@@ -136,7 +136,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilLocalVariable loc_1_keyValuePair = new(keyValuePairType.Import(module));
 
                 // Create a method body for the method
-                method.CilMethodBody = new CilMethodBody(method)
+                method.CilMethodBody = new CilMethodBody()
                 {
                     LocalVariables = { loc_0_hresult, loc_1_keyValuePair },
                     ExceptionHandlers =
@@ -202,7 +202,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
             // Initialize the 'KeyValuePair<,>' vtable
-            cctor.CilMethodBody = new CilMethodBody(cctor)
+            cctor.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

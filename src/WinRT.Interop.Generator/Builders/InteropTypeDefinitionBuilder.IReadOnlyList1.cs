@@ -145,7 +145,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction nop_implementation = new(Nop);
 
             // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody(getAtMethod)
+            getAtMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_result },
                 Instructions =
@@ -276,7 +276,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
 
             // Create a method body for the 'Item' method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            get_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -300,7 +300,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyListMethodsType.Methods.Add(countMethod);
 
             // Create a method body for the 'Count' method
-            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            countMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -552,7 +552,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

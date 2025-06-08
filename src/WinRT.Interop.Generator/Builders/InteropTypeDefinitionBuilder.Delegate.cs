@@ -98,7 +98,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
             // Create a method body for the 'Invoke' method
-            invokeMethod.CilMethodBody = new CilMethodBody(invokeMethod)
+            invokeMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
@@ -201,7 +201,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
 
             // Create a method body for the 'get_Value' method
-            valueMethod.CilMethodBody = new CilMethodBody(valueMethod)
+            valueMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult, loc_1_referenceValue },
                 Instructions =
@@ -339,26 +339,28 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Object,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+            {
+                CilMethodBody = new CilMethodBody
+                {
+                    // Create a new delegate targeting the 'Invoke' extension, with the 'WindowsRuntimeObjectReference' object
+                    // as target. This allows us to not need an additional type (and allcation) for the delegate target.
+                    Instructions =
+                    {
+                        { Ldarg_0 },
+                        { Call, get_IidMethod },
+                        { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                        { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
+                        { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
+                        { Ret }
+                    }
+                }
+            };
 
             // Add and implement the 'CreateObject' method
             callbackType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeComWrappersCallbackCreateObject.Import(module),
                 method: createObjectMethod);
-
-            // Create a method body for the 'CreateObject' method
-            createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
-                    { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
-                    { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
-                    { Ret }
-                }
-            };
         }
 
         /// <summary>
@@ -399,12 +401,13 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module),
                         invokeSignature.ParameterTypes[0].Import(module),
-                        invokeSignature.ParameterTypes[1].Import(module)]));
+                        invokeSignature.ParameterTypes[1].Import(module)]))
+            { CilMethodBody = new CilMethodBody() };
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
-            // Create a method body for the 'Invoke' method
-            CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
+            // Get the method body for the 'Invoke' method
+            CilMethodBody invokeBody = invokeMethod.CilMethodBody;
             CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
@@ -564,7 +567,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: computeVtablesMethod);
 
             // Create a method body for the 'ComputeVtables' method
-            computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
+            computeVtablesMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -603,7 +606,7 @@ internal partial class InteropTypeDefinitionBuilder
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Create a method body for the 'CreateObject' method
-            createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+            createObjectMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -663,7 +666,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(convertToUnmanagedMethod);
 
             // Create a method body for the 'ConvertToUnmanaged' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -693,7 +696,7 @@ internal partial class InteropTypeDefinitionBuilder
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Create a method body for the 'ConvertToManaged' method
-            convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
+            convertToManagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -716,7 +719,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(boxToUnmanagedMethod);
 
             // Create a method body for the 'ConvertToUnmanaged' method
-            boxToUnmanagedMethod.CilMethodBody = new CilMethodBody(boxToUnmanagedMethod)
+            boxToUnmanagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -746,7 +749,7 @@ internal partial class InteropTypeDefinitionBuilder
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Create a method body for the 'UnboxToManaged' method
-            unboxToUnmanagedMethod.CilMethodBody = new CilMethodBody(unboxToUnmanagedMethod)
+            unboxToUnmanagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

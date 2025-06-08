@@ -156,7 +156,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: hasKeyMethod);
 
             // Create a method body for the 'HasKey' method
-            hasKeyMethod.CilMethodBody = new CilMethodBody(hasKeyMethod)
+            hasKeyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -180,7 +180,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: lookupMethod);
 
             // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody(lookupMethod)
+            lookupMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyDictionaryMethodsType.Methods.Add(get_ItemMethod);
 
             // Create a method body for the 'Item' method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            get_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -252,7 +252,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyDictionaryMethodsType.Methods.Add(countMethod);
 
             // Create a method body for the 'Count' method
-            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            countMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -277,7 +277,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyDictionaryMethodsType.Methods.Add(containsKeyMethod);
 
             // Create a method body for the 'ContainsKey' method
-            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
+            containsKeyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -308,7 +308,7 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyDictionaryMethodsType.Methods.Add(tryGetValueMethod);
 
             // Create a method body for the 'TryGetValue' method
-            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
+            tryGetValueMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -515,7 +515,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_KeysMethod);
 
             // Create a body for the 'get_Keys' method
-            get_KeysMethod.CilMethodBody = new CilMethodBody(get_KeysMethod)
+            get_KeysMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -546,7 +546,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_ValuesMethod);
 
             // Create a body for the 'get_Values' method
-            get_ValuesMethod.CilMethodBody = new CilMethodBody(get_ValuesMethod)
+            get_ValuesMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

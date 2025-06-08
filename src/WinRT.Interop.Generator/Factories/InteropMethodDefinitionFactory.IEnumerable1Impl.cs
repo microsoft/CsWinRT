@@ -70,7 +70,7 @@ internal partial class InteropMethodDefinitionFactory
             CilLocalVariable loc_1_enumeratorValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
 
             // Create a method body for the 'get_Current' method
-            firstMethod.CilMethodBody = new CilMethodBody(firstMethod)
+            firstMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult, loc_1_enumeratorValue },
                 Instructions =

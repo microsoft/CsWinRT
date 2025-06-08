@@ -131,7 +131,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: getAtMethod);
 
             // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody(getAtMethod)
+            getAtMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -156,7 +156,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: setAtMethod);
 
             // Create a method body for the 'SetAt' method
-            setAtMethod.CilMethodBody = new CilMethodBody(setAtMethod)
+            setAtMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -180,7 +180,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: appendMethod);
 
             // Create a method body for the 'Append' method
-            appendMethod.CilMethodBody = new CilMethodBody(appendMethod)
+            appendMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -208,7 +208,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: indexOfMethod);
 
             // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
+            indexOfMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -233,7 +233,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: insertAtMethod);
 
             // Create a method body for the 'InsertAt' method
-            insertAtMethod.CilMethodBody = new CilMethodBody(insertAtMethod)
+            insertAtMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -280,7 +280,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(get_ItemMethod);
 
             // Create a method body for the 'Item' getter method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            get_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -307,7 +307,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(set_ItemMethod);
 
             // Create a method body for the 'Item' setter method
-            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
+            set_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -332,7 +332,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(countMethod);
 
             // Create a method body for the 'Count' method
-            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            countMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -357,7 +357,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(addMethod);
 
             // Create a method body for the 'Add' method
-            addMethod.CilMethodBody = new CilMethodBody(addMethod)
+            addMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -383,7 +383,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(containsMethod);
 
             // Create a method body for the 'Contains' method
-            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
+            containsMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -410,7 +410,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(copyToMethod);
 
             // Create a method body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            copyToMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -437,7 +437,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(removeMethod);
 
             // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            removeMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -463,7 +463,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(removeAtMethod);
 
             // Create a method body for the 'RemoveAt' method
-            removeAtMethod.CilMethodBody = new CilMethodBody(removeAtMethod)
+            removeAtMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -489,7 +489,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(indexOfMethod);
 
             // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
+            indexOfMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -516,7 +516,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(insertMethod);
 
             // Create a method body for the 'Insert' method
-            insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
+            insertMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -541,7 +541,7 @@ internal partial class InteropTypeDefinitionBuilder
             listMethodsType.Methods.Add(clearMethod);
 
             // Create a method body for the 'Clear' method
-            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
+            clearMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -864,7 +864,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_IsReadOnlyMethod);
 
             // Create a body for the 'get_IsReadOnly' method
-            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody(get_IsReadOnlyMethod)
+            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -1012,7 +1012,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

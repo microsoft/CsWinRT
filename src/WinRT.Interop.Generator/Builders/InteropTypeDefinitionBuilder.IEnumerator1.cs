@@ -106,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction nop_finallyEnd = new(Nop);
 
             // Create a method body for the 'Current' method
-            currentMethod.CilMethodBody = new CilMethodBody(currentMethod)
+            currentMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_currentNative },
                 Instructions =
@@ -204,7 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
             iteratorMethodsType.Methods.Add(hasCurrentMethod);
 
             // Create a method body for the 'HasCurrent' method
-            hasCurrentMethod.CilMethodBody = new CilMethodBody(hasCurrentMethod)
+            hasCurrentMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -227,7 +227,7 @@ internal partial class InteropTypeDefinitionBuilder
             iteratorMethodsType.Methods.Add(moveNextMethod);
 
             // Create a method body for the 'HasCurrent' method
-            moveNextMethod.CilMethodBody = new CilMethodBody(moveNextMethod)
+            moveNextMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -427,7 +427,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_IEnumeratorCurrentMethod);
 
             // Create a method body for the 'IEnumerator.Current' property
-            get_IEnumeratorCurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumeratorCurrentMethod)
+            get_IEnumeratorCurrentMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -479,7 +479,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: resetMethod);
 
             // Create a method body for the 'Reset' method
-            resetMethod.CilMethodBody = new CilMethodBody(resetMethod)
+            resetMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -500,7 +500,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: disposeMethod);
 
             // Create a method body for the 'Dispose' method
-            disposeMethod.CilMethodBody = new CilMethodBody(disposeMethod)
+            disposeMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ret } }
             };

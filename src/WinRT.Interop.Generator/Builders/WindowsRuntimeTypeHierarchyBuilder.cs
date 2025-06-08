@@ -546,7 +546,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
 
         // Create a method body for the 'TryGetBaseRuntimeClassName' method
-        tryGetBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody(tryGetBaseRuntimeClassNameMethod)
+        tryGetBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody()
         {
             LocalVariables =
             {
@@ -721,7 +721,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CilLocalVariable loc_1_valueLength = new(module.CorLibTypeFactory.Int32);
 
         // Create a method body for the 'TryGetNextBaseRuntimeClassName' method
-        tryGetNextBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody(tryGetNextBaseRuntimeClassNameMethod)
+        tryGetNextBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody()
         {
             LocalVariables = { loc_0_valuesRef, loc_1_valueLength },
             Instructions =

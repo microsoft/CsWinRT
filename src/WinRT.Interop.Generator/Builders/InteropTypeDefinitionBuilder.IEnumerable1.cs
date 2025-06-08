@@ -163,7 +163,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction ldloc_3_finallyEnd = new(Ldloc_3);
 
             // Create a method body for the 'First' method
-            firstMethod.CilMethodBody = new CilMethodBody(firstMethod)
+            firstMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_enumeratorPtr, loc_3_enumerator },
                 Instructions =
@@ -269,7 +269,7 @@ internal partial class InteropTypeDefinitionBuilder
             enumerableMethodsType.Methods.Add(getEnumeratorMethod);
 
             // Create a method body for the 'GetEnumerator' method
-            getEnumeratorMethod.CilMethodBody = new CilMethodBody(getEnumeratorMethod)
+            getEnumeratorMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -452,7 +452,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

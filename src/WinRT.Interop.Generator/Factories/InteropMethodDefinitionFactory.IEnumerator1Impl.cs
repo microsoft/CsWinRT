@@ -59,7 +59,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'get_Current' method
-            currentMethod.CilMethodBody = new CilMethodBody(currentMethod)
+            currentMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
@@ -171,7 +171,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
             // Create a method body for the 'get_HasCurrent' method
-            boolMethod.CilMethodBody = new CilMethodBody(boolMethod)
+            boolMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
@@ -264,7 +264,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_implementation = new(Nop);
 
             // Create a method body for the 'get_Current' method
-            currentMethod.CilMethodBody = new CilMethodBody(currentMethod)
+            currentMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 2 variables:
                 //   [0]: 'int' (the 'HRESULT' to return)

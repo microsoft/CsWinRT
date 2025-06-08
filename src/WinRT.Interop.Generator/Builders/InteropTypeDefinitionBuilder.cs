@@ -160,7 +160,7 @@ internal static partial class InteropTypeDefinitionBuilder
         CilInstruction ldarg_3_failure = new(Ldarg_3);
 
         // Create a method body for the 'TryCreateObject' method
-        tryCreateObjectMethod.CilMethodBody = new CilMethodBody(tryCreateObjectMethod)
+        tryCreateObjectMethod.CilMethodBody = new CilMethodBody()
         {
             LocalVariables = { loc_0_result },
             Instructions =
@@ -268,7 +268,7 @@ internal static partial class InteropTypeDefinitionBuilder
             method: computeVtablesMethod);
 
         // Create a method body for the 'ComputeVtables' method
-        computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
+        computeVtablesMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -307,7 +307,7 @@ internal static partial class InteropTypeDefinitionBuilder
         CilInstruction stind_i4_setFlags = new(Stind_I4);
 
         // Create a method body for the 'CreateObject' method
-        createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+        createObjectMethod.CilMethodBody = new CilMethodBody()
         {
             LocalVariables = { loc_0_result },
             Instructions =
@@ -386,7 +386,7 @@ internal static partial class InteropTypeDefinitionBuilder
             .MakeGenericInstanceMethod(typeSignature);
 
         // Create a method body for the 'ConvertToUnmanaged' method
-        convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+        convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -416,7 +416,7 @@ internal static partial class InteropTypeDefinitionBuilder
             .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
 
         // Create a method body for the 'ConvertToManaged' method
-        convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
+        convertToManagedMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -476,7 +476,7 @@ internal static partial class InteropTypeDefinitionBuilder
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
         // Initialize the base vtable
-        cctor.CilMethodBody = new CilMethodBody(cctor)
+        cctor.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -597,7 +597,10 @@ internal static partial class InteropTypeDefinitionBuilder
         IFieldDescriptor comInterfaceEntryVtableField = interopReferences.ComInterfaceEntryVtable.Import(module);
 
         // We need to create a new method body bound to this constructor
-        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
+        CilInstructionCollection cctorInstructions = cctor.CilMethodBody!.Instructions;
+
+        // Ensure there's no instructions ('GetOrCreateStaticConstructor' adds a return stub)
+        cctorInstructions.Clear();
 
         // Initialize the COM interface entries, doing this for each entry:
         //
@@ -642,7 +645,7 @@ internal static partial class InteropTypeDefinitionBuilder
         implType.Methods.Add(vtablesProperty.GetMethod!);
 
         // Create a method body for the 'Vtables' property (it directly returns the 'Entries' field address)
-        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtablesProperty.GetMethod!)
+        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {

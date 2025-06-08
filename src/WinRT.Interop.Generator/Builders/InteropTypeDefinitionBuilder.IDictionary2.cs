@@ -210,7 +210,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: hasKeyMethod);
 
             // Create a method body for the 'HasKey' method
-            hasKeyMethod.CilMethodBody = new CilMethodBody(hasKeyMethod)
+            hasKeyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -234,7 +234,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: lookupMethod);
 
             // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody(lookupMethod)
+            lookupMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -259,7 +259,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: insertMethod);
 
             // Create a method body for the 'Insert' method
-            insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
+            insertMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -283,7 +283,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: removeMethod);
 
             // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            removeMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
@@ -333,7 +333,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(get_ItemMethod);
 
             // Create a method body for the 'Item' getter method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            get_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -360,7 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(set_ItemMethod);
 
             // Create a method body for the 'Item' setter method
-            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
+            set_ItemMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -388,7 +388,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(addMethod);
 
             // Create a method body for the 'Add' method
-            addMethod.CilMethodBody = new CilMethodBody(addMethod)
+            addMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -415,7 +415,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(removeMethod);
 
             // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            removeMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -439,7 +439,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(countMethod);
 
             // Create a method body for the 'Count' method
-            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            countMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -464,7 +464,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(containsKeyMethod);
 
             // Create a method body for the 'ContainsKey' method
-            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
+            containsKeyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -495,7 +495,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(tryGetValueMethod);
 
             // Create a method body for the 'TryGetValue' method
-            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
+            tryGetValueMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -522,7 +522,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(addKeyValuePairMethod);
 
             // Create a method body for the 'Add' method
-            addKeyValuePairMethod.CilMethodBody = new CilMethodBody(addKeyValuePairMethod)
+            addKeyValuePairMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -548,7 +548,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(removeKeyValuePairMethod);
 
             // Create a method body for the 'Remove' method
-            removeKeyValuePairMethod.CilMethodBody = new CilMethodBody(removeKeyValuePairMethod)
+            removeKeyValuePairMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -572,7 +572,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(clearMethod);
 
             // Create a method body for the 'Clear' method
-            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
+            clearMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -597,7 +597,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(containsMethod);
 
             // Create a method body for the 'Contains' method
-            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
+            containsMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -634,7 +634,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(copyToMethod);
 
             // Create a method body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            copyToMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -870,7 +870,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_KeysMethod);
 
             // Create a body for the 'get_Keys' method
-            get_KeysMethod.CilMethodBody = new CilMethodBody(get_KeysMethod)
+            get_KeysMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -901,7 +901,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_ValuesMethod);
 
             // Create a body for the 'get_Values' method
-            get_ValuesMethod.CilMethodBody = new CilMethodBody(get_ValuesMethod)
+            get_ValuesMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -1093,7 +1093,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
             // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
             // are emitting code manually, to save the current 'WindowsRuntimeObject', resolve the two references, and forward the call.
-            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            copyToMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { new CilLocalVariable(interopReferences.WindowsRuntimeObject.Import(module).ToReferenceTypeSignature()) },
                 Instructions =
@@ -1158,7 +1158,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_IsReadOnlyMethod);
 
             // Create a body for the 'get_IsReadOnly' method
-            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody(get_IsReadOnlyMethod)
+            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

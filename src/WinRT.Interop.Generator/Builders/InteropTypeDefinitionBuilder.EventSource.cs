@@ -75,7 +75,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: convertToUnmanagedMethod);
 
             // Create a method body for the 'CreateObject' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {
@@ -142,7 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
                 method: convertToUnmanagedMethod);
 
             // Create a method body for the 'CreateObject' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
             {
                 Instructions =
                 {

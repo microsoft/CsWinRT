@@ -74,7 +74,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // Create a method body for the 'IID' property
-        get_IidMethod.CilMethodBody = new CilMethodBody(get_IidMethod)
+        get_IidMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -120,7 +120,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // Create a method body for the 'IID' property
-        get_IidMethod.CilMethodBody = new CilMethodBody(get_IidMethod)
+        get_IidMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -158,7 +158,7 @@ internal static class WellKnownMemberDefinitionFactory
         { GetMethod = get_VtableMethod };
 
         // Create a method body for the 'Vtable' property
-        vtableProperty.GetMethod.CilMethodBody = new CilMethodBody(vtableProperty.GetMethod)
+        vtableProperty.GetMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {
@@ -193,7 +193,7 @@ internal static class WellKnownMemberDefinitionFactory
         CilLocalVariable loc_1_index = new(module.CorLibTypeFactory.Int32);
 
         // Create a method body for the 'ComputeReadOnlySpanHash' method
-        hashMethod.CilMethodBody = new CilMethodBody(hashMethod)
+        hashMethod.CilMethodBody = new CilMethodBody()
         {
             LocalVariables = { loc_0_hash, loc_1_index },
             Instructions =

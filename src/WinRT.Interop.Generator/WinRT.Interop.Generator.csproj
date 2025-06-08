@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-beta.3" />
+    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.157" />
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
     <PackageReference Include="ConsoleAppFramework" Version="5.4.1" PrivateAssets="all" />
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.4" />

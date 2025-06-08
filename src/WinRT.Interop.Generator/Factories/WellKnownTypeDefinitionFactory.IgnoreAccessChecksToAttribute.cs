@@ -67,7 +67,7 @@ internal partial class WellKnownTypeDefinitionFactory
         ignoreAccessChecksToType.Methods.Add(get_AssemblyNameMethod);
 
         // Create a method body for the 'AssemblyName' property
-        get_AssemblyNameMethod.CilMethodBody = new CilMethodBody(get_AssemblyNameMethod)
+        get_AssemblyNameMethod.CilMethodBody = new CilMethodBody()
         {
             Instructions =
             {

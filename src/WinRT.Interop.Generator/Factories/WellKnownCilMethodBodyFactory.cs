@@ -32,7 +32,7 @@ internal static class WellKnownCilMethodBodyFactory
         ModuleDefinition module)
     {
         // Prepare the method body with the basic setup and the call to the forwarded method
-        CilMethodBody body = new(implementationMethod)
+        CilMethodBody body = new()
         {
             Instructions =
             {
