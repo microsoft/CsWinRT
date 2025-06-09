@@ -11,13 +11,16 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal sealed class InteropGeneratorArgs
 {
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='referencePath']/node()"/></summary>
-    public required string[] ReferencePath { get; init; }
+    public required string[] ReferenceAssemblyPaths { get; init; }
 
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='assemblyPath']/node()"/></summary>
-    public required string AssemblyPath { get; init; }
+    public required string OutputAssemblyPath { get; init; }
 
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='outputDirectory']/node()"/></summary>
     public required string OutputDirectory { get; init; }
+
+    /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='useWindowsUIXamlProjections']/node()"/></summary>
+    public required bool UseWindowsUIXamlProjections { get; init; }
 
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='maxDegreesOfParallelism']/node()"/></summary>
     public required int MaxDegreesOfParallelism { get; init; }

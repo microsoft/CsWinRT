@@ -26,7 +26,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Initialize the assembly resolver (we need to reuse this to allow caching)
-        PathAssemblyResolver pathAssemblyResolver = new(args.ReferencePath);
+        PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
 
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
@@ -36,7 +36,7 @@ internal partial class InteropGenerator
         {
             // Load and process all modules, potentially in parallel
             ParallelLoopResult result = Parallel.ForEach(
-                source: args.ReferencePath.Concat([args.AssemblyPath]),
+                source: args.ReferenceAssemblyPaths.Concat([args.OutputAssemblyPath]),
                 parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
                 body: path => LoadAndProcessModule(args, discoveryState, path));
 

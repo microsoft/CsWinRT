@@ -18,23 +18,29 @@ internal static partial class InteropGenerator
     /// <summary>
     /// Runs the interop generator to produce the resulting <c>WinRT.Interop.dll</c> assembly.
     /// </summary>
-    /// <param name="referencePath">The input .dll paths.</param>
-    /// <param name="assemblyPath">The path of the assembly that was built.</param>
+    /// <param name="referenceAssemblyPaths">The input .dll paths.</param>
+    /// <param name="outputAssemblyPath">The path of the assembly that was built.</param>
     /// <param name="outputDirectory">The output path for the resulting assembly.</param>
     /// <param name="maxDegreesOfParallelism">The maximum number of parallel tasks to use for execution.</param>
+    /// <param name="useWindowsUiXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="token">The token for the operation.</param>
     public static void Run(
-        string[] referencePath,
-        string assemblyPath,
+        string[] referenceAssemblyPaths,
+        string outputAssemblyPath,
         string outputDirectory,
+        bool useWindowsUiXamlProjections,
         int maxDegreesOfParallelism,
         CancellationToken token)
     {
+        // Note: the 'useWindowsUiXamlProjections' name in the parameter is intentional,
+        // and it's so that 'ConsoleAppFramework' parses the command line name correctly.
+
         RunCore(new InteropGeneratorArgs
         {
-            ReferencePath = referencePath,
-            AssemblyPath = assemblyPath,
+            ReferenceAssemblyPaths = referenceAssemblyPaths,
+            OutputAssemblyPath = outputAssemblyPath,
             OutputDirectory = outputDirectory,
+            UseWindowsUIXamlProjections = useWindowsUiXamlProjections,
             MaxDegreesOfParallelism = maxDegreesOfParallelism,
             Token = token
         });
@@ -52,7 +58,7 @@ internal static partial class InteropGenerator
         // exceptions that can reach that path to have our custom formatting implementation there.
         try
         {
-            ConsoleApp.Log($"Processing {args.ReferencePath.Length + 1} modules");
+            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + 1} modules");
 
             discoveryState = Discover(args);
         }

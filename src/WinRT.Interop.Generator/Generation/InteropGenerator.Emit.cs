@@ -114,7 +114,7 @@ internal partial class InteropGenerator
     private static ModuleDefinition DefineInteropModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, out ModuleDefinition windowsRuntimeModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
-        if (!discoveryState.ModuleDefinitions.TryGetValue(args.AssemblyPath, out ModuleDefinition? assemblyModule))
+        if (!discoveryState.ModuleDefinitions.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
         {
             throw WellKnownInteropExceptions.AssemblyModuleNotFound();
         }
