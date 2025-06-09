@@ -7,7 +7,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Helpers;
+
+#pragma warning disable IDE0008
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -20,8 +25,7 @@ internal partial class InteropGenerator
     /// <param name="args">The arguments for this invocation.</param>
     private static void SaveDebugRepro(InteropGeneratorArgs args)
     {
-        // If no debug repro directory was provided, we have nothing to do.
-        // This is fully expected, it just means no debug repro is needed.
+        // We expect callers to have already performed this check, but just in case
         if (args.DebugReproDirectory is null)
         {
             return;
@@ -45,6 +49,9 @@ internal partial class InteropGenerator
         // List to store the updated DLL names for the .rsp file
         List<string> updatedDllNames = [];
 
+        // Map with all the original paths
+        Dictionary<string, string> originalPaths = new(args.ReferenceAssemblyPaths.Length + 1);
+
         // Add all reference assemblies to the temp directory with hashed names
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
@@ -54,6 +61,7 @@ internal partial class InteropGenerator
             File.Copy(referenceAssemblyPath, destinationPath, overwrite: true);
 
             updatedDllNames.Add(hashedName);
+            originalPaths.Add(hashedName, referenceAssemblyPath);
         }
 
         // Add the output assembly to the temp directory with a hashed name
@@ -61,6 +69,8 @@ internal partial class InteropGenerator
         string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
 
         File.Copy(args.OutputAssemblyPath, outputAssemblyDestination, overwrite: true);
+
+        originalPaths.Add(outputAssemblyHashedName, args.OutputAssemblyPath);
 
         // Prepare the .rsp file with all updated arguments
         StringBuilder builder = new();
@@ -85,6 +95,17 @@ internal partial class InteropGenerator
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtgen.rsp");
 
         File.WriteAllText(rspFilePath, builder.ToString());
+
+        // Create the .json file with the original paths
+        string jsonFilePath = Path.Combine(tempDirectory, "original-paths.json");
+
+        // Serialize the original paths
+        using (Stream jsonStream = File.Create(jsonFilePath))
+        {
+            var jsonTypeInfo = (JsonTypeInfo<Dictionary<string, string>>)InteropGeneratorJsonSerializerContext.Default.GetTypeInfo(typeof(Dictionary<string, string>))!;
+
+            JsonSerializer.Serialize(jsonStream, originalPaths, jsonTypeInfo);
+        }
 
         // Delete the previous file, if it exists
         if (File.Exists(zipPath))
