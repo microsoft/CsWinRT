@@ -137,11 +137,7 @@ public sealed class CsWinRTGenerator : ToolTask
 
         _ = args.Append("--output-directory ").AppendLine(outputDirectory);
 
-        if (UseWindowsUIXamlProjections)
-        {
-            _ = args.AppendLine("--use-windows-ui-xaml-projections");
-        }
-
+        _ = args.Append("--use-windows-ui-xaml-projections").AppendLine(UseWindowsUIXamlProjections.ToString());
         _ = args.Append("--max-degrees-of-parallelism").AppendLine(MaxDegreesOfParallelism.ToString());
 
         return args.ToString();

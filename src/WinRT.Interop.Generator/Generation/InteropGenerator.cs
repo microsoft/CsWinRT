@@ -18,38 +18,22 @@ internal static partial class InteropGenerator
     /// <summary>
     /// Runs the interop generator to produce the resulting <c>WinRT.Interop.dll</c> assembly.
     /// </summary>
-    /// <param name="referenceAssemblyPaths">The input .dll paths.</param>
-    /// <param name="outputAssemblyPath">The path of the assembly that was built.</param>
-    /// <param name="outputDirectory">The output path for the resulting assembly.</param>
-    /// <param name="maxDegreesOfParallelism">The maximum number of parallel tasks to use for execution.</param>
-    /// <param name="useWindowsUiXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="responseFilePath">The path to the response file to use.</param>
     /// <param name="token">The token for the operation.</param>
-    public static void Run(
-        string[] referenceAssemblyPaths,
-        string outputAssemblyPath,
-        string outputDirectory,
-        bool useWindowsUiXamlProjections,
-        int maxDegreesOfParallelism,
-        CancellationToken token)
+    public static void Run([Argument] string responseFilePath, CancellationToken token)
     {
-        // Note: the 'useWindowsUiXamlProjections' name in the parameter is intentional,
-        // and it's so that 'ConsoleAppFramework' parses the command line name correctly.
+        InteropGeneratorArgs args;
 
-        RunCore(new InteropGeneratorArgs
+        // Parse the actual arguments from the response file
+        try
         {
-            ReferenceAssemblyPaths = referenceAssemblyPaths,
-            OutputAssemblyPath = outputAssemblyPath,
-            OutputDirectory = outputDirectory,
-            UseWindowsUIXamlProjections = useWindowsUiXamlProjections,
-            MaxDegreesOfParallelism = maxDegreesOfParallelism,
-            Token = token
-        });
-    }
+            args = InteropGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledInteropException("parsing", e);
+        }
 
-    /// <inheritdoc cref="Run"/>
-    /// <param name="args">The arguments for this invocation.</param>
-    private static void RunCore(InteropGeneratorArgs args)
-    {
         InteropGeneratorDiscoveryState discoveryState;
 
         // Wrap the actual logic, to ensure that we're only ever throwing an exception that will result
