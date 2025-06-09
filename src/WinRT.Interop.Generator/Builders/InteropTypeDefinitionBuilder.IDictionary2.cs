@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -1126,6 +1127,38 @@ internal partial class InteropTypeDefinitionBuilder
             { GetMethod = get_IsReadOnlyMethod };
 
             interfaceImplType.Properties.Add(isReadOnlyProperty);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition vftblType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            InteropTypeDefinitionBuilder.ImplType(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Impl"),
+                vftblType: vftblType,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: []);
         }
 
         /// <summary>

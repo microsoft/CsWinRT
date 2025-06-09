@@ -924,6 +924,16 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IDictionary2.ImplType(
+                    dictionaryType: typeSignature,
+                    vftblType: vftblType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out _);
+
                 // Define the 'IMapMethods' type (with the public thunks for 'IMap<K, V>' native calls)
                 InteropTypeDefinitionBuilder.IDictionary2.IMapMethods(
                     dictionaryType: typeSignature,

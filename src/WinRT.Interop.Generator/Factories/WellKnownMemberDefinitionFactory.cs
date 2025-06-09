@@ -61,7 +61,14 @@ internal static class WellKnownMemberDefinitionFactory
             name: "get_"u8 + propertyName,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(iidPropertyType))
-        { IsAggressiveInlining = true };
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Ldsflda, iidRvaField },
+                { Ret }
+            }
+        };
 
         // Create the 'IID' property
         iidProperty = new PropertyDefinition(
@@ -71,16 +78,6 @@ internal static class WellKnownMemberDefinitionFactory
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
-        };
-
-        // Create a method body for the 'IID' property
-        get_IidMethod.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
-            {
-                { Ldsflda, iidRvaField },
-                { Ret }
-            }
         };
     }
 
@@ -107,7 +104,14 @@ internal static class WellKnownMemberDefinitionFactory
             name: "get_IID"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(iidPropertyType))
-        { IsAggressiveInlining = true };
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Call, forwardedIidMethod },
+                { Ret }
+            }
+        };
 
         // Create the 'IID' property
         iidProperty = new PropertyDefinition(
@@ -117,16 +121,6 @@ internal static class WellKnownMemberDefinitionFactory
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
-        };
-
-        // Create a method body for the 'IID' property
-        get_IidMethod.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
-            {
-                { Call, forwardedIidMethod },
-                { Ret }
-            }
         };
     }
 
@@ -148,7 +142,15 @@ internal static class WellKnownMemberDefinitionFactory
             name: "get_Vtable"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(corLibTypeFactory.IntPtr))
-        { IsAggressiveInlining = true };
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Ldsflda, vftblField },
+                { Conv_U },
+                { Ret }
+            }
+        };
 
         // Create the 'Vtable' property (the signature is just 'nint')
         vtableProperty = new PropertyDefinition(
@@ -156,17 +158,6 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_VtableMethod))
         { GetMethod = get_VtableMethod };
-
-        // Create a method body for the 'Vtable' property
-        vtableProperty.GetMethod.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
-            {
-                { Ldsflda, vftblField },
-                { Conv_U },
-                { Ret }
-            }
-        };
     }
 
     /// <summary>
