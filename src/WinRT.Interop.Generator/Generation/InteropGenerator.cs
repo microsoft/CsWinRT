@@ -37,7 +37,14 @@ internal static partial class InteropGenerator
         // Same a debug repro, if needed
         try
         {
-            SaveDebugRepro(args);
+            // If no debug repro directory was provided, we have nothing to do.
+            // This is fully expected, it just means no debug repro is needed.
+            if (args.DebugReproDirectory is not null)
+            {
+                ConsoleApp.Log("Saving 'cswinrtgen' debug repro");
+
+                SaveDebugRepro(args);
+            }
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
