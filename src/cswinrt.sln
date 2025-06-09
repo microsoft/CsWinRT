@@ -184,6 +184,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.Runtime2", "WinRT.Run
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.Interop.Generator", "WinRT.Interop.Generator\WinRT.Interop.Generator.csproj", "{F84931D9-CE95-465B-A0C3-93A8DFEC3A4C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.Interop.Tasks", "WinRT.Interop.Tasks\WinRT.Interop.Tasks.csproj", "{33F36D10-A11B-4984-A06D-BBDF434C5805}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -916,6 +918,22 @@ Global
 		{F84931D9-CE95-465B-A0C3-93A8DFEC3A4C}.Release|x64.Build.0 = Release|Any CPU
 		{F84931D9-CE95-465B-A0C3-93A8DFEC3A4C}.Release|x86.ActiveCfg = Release|Any CPU
 		{F84931D9-CE95-465B-A0C3-93A8DFEC3A4C}.Release|x86.Build.0 = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|ARM.Build.0 = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|x64.Build.0 = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Debug|x86.Build.0 = Debug|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|ARM.ActiveCfg = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|ARM.Build.0 = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|ARM64.Build.0 = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|x64.ActiveCfg = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|x64.Build.0 = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|x86.ActiveCfg = Release|Any CPU
+		{33F36D10-A11B-4984-A06D-BBDF434C5805}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
