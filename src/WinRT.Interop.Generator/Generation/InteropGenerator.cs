@@ -34,6 +34,16 @@ internal static partial class InteropGenerator
             throw new UnhandledInteropException("parsing", e);
         }
 
+        // Same a debug repro, if needed
+        try
+        {
+            SaveDebugRepro(args);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledInteropException("debug-repro", e);
+        }
+
         InteropGeneratorDiscoveryState discoveryState;
 
         // Wrap the actual logic, to ensure that we're only ever throwing an exception that will result
@@ -66,6 +76,6 @@ internal static partial class InteropGenerator
         }
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.OutputDirectory, InteropNames.InteropDllName)}");
+        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.InteropDllName)}");
     }
 }

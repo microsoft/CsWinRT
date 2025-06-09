@@ -71,11 +71,29 @@ internal static class InteropGeneratorArgsExtensions
             {
                 ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(InteropGeneratorArgs.ReferenceAssemblyPaths)),
                 OutputAssemblyPath = GetStringArgument(argsMap, nameof(InteropGeneratorArgs.OutputAssemblyPath)),
-                OutputDirectory = GetStringArgument(argsMap, nameof(InteropGeneratorArgs.OutputDirectory)),
+                GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(InteropGeneratorArgs.GeneratedAssemblyDirectory)),
+                DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(InteropGeneratorArgs.DebugReproDirectory)),
                 UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(InteropGeneratorArgs.UseWindowsUIXamlProjections)),
                 MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(InteropGeneratorArgs.MaxDegreesOfParallelism)),
                 Token = token
             };
+        }
+
+        /// <summary>
+        /// Gets the command line argument name for a property.
+        /// </summary>
+        /// <param name="propertyName">The target property name.</param>
+        /// <returns>The command line argument name for <paramref name="propertyName"/>.</returns>
+        public static string GetCommandLineArgumentName(string propertyName)
+        {
+            try
+            {
+                return typeof(InteropGeneratorArgs).GetProperty(propertyName)!.GetCustomAttribute<CommandLineArgumentNameAttribute>()!.Name;
+            }
+            catch (Exception e)
+            {
+                throw WellKnownInteropExceptions.ResponseFileArgumentParsingError(propertyName, e);
+            }
         }
     }
 
@@ -112,6 +130,22 @@ internal static class InteropGeneratorArgsExtensions
     }
 
     /// <summary>
+    /// Parses a nullable (optional) <see cref="string"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Parses an <see cref="int"/> argument.
     /// </summary>
     /// <param name="argsMap">The input map with raw arguments.</param>
@@ -141,22 +175,5 @@ internal static class InteropGeneratorArgsExtensions
         }
 
         throw WellKnownInteropExceptions.ResponseFileArgumentParsingError(propertyName);
-    }
-
-    /// <summary>
-    /// Gets the command line argument name for a property.
-    /// </summary>
-    /// <param name="propertyName">The target property name.</param>
-    /// <returns>The command line argument name for <paramref name="propertyName"/>.</returns>
-    private static string GetCommandLineArgumentName(string propertyName)
-    {
-        try
-        {
-            return typeof(InteropGeneratorArgs).GetProperty(propertyName)!.GetCustomAttribute<CommandLineArgumentNameAttribute>()!.Name;
-        }
-        catch (Exception e)
-        {
-            throw WellKnownInteropExceptions.ResponseFileArgumentParsingError(propertyName, e);
-        }
     }
 }

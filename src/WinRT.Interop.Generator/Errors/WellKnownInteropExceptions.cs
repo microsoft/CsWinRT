@@ -261,6 +261,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The debug repro directory does not exist.
+    /// </summary>
+    public static Exception DebugReproDirectoryDoesNotExist(string path)
+    {
+        return Exception(31, $"The debug repro directory '{path}' does not exist.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

@@ -32,10 +32,16 @@ public sealed class CsWinRTGenerator : ToolTask
     public ITaskItem? OutputAssemblyPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the output directory where the generated interop assembly will be placed.
+    /// Gets or sets the directory where the generated interop assembly will be placed.
     /// </summary>
     /// <remarks>If not set, the same directory as <see cref="OutputAssemblyPath"/> will be used.</remarks>
-    public string? OutputDirectory { get; set; }
+    public string? GeneratedAssemblyDirectory { get; set; }
+
+    /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
 
     /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtgen' tool is located.
@@ -83,9 +89,16 @@ public sealed class CsWinRTGenerator : ToolTask
             return false;
         }
 
-        if (OutputDirectory is not null && !Directory.Exists(OutputDirectory))
+        if (GeneratedAssemblyDirectory is not null && !Directory.Exists(GeneratedAssemblyDirectory))
         {
-            Log.LogWarning("Output directory '{0}' does not exist.", OutputDirectory);
+            Log.LogWarning("Generated assembly directory '{0}' does not exist.", GeneratedAssemblyDirectory);
+
+            return false;
+        }
+
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' does not exist.", DebugReproDirectory);
 
             return false;
         }
@@ -133,9 +146,15 @@ public sealed class CsWinRTGenerator : ToolTask
         _ = args.Append("--reference-assembly-paths ").AppendLine(referenceAssemblyPathsArg);
         _ = args.Append("--output-assembly-path ").AppendLine(OutputAssemblyPath!.ItemSpec);
 
-        string outputDirectory = OutputDirectory ?? Path.GetDirectoryName(OutputAssemblyPath!.ItemSpec)!;
+        string generatedAssemblyDirectory = GeneratedAssemblyDirectory ?? Path.GetDirectoryName(OutputAssemblyPath!.ItemSpec)!;
 
-        _ = args.Append("--output-directory ").AppendLine(outputDirectory);
+        _ = args.Append("--generated-assembly-directory ").AppendLine(generatedAssemblyDirectory);
+
+        // The debug repro directory is optional, and might not be set
+        if (DebugReproDirectory is not null)
+        {
+            _ = args.Append("--debug-repro-directory ").AppendLine(DebugReproDirectory);
+        }
 
         _ = args.Append("--use-windows-ui-xaml-projections").AppendLine(UseWindowsUIXamlProjections.ToString());
         _ = args.Append("--max-degrees-of-parallelism").AppendLine(MaxDegreesOfParallelism.ToString());

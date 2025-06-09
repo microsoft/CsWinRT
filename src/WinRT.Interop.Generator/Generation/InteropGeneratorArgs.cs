@@ -19,9 +19,13 @@ internal sealed class InteropGeneratorArgs
     [CommandLineArgumentName("--output-assembly-path")]
     public required string OutputAssemblyPath { get; init; }
 
-    /// <summary>Gets the output path for the resulting assembly.</summary>
-    [CommandLineArgumentName("--output-directory")]
-    public required string OutputDirectory { get; init; }
+    /// <summary>Gets the directory to use to place the generated assembly.</summary>
+    [CommandLineArgumentName("--generated-assembly-directory")]
+    public required string GeneratedAssemblyDirectory { get; init; }
+
+    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    [CommandLineArgumentName("--debug-repro-directory")]
+    public string? DebugReproDirectory { get; init; }
 
     /// <summary>Gets whether to use <c>Windows.UI.Xaml</c> projections.</summary>
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]

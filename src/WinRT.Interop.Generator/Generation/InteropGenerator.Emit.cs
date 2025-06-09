@@ -1128,7 +1128,7 @@ internal partial class InteropGenerator
     /// <param name="module">The module to write to disk.</param>
     private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module)
     {
-        string winRTInteropAssemblyPath = Path.Combine(args.OutputDirectory, InteropNames.InteropDllName);
+        string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.InteropDllName);
 
         try
         {
