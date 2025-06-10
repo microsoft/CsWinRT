@@ -88,10 +88,28 @@ internal sealed class InteropReferences
     public TypeReference ReadOnlySpan => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="byte"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Byte);
+
+    /// <summary>
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Char);
+
+    /// <summary>
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="ushort"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.UInt16);
+
+    /// <summary>
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="int"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Int32);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Exception"/>.
@@ -662,6 +680,18 @@ internal sealed class InteropReferences
         .CreateMemberReference("GetEnumerator"u8, MethodSignature.CreateInstance(IEnumerator.ToReferenceTypeSignature()));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of <see cref="byte"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte
+        .ToTypeDefOrRef()
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -681,6 +711,18 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlySpanCharget_Length => field ??= ReadOnlySpanChar
         .ToTypeDefOrRef()
         .CreateMemberReference("get_Length"u8, MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of <see cref="ushort"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ReadOnlySpanUInt16_ctor => field ??= ReadOnlySpanUInt16
+        .ToTypeDefOrRef()
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.SequenceEqual{T}(System.Span{T}, System.ReadOnlySpan{T})"/> (for <see cref="ReadOnlySpanChar"/>).

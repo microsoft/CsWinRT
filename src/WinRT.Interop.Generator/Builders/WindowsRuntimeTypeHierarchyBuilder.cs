@@ -10,8 +10,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using AsmResolver;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
-using AsmResolver.DotNet.Collections;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -116,43 +114,17 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         token.ThrowIfCancellationRequested();
 
-        // We're declaring a 'public static class' type
-        lookupType = new TypeDefinition(
-            ns: "WindowsRuntime.Interop"u8,
-            name: "WindowsRuntimeTypeHierarchy"u8,
-            attributes: TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-        module.TopLevelTypes.Add(lookupType);
-
-        token.ThrowIfCancellationRequested();
-
         try
         {
-            // Emit the actual lookup method, using the RVA fields just declared
-            TryGetBaseRuntimeClassName(
-                sortedTypeHierarchyEntries,
-                bucketSize,
-                interopDefinitions,
-                interopReferences,
-                module,
-                bucketsRvaField,
-                keysRvaField,
-                valuesRvaField,
-                out MethodDefinition tryGetBaseRuntimeClassNameMethod);
-
-            lookupType.Methods.Add(tryGetBaseRuntimeClassNameMethod);
-
-            token.ThrowIfCancellationRequested();
-
-            // Emit the fast lookup method for following base types
-            TryGetNextBaseRuntimeClassName(
-                interopReferences,
-                module,
-                valuesRvaField,
-                out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
-
-            lookupType.Methods.Add(tryGetNextBaseRuntimeClassNameMethod);
+            // Emit the actual lookup helper type, using the RVA fields just declared
+            WindowsRuntimeTypeHierarchyData(
+                typeHierarchyEntries: sortedTypeHierarchyEntries,
+                bucketsRvaField: bucketsRvaField,
+                keysRvaField: keysRvaField,
+                valuesRvaField: valuesRvaField,
+                interopReferences: interopReferences,
+                module: module,
+                out lookupType);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -456,323 +428,151 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     }
 
     /// <summary>
-    /// Creates the 'TryGetBaseRuntimeClassName' method for the type hierarchy.
+    /// Creates the helper data type for type name lookups.
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
-    /// <param name="bucketSize">The resulting bucket size.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <param name="bucketsRvaField">The 'Buckets' RVA field (created by <see cref="BucketsRva"/>).</param>
     /// <param name="keysRvaField">The 'Keys' RVA field (created by <see cref="KeysRva"/>).</param>
     /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
-    /// <param name="tryGetBaseRuntimeClassNameMethod">The resulting 'TryGetBaseRuntimeClassName' method.</param>
-    private static void TryGetBaseRuntimeClassName(
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="windowsRuntimeTypeHierarchyDataType">The resulting type.</param>
+    private static void WindowsRuntimeTypeHierarchyData(
         SortedDictionary<string, string> typeHierarchyEntries,
-        int bucketSize,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module,
         FieldDefinition bucketsRvaField,
         FieldDefinition keysRvaField,
         FieldDefinition valuesRvaField,
-        out MethodDefinition tryGetBaseRuntimeClassNameMethod)
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition windowsRuntimeTypeHierarchyDataType)
     {
-        // Define the 'TryGetBaseRuntimeClassName' method as follows:
-        //
-        // public static bool TryGetBaseRuntimeClassName(
-        //     scoped ReadOnlySpan<char> runtimeClassName,
-        //     out ReadOnlySpan<char> baseRuntimeClassName,
-        //     out int nextBaseRuntimeClassNameIndex)
-        tryGetBaseRuntimeClassNameMethod = new MethodDefinition(
-            name: "TryGetBaseRuntimeClassName"u8,
-            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Boolean,
-                parameterTypes: [
-                    interopReferences.ReadOnlySpanChar.Import(module),
-                    interopReferences.ReadOnlySpanChar.Import(module).MakeByReferenceType(),
-                    module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+        // We're declaring a 'public static class' type
+        windowsRuntimeTypeHierarchyDataType = new TypeDefinition(
+            ns: "WindowsRuntime.Interop"u8,
+            name: "WindowsRuntimeTypeHierarchyData"u8,
+            attributes: TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+        module.TopLevelTypes.Add(windowsRuntimeTypeHierarchyDataType);
+
+        // Create the 'Buckets' get accessor
+        MethodDefinition get_BucketsMethod = new(
+            name: "get_Buckets"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanInt32.Import(module)))
         {
-            // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters.
-            // We also need to emit '[ScopedRef]' for the 'baseRuntimeClassName' parameter (for 'scoped').
-            ParameterDefinitions =
+            IsAggressiveInlining = true,
+            CilInstructions =
             {
-                new ParameterDefinition(sequence: 1, name: null, attributes: default)
-                {
-                    CustomAttributes = { new CustomAttribute(interopReferences.ScopedRefAttribute_ctor.Import(module)) }
-                },
-                new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out),
-                new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out)
+                { Ldsflda, bucketsRvaField },
+                { Conv_U },
+                { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize / sizeof(int))) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Ret }
             }
         };
 
-        // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = interopReferences.MemoryMarshalCreateSpan
-            .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
-            .Import(module);
+        // Create the 'Keys' get accessor
+        MethodDefinition get_KeysMethod = new(
+            name: "get_Keys"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte.Import(module)))
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Ldsflda, keysRvaField },
+                { Conv_U },
+                { CilInstruction.CreateLdcI4((int)keysRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Ret }
+            }
+        };
+
+        // Create the 'Values' get accessor
+        MethodDefinition get_ValuesMethod = new(
+            name: "get_Values"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte.Import(module)))
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Ldsflda, valuesRvaField },
+                { Conv_U },
+                { CilInstruction.CreateLdcI4((int)valuesRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Ret }
+            }
+        };
+
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_BucketsMethod);
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_KeysMethod);
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_ValuesMethod);
+
+        // Create the 'Buckets' property definition
+        PropertyDefinition bucketsProperty = new(
+            name: "Buckets"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_BucketsMethod))
+        { GetMethod = get_BucketsMethod };
+
+        // Create the 'Keys' property definition
+        PropertyDefinition keysProperty = new(
+            name: "Buckets"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_KeysMethod))
+        { GetMethod = get_KeysMethod };
+
+        // Create the 'Values' property definition
+        PropertyDefinition valuesProperty = new(
+            name: "Values"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_ValuesMethod))
+        { GetMethod = get_ValuesMethod };
+
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(bucketsProperty);
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(keysProperty);
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(valuesProperty);
 
         // Compute the range check arguments
         int minLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
         int maxLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
 
-        // Labels for jumps
-        CilInstruction ldc_I4_0_returnFalse = new(Ldc_I4_0);
-        CilInstruction ldsflda_rangeCheckSuccess = new(Ldsflda, bucketsRvaField);
-        CilInstruction ldloc_1_loopStart = new(Ldloc_1);
+        // Jump labels
+        CilInstruction ldc_i4_0_returnFalse = new(Ldc_I4_0);
 
-        // Extract the parameters:
-        //   [0]: 'scoped ReadOnlySpan<char>' (the runtime class name)
-        //   [1]: 'ReadOnlySpan<char>&' (the base runtime class name)
-        //   [2]: 'int&' (the next base runtime class name index)
-        Parameter arg_0_runtimeClassName = tryGetBaseRuntimeClassNameMethod.Parameters[0];
-        Parameter arg_1_baseRuntimeClassName = tryGetBaseRuntimeClassNameMethod.Parameters[1];
-        Parameter arg_2_nextBaseRuntimeClassNameIndex = tryGetBaseRuntimeClassNameMethod.Parameters[2];
-
-        // Declare the following variables:
-        //   [0]: 'int' (the bucket index)
-        //   [1]: 'byte&' (the reference into the 'Keys' RVA field)
-        //   [2]: 'int' (the length of the current key candidate)
-        //   [3]: 'int' (the offset to the matching value in the 'Values' RVA field)
-        //   [4]: 'ReadOnlySpan<char>' (the current key candidate)
-        //   [5]: 'byte&' (the reference into the 'Values' RVA field)
-        //   [6]: 'int' (the length of the matching value)
-        CilLocalVariable loc_0_bucketIndex = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_1_keysRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
-        CilLocalVariable loc_2_keyLength = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_3_valueOffset = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_4_keySpan = new(interopReferences.ReadOnlySpanChar.Import(module));
-        CilLocalVariable loc_5_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
-        CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
-
-        // Create a method body for the 'TryGetBaseRuntimeClassName' method
-        tryGetBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody()
-        {
-            LocalVariables =
-            {
-                loc_0_bucketIndex,
-                loc_1_keysRef,
-                loc_2_keyLength,
-                loc_3_valueOffset,
-                loc_4_keySpan,
-                loc_5_valuesRef,
-                loc_6_valueLength
-            },
-            Instructions =
-            {
-                // Set the 'out' parameters to default
-                { Ldarg_1 },
-                { Initobj, interopReferences.ReadOnlySpanChar.Import(module).ToTypeDefOrRef() },
-                { Ldarg_2 },
-                { Ldc_I4_0 },
-                { Stind_I4 },
-
-                // Emit the range checks
-                { Ldarga_S, arg_0_runtimeClassName },
-                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
-                { CilInstruction.CreateLdcI4(minLength) },
-                { Blt, ldc_I4_0_returnFalse.CreateLabel() },
-                { Ldarga_S, arg_0_runtimeClassName },
-                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
-                { CilInstruction.CreateLdcI4(maxLength) },
-                { Bgt_S, ldc_I4_0_returnFalse.CreateLabel() },
-
-                // Compute the hash and get the bucket index
-                { ldsflda_rangeCheckSuccess },
-                { Ldarg_0 },
-                { Call, interopDefinitions.InteropImplementationDetails.GetMethod("ComputeReadOnlySpanHash"u8) },
-                { Ldc_I4, bucketSize },
-                { Rem_Un },
-                { Ldc_I4_4 },
-                { Mul },
-                { Add },
-                { Ldind_I4 },
-                { Stloc_0 },
-                { Ldloc_0 },
-                { Ldc_I4_0 },
-                { Blt_S, ldc_I4_0_returnFalse.CreateLabel() },
-
-                // Get the reference to the start of the keys RVA field data, for this bucket
-                { Ldsflda, keysRvaField },
-                { Ldloc_0 },
-                { Add },
-                { Stloc_1 },
-
-                // Start looping through conflicting keys for this chain, stop if we reached the end
-                { ldloc_1_loopStart },
-                { Ldind_U2 },
-                { Stloc_2 },
-                { Ldloc_2 },
-                { Brfalse_S, ldc_I4_0_returnFalse.CreateLabel() },
-                { Ldloc_1 },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_1 },
-
-                // Load the value offset for the current key, and save it for later
-                { Ldloc_1 },
-                { Ldind_U2 },
-                { Stloc_3 },
-                { Ldloc_1 },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_1 },
-
-                // Create the span, advance past it, compare it, and repeat if we don't have a match
-                { Ldloc_1 },
-                { Ldloc_2 },
-                { Call, createReadOnlySpanMethod },
-                { Stloc_S, loc_4_keySpan },
-                { Ldloc_1 },
-                { Ldloc_2 },
-                { Add },
-                { Stloc_1 },
-                { Ldarg_0 },
-                { Ldloc_S, loc_4_keySpan },
-                { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
-                { Brfalse_S, ldloc_1_loopStart.CreateLabel() },
-
-                // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
-                { Ldsflda, valuesRvaField },
-                { Ldloc_3 },
-                { Add },
-                { Stloc_S, loc_5_valuesRef },
-                { Ldloc_S, loc_5_valuesRef },
-                { Ldind_U2 },
-                { Stloc_S, loc_6_valueLength },
-                { Ldloc_S, loc_5_valuesRef },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_S, loc_5_valuesRef },
-                { Ldarg_2 },
-                { Ldloc_S, loc_5_valuesRef },
-                { Ldind_U2 },
-                { Stind_I4 },
-                { Ldloc_S, loc_5_valuesRef },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_S, loc_5_valuesRef },
-                { Ldarg_1 },
-                { Ldloc_S, loc_5_valuesRef },
-                { Ldloc_S, loc_6_valueLength },
-                { Call, createReadOnlySpanMethod },
-                { Stobj, interopReferences.ReadOnlySpanChar.Import(module).ToTypeDefOrRef() },
-
-                // Success epilogue
-                { Ldc_I4_1 },
-                { Ret },
-
-                // Shared failure epilogue
-                { ldc_I4_0_returnFalse },
-                { Ret },
-            }
-        };
-    }
-
-    /// <summary>
-    /// Creates the 'TryGetNextBaseRuntimeClassName' method for the type hierarchy.
-    /// </summary>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
-    /// <param name="tryGetNextBaseRuntimeClassNameMethod">The resulting 'TryGetNextBaseRuntimeClassName' method.</param>
-    private static void TryGetNextBaseRuntimeClassName(
-        InteropReferences interopReferences,
-        ModuleDefinition module,
-        FieldDefinition valuesRvaField,
-        out MethodDefinition tryGetNextBaseRuntimeClassNameMethod)
-    {
-        // Define the 'TryGetNextBaseRuntimeClassName' method as follows:
+        // Create the 'IsLengthInRange' method as follows:
         //
-        // public static bool TryGetNextBaseRuntimeClassName(
-        //     int baseRuntimeClassNameIndex,
-        //     out ReadOnlySpan<char> baseRuntimeClassName,
-        //     out int nextBaseRuntimeClassNameIndex)
-        tryGetNextBaseRuntimeClassNameMethod = new MethodDefinition(
-            name: "TryGetNextBaseRuntimeClassName"u8,
+        // public static bool IsLengthInRange(int length)
+        MethodDefinition isLengthInRange = new(
+            name: "IsLengthInRange"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Boolean,
-                parameterTypes: [
-                    module.CorLibTypeFactory.Int32,
-                    interopReferences.ReadOnlySpanChar.Import(module).MakeByReferenceType(),
-                    module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                parameterTypes: [module.CorLibTypeFactory.Int32]))
         {
-            // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters
-            ParameterDefinitions =
+            IsAggressiveInlining = true,
+            CilInstructions =
             {
-                new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out),
-                new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out)
+                // This emits the following code:
+                //
+                // return (uint)length is >= <MIN_LENGTH> and <= <MAX_LENGTH>;
+                { Ldarg_0 },
+                { CilInstruction.CreateLdcI4(minLength) },
+                { Blt_Un_S, ldc_i4_0_returnFalse.CreateLabel() },
+                { Ldarg_0 },
+                { CilInstruction.CreateLdcI4(maxLength) },
+                { Cgt_Un },
+                { Ldc_I4_0 },
+                { Ceq },
+                { Ret },
+                { ldc_i4_0_returnFalse },
+                { Ret }
             }
         };
 
-        // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = interopReferences.MemoryMarshalCreateSpan
-            .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
-            .Import(module);
-
-        // Labels for jumps
-        CilInstruction ldc_I4_0_returnFalse = new(Ldc_I4_0);
-
-        // Declare the following variables:
-        //   [0]: 'byte&' (the reference into the 'Values' RVA field)
-        //   [1]: 'int' (the length of the matching value)
-        CilLocalVariable loc_0_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
-        CilLocalVariable loc_1_valueLength = new(module.CorLibTypeFactory.Int32);
-
-        // Create a method body for the 'TryGetNextBaseRuntimeClassName' method
-        tryGetNextBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody()
-        {
-            LocalVariables = { loc_0_valuesRef, loc_1_valueLength },
-            Instructions =
-            {
-                // Set the 'out' parameters to default
-                { Ldarg_1 },
-                { Initobj, interopReferences.ReadOnlySpanChar.Import(module).ToTypeDefOrRef() },
-                { Ldarg_2 },
-                { Ldc_I4_0 },
-                { Stind_I4 },
-
-                // Emit the range check
-                { Ldarg_0 },
-                { Ldc_I4_0 },
-                { Blt_S, ldc_I4_0_returnFalse.CreateLabel() },
-
-                // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
-                { Ldsflda, valuesRvaField },
-                { Ldarg_0 },
-                { Add },
-                { Stloc_0 },
-                { Ldloc_0 },
-                { Ldind_U2 },
-                { Stloc_1 },
-                { Ldloc_0 },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_0 },
-                { Ldarg_2 },
-                { Ldloc_0 },
-                { Ldind_U2 },
-                { Stind_I4 },
-                { Ldloc_0 },
-                { Ldc_I4_2 },
-                { Add },
-                { Stloc_0 },
-                { Ldarg_1 },
-                { Ldloc_0 },
-                { Ldloc_1 },
-                { Call, createReadOnlySpanMethod },
-                { Stobj, interopReferences.ReadOnlySpanChar.Import(module).ToTypeDefOrRef() },
-
-                // Success epilogue
-                { Ldc_I4_1 },
-                { Ret },
-
-                // Shared failure epilogue
-                { ldc_I4_0_returnFalse },
-                { Ret },
-            }
-        };
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(isLengthInRange);
     }
 
     /// <summary>
