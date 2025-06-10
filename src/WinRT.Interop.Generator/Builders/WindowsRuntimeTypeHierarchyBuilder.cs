@@ -519,7 +519,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         // Create the 'Keys' property definition
         PropertyDefinition keysProperty = new(
-            name: "Buckets"u8,
+            name: "Keys"u8,
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_KeysMethod))
         { GetMethod = get_KeysMethod };
