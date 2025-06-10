@@ -845,24 +845,4 @@ internal static partial class WellKnownTypeDefinitionFactory
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
     }
-
-    /// <summary>
-    /// Creates a type to hold implementation detail helpers.
-    /// </summary>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
-    /// <returns>The <see cref="TypeDefinition"/> to hold implementation detail helpers.</returns>
-    public static TypeDefinition InteropImplementationDetails(InteropReferences interopReferences, ModuleDefinition module)
-    {
-        // Define the special '<InteropImplementationDetails>' type, with all internal helpers
-        TypeDefinition interopImplementationDetailsType = new(
-            ns: null,
-            name: "<InteropImplementationDetails>"u8,
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-        interopImplementationDetailsType.Methods.Add(WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash(interopReferences, module));
-
-        return interopImplementationDetailsType;
-    }
 }

@@ -4,9 +4,7 @@
 using System;
 using AsmResolver;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -158,73 +156,5 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_VtableMethod))
         { GetMethod = get_VtableMethod };
-    }
-
-    /// <summary>
-    /// Creates the 'ComputeReadOnlySpanHash' method.
-    /// </summary>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
-    public static MethodDefinition ComputeReadOnlySpanHash(InteropReferences interopReferences, ModuleDefinition module)
-    {
-        // Create the 'ComputeReadOnlySpanHash' getter method
-        MethodDefinition hashMethod = new(
-            name: "ComputeReadOnlySpanHash"u8,
-            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Int32,
-                parameterTypes: [interopReferences.ReadOnlySpanChar.Import(module)]));
-
-        // Jump labels
-        CilInstruction ldloc_1_rangeCheck = new(Ldloc_1);
-        CilInstruction ldarga_S_0_loopStart = new(Ldarga_S, hashMethod.Parameters[0]);
-
-        // Define the locals (hash value, and loop index)
-        CilLocalVariable loc_0_hash = new(module.CorLibTypeFactory.UInt32);
-        CilLocalVariable loc_1_index = new(module.CorLibTypeFactory.Int32);
-
-        // Create a method body for the 'ComputeReadOnlySpanHash' method
-        hashMethod.CilMethodBody = new CilMethodBody()
-        {
-            LocalVariables = { loc_0_hash, loc_1_index },
-            Instructions =
-            {
-                // This method copies the simple hash implementation that Roslyn emits.
-                // To verify that source, just inspect the code generated for a method
-                // with at least a dozen 'string'-s in a big switch statement.
-                { CilInstruction.CreateLdcI4(unchecked((int)2166136261u)) },
-                { Stloc_0 },
-                { Ldc_I4_0 },
-                { Stloc_1 },
-                { Br_S, ldloc_1_rangeCheck.CreateLabel() },
-
-                // Loop
-                { ldarga_S_0_loopStart },
-                { Ldloc_1 },
-                { Call, interopReferences.ReadOnlySpanCharget_Item.Import(module) },
-                { Ldind_U2 },
-                { Ldloc_0 },
-                { Xor },
-                { CilInstruction.CreateLdcI4(16777619) },
-                { Mul },
-                { Stloc_0 },
-                { Ldloc_1 },
-                { Ldc_I4_1 },
-                { Add },
-                { Stloc_1 },
-
-                // Loop range check
-                { ldloc_1_rangeCheck },
-                { Ldarga_S, hashMethod.Parameters[0] },
-                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
-                { Blt_S, ldarga_S_0_loopStart.CreateLabel() },
-
-                // Return the hash
-                { Ldloc_0 },
-                { Ret }
-            }
-        };
-
-        return hashMethod;
     }
 }

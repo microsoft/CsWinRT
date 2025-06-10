@@ -1088,7 +1088,6 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IDictionary2Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
-            module.TopLevelTypes.Add(interopDefinitions.InteropImplementationDetails);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

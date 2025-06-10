@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 #pragma warning disable CS1573
 
@@ -25,7 +26,49 @@ internal static class WindowsRuntimeTypeHierarchy
         out ReadOnlySpan<char> baseRuntimeClassName,
         out int nextBaseRuntimeClassNameIndex)
     {
-        throw null!;
+        // If the length can't possibly match any runtime class name we know of, we can stop here
+        if (!WindowsRuntimeTypeHierarchyData.IsLengthInRange(null, runtimeClassName.Length))
+        {
+            baseRuntimeClassName = default;
+            nextBaseRuntimeClassNameIndex = 0;
+
+            return false;
+        }
+
+        int hashCode = ComputeReadOnlySpanHash(runtimeClassName);
+        P_1 = default(ReadOnlySpan<char>);
+        P_2 = 0;
+        if (P_0.Length >= 21 && P_0.Length <= 81)
+        {
+            int num = Unsafe.As << RvaFields >.TypeHierarchyLookupBucketsRvaData(Size = 4384 | Align = 4), int> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupBuckets, (uint)< InteropImplementationDetails >.ComputeReadOnlySpanHash(P_0) % 1096u * 4));
+            if (num >= 0)
+            {
+                ref byte reference = ref Unsafe.As << RvaFields >.TypeHierarchyLookupKeysRvaData(Size = 72514 | Align = 2), byte> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupKeys, num));
+                while (true)
+                {
+                    int num2 = Unsafe.As<byte, ushort>(ref reference);
+                    if (num2 == 0)
+                    {
+                        break;
+                    }
+                    reference = ref Unsafe.Add(ref reference, 2);
+                    int num3 = Unsafe.As<byte, ushort>(ref reference);
+                    reference = ref Unsafe.Add(ref reference, 2);
+                    ReadOnlySpan<char> readOnlySpan = MemoryMarshal.CreateReadOnlySpan<char>(ref Unsafe.As<byte, char>(ref reference), num2);
+                    reference = ref Unsafe.Add(ref reference, num2);
+                    if (MemoryExtensions.SequenceEqual<char>(P_0, readOnlySpan))
+                    {
+                        ref byte reference2 = ref Unsafe.As << RvaFields >.TypeHierarchyLookupValuesRvaData(Size = 13054 | Align = 2), byte> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupValues, num3));
+                        int num4 = Unsafe.As<byte, ushort>(ref reference2);
+                        reference2 = ref Unsafe.Add(ref reference2, 2);
+                        P_2 = Unsafe.As<byte, ushort>(ref reference2);
+                        P_1 = MemoryMarshal.CreateReadOnlySpan<char>(ref Unsafe.As<byte, char>(ref Unsafe.Add(ref reference2, 2)), num4);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -41,6 +84,24 @@ internal static class WindowsRuntimeTypeHierarchy
         out int nextBaseRuntimeClassNameIndex)
     {
         throw null!;
+    }
+
+    /// <summary>
+    /// Computes a deterministic hash of an input span.
+    /// </summary>
+    /// <param name="span">The input span.</param>
+    /// <returns>The hash of <paramref name="span"/>.</returns>
+    /// <remarks>This implementation must be identical to the one in runtime.</remarks>
+    private static int ComputeReadOnlySpanHash(ReadOnlySpan<char> span)
+    {
+        uint hash = 2166136261u;
+
+        foreach (char c in span)
+        {
+            hash = (c ^ hash) * 16777619;
+        }
+
+        return (int)hash;
     }
 }
 

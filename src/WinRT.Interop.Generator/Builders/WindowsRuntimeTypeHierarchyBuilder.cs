@@ -580,9 +580,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="span">The input span.</param>
     /// <returns>The hash of <paramref name="span"/>.</returns>
-    /// <remarks>
-    /// This implementation must be identical to the one emitted from <see cref="Factories.WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash"/>
-    /// </remarks>
+    /// <remarks>This implementation must be identical to the one in runtime.</remarks>
     private static int ComputeReadOnlySpanHash(ReadOnlySpan<char> span)
     {
         uint hash = 2166136261u;
