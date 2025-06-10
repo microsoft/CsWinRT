@@ -107,7 +107,27 @@ internal static class WindowsRuntimeTypeHierarchy
         out ReadOnlySpan<char> baseRuntimeClassName,
         out int nextBaseRuntimeClassNameIndex)
     {
-        throw null!;
+        if (baseRuntimeClassNameIndex >= 0)
+        {
+            RvaDataReader valuesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Values(null));
+
+            // The input index should directly point to the next value to return
+            valuesDataReader.Advance(baseRuntimeClassNameIndex);
+
+            // Read the length of the value, same as above
+            ushort valueLength = valuesDataReader.ReadUInt16();
+
+            // Return the new value, and the next index (if available, it might be '0')
+            nextBaseRuntimeClassNameIndex = valuesDataReader.ReadUInt16();
+            baseRuntimeClassName = valuesDataReader.ReadString(valueLength);
+
+            return true;
+        }
+
+        baseRuntimeClassName = [];
+        nextBaseRuntimeClassNameIndex = 0;
+
+        return false;
     }
 
     /// <summary>
