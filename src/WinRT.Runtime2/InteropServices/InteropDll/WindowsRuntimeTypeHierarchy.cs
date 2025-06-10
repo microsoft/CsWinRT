@@ -29,45 +29,69 @@ internal static class WindowsRuntimeTypeHierarchy
         // If the length can't possibly match any runtime class name we know of, we can stop here
         if (!WindowsRuntimeTypeHierarchyData.IsLengthInRange(null, runtimeClassName.Length))
         {
-            baseRuntimeClassName = default;
-            nextBaseRuntimeClassNameIndex = 0;
-
-            return false;
+            goto Failure;
         }
 
+        // Get the hashcode of the input runtime class name. This function is deterministic and is
+        // an exact match for the one used to actually emit the data in the RVA fields for the lookup.
         int hashCode = ComputeReadOnlySpanHash(runtimeClassName);
-        P_1 = default(ReadOnlySpan<char>);
-        P_2 = 0;
-        if (P_0.Length >= 21 && P_0.Length <= 81)
+
+        // Get the bucket index, which represents the chain of all colliding potential matches
+        int bucketIndex = WindowsRuntimeTypeHierarchyData.get_Buckets(null)[(int)((uint)hashCode % (uint)WindowsRuntimeTypeHierarchyData.get_Buckets(null).Length)];
+
+        // Bucket indices of '-1' indicate no possible matches
+        if (bucketIndex < 0)
         {
-            int num = Unsafe.As << RvaFields >.TypeHierarchyLookupBucketsRvaData(Size = 4384 | Align = 4), int> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupBuckets, (uint)< InteropImplementationDetails >.ComputeReadOnlySpanHash(P_0) % 1096u * 4));
-            if (num >= 0)
+            goto Failure;
+        }
+
+        RvaDataReader keysDataReader = new(WindowsRuntimeTypeHierarchyData.get_Keys(null));
+
+        // Move to the start of the bucket chain where the possible match might be
+        keysDataReader.Advance(bucketIndex);
+
+        // Iterate all keys in the bucket chain until we either find a match or reach the end
+        // of the chain. This is the same exact logic as the standard 'Dictionary<,>' lookup.
+        while (true)
+        {
+            // The first value (2 bytes) is the length of the key (in characters)
+            ushort keyLength = keysDataReader.ReadUInt16();
+
+            // A key length of '0' indicates the end of a chain. If
+            // we found this value, it means we didn't find a match.
+            if (keyLength == 0)
             {
-                ref byte reference = ref Unsafe.As << RvaFields >.TypeHierarchyLookupKeysRvaData(Size = 72514 | Align = 2), byte> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupKeys, num));
-                while (true)
-                {
-                    int num2 = Unsafe.As<byte, ushort>(ref reference);
-                    if (num2 == 0)
-                    {
-                        break;
-                    }
-                    reference = ref Unsafe.Add(ref reference, 2);
-                    int num3 = Unsafe.As<byte, ushort>(ref reference);
-                    reference = ref Unsafe.Add(ref reference, 2);
-                    ReadOnlySpan<char> readOnlySpan = MemoryMarshal.CreateReadOnlySpan<char>(ref Unsafe.As<byte, char>(ref reference), num2);
-                    reference = ref Unsafe.Add(ref reference, num2);
-                    if (MemoryExtensions.SequenceEqual<char>(P_0, readOnlySpan))
-                    {
-                        ref byte reference2 = ref Unsafe.As << RvaFields >.TypeHierarchyLookupValuesRvaData(Size = 13054 | Align = 2), byte> (ref Unsafe.AddByteOffset(ref < RvaFields >.TypeHierarchyLookupValues, num3));
-                        int num4 = Unsafe.As<byte, ushort>(ref reference2);
-                        reference2 = ref Unsafe.Add(ref reference2, 2);
-                        P_2 = Unsafe.As<byte, ushort>(ref reference2);
-                        P_1 = MemoryMarshal.CreateReadOnlySpan<char>(ref Unsafe.As<byte, char>(ref Unsafe.Add(ref reference2, 2)), num4);
-                        return true;
-                    }
-                }
+                goto Failure;
+            }
+
+            // The second value (2 bytes) is the offset to the value in the values RVA field data
+            ushort valueOffset = keysDataReader.ReadUInt16();
+
+            // Check if the current key is a match for the input runtime class name
+            if (keysDataReader.ReadString(keyLength).SequenceEqual(runtimeClassName))
+            {
+                RvaDataReader valuesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Values(null));
+
+                // Move to the start of the value data for the current (matching) key
+                valuesDataReader.Advance(valueOffset);
+
+                // The first value (2 bytes) is the length of the base runtime class name (in characters)
+                ushort valueLength = valuesDataReader.ReadUInt16();
+
+                // Next, we have:
+                //   - The index (2 bytes) of the next base runtime class name (0 if there is no next base class)
+                //   - The actual base runtime class name (with the previously retrieved length)
+                nextBaseRuntimeClassNameIndex = valuesDataReader.ReadUInt16();
+                baseRuntimeClassName = valuesDataReader.ReadString(valueLength);
+
+                return true;
             }
         }
+
+    Failure:
+        baseRuntimeClassName = default;
+        nextBaseRuntimeClassNameIndex = 0;
+
         return false;
     }
 
@@ -102,6 +126,85 @@ internal static class WindowsRuntimeTypeHierarchy
         }
 
         return (int)hash;
+    }
+
+    /// <summary>
+    /// A helper type to read RVA data.
+    /// </summary>
+    /// <param name="rvaData">The RVA data to wrap.</param>
+    private ref struct RvaDataReader(ReadOnlySpan<byte> rvaData)
+    {
+        /// <summary>
+        /// The reference to the RVA data (for the current offset).
+        /// </summary>
+        private ref byte _dataRef = ref MemoryMarshal.GetReference(rvaData);
+
+        /// <summary>
+        /// The remaining length of the RVA data to read.
+        /// </summary>
+        private int _length = rvaData.Length;
+
+        /// <summary>
+        /// Advances the reader to the specified offset.
+        /// </summary>
+        /// <param name="offset">The offset to use to advance the reader.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Advance(int offset)
+        {
+            if ((uint)offset > (uint)_length)
+            {
+                ThrowBadImageFormatException();
+            }
+
+            _dataRef = ref Unsafe.Add(ref _dataRef, offset);
+            _length -= offset;
+        }
+
+        /// <summary>
+        /// Reads an <see cref="ushort"/> value and advances the reader.
+        /// </summary>
+        /// <returns>The resulting <see cref="ushort"/> value.</returns>
+        public ushort ReadUInt16()
+        {
+            if (_length < sizeof(ushort))
+            {
+                ThrowBadImageFormatException();
+            }
+
+            ushort value = Unsafe.As<byte, ushort>(ref _dataRef);
+
+            Advance(sizeof(ushort));
+
+            return value;
+        }
+
+        /// <summary>
+        /// Reads a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> value and advances the reader.
+        /// </summary>
+        /// <param name="length">The length of the span to read.</param>
+        /// <returns>The resulting span.</returns>
+        public ReadOnlySpan<char> ReadString(int length)
+        {
+            if ((uint)length > (uint)_length)
+            {
+                ThrowBadImageFormatException();
+            }
+
+            ReadOnlySpan<char> value = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<byte, char>(ref _dataRef), length);
+
+            Advance(length * sizeof(char));
+
+            return value;
+        }
+
+        /// <summary>
+        /// Throws a <see cref="BadImageFormatException"/> indicating that the RVA data is malformed.
+        /// </summary>
+        /// <exception cref="BadImageFormatException"></exception>
+        private static void ThrowBadImageFormatException()
+        {
+            throw new BadImageFormatException("The RVA data for the type hierarchy lookup is malformed.", "WinRT.Interop.dll");
+        }
     }
 }
 
