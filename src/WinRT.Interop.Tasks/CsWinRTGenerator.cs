@@ -10,7 +10,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace WinRT.Interop.Tasks;
+namespace WindowsRuntime.Interop.Tasks;
 
 /// <summary>
 /// The custom MSBuild task that invokes the 'cswinrtgen' tool.
