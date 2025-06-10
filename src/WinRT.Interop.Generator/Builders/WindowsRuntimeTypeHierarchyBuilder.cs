@@ -178,16 +178,34 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             // Write the value length (in characters)
             valuesRvaBuffer.Write((ushort)value.Length);
 
-            // Get the index of the parent, if available
-            int parentIndex = typeHierarchyEntries.TryGetValue(value, out string? parentValue)
-                ? typeHierarchyValues[parentValue].Index
-                : -1;
-
-            // Write the parent index
-            valuesRvaBuffer.Write((ushort)parentIndex);
+            // Write the parent index. This is just a placeholder to be replaced once we finish
+            // writing the buffer. The issue is we don't yet know the target offsets here.
+            valuesRvaBuffer.Write(unchecked((ushort)-1));
 
             // Write the value right after that
             valuesRvaBuffer.Write(MemoryMarshal.AsBytes(value.AsSpan()));
+        }
+
+        // Do a second pass to replace the actual RVA offsets of each parent value
+        foreach (string value in typeHierarchyEntries.Values)
+        {
+            // Get the index of the parent, if available. If there is no parent, we can
+            // just skip this value, as we already wrote '-1' in the RVA data for it.
+            if (!typeHierarchyEntries.TryGetValue(value, out string? parentValue))
+            {
+                continue;
+            }
+
+            int valueRvaOffset = typeHierarchyValues[value].RvaOffset;
+            int parentRvaOffset = typeHierarchyValues[parentValue].RvaOffset;
+
+            // We want to get a span starting at the RVA offset we need to write to
+            ReadOnlySpan<byte> rvaData = valuesRvaBuffer.WrittenSpan[(valueRvaOffset + 2)..];
+
+            // Write the RVA offset for the parent value at the current position
+            MemoryMarshal.Write(
+                destination: MemoryMarshal.CreateSpan(ref MemoryMarshal.GetReference(rvaData), rvaData.Length),
+                value: (ushort)parentRvaOffset);
         }
 
         if (valuesRvaBuffer.WrittenCount >= ushort.MaxValue)

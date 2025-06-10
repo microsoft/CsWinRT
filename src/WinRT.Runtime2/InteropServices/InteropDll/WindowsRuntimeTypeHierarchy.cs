@@ -107,7 +107,9 @@ internal static class WindowsRuntimeTypeHierarchy
         out ReadOnlySpan<char> baseRuntimeClassName,
         out int nextBaseRuntimeClassNameIndex)
     {
-        if (baseRuntimeClassNameIndex >= 0)
+        // When there is no next base class, the index is set to '-1'. Because each value is
+        // stored as an 'ushort' value, but here we take an 'int', we need to adjust the check.
+        if ((uint)baseRuntimeClassNameIndex < ushort.MaxValue)
         {
             RvaDataReader valuesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Values(null));
 
