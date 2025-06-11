@@ -53,12 +53,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <summary>
     /// Cached creation factory for <see cref="CreateMarshallingInfo"/>.
     /// </summary>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?>.CreateValueCallback CreateMarshallingInfoCallback = new(CreateMarshallingInfo);
+    private static readonly Func<Type, WindowsRuntimeMarshallingInfo?> CreateMarshallingInfoCallback = new(CreateMarshallingInfo);
 
     /// <summary>
     /// Cached creation factory for <see cref="GetMetadataProviderType"/>.
     /// </summary>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?>.CreateValueCallback GetMetadataProviderTypeCallback = new(GetMetadataProviderType);
+    private static readonly Func<Type, WindowsRuntimeMarshallingInfo?> GetMetadataProviderTypeCallback = new(GetMetadataProviderType);
 
     /// <summary>
     /// The metadata provider type associated with the current instance (ie. the mapped type to use to resolve attributes).
@@ -183,7 +183,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // We found a mapped external type, return its associated marshalling info
         if (externalType is not null)
         {
-            info = TypeToMetadataProviderTypes.GetValue(externalType, CreateMarshallingInfoCallback)!;
+            info = TypeToMetadataProviderTypes.GetOrAdd(externalType, CreateMarshallingInfoCallback)!;
 
             return true;
         }
@@ -233,7 +233,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </remarks>
     public static bool TryGetInfo(Type managedType, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
-        WindowsRuntimeMarshallingInfo? result = TypeToMetadataProviderTypes.GetValue(managedType, GetMetadataProviderTypeCallback);
+        WindowsRuntimeMarshallingInfo? result = TypeToMetadataProviderTypes.GetOrAdd(managedType, GetMetadataProviderTypeCallback);
 
         info = result;
 
