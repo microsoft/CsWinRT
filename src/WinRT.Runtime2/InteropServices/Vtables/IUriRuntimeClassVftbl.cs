@@ -33,7 +33,7 @@ internal unsafe struct IUriRuntimeClassVftbl
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_Path;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_Query;
     public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_QueryParsed;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> _get_RawUri;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_RawUri;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_SchemeName;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_UserName;
     public delegate* unmanaged[MemberFunction]<void*, int*, HRESULT> get_Port;
@@ -51,6 +51,6 @@ internal unsafe struct IUriRuntimeClassVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_RawUriUnsafe(void* thisPtr, HSTRING* result)
     {
-        return ((IUriRuntimeClassVftbl*)thisPtr)->_get_RawUri(thisPtr, result);
+        return ((IUriRuntimeClassVftbl*)*(void***)thisPtr)->get_RawUri(thisPtr, result);
     }
 }

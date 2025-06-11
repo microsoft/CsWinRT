@@ -34,6 +34,6 @@ internal unsafe struct IPropertyChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_PropertyNameUnsafe(void* thisPtr, HSTRING* propertyName)
     {
-        return ((IPropertyChangedEventArgsVftbl*)thisPtr)->get_PropertyName(thisPtr, propertyName);
+        return ((IPropertyChangedEventArgsVftbl*)*(void***)thisPtr)->get_PropertyName(thisPtr, propertyName);
     }
 }

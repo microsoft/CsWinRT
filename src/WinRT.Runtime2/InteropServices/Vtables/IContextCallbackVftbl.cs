@@ -39,6 +39,6 @@ internal unsafe struct IContextCallbackVftbl
         int iMethod,
         void* pUnk)
     {
-        return ((IContextCallbackVftbl*)thisPtr)->ContextCallback(thisPtr, pfnCallback, pParam, riid, iMethod, pUnk);
+        return ((IContextCallbackVftbl*)*(void***)thisPtr)->ContextCallback(thisPtr, pfnCallback, pParam, riid, iMethod, pUnk);
     }
 }

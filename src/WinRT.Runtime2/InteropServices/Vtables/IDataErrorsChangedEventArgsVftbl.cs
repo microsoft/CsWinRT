@@ -35,6 +35,6 @@ internal unsafe struct IDataErrorsChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_PropertyNameUnsafe(void* thisPtr, HSTRING* propertyName)
     {
-        return ((IDataErrorsChangedEventArgsVftbl*)thisPtr)->get_PropertyName(thisPtr, propertyName);
+        return ((IDataErrorsChangedEventArgsVftbl*)*(void***)thisPtr)->get_PropertyName(thisPtr, propertyName);
     }
 }

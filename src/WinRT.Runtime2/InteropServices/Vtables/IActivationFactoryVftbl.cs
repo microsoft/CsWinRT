@@ -35,7 +35,7 @@ internal unsafe struct IActivationFactoryVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT ActivateInstanceUnsafe(void* thisPtr, void** instance)
     {
-        return ((IActivationFactoryVftbl*)thisPtr)->ActivateInstance(thisPtr, instance);
+        return ((IActivationFactoryVftbl*)*(void***)thisPtr)->ActivateInstance(thisPtr, instance);
     }
 
     /// <param name="param0">An additional <c>HSTRING</c> parameter.</param>
@@ -46,7 +46,7 @@ internal unsafe struct IActivationFactoryVftbl
         HSTRING param0,
         void** instance)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void**, HRESULT>)((IActivationFactoryVftbl*)*(void***)thisPtr)->ActivateInstance)(
             thisPtr,
             param0,
             instance);
@@ -65,7 +65,7 @@ internal unsafe struct IActivationFactoryVftbl
         void** innerInterface,
         void** instance)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+        return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)*(void***)thisPtr)->ActivateInstance)(
             thisPtr,
             baseInterface,
             innerInterface,
@@ -82,7 +82,7 @@ internal unsafe struct IActivationFactoryVftbl
         void** innerInterface,
         void** instance)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)*(void***)thisPtr)->ActivateInstance)(
             thisPtr,
             param0,
             baseInterface,
@@ -108,7 +108,7 @@ internal unsafe struct IActivationFactoryVftbl
         void** innerInterface,
         void** instance)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, NotifyCollectionChangedAction, void*, void*, int, int, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+        return ((delegate* unmanaged[MemberFunction]<void*, NotifyCollectionChangedAction, void*, void*, int, int, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)*(void***)thisPtr)->ActivateInstance)(
             thisPtr,
             param0,
             param1,

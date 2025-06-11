@@ -33,7 +33,7 @@ internal unsafe struct IReferenceTrackerVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT AddRefFromTrackerSourceUnsafe(void* thisPtr)
     {
-        return ((IReferenceTrackerVftbl*)thisPtr)->AddRefFromTrackerSource(thisPtr);
+        return ((IReferenceTrackerVftbl*)*(void***)thisPtr)->AddRefFromTrackerSource(thisPtr);
     }
 
     /// <summary>
@@ -44,6 +44,6 @@ internal unsafe struct IReferenceTrackerVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT ReleaseFromTrackerSourceUnsafe(void* thisPtr)
     {
-        return ((IReferenceTrackerVftbl*)thisPtr)->ReleaseFromTrackerSource(thisPtr);
+        return ((IReferenceTrackerVftbl*)*(void***)thisPtr)->ReleaseFromTrackerSource(thisPtr);
     }
 }

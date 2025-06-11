@@ -29,6 +29,6 @@ internal unsafe struct IWeakReferenceVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT ResolveUnsafe(void* thisPtr, Guid* riid, void** objectReference)
     {
-        return ((IWeakReferenceVftbl*)thisPtr)->Resolve(thisPtr, riid, objectReference);
+        return ((IWeakReferenceVftbl*)*(void***)thisPtr)->Resolve(thisPtr, riid, objectReference);
     }
 }

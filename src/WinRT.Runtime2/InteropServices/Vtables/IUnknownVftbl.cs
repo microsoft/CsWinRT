@@ -26,7 +26,7 @@ internal unsafe struct IUnknownVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT QueryInterfaceUnsafe(void* thisPtr, Guid* riid, void** ppvObject)
     {
-        return ((IUnknownVftbl*)thisPtr)->QueryInterface(thisPtr, riid, ppvObject);
+        return ((IUnknownVftbl*)*(void***)thisPtr)->QueryInterface(thisPtr, riid, ppvObject);
     }
 
     /// <param name="thisPtr">The target COM object.</param>
@@ -39,7 +39,7 @@ internal unsafe struct IUnknownVftbl
         fixed (Guid* riid = &iid)
         fixed (void** ppvObject = &pvObject)
         {
-            return QueryInterfaceUnsafe(thisPtr, riid, ppvObject);
+            return ((IUnknownVftbl*)*(void***)thisPtr)->QueryInterface(thisPtr, riid, ppvObject);
         }
     }
 
@@ -51,7 +51,7 @@ internal unsafe struct IUnknownVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint AddRefUnsafe(void* thisPtr)
     {
-        return ((IUnknownVftbl*)thisPtr)->AddRef(thisPtr);
+        return ((IUnknownVftbl*)*(void***)thisPtr)->AddRef(thisPtr);
     }
 
     /// <summary>
@@ -62,6 +62,6 @@ internal unsafe struct IUnknownVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ReleaseUnsafe(void* thisPtr)
     {
-        return ((IUnknownVftbl*)thisPtr)->Release(thisPtr);
+        return ((IUnknownVftbl*)*(void***)thisPtr)->Release(thisPtr);
     }
 }

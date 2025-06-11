@@ -28,6 +28,6 @@ internal unsafe struct IWeakReferenceSourceVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT GetWeakReferenceUnsafe(void* thisPtr, void** weakReference)
     {
-        return ((IWeakReferenceSourceVftbl*)thisPtr)->GetWeakReference(thisPtr, weakReference);
+        return ((IWeakReferenceSourceVftbl*)*(void***)thisPtr)->GetWeakReference(thisPtr, weakReference);
     }
 }

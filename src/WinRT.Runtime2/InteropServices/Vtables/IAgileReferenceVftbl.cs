@@ -34,6 +34,6 @@ internal unsafe struct IAgileReferenceVftbl
         Guid* riid,
         void** ppvObjectReference)
     {
-        return ((IAgileReferenceVftbl*)thisPtr)->Resolve(thisPtr, riid, ppvObjectReference);
+        return ((IAgileReferenceVftbl*)*(void***)thisPtr)->Resolve(thisPtr, riid, ppvObjectReference);
     }
 }

@@ -38,7 +38,7 @@ internal unsafe struct IInspectableVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT GetIidsUnsafe(void* thisPtr, uint* iidCount, Guid** iids)
     {
-        return ((IInspectableVftbl*)thisPtr)->GetIids(thisPtr, iidCount, iids);
+        return ((IInspectableVftbl*)*(void***)thisPtr)->GetIids(thisPtr, iidCount, iids);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ internal unsafe struct IInspectableVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT GetRuntimeClassNameUnsafe(void* thisPtr, HSTRING* className)
     {
-        return ((IInspectableVftbl*)thisPtr)->GetRuntimeClassName(thisPtr, className);
+        return ((IInspectableVftbl*)*(void***)thisPtr)->GetRuntimeClassName(thisPtr, className);
     }
 
     /// <summary>
@@ -62,6 +62,6 @@ internal unsafe struct IInspectableVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT GetTrustLevelUnsafe(void* thisPtr, TrustLevel* trustLevel)
     {
-        return ((IInspectableVftbl*)thisPtr)->GetTrustLevel(thisPtr, trustLevel);
+        return ((IInspectableVftbl*)*(void***)thisPtr)->GetTrustLevel(thisPtr, trustLevel);
     }
 }

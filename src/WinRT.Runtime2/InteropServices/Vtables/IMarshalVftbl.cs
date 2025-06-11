@@ -45,7 +45,7 @@ internal unsafe struct IMarshalVftbl
         uint mshlflags,
         Guid* pCid)
     {
-        return ((IMarshalVftbl*)thisPtr)->GetUnmarshalClass(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pCid);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->GetUnmarshalClass(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pCid);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ internal unsafe struct IMarshalVftbl
         uint mshlflags,
         uint* pSize)
     {
-        return ((IMarshalVftbl*)thisPtr)->GetMarshalSizeMax(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->GetMarshalSizeMax(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ internal unsafe struct IMarshalVftbl
         void* pvDestContext,
         uint mshlflags)
     {
-        return ((IMarshalVftbl*)thisPtr)->MarshalInterface(thisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->MarshalInterface(thisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ internal unsafe struct IMarshalVftbl
         Guid* riid,
         void** ppv)
     {
-        return ((IMarshalVftbl*)thisPtr)->UnmarshalInterface(thisPtr, pStm, riid, ppv);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->UnmarshalInterface(thisPtr, pStm, riid, ppv);
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ internal unsafe struct IMarshalVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT ReleaseMarshalDataUnsafe(void* thisPtr, void* pStm)
     {
-        return ((IMarshalVftbl*)thisPtr)->ReleaseMarshalData(thisPtr, pStm);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->ReleaseMarshalData(thisPtr, pStm);
     }
 
     /// <summary>
@@ -135,6 +135,6 @@ internal unsafe struct IMarshalVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT DisconnectObjectUnsafe(void* thisPtr, uint dwReserved)
     {
-        return ((IMarshalVftbl*)thisPtr)->DisconnectObject(thisPtr, dwReserved);
+        return ((IMarshalVftbl*)*(void***)thisPtr)->DisconnectObject(thisPtr, dwReserved);
     }
 }

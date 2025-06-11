@@ -32,7 +32,7 @@ internal unsafe struct IReferenceTrackerVftblTargetVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint AddRefFromReferenceTrackerUnsafe(void* thisPtr)
     {
-        return ((IReferenceTrackerVftblTargetVftbl*)thisPtr)->AddRefFromReferenceTracker(thisPtr);
+        return ((IReferenceTrackerVftblTargetVftbl*)*(void***)thisPtr)->AddRefFromReferenceTracker(thisPtr);
     }
 
     /// <summary>
@@ -43,6 +43,6 @@ internal unsafe struct IReferenceTrackerVftblTargetVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ReleaseFromReferenceTrackerUnsafe(void* thisPtr)
     {
-        return ((IReferenceTrackerVftblTargetVftbl*)thisPtr)->ReleaseFromReferenceTracker(thisPtr);
+        return ((IReferenceTrackerVftblTargetVftbl*)*(void***)thisPtr)->ReleaseFromReferenceTracker(thisPtr);
     }
 }

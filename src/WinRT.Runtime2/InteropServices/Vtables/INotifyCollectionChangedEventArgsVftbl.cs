@@ -39,7 +39,7 @@ internal unsafe struct INotifyCollectionChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_ActionUnsafe(void* thisPtr, NotifyCollectionChangedAction* action)
     {
-        return ((INotifyCollectionChangedEventArgsVftbl*)thisPtr)->get_Action(thisPtr, action);
+        return ((INotifyCollectionChangedEventArgsVftbl*)*(void***)thisPtr)->get_Action(thisPtr, action);
     }
 
     /// <summary>
@@ -51,7 +51,7 @@ internal unsafe struct INotifyCollectionChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_NewItemsUnsafe(void* thisPtr, void* newItems)
     {
-        return ((INotifyCollectionChangedEventArgsVftbl*)thisPtr)->get_NewItems(thisPtr, newItems);
+        return ((INotifyCollectionChangedEventArgsVftbl*)*(void***)thisPtr)->get_NewItems(thisPtr, newItems);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ internal unsafe struct INotifyCollectionChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_OldItemsUnsafe(void* thisPtr, void* oldItems)
     {
-        return ((INotifyCollectionChangedEventArgsVftbl*)thisPtr)->get_OldItems(thisPtr, oldItems);
+        return ((INotifyCollectionChangedEventArgsVftbl*)*(void***)thisPtr)->get_OldItems(thisPtr, oldItems);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ internal unsafe struct INotifyCollectionChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_NewStartingIndexUnsafe(void* thisPtr, int* newStartingIndex)
     {
-        return ((INotifyCollectionChangedEventArgsVftbl*)thisPtr)->get_NewStartingIndex(thisPtr, newStartingIndex);
+        return ((INotifyCollectionChangedEventArgsVftbl*)*(void***)thisPtr)->get_NewStartingIndex(thisPtr, newStartingIndex);
     }
 
     /// <summary>
@@ -87,6 +87,6 @@ internal unsafe struct INotifyCollectionChangedEventArgsVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_OldStartingIndexUnsafe(void* thisPtr, int* oldStartingIndex)
     {
-        return ((INotifyCollectionChangedEventArgsVftbl*)thisPtr)->get_OldStartingIndex(thisPtr, oldStartingIndex);
+        return ((INotifyCollectionChangedEventArgsVftbl*)*(void***)thisPtr)->get_OldStartingIndex(thisPtr, oldStartingIndex);
     }
 }
