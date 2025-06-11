@@ -37,7 +37,7 @@ internal static unsafe partial class WindowsRuntimeImports
     /// <see href="https://learn.microsoft.com/windows/win32/api/winstring/nf-winstring-windowscreatestringreference"/>
     [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
     [SupportedOSPlatform("windows6.2")]
-    public static partial HRESULT WindowsCreateStringReference(char* sourceString, uint length, /* TODO */ void* hstringHeader, HSTRING* @string);
+    public static partial HRESULT WindowsCreateStringReference(char* sourceString, uint length, HSTRING_HEADER* hstringHeader, HSTRING* @string);
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/winstring/nf-winstring-windowsdeletestring"/>
     [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]

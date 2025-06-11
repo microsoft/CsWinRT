@@ -56,9 +56,6 @@ public static unsafe class IInspectableImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetIids(void* thisPtr, uint* iidCount, Guid** iids)
     {
-        *iidCount = 0;
-        *iids = null;
-
         try
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
@@ -90,8 +87,6 @@ public static unsafe class IInspectableImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetRuntimeClassName(void* thisPtr, HSTRING* className)
     {
-        *className = (HSTRING)null;
-
         try
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
