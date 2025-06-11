@@ -67,6 +67,12 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return null;
         }
 
+        // If the value is a CCW we recognize, unwrap it (and assume it's a 'Delegate' instance)
+        if (WindowsRuntimeHelpers.IsReferenceToManagedObject(value))
+        {
+            return ComWrappers.ComInterfaceDispatch.GetInstance<Delegate>((ComWrappers.ComInterfaceDispatch*)value);
+        }
+
         WindowsRuntimeComWrappers.ObjectComWrappersCallback = WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>();
         WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;

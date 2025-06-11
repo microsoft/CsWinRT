@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.CompilerServices;
+
 #pragma warning disable CS8909
 
 namespace WindowsRuntime.InteropServices;
@@ -18,9 +20,10 @@ public static unsafe class WindowsRuntimeHelpers
     /// <remarks>
     /// This method does not validate the input <paramref name="unknown"/> pointer not being <see langword="null"/>.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsReferenceToManagedObject(void* unknown)
     {
-        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)(void**)unknown;
+        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)unknown;
         IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
 
         return
