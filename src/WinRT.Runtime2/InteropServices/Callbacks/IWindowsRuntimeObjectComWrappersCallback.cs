@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// An interface for callbacks for <see cref="ComWrappers.CreateObject"/>, for Windows Runtime objects.
+/// An interface for callbacks for <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>, for Windows Runtime objects.
 /// </summary>
 public unsafe interface IWindowsRuntimeObjectComWrappersCallback
 {
@@ -22,8 +22,9 @@ public unsafe interface IWindowsRuntimeObjectComWrappersCallback
     /// use of each <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation, as defined by the
     /// invoked method in one of the available marshaller types for CsWinRT. It is guaranteed to be some
     /// <c>IUnknown</c> pointer, but it won't always be just <c>IUnknown</c>, unlike the actual input value
-    /// for <see cref="ComWrappers.CreateObject"/>. This allows implementations
-    /// to avoid redundant <c>QueryInterface</c> calls, if the exact interface is statically visible.
+    /// for <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>.
+    /// This allows implementations to avoid redundant <c>QueryInterface</c> calls, if the exact interface
+    /// is statically visible.
     /// </para>
     /// <para>
     /// For instance, if a given native API returns a <c>Windows.UI.Xaml.Data.PropertyChangedHandler</c> object,
@@ -32,10 +33,11 @@ public unsafe interface IWindowsRuntimeObjectComWrappersCallback
     /// will be such an interface pointer, and avoid doing a <c>QueryInterface</c> call for that same interface.
     /// </para>
     /// <para>
-    /// This method will be called from the <see cref="ComWrappers.CreateObject"/> method, so implementations must
-    /// not call back into <see cref="ComWrappers.CreateObject"/> themselves, but rather they should just marshal
-    /// the object directly, and return it. Calling back into <see cref="ComWrappers.CreateObject"/> is not supported,
-    /// and it will likely lead to a stack overlow exception.
+    /// This method will be called from the <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> method,
+    /// so implementations must not call back into <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>
+    /// themselves, but rather they should just marshal the object directly, and return it. Calling back into
+    /// <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> is not supported, and it will likely lead
+    /// to a stack overflow exception.
     /// </para>
     /// </remarks>
     static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);

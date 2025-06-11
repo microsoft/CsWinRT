@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// An interface for callbacks for <see cref="ComWrappers.CreateObject"/>, for unsealed Windows Runtime objects.
+/// An interface for callbacks for <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>, for unsealed Windows Runtime objects.
 /// </summary>
 public unsafe interface IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
@@ -30,9 +30,11 @@ public unsafe interface IWindowsRuntimeUnsealedObjectComWrappersCallback
     /// The same semantics around <paramref name="value"/> apply as in <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>.
     /// </para>
     /// <para>
-    /// Like <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>, this method will be called from the <see cref="ComWrappers.CreateObject"/>
-    /// method, so implementations must not call back into <see cref="ComWrappers.CreateObject"/> themselves, but rather they should just marshal the object
-    /// directly, and return it. Calling back into <see cref="ComWrappers.CreateObject"/> is not supported, and it will likely lead to a stack overlow exception.
+    /// Like <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>, this method will be called from the
+    /// <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> method, so implementations must not call back into
+    /// <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> themselves, but rather they should just marshal the object
+    /// directly, and return it. Calling back into <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> is not supported,
+    /// and it will likely lead to a stack overflow exception.
     /// </para>
     /// </remarks>
     /// <seealso cref="IWindowsRuntimeObjectComWrappersCallback"/>

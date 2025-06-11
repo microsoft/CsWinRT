@@ -111,6 +111,6 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// The <paramref name="value"/> argument will never be <see langword="null"/>, and implementations don't have to validate that.
     /// </para>
     /// </remarks>
-    /// <seealso cref="ComWrappers.CreateObject"/>
+    /// <seealso cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>
     public abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }

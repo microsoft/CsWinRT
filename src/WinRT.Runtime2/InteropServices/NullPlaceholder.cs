@@ -9,8 +9,9 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// <para>
 /// This type can be used to represent <see langword="null"/> values for projected Windows Runtime types being marshalled to
-/// managed. The reason why this exists is that <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/> doesn't
-/// allow returning <see langword="null"/> values, and it will throw an exception if that happens. To avoid that, this type
+/// managed. The reason why this exists is that
+/// <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject(nint, System.Runtime.InteropServices.CreateObjectFlags, object?, out System.Runtime.InteropServices.CreatedWrapperFlags)"/>
+/// doesn't allow returning <see langword="null"/> values, and it will throw an exception if that happens. To avoid that, this type
 /// can be used instead (ie. by returning <see cref="Instance"/>). Callers are expected to then check for this instance, and
 /// convert to an actual <see langword="null"/> value. 3rd-party code should never see or receive instances of this type.
 /// </para>

@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -24,10 +25,11 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     internal static WindowsRuntimeMarshallingInfo? MarshallingInfo;
 
     /// <summary>
-    /// The <see cref="WindowsRuntimeObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the <see cref="CreateObject"/> fast-path, if available.
+    /// The <see cref="WindowsRuntimeObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible,
+    /// enabling the <see cref="CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> fast-path, if available.
     /// </summary>
     /// <remarks>
-    /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateObjectForComInstance"/> method,
+    /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateObjectForComInstance(nint, CreateObjectFlags, object?)"/> method,
     /// to pass additional information to the <see cref="ComWrappers"/> instance. It should be set to <see langword="null"/>
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
@@ -35,7 +37,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     internal static WindowsRuntimeObjectComWrappersCallback? ObjectComWrappersCallback;
 
     /// <summary>
-    /// The <see cref="WindowsRuntimeUnsealedObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the unsealed <see cref="CreateObject"/> fast-path, if available.
+    /// The <see cref="WindowsRuntimeUnsealedObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible,
+    /// enabling the unsealed <see cref="CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> fast-path, if available.
     /// </summary>
     /// <remarks>
     /// The same remarks as with <see cref="ObjectComWrappersCallback"/> apply here, the only difference is this callback is for unsealed types.
@@ -44,7 +47,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     internal static WindowsRuntimeUnsealedObjectComWrappersCallback? UnsealedObjectComWrappersCallback;
 
     /// <summary>
-    /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.
+    /// The statically-visible object type that should be used by <see cref="CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>, if available.
     /// </summary>
     /// <remarks><inheritdoc cref="ObjectComWrappersCallback" path="/remarks/node()"/></remarks>
     [ThreadStatic]
@@ -189,58 +192,122 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags)
     {
-        CreatedWrapperFlags wrapperFlags = CreatedWrapperFlags.None;
+        return CreateObject(externalComObject, flags, userState: null, wrapperFlags: out _);
+    }
 
+    /// <inheritdoc/>
+    protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags, object? userState, out CreatedWrapperFlags wrapperFlags)
+    {
         // If we have a callback instance, it means this invocation was for a statically visible type that can
         // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
         if (ObjectComWrappersCallback is { } createObjectCallback)
         {
             void* interfacePointer = CreateObjectTargetInterfacePointer;
 
-            // In some cases, callers might have provided a derived interfcae pointer, if statically visible.
-            // For instance, if a native API returned an instance of a delegate type, we can reuse that, rather
-            // than doing a 'QueryInterface' call again from here (because 'CreateObject' only ever gets an
-            // 'IUnknown' object as input. So, just select the best available input argument here.
-            return interfacePointer != null
-                ? createObjectCallback.CreateObject(interfacePointer, out wrapperFlags)
-                : createObjectCallback.CreateObject((void*)externalComObject, out wrapperFlags);
+            // Callers will have provided a derived interface pointer, if statically visible. For instance, if
+            // a native API returned an instance of a delegate type, we can reuse that, rather than doing a
+            // 'QueryInterface' call again from here (because 'CreateObject' only ever gets an 'IUnknown'
+            // object as input). So we can just forward that here directly to the provided callback.
+            return createObjectCallback.CreateObject(interfacePointer, out wrapperFlags);
         }
 
-        // Store the type so we do a single read from TLS
-        Type? objectType = CreateObjectTargetType;
-
-        // If we don't have an available callback, and also no statically visible type at all, the only possible
-        // scenario is that the statically visible type was 'IInspectable'. In that case, we can opportunistically
-        // skip the 'QueryInterface' call for it, as that interface pointer can be set by callers instead.
-        void* inspectablePtr = null;
-
-        // This optimization is only valid for 'IInspectable' object, not for specific types
-        if (objectType is null)
-        {
-            inspectablePtr = CreateObjectTargetInterfacePointer;
-        }
-        else
-        {
-            // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
-            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out inspectablePtr);
-
-            // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
-            // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
-            Marshal.ThrowExceptionForHR(hresult);
-        }
+        HSTRING className = null;
 
         try
         {
-            // TODO
+            scoped ReadOnlySpan<char> runtimeClassName = default;
+
+            if (UnsealedObjectComWrappersCallback is { } unsealedObjectCallback)
+            {
+                void* interfacePointer = CreateObjectTargetInterfacePointer;
+
+                HRESULT hresult = IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className);
+
+                Marshal.ThrowExceptionForHR(hresult);
+
+                runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(className);
+
+                if (unsealedObjectCallback.TryCreateObject(
+                    value: interfacePointer,
+                    runtimeClassName: runtimeClassName,
+                    out object? wrapperObject,
+                    out wrapperFlags))
+                {
+                    return wrapperObject;
+                }
+
+                if (!WindowsRuntimeTypeHierarchy.TryGetBaseRuntimeClassName(
+                    runtimeClassName: runtimeClassName,
+                    out ReadOnlySpan<char> baseRuntimeClassName,
+                    out int nextBaseRuntimeClassNameIndex))
+                {
+                    WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(interfacePointer, in WellKnownInterfaceIds.IID_IInspectable)!;
+
+                    wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+                    return new WindowsRuntimeInspectable(objectReference) { InspectableObjectReference = objectReference };
+                }
+
+                if (WindowsRuntimeMarshallingInfo.TryGetInfo(baseRuntimeClassName, out WindowsRuntimeMarshallingInfo? baseMarshallingInfo))
+                {
+                    return baseMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
+                }
+
+                while (WindowsRuntimeTypeHierarchy.TryGetNextBaseRuntimeClassName(
+                    baseRuntimeClassNameIndex: nextBaseRuntimeClassNameIndex,
+                    baseRuntimeClassName: out baseRuntimeClassName,
+                    nextBaseRuntimeClassNameIndex: out nextBaseRuntimeClassNameIndex))
+                {
+
+                }
+            }
+            else
+            {
+
+            }
+
+            // Store the type so we do a single read from TLS
+            Type? objectType = CreateObjectTargetType;
+
+            // If we don't have an available callback, and also no statically visible type at all, the only possible
+            // scenario is that the statically visible type was 'IInspectable'. In that case, we can opportunistically
+            // skip the 'QueryInterface' call for it, as that interface pointer can be set by callers instead.
+            void* inspectablePtr = null;
+
+            // This optimization is only valid for 'IInspectable' object, not for specific types
+            if (objectType is null)
+            {
+                inspectablePtr = CreateObjectTargetInterfacePointer;
+            }
+            else
+            {
+                // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
+                HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out inspectablePtr);
+
+                // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
+                // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
+                Marshal.ThrowExceptionForHR(hresult);
+            }
+
+            try
+            {
+                // TODO
+            }
+            finally
+            {
+                // Make sure not to leak the object, if someone else hasn't taken ownership of it just yet
+                if (inspectablePtr != null)
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
+                }
+            }
         }
         finally
         {
-            // Make sure not to leak the object, if someone else hasn't taken ownership of it just yet
-            if (inspectablePtr != null)
-            {
-                _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
-            }
+            HStringMarshaller.Free(className);
         }
+
+        wrapperFlags = CreatedWrapperFlags.None;
 
         return null;
     }
@@ -248,6 +315,5 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override void ReleaseObjects(IEnumerable objects)
     {
-        throw new NotImplementedException();
     }
 }
