@@ -248,7 +248,14 @@ internal partial class InteropGenerator
                     delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.Delegate.TypeMapAttributes(
+                    delegateType: typeSignature,
+                    proxyType: proxyType,
+                    interopReferences: interopReferences,
+                    module: module);
 
                 // Define the 'EventSource' types (for when the delegate types are used for events on projected types)
                 if (typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true)
@@ -367,7 +374,7 @@ internal partial class InteropGenerator
                     iteratorMethodsType: iteratorMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IEnumerator1.Proxy(
@@ -375,7 +382,15 @@ internal partial class InteropGenerator
                     enumeratorComWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IEnumerator1.TypeMapAttributes(
+                    enumeratorType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -492,7 +507,7 @@ internal partial class InteropGenerator
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IEnumerable1.Proxy(
@@ -500,7 +515,15 @@ internal partial class InteropGenerator
                     enumerableComWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IEnumerable1.TypeMapAttributes(
+                    enumerableType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -617,7 +640,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Proxy(
@@ -625,7 +648,15 @@ internal partial class InteropGenerator
                     readOnlyListComWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
+                    readOnlyListType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -742,7 +773,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IList1.Proxy(
@@ -750,7 +781,15 @@ internal partial class InteropGenerator
                     listComWrappersMarshallerAttributeType: listComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
+                    listType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -867,7 +906,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Proxy(
@@ -875,7 +914,15 @@ internal partial class InteropGenerator
                     readOnlyDictionaryComWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.TypeMapAttributes(
+                    readOnlyDictionaryType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -993,7 +1040,7 @@ internal partial class InteropGenerator
                     dictionaryMethodsType: dictionaryMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IDictionary2.Proxy(
@@ -1001,7 +1048,15 @@ internal partial class InteropGenerator
                     dictionaryComWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IDictionary2.TypeMapAttributes(
+                    dictionaryType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

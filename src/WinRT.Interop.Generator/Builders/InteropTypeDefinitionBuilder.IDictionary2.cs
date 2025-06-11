@@ -1190,5 +1190,35 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out proxyType);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="ProxyType"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: $"Windows.Foundation.Collections.IMap`2<{keyType},{valueType}>", // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: dictionaryType,
+                proxyTypeMapSourceType: dictionaryType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: dictionaryType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }

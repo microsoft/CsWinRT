@@ -784,5 +784,30 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out proxyType);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some <see cref="Delegate"/> type.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="ProxyType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature delegateType,
+            TypeDefinition proxyType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: delegateType.FullName, // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: delegateType,
+                proxyTypeMapSourceType: delegateType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: null,
+                interfaceTypeMapProxyType: null,
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }
