@@ -22,7 +22,7 @@ public static unsafe class HStringMarshaller
     {
         if (value.IsEmpty)
         {
-            return (HSTRING)null;
+            return null;
         }
 
         fixed (char* valuePtr = value)
@@ -110,7 +110,7 @@ public static unsafe class HStringMarshaller
     /// <returns>The resulting <see cref="string"/> value.</returns>
     public static string ConvertToManaged(HSTRING value)
     {
-        if (value == (HSTRING)null)
+        if (value == null)
         {
             return "";
         }
@@ -141,7 +141,7 @@ public static unsafe class HStringMarshaller
     /// </remarks>
     public static ReadOnlySpan<char> ConvertToManagedUnsafe(HSTRING value)
     {
-        if (value == (HSTRING)null)
+        if (value == null)
         {
             return "";
         }
@@ -161,7 +161,7 @@ public static unsafe class HStringMarshaller
     {
         // We technically don't need this check, since 'WindowsDeleteString' can handle 'null' values
         // as well. However, we can check this to avoid going through the native call if not needed.
-        if (value == (HSTRING)null)
+        if (value == null)
         {
             return;
         }
