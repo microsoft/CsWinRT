@@ -13,12 +13,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<UInt16>",
     target: typeof(ABI.System.UInt16),
     trimTarget: typeof(ushort))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(ushort), typeof(ABI.System.UInt16))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(ushort), typeof(ABI.System.UInt16))]
 
 namespace ABI.System;
 

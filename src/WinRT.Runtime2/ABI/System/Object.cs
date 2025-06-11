@@ -9,7 +9,7 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(object), typeof(ABI.System.Object))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(object), typeof(ABI.System.Object))]
 
 namespace ABI.System;
 

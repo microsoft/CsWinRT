@@ -10,12 +10,12 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs),
     trimTarget: typeof(DataErrorsChangedEventArgs))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(DataErrorsChangedEventArgs),
     typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs))]
 

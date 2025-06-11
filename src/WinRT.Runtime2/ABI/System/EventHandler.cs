@@ -14,7 +14,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(EventHandler),
     typeof(ABI.System.EventHandler))]
 

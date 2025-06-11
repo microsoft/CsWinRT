@@ -13,12 +13,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.TimeSpan>",
     target: typeof(ABI.System.TimeSpan),
     trimTarget: typeof(TimeSpan))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(TimeSpan), typeof(ABI.System.TimeSpan))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(TimeSpan), typeof(ABI.System.TimeSpan))]
 
 namespace ABI.System;
 

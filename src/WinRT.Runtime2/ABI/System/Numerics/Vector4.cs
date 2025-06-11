@@ -14,12 +14,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector4>",
     target: typeof(ABI.System.Numerics.Vector4),
     trimTarget: typeof(Vector4))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Vector4), typeof(ABI.System.Numerics.Vector4))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Vector4), typeof(ABI.System.Numerics.Vector4))]
 
 namespace ABI.System.Numerics;
 

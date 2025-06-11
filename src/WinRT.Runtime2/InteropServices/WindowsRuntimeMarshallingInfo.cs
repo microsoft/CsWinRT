@@ -23,13 +23,13 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// The external types mapping for Windows Runtime types.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "We expect external types to only be preserved if used in runtime casts.")]
-    private static readonly IReadOnlyDictionary<string, Type> WindowsRuntimeExternalTypes = TypeMapping.GetOrCreateExternalTypeMapping<WindowsRuntimeTypeMapGroup>();
+    private static readonly IReadOnlyDictionary<string, Type> WindowsRuntimeExternalTypes = TypeMapping.GetOrCreateExternalTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
 
     /// <summary>
     /// The proxy types mapping for Windows Runtime types.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "We expect only proxy types for constructed types to be preserved.")]
-    private static readonly IReadOnlyDictionary<Type, Type> WindowsRuntimeProxyTypes = TypeMapping.GetOrCreateProxyTypeMapping<WindowsRuntimeTypeMapGroup>();
+    private static readonly IReadOnlyDictionary<Type, Type> WindowsRuntimeProxyTypes = TypeMapping.GetOrCreateProxyTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
 
     /// <summary>
     /// The cached external types mapping for Windows Runtime types.

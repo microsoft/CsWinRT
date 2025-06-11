@@ -14,12 +14,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>",
     target: typeof(ABI.System.Numerics.Matrix3x2),
     trimTarget: typeof(Matrix3x2))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Matrix3x2), typeof(ABI.System.Numerics.Matrix3x2))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Matrix3x2), typeof(ABI.System.Numerics.Matrix3x2))]
 
 namespace ABI.System.Numerics;
 

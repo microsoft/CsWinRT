@@ -13,12 +13,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006
 
-[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Boolean>",
     target: typeof(ABI.System.Boolean),
     trimTarget: typeof(bool))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(bool), typeof(ABI.System.Boolean))]
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(bool), typeof(ABI.System.Boolean))]
 
 namespace ABI.System;
 
