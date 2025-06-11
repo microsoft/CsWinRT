@@ -68,15 +68,10 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         }
 
         WindowsRuntimeComWrappers.ObjectComWrappersCallback = WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>();
-        WindowsRuntimeComWrappers.CreateObjectTargetType = null;
+        WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
         object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
-
-        WindowsRuntimeComWrappers.ObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = null;
-
-        Debug.Assert(managedDelegate is Delegate);
 
         return Unsafe.As<Delegate>(managedDelegate);
     }

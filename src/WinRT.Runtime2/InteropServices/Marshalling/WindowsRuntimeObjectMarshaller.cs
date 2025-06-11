@@ -86,7 +86,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         WindowsRuntimeComWrappers.ObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.CreateObjectTargetType = null;
+        WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
         return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);

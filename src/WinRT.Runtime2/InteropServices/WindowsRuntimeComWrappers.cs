@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.InteropServices;
 
@@ -47,14 +50,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     internal static WindowsRuntimeUnsealedObjectComWrappersCallback? UnsealedObjectComWrappersCallback;
 
     /// <summary>
-    /// The statically-visible object type that should be used by <see cref="CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>, if available.
-    /// </summary>
-    /// <remarks><inheritdoc cref="ObjectComWrappersCallback" path="/remarks/node()"/></remarks>
-    [ThreadStatic]
-    internal static Type? CreateObjectTargetType;
-
-    /// <summary>
-    /// The derived interface pointer to use for marshalling, if available.
+    /// The derived interface pointer to use for marshalling (this should always be supplied).
     /// </summary>
     [ThreadStatic]
     internal static void* CreateObjectTargetInterfacePointer;
@@ -198,12 +194,18 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags, object? userState, out CreatedWrapperFlags wrapperFlags)
     {
+        // Retrieve the 'IInspectable' interface pointer, to avoid 'QueryInterface' calls.
+        // We always need this, and all callers are expected to be providing one.
+        void* interfacePointer = CreateObjectTargetInterfacePointer;
+
+        // Validate that we do have an input interface pointer, just in case.
+        // We might want to relax this restriction later if actually needed.
+        ArgumentNullException.ThrowIfNull(interfacePointer);
+
         // If we have a callback instance, it means this invocation was for a statically visible type that can
         // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
         if (ObjectComWrappersCallback is { } createObjectCallback)
         {
-            void* interfacePointer = CreateObjectTargetInterfacePointer;
-
             // Callers will have provided a derived interface pointer, if statically visible. For instance, if
             // a native API returned an instance of a delegate type, we can reuse that, rather than doing a
             // 'QueryInterface' call again from here (because 'CreateObject' only ever gets an 'IUnknown'
@@ -213,20 +215,23 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
         HSTRING className = null;
 
+        // Get the runtime class name (we need it to figure out the most derived type to marshal)
+        HRESULT hresult = IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
         try
         {
-            scoped ReadOnlySpan<char> runtimeClassName = default;
+            // We only need the runtime class name in this scope, so just get the raw characters
+            ReadOnlySpan<char> runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(className);
 
+            // If we have a callback instance for an unsealed type, it means that this invocation was for either an
+            // unsealed type or some interface type. In this case, we do logic analogous to the case above, just with
+            // the additional complexity due to also needing the runtime class name to figure out the managed type.
             if (UnsealedObjectComWrappersCallback is { } unsealedObjectCallback)
             {
-                void* interfacePointer = CreateObjectTargetInterfacePointer;
-
-                HRESULT hresult = IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className);
-
-                Marshal.ThrowExceptionForHR(hresult);
-
-                runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(className);
-
+                // We can now invoke the callback. If we have an exact match with the runtime class name that
+                // the callback is specialized for, then we can just directly return the object it produced.
                 if (unsealedObjectCallback.TryCreateObject(
                     value: interfacePointer,
                     runtimeClassName: runtimeClassName,
@@ -236,84 +241,118 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                     return wrapperObject;
                 }
 
-                if (!WindowsRuntimeTypeHierarchy.TryGetBaseRuntimeClassName(
+                // We didn't find an exact match, so we need to walk the parent types in the hierarchy. Note that
+                // if the type is an interface type, this will simply not find any matches and return immediately.
+                if (TryFindMostDerivedWindowsRuntimeMarshallingInfo(
                     runtimeClassName: runtimeClassName,
-                    out ReadOnlySpan<char> baseRuntimeClassName,
-                    out int nextBaseRuntimeClassNameIndex))
+                    marshallingInfo: out WindowsRuntimeMarshallingInfo? unsealedMarshallingInfo))
                 {
-                    WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(interfacePointer, in WellKnownInterfaceIds.IID_IInspectable)!;
-
-                    wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
-
-                    return new WindowsRuntimeInspectable(objectReference) { InspectableObjectReference = objectReference };
-                }
-
-                if (WindowsRuntimeMarshallingInfo.TryGetInfo(baseRuntimeClassName, out WindowsRuntimeMarshallingInfo? baseMarshallingInfo))
-                {
-                    return baseMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
-                }
-
-                while (WindowsRuntimeTypeHierarchy.TryGetNextBaseRuntimeClassName(
-                    baseRuntimeClassNameIndex: nextBaseRuntimeClassNameIndex,
-                    baseRuntimeClassName: out baseRuntimeClassName,
-                    nextBaseRuntimeClassNameIndex: out nextBaseRuntimeClassNameIndex))
-                {
-
+                    return unsealedMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
                 }
             }
             else
             {
-
-            }
-
-            // Store the type so we do a single read from TLS
-            Type? objectType = CreateObjectTargetType;
-
-            // If we don't have an available callback, and also no statically visible type at all, the only possible
-            // scenario is that the statically visible type was 'IInspectable'. In that case, we can opportunistically
-            // skip the 'QueryInterface' call for it, as that interface pointer can be set by callers instead.
-            void* inspectablePtr = null;
-
-            // This optimization is only valid for 'IInspectable' object, not for specific types
-            if (objectType is null)
-            {
-                inspectablePtr = CreateObjectTargetInterfacePointer;
-            }
-            else
-            {
-                // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
-                HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out inspectablePtr);
-
-                // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
-                // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
-                Marshal.ThrowExceptionForHR(hresult);
-            }
-
-            try
-            {
-                // TODO
-            }
-            finally
-            {
-                // Make sure not to leak the object, if someone else hasn't taken ownership of it just yet
-                if (inspectablePtr != null)
+                // If we have no static type information whatsoever (i.e. we're just marshalling 'object'), then
+                // we also first try to lookup marshalling info for the current type, and then walk the base types.
+                if (TryFindMostDerivedWindowsRuntimeMarshallingInfoOrSelf(
+                    runtimeClassName: runtimeClassName,
+                    marshallingInfo: out WindowsRuntimeMarshallingInfo? opaqueMarshallingInfo))
                 {
-                    _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
+                    return opaqueMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
                 }
             }
+
+            // We couldn't find any partially derived type to marshal: just return an opaque object.
+            // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
+            return CreateOpaqueInspectable(interfacePointer, out wrapperFlags);
         }
         finally
         {
             HStringMarshaller.Free(className);
         }
-
-        wrapperFlags = CreatedWrapperFlags.None;
-
-        return null;
     }
 
     /// <inheritdoc/>
     protected override void ReleaseObjects(IEnumerable objects)
     {
+    }
+
+    /// <summary>
+    /// Tries to find the <see cref="WindowsRuntimeMarshallingInfo"/> for the most derived type in a given hierarchy.
+    /// </summary>
+    /// <param name="runtimeClassName">The starting runtime class name.</param>
+    /// <param name="marshallingInfo">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> value, if found.</param>
+    /// <returns>Whether <paramref name="marshallingInfo"/> was found.</returns>
+    private static bool TryFindMostDerivedWindowsRuntimeMarshallingInfo(
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? marshallingInfo)
+    {
+        // Start the lookup with the immediate parent, if this fails we stop immediately
+        if (!WindowsRuntimeTypeHierarchy.TryGetBaseRuntimeClassName(
+            runtimeClassName: runtimeClassName,
+            out ReadOnlySpan<char> baseRuntimeClassName,
+            out int nextBaseRuntimeClassNameIndex))
+        {
+            marshallingInfo = null;
+
+            return false;
+        }
+
+        // After the first lookup, we now have a fast path to walk any remaining base types in the hierarchy.
+        // For each of them, we just try to get the marshalling info, and then move up if that failed.
+        while (true)
+        {
+            // Try to find the marshalling info for the base type
+            if (WindowsRuntimeMarshallingInfo.TryGetInfo(baseRuntimeClassName, out marshallingInfo))
+            {
+                return true;
+            }
+
+            // Move up to the next base type, if available
+            if (!WindowsRuntimeTypeHierarchy.TryGetNextBaseRuntimeClassName(
+                baseRuntimeClassNameIndex: nextBaseRuntimeClassNameIndex,
+                baseRuntimeClassName: out baseRuntimeClassName,
+                nextBaseRuntimeClassNameIndex: out nextBaseRuntimeClassNameIndex))
+            {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to find the <see cref="WindowsRuntimeMarshallingInfo"/> for the most derived type in a given hierarchy, or the starting type itself.
+    /// </summary>
+    /// <param name="runtimeClassName">The starting runtime class name.</param>
+    /// <param name="marshallingInfo">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> value, if found.</param>
+    /// <returns>Whether <paramref name="marshallingInfo"/> was found.</returns>
+    private static bool TryFindMostDerivedWindowsRuntimeMarshallingInfoOrSelf(
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? marshallingInfo)
+    {
+        // Start with checking whether we have info for this exact type first
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(runtimeClassName, out marshallingInfo))
+        {
+            return true;
+        }
+
+        // If not, just walk base types as usual
+        return TryFindMostDerivedWindowsRuntimeMarshallingInfo(runtimeClassName, out marshallingInfo);
+    }
+
+    /// <summary>
+    /// Creates an opaque <see cref="WindowsRuntimeInspectable"/> object for a given interface pointer.
+    /// </summary>
+    /// <param name="interfacePointer">The input interface pointer.</param>
+    /// <param name="wrapperFlags">The resulting <see cref="CreatedWrapperFlags"/> value.</param>
+    /// <returns>The wrapped opaque value.</returns>
+    private static object CreateOpaqueInspectable(void* interfacePointer, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(interfacePointer, in WellKnownInterfaceIds.IID_IInspectable)!;
+
+        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+        return new WindowsRuntimeInspectable(objectReference) { InspectableObjectReference = objectReference };
     }
 }
