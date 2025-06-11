@@ -47,8 +47,10 @@ public static unsafe class INotifyCollectionChangedMethods
     /// <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>
     public static NotifyCollectionChangedEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
-        // TODO: remove capture in .NET 10
-        return CollectionChangedTable.GetValue(thisObject, thisObject => new NotifyCollectionChangedEventSource(thisReference, 6));
+        return CollectionChangedTable.GetOrAdd(
+            key: thisObject,
+            valueFactory: static (_, thisReference) => new NotifyCollectionChangedEventSource(thisReference, 6),
+            factoryArgument: thisReference);
     }
 }
 

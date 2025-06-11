@@ -67,8 +67,10 @@ public static unsafe class INotifyDataErrorInfoMethods
         [return: WindowsRuntimeUnsafeAccessorType("ABI.WindowsRuntime.Interop.<#CsWinRT>EventHandlerEventSource`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")]
         static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
 
-        // TODO: remove capture in .NET 10
-        return ErrorsChangedTable.GetValue(thisObject, thisObject => Unsafe.As<EventHandlerEventSource<DataErrorsChangedEventArgs>>(ctor(thisReference, 7)));
+        return ErrorsChangedTable.GetOrAdd(
+            key: thisObject,
+            valueFactory: static (_, thisReference) => Unsafe.As<EventHandlerEventSource<DataErrorsChangedEventArgs>>(ctor(thisReference, 7)),
+            factoryArgument: thisReference);
     }
 
     /// <see cref="global::System.ComponentModel.INotifyDataErrorInfo.GetErrors"/>

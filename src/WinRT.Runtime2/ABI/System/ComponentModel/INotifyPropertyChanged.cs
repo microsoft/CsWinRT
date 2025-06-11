@@ -46,8 +46,10 @@ public static unsafe class INotifyPropertyChangedMethods
     /// <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>
     public static PropertyChangedEventSource PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
-        // TODO: remove capture in .NET 10
-        return PropertyChangedTable.GetValue(thisObject, thisObject => new PropertyChangedEventSource(thisReference, 6));
+        return PropertyChangedTable.GetOrAdd(
+            key: thisObject,
+            valueFactory: static (_, thisReference) => new PropertyChangedEventSource(thisReference, 6),
+            factoryArgument: thisReference);
     }
 }
 

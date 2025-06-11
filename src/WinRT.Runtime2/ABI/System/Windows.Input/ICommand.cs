@@ -47,8 +47,10 @@ public static unsafe class ICommandMethods
     /// <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>
     public static EventHandlerEventSource CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
-        // TODO: remove capture in .NET 10
-        return CanExecuteChangedTable.GetValue(thisObject, thisObject => new EventHandlerEventSource(thisReference, 6));
+        return CanExecuteChangedTable.GetOrAdd(
+            key: thisObject,
+            valueFactory: static (_, thisReference) => new EventHandlerEventSource(thisReference, 6),
+            factoryArgument: thisReference);
     }
 
     /// <see cref="global::System.Windows.Input.ICommand.CanExecute"/>
