@@ -701,4 +701,54 @@ internal static partial class InteropTypeDefinitionBuilder
         // Add the generated marshaller attribute
         marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!));
     }
+
+    /// <summary>
+    /// Creates the type map attributes for a given type.
+    /// </summary>
+    /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
+    /// <param name="externalTypeMapTargetType">The target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
+    /// <param name="externalTypeMapTrimTargetType">The trim target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
+    /// <param name="proxyTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="proxyTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="interfaceTypeMapSourceType">The IDIC source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    public static void TypeMapAttributes(
+        string runtimeClassName,
+        TypeSignature externalTypeMapTargetType,
+        TypeSignature externalTypeMapTrimTargetType,
+        TypeSignature proxyTypeMapSourceType,
+        TypeSignature proxyTypeMapProxyType,
+        [NotNullIfNotNull(nameof(interfaceTypeMapProxyType))] TypeSignature? interfaceTypeMapSourceType,
+        [NotNullIfNotNull(nameof(interfaceTypeMapSourceType))] TypeSignature? interfaceTypeMapProxyType,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Emit the '[TypeMap]' attribute for the external type map
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
+            value: runtimeClassName,
+            target: externalTypeMapTargetType,
+            trimTarget: externalTypeMapTrimTargetType,
+            interopReferences: interopReferences,
+            module: module));
+
+        // Emit the '[TypeMapAssociation]' attribute for the proxy type map
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
+            source: proxyTypeMapSourceType,
+            proxy: proxyTypeMapProxyType,
+            interopReferences: interopReferences,
+            module: module));
+
+        // Emit the '[TypeMapAssociation]' attribute for 'IDynamicInterfaceCastable' scenarios.
+        // This is not always needed, as it is specifically only for interface types.
+        if (interfaceTypeMapSourceType is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationDynamicInterfaceCastableImplementationTypeMapGroup(
+                source: interfaceTypeMapSourceType,
+                proxy: interfaceTypeMapProxyType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
+    }
 }

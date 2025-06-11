@@ -58,6 +58,30 @@ internal sealed class InteropReferences
     public TypeReference AttributeUsageAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "AttributeUsageAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference TypeMapAttribute1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "TypeMapAttribute`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="GenericInstanceTypeSignature"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/> of <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public GenericInstanceTypeSignature TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference TypeMapAssociationAttribute1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "TypeMapAssociationAttribute`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="GenericInstanceTypeSignature"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}"/> of <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public GenericInstanceTypeSignature TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -85,31 +109,31 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ReadOnlySpan{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference ReadOnlySpan => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
+    public TypeReference ReadOnlySpan1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
 
     /// <summary>
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="byte"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Byte);
+    public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan1.MakeGenericValueType(_interopModule.CorLibTypeFactory.Byte);
 
     /// <summary>
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Char);
+    public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan1.MakeGenericValueType(_interopModule.CorLibTypeFactory.Char);
 
     /// <summary>
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="ushort"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.UInt16);
+    public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan1.MakeGenericValueType(_interopModule.CorLibTypeFactory.UInt16);
 
     /// <summary>
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="int"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Int32);
+    public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType(_interopModule.CorLibTypeFactory.Int32);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Exception"/>.
@@ -302,6 +326,18 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeComWrappersTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersTypeMapGroup"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference DynamicInterfaceCastableImplementationTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableImplementationTypeMapGroup"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl</c>.
@@ -645,6 +681,24 @@ internal sealed class InteropReferences
             parameterTypes: [AttributeTargets.ToValueTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.IDisposable.Dispose"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -733,8 +787,8 @@ internal sealed class InteropReferences
             returnType: _interopModule.CorLibTypeFactory.Boolean,
             genericParameterCount: 1,
             parameterTypes: [
-                ReadOnlySpan.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0)),
-                ReadOnlySpan.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
+                ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0)),
+                ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
         .MakeGenericInstanceMethod(_interopModule.CorLibTypeFactory.Char);
 
     /// <summary>
@@ -752,7 +806,7 @@ internal sealed class InteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference MemoryMarshalCreateSpan => field ??= MemoryMarshal
         .CreateMemberReference("CreateReadOnlySpan"u8, MethodSignature.CreateStatic(
-            returnType: ReadOnlySpan.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0)),
+            returnType: ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0)),
             genericParameterCount: 1,
             parameterTypes: [
                 new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
@@ -1324,6 +1378,39 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Int32,
             parameterTypes: [new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>.
+    /// </summary>
+    /// <param name="typeMapGroup">The type map group to use.</param>
+    public MemberReference TypeMapAttribute1_ctor_TrimTarget(TypeSignature typeMapGroup)
+    {
+        return TypeMapAttribute1
+            .MakeGenericReferenceType(typeMapGroup)
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    _interopModule.CorLibTypeFactory.String,
+                    Type.ToReferenceTypeSignature(),
+                    Type.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>.
+    /// </summary>
+    /// <param name="typeMapGroup">The type map group to use.</param>
+    public MemberReference TypeMapAssociationAttribute1_ctor(TypeSignature typeMapGroup)
+    {
+        return TypeMapAssociationAttribute1
+            .MakeGenericReferenceType(typeMapGroup)
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _interopModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                Type.ToReferenceTypeSignature(),
+                Type.ToReferenceTypeSignature()]));
+    }
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
