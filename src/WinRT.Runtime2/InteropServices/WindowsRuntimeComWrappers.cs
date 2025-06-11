@@ -275,6 +275,19 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override void ReleaseObjects(IEnumerable objects)
     {
+        foreach (object? obj in objects)
+        {
+            // We are intentionally only releasing objects as a best effort, when we can unwrap them. This method is usually
+            // only called when XAML notifies the tracker runtime that a thread is shutting down (e.g. when closing a XAML
+            // window, such as 'CoreWindow'), so that objects that are tied to that context have a chance of being released.
+            // 'ComWrappers' will pass all objects that have been created so far and that are eligible for release though,
+            // meaning we can very well encounter objects that we cannot unwrap and dispose manually. In those cases, we
+            // are just skipping them to avoid crashing the app (there were several reports of this causing issues before).
+            if (WindowsRuntimeObjectMarshaller.TryUnwrap(obj, out WindowsRuntimeObjectReference? objReference))
+            {
+                objReference.Dispose();
+            }
+        }
     }
 
     /// <summary>
