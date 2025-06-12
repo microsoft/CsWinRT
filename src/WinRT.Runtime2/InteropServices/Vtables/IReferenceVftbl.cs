@@ -34,6 +34,6 @@ internal unsafe struct IReferenceVftbl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT get_ValueUnsafe(void* thisPtr, void* value)
     {
-        return ((IReferenceVftbl*)*(void***)thisPtr)->get_Value(thisPtr, &value);
+        return ((IReferenceVftbl*)*(void***)thisPtr)->get_Value(thisPtr, value);
     }
 }
