@@ -586,6 +586,12 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeObjectReferenceValue => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeObjectReferenceValue"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMarshal"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1004,17 +1010,6 @@ internal sealed class InteropReferences
             returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.CreateUnsafe(void*, in Guid)</c>.
-    /// </summary>
-    [field: MaybeNull, AllowNull]
-    public MemberReference WindowsRuntimeObjectReferenceCreateUnsafe => field ??= WindowsRuntimeObjectReference
-        .CreateMemberReference("CreateUnsafe"u8, MethodSignature.CreateStatic(
-            returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-            parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                WellKnownTypeSignatureFactory.InGuid(this)]));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.AsValue()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1152,13 +1147,6 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.GetReferenceTrackerPtrUnsafe()</c>.
-    /// </summary>
-    [field: MaybeNull, AllowNull]
-    public MemberReference WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe => field ??= WindowsRuntimeObjectReference
-        .CreateMemberReference("GetReferenceTrackerPtrUnsafe"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1236,6 +1224,30 @@ internal sealed class InteropReferences
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
                 CreatedWrapperFlags.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.CreateObjectReference</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeMarshalCreateObjectReference => field ??= WindowsRuntimeMarshal
+        .CreateMemberReference("CreateObjectReference"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                Guid.MakeByReferenceType(),
+                CreatedWrapperFlags.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.CreateObjectReferenceUnsafe</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeMarshalCreateObjectReferenceUnsafe => field ??= WindowsRuntimeMarshal
+        .CreateMemberReference("CreateObjectReferenceUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                Guid.MakeByReferenceType(),
+                CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(object)</c>.

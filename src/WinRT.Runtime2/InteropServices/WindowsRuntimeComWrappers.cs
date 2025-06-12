@@ -92,7 +92,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// This method differs from <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> in that it lookup the appropriate
     /// <see cref="WindowsRuntimeMarshallingInfo"/> value and marshal the object via its <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/>,
     /// if present. This is why no input <see cref="CreateComInterfaceFlags"/> value is needed: this method will figure out the
-    /// right one to use automatically. If no marshaller is available, the general <see cref="object"/> marshaller will be used.
+    /// right one to use automatically. If <paramref name="instance"/> is a custom mapped type that is marshalled as a native
+    /// value directly, then this call may create such an object and bypass <see cref="ComWrappers"/> entirely. If no marshaller
+    /// is available, the general <see cref="object"/> marshaller will be used.
     /// </para>
     /// <para>
     /// This method should only be used when no static type information is available. Otherwise, the overloads below should be used.

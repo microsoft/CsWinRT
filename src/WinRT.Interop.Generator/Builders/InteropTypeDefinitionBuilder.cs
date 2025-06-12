@@ -151,12 +151,10 @@ internal static partial class InteropTypeDefinitionBuilder
             method: tryCreateObjectMethod);
 
         // Declare the local variables:
-        //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
+        //   [0]: 'WindowsRuntimeObjectReference' (for 'result')
         CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
 
         // Jump labels
-        CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
-        CilInstruction stind_i4_setFlags = new(Stind_I4);
         CilInstruction ldarg_3_failure = new(Ldarg_3);
 
         // Create a method body for the 'TryCreateObject' method
@@ -175,20 +173,9 @@ internal static partial class InteropTypeDefinitionBuilder
                 // Create the 'WindowsRuntimeObjectReference' instance
                 { Ldarg_0 },
                 { Call, get_IidMethod },
-                { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
-                { Stloc_0 },
-
-                // Set the 'CreatedWrapperFlags' value correctly
                 { Ldarg_3 },
-                { Ldloc_0 },
-                { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
-                { Ldc_I4_0 },
-                { Conv_U },
-                { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
-                { Ldc_I4_1 },
-                { Br_S, stind_i4_setFlags.CreateLabel() },
-                { ldc_i4_0_noFlags },
-                { stind_i4_setFlags },
+                { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReferenceUnsafe.Import(module) },
+                { Stloc_0 },
 
                 // Create and assign the 'NativeObject' instance to return
                 { Ldarg_2 },
@@ -298,40 +285,16 @@ internal static partial class InteropTypeDefinitionBuilder
             declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
             method: createObjectMethod);
 
-        // Declare the local variables:
-        //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
-        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
-
-        // Jump labels
-        CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
-        CilInstruction stind_i4_setFlags = new(Stind_I4);
-
         // Create a method body for the 'CreateObject' method
         createObjectMethod.CilMethodBody = new CilMethodBody()
         {
-            LocalVariables = { loc_0_result },
             Instructions =
             {
                 // Create and initialize the 'WindowsRuntimeObjectReference' instance
                 { Ldarg_1 },
                 { Call, get_IidMethod },
-                { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
-                { Stloc_0 },
-
-                // Set the 'CreatedWrapperFlags' value correctly
                 { Ldarg_2 },
-                { Ldloc_0 },
-                { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
-                { Ldc_I4_0 },
-                { Conv_U },
-                { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
-                { Ldc_I4_1 },
-                { Br_S, stind_i4_setFlags.CreateLabel() },
-                { ldc_i4_0_noFlags },
-                { stind_i4_setFlags },
-
-                // Create and return the 'NativeObject' instance
-                { Ldloc_0 },
+                { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReference.Import(module) },
                 { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                 { Ret },
             }

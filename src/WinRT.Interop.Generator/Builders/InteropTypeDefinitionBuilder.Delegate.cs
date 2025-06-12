@@ -339,17 +339,21 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Object,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
             {
+                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) },
                 CilMethodBody = new CilMethodBody
                 {
                     // Create a new delegate targeting the 'Invoke' extension, with the 'WindowsRuntimeObjectReference' object
-                    // as target. This allows us to not need an additional type (and allcation) for the delegate target.
+                    // as target. This allows us to not need an additional type (and allocation) for the delegate target.
                     Instructions =
                     {
                         { Ldarg_0 },
                         { Call, get_IidMethod },
-                        { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                        { Ldarg_1 },
+                        { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReferenceUnsafe.Import(module) },
                         { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
                         { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
                         { Ret }
