@@ -91,7 +91,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        wrapperFlags = CreatedWrapperFlags.None;
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_UriRuntimeClass, out void* result);
 
