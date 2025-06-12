@@ -243,9 +243,30 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <summary>
-    /// Initializes a <see cref="WindowsRuntimeObjectReference"/> object for a given COM pointer to <c>IInspectable</c>.
+    /// Initializes a <see cref="WindowsRuntimeObjectReference"/> object for a given COM pointer, using <c>QueryInterface</c>.
     /// </summary>
     /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
+    /// <param name="iid">The IID that represents the interface implemented by <paramref name="externalComObject"/>.</param>
+    /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping <paramref name="externalComObject"/>.</returns>
+    /// <remarks>
+    /// This method is only meant to be used when creating a managed object reference around native objects. It should not
+    /// be used when dealing with Windows Runtime types instantiated from C# (which includes COM aggregation scenarios too).
+    /// </remarks>
+    internal static WindowsRuntimeObjectReference InitializeObjectReference(void* externalComObject, in Guid iid)
+    {
+        // Do a 'QueryInterface' to actually get the interface pointer we're looking for
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return InitializeObjectReferenceUnsafe(interfacePtr, in iid);
+    }
+
+    /// <summary>
+    /// Initializes a <see cref="WindowsRuntimeObjectReference"/> object for a given COM pointer.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
+    /// <param name="iid">The IID that represents the interface implemented by <paramref name="externalComObject"/>.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping <paramref name="externalComObject"/>.</returns>
     /// <remarks>
     /// <para>
@@ -253,28 +274,20 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// be used when dealing with Windows Runtime types instantiated from C# (which includes COM aggregation scenarios too).
     /// </para>
     /// <para>
-    /// This method takes ownership of <paramref name="externalComObject"/>.
+    /// Unlike <see cref="InitializeObjectReference"/>, this method assumes <paramref name="externalComObject"/> is exactly the
+    /// right interface pointer for <paramref name="iid"/>, and will therefore skip doing a <c>QueryInterface</c> call on it.
     /// </para>
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeFromNativeInspectableUnsafe(ref void* externalComObject)
+    internal static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(void* externalComObject, in Guid iid)
     {
-        void* acquiredComObject = externalComObject;
-
-        externalComObject = null;
-
         // Early free-threaded check, to handle failure cases too (see notes above)
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredComObject);
+        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(externalComObject);
 
-        // If we are about to throw, release the external COM object first, to avoid leaks
-        if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
-        {
-            _ = IUnknownVftbl.ReleaseUnsafe(acquiredComObject);
-
-            Marshal.ThrowExceptionForHR(isFreeThreaded);
-        }
+        // In theory this should never throw
+        Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(acquiredComObject, in WellKnownInterfaceIds.IID_IReferenceTracker, out void* referenceTracker);
+        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownInterfaceIds.IID_IReferenceTracker, out void* referenceTracker);
 
         if (referenceTracker != null)
         {
@@ -288,10 +301,19 @@ public unsafe partial class WindowsRuntimeObjectReference
             _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
 
-        // Create the right object reference. Because this method requires the input COM object
-        // to be an 'IInspectable' interface pointer, we can also optimize for that case.
-        return isFreeThreaded == WellKnownErrorCodes.S_OK
-            ? new FreeThreadedObjectReference(acquiredComObject, referenceTracker)
-            : new ContextAwareInspectableObjectReference(acquiredComObject, referenceTracker);
+        // We're going to store the input object, so increment its ref count
+        _ = IUnknownVftbl.AddRefUnsafe(externalComObject);
+
+        // Special case for free-threaded object references (see notes above).
+        // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
+        if (isFreeThreaded == WellKnownErrorCodes.S_OK)
+        {
+            return new FreeThreadedObjectReference(externalComObject, referenceTracker);
+        }
+
+        // Optimize the returned context-aware object reference if 'IInspectable' is requested
+        return iid == WellKnownInterfaceIds.IID_IInspectable
+            ? new ContextAwareInspectableObjectReference(externalComObject, referenceTracker)
+            : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid);
     }
 }
