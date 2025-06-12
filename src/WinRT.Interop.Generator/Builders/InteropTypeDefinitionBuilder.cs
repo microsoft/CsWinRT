@@ -286,6 +286,11 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeSignature typeSignature2 = typeSignature.Import(module);
         TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
 
+        // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
+        MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
+            interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
+            .MakeGenericInstanceMethod(typeSignature);
+
         // Define the 'ConvertToUnmanaged' method as follows:
         //
         // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<INTERFACE_TYPE> value)
@@ -294,19 +299,9 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
                 returnType: windowsRuntimeObjectReferenceValueType,
-                parameterTypes: [typeSignature2]));
-
-        marshallerType.Methods.Add(convertToUnmanagedMethod);
-
-        // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
-        MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
-            interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
-            .MakeGenericInstanceMethod(typeSignature);
-
-        // Create a method body for the 'ConvertToUnmanaged' method
-        convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
+                parameterTypes: [typeSignature2]))
         {
-            Instructions =
+            CilInstructions =
             {
                 { Ldarg_0 },
                 { Call, get_IidMethod },
@@ -314,6 +309,14 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ret }
             }
         };
+
+        marshallerType.Methods.Add(convertToUnmanagedMethod);
+
+        // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
+        IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
+            interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
+            .Import(module)
+            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
 
         // Define the 'ConvertToManaged' method as follows:
         //
@@ -323,26 +326,17 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
                 returnType: typeSignature2,
-                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
-
-        marshallerType.Methods.Add(convertToManagedMethod);
-
-        // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
-        IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
-            interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-            .Import(module)
-            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
-
-        // Create a method body for the 'ConvertToManaged' method
-        convertToManagedMethod.CilMethodBody = new CilMethodBody()
+                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
         {
-            Instructions =
+            CilInstructions =
             {
                 { Ldarg_0 },
                 { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
                 { Ret }
             }
         };
+
+        marshallerType.Methods.Add(convertToManagedMethod);
     }
 
     /// <summary>
@@ -556,22 +550,20 @@ internal static partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: vtablesPropertyType,
                     parameterTypes: []))
-            { IsAggressiveInlining = true }
+            {
+                IsAggressiveInlining = true,
+                CilInstructions =
+                {
+                    // Create a method body for the 'Vtables' property (it directly returns the 'Entries' field address)
+                    { Ldsflda, entriesField },
+                    { Conv_U },
+                    { Ret }
+                }
+            }
         };
 
         implType.Properties.Add(vtablesProperty);
         implType.Methods.Add(vtablesProperty.GetMethod!);
-
-        // Create a method body for the 'Vtables' property (it directly returns the 'Entries' field address)
-        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
-            {
-                { Ldsflda, entriesField },
-                { Conv_U },
-                { Ret }
-            }
-        };
     }
 
     /// <summary>

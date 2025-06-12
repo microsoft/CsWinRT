@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
@@ -67,23 +66,20 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
-                    parameterTypes: [delegateType.Import(module)]));
-
-            // Add and implement the 'ConvertToUnmanaged' method
-            eventSourceType.AddMethodImplementation(
-                declaration: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType).Import(module),
-                method: convertToUnmanagedMethod);
-
-            // Create a method body for the 'CreateObject' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [delegateType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_1 },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Ret }
                 }
             };
+
+            // Add and implement the 'ConvertToUnmanaged' method
+            eventSourceType.AddMethodImplementation(
+                declaration: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType).Import(module),
+                method: convertToUnmanagedMethod);
         }
 
         /// <summary>
@@ -134,23 +130,20 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
-                    parameterTypes: [delegateType.Import(module)]));
-
-            // Add and implement the 'ConvertToUnmanaged' method
-            eventSourceType.AddMethodImplementation(
-                declaration: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType).Import(module),
-                method: convertToUnmanagedMethod);
-
-            // Create a method body for the 'CreateObject' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [delegateType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_1 },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Ret }
                 }
             };
+
+            // Add and implement the 'ConvertToUnmanaged' method
+            eventSourceType.AddMethodImplementation(
+                declaration: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType).Import(module),
+                method: convertToUnmanagedMethod);
         }
     }
 }
