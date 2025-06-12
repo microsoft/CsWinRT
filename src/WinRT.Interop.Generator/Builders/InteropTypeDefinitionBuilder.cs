@@ -232,38 +232,6 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
-        // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-        PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
-
-        // Define the 'ComputeVtables' method as follows:
-        //
-        // public static ComInterfaceEntry* ComputeVtables(out int count)
-        MethodDefinition computeVtablesMethod = new(
-            name: "ComputeVtables"u8,
-            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-            signature: MethodSignature.CreateInstance(
-                returnType: computeVtablesReturnType,
-                parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
-        {
-            // The parameter is '[out]'
-            ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
-        };
-
-        // Add and implement the 'ComputeVtables' method
-        marshallerType.AddMethodImplementation(
-            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-            method: computeVtablesMethod);
-
-        // Create a method body for the 'ComputeVtables' method
-        computeVtablesMethod.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
-            {
-                { Newobj, interopReferences.UnreachableException_ctor.Import(module) },
-                { Throw }
-            }
-        };
-
         // Define the 'CreateObject' method as follows:
         //
         // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
