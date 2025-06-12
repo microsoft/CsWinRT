@@ -82,11 +82,11 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
         }
 
-        WindowsRuntimeComWrappers.ObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
-
-        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
+        // Marshal the object as an opaque object, as we have no static type information available
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: null,
+            unsealedObjectComWrappersCallback: null);
     }
 
     /// <summary>

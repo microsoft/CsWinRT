@@ -24,7 +24,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeMarshallingInfo? MarshallingInfo;
+    private static WindowsRuntimeMarshallingInfo? MarshallingInfo;
 
     /// <summary>
     /// The <see cref="WindowsRuntimeObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible,
@@ -36,7 +36,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeObjectComWrappersCallback? ObjectComWrappersCallback;
+    private static WindowsRuntimeObjectComWrappersCallback? ObjectComWrappersCallback;
 
     /// <summary>
     /// The <see cref="WindowsRuntimeUnsealedObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible,
@@ -46,13 +46,13 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// The same remarks as with <see cref="ObjectComWrappersCallback"/> apply here, the only difference is this callback is for unsealed types.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeUnsealedObjectComWrappersCallback? UnsealedObjectComWrappersCallback;
+    private static WindowsRuntimeUnsealedObjectComWrappersCallback? UnsealedObjectComWrappersCallback;
 
     /// <summary>
     /// The derived interface pointer to use for marshalling (this should always be supplied).
     /// </summary>
     [ThreadStatic]
-    internal static void* CreateObjectTargetInterfacePointer;
+    private static void* CreateObjectTargetInterfacePointer;
 
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeComWrappers"/> instance.
@@ -174,6 +174,40 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         Marshal.ThrowExceptionForHR(hresult);
 
         return (nint)interfacePtr;
+    }
+
+    /// <summary>
+    /// Get the currently registered managed object or creates a new managed object and registers it.
+    /// </summary>
+    /// <param name="externalComObject">Object to import for usage into the .NET runtime.</param>
+    /// <param name="objectComWrappersCallback"><inheritdoc cref="ObjectComWrappersCallback" path="/summary/node()"/></param>
+    /// <param name="unsealedObjectComWrappersCallback"><inheritdoc cref="UnsealedObjectComWrappersCallback" path="/summary/node()"/></param>
+    /// <returns>Returns a managed object associated with the supplied external COM object.</returns>
+    /// <remarks>
+    /// <para>
+    /// If a managed object was previously created for the specified <paramref name="externalComObject" />
+    /// using this <see cref="ComWrappers" /> instance, the previously created object will be returned.
+    /// If not, a new one will be created.
+    /// </para>
+    /// <para>
+    /// Unlike the <see cref="ComWrappers.GetOrCreateObjectForComInstance(nint, CreateObjectFlags)"/> overloads,
+    /// this method assumes that <paramref name="externalComObject"/> is some <c>IInspectable</c> interface pointer.
+    /// Calling this method with a COM pointer that does not implement <c>IInspectable</c> is undefined behavior.
+    /// </para>
+    /// </remarks>
+    public object GetOrCreateObjectForComInstanceUnsafe(
+        nint externalComObject,
+        WindowsRuntimeObjectComWrappersCallback? objectComWrappersCallback,
+        WindowsRuntimeUnsealedObjectComWrappersCallback? unsealedObjectComWrappersCallback)
+    {
+        ObjectComWrappersCallback = objectComWrappersCallback;
+        UnsealedObjectComWrappersCallback = unsealedObjectComWrappersCallback;
+        CreateObjectTargetInterfacePointer = (void*)externalComObject;
+
+        // We always pass no flags, as our implementation will use 'CreatedWrapperFlags' to signal the
+        // appropriate flags back from the marshalling stubs. We do pass a user state so that we can
+        // pick the overload that will actually observe the returned 'CreatedWrapperFlags' value.
+        return GetOrCreateObjectForComInstance(externalComObject, CreateObjectFlags.None, userState: null);
     }
 
     /// <inheritdoc/>

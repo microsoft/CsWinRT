@@ -73,11 +73,11 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return ComWrappers.ComInterfaceDispatch.GetInstance<Delegate>((ComWrappers.ComInterfaceDispatch*)value);
         }
 
-        WindowsRuntimeComWrappers.ObjectComWrappersCallback = WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>();
-        WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
-
-        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
+        // Marshal the object with the supplied callback for sealed runtime class types
+        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>(),
+            unsealedObjectComWrappersCallback: null);
 
         return Unsafe.As<Delegate>(managedDelegate);
     }

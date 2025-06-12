@@ -29,10 +29,10 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
             return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
         }
 
-        WindowsRuntimeComWrappers.ObjectComWrappersCallback = null;
-        WindowsRuntimeComWrappers.UnsealedObjectComWrappersCallback = WindowsRuntimeUnsealedObjectComWrappersCallback.GetInstance<TCallback>();
-        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
-
-        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
+        // Marshal the value with the supplied callback for unsealed types (or interfaces)
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: null,
+            unsealedObjectComWrappersCallback: WindowsRuntimeUnsealedObjectComWrappersCallback.GetInstance<TCallback>());
     }
 }
