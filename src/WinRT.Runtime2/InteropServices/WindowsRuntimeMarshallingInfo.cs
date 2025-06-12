@@ -23,32 +23,40 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// The external types mapping for Windows Runtime types.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "We expect external types to only be preserved if used in runtime casts.")]
-    private static readonly IReadOnlyDictionary<string, Type> WindowsRuntimeExternalTypes = TypeMapping.GetOrCreateExternalTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
+    private static readonly IReadOnlyDictionary<string, Type> ExternalTypeMapping = TypeMapping.GetOrCreateExternalTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
 
     /// <summary>
     /// The proxy types mapping for Windows Runtime types.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "We expect only proxy types for constructed types to be preserved.")]
-    private static readonly IReadOnlyDictionary<Type, Type> WindowsRuntimeProxyTypes = TypeMapping.GetOrCreateProxyTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
+    private static readonly IReadOnlyDictionary<Type, Type> ProxyTypeMapping = TypeMapping.GetOrCreateProxyTypeMapping<WindowsRuntimeComWrappersTypeMapGroup>();
 
     /// <summary>
     /// The cached external types mapping for Windows Runtime types.
     /// </summary>
     /// <remarks>
-    /// This is used to introduce a cache layer around <see cref="WindowsRuntimeExternalTypes"/>. It is done for two reasons:
+    /// This is used to introduce a cache layer around <see cref="ExternalTypeMapping"/>. It is done for two reasons:
     /// allow lookups without always instantiating a <see cref="string"/>, and reducing the overhead. Lookups into the actual
     /// runtime-provided dictionary can be quite expensive, as they might also do UTF8 transcoding internally.
     /// </remarks>
-    private static readonly ConcurrentDictionary<string, Type?> TypeNameToMappedTypes = new();
+    private static readonly ConcurrentDictionary<string, Type?> TypeNameToMappedTypeDictionary = [];
 
     /// <summary>
-    /// The map of marshalling info for all types that can participate in marshalling.
+    /// The cached marshalling infos for Windows Runtime types, accounting for inheritance.
+    /// </summary>
+    /// <remarks>
+    /// This is used to avoid traversing the type hierarchy for a given type multiple times.
+    /// </remarks>
+    private static readonly ConcurrentDictionary<string, WindowsRuntimeMarshallingInfo?> TypeNameToMostDerivedMarshallingInfoDictionary = [];
+
+    /// <summary>
+    /// The table of marshalling info for all types that can participate in marshalling.
     /// </summary>
     /// <remarks>
     /// This will only have non <see langword="null"/> values for types needing special marshalling. Types which are meant to
     /// be marshalled as opaque <c>IInspectable</c> objects will have no associated values, and should be handled separately.
     /// </remarks>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?> TypeToMetadataProviderTypes = [];
+    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?> TypeToMarshallingInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateMarshallingInfo"/>.
@@ -151,15 +159,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <param name="runtimeClassName">The input runtime class name to use for lookups.</param>
     /// <param name="info">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if found.</param>
     /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
-    /// <remarks>
-    /// This can be used to support runtime type checks for objects marshalled from native to managed.
-    /// </remarks>
     public static bool TryGetInfo(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
         // Tries to get the external type for the input runtime class name
         static Type? TryGetExternalType(ReadOnlySpan<char> runtimeClassName)
         {
-            var alternate = TypeNameToMappedTypes.GetAlternateLookup<ReadOnlySpan<char>>();
+            var alternate = TypeNameToMappedTypeDictionary.GetAlternateLookup<ReadOnlySpan<char>>();
 
             // Check if we already have a cached result (it might be 'null')
             if (alternate.TryGetValue(runtimeClassName, out Type? externalType))
@@ -168,7 +173,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
             }
 
             // Try to get the external type (which might not be present, if we don't have projections or if the entry has been removed)
-            _ = WindowsRuntimeExternalTypes.TryGetValue(runtimeClassName.ToString(), out externalType);
+            _ = ExternalTypeMapping.TryGetValue(runtimeClassName.ToString(), out externalType);
 
             // Try to add the cached value to the table
             _ = alternate.TryAdd(runtimeClassName, externalType);
@@ -183,7 +188,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // We found a mapped external type, return its associated marshalling info
         if (externalType is not null)
         {
-            info = TypeToMetadataProviderTypes.GetOrAdd(externalType, CreateMarshallingInfoCallback)!;
+            info = TypeToMarshallingInfoTable.GetOrAdd(externalType, CreateMarshallingInfoCallback)!;
 
             return true;
         }
@@ -191,6 +196,100 @@ internal sealed class WindowsRuntimeMarshallingInfo
         info = null;
 
         return false;
+    }
+
+    /// <summary>
+    /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for the most derived type in a given hierarchy.
+    /// </summary>
+    /// <param name="runtimeClassName">The input runtime class name to use for lookups.</param>
+    /// <param name="info">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if found.</param>
+    /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
+    /// <remarks>
+    /// This can be used to support runtime type checks for objects marshalled from native to managed.
+    /// </remarks>
+    public static bool TryGetMostDerivedInfo(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
+    {
+        var alternate = TypeNameToMostDerivedMarshallingInfoDictionary.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        // If we already have a cached info, return it. Note that the result from the map
+        // might be 'null', if no marshalling info exists for a given type hierarchy. In that
+        // case, we need to check for 'null' here, to return the correct result.
+        if (alternate.TryGetValue(runtimeClassName, out info))
+        {
+            return info is not null;
+        }
+
+        // Start the lookup with the immediate parent, if this fails we stop immediately
+        if (!WindowsRuntimeTypeHierarchy.TryGetBaseRuntimeClassName(
+            runtimeClassName: runtimeClassName,
+            out ReadOnlySpan<char> baseRuntimeClassName,
+            out int nextBaseRuntimeClassNameIndex))
+        {
+            info = null;
+
+            // Store the result for later, to avoid repeated lookups. If we're racing with another thread,
+            // it doesn't matter if we lose, as the result for a given runtime class name is always the same.
+            _ = alternate.TryAdd(runtimeClassName, null);
+
+            return false;
+        }
+
+        // After the first lookup, we now have a fast path to walk any remaining base types in the hierarchy.
+        // For each of them, we just try to get the marshalling info, and then move up if that failed.
+        while (true)
+        {
+            // Try to find the marshalling info for the base type, and check the value as above
+            if (TryGetInfo(baseRuntimeClassName, out info))
+            {
+                _ = alternate.TryAdd(runtimeClassName, info);
+
+                return info is not null;
+            }
+
+            // Move up to the next base type, if available
+            if (!WindowsRuntimeTypeHierarchy.TryGetNextBaseRuntimeClassName(
+                baseRuntimeClassNameIndex: nextBaseRuntimeClassNameIndex,
+                baseRuntimeClassName: out baseRuntimeClassName,
+                nextBaseRuntimeClassNameIndex: out nextBaseRuntimeClassNameIndex))
+            {
+                break;
+            }
+        }
+
+        _ = alternate.TryAdd(runtimeClassName, null);
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for the most derived type in a given hierarchy, or the starting type itself.
+    /// </summary>
+    /// <param name="runtimeClassName">The input runtime class name to use for lookups.</param>
+    /// <param name="info">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if found.</param>
+    /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
+    /// <remarks>
+    /// This can be used to support runtime type checks for objects marshalled from native to managed.
+    /// </remarks>
+    public static bool TryGetMostDerivedInfoOrSelf(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
+    {
+        var alternate = TypeNameToMostDerivedMarshallingInfoDictionary.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        // Start by checking for a cached info, like in 'TryGetMostDerivedInfo' above
+        if (alternate.TryGetValue(runtimeClassName, out info))
+        {
+            return info is not null;
+        }
+
+        // Next, check whether we have info for this exact type first (this is the whole point of this method)
+        if (TryGetInfo(runtimeClassName, out info))
+        {
+            _ = alternate.TryAdd(runtimeClassName, info);
+
+            return true;
+        }
+
+        // If not, just walk base types as usual
+        return TryGetMostDerivedInfo(runtimeClassName, out info);
     }
 
     /// <summary>
@@ -233,7 +332,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </remarks>
     public static bool TryGetInfo(Type managedType, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
-        WindowsRuntimeMarshallingInfo? result = TypeToMetadataProviderTypes.GetOrAdd(managedType, GetMetadataProviderTypeCallback);
+        WindowsRuntimeMarshallingInfo? result = TypeToMarshallingInfoTable.GetOrAdd(managedType, GetMetadataProviderTypeCallback);
 
         info = result;
 
@@ -418,7 +517,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // Check if we have a mapped proxy type for this managed type. If we do, that type
         // will be the metadata provider, and the current managed type will be the public
         // type. In this case, we don't need to query for '[WindowsRuntimeMappedType]'.
-        if (WindowsRuntimeProxyTypes.TryGetValue(managedType, out Type? proxyType))
+        if (ProxyTypeMapping.TryGetValue(managedType, out Type? proxyType))
         {
             return new(proxyType, publicType: managedType);
         }
