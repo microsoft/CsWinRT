@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -56,16 +57,21 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// tracking support, where applicable). They can also return new "equivalent values" when needed (eg. for custom mapped types).
     /// </para>
     /// <para>
-    /// The default implementation will use the <see cref="ComWrappers"/> implementation in CsWinRT, with reference tracking support.
+    /// Implementations are allowed to use <see cref="WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject"/> if they need to directly
+    /// marshal a managed object via the built-in <see cref="ComWrappers"/> implementation in CsWinRT. If instead they need to use custom
+    /// logic to marshal types, they are also allowed to create a native object to return in whichever manner is required for the scenario.
     /// </para>
     /// <para>
     /// The <paramref name="value"/> argument will never be <see langword="null"/>, and implementations don't have to validate that.
     /// </para>
     /// </remarks>
-    /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>"/>
     public virtual void* GetOrCreateComInterfaceForObject(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static NotSupportedException GetNotSupportedException()
+            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(GetOrCreateComInterfaceForObject)}'.");
+
+        throw GetNotSupportedException();
     }
 
     /// <summary>
@@ -94,7 +100,14 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// </para>
     /// </remarks>
     /// <seealso cref="ComWrappers.ComputeVtables"/>
-    public abstract ComWrappers.ComInterfaceEntry* ComputeVtables(out int count);
+    public virtual ComWrappers.ComInterfaceEntry* ComputeVtables(out int count)
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static NotSupportedException GetNotSupportedException()
+            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(ComputeVtables)}'.");
+
+        throw GetNotSupportedException();
+    }
 
     /// <summary>
     /// Creates a managed Windows Runtime object for a given native object.

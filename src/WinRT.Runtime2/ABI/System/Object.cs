@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -81,6 +81,7 @@ file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeCo
     /// <inheritdoc/>
     public override unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        throw new NotSupportedException("Marshalling 'object' instances is not supported.");
+        // Marshalling 'object' instances is not supported, and it should just never happen
+        throw new UnreachableException();
     }
 }

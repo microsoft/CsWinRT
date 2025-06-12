@@ -172,6 +172,12 @@ file static class PropertyChangedEventHandlerInterfaceEntriesImpl
 file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+    }
+
+    /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(PropertyChangedEventHandlerInterfaceEntries) / sizeof(ComInterfaceEntry);

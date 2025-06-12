@@ -122,6 +122,12 @@ file static class ExceptionInterfaceEntriesImpl
 file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+    }
+
+    /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(ExceptionInterfaceEntries) / sizeof(ComInterfaceEntry);

@@ -3,13 +3,11 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
-using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
@@ -84,13 +82,6 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return PropertyChangedEventArgsRuntimeClassFactory.CreateInstance(((global::System.ComponentModel.PropertyChangedEventArgs)value).PropertyName);
-    }
-
-    /// <inheritdoc/>
-    public override ComInterfaceEntry* ComputeVtables(out int count)
-    {
-        // All managed 'PropertyChangedEventArgs' instances are marshalled as fully native objects
-        throw new UnreachableException();
     }
 
     /// <inheritdoc/>

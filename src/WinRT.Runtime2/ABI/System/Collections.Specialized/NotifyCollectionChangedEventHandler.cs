@@ -173,6 +173,12 @@ file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
 file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+    }
+
+    /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(NotifyCollectionChangedEventHandlerInterfaceEntries) / sizeof(ComInterfaceEntry);

@@ -45,14 +45,14 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             {
                 [DoesNotReturn]
                 [StackTraceHidden]
-                static void ThrowArgumentException(object value)
+                static void ThrowNotSupportedException(object value)
                 {
                     throw new NotSupportedException(
                         $"This delegate instance of type '{value.GetType()}' cannot be marshalled as a Windows Runtime 'IInspectable' object, because it is wrapping a native " +
                         $"Windows Runtime delegate object, which does not implement the 'IInspectable' interface. Only managed delegate instances can be marshalled this way.");
                 }
 
-                ThrowArgumentException(value);
+                ThrowNotSupportedException(value);
             }
 
             return new(inspectablePtr);

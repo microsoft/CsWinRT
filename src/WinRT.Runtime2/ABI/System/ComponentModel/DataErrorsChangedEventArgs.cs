@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
-using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
@@ -77,13 +75,6 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return DataErrorsChangedEventArgsRuntimeClassFactory.CreateInstance(((global::System.ComponentModel.DataErrorsChangedEventArgs)value).PropertyName);
-    }
-
-    /// <inheritdoc/>
-    public override ComInterfaceEntry* ComputeVtables(out int count)
-    {
-        // All managed 'DataErrorsChangedEventArgs' instances are marshalled as fully native objects
-        throw new UnreachableException();
     }
 
     /// <inheritdoc/>
