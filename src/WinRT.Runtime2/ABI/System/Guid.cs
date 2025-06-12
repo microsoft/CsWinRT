@@ -114,7 +114,7 @@ internal sealed unsafe class GuidComWrappersMarshallerAttribute : WindowsRuntime
     {
         count = sizeof(GuidInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in GuidInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in GuidInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -168,7 +168,7 @@ file static unsafe class GuidReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
@@ -258,7 +258,7 @@ file static unsafe class GuidPropertyValueImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>

@@ -75,7 +75,7 @@ file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeCo
     {
         count = sizeof(ObjectInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in ObjectInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in ObjectInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>

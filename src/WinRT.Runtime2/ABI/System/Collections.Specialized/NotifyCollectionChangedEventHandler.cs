@@ -176,7 +176,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
     {
         count = sizeof(NotifyCollectionChangedEventHandlerInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in NotifyCollectionChangedEventHandlerInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in NotifyCollectionChangedEventHandlerInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -234,7 +234,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>
@@ -307,7 +307,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

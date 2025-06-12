@@ -116,7 +116,7 @@ internal sealed unsafe class Matrix3x2ComWrappersMarshallerAttribute : WindowsRu
     {
         count = sizeof(Matrix3x2InterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in Matrix3x2InterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in Matrix3x2InterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -170,7 +170,7 @@ file static unsafe class Matrix3x2ReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

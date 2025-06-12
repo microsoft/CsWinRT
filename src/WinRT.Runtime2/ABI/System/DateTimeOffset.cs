@@ -154,7 +154,7 @@ file sealed unsafe class DateTimeOffsetComWrappersMarshallerAttribute : WindowsR
     {
         count = sizeof(DateTimeOffsetInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in DateTimeOffsetInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in DateTimeOffsetInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -210,7 +210,7 @@ file static unsafe class DateTimeOffsetReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
@@ -302,7 +302,7 @@ file static unsafe class DateTimeOffsetPropertyValueImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>

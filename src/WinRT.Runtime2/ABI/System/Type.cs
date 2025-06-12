@@ -211,7 +211,7 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
     {
         count = sizeof(TypeInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in TypeInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in TypeInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -277,7 +277,7 @@ file static unsafe class TypeReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

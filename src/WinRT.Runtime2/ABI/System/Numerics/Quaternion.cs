@@ -116,7 +116,7 @@ internal sealed unsafe class QuaternionComWrappersMarshallerAttribute : WindowsR
     {
         count = sizeof(QuaternionInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in QuaternionInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in QuaternionInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -170,7 +170,7 @@ file static unsafe class QuaternionReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

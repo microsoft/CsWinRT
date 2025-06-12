@@ -116,7 +116,7 @@ internal sealed unsafe class Vector3ComWrappersMarshallerAttribute : WindowsRunt
     {
         count = sizeof(Vector3InterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in Vector3InterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in Vector3InterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -170,7 +170,7 @@ file static unsafe class Vector3ReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

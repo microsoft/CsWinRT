@@ -104,7 +104,7 @@ internal sealed unsafe class EventRegistrationTokenComWrappersMarshallerAttribut
     {
         count = sizeof(EventRegistrationTokenInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in EventRegistrationTokenInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in EventRegistrationTokenInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -158,7 +158,7 @@ file static unsafe class EventRegistrationTokenReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

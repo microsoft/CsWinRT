@@ -21,7 +21,7 @@ public unsafe partial class IPropertyValueImpl
     public static nint InspectableArrayVtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in InspectableArrayPropertyValueImpl.Vftbl));
+        get => (nint)Unsafe.AsPointer(in InspectableArrayPropertyValueImpl.Vftbl);
     }
 }
 

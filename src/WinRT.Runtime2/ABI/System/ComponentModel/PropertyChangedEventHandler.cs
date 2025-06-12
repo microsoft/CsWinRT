@@ -175,7 +175,7 @@ file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribu
     {
         count = sizeof(PropertyChangedEventHandlerInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in PropertyChangedEventHandlerInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in PropertyChangedEventHandlerInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -233,7 +233,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <inheritdoc cref="global::System.ComponentModel.PropertyChangedEventHandler"/>
@@ -306,7 +306,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>

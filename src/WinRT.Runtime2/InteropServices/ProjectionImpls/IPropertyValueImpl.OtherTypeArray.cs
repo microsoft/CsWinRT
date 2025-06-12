@@ -19,7 +19,7 @@ public unsafe partial class IPropertyValueImpl
     public static nint OtherTypeArrayVtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in OtherTypeArrayPropertyValueImpl.Vftbl));
+        get => (nint)Unsafe.AsPointer(in OtherTypeArrayPropertyValueImpl.Vftbl);
     }
 }
 

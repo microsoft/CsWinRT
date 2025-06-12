@@ -126,7 +126,7 @@ file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntim
     {
         count = sizeof(ExceptionInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in ExceptionInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in ExceptionInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -185,7 +185,7 @@ file static unsafe class ExceptionReferenceImpl
     public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
