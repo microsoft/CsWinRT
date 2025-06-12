@@ -90,7 +90,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="GetActivationFactory(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName)
     {
-        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in Unsafe.NullRef<Guid>(), out void* activationFactory);
+        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out void* activationFactory);
 
         ThrowIfActivationFailed(runtimeClassName, hresult);
 
@@ -150,7 +150,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
-        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in Unsafe.NullRef<Guid>(), out activationFactory);
+        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory);
 
         return WellKnownErrorCodes.Succeeded(hresult);
     }
