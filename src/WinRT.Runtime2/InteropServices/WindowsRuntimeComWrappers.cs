@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -117,7 +116,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         else
         {
             // Special case 'Exception', see notes in 'ComputeVtables' below for more details. Repeating this here
-            // allows us to still stip the repeated lookup, as we already know we won't find a matching key pair.
+            // allows us to still skip the repeated lookup, as we already know we won't find a matching key pair.
             MarshallingInfo = instance is Exception
                 ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
                 : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
@@ -265,26 +264,17 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                 {
                     return wrapperObject;
                 }
-
-                // We didn't find an exact match, so we need to walk the parent types in the hierarchy. Note that
-                // if the type is an interface type, this will simply not find any matches and return immediately.
-                if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfo(
-                    runtimeClassName: runtimeClassName,
-                    info: out WindowsRuntimeMarshallingInfo? unsealedMarshallingInfo))
-                {
-                    return unsealedMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
-                }
             }
-            else
+
+            // We didn't find an exact match, so we need to walk the parent types in the hierarchy. Note that
+            // if the type is an interface type, this will simply not find any matches and return immediately.
+            // This also covers cases where we have no static type information whatsoever (i.e. we're just
+            // marshalling 'object'). This traversal allows us to still return derived types, when not trimmed.
+            if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfo(
+                runtimeClassName: runtimeClassName,
+                info: out WindowsRuntimeMarshallingInfo? unsealedMarshallingInfo))
             {
-                // If we have no static type information whatsoever (i.e. we're just marshalling 'object'), then
-                // we also first try to lookup marshalling info for the current type, and then walk the base types.
-                if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfoOrSelf(
-                    runtimeClassName: runtimeClassName,
-                    info: out WindowsRuntimeMarshallingInfo? opaqueMarshallingInfo))
-                {
-                    return opaqueMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
-                }
+                return unsealedMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
             }
 
             // We couldn't find any partially derived type to marshal: just return an opaque object.

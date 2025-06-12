@@ -205,7 +205,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <param name="info">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if found.</param>
     /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
     /// <remarks>
+    /// <para>
     /// This can be used to support runtime type checks for objects marshalled from native to managed.
+    /// </para>
+    /// <para>
+    /// The search will include <paramref name="runtimeClassName"/> itself, if we find marshalling info for it right away.
+    /// </para>
     /// </remarks>
     public static bool TryGetMostDerivedInfo(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
@@ -219,6 +224,20 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return info is not null;
         }
 
+        // Next, check whether we have info for this exact type. This is needed because even if we're marshalling an unsealed
+        // type and we are able to provide a specialized callback for it, it's possible that the actual object being returned
+        // is a more derived type that's also projected. In that case, we'll need to still be able to find the marshalling info
+        // for that type, and return that. If that is not available, the search will continue upwards and will also pass through
+        // the starting type (for which the marshalling info is guaranteed to be present, in this scenario).
+        if (TryGetInfo(runtimeClassName, out info))
+        {
+            // Store the result for later, to avoid repeated lookups. If we're racing with another thread,
+            // it doesn't matter if we lose, as the result for a given runtime class name is always the same.
+            _ = alternate.TryAdd(runtimeClassName, info);
+
+            return true;
+        }
+
         // Start the lookup with the immediate parent, if this fails we stop immediately
         if (!WindowsRuntimeTypeHierarchy.TryGetBaseRuntimeClassName(
             runtimeClassName: runtimeClassName,
@@ -227,8 +246,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
         {
             info = null;
 
-            // Store the result for later, to avoid repeated lookups. If we're racing with another thread,
-            // it doesn't matter if we lose, as the result for a given runtime class name is always the same.
             _ = alternate.TryAdd(runtimeClassName, null);
 
             return false;
@@ -259,37 +276,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
         _ = alternate.TryAdd(runtimeClassName, null);
 
         return false;
-    }
-
-    /// <summary>
-    /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for the most derived type in a given hierarchy, or the starting type itself.
-    /// </summary>
-    /// <param name="runtimeClassName">The input runtime class name to use for lookups.</param>
-    /// <param name="info">The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if found.</param>
-    /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
-    /// <remarks>
-    /// This can be used to support runtime type checks for objects marshalled from native to managed.
-    /// </remarks>
-    public static bool TryGetMostDerivedInfoOrSelf(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
-    {
-        var alternate = TypeNameToMostDerivedMarshallingInfoDictionary.GetAlternateLookup<ReadOnlySpan<char>>();
-
-        // Start by checking for a cached info, like in 'TryGetMostDerivedInfo' above
-        if (alternate.TryGetValue(runtimeClassName, out info))
-        {
-            return info is not null;
-        }
-
-        // Next, check whether we have info for this exact type first (this is the whole point of this method)
-        if (TryGetInfo(runtimeClassName, out info))
-        {
-            _ = alternate.TryAdd(runtimeClassName, info);
-
-            return true;
-        }
-
-        // If not, just walk base types as usual
-        return TryGetMostDerivedInfo(runtimeClassName, out info);
     }
 
     /// <summary>
