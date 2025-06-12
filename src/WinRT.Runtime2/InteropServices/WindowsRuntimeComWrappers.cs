@@ -304,7 +304,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // 'ComWrappers' will pass all objects that have been created so far and that are eligible for release though,
             // meaning we can very well encounter objects that we cannot unwrap and dispose manually. In those cases, we
             // are just skipping them to avoid crashing the app (there were several reports of this causing issues before).
-            if (WindowsRuntimeObjectMarshaller.TryUnwrap(obj, out WindowsRuntimeObjectReference? objReference))
+            if (WindowsRuntimeMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objReference))
             {
                 objReference.Dispose();
             }

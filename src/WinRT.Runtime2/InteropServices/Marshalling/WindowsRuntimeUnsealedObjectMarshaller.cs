@@ -24,7 +24,7 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
         }
 
         // Unwrap CCWs we recognize (same as with opaque objects)
-        if (WindowsRuntimeHelpers.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
         {
             return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
         }
