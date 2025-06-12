@@ -136,14 +136,7 @@ internal static partial class InteropTypeDefinitionBuilder
                     interopReferences.ReadOnlySpanChar.Import(module),
                     module.CorLibTypeFactory.Object.MakeByReferenceType(),
                     interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
-        {
-            // The last two parameters are '[out]'
-            ParameterDefinitions =
-            {
-                new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out),
-                new ParameterDefinition(sequence: 4, name: null, attributes: ParameterAttributes.Out)
-            }
-        };
+        { CilOutParameterIndices = [3, 4] };
 
         // Add and implement 'TryCreateObject'
         callbackType.AddMethodImplementation(
@@ -244,19 +237,8 @@ internal static partial class InteropTypeDefinitionBuilder
                     module.CorLibTypeFactory.Void.MakePointerType(),
                     interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
         {
-            // The 'wrapperFlags' parameter is '[out]'
-            ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
-        };
-
-        // Add and implement the 'CreateObject' method
-        marshallerType.AddMethodImplementation(
-            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-            method: createObjectMethod);
-
-        // Create a method body for the 'CreateObject' method
-        createObjectMethod.CilMethodBody = new CilMethodBody()
-        {
-            Instructions =
+            CilOutParameterIndices = [2],
+            CilInstructions =
             {
                 // Create and initialize the 'WindowsRuntimeObjectReference' instance
                 { Ldarg_1 },
@@ -267,6 +249,11 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ret },
             }
         };
+
+        // Add and implement the 'CreateObject' method
+        marshallerType.AddMethodImplementation(
+            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
+            method: createObjectMethod);
     }
 
     /// <summary>

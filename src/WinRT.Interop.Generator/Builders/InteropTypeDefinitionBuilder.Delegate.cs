@@ -343,7 +343,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
             {
-                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) },
+                CilOutParameterIndices = [2],
                 CilMethodBody = new CilMethodBody
                 {
                     // Create a new delegate targeting the 'Invoke' extension, with the 'WindowsRuntimeObjectReference' object
@@ -560,10 +560,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
                     parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
-            {
-                // The parameter is '[out]'
-                ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
-            };
+            { CilOutParameterIndices = [1] };
 
             // Add and implement the 'ComputeVtables' method
             marshallerType.AddMethodImplementation(
@@ -594,10 +591,7 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.Import(module).ToValueTypeSignature()]))
-            {
-                // The 'wrapperFlags' parameter is '[out]'
-                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
-            };
+            { CilOutParameterIndices = [2] };
 
             // Add and implement the 'CreateObject' method
             marshallerType.AddMethodImplementation(

@@ -300,10 +300,7 @@ internal partial class InteropTypeDefinitionBuilder
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module),
                         valueType.Import(module).MakeByReferenceType()]))
-            {
-                // The 'value' parameter is '[out]'
-                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
-            };
+            { CilOutParameterIndices = [3] };
 
             readOnlyDictionaryMethodsType.Methods.Add(tryGetValueMethod);
 
@@ -593,9 +590,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [keyType.Import(module), valueType.Import(module).MakeByReferenceType()]))
-            {
-                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
-            };
+            { CilOutParameterIndices = [2] };
 
             // Add and implement the 'TryGetValue' method
             interfaceImplType.AddMethodImplementation(

@@ -199,7 +199,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
             {
                 NoInlining = true,
-                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
+                CilOutParameterIndices = [3]
             };
 
             // Add and implement the 'IndexOf' method
