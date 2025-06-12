@@ -59,18 +59,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // Marshal 'value' as an 'IInspectable' (this method will take care of correctly marshalling objects with the right vtables)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateInspectableInterfaceForObject(value);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownInterfaceIds.IID_IInspectable);
 
-        // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the interface IID
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIds.IID_IInspectable, out void* interfacePtr);
-
-        // We can release the 'IUnknown' reference now, it's no longer needed
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
-        Marshal.ThrowExceptionForHR(hresult);
-
-        return new(interfacePtr);
+        return new(thisPtr);
     }
 
     /// <summary>

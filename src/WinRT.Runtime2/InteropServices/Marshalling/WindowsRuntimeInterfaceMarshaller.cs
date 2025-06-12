@@ -51,13 +51,15 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
         }
 
         // Marshal 'value' as an 'IInspectable' (same as in 'WindowsRuntimeObjectMarshaller')
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateInspectableInterfaceForObject(value);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value);
 
         // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
         // The local cache for object references only applies to projected runtime classes, not managed types.
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
 
-        // We can release the 'IUnknown' reference now, it's no longer needed
+        // We can release the 'IUnknown' reference now, it's no longer needed. We would normally just
+        // use the 'GetOrCreateComInterfaceForObject' overload taking care of all of this 'QueryInterface'
+        // logic automatically, but here we specifically want to throw a custom exception in case of failure.
         _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
 
         // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
