@@ -31,13 +31,13 @@ public unsafe partial class WindowsRuntimeObjectReference
             return null;
         }
 
-        // We're not transferring ownership, so we need to increment the reference count
-        _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
-
         // If the object is agile, avoid all the context tracking overhead
         HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr);
 
         Marshal.ThrowExceptionForHR(isFreeThreaded);
+
+        // We're now transferring ownership, so we need to increment the reference count
+        _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
 
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
@@ -73,26 +73,26 @@ public unsafe partial class WindowsRuntimeObjectReference
             return null;
         }
 
-        // Do a 'QueryInterface' to actually get the interface pointer we're looking for
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* qiObject);
-
-        Marshal.ThrowExceptionForHR(hresult);
-
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(qiObject);
+        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr);
 
         Marshal.ThrowExceptionForHR(isFreeThreaded);
+
+        // Do a 'QueryInterface' to actually get the interface pointer we're looking for
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
 
         // Now we can safely wrap it (no need to increment its reference count here)
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
         {
-            return new FreeThreadedObjectReference(qiObject, referenceTrackerPtr: null);
+            return new FreeThreadedObjectReference(interfacePtr, referenceTrackerPtr: null);
         }
 
         // Same optimization as above for context aware object references
         return iid == WellKnownInterfaceIds.IID_IInspectable
-            ? new ContextAwareInspectableObjectReference(qiObject, referenceTrackerPtr: null)
-            : new ContextAwareInterfaceObjectReference(qiObject, referenceTrackerPtr: null, iid: in iid);
+            ? new ContextAwareInspectableObjectReference(interfacePtr, referenceTrackerPtr: null)
+            : new ContextAwareInterfaceObjectReference(interfacePtr, referenceTrackerPtr: null, iid: in iid);
     }
 
     /// <summary>
@@ -110,14 +110,18 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// The resulting <see cref="WindowsRuntimeObjectReference"/> is <see langword="null"/> if <paramref name="thisPtr"/> is <see langword="null"/>.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReference? AttachUnsafe(ref void* thisPtr, in Guid iid)
+    internal static WindowsRuntimeObjectReference? AttachUnsafe(ref void* thisPtr, in Guid iid)
     {
         if (thisPtr is null)
         {
             return null;
         }
 
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr);
+        void* acquiredThisPtr = thisPtr;
+
+        thisPtr = null;
+
+        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredThisPtr);
 
         // This method is meant to transfer ownership to the returned object reference. However,
         // we need to handle the scenario where 'IsFreeThreadedUnsafe' might actually fail in a
@@ -126,32 +130,21 @@ public unsafe partial class WindowsRuntimeObjectReference
         // So we handle this special case here first, before doing anything else.
         if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-            thisPtr = null;
+            _ = IUnknownVftbl.ReleaseUnsafe(acquiredThisPtr);
 
             Marshal.ThrowExceptionForHR(isFreeThreaded);
         }
-
-        WindowsRuntimeObjectReference objectReference;
 
         // Special case for free-threaded object references (see notes above).
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
         {
-            objectReference = new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null);
-        }
-        else
-        {
-            // Once again, same optimization as above for context aware object references
-            objectReference = iid == WellKnownInterfaceIds.IID_IInspectable
-                ? new ContextAwareInspectableObjectReference(thisPtr, referenceTrackerPtr: null)
-                : new ContextAwareInterfaceObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
+            return new FreeThreadedObjectReference(acquiredThisPtr, referenceTrackerPtr: null);
         }
 
-        // We transferred ownership of the input pointer, so clear it to avoid double-free issues
-        thisPtr = null;
-
-        return objectReference;
+        // Once again, same optimization as above for context aware object references
+        return iid == WellKnownInterfaceIds.IID_IInspectable
+            ? new ContextAwareInspectableObjectReference(acquiredThisPtr, referenceTrackerPtr: null)
+            : new ContextAwareInterfaceObjectReference(acquiredThisPtr, referenceTrackerPtr: null, iid: in iid);
     }
 }
