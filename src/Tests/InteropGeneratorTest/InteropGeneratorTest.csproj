@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CsWinRTGenerateInteropAssembly>true</CsWinRTGenerateInteropAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CsWinRTTasksDirectory>$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Tasks\bin\Debug\net472\</CsWinRTTasksDirectory>
+  </PropertyGroup>
+
+  <!-- Properties to control importing the 'cswinrtgen' task -->
+  <PropertyGroup>
+    <CsWinRTTasksAssemblyDirectory Condition="'$(CsWinRTTasksAssemblyDirectory)' == ''">$(CsWinRTTasksDirectory)</CsWinRTTasksAssemblyDirectory>
+    <CsWinRTTasksAssemblyName>WinRT.Interop.Tasks.dll</CsWinRTTasksAssemblyName>
+    <CsWinRTTasksAssemblyNamespace>WindowsRuntime.Interop.Tasks</CsWinRTTasksAssemblyNamespace>
+    <CsWinRTTasksAssemblyPath>$([System.IO.Path]::Combine('$(CsWinRTTasksAssemblyDirectory)', '$(CsWinRTTasksAssemblyName)'))</CsWinRTTasksAssemblyPath>
+  </PropertyGroup>
+    
+  <!-- Load the 'cswinrtgen' task -->
+  <UsingTask AssemblyFile="$(CsWinRTTasksAssemblyPath)" TaskName="$(CsWinRTTasksAssemblyNamespace).CsWinRTGenerator" />
+
+  <!-- 'cswinrtgen' task -->
+  <Target
+    Name="InvokeCsWinRTGenerator"
+    DependsOnTargets="CoreCompile;GetTargetPath"
+    BeforeTargets="GenerateBuildDependencyFile;GeneratePublishDependencyFile"
+    Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'" >
+    
+    <!-- Default property values for 'cswinrtgen' -->
+    <PropertyGroup>
+      <CsWinRTToolsDirectory Condition="'$(CsWinRTToolsDirectory)' == ''"></CsWinRTToolsDirectory>
+      <CsWinRTGeneratorMaxDegreesOfParallelism Condition="'$(CsWinRTGeneratorMaxDegreesOfParallelism)' == ''">-1</CsWinRTGeneratorMaxDegreesOfParallelism>
+    </PropertyGroup>
+
+    <!-- Invoke 'cswinrtgen' -->
+    <CsWinRTGenerator
+      ReferenceAssemblyPaths="@(ReferencePath)"
+      OutputAssemblyPath="@(TargetPathWithTargetPlatformMoniker)"
+      InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
+      DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
+      CsWinRTToolsDirectory=""
+      UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)" >
+      <Output ItemName="CsWinRTGeneratorInteropAssemblyPath" TaskParameter="InteropAssemblyPath" />
+    </CsWinRTGenerator>
+
+    <!-- Add the interop .dll to the list of reference assemblies -->
+    <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
+  </Target>
+</Project>
