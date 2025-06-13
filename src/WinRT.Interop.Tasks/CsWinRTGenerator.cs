@@ -18,6 +18,11 @@ namespace WindowsRuntime.Interop.Tasks;
 public sealed class CsWinRTGenerator : ToolTask
 {
     /// <summary>
+    /// The name of the generated interop assembly.
+    /// </summary>
+    private const string InteropAssemblyName = "WinRT.Interop.dll";
+
+    /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
     /// the entire surface area for compilation. These assemblies are the full set of assemblies
     /// that will contribute to the interop .dll being generated.
@@ -28,14 +33,17 @@ public sealed class CsWinRTGenerator : ToolTask
     /// <summary>
     /// Gets or sets the path to the output assembly that was produced by the build (for the current project).
     /// </summary>
+    /// <remarks>
+    /// This property is an array, but it should only ever receive a single item.
+    /// </remarks>
     [Required]
-    public ITaskItem? OutputAssemblyPath { get; set; }
+    public ITaskItem[]? OutputAssemblyPath { get; set; }
 
     /// <summary>
     /// Gets or sets the directory where the generated interop assembly will be placed.
     /// </summary>
     /// <remarks>If not set, the same directory as <see cref="OutputAssemblyPath"/> will be used.</remarks>
-    public string? GeneratedAssemblyDirectory { get; set; }
+    public string? InteropAssemblyDirectory { get; set; }
 
     /// <summary>
     /// Gets or sets the directory where the debug repro will be produced.
@@ -61,8 +69,44 @@ public sealed class CsWinRTGenerator : ToolTask
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
     public int MaxDegreesOfParallelism { get; set; } = -1;
 
+    /// <summary>
+    /// Gets the resulting generated interop .dll item.
+    /// </summary>
+    [Output]
+    public ITaskItem? InteropAssemblyPath { get; private set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtgen.exe";
+
+    /// <summary>
+    /// Gets the effective item spec for the output assembly.
+    /// </summary>
+    private string EffectiveOutputAssemblyItemSpec => OutputAssemblyPath![0].ItemSpec;
+
+    /// <summary>
+    /// Gets the effective directory where the generated interop assembly will be placed.
+    /// </summary>
+    private string EffectiveGeneratedAssemblyDirectory => InteropAssemblyDirectory ?? Path.GetDirectoryName(EffectiveOutputAssemblyItemSpec)!;
+
+    /// <inheritdoc/>
+    [MemberNotNullWhen(true, nameof(InteropAssemblyPath))]
+    public override bool Execute()
+    {
+        // If the tool execution fails, we will not have a generated interop .dll path
+        if (!base.Execute())
+        {
+            InteropAssemblyPath = null;
+
+            return false;
+        }
+
+        string generatedAssemblyPath = Path.Combine(EffectiveGeneratedAssemblyDirectory, InteropAssemblyName);
+
+        // Return the generated interop assembly path as an output item (we mark this as private too)
+        InteropAssemblyPath = new TaskItem(generatedAssemblyPath, new Dictionary<string, string> { ["IsPrivate"] = "true" });
+
+        return true;
+    }
 
     /// <inheritdoc/>
     [MemberNotNullWhen(true, nameof(ReferenceAssemblyPaths))]
@@ -82,16 +126,16 @@ public sealed class CsWinRTGenerator : ToolTask
             return false;
         }
 
-        if (OutputAssemblyPath is null)
+        if (OutputAssemblyPath is not { Length: 1 })
         {
             Log.LogWarning("Invalid 'OutputAssemblyPath' input.");
 
             return false;
         }
 
-        if (GeneratedAssemblyDirectory is not null && !Directory.Exists(GeneratedAssemblyDirectory))
+        if (InteropAssemblyDirectory is not null && !Directory.Exists(InteropAssemblyDirectory))
         {
-            Log.LogWarning("Generated assembly directory '{0}' does not exist.", GeneratedAssemblyDirectory);
+            Log.LogWarning("Generated assembly directory '{0}' does not exist.", InteropAssemblyDirectory);
 
             return false;
         }
@@ -144,11 +188,9 @@ public sealed class CsWinRTGenerator : ToolTask
         string referenceAssemblyPathsArg = string.Join(",", referenceAssemblyPaths);
 
         _ = args.Append("--reference-assembly-paths ").AppendLine(referenceAssemblyPathsArg);
-        _ = args.Append("--output-assembly-path ").AppendLine(OutputAssemblyPath!.ItemSpec);
+        _ = args.Append("--output-assembly-path ").AppendLine(EffectiveOutputAssemblyItemSpec);
 
-        string generatedAssemblyDirectory = GeneratedAssemblyDirectory ?? Path.GetDirectoryName(OutputAssemblyPath!.ItemSpec)!;
-
-        _ = args.Append("--generated-assembly-directory ").AppendLine(generatedAssemblyDirectory);
+        _ = args.Append("--generated-assembly-directory ").AppendLine(EffectiveGeneratedAssemblyDirectory);
 
         // The debug repro directory is optional, and might not be set
         if (DebugReproDirectory is not null)
