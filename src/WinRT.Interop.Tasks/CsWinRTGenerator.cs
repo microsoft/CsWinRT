@@ -187,20 +187,30 @@ public sealed class CsWinRTGenerator : ToolTask
         IEnumerable<string> referenceAssemblyPaths = ReferenceAssemblyPaths!.Select(static path => path.ItemSpec);
         string referenceAssemblyPathsArg = string.Join(",", referenceAssemblyPaths);
 
-        _ = args.Append("--reference-assembly-paths ").AppendLine(referenceAssemblyPathsArg);
-        _ = args.Append("--output-assembly-path ").AppendLine(EffectiveOutputAssemblyItemSpec);
-
-        _ = args.Append("--generated-assembly-directory ").AppendLine(EffectiveGeneratedAssemblyDirectory);
+        AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
+        AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
+        AppendResponseFileCommand(args, "--generated-assembly-directory", EffectiveGeneratedAssemblyDirectory);
 
         // The debug repro directory is optional, and might not be set
         if (DebugReproDirectory is not null)
         {
-            _ = args.Append("--debug-repro-directory ").AppendLine(DebugReproDirectory);
+            AppendResponseFileCommand(args, "--debug-repro-directory", DebugReproDirectory);
         }
 
-        _ = args.Append("--use-windows-ui-xaml-projections").AppendLine(UseWindowsUIXamlProjections.ToString());
-        _ = args.Append("--max-degrees-of-parallelism").AppendLine(MaxDegreesOfParallelism.ToString());
+        AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
 
         return args.ToString();
+    }
+
+    /// <summary>
+    /// Appends a command line argument to the response file arguments, with the right format.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandValue">The command value to append.</param>
+    private static void AppendResponseFileCommand(StringBuilder args, string commandName, string commandValue)
+    {
+        _ = args.Append($"{commandName} ").AppendLine(commandValue);
     }
 }
