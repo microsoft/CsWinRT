@@ -125,6 +125,19 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTModuleNotFound();
         }
 
+        // If assembly version validation is required, ensure that the 'cswinrtgen' version matches that of 'WinRT.Runtime.dll'.
+        // We only compare major and minor versions, as it's fine to ship small forward compatible fixes in revision updates.
+        if (args.ValidateWinRTRuntimeAssemblyVersion)
+        {
+            Version? winRTRuntimeAssemblyVersion = windowsRuntimeModule.Assembly?.Version;
+            Version? cswinrtgenAssemblyVersion = typeof(InteropGenerator).Assembly.GetName().Version;
+
+            if (winRTRuntimeAssemblyVersion?.EqualsInMajorAndMinorOnly(cswinrtgenAssemblyVersion) is not true)
+            {
+                throw WellKnownInteropExceptions.WinRTRuntimeAssemblyVersionMismatch(winRTRuntimeAssemblyVersion, cswinrtgenAssemblyVersion);
+            }
+        }
+
         try
         {
             AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));

@@ -269,6 +269,18 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The debug repro directory does not exist.
+    /// </summary>
+    public static Exception WinRTRuntimeAssemblyVersionMismatch(
+        Version? winRTRuntimeAssemblyVersion,
+        Version? cswinrtgenAssemblyVersion)
+    {
+        return Exception(32,
+            $"The assembly version of 'WinRT.Runtime.dll' ('{winRTRuntimeAssemblyVersion}') does not match the assembly version of the 'cswinrtgen' " +
+            $"tool being used ('{cswinrtgenAssemblyVersion}'). The two binaries must be versioned together to ensure things work correctly.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

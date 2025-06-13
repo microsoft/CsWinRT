@@ -75,9 +75,10 @@ internal partial class InteropGeneratorArgs
             ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ReferenceAssemblyPaths)),
             OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
-            DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
+            ValidateWinRTRuntimeAssemblyVersion = GetBooleanArgument(argsMap, nameof(ValidateWinRTRuntimeAssemblyVersion)),
             MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(MaxDegreesOfParallelism)),
+            DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             Token = token
         };
     }
@@ -157,7 +158,10 @@ internal partial class InteropGeneratorArgs
     {
         if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
         {
-            return int.Parse(argumentValue);
+            if (int.TryParse(argumentValue, out int parsedValue))
+            {
+                return parsedValue;
+            }
         }
 
         throw WellKnownInteropExceptions.ResponseFileArgumentParsingError(propertyName);
@@ -173,7 +177,10 @@ internal partial class InteropGeneratorArgs
     {
         if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
         {
-            return bool.Parse(argumentValue);
+            if (bool.TryParse(argumentValue, out bool parsedValue))
+            {
+                return parsedValue;
+            }
         }
 
         throw WellKnownInteropExceptions.ResponseFileArgumentParsingError(propertyName);

@@ -23,13 +23,13 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--generated-assembly-directory")]
     public required string GeneratedAssemblyDirectory { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
-    [CommandLineArgumentName("--debug-repro-directory")]
-    public string? DebugReproDirectory { get; init; }
-
     /// <summary>Gets whether to use <c>Windows.UI.Xaml</c> projections.</summary>
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
+
+    /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>
+    [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]
+    public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; }
 
     /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
@@ -37,4 +37,8 @@ internal sealed partial class InteropGeneratorArgs
 
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
+
+    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    [CommandLineArgumentName("--debug-repro-directory")]
+    public string? DebugReproDirectory { get; init; }
 }
