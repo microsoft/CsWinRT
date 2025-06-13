@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <CsWinRTGenerateInteropAssembly>true</CsWinRTGenerateInteropAssembly>
@@ -9,6 +9,7 @@
 
   <PropertyGroup>
     <CsWinRTTasksDirectory>$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Tasks\bin\Debug\net472\</CsWinRTTasksDirectory>
+    <CsWinRTToolsDirectory>$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\Debug\net10.0\</CsWinRTToolsDirectory>
   </PropertyGroup>
 
   <!-- Properties to control importing the 'cswinrtgen' task -->
@@ -25,13 +26,14 @@
   <!-- 'cswinrtgen' task -->
   <Target
     Name="InvokeCsWinRTGenerator"
-    DependsOnTargets="CoreCompile;GetTargetPath"
+    DependsOnTargets="CoreCompile"
     BeforeTargets="GenerateBuildDependencyFile;GeneratePublishDependencyFile"
-    Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'" >
+    Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
     
     <!-- Default property values for 'cswinrtgen' -->
     <PropertyGroup>
       <CsWinRTToolsDirectory Condition="'$(CsWinRTToolsDirectory)' == ''"></CsWinRTToolsDirectory>
+      <CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion Condition="'$(ValidateWinRTRuntimeAssemblyVersion)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion>
       <CsWinRTGeneratorMaxDegreesOfParallelism Condition="'$(CsWinRTGeneratorMaxDegreesOfParallelism)' == ''">-1</CsWinRTGeneratorMaxDegreesOfParallelism>
       <CsWinRTGeneratorStandardOutputImportance Condition="'$(CsWinRTGeneratorStandardOutputImportance)' == ''">High</CsWinRTGeneratorStandardOutputImportance>
       <CsWinRTGeneratorStandardErrorImportance Condition="'$(CsWinRTGeneratorStandardErrorImportance)' == ''">High</CsWinRTGeneratorStandardErrorImportance>
@@ -41,11 +43,12 @@
     <!-- Invoke 'cswinrtgen' -->
     <CsWinRTGenerator
       ReferenceAssemblyPaths="@(ReferencePath)"
-      OutputAssemblyPath="@(TargetPathWithTargetPlatformMoniker)"
+      OutputAssemblyPath="@(IntermediateAssembly)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTToolsDirectory)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
@@ -55,7 +58,7 @@
 
     <!-- Add the interop .dll to the list of reference assemblies -->
     <ItemGroup>
-      <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
+      <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
     </ItemGroup>
   </Target>
 </Project>

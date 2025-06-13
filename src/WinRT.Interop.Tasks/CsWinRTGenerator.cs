@@ -64,6 +64,11 @@ public sealed class CsWinRTGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
+    /// </summary>
+    public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; } = true;
+
+    /// <summary>
     /// Gets or sets the maximum number of parallel tasks to use for execution.
     /// </summary>
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
@@ -198,6 +203,7 @@ public sealed class CsWinRTGenerator : ToolTask
         }
 
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
 
         return args.ToString();
