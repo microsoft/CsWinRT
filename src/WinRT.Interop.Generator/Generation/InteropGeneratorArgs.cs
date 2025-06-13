@@ -9,7 +9,7 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <summary>
 /// Input parameters for <see cref="InteropGenerator"/>.
 /// </summary>
-internal sealed class InteropGeneratorArgs
+internal sealed partial class InteropGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
