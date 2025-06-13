@@ -29,6 +29,13 @@ internal static class InteropGeneratorArgsExtensions
         /// <returns>The resulting <see cref="InteropGeneratorArgs"/> instance.</returns>
         public static InteropGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
         {
+            // If the path is a response file, it will start with the '@' character.
+            // This matches the default escaping 'ToolTask' uses for response files.
+            if (path is ['@', .. string escapedPath])
+            {
+                path = escapedPath;
+            }
+
             string[] responseArgs;
 
             // Read all lines in the response file (each line contains a single command line argument)
