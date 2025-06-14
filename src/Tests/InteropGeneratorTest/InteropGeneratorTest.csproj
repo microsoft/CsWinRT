@@ -74,9 +74,14 @@
       </CsWinRTGeneratorInteropAssemblyPath>
     </ItemGroup>
 
-    <!-- Add the interop .dll to the list of reference assemblies -->
+    <!-- Add the interop .dll to the list of intermediate assemblies -->
     <ItemGroup>
-      <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
+      <IntermediateAssembly Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
+    </ItemGroup>
+
+    <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->
+    <ItemGroup>
+      <FileWrites Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
     </ItemGroup>
   </Target>
 </Project>
