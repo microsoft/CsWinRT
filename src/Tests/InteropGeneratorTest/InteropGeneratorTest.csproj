@@ -4,8 +4,13 @@
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RemoveWindowsFrameworkReferences>false</RemoveWindowsFrameworkReferences>
     <CsWinRTGenerateInteropAssembly>true</CsWinRTGenerateInteropAssembly>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
+  </ItemGroup>
 
   <PropertyGroup>
     <CsWinRTTasksDirectory>$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Tasks\bin\Debug\net472\</CsWinRTTasksDirectory>
@@ -55,6 +60,19 @@
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)">
       <Output ItemName="CsWinRTGeneratorInteropAssemblyPath" TaskParameter="InteropAssemblyPath" />
     </CsWinRTGenerator>
+
+    <!-- Set the metadata for the interop .dll item -->
+    <ItemGroup>
+      <CsWinRTGeneratorInteropAssemblyPath Condition="'%(Filename)%(Extension)' == 'WinRT.Interop.dll'">
+        <AssemblyName>WinRT.Interop</AssemblyName>
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+        <Private>true</Private>
+        <MSBuildSourceTargetName>InvokeCsWinRTGenerator</MSBuildSourceTargetName>
+        <Platforms>AnyCPU</Platforms>
+        <CopyLocal>true</CopyLocal>
+      </CsWinRTGeneratorInteropAssemblyPath>
+    </ItemGroup>
 
     <!-- Add the interop .dll to the list of reference assemblies -->
     <ItemGroup>

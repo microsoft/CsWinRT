@@ -93,6 +93,11 @@ public sealed class CsWinRTGenerator : ToolTask
     /// </summary>
     private string EffectiveGeneratedAssemblyDirectory => InteropAssemblyDirectory ?? Path.GetDirectoryName(EffectiveOutputAssemblyItemSpec)!;
 
+    /// <summary>
+    /// Gets the effective path of the produced interop assembly.
+    /// </summary>
+    private string EffectiveGeneratedAssemblyPath => Path.Combine(EffectiveGeneratedAssemblyDirectory, InteropAssemblyName);
+
     /// <inheritdoc/>
     [MemberNotNullWhen(true, nameof(InteropAssemblyPath))]
     public override bool Execute()
@@ -105,10 +110,8 @@ public sealed class CsWinRTGenerator : ToolTask
             return false;
         }
 
-        string generatedAssemblyPath = Path.Combine(EffectiveGeneratedAssemblyDirectory, InteropAssemblyName);
-
-        // Return the generated interop assembly path as an output item (we mark this as private too)
-        InteropAssemblyPath = new TaskItem(generatedAssemblyPath, new Dictionary<string, string> { ["IsPrivate"] = "true" });
+        // Return the generated interop assembly path as an output item
+        InteropAssemblyPath = new TaskItem(EffectiveGeneratedAssemblyPath);
 
         return true;
     }
