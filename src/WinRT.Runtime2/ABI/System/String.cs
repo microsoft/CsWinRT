@@ -248,15 +248,15 @@ file static unsafe class StringPropertyValueImpl
 
         Vftbl.get_Type = &get_Type;
         Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
-        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt8 = &GetUInt8;
+        Vftbl.GetInt16 = &GetInt16;
+        Vftbl.GetUInt16 = &GetUInt16;
+        Vftbl.GetInt32 = &GetInt32;
+        Vftbl.GetUInt32 = &GetUInt32;
+        Vftbl.GetInt64 = &GetInt64;
+        Vftbl.GetUInt64 = &GetUInt64;
+        Vftbl.GetSingle = &GetSingle;
+        Vftbl.GetDouble = &GetDouble;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetString = &StringReferenceImpl.get_Value;
