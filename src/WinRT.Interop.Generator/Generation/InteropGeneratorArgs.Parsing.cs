@@ -49,9 +49,11 @@ internal partial class InteropGeneratorArgs
         // Build a map with all the commands and their values
         foreach (string line in responseArgs)
         {
+            string trimmedLine = line.Trim();
+
             // Each line has the command line argument name followed by a space, and then the
             // argument value. If there are no spaces on any given line, the file is malformed.
-            int indexOfSpace = line.IndexOf(' ');
+            int indexOfSpace = trimmedLine.IndexOf(' ');
 
             if (indexOfSpace == -1)
             {
@@ -59,8 +61,8 @@ internal partial class InteropGeneratorArgs
             }
 
             // Now we can parse the actual command line argument name and value
-            string argumentName = line.AsSpan()[..indexOfSpace].ToString();
-            string argumentValue = line.AsSpan()[(indexOfSpace + 1)..].TrimEnd().ToString();
+            string argumentName = trimmedLine.AsSpan()[..indexOfSpace].ToString();
+            string argumentValue = trimmedLine.AsSpan()[(indexOfSpace + 1)..].TrimEnd().ToString();
 
             // We should never have duplicate commands
             if (!argsMap.TryAdd(argumentName, argumentValue))
