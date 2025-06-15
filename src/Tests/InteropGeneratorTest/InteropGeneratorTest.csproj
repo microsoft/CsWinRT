@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
+
+    <CsWinRTGeneratorAdditionalArgument Include="--some-arg true"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -31,8 +33,8 @@
   <!-- 'cswinrtgen' task -->
   <Target
     Name="InvokeCsWinRTGenerator"
-    DependsOnTargets="CoreCompile"
-    BeforeTargets="GenerateBuildDependencyFile;GeneratePublishDependencyFile"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn)"
+    BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile"
     Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
     
     <!-- Default property values for 'cswinrtgen' -->
@@ -55,6 +57,7 @@
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
+      AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)">
@@ -67,6 +70,7 @@
         <AssemblyName>WinRT.Interop</AssemblyName>
         <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
         <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
         <Private>true</Private>
         <MSBuildSourceTargetName>InvokeCsWinRTGenerator</MSBuildSourceTargetName>
         <Platforms>AnyCPU</Platforms>
@@ -74,9 +78,9 @@
       </CsWinRTGeneratorInteropAssemblyPath>
     </ItemGroup>
 
-    <!-- Add the interop .dll to the list of intermediate assemblies -->
+    <!-- Add the interop .dll to the list of reference paths -->
     <ItemGroup>
-      <IntermediateAssembly Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
+      <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
     </ItemGroup>
 
     <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->

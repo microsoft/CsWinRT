@@ -75,6 +75,11 @@ public sealed class CsWinRTGenerator : ToolTask
     public int MaxDegreesOfParallelism { get; set; } = -1;
 
     /// <summary>
+    /// Gets or sets additional arguments to pass to the tool.
+    /// </summary>
+    public ITaskItem[]? AdditionalArguments { get; set; }
+
+    /// <summary>
     /// Gets the resulting generated interop .dll item.
     /// </summary>
     [Output]
@@ -208,6 +213,12 @@ public sealed class CsWinRTGenerator : ToolTask
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
+
+        // Add any additional arguments that are not statically known
+        foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])
+        {
+            _ = args.AppendLine(additionalArgument.ItemSpec);
+        }
 
         return args.ToString();
     }
