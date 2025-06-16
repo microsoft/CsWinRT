@@ -315,9 +315,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
             // We couldn't find any partially derived type to marshal: just return an opaque object.
             // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
-            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(interfacePointer, in WellKnownInterfaceIds.IID_IInspectable)!;
-
-            wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeMarshal.CreateObjectReference(interfacePointer, in WellKnownInterfaceIds.IID_IInspectable, out wrapperFlags);
 
             // Because we created object reference for exactly 'IInspectable', we can optimize things here by pre-initializing that
             // property, so we can reuse that same instance later, rather than creating a new one and doing 'QueryInterface' again.
