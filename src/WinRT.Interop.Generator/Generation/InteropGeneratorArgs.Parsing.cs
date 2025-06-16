@@ -79,6 +79,7 @@ internal partial class InteropGeneratorArgs
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
             ValidateWinRTRuntimeAssemblyVersion = GetBooleanArgument(argsMap, nameof(ValidateWinRTRuntimeAssemblyVersion)),
+            TreatWarningsAsErrors = GetBooleanArgument(argsMap, nameof(TreatWarningsAsErrors)),
             MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(MaxDegreesOfParallelism)),
             DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             Token = token

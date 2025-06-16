@@ -31,6 +31,10 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]
     public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; }
 
+    /// <summary>Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
+    [CommandLineArgumentName("--treat-warnings-as-errors")]
+    public required bool TreatWarningsAsErrors { get; init; }
+
     /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }

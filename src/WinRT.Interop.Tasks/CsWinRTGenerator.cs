@@ -66,7 +66,12 @@ public sealed class CsWinRTGenerator : ToolTask
     /// <summary>
     /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
     /// </summary>
-    public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; } = true;
+    public bool ValidateWinRTRuntimeAssemblyVersion { get; init; } = true;
+
+    /// <summary>
+    /// Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).
+    /// </summary>
+    public bool TreatWarningsAsErrors { get; init; } = false;
 
     /// <summary>
     /// Gets or sets the maximum number of parallel tasks to use for execution.
@@ -212,6 +217,7 @@ public sealed class CsWinRTGenerator : ToolTask
 
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
+        AppendResponseFileCommand(args, "--treat-warnings-as-errors", TreatWarningsAsErrors.ToString());
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
 
         // Add any additional arguments that are not statically known
