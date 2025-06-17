@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
@@ -14,14 +15,9 @@ namespace WindowsRuntime.InteropServices;
 /// This attribute is used to resolve implementation types for projected interfaces that can be implemented via more than
 /// one native interface type. Implementations can perform <c>QueryInterface</c> calls to determine the right implementation.
 /// </remarks>
-[AttributeUsage(
-    AttributeTargets.Class |
-    AttributeTargets.Struct |
-    AttributeTargets.Enum |
-    AttributeTargets.Interface |
-    AttributeTargets.Delegate,
-    AllowMultiple = false,
-    Inherited = false)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class DynamicInterfaceCastableImplementationForwarderAttribute : Attribute
 {
     /// <summary>
