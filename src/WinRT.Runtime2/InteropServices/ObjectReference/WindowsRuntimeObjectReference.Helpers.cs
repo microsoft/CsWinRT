@@ -130,7 +130,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="objectReference">The resulting <see cref="WindowsRuntimeObjectReference"/> instance for the requested interface.</param>
     /// <returns>The <c>HRESULT</c> value for the <c>QueryInterface</c> call</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
-    private protected abstract HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference);
+    internal abstract HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference);
 
     /// <summary>
     /// Performs a <c>QueryInterface</c> call on the underlying COM object to retrieve the requested interface pointer.
@@ -139,7 +139,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="ppv">The resulting COM pointer for the requested interface.</param>
     /// <returns>The <c>HRESULT</c> value for the <c>QueryInterface</c> call</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
-    private HRESULT TryAsNative(in Guid iid, out void* ppv)
+    internal HRESULT TryAsNative(in Guid iid, out void* ppv)
     {
         ppv = null;
 
@@ -156,7 +156,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <inheritdoc cref="TryAsNative(in Guid, out void*)"/>
-    private HRESULT TryAsNative(in Guid iid, out nint ppv)
+    internal HRESULT TryAsNative(in Guid iid, out nint ppv)
     {
         ppv = (nint)null;
 

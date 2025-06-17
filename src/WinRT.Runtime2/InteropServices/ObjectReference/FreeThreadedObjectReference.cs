@@ -26,7 +26,7 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
     }
 
     /// <inheritdoc/>
-    private protected override HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
+    internal override HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
     {
         objectReference = null;
 
