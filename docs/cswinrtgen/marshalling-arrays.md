@@ -124,7 +124,7 @@ public static class <string>ArrayImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<string[]>((ComInterfaceDispatch*)thisPtr);
 
-            <string>ArrayMarshaller.CopyToUnmanaged(unboxedValue, out *count, out *result);
+            <string>ArrayMarshaller.ConvertToUnmanaged(unboxedValue, out *count, out *result);
 
             return WellKnownErrorCodes.S_OK;
         }
