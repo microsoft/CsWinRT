@@ -1,6 +1,6 @@
 # CsWinRT 3.0 array infrastructure
 
-This document builds on top of the [generic interface marshalling infrastructure document](marshalling-generic-interfaces.md) and describes the design of the CsWinRT 3.0 array marshalling infrastructure. The same basic concepts outlined in the other document apply here, with the amin difference being a different API surface for marshaller types. This will be covered in more detail below.
+This document builds on top of the [generic interface marshalling infrastructure document](marshalling-generic-interfaces.md) and describes the design of the CsWinRT 3.0 array marshalling infrastructure. The same basic concepts outlined in the other document apply here, with the main difference being a different API surface for marshaller types. This will be covered in more detail below.
 
 ## Native -> managed (in `WinRT.Runtime.dll`)
 
