@@ -26,7 +26,6 @@
   <Target Name="CsWinRTNet5EOL" />
 
   <Target Name="CsWinRTCheckDependencies" BeforeTargets="PrepareForBuild">
-    <Error Condition="!Exists('$(SolutionDir)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
   </Target>
 
   <Target Name="CleanIntermediateDirs" Condition="'$(CleanIntermediateDirs)'=='true'" AfterTargets="Build">
