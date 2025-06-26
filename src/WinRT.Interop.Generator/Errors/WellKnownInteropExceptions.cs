@@ -281,6 +281,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to discover SZ array types.
+    /// </summary>
+    public static Exception DiscoverSzArrayTypesError(string? name, Exception exception)
+    {
+        return Exception(33, $"Failed to discover SZ array type for module '{name}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

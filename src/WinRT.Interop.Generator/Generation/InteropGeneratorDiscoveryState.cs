@@ -44,6 +44,9 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
+    private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>
     /// Indicates whether the current state is readonly.
     /// </summary>
@@ -103,6 +106,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all <see cref="KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
     public IReadOnlyCollection<GenericInstanceTypeSignature> KeyValuePairTypes => (IReadOnlyCollection<GenericInstanceTypeSignature>)_keyValuePairTypes.Keys;
+
+    /// <summary>
+    /// Gets all SZ array types.
+    /// </summary>
+    public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
 
     /// <summary>
     /// Tracks a loaded module definition.
@@ -214,6 +222,17 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _keyValuePairTypes.TryAdd(keyValuePairType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a SZ array type.
+    /// </summary>
+    /// <param name="szArrayType">The SZ array type.</param>
+    public void TrackSzArrayType(SzArrayTypeSignature szArrayType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _szArrayTypes.TryAdd(szArrayType, 0);
     }
 
     /// <summary>

@@ -110,6 +110,11 @@ internal partial class InteropGenerator
 
         // Discover all generic type instantiations
         DiscoverGenericTypeInstantiations(args, discoveryState, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Discover all SZ array types
+        DiscoverSzArrayTypes(args, discoveryState, module);
     }
 
     /// <summary>
@@ -259,6 +264,50 @@ internal partial class InteropGenerator
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e);
+        }
+    }
+
+    /// <summary>
+    /// Discovers all SZ array types in a given assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    private static void DiscoverSzArrayTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
+    {
+        try
+        {
+            // Create the interop references scoped to this module. We're not going to use any references
+            // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
+            InteropReferences interopReferences = new(module, null!);
+
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                // Filter all constructed generic type signatures we have. We don't care about
+                // generic type definitions (eg. '!0[]') for the purposes of marshalling code.
+                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
+                {
+                    continue;
+                }
+
+                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
+                if (!typeSignature.IsFullyResolvable)
+                {
+                    continue;
+                }
+
+                // Track all SZ array types, as we'll need to emit marshalling code for them
+                discoveryState.TrackSzArrayType(typeSignature);
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e);
         }
     }
 }

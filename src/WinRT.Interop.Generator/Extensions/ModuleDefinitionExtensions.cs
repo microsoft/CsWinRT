@@ -26,6 +26,16 @@ internal static class ModuleDefinitionExtensions
     }
 
     /// <summary>
+    /// Enumerates all SZ array type signatures in the module.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <returns>All (unique) generic type signatures in the module.</returns>
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module)
+    {
+        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance);
+    }
+
+    /// <summary>
     /// Enumerates all target type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
