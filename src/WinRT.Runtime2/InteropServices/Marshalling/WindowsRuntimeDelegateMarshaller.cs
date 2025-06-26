@@ -124,7 +124,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <summary>
     /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
     /// </summary>
-    /// <typeparam name="TCallback">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <typeparam name="TCallback">The type of static callback for <see cref="ComWrappers"/> to marshal the delegate.</typeparam>
     /// <param name="value">The input object to unbox and convert to managed.</param>
     /// <returns>The resulting managed Windows Runtime delegate object.</returns>
     /// <remarks>
@@ -158,7 +158,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <summary>
     /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
     /// </summary>
-    /// <typeparam name="TCallback">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <typeparam name="TCallback">The type of static callback for <see cref="ComWrappers"/> to marshal the delegate.</typeparam>
     /// <param name="value">The input object to unbox and convert to managed.</param>
     /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime delegate type.</param>
     /// <returns>The resulting managed Windows Runtime delegate object.</returns>
