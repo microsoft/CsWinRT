@@ -276,9 +276,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         HSTRING className = null;
 
         // Get the runtime class name (we need it to figure out the most derived type to marshal)
-        HRESULT hresult = IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Assert();
 
         try
         {

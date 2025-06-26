@@ -255,9 +255,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     internal static WindowsRuntimeObjectReference InitializeObjectReference(void* externalComObject, in Guid iid)
     {
         // Do a 'QueryInterface' to actually get the interface pointer we're looking for
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr).Assert();
 
         return InitializeObjectReferenceUnsafe(interfacePtr, in iid);
     }

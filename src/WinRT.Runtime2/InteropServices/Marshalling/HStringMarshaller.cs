@@ -29,7 +29,7 @@ public static unsafe class HStringMarshaller
         {
             HSTRING handle;
 
-            Marshal.ThrowExceptionForHR(WindowsRuntimeImports.WindowsCreateString(valuePtr, (uint)value.Length, &handle));
+            WindowsRuntimeImports.WindowsCreateString(valuePtr, (uint)value.Length, &handle).Assert();
 
             return handle;
         }
@@ -94,13 +94,11 @@ public static unsafe class HStringMarshaller
 
         // Create the fast-pass 'HSTRING' on the target location. The fact the resulting
         // 'HSTRING' instance points to the header is why it should never be copied too.
-        HRESULT hr = WindowsRuntimeImports.WindowsCreateStringReference(
+        WindowsRuntimeImports.WindowsCreateStringReference(
             sourceString: value,
             length: (uint)length.GetValueOrDefault(),
             hstringHeader: headerPtr,
-            @string: hstringPtr);
-
-        Marshal.ThrowExceptionForHR(hr);
+            @string: hstringPtr).Assert();
     }
 
     /// <summary>

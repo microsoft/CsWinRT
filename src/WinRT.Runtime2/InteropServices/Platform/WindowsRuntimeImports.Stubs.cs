@@ -21,14 +21,11 @@ internal partial class WindowsRuntimeImports
     public static unsafe void* CoGetObjectContext(in Guid iid)
     {
         void* objectContext;
-        HRESULT hresult;
 
         fixed (Guid* piid = &iid)
         {
-            hresult = CoGetObjectContext(piid, &objectContext);
+            CoGetObjectContext(piid, &objectContext).Assert();
         }
-
-        Marshal.ThrowExceptionForHR(hresult);
 
         return objectContext;
     }
@@ -39,9 +36,7 @@ internal partial class WindowsRuntimeImports
     {
         nuint contextToken;
 
-        HRESULT hresult = CoGetContextToken(&contextToken);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        CoGetContextToken(&contextToken).Assert();
 
         return contextToken;
     }

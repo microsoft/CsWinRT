@@ -57,9 +57,8 @@ public static unsafe class PropertyChangedEventArgsMarshaller
 
         // Extract the property name from the native object
         HSTRING propertyName;
-        HRESULT hresult = IPropertyChangedEventArgsVftbl.get_PropertyNameUnsafe(value, &propertyName);
 
-        Marshal.ThrowExceptionForHR(hresult);
+        IPropertyChangedEventArgsVftbl.get_PropertyNameUnsafe(value, &propertyName).Assert();
 
         // Convert to a managed 'string' and create the managed object for the args as well
         try
@@ -94,9 +93,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
             ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgs
             : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgs;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
 
         try
         {

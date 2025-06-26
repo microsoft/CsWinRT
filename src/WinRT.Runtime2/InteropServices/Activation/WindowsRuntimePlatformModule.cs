@@ -31,9 +31,7 @@ internal sealed unsafe class WindowsRuntimePlatformModule
     {
         CO_MTA_USAGE_COOKIE mtaCookie;
 
-        HRESULT hresult = WindowsRuntimeImports.CoIncrementMTAUsage(&mtaCookie);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        WindowsRuntimeImports.CoIncrementMTAUsage(&mtaCookie).Assert();
 
         _mtaCookie = mtaCookie;
     }
@@ -47,9 +45,7 @@ internal sealed unsafe class WindowsRuntimePlatformModule
         // it alive. However, we might have instantiated multiple instances if more than one thread
         // tried to concurrently access the static property the first time. So this finalizer still
         // helps remove those unwanted MTA usage increments for transient, discarded instances.
-        HRESULT hresult = WindowsRuntimeImports.CoDecrementMTAUsage(_mtaCookie);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        WindowsRuntimeImports.CoDecrementMTAUsage(_mtaCookie).Assert();
     }
 
     /// <summary>

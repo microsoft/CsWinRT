@@ -54,9 +54,8 @@ public static unsafe class StringMarshaller
 
         // Extract the underlying 'HSTRING' from the native object
         HSTRING result;
-        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(value, &result);
 
-        Marshal.ThrowExceptionForHR(hresult);
+        IReferenceVftbl.get_ValueUnsafe(value, &result).Assert();
 
         // Convert to a managed 'string' to return
         try
@@ -144,9 +143,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_IReferenceOfString, out void* result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_IReferenceOfString, out void* result).Assert();
 
         try
         {

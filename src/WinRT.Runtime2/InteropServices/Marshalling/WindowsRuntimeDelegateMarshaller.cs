@@ -147,9 +147,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         void* delegatePtr;
 
         // Unbox the native delegate (we always just discard the outer reference)
-        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(value, &delegatePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IReferenceVftbl.get_ValueUnsafe(value, &delegatePtr).Assert();
 
         // At this point, we just convert the native delegate to a 'T' instance normally
         return ConvertToManaged<TCallback>(delegatePtr);
@@ -180,9 +178,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         }
 
         // First, make sure we have the right 'IReference<T>' interface on 'value'
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
         // Now that we have the 'IReference<T>' pointer, unbox it normally
         return UnboxToManaged<TCallback>(referencePtr);

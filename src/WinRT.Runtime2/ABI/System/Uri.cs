@@ -51,9 +51,8 @@ public static unsafe class UriMarshaller
 
         // Extract the raw URI string from the native object
         HSTRING rawUri;
-        HRESULT hresult = IUriRuntimeClassVftbl.get_RawUriUnsafe(value, &rawUri);
 
-        Marshal.ThrowExceptionForHR(hresult);
+        IUriRuntimeClassVftbl.get_RawUriUnsafe(value, &rawUri).Assert();
 
         // Convert to a managed 'string' and create the managed object for the args as well
         try
@@ -84,9 +83,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_UriRuntimeClass, out void* result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_UriRuntimeClass, out void* result).Assert();
 
         try
         {

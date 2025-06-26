@@ -50,9 +50,8 @@ public static unsafe class DataErrorsChangedEventArgsMarshaller
 
         // Extract the property name from the native object
         HSTRING propertyName;
-        HRESULT hresult = IDataErrorsChangedEventArgsVftbl.get_PropertyNameUnsafe(value, &propertyName);
 
-        Marshal.ThrowExceptionForHR(hresult);
+        IDataErrorsChangedEventArgsVftbl.get_PropertyNameUnsafe(value, &propertyName).Assert();
 
         // Convert to a managed 'string' and create the managed object for the args as well
         try
@@ -83,9 +82,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgs, out void* result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgs, out void* result).Assert();
 
         try
         {

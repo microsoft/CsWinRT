@@ -39,9 +39,7 @@ public static unsafe class WindowsRuntimeArrayMarshaller
         }
 
         // First, make sure we have the right 'IReferenceArray<T>' interface on 'value'
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
         try
         {
@@ -49,9 +47,7 @@ public static unsafe class WindowsRuntimeArrayMarshaller
             void* result;
 
             // Unbox the underlying array (we always just discard the outer reference)
-            HRESULT hresult2 = IReferenceArrayVftbl.get_ValueUnsafe(value, &count, &result);
-
-            Marshal.ThrowExceptionForHR(hresult2);
+            IReferenceArrayVftbl.get_ValueUnsafe(value, &count, &result).Assert();
 
             // Forward to the supplied callback
             return TCallback.CreateArray(count, result);

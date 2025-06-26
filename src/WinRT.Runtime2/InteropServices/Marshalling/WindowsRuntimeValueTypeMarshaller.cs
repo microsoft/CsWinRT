@@ -64,9 +64,7 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
         T result;
 
         // Unbox the blittable value (we always just discard the outer reference)
-        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(value, &result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IReferenceVftbl.get_ValueUnsafe(value, &result).Assert();
 
         return result;
     }
@@ -96,9 +94,7 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
         }
 
         // First, make sure we have the right 'IReference<T>' interface on 'value'
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
         // Now that we have the 'IReference<T>' pointer, unbox it normally
         return UnboxToManaged<T>(referencePtr);
@@ -128,15 +124,11 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
     public static T UnboxToManagedUnsafe<T>(void* value, in Guid iid)
         where T : unmanaged
     {
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
         T result;
 
-        hresult = IReferenceVftbl.get_ValueUnsafe(referencePtr, &result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IReferenceVftbl.get_ValueUnsafe(referencePtr, &result).Assert();
 
         return result;
     }

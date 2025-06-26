@@ -191,9 +191,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
             ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
             : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
 
         try
         {

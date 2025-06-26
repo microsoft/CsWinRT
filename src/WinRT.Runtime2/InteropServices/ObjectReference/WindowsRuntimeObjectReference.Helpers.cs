@@ -44,9 +44,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
     public WindowsRuntimeObjectReference As(in Guid iid)
     {
-        HRESULT hresult = DerivedTryAsNative(in iid, out WindowsRuntimeObjectReference? objectReference);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        DerivedTryAsNative(in iid, out WindowsRuntimeObjectReference? objectReference).Assert();
 
         return objectReference!;
     }
@@ -74,17 +72,13 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
     public void AsUnsafe(in Guid iid, out void* ppv)
     {
-        HRESULT hresult = TryAsNative(in iid, out ppv);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        TryAsNative(in iid, out ppv).Assert();
     }
 
     /// <inheritdoc cref="AsUnsafe(in Guid, out void*)"/>
     public void AsUnsafe(in Guid iid, out nint ppv)
     {
-        HRESULT hresult = TryAsNative(in iid, out ppv);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        TryAsNative(in iid, out ppv).Assert();
     }
 
     /// <summary>

@@ -78,9 +78,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Do a 'QueryInterface' to actually get the interface pointer we're looking for
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
+        IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr).Assert();
 
         // Now we can safely wrap it (no need to increment its reference count here)
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
