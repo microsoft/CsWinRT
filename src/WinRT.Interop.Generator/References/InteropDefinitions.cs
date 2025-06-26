@@ -136,4 +136,10 @@ internal sealed class InteropDefinitions
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences, _interopModule);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
 }
