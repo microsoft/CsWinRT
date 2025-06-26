@@ -241,7 +241,7 @@ file static class WindowsRuntimeTypeHierarchyData
     /// <returns>The buckets <see cref="ReadOnlySpan{T}"/>.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
     public static extern ReadOnlySpan<int> get_Buckets(
-        /* [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll"))] */ object? _);
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll")] object? _);
 
     /// <summary>
     /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup keys.
@@ -249,7 +249,7 @@ file static class WindowsRuntimeTypeHierarchyData
     /// <returns>The keys <see cref="ReadOnlySpan{T}"/>.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
     public static extern ReadOnlySpan<byte> get_Keys(
-        /* [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll"))] */ object? _);
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll")] object? _);
 
     /// <summary>
     /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup values.
@@ -257,7 +257,7 @@ file static class WindowsRuntimeTypeHierarchyData
     /// <returns>The values <see cref="ReadOnlySpan{T}"/>.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
     public static extern ReadOnlySpan<byte> get_Values(
-        /* [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll"))] */ object? _);
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll")] object? _);
 
     /// <summary>
     /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup buckets.
@@ -265,6 +265,6 @@ file static class WindowsRuntimeTypeHierarchyData
     /// <returns>The buckets <see cref="ReadOnlySpan{T}"/>.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
     public static extern bool IsLengthInRange(
-        /* [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll"))] */ object? _,
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop.dll")] object? _,
         int length);
 }
