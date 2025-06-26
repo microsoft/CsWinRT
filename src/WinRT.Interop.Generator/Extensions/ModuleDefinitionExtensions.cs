@@ -22,16 +22,31 @@ internal static class ModuleDefinitionExtensions
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module)
     {
-        HashSet<GenericInstanceTypeSignature> genericInstantiations = new(SignatureComparer.IgnoreVersion);
+        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance);
+    }
 
-        // Helper to crawl a signature, if generic
-        static IEnumerable<GenericInstanceTypeSignature> EnumerateTypeSignatures(TypeSignature? type, HashSet<GenericInstanceTypeSignature> genericInstantiations)
+    /// <summary>
+    /// Enumerates all target type signatures in the module.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
+    /// <returns>All (unique) type signatures of interest in the module.</returns>
+    public static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(this ModuleDefinition module, ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
+        where TResult : TypeSignature
+    {
+        HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
+
+        // Helper to crawl a signature, recursively
+        static IEnumerable<TResult> EnumerateTypeSignatures(
+            TypeSignature? type,
+            HashSet<TResult> results,
+            ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
         {
-            foreach (GenericInstanceTypeSignature genericType in (type as GenericInstanceTypeSignature)?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
+            foreach (TResult result in type?.AcceptVisitor(visitor) ?? [])
             {
-                if (genericInstantiations.Add(genericType))
+                if (results.Add(result))
                 {
-                    yield return genericType;
+                    yield return result;
                 }
             }
         }
@@ -41,9 +56,9 @@ internal static class ModuleDefinitionExtensions
         // base types (for generic types or not), as well as implemented (generic) interfaces.
         foreach (TypeSpecification type in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
         {
-            foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(type.Signature, genericInstantiations))
+            foreach (TResult result in EnumerateTypeSignatures(type.Signature, results, visitor))
             {
-                yield return genericType;
+                yield return result;
             }
         }
 
@@ -51,9 +66,9 @@ internal static class ModuleDefinitionExtensions
         // without them appearing in the type specification table. This ensures that we're not missing those.
         foreach (FieldDefinition field in module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
         {
-            foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(field.Signature?.FieldType, genericInstantiations))
+            foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType, results, visitor))
             {
-                yield return genericType;
+                yield return result;
             }
         }
 
@@ -61,26 +76,26 @@ internal static class ModuleDefinitionExtensions
         foreach (MethodDefinition method in module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
             // Gather return type signatures
-            foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(method.Signature?.ReturnType, genericInstantiations))
+            foreach (TResult result in EnumerateTypeSignatures(method.Signature?.ReturnType, results, visitor))
             {
-                yield return genericType;
+                yield return result;
             }
 
             // Walk all parameters as well
             foreach (TypeSignature parameter in method.Signature?.ParameterTypes ?? [])
             {
-                foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(parameter, genericInstantiations))
+                foreach (TResult result in EnumerateTypeSignatures(parameter, results, visitor))
                 {
-                    yield return genericType;
+                    yield return result;
                 }
             }
 
             // Also walk all declared locals, just in case
             foreach (CilLocalVariable local in method.CilMethodBody?.LocalVariables ?? [])
             {
-                foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(local.VariableType, genericInstantiations))
+                foreach (TResult result in EnumerateTypeSignatures(local.VariableType, results, visitor))
                 {
-                    yield return genericType;
+                    yield return result;
                 }
             }
         }
@@ -98,26 +113,35 @@ internal static class ModuleDefinitionExtensions
             GenericContext genericContext = new(specification.DeclaringType?.ToTypeSignature() as GenericInstanceTypeSignature, specification.Signature);
 
             // Instantiate and gather the return type
-            foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(specification.Method!.Signature!.ReturnType.InstantiateGenericTypes(genericContext), genericInstantiations))
+            foreach (TResult result in EnumerateTypeSignatures(
+                specification.Method!.Signature!.ReturnType.InstantiateGenericTypes(genericContext),
+                results,
+                visitor))
             {
-                yield return genericType;
+                yield return result;
             }
 
             // Instantiate and gather all parameter types
             foreach (TypeSignature parameterType in specification.Method!.Signature!.ParameterTypes)
             {
-                foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(parameterType.InstantiateGenericTypes(genericContext), genericInstantiations))
+                foreach (TResult result in EnumerateTypeSignatures(
+                    parameterType.InstantiateGenericTypes(genericContext),
+                    results,
+                    visitor))
                 {
-                    yield return genericType;
+                    yield return result;
                 }
             }
 
             // And process locals as well
             foreach (CilLocalVariable localVariable in specification.Method!.Resolve()?.CilMethodBody?.LocalVariables ?? [])
             {
-                foreach (GenericInstanceTypeSignature genericType in EnumerateTypeSignatures(localVariable.VariableType.InstantiateGenericTypes(genericContext), genericInstantiations))
+                foreach (TResult result in EnumerateTypeSignatures(
+                    localVariable.VariableType.InstantiateGenericTypes(genericContext),
+                    results,
+                    visitor))
                 {
-                    yield return genericType;
+                    yield return result;
                 }
             }
         }
