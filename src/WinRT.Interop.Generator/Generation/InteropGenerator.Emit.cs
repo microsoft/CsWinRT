@@ -90,6 +90,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for SZ array types
+        DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Add all top level internal types to the interop module
         DefineImplementationDetailTypes(interopDefinitions, module);
 
@@ -1128,6 +1133,49 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for SZ array types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineSzArrayTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the 'IID' property
+                InteropTypeDefinitionBuilder.SzArray.IID(
+                    arrayType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.SzArray.Marshaller(
+                    arrayType: typeSignature,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out _);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.SzArrayTypeCodeGenerationError(typeSignature.Name, e);
             }
         }
     }

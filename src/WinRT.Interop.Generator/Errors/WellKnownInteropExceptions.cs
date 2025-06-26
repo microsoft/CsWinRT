@@ -107,9 +107,9 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    public static Exception KeyValuePairTypeCodeGenerationError(string? delegateType, Exception exception)
+    public static Exception KeyValuePairTypeCodeGenerationError(string? keyValuePairType, Exception exception)
     {
-        return Exception(12, $"Failed to generate marshalling code for 'KeyValuePair<,>' type '{delegateType}'.", exception);
+        return Exception(12, $"Failed to generate marshalling code for 'KeyValuePair<,>' type '{keyValuePairType}'.", exception);
     }
 
     /// <summary>
@@ -286,6 +286,14 @@ internal static class WellKnownInteropExceptions
     public static Exception DiscoverSzArrayTypesError(string? name, Exception exception)
     {
         return Exception(33, $"Failed to discover SZ array type for module '{name}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a SZ array type.
+    /// </summary>
+    public static Exception SzArrayTypeCodeGenerationError(string? arrayType, Exception exception)
+    {
+        return Exception(34, $"Failed to generate marshalling code for SZ array type '{arrayType}'.", exception);
     }
 
     /// <summary>

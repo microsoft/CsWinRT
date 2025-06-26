@@ -112,6 +112,12 @@ internal sealed class InteropReferences
     public TypeReference ValueType => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ValueType"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Span{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Span1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Span`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ReadOnlySpan{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
