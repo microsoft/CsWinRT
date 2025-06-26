@@ -90,7 +90,7 @@ internal sealed class AllSzArrayTypesVisitor : ITypeSignatureVisitor<IEnumerable
     /// <inheritdoc/>
     public IEnumerable<SzArrayTypeSignature> VisitSzArrayType(SzArrayTypeSignature signature)
     {
-        return [signature];
+        return signature.BaseType.AcceptVisitor(this).Append(signature);
     }
 
     /// <inheritdoc/>
