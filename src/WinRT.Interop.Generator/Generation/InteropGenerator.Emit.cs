@@ -1171,7 +1171,15 @@ internal partial class InteropGenerator
                     arrayType: typeSignature,
                     interopReferences: interopReferences,
                     module: module,
-                    marshallerType: out _);
+                    marshallerType: out TypeDefinition marshallerType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeArrayComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.SzArray.ComWrappersCallbackType(
+                    arrayType: typeSignature,
+                    marshallerType: marshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition dictionaryComWrappersCallbackType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

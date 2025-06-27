@@ -3,9 +3,7 @@
 
 using System;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
@@ -175,6 +173,60 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             marshallerType.Methods.Add(freeMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeArrayComWrappersCallback</c> interface for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="marshallerType">The type returned by <see cref="Marshaller"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition marshallerType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            // We're declaring an 'internal abstract class' type
+            callbackType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersCallback"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeArrayComWrappersCallback.Import(module)) }
+            };
+
+            module.TopLevelTypes.Add(callbackType);
+
+            // Define the 'CreateArray' method as follows:
+            //
+            // public static Array CreateArray(uint count, void* value)
+            MethodDefinition createArrayMethod = new(
+                name: "CreateArray"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.Array.ToReferenceTypeSignature().Import(module),
+                    parameterTypes: [
+                        module.CorLibTypeFactory.UInt32,
+                        module.CorLibTypeFactory.Void.MakePointerType()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, marshallerType.GetMethod("ConvertToManaged"u8) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement 'CreateArray'
+            callbackType.AddMethodImplementation(
+                declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackCreateArray.Import(module),
+                method: createArrayMethod);
         }
     }
 }

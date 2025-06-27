@@ -88,6 +88,12 @@ internal sealed class InteropReferences
     public GenericInstanceTypeSignature TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Array"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Array => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -566,6 +572,12 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IWindowsRuntimeUnsealedObjectComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeUnsealedObjectComWrappersCallback"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IWindowsRuntimeArrayComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeArrayComWrappersCallback"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
@@ -1138,6 +1150,17 @@ internal sealed class InteropReferences
                 ReadOnlySpanChar,
                 _windowsRuntimeModule.CorLibTypeFactory.Object.MakeByReferenceType(),
                 CreatedWrapperFlags.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback.CreateArray</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IWindowsRuntimeArrayComWrappersCallbackCreateArray => field ??= IWindowsRuntimeArrayComWrappersCallback
+        .CreateMemberReference("CreateArray"u8, MethodSignature.CreateStatic(
+            returnType: Array.ToReferenceTypeSignature(),
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.
