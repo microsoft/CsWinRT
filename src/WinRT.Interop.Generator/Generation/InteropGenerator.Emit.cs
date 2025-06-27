@@ -1210,6 +1210,21 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.SzArray.Proxy(
+                    arrayType: typeSignature,
+                    arrayComWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.SzArray.TypeMapAttributes(
+                    arrayType: typeSignature,
+                    proxyType: proxyType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

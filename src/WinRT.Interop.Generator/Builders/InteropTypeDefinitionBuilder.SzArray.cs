@@ -385,7 +385,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <summary>
         /// Creates a new type definition for the marshaller attribute for some SZ array type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
@@ -507,6 +507,56 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.AddMethodImplementation(
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
                 method: createObjectMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="arrayComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition arrayComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType), // TODO
+                runtimeClassName: arrayType.FullName, // TODO
+                comWrappersMarshallerAttributeType: arrayComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
+
+        /// <summary>
+        /// Creates the type map attributes for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition proxyType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: arrayType.FullName, // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: arrayType,
+                proxyTypeMapSourceType: arrayType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: null,
+                interfaceTypeMapProxyType: null,
+                interopReferences: interopReferences,
+                module: module);
         }
     }
 }
