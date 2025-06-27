@@ -240,14 +240,14 @@ internal partial class InteropGenerator
                     implType: out TypeDefinition delegateReferenceImplType);
 
                 // Define the 'DelegateInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
-                InteropTypeDefinitionBuilder.Delegate.InterfaceEntriesImplType(
+                InteropTypeDefinitionBuilder.Delegate.InterfaceEntriesImpl(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    implType: out TypeDefinition delegateInterfaceEntriesImplType);
+                    interfaceEntriesImplType: out TypeDefinition delegateInterfaceEntriesImplType);
 
                 // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.Delegate.ComWrappersMarshallerAttribute(
@@ -1190,6 +1190,15 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     implType: out TypeDefinition arrayImplType);
+
+                // Define the 'ArrayInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
+                InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
+                    arrayType: typeSignature,
+                    implType: arrayImplType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -1223,6 +1232,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

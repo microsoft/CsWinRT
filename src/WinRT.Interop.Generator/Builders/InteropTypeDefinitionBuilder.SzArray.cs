@@ -334,7 +334,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            InteropTypeDefinitionBuilder.Impl(
+            Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayImpl"),
@@ -345,6 +345,41 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 vtableMethods: [valueMethod]);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the COM interface entries for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="implType">The <see cref="TypeDefinition"/> instance returned by <see cref="Impl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
+        public static void InterfaceEntriesImpl(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition implType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceEntriesImplType)
+        {
+            InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayInterfaceEntriesImpl"),
+                entriesFieldType: interopDefinitions.IReferenceArrayInterfaceEntries,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out interfaceEntriesImplType,
+                implTypes: [
+                    (implType.GetMethod("get_IID"u8), implType.GetMethod("get_Vtable"u8)),
+                    (interopReferences.IPropertyValueImplget_IID, interopReferences.IPropertyValueImplget_OtherTypeVtable), // TODO
+                    (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
+                    (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
+                    (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
+                    (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
+                    (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable)]);
         }
     }
 }
