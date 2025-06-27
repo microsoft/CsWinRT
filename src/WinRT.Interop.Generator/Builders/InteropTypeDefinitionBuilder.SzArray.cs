@@ -38,7 +38,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayIID"), // TODO
+                name: InteropUtf8NameFactory.TypeName(arrayType, "IID"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -62,7 +62,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayMarshaller"), // TODO
+                name: InteropUtf8NameFactory.TypeName(arrayType, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -337,7 +337,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayImpl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "Impl"),
                 vftblType: interopDefinitions.IReferenceArrayVftbl,
                 get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
@@ -366,7 +366,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayInterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.IReferenceArrayInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -406,7 +406,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
 

@@ -52,6 +52,12 @@ internal static class InteropUtf8NameFactory
                 return;
             }
 
+            // SZ arrays are enclosed in angle brackets
+            if (typeSignature is SzArrayTypeSignature)
+            {
+                interpolatedStringHandler.AppendLiteral("<");
+            }
+
             // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
             interpolatedStringHandler.AppendLiteral("<");
             interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name));
@@ -83,11 +89,22 @@ internal static class InteropUtf8NameFactory
 
                 interpolatedStringHandler.AppendLiteral(">");
             }
+            else if (typeSignature is SzArrayTypeSignature arrayTypeSignature)
+            {
+                // Same as below (see comments there), but we use the element type name, not the array type name
+                interpolatedStringHandler.AppendFormatted(depth == 0 ? arrayTypeSignature.BaseType.Name! : arrayTypeSignature.BaseType.FullName);
+            }
             else
             {
                 // If the type is a type definition, append the name of the type definition.
                 // Just like with generic types, we can skip the namespace if the deth is '0'.
                 interpolatedStringHandler.AppendFormatted(depth == 0 ? typeSignature.Name! : typeSignature.FullName);
+            }
+
+            // Complete the name mangling for SZ arrays
+            if (typeSignature is SzArrayTypeSignature)
+            {
+                interpolatedStringHandler.AppendLiteral(">Array");
             }
         }
 
