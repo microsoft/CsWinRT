@@ -1179,7 +1179,7 @@ internal partial class InteropGenerator
                     marshallerType: marshallerType,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition dictionaryComWrappersCallbackType);
+                    out TypeDefinition arrayComWrappersCallbackType);
 
                 // Define the 'ArrayImpl' type (with the boxed delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.SzArray.ArrayImpl(
@@ -1199,6 +1199,17 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.SzArray.ComWrappersMarshallerAttribute(
+                    arrayType: typeSignature,
+                    arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
+                    arrayComWrappersCallbackType: arrayComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition arrayComWrappersMarshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

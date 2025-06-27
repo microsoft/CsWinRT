@@ -286,6 +286,12 @@ internal sealed class InteropReferences
     public TypeReference ComInterfaceEntry => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers"u8, "ComWrappers/ComInterfaceEntry"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreateComInterfaceFlags"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference CreateComInterfaceFlags => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "CreateComInterfaceFlags"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreatedWrapperFlags"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -626,6 +632,12 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeDelegateMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeArrayMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
@@ -1242,6 +1254,17 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.ToValueTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeMarshalGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeMarshal
+        .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Object,
+                CreateComInterfaceFlags.ToValueTypeSignature()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.CreateObjectReference</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1363,6 +1386,18 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeDelegateMarshallerUnboxToManaged2 => field ??= WindowsRuntimeDelegateMarshaller
         .CreateMemberReference("UnboxToManaged"u8, MethodSignature.CreateStatic(
             returnType: Delegate.ToReferenceTypeSignature(),
+            genericParameterCount: 1,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                Guid.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller.UnboxToManaged&lt;TCallback&gt;(void*, in Guid)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeArrayMarshallerUnboxToManaged => field ??= WindowsRuntimeArrayMarshaller
+        .CreateMemberReference("UnboxToManaged"u8, MethodSignature.CreateStatic(
+            returnType: Array.ToReferenceTypeSignature(),
             genericParameterCount: 1,
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),

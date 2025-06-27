@@ -381,5 +381,132 @@ internal partial class InteropTypeDefinitionBuilder
                     (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
                     (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable)]);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller attribute for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
+        /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void ComWrappersMarshallerAttribute(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition arrayInterfaceEntriesImplType,
+            TypeDefinition arrayComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal sealed class' type
+            marshallerType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayComWrappersMarshallerAttribute"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+            marshallerType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+
+            // Define the 'GetOrCreateComInterfaceForObject' method as follows:
+            //
+            // public static void* GetOrCreateComInterfaceForObject(object value)
+            MethodDefinition getOrCreateComInterfaceForObjectMethod = new(
+                name: "GetOrCreateComInterfaceForObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    parameterTypes: [module.CorLibTypeFactory.Object]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { Ldc_I4_2 }, // TODO
+                    { Call, interopReferences.WindowsRuntimeMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'GetOrCreateComInterfaceForObject' method
+            marshallerType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject.Import(module),
+                method: getOrCreateComInterfaceForObjectMethod);
+
+            // Define the 'ComputeVtables' method as follows:
+            //
+            // public static ComInterfaceEntry* ComputeVtables(out int count)
+            MethodDefinition computeVtablesMethod = new(
+                name: "ComputeVtables"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: interopReferences.ComInterfaceEntry.Import(module).MakePointerType(),
+                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+            {
+                CilOutParameterIndices = [1],
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4(interopDefinitions.IReferenceArrayInterfaceEntries.Fields.Count) },
+                    { Stind_I4 },
+                    { Call, arrayInterfaceEntriesImplType.GetMethod("get_Vtables"u8) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'ComputeVtables' method
+            marshallerType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
+                method: computeVtablesMethod);
+
+            // Import the 'UnboxToManaged<TCallback>' method for the array
+            IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor = interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
+                .Import(module)
+                .MakeGenericInstanceMethod(arrayComWrappersCallbackType.ToReferenceTypeSignature());
+
+            // Define the 'CreateObject' method as follows:
+            //
+            // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+            MethodDefinition createObjectMethod = new(
+                name: "CreateObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Object,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+            {
+                CilOutParameterIndices = [2],
+                CilInstructions =
+                {
+                    // Set the 'wrapperFlags' to 'CreatedWrapperFlags.NonWrapping'
+                    { Ldarg_2 },
+                    { Ldc_I4_2 },
+                    { Stind_I4 },
+
+                    // Forward to 'WindowsRuntimeArrayMarshaller'
+                    { Ldarg_1 },
+                    { Call, get_IidMethod },
+                    { Call, windowsRuntimeArrayMarshallerUnboxToManagedDescriptor },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'CreateObject' method
+            marshallerType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
+                method: createObjectMethod);
+        }
     }
 }
