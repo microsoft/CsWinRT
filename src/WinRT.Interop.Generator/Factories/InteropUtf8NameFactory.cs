@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -24,8 +26,21 @@ internal static class InteropUtf8NameFactory
     {
         // Special case when there's no namespace: just put the generated types under 'ABI'.
         // Otherwise, we just add the "ABI." prefix to the namespace of the input type.
-        // TODO: remove temporary allocation in .NET 10 via 'WrittenSpan'
-        return typeSignature.Namespace?.Length is not > 0 ? new("ABI"u8) : new($"ABI.{typeSignature.Namespace}");
+        if (typeSignature.Namespace?.Length is not > 0)
+        {
+            return new("ABI"u8);
+        }
+
+        // Interpolate into 'DefaultInterpolatedStringHandler' to access the buffer directly.
+        // This allows this method to avoid materializing a temporary 'string' every time.
+        DefaultInterpolatedStringHandler interpolatedStringHandler = $"ABI.{typeSignature.Namespace}";
+
+        Utf8String result = new(interpolatedStringHandler.Text);
+
+        // Clear the handler before returning, so the rented array can be reused
+        interpolatedStringHandler.Clear();
+
+        return result;
     }
 
     /// <summary>
@@ -114,9 +129,19 @@ internal static class InteropUtf8NameFactory
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
 
-        // Create the final value, and also replace '.' characters with '-' instead
-        // TODO: make this zero-alloc in .NET 10 using 'WrittenSpan'
-        return new(interpolatedStringHandler.ToStringAndClear().Replace('.', '-'));
+        // Replace '.' characters with '-' instead, to avoid type name parsing issues
+        MemoryMarshal.CreateSpan(
+            reference: ref MemoryMarshal.GetReference(interpolatedStringHandler.Text),
+            length: interpolatedStringHandler.Text.Length)
+            .Replace('.', '-');
+
+        // Like above, create the final UTF8 string without materializing a temporary 'string'
+        Utf8String result = new(interpolatedStringHandler.Text);
+
+        // Return the rented buffer to the pool
+        interpolatedStringHandler.Clear();
+
+        return result;
     }
 
     /// <summary>
