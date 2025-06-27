@@ -1414,6 +1414,19 @@ internal sealed class InteropReferences
             parameterTypes: [new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
+    /// </summary>
+    public MemberReference ReadOnlySpan1_ctor(SzArrayTypeSignature arrayType)
+    {
+        return ReadOnlySpan1
+            .MakeGenericValueType(arrayType.BaseType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                parameterTypes: [arrayType]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>.
     /// </summary>
     /// <param name="typeMapGroup">The type map group to use.</param>

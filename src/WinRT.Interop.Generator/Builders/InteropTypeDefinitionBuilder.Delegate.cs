@@ -140,7 +140,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            InteropTypeDefinitionBuilder.ImplType(
+            InteropTypeDefinitionBuilder.Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
@@ -251,11 +251,11 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            InteropTypeDefinitionBuilder.ImplType(
-                interfaceType: ComInterfaceType.InterfaceIsIUnknown,
+            InteropTypeDefinitionBuilder.Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),
-                vftblType: interopDefinitions.DelegateVftbl,
+                vftblType: interopDefinitions.DelegateReferenceVftbl,
                 get_IidMethod: get_ReferenceIidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -283,7 +283,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            InteropTypeDefinitionBuilder.InterfaceEntriesImplType(
+            InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.DelegateInterfaceEntries,
@@ -755,7 +755,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition proxyType)
         {
-            ProxyType(
+            InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
                 runtimeClassName: delegateType.FullName, // TODO
@@ -769,7 +769,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the type map attributes for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="ProxyType"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         public static void TypeMapAttributes(

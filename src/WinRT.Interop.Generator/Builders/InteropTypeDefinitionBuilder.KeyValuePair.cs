@@ -260,7 +260,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            InteropTypeDefinitionBuilder.InterfaceEntriesImplType(
+            InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.IKeyValuePairInterfaceEntries,

@@ -1174,12 +1174,22 @@ internal partial class InteropGenerator
                     marshallerType: out TypeDefinition marshallerType);
 
                 // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeArrayComWrappersCallback' implementation)
-                InteropTypeDefinitionBuilder.SzArray.ComWrappersCallbackType(
+                InteropTypeDefinitionBuilder.SzArray.ComWrappersCallback(
                     arrayType: typeSignature,
                     marshallerType: marshallerType,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition dictionaryComWrappersCallbackType);
+
+                // Define the 'ArrayImpl' type (with the boxed delegate interface vtable implementation)
+                InteropTypeDefinitionBuilder.SzArray.ArrayImpl(
+                    arrayType: typeSignature,
+                    marshallerType: marshallerType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out TypeDefinition arrayImplType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

@@ -373,7 +373,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition callbackType)
         {
-            InteropTypeDefinitionBuilder.ComWrappersCallbackType(
+            InteropTypeDefinitionBuilder.ComWrappersCallback(
                 runtimeClassName: readOnlyDictionaryType.FullName, // TODO
                 typeSignature: readOnlyDictionaryType,
                 nativeObjectType: nativeObjectType,
@@ -653,7 +653,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            InteropTypeDefinitionBuilder.ImplType(
+            InteropTypeDefinitionBuilder.Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Impl"),
@@ -686,7 +686,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             string runtimeClassName = $"Windows.Foundation.Collections.IMapView`2<{keyType},{valueType}>"; // TODO
 
-            ProxyType(
+            InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType),
                 runtimeClassName: runtimeClassName,
@@ -700,7 +700,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the type map attributes for some <c>IMapView&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="ProxyType"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
         /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>

@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
@@ -183,7 +186,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
-        public static void ComWrappersCallbackType(
+        public static void ComWrappersCallback(
             SzArrayTypeSignature arrayType,
             TypeDefinition marshallerType,
             InteropReferences interopReferences,
@@ -227,6 +230,121 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackCreateArray.Import(module),
                 method: createArrayMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for the 'IReferenceArray`1&lt;T&gt;' instantiation for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Marshaller"/>.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method returned by <see cref="IID"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ArrayImpl(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition marshallerType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            // Define the 'get_Value' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int get_Value(void* thisPtr, uint* size, <ABI_ELEMENT_TYPE>** result)
+            MethodDefinition valueMethod = new(
+                name: "get_Value"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.UInt32.MakePointerType(),
+                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()])) // TODO
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Jump labels
+            CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
+
+            // Declare 2 local variables:
+            //   [0]: 'int' (the 'HRESULT' to return)
+            //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
+            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+
+            // Create a method body for the 'get_Value' method
+            valueMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_hresult, loc_1_referenceValue },
+                Instructions =
+                {
+                    // Return 'E_POINTER' if either argument is 'null'
+                    { Ldarg_1 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Beq_S, ldc_i4_e_pointer.CreateLabel() },
+                    { Ldarg_2 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { ldc_i4_e_pointer },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(arrayType).Import(module) },
+                    { Newobj, interopReferences.ReadOnlySpan1_ctor(arrayType).Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
+                    { Ldc_I4_0 },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // 'catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [0]
+                    { ldloc_0_returnHResult },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            InteropTypeDefinitionBuilder.Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType, "ArrayImpl"),
+                vftblType: interopDefinitions.IReferenceArrayVftbl,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: [valueMethod]);
         }
     }
 }

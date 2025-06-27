@@ -283,7 +283,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition callbackType)
         {
-            InteropTypeDefinitionBuilder.ComWrappersCallbackType(
+            InteropTypeDefinitionBuilder.ComWrappersCallback(
                 runtimeClassName: enumeratorType.FullName, // TODO
                 typeSignature: enumeratorType,
                 nativeObjectType: nativeObjectType,
@@ -549,7 +549,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            InteropTypeDefinitionBuilder.ImplType(
+            InteropTypeDefinitionBuilder.Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
@@ -583,7 +583,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             string runtimeClassName = $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>"; // TODO
 
-            ProxyType(
+            InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
                 runtimeClassName: runtimeClassName,
@@ -597,7 +597,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the type map attributes for some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="ProxyType"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
         /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>

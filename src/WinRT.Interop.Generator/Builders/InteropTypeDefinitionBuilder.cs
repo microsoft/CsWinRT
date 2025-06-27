@@ -98,7 +98,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="callbackType">The resulting callback type.</param>
-    public static void ComWrappersCallbackType(
+    public static void ComWrappersCallback(
         string runtimeClassName,
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
@@ -260,7 +260,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// Creates a new type definition for the marshaller for a generic interface.
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
-    /// <param name="interfaceComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+    /// <param name="interfaceComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -352,7 +352,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="module">The interop module being built.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="vtableMethods">The set of implementation methods for the implementation type.</param>
-    public static void ImplType(
+    public static void Impl(
         [ConstantExpected] ComInterfaceType interfaceType,
         Utf8String ns,
         Utf8String name,
@@ -468,7 +468,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
-    private static void InterfaceEntriesImplType(
+    private static void InterfaceEntriesImpl(
         Utf8String ns,
         Utf8String name,
         TypeDefinition entriesFieldType,
@@ -576,7 +576,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting proxy type.</param>
-    public static void ProxyType(
+    public static void Proxy(
         Utf8String ns,
         Utf8String name,
         string runtimeClassName,
