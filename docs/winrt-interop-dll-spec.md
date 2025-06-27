@@ -23,6 +23,7 @@ The **mangled type name** for a given type is defined as follows:
 1. **Primitive types**: well-known primitive types (e.g., `int`, `string`) are mapped to their corresponding identifiers.
 2. **User-defined types**: the type name is prefixed with the assembly name (or a compact identifier for well-known assemblies) within angle brackets (i.e. `<>`), and suffixed with the type name. The namespace is not included, as it matches the containing namespace for the generated type (without the `ABI[.]` prefix).
 3. **Generic types**: their type arguments are enclosed in angle brackets, right after the type name. Nested generics are recursively processed, and type arguments are separated by a pipe (i.e. `|`). Each type argument also has its name prefixed by the containing namespace.
+4. **Array types**: single-dimensional arrays (SZ arrays) are represented by wrapping the mangled name of the element type in angle brackets, and appending `Array` (i.e., `<NAME>Array`) as a suffix. The element type uses the same mangling rules as any other type (primitive, user-defined, generic, or nested array).
 
 All `.` characters in the final mangled name are replaced with `-` characters.
 
@@ -43,7 +44,7 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 **Primitive type**
 
 - Type: `System.Int32`
-- Mangled name: `ABI.System.<#corlib>int`
+- Mangled name: `ABI.System.int`
 
 **User-defined type**
 
@@ -52,13 +53,33 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 
 **Generic type**
 
-- Type: `System.Collections.Generic.IEnumerable<System.String>`
-- Mangled name: ``ABI.System.Collections.Generic.<#corlib>IEnumerable`1<<#corlib>string>"``
+- Type: `System.Collections.Generic.IEnumerable<string>`
+- Mangled name: ``ABI.System.Collections.Generic.<#corlib>IEnumerable`1<string>"``
 
 **Nested generic type**
 
-- Type: `System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePairSystem.String, MyNamespace.MyType>` (`MyType` is from assembly `MyAssembly`)
-- Mangled name: ``ABI.System.Collections.Generic.<#corlib>ICollection`1<<#corlib>System-Collections-Generic-KeyValuePair`2<<#corlib>string|<MyAssembly>MyNamespace-MyType>>``
+- Type: `System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<string, MyNamespace.MyType>` (`MyType` is from assembly `MyAssembly`)
+- Mangled name: ``ABI.System.Collections.Generic.<#corlib>ICollection`1<<#corlib>System-Collections-Generic-KeyValuePair`2<string|<MyAssembly>MyNamespace-MyType>>``
+
+**Array type (primitive element)**
+
+- Type: `System.Int32[]`
+- Mangled name: `ABI.System.<int>Array`
+
+**Array type (user-defined element)**
+
+- Type: `MyNamespace.MyType[]` (from assembly `MyAssembly`)
+- Mangled name: `ABI.MyNamespace.<<MyAssembly>MyType>Array`
+
+**Array type (generic element)**
+
+- Type: `System.Collections.Generic.List<string>[]`
+- Mangled name: ``ABI.System.Collections.Generic.<<#corlib>List`1<string>>Array``
+
+**Array type (nested array)**
+
+- Type: `System.Int32[][]`
+- Mangled name: `ABI.System.<<int>Array>Array`
 
 ### ANTLR4 name mangling rules
 
@@ -76,7 +97,8 @@ namespace : 'ABI' ('.' identifier)*;
 // Mangled type name rules
 mangledTypeName : primitiveType
                 | userDefinedType
-                | genericType;
+                | genericType
+                | arrayType;
 
 // Primitive types
 primitiveType : 'bool'
@@ -101,7 +123,11 @@ userDefinedType : '<' assemblyName '>' identifier;
 genericType : '<' assemblyName '>' identifier '<' typeArgument ( '|' typeArgument )* '>';
 typeArgument : primitiveType
              | userDefinedType
-             | genericType;
+             | genericType
+             | arrayType;
+
+// Array types
+arrayType : '<' mangledTypeName '>' 'Array';
 
 // Assembly name rules
 assemblyName : '#corlib'
