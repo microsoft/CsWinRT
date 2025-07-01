@@ -1185,7 +1185,8 @@ namespace Generator
                     typeMapper,
                     GeneratorHelper.IsManagedOnlyType(context.SemanticModel.Compilation),
                     isWinRTType,
-                    GeneratorHelper.IsWinRTClassOrInterface(context.SemanticModel.Compilation, isWinRTType, typeMapper));
+                    GeneratorHelper.IsWinRTClassOrInterface(context.SemanticModel.Compilation, isWinRTType, typeMapper),
+                    GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation));
         }
 
         private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(
@@ -1193,7 +1194,8 @@ namespace Generator
             TypeMapper typeMapper,
             Func<ISymbol, bool> isManagedOnlyType,
             Func<ISymbol, TypeMapper, bool> isWinRTType,
-            Func<ISymbol, bool, bool> isWinRTClassOrInterface)
+            Func<ISymbol, bool, bool> isWinRTClassOrInterface,
+            Func<ISymbol, bool> isGeneratedBindableCustomPropertyClass)
         {
             HashSet<ITypeSymbol> visitedTypes = new(SymbolEqualityComparer.Default);
             HashSet<VtableAttribute> vtableAttributes = new();
@@ -1208,7 +1210,8 @@ namespace Generator
                     // In theory, another library can also be called which can call a projected function
                     // but not handling those scenarios for now.
                     (isWinRTClassOrInterface(methodSymbol.ContainingSymbol, true) ||
-                     SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
+                     SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
+                     isGeneratedBindableCustomPropertyClass(methodSymbol.ContainingSymbol)))
                 {
                     // Get the concrete types directly from the argument rather than
                     // using what the method accepts, which might just be an interface, so
@@ -1237,14 +1240,16 @@ namespace Generator
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
                 if (leftSymbol is IPropertySymbol propertySymbol &&
                     (isWinRTClassOrInterface(propertySymbol.ContainingSymbol, true) ||
-                     SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
+                     SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
+                     isGeneratedBindableCustomPropertyClass(propertySymbol.ContainingSymbol)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type);
                 }
                 else if (leftSymbol is IFieldSymbol fieldSymbol &&
                     // WinRT interfaces don't have fields, so we don't need to check for them.
                     (isWinRTClassOrInterface(fieldSymbol.ContainingSymbol, false) || 
-                     SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
+                     SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
+                     isGeneratedBindableCustomPropertyClass(fieldSymbol.ContainingSymbol)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
                 }
