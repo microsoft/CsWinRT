@@ -406,15 +406,10 @@ namespace Generator
         }
 
         // Returns whether the class is marked with the GeneratedBindableCustomProperty attribute or not.
-        public static Func<ISymbol, bool> IsGeneratedBindableCustomPropertyClass(Compilation compilation)
+        public static bool IsGeneratedBindableCustomPropertyClass(Compilation compilation, ISymbol type)
         {
             var generatedBindableCustomPropertyAttribute = compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute");
-            return IsGeneratedBindableCustomPropertyClassHelper;
-
-            bool IsGeneratedBindableCustomPropertyClassHelper(ISymbol type)
-            {
-                return HasAttributeWithType(type, generatedBindableCustomPropertyAttribute);
-            }
+            return HasAttributeWithType(type, generatedBindableCustomPropertyAttribute);
         }
 
         // Returns whether it is a WinRT class or interface.
