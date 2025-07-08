@@ -91,7 +91,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IWeakReferenceSource</c> (00000038-0000-0000-C000-000000000046).</summary>
-        internal static ref readonly Guid IID_IWeakReferenceSource
+        public static ref readonly Guid IID_IWeakReferenceSource
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get

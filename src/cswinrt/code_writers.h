@@ -8336,7 +8336,7 @@ nongeneric_delegates);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid)
+if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid || global::WinRT.Interop.IID.IID_IWeakReferenceSource == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
