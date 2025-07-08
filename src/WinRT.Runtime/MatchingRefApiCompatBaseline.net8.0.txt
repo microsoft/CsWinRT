@@ -8,4 +8,5 @@ CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableConte
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttribute' exists on 'WinRT.ActivationFactory.ActivationHandler' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>.AddEventHandler(T)' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.DynamicWindowsRuntimeCastAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 9
+MembersMustExist : Member 'public System.Guid WinRT.Interop.IID.IID_IWeakReferenceSource.get()' does not exist in the reference but it does exist in the implementation.
+Total Issues: 10
