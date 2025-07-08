@@ -1234,19 +1234,26 @@ namespace Generator
             }
             else if (context.Node is AssignmentExpressionSyntax assignment)
             {
+                var isGeneratedBindableCustomPropertyClass = false;
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
+                // Check if we are assigning to a property that is a WinRT class / interface or 
+                // a generated bindable custom property class as that will probably be binded to
+                // or is being assigned to another property in the same assembly as it might then be
+                // used elswhere after casting.
                 if (leftSymbol is IPropertySymbol propertySymbol &&
                     (isWinRTClassOrInterface(propertySymbol.ContainingSymbol, true) ||
+                     (isGeneratedBindableCustomPropertyClass = GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, propertySymbol.ContainingSymbol)) ||
                      SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
-                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type);
+                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type, isGeneratedBindableCustomPropertyClass);
                 }
                 else if (leftSymbol is IFieldSymbol fieldSymbol &&
                     // WinRT interfaces don't have fields, so we don't need to check for them.
-                    (isWinRTClassOrInterface(fieldSymbol.ContainingSymbol, false) || 
+                    (isWinRTClassOrInterface(fieldSymbol.ContainingSymbol, false) ||
+                     (isGeneratedBindableCustomPropertyClass = GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, fieldSymbol.ContainingSymbol)) ||
                      SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
-                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
+                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type, isGeneratedBindableCustomPropertyClass);
                 }
             }
             else if (context.Node is VariableDeclarationSyntax variableDeclaration)
@@ -1345,15 +1352,15 @@ namespace Generator
             return vtableAttributes.ToImmutableArray();
 
             // Helper to directly use 'AddVtableAttributesForTypeDirect' with 'TypeInfo' values
-            void AddVtableAttributesForType(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol)
+            void AddVtableAttributesForType(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol, bool isGeneratedBindableCustomPropertyClass = false)
             {
-                AddVtableAttributesForTypeDirect(instantiatedType.Type, instantiatedType.ConvertedType, convertedToTypeSymbol);
+                AddVtableAttributesForTypeDirect(instantiatedType.Type, instantiatedType.ConvertedType, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
             }
 
             // This handles adding vtable information for types for which we can not directly put an attribute on them.
             // This includes generic types that are boxed and and non-WinRT types for which our AOT source generator hasn't
             // ran on but implements WinRT interfaces.
-            void AddVtableAttributesForTypeDirect(ITypeSymbol instantiatedTypeSymbol, ITypeSymbol instantiatedConvertedTypeSymbol, ITypeSymbol convertedToTypeSymbol)
+            void AddVtableAttributesForTypeDirect(ITypeSymbol instantiatedTypeSymbol, ITypeSymbol instantiatedConvertedTypeSymbol, ITypeSymbol convertedToTypeSymbol, bool isGeneratedBindableCustomPropertyClass = false)
             {
                 // This handles the case where there is an WinRT array possibly being assigned
                 // to an object type or a list. In this case, the IList interfaces of the array
@@ -1430,8 +1437,8 @@ namespace Generator
                                 // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
                                 (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
                                   GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
-                                // Make sure the type we are passing is being boxed or cast to another interface.
-                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
+                                // Make sure the type we are passing is being boxed or cast to another interface or being assigned to a member in a bindable class.
+                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol) || isGeneratedBindableCustomPropertyClass);
                         }
                         else if (!isWinRTType(instantiatedTypeSymbol, typeMapper))
                         {
@@ -1440,8 +1447,8 @@ namespace Generator
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it.
                                 !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
-                                // Make sure the type we are passing is being boxed or cast to another interface.
-                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
+                                // Make sure the type we are passing is being boxed or cast to another interface or being assigned to a member in a bindable class.
+                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol) || isGeneratedBindableCustomPropertyClass);
                         }
 
                         if (addClassOnLookupTable)

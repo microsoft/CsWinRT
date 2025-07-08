@@ -405,6 +405,13 @@ namespace Generator
             return compilation is CSharpCompilation csharpCompilation && csharpCompilation.Options.AllowUnsafe;
         }
 
+        // Returns whether the class is marked with the GeneratedBindableCustomProperty attribute or not.
+        public static bool IsGeneratedBindableCustomPropertyClass(Compilation compilation, ISymbol type)
+        {
+            var generatedBindableCustomPropertyAttribute = compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute");
+            return HasAttributeWithType(type, generatedBindableCustomPropertyAttribute);
+        }
+
         // Returns whether it is a WinRT class or interface.
         // If the bool parameter is true, then custom mapped interfaces are also considered.
         // This function is similar to whether it is a WinRT type, but custom type mapped
