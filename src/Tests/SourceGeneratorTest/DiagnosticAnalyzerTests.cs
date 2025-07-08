@@ -1168,4 +1168,361 @@ public class DiagnosticAnalyzerTests
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchStatement_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    switch (obj)
+                    {
+                        case {|CsWinRT1034:C|}: return 42;
+                        default: return 0;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchStatement_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    switch (obj)
+                    {
+                        case C: return 42;
+                        default: return 0;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchStatement_WithDeclaration_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    switch (obj)
+                    {
+                        case {|CsWinRT1034:C c|}: return c.GetHashCode();
+                        default: return 0;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchStatement_WithDeclaration_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    switch (obj)
+                    {
+                        case C c: return c.GetHashCode();
+                        default: return 0;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        {|CsWinRT1034:C|} => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        C => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithCondition_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        { } when {|CsWinRT1034:obj is C|} => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithCondition_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        { } when obj is C => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithConditionAndDeclaration_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        { } when {|CsWinRT1034:obj is C c|} => c.GetHashCode(),
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithConditionAndDeclaration_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        { } when obj is C c => c.GetHashCode(),
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithTuple_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        ({|CsWinRT1034:C|}, _) => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithTuple_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj)
+                {
+                    return obj switch
+                    {
+                        (C, _) => 42,
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithTuple2_NoAttribute_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                int M(object obj, object obj2)
+                {
+                    return (obj, obj2) switch
+                    {
+                        ({|CsWinRT1034:C c|}, _) => c.GetHashCode(),
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_SwitchExpression_WithTuple2_WithAttribute_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                int M(object obj, object obj2)
+                {
+                    return (obj, obj2) switch
+                    {
+                        (C c, _) => c.GetHashCode(),
+                        _ => 0
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
 }
