@@ -413,7 +413,7 @@ namespace Generator
                 symbol.TypeKind,
                 symbol.IsRecord,
                 classHierarchy,
-                ToFullyQualifiedString(symbol),
+                ToFullyQualifiedString(symbol, false),
                 bindableCustomProperties.ToImmutableArray());
 
             void AddProperty(ISymbol symbol)
@@ -422,12 +422,12 @@ namespace Generator
                 {
                     bindableCustomProperties.Add(new BindableCustomProperty(
                         propertySymbol.MetadataName,
-                        ToFullyQualifiedString(propertySymbol.Type),
+                        ToFullyQualifiedString(propertySymbol.Type, false),
                         // Make sure the property accessors are also public even if property itself is public.
                         propertySymbol.GetMethod != null && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public,
                         propertySymbol.SetMethod != null && !propertySymbol.SetMethod.IsInitOnly && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public,
                         propertySymbol.IsIndexer,
-                        propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type) : "",
+                        propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type, false) : "",
                         propertySymbol.IsStatic
                         ));
                 }
@@ -435,7 +435,7 @@ namespace Generator
         }
 #nullable disable
 
-        private static string ToFullyQualifiedString(ISymbol symbol)
+        private static string ToFullyQualifiedString(ISymbol symbol, bool trimGlobal = true)
         {
             // Used to ensure class names within generics are fully qualified to avoid
             // having issues when put in ABI namespaces.
@@ -446,7 +446,7 @@ namespace Generator
                 miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.ExpandNullable);
 
             var qualifiedString = symbol.ToDisplayString(symbolDisplayString);
-            return qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
+            return trimGlobal && qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
         }
 
         private static string ToVtableLookupString(ISymbol symbol)
