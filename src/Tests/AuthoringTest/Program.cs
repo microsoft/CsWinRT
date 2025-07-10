@@ -205,6 +205,8 @@ namespace AuthoringTest
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRT";
+        public CustomWWW Url => null;
+        public CustomPropertyStructType CustomPropertyStructType => new CustomPropertyStructType();
     }
 
     [GeneratedBindableCustomProperty]
