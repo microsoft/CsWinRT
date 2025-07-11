@@ -1238,7 +1238,7 @@ namespace Generator
 
         public static string EscapeAssemblyNameForIdentifier(string typeName)
         {
-            return Regex.Replace(typeName, """[^a-zA-Z0-9_]""", "_");
+            return Regex.Replace(typeName, @"(^\d)|[^a-zA-Z0-9_]", "_");
         }
 
         public static string EscapeTypeNameForIdentifier(string typeName)
