@@ -33,7 +33,7 @@ internal sealed class PathAssemblyResolver : IAssemblyResolver
     public PathAssemblyResolver(string[] referencePath)
     {
         _referencePath = referencePath;
-        ReaderParameters = new RuntimeContext(new DotNetRuntimeInfo(), this).DefaultReaderParameters;
+        ReaderParameters = new RuntimeContext(new DotNetRuntimeInfo(".NETCoreApp", new Version(10, 0)), this).DefaultReaderParameters;
     }
 
     /// <summary>
