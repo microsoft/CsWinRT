@@ -129,11 +129,11 @@ internal static class InteropUtf8NameFactory
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
 
-        // Replace '.' characters with '-' instead, to avoid type name parsing issues
-        MemoryMarshal.CreateSpan(
-            reference: ref MemoryMarshal.GetReference(interpolatedStringHandler.Text),
-            length: interpolatedStringHandler.Text.Length)
-            .Replace('.', '-');
+        // Replace '.' characters with '-' instead, to avoid type name parsing issues.
+        // Also replace '`' characters, as using backticks breaks some tooling (eg. ILSpy),
+        // as the backtick character is assumed to indicate that a type is generic.
+        interpolatedStringHandler.Text.AsSpanUnsafe().Replace('.', '-');
+        interpolatedStringHandler.Text.AsSpanUnsafe().Replace('`', '\'');
 
         // Like above, create the final UTF8 string without materializing a temporary 'string'
         Utf8String result = new(interpolatedStringHandler.Text);
