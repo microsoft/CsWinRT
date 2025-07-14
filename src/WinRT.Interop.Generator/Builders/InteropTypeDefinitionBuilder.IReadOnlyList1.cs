@@ -363,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition callbackType)
         {
-            InteropTypeDefinitionBuilder.ComWrappersCallback(
+            ComWrappersCallback(
                 runtimeClassName: readOnlyListType.FullName, // TODO
                 typeSignature: readOnlyListType,
                 nativeObjectType: nativeObjectType,
@@ -582,7 +582,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            InteropTypeDefinitionBuilder.Impl(
+            Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),

@@ -140,7 +140,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            InteropTypeDefinitionBuilder.Impl(
+            Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
@@ -251,7 +251,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            InteropTypeDefinitionBuilder.Impl(
+            Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),

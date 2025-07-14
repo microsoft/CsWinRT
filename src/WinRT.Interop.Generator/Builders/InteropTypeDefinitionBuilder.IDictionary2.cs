@@ -665,7 +665,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition callbackType)
         {
-            InteropTypeDefinitionBuilder.ComWrappersCallback(
+            ComWrappersCallback(
                 runtimeClassName: dictionaryType.FullName, // TODO
                 typeSignature: dictionaryType,
                 nativeObjectType: nativeObjectType,
@@ -1145,7 +1145,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            InteropTypeDefinitionBuilder.Impl(
+            Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "Impl"),
