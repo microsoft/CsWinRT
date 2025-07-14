@@ -33,10 +33,12 @@ The **mangled type name** for a given type is defined as follows:
 3. **Generic types**: their type arguments are enclosed in angle brackets, right after the type name. Nested generics are recursively processed, and type arguments are separated by a pipe (i.e. `|`). Each type argument also has its name prefixed by the containing namespace.
 4. **Array types**: single-dimensional arrays (SZ arrays) are represented by wrapping the mangled name of the element type in angle brackets, and appending `Array` (i.e., `<NAME>Array`) as a suffix. The element type uses the same mangling rules as any other type (primitive, user-defined, generic, or nested array).
 
-All `.` characters in the final mangled name are replaced with `-` characters.
+All `.` characters in the final mangled name are replaced with `-` characters. Additionally, all `` ` `` characters (backticks) in the final mangled name are replaced with `'` characters (apostrophes).
 
 > [!NOTE]
-> This is not strictly required, as the `.` character is a valid character for an identifier as per ECMA-335. However, using that character can be inconvenient when using reflection APIs to inspect such types, as it makes it not possible to easily distinguish the namespace from the actual type name. So to account for this, we just do this substitution, given the final length of the mangled name remains the same anyway when doing so.
+> The `.` character replacement is not strictly required, as the `.` character is a valid character for an identifier as per ECMA-335. However, using that character can be inconvenient when using reflection APIs to inspect such types, as it makes it not possible to easily distinguish the namespace from the actual type name. So to account for this, we just do this substitution, given the final length of the mangled name remains the same anyway when doing so.
+> 
+> The `` ` `` character replacement is done to avoid issues with tooling, such as ILSpy, which assume that all types with `` ` `` in their name are generic types. The generated types for marshalling generic types are not themselves generic, which causes these tools to incorrectly interpret the type metadata.
 
 These are the well-known assemblies and their compact identifiers:
 - `System.Runtime`: `#corlib`
@@ -62,12 +64,12 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 **Generic type**
 
 - Type: `System.Collections.Generic.IEnumerable<string>`
-- Mangled name: ``ABI.System.Collections.Generic.<#corlib>IEnumerable`1<string>"``
+- Mangled name: `ABI.System.Collections.Generic.<#corlib>IEnumerable'1<string>`
 
 **Nested generic type**
 
 - Type: `System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<string, MyNamespace.MyType>` (`MyType` is from assembly `MyAssembly`)
-- Mangled name: ``ABI.System.Collections.Generic.<#corlib>ICollection`1<<#corlib>System-Collections-Generic-KeyValuePair`2<string|<MyAssembly>MyNamespace-MyType>>``
+- Mangled name: `ABI.System.Collections.Generic.<#corlib>ICollection'1<<#corlib>System-Collections-Generic-KeyValuePair'2<string|<MyAssembly>MyNamespace-MyType>>`
 
 **Array type (primitive element)**
 
@@ -82,7 +84,7 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 **Array type (generic element)**
 
 - Type: `System.Collections.Generic.List<string>[]`
-- Mangled name: ``ABI.System.Collections.Generic.<<#corlib>List`1<string>>Array``
+- Mangled name: `ABI.System.Collections.Generic.<<#corlib>List'1<string>>Array`
 
 **Array type (nested array)**
 
