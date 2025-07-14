@@ -592,7 +592,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.Import(module).ToValueTypeSignature()]))
+                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =
