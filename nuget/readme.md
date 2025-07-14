@@ -79,6 +79,7 @@ C#/WinRT supports several feature switches to opt-out of some features available
 | CsWinRTEnableIReferenceSupport | \*true \| false | Enables support and marshalling of `IReference<T>`, `IReferenceArray<T>` and `IPropertyValue` objects. Setting this to **false** allows trimming all supporting code for all three interfaces, and will make all of them not available on marshalled CCW types. |
 | CsWinRTEnableIDynamicInterfaceCastableSupport | \*true \| false | Enables support for the [`IDynamicInterfaceCastable`](https://devblogs.microsoft.com/dotnet/improvements-in-native-code-interop-in-net-5-0/#idynamicinterfacecastable) infrastructure for RCW types. Setting this to **false** allows trimming of all related code, and will disallow casting RCW types to interface types they don't directly implement in metadata. |
 \*Default value
+| CsWinRTLoadComponentsInDefaultALC | true \| \*false | Setting this to **true** configures `WinRT.Host.dll` to load CsWinRT components in the default Assembly Load Context (ALC).  By default, when set to **false**, they load in their own ALC. |
 
 ### Windows Metadata
 
