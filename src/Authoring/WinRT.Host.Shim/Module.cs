@@ -24,6 +24,9 @@ namespace WinRT.Host
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
 #if NET
+        private const string UseLoadComponentsInDefaultALCPropertyName = "CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC";
+        private readonly static bool _IsLoadInDefaultContext = IsLoadInDefaultContext();
+
         private static HashSet<string> _InitializedResolversInDefaultContext = null;
 
         public static Assembly LoadInDefaultContext(string targetAssembly)
@@ -54,6 +57,16 @@ namespace WinRT.Host
 
             return AssemblyLoadContext.Default.LoadFromAssemblyPath(targetAssembly);
         }
+
+        public static bool IsLoadInDefaultContext()
+        {
+            if (AppContext.TryGetSwitch(UseLoadComponentsInDefaultALCPropertyName, out bool isEnabled))
+            {
+                return isEnabled;
+            }
+
+            return false;
+        }
 #endif
 
         public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
@@ -66,7 +79,15 @@ namespace WinRT.Host
             try
             {
 #if NET
-                var assembly = LoadInDefaultContext(targetAssembly);
+                Assembly assembly;
+                if (_IsLoadInDefaultContext)
+                {
+                    assembly = LoadInDefaultContext(targetAssembly);
+                }
+                else
+                {
+                    assembly = ActivationLoader.LoadAssembly(targetAssembly);
+                }
 #else
                 var assembly = ActivationLoader.LoadAssembly(targetAssembly);
 #endif

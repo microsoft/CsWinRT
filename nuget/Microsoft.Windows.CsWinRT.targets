@@ -567,6 +567,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
     <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
+    <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -618,6 +619,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
+                                    Trim="true" />
+	  
+    <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
+                                    Value="$(CsWinRTLoadComponentsInDefaultALC)"
                                     Trim="true" />
   </ItemGroup>
 
