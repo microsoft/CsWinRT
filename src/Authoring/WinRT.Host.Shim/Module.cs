@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 
 #if NET
 using System.Runtime.Loader;
+using System.Threading;
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 #endif
 
@@ -21,6 +23,39 @@ namespace WinRT.Host
 
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
+#if NET
+        private static HashSet<string> _InitializedResolversInDefaultContext = null;
+
+        public static Assembly LoadInDefaultContext(string targetAssembly)
+        {
+            if (_InitializedResolversInDefaultContext == null)
+            {
+                Interlocked.CompareExchange(ref _InitializedResolversInDefaultContext, new HashSet<string>(StringComparer.OrdinalIgnoreCase), null);
+            }
+
+            lock (_InitializedResolversInDefaultContext)
+            {
+                if (!_InitializedResolversInDefaultContext.Contains(targetAssembly))
+                {
+                    var resolver = new AssemblyDependencyResolver(targetAssembly);
+                    AssemblyLoadContext.Default.Resolving += (AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName) =>
+                    {
+                        string assemblyPath = resolver.ResolveAssemblyToPath(assemblyName);
+                        if (assemblyPath != null)
+                        {
+                            return assemblyLoadContext.LoadFromAssemblyPath(assemblyPath);
+                        }
+                        return null;
+                    };
+
+                    _InitializedResolversInDefaultContext.Add(targetAssembly);
+                }
+            }
+
+            return AssemblyLoadContext.Default.LoadFromAssemblyPath(targetAssembly);
+        }
+#endif
+
         public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
         {
             *activationFactory = IntPtr.Zero;
@@ -30,7 +65,11 @@ namespace WinRT.Host
 
             try
             {
+#if NET
+                var assembly = LoadInDefaultContext(targetAssembly);
+#else
                 var assembly = ActivationLoader.LoadAssembly(targetAssembly);
+#endif
                 var type = assembly.GetType("WinRT.Module");
                 if (type == null)
                 {
