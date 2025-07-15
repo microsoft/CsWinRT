@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
@@ -61,6 +62,9 @@ internal partial class InteropGenerator
         // We want to ensure the state will never be mutated after this method completes
         discoveryState.MakeReadOnly();
 
+        // Validate referenced assemblies for CsWinRT 2.x
+        ValidateWinRTRuntimeDllVersion2References(discoveryState);
+
         return discoveryState;
     }
 
@@ -98,6 +102,15 @@ internal partial class InteropGenerator
         // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
         if (!module.IsOrReferencesWindowsSDKProjectionsAssembly)
         {
+            return;
+        }
+
+        // If the module references the CsWinRT 2.x runtime assembly, we need to stop, as it's invalid.
+        // We'll emit an error after loading all modules, to let the user know of the wrong configuration.
+        if (module.ReferencesWinRTRuntimeDllVersion2)
+        {
+            discoveryState.MarkWinRTRuntimeDllVersion2References();
+
             return;
         }
 
@@ -309,5 +322,27 @@ internal partial class InteropGenerator
         {
             throw WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e);
         }
+    }
+
+    /// <summary>
+    /// Validates that no assemblies targeting CsWinRT 2.x are referenced.
+    /// </summary>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    private static void ValidateWinRTRuntimeDllVersion2References(InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Fast-path if no invalid module has been discovered
+        if (!discoveryState.HasWinRTRuntimeDllVersion2References)
+        {
+            return;
+        }
+
+        // Filter all invalid modules (i.e. that reference the 'WinRT.Runtime.dll' assembly version 2)
+        IEnumerable<string> invalidModuleNames = discoveryState.ModuleDefinitions
+            .Values
+            .Where(static module => module.ReferencesWinRTRuntimeDllVersion2)
+            .Select(static module => module.Name?.ToString() ?? "")
+            .Order();
+
+        throw WellKnownInteropExceptions.WinRTRuntimeDllVersion2References(invalidModuleNames);
     }
 }

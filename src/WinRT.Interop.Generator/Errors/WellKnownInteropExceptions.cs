@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -294,6 +296,19 @@ internal static class WellKnownInteropExceptions
     public static Exception SzArrayTypeCodeGenerationError(string? arrayType, Exception exception)
     {
         return Exception(34, $"Failed to generate marshalling code for SZ array type '{arrayType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to discover SZ array types.
+    /// </summary>
+    public static Exception WinRTRuntimeDllVersion2References(IEnumerable<string> names)
+    {
+        string combinedNames = string.Join(", ", names.Select(static name => $"'{name}'"));
+
+        return Exception(35,
+            $"One or more referenced assemblies were compiled against CsWinRT 2.x (i.e. referencing 'WinRT.Runtime.dll' version '2.x'), which is not compatible with CsWinRT 3.0 (i.e. referencing 'WinRT.Runtime.dll' version '3.0'). " +
+            $"CsWinRT 3.0 is not backward-compatible with CsWinRT 2.x, so referencing any assemblies targeting an older version of CsWinRT is not supported. Those assemblies will need to be recompiled using CsWinRT 3.0 (i.e. using" +
+            $"a TFM such as 'net10.0-windows10.0.26100.1', where the '.1' revision number at the end of the target platform version indicates CsWinRT 3.0). The names of the assemblies causing issues are: {combinedNames}.");
     }
 
     /// <summary>

@@ -53,6 +53,11 @@ internal sealed class InteropGeneratorDiscoveryState
     private volatile bool _isReadOnly;
 
     /// <summary>
+    /// Indicates whether any of the loaded modules reference the WinRT runtime .dll version 2.
+    /// </summary>
+    private volatile bool _hasWinRTRuntimeDllVersion2References;
+
+    /// <summary>
     /// Gets the assembly resolver to use for loading assemblies.
     /// </summary>
     public required IAssemblyResolver AssemblyResolver { get; init; }
@@ -111,6 +116,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all SZ array types.
     /// </summary>
     public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
+
+    /// <summary>
+    /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
+    /// </summary>
+    public bool HasWinRTRuntimeDllVersion2References => _hasWinRTRuntimeDllVersion2References;
 
     /// <summary>
     /// Tracks a loaded module definition.
@@ -241,6 +251,16 @@ internal sealed class InteropGeneratorDiscoveryState
     public void MakeReadOnly()
     {
         _isReadOnly = true;
+    }
+
+    /// <summary>
+    /// Marks the state as having references to the WinRT runtime .dll version 2.
+    /// </summary>
+    public void MarkWinRTRuntimeDllVersion2References()
+    {
+        ThrowIfReadOnly();
+
+        _hasWinRTRuntimeDllVersion2References = true;
     }
 
     /// <summary>

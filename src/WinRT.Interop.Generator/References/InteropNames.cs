@@ -26,6 +26,11 @@ internal static class InteropNames
     public static ReadOnlySpan<byte> InteropDllNameUtf8 => "WinRT.Interop.dll"u8;
 
     /// <summary>
+    /// The name of the WinRT runtime .dll.
+    /// </summary>
+    public static ReadOnlySpan<byte> WinRTRuntimeDllNameUtf8 => "WinRT.Runtime.dll"u8;
+
+    /// <summary>
     /// The name of the Windows SDK projections .dll.
     /// </summary>
     public static ReadOnlySpan<byte> WindowsSDKDllNameUtf8 => "Microsoft.Windows.SDK.NET.dll"u8;

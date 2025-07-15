@@ -128,5 +128,26 @@ internal static class WindowsRuntimeExtensions
                 return module.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8) is true;
             }
         }
+
+        /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> references 'WinRT.Runtime.dll' version 2.
+        /// </summary>
+        /// <returns>Whether the module references 'WinRT.Runtime.dll' version 2.</returns>
+        public bool ReferencesWinRTRuntimeDllVersion2
+        {
+            get
+            {
+                // Get the 'WinRT.Runtime.dll' reference, and check if its version is the one for CsWinRT 2.x
+                foreach (AssemblyReference reference in module.AssemblyReferences)
+                {
+                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntimeDllNameUtf8[..^4]) is true)
+                    {
+                        return reference.Version.Major == 2;
+                    }
+                }
+
+                return false;
+            }
+        }
     }
 }
