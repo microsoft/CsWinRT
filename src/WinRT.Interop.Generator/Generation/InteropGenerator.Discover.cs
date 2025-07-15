@@ -63,7 +63,7 @@ internal partial class InteropGenerator
         discoveryState.MakeReadOnly();
 
         // Validate referenced assemblies for CsWinRT 2.x
-        ValidateWinRTRuntimeDllVersion2References(discoveryState);
+        ValidateWinRTRuntimeDllVersion2References(args, discoveryState);
 
         return discoveryState;
     }
@@ -327,11 +327,18 @@ internal partial class InteropGenerator
     /// <summary>
     /// Validates that no assemblies targeting CsWinRT 2.x are referenced.
     /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
-    private static void ValidateWinRTRuntimeDllVersion2References(InteropGeneratorDiscoveryState discoveryState)
+    private static void ValidateWinRTRuntimeDllVersion2References(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
     {
         // Fast-path if no invalid module has been discovered
         if (!discoveryState.HasWinRTRuntimeDllVersion2References)
+        {
+            return;
+        }
+
+        // Skip the validation if the opt-out switch is set (mostly useful for testing)
+        if (!args.ValidateWinRTRuntimeDllVersion2References)
         {
             return;
         }
