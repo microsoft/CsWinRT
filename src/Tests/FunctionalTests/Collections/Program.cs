@@ -96,6 +96,14 @@ if (!AllEqual(nestedArr, nestedArr2, outNestedArr, retNestedArr))
     return 101;
 }
 
+EnumValue[] enumArr = new EnumValue[] { EnumValue.One, EnumValue.Two };
+instance.EnumsProperty = enumArr;
+EnumValue[] retEnumArr = instance.EnumsProperty;
+if (!AllEqual(enumArr, retEnumArr))
+{
+    return 101;
+}
+
 #endif
 
 IStringable[] stringableArr = new IStringable[] {

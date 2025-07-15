@@ -685,6 +685,32 @@ namespace WinRT
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
+            else if (typeof(T).IsEnum)
+            {
+                Func<T, object> ReturnTypedParameterFunc = (T value) => value;
+                AbiType = typeof(T);
+                CreateMarshaler = ReturnTypedParameterFunc;
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = Marshaler.ReturnParameterFunc;
+                FromAbi = (object value) => (T)value;
+                FromManaged = ReturnTypedParameterFunc;
+                DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                if (typeof(T).IsEnum)
+                {
+                    // For marshaling non-blittable enum arrays via MarshalNonBlittable
+                    if (typeof(T).GetEnumUnderlyingType() == typeof(int))
+                    {
+                        CopyAbi = Marshaler.CopyIntEnumFunc;
+                        CopyManaged = Marshaler.CopyIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                    else
+                    {
+                        CopyAbi = Marshaler.CopyUIntEnumFunc;
+                        CopyManaged = Marshaler.CopyUIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                }
+            }
             else if (typeof(T).IsValueType)
             {
                 // Value types can have custom marshaller types and use value types in places where we can't construct
