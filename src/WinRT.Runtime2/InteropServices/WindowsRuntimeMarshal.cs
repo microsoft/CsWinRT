@@ -162,7 +162,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
     /// <param name="flags">Flags used to configure the generated interface.</param>
     /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="instance"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// This method exposes the functionality from <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> using the
