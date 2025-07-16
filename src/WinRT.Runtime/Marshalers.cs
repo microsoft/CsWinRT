@@ -685,6 +685,32 @@ namespace WinRT
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
+            else if (typeof(T).IsEnum)
+            {
+                Func<T, object> ReturnTypedParameterFunc = (T value) => value;
+                AbiType = typeof(T);
+                CreateMarshaler = ReturnTypedParameterFunc;
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = Marshaler.ReturnParameterFunc;
+                FromAbi = (object value) => (T)value;
+                FromManaged = ReturnTypedParameterFunc;
+                DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                if (typeof(T).IsEnum)
+                {
+                    // For marshaling non-blittable enum arrays via MarshalNonBlittable
+                    if (typeof(T).GetEnumUnderlyingType() == typeof(int))
+                    {
+                        CopyAbi = Marshaler.CopyIntEnumFunc;
+                        CopyManaged = Marshaler.CopyIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                    else
+                    {
+                        CopyAbi = Marshaler.CopyUIntEnumFunc;
+                        CopyManaged = Marshaler.CopyUIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                }
+            }
             else if (typeof(T).IsValueType)
             {
                 // Value types can have custom marshaller types and use value types in places where we can't construct
@@ -1088,7 +1114,10 @@ namespace WinRT
                 {
                     foreach (var marshaler in _marshalers)
                     {
-                        Marshaler<T>.DisposeMarshaler(marshaler);
+                        // We make use of MarshalNonBlittable for array marshaling when T is non-blittable or when it is an enum.
+                        // Both scenarios are handled by MarshalNonBlittable for marshaling T itself, so we just directly use that
+                        // here and below without needing to go through Marshaler<T>.
+                        MarshalNonBlittable<T>.DisposeMarshaler(marshaler);
                     }
                 }
                 if (_array != IntPtr.Zero)
@@ -1103,7 +1132,7 @@ namespace WinRT
 
         public static new unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1131,8 +1160,8 @@ namespace WinRT
                 var element = (byte*)m._array.ToPointer();
                 for (int i = 0; i < length; i++)
                 {
-                    m._marshalers[i] = Marshaler<T>.CreateMarshaler(array[i]);
-                    Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
+                    m._marshalers[i] = MarshalNonBlittable<T>.CreateMarshaler(array[i]);
+                    MarshalNonBlittable<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
 #pragma warning restore IL3050
@@ -1156,7 +1185,7 @@ namespace WinRT
 
         public static new unsafe T[] FromAbiArray(object box)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1188,7 +1217,7 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-                array[i] = Marshaler<T>.FromAbi(abi_element);
+                array[i] = MarshalNonBlittable<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
 #pragma warning restore IL3050
@@ -1197,7 +1226,7 @@ namespace WinRT
 
         public static unsafe void CopyAbiArray(T[] array, object box)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1224,7 +1253,7 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-                array[i] = Marshaler<T>.FromAbi(abi_element);
+                array[i] = MarshalNonBlittable<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
 #pragma warning restore IL3050
@@ -1232,7 +1261,7 @@ namespace WinRT
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1260,7 +1289,7 @@ namespace WinRT
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
                 {
-                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    MarshalNonBlittable<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
 #pragma warning restore IL3050
@@ -1278,7 +1307,7 @@ namespace WinRT
 
         public static unsafe void CopyManagedArray(T[] array, IntPtr data)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1304,7 +1333,7 @@ namespace WinRT
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
                 {
-                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    MarshalNonBlittable<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
 #pragma warning restore IL3050

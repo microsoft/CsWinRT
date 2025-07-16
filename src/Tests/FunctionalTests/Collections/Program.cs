@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
+using Windows.Foundation;
 
 var instance = new Class();
 
@@ -36,6 +37,84 @@ float[] floatArr2 = new float[floatArr.Length];
 float[] outFloatArr;
 float[] retFloatArr = instance2.Array9(floatArr, floatArr2, out outFloatArr);
 if (!AllEqual(floatArr, floatArr2, outFloatArr, retFloatArr))
+{
+    return 101;
+}
+
+string[] stringArr = new string[] { "apples", "oranges", "pears" };
+string[] stringArr2 = new string[stringArr.Length];
+string[] outStringArr;
+string[] retStringArr = instance2.Array12(stringArr, stringArr2, out outStringArr);
+if (!AllEqual(stringArr, stringArr2, outStringArr, retStringArr))
+{
+    return 101;
+}
+
+TestComponent.Blittable[] blittableArr = new TestComponent.Blittable[] {
+                new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(TestComponent.ITests).GUID),
+                new TestComponent.Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID)
+            };
+TestComponent.Blittable[] blittableArr2 = new TestComponent.Blittable[blittableArr.Length];
+TestComponent.Blittable[] outBlittableArr;
+TestComponent.Blittable[] retBlittableArr = instance2.Array13(blittableArr, blittableArr2, out outBlittableArr);
+if (!AllEqual(blittableArr, blittableArr2, outBlittableArr, retBlittableArr))
+{
+    return 101;
+}
+
+#if NET9_0_OR_GREATER
+
+TestComponent.NonBlittable[] nonBlittableArr = new TestComponent.NonBlittable[] {
+                new TestComponent.NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123)),
+                new TestComponent.NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456)),
+                new TestComponent.NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789))
+            };
+TestComponent.NonBlittable[] nonBlittableArr2 = new TestComponent.NonBlittable[nonBlittableArr.Length];
+TestComponent.NonBlittable[] outNonBlittableArr;
+TestComponent.NonBlittable[] retNonBlittableArr = instance2.Array14(nonBlittableArr, nonBlittableArr2, out outNonBlittableArr);
+if (!AllEqual(nonBlittableArr, nonBlittableArr2, outNonBlittableArr, retNonBlittableArr))
+{
+    return 101;
+}
+
+TestComponent.Nested[] nestedArr = new TestComponent.Nested[]{
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(TestComponent.ITests).GUID),
+                    new TestComponent.NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123))),
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
+                    new TestComponent.NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456))),
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(WinRT.IInspectable).GUID),
+                    new TestComponent.NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789)))
+            };
+TestComponent.Nested[] nestedArr2 = new TestComponent.Nested[nestedArr.Length];
+TestComponent.Nested[] outNestedArr;
+TestComponent.Nested[] retNestedArr = instance2.Array15(nestedArr, nestedArr2, out outNestedArr);
+if (!AllEqual(nestedArr, nestedArr2, outNestedArr, retNestedArr))
+{
+    return 101;
+}
+
+EnumValue[] enumArr = new EnumValue[] { EnumValue.One, EnumValue.Two };
+instance.EnumsProperty = enumArr;
+EnumValue[] retEnumArr = instance.EnumsProperty;
+if (!AllEqual(enumArr, retEnumArr))
+{
+    return 101;
+}
+
+#endif
+
+IStringable[] stringableArr = new IStringable[] {
+                Windows.Data.Json.JsonValue.CreateNumberValue(3),
+                Windows.Data.Json.JsonValue.CreateNumberValue(4),
+                Windows.Data.Json.JsonValue.CreateNumberValue(5.0)
+            };
+IStringable[] stringableArr2 = new IStringable[stringableArr.Length];
+IStringable[] outStringableArr;
+IStringable[] retStringableArr = instance2.Array16(stringableArr, stringableArr2, out outStringableArr);
+if (!AllEqual(stringableArr, stringableArr2, outStringableArr, retStringableArr))
 {
     return 101;
 }

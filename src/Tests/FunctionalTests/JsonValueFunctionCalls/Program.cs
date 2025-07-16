@@ -19,10 +19,16 @@ foreach (var str in a)
 // Class function call
 result += (int)(a[1] as Windows.Data.Json.JsonValue).GetNumber();
 
-var enumVal = TestComponentCSharp.Class.BoxedEnum;
-if (enumVal is TestComponentCSharp.EnumValue val && val == TestComponentCSharp.EnumValue.Two)
-{
-    result += 1;
-}
+CheckBoxedEnum();
 
 return result == 17 ? 100 : 101;
+
+[WinRT.DynamicWindowsRuntimeCast(typeof(TestComponentCSharp.EnumValue))]
+void CheckBoxedEnum()
+{
+    var enumVal = TestComponentCSharp.Class.BoxedEnum;
+    if (enumVal is TestComponentCSharp.EnumValue val && val == TestComponentCSharp.EnumValue.Two)
+    {
+        result += 1;
+    }
+}
