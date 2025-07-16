@@ -1114,6 +1114,9 @@ namespace WinRT
                 {
                     foreach (var marshaler in _marshalers)
                     {
+                        // We make use of MarshalNonBlittable for array marshaling when T is non-blittable or when it is an enum.
+                        // Both scenarios are handled by MarshalNonBlittable for marshaling T itself, so we just directly use that
+                        // here and below without needing to go through Marshaler<T>.
                         MarshalNonBlittable<T>.DisposeMarshaler(marshaler);
                     }
                 }

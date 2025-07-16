@@ -1,7 +1,6 @@
 ﻿using System;
 using Windows.Foundation;
 
-
 // Static function calls and create RCW for existing object.
 IStringable[] a = new IStringable[] {
                 Windows.Data.Json.JsonValue.CreateNumberValue(3),
