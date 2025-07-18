@@ -403,6 +403,18 @@ if (!instance.CheckForBindableObjectInterface(new List<object>()) ||
     return 103;
 }
 
+var stringArr3 = (string[])Class.BoxedStringArray;
+if (stringArr3.Length != 3 || stringArr3[0] != "one" || stringArr3[1] != "two" || stringArr3[2] != "three")
+{
+    return 104;
+}
+
+var intArr = (int[])Class.BoxedInt32Array;
+if (intArr.Length != 3 || intArr[0] != 1 || intArr[1] != 2 || intArr[2] != 3)
+{
+    return 104;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));

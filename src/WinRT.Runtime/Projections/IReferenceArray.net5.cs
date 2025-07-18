@@ -253,6 +253,7 @@ namespace ABI.Windows.Foundation
                 throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
             }
 
+            if (type == typeof(string)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<string>);
             if (type == typeof(int)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<int>);
             if (type == typeof(byte)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<byte>);
             if (type == typeof(bool)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<bool>);
