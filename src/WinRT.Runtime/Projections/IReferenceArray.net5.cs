@@ -432,9 +432,9 @@ namespace ABI.Windows.Foundation
             {
                 ExceptionHelpers.ThrowExceptionForHR(
 #if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<global::System.Type>.PIID, out referenceArrayPtr)
 #else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<global::System.Type>.PIID), out referenceArrayPtr)
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
@@ -463,9 +463,9 @@ namespace ABI.Windows.Foundation
             {
                 ExceptionHelpers.ThrowExceptionForHR(
 #if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<T>.PIID, out referenceArrayPtr)
 #else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<T>.PIID), out referenceArrayPtr)
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
@@ -487,9 +487,9 @@ namespace ABI.Windows.Foundation
             {
                 ExceptionHelpers.ThrowExceptionForHR(
 #if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<global::System.EventHandler>.PIID, out referenceArrayPtr)
 #else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<global::System.EventHandler>.PIID), out referenceArrayPtr)
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
@@ -511,9 +511,9 @@ namespace ABI.Windows.Foundation
             {
                 ExceptionHelpers.ThrowExceptionForHR(
 #if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<global::System.ComponentModel.PropertyChangedEventHandler>.PIID, out referenceArrayPtr)
 #else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<global::System.ComponentModel.PropertyChangedEventHandler>.PIID), out referenceArrayPtr)
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
@@ -535,9 +535,9 @@ namespace ABI.Windows.Foundation
             {
                 ExceptionHelpers.ThrowExceptionForHR(
 #if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.PIID, out referenceArrayPtr)
 #else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.PIID), out referenceArrayPtr)
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
