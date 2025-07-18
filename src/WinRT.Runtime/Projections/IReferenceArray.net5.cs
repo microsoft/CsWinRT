@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using ABI.System;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
