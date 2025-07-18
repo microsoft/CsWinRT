@@ -21,6 +21,11 @@
         public const string MarshallingOrGenericInstantiationsRequiresDynamicCode = "The necessary marshalling code or generic instantiations might not be available.";
 
         /// <summary>
+        /// Message for APIs not supported when dynamic code is not available (ie. in AOT environments).
+        /// </summary>
+        public const string NotSupportedIfDynamicCodeIsNotAvailable = "The annotated API is not supported when dynamic code is not available (ie. in AOT environments).";
+
+        /// <summary>
         /// Message for suppressing trim warnings for <see cref="System.Type.MakeGenericType"/> calls with ABI types as type arguments for <see langword="unmanaged"/> constrained type parameters.
         /// </summary>
         public const string AbiTypesNeverHaveConstructors = "All ABI types never have a constructor that would need to be accessed via reflection.";

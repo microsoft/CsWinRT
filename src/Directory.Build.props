@@ -35,7 +35,7 @@
     <LibBuildTFMsNoNetStandard Condition="'$(CIBuildReason)' == 'CI'">net8.0;net9.0</LibBuildTFMsNoNetStandard>
     <TestsBuildTFMs>net8.0-windows10.0.19041.0</TestsBuildTFMs>
     <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net8.0-windows10.0.19041.0</TestsBuildTFMs>
-    <FunctionalTestsBuildTFMs>net8.0</FunctionalTestsBuildTFMs>
+    <FunctionalTestsBuildTFMs>net8.0;net9.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
     <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
   </PropertyGroup>

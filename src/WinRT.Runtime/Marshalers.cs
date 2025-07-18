@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -74,7 +75,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     class MarshalString
@@ -106,7 +107,7 @@ namespace WinRT
                 _header = default;
 #if DEBUG
                 _pinned = false;
-#endif            
+#endif
             }
 
             public ref readonly char GetPinnableReference()
@@ -684,6 +685,32 @@ namespace WinRT
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
+            else if (typeof(T).IsEnum)
+            {
+                Func<T, object> ReturnTypedParameterFunc = (T value) => value;
+                AbiType = typeof(T);
+                CreateMarshaler = ReturnTypedParameterFunc;
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = Marshaler.ReturnParameterFunc;
+                FromAbi = (object value) => (T)value;
+                FromManaged = ReturnTypedParameterFunc;
+                DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                if (typeof(T).IsEnum)
+                {
+                    // For marshaling non-blittable enum arrays via MarshalNonBlittable
+                    if (typeof(T).GetEnumUnderlyingType() == typeof(int))
+                    {
+                        CopyAbi = Marshaler.CopyIntEnumFunc;
+                        CopyManaged = Marshaler.CopyIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                    else
+                    {
+                        CopyAbi = Marshaler.CopyUIntEnumFunc;
+                        CopyManaged = Marshaler.CopyUIntEnumDirectFunc.WithTypedT1<T>();
+                    }
+                }
+            }
             else if (typeof(T).IsValueType)
             {
                 // Value types can have custom marshaller types and use value types in places where we can't construct
@@ -990,7 +1017,17 @@ namespace WinRT
         }
     }
 
-    internal static class MarshalGenericHelper<T>
+    /// <summary>
+    /// This type is only meant to be used by generated marshalling stubs. Its API surface might change in the future.
+    /// </summary>
+    /// <typeparam name="T">The managed type to marshal.</typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class MarshalGenericHelper<T>
     {
         private static unsafe void CopyManagedFallback(T value, IntPtr dest)
         {
@@ -1006,7 +1043,7 @@ namespace WinRT
             }
         }
 
-        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
     }
 
 #if EMBED
@@ -1077,7 +1114,10 @@ namespace WinRT
                 {
                     foreach (var marshaler in _marshalers)
                     {
-                        Marshaler<T>.DisposeMarshaler(marshaler);
+                        // We make use of MarshalNonBlittable for array marshaling when T is non-blittable or when it is an enum.
+                        // Both scenarios are handled by MarshalNonBlittable for marshaling T itself, so we just directly use that
+                        // here and below without needing to go through Marshaler<T>.
+                        MarshalNonBlittable<T>.DisposeMarshaler(marshaler);
                     }
                 }
                 if (_array != IntPtr.Zero)
@@ -1114,17 +1154,17 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
                 m._marshalers = new object[length];
                 var element = (byte*)m._array.ToPointer();
                 for (int i = 0; i < length; i++)
                 {
-                    m._marshalers[i] = Marshaler<T>.CreateMarshaler(array[i]);
-                    Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
+                    m._marshalers[i] = MarshalNonBlittable<T>.CreateMarshaler(array[i]);
+                    MarshalNonBlittable<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return m;
             }
@@ -1177,10 +1217,10 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
-                array[i] = Marshaler<T>.FromAbi(abi_element);
+                array[i] = MarshalNonBlittable<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
             return array;
         }
 
@@ -1213,10 +1253,10 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
-                array[i] = Marshaler<T>.FromAbi(abi_element);
+                array[i] = MarshalNonBlittable<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
@@ -1244,15 +1284,15 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
                 {
-                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    MarshalNonBlittable<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return (i, data);
             }
@@ -1290,14 +1330,13 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
-                var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
                 {
-                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    MarshalNonBlittable<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
             }
             finally
@@ -1335,10 +1374,9 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
-                Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe void DisposeAbiArray(object box)
@@ -2035,6 +2073,9 @@ namespace WinRT
         private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
 
+#if NET
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
 #if EMBED
     internal
 #else
@@ -2044,6 +2085,15 @@ namespace WinRT
     {
         static Marshaler()
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"'Marshaler<T>' is not supported in AOT environments, and is only supported for backwards compatibility in JIT environments. " +
+                    $"The type '{typeof(T)}' cannot be marshalled using it. Consider using the appropriate, more specific marshaller type instead.");
+            }    
+#endif
+
             // Structs cannot contain arrays, and arrays may only ever appear as parameters
             if (typeof(T).IsArray)
             {
