@@ -2459,7 +2459,7 @@ namespace ABI.System
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
 
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(global::ABI.Windows.Foundation.IReferenceArray<T>);
+        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(T[]);
 
         unsafe object IWinRTNullableTypeDetails.GetNullableArrayValue(IInspectable inspectable)
         {
@@ -2583,7 +2583,7 @@ namespace ABI.System
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
 
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(global::ABI.Windows.Foundation.IReferenceArray<T>);
+        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(T[]);
 
         // Unboxing enums are handled separately.
         object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable) => throw new NotImplementedException();

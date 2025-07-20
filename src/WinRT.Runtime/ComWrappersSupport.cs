@@ -639,9 +639,9 @@ namespace WinRT
             }
 
 #if NET
-            if (implementationType.IsAbiIReferenceArray())
+            if (implementationType.IsSZArray)
             {
-                return ABI.Windows.Foundation.IReferenceArrayType.GetValueFactory(implementationType.GetGenericArguments()[0]);
+                return ABI.Windows.Foundation.IReferenceArrayType.GetValueFactory(implementationType.GetElementType());
             }
 #endif
 
