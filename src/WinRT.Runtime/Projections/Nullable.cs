@@ -2390,8 +2390,6 @@ namespace ABI.System
     {
         object GetNullableValue(IInspectable inspectable);
         Type GetNullableType();
-        Type GetNullableArrayType();
-        object GetNullableArrayValue(IInspectable inspectable);
     }
 
     public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails
@@ -2458,20 +2456,6 @@ namespace ABI.System
         }
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
-
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(T[]);
-
-        unsafe object IWinRTNullableTypeDetails.GetNullableArrayValue(IInspectable inspectable)
-        {
-            if (typeof(T) == typeof(TAbi))
-            {
-                return ABI.Windows.Foundation.IReferenceArrayType.GetBlittableValue<TAbi>(inspectable);
-            }
-            else
-            {
-                return ABI.Windows.Foundation.IReferenceArrayType.GetNonBlittableValue<T>(inspectable);
-            }
-        }
     }
 
     public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
@@ -2536,12 +2520,6 @@ namespace ABI.System
 
         // Delegates are handled separately.
         Type IWinRTNullableTypeDetails.GetNullableType() => throw new NotImplementedException();
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => throw new NotImplementedException();
-
-        unsafe object IWinRTNullableTypeDetails.GetNullableArrayValue(IInspectable inspectable)
-        {
-            return ABI.Windows.Foundation.IReferenceArray<T>.GetValue(inspectable);
-        }
     }
 
     public sealed class EnumTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : unmanaged, Enum
@@ -2583,15 +2561,8 @@ namespace ABI.System
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
 
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(T[]);
-
         // Unboxing enums are handled separately.
         object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable) => throw new NotImplementedException();
-
-        unsafe object IWinRTNullableTypeDetails.GetNullableArrayValue(IInspectable inspectable)
-        {
-            return ABI.Windows.Foundation.IReferenceArrayType.GetBlittableValue<T>(inspectable);
-        }
     }
 }
 #endif

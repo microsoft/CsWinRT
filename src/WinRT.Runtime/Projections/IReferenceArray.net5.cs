@@ -280,31 +280,6 @@ namespace ABI.Windows.Foundation
             if (type == typeof(global::System.Numerics.Vector3)) return typeof(global::System.Numerics.Vector3[]);
             if (type == typeof(global::System.Numerics.Vector4)) return typeof(global::System.Numerics.Vector4[]);
 
-#if NET
-            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
-            if (winrtExposedClassAttribute == null)
-            {
-                var authoringMetadaType = type.GetAuthoringMetadataType();
-                if (authoringMetadaType != null)
-                {
-                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
-                }
-            }
-
-            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
-            {
-                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
-                {
-                    return nullableTypeDetails.GetNullableArrayType();
-                }
-            }
-
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                throw new NotSupportedException($"Failed to construct IReferenceArray with type '{type}'.");
-            }
-#endif
-
             return null;
         }
 
@@ -338,7 +313,9 @@ namespace ABI.Windows.Foundation
             if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IID.IID_IReferenceArrayOfVector3;
             if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IID.IID_IReferenceArrayOfVector4;
 
-            return IReferenceArray<T>.PIID;
+            // If this is an old projection, we shoudn't come here as we pivot based on whether the ABI type
+            // for IReferenceArray is used or not.
+            throw new NotSupportedException($"Failed to get the IID of IReferenceArray with type '{typeof(T)}'.");
         }
 
         public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
@@ -381,31 +358,10 @@ namespace ABI.Windows.Foundation
             if (type == typeof(global::System.Numerics.Vector2)) return GetBlittableValue<global::System.Numerics.Vector2>;
             if (type == typeof(global::System.Numerics.Vector3)) return GetBlittableValue<global::System.Numerics.Vector3>;
             if (type == typeof(global::System.Numerics.Vector4)) return GetBlittableValue<global::System.Numerics.Vector4>;
-            if (type == typeof(global::System.EventHandler)) return GetEventHandlerValue;
-            if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return GetPropertyChangedEventHandlerValue;
-            if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return GetNotifyCollectionChangedEventHandlerValue;
-
-            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
-            if (winrtExposedClassAttribute == null)
-            {
-                var authoringMetadaType = type.GetAuthoringMetadataType();
-                if (authoringMetadaType != null)
-                {
-                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
-                }
-            }
-
-            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
-            {
-                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
-                {
-                    return nullableTypeDetails.GetNullableArrayValue;
-                }
-            }
 
             // If this is an old projection, we shoudn't come here as we pivot based on whether the ABI type
             // for IReferenceArray is used or not.
-            throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
+            throw new NotSupportedException($"Failed to get the value of IReferenceArray with type '{type}'.");
         }
 
         internal static unsafe object GetBlittableValue<T>(IInspectable inspectable) where T : unmanaged
@@ -484,7 +440,7 @@ namespace ABI.Windows.Foundation
 
         internal static unsafe object GetNonBlittableValue<T>(IInspectable inspectable)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -511,78 +467,6 @@ namespace ABI.Windows.Foundation
             finally
             {
                 MarshalNonBlittable<T>.DisposeAbiArray((__retval_length, __retval_data));
-                Marshal.Release(referenceArrayPtr);
-            }
-        }
-
-        private static unsafe object GetEventHandlerValue(IInspectable inspectable)
-        {
-            IntPtr referenceArrayPtr = IntPtr.Zero;
-            int __retval_length = default;
-            IntPtr __retval_data = default;
-            try
-            {
-                ExceptionHelpers.ThrowExceptionForHR(
-#if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_IReferenceArrayOfEventHandler, out referenceArrayPtr)
-#else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_IReferenceArrayOfEventHandler), out referenceArrayPtr)
-#endif
-                    );
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
-                return ABI.System.EventHandler.FromAbiArray((__retval_length, __retval_data));
-            }
-            finally
-            {
-                ABI.System.EventHandler.DisposeAbiArray((__retval_length, __retval_data));
-                Marshal.Release(referenceArrayPtr);
-            }
-        }
-
-        private static unsafe object GetPropertyChangedEventHandlerValue(IInspectable inspectable)
-        {
-            IntPtr referenceArrayPtr = IntPtr.Zero;
-            int __retval_length = default;
-            IntPtr __retval_data = default;
-            try
-            {
-                ExceptionHelpers.ThrowExceptionForHR(
-#if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_MUX_IReferenceArrayOfPropertyChangedEventHandler, out referenceArrayPtr)
-#else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_MUX_IReferenceArrayOfPropertyChangedEventHandler), out referenceArrayPtr)
-#endif
-                    );
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
-                return ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbiArray((__retval_length, __retval_data));
-            }
-            finally
-            {
-                ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeAbiArray((__retval_length, __retval_data));
-                Marshal.Release(referenceArrayPtr);
-            }
-        }
-
-        private static unsafe object GetNotifyCollectionChangedEventHandlerValue(IInspectable inspectable)
-        {
-            IntPtr referenceArrayPtr = IntPtr.Zero;
-            int __retval_length = default;
-            IntPtr __retval_data = default;
-            try
-            {
-                ExceptionHelpers.ThrowExceptionForHR(
-#if NET8_0_OR_GREATER
-                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_MUX_IReferenceArrayOfNotifyCollectionChangedEventHandler, out referenceArrayPtr)
-#else
-                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_MUX_IReferenceArrayOfNotifyCollectionChangedEventHandler), out referenceArrayPtr)
-#endif
-                    );
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
-                return ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromAbiArray((__retval_length, __retval_data));
-            }
-            finally
-            {
-                ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeAbiArray((__retval_length, __retval_data));
                 Marshal.Release(referenceArrayPtr);
             }
         }
