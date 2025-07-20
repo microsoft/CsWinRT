@@ -167,6 +167,28 @@ if (propertySet["echo"] is not Point[] pointArray || pointArray.Length != 3 || p
     return 101;
 }
 
+propertySet.Add("test2", new EnumValue[] { EnumValue.Two, EnumValue.One});
+if (propertySet["test2"] is not EnumValue[] enumArray || enumArray.Length != 2 || enumArray[0] != EnumValue.Two || enumArray[1] != EnumValue.One)
+{
+    return 101;
+}
+
+ProvideInt provideInt = () => 4;
+ProvideInt provideInt2 = () => 5;
+propertySet.Add("test3", new ProvideInt[] { provideInt, provideInt2 });
+if (propertySet["test3"] is not ProvideInt[] provideIntArray || provideIntArray.Length != 2 || provideIntArray[0]() != 4 || provideIntArray[1]() != 5)
+{
+    return 101;
+}
+
+EventHandler eventHandler = (sender, args) => { };
+EventHandler eventHandler2 = (sender, args) => { };
+propertySet.Add("test4", new EventHandler[] { eventHandler, eventHandler2 });
+if (propertySet["test4"] is not EventHandler[] eventHandlerArray || eventHandlerArray.Length != 2 || eventHandlerArray[0] != eventHandler || eventHandlerArray[1] != eventHandler2)
+{
+    return 101;
+}
+
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
 {
