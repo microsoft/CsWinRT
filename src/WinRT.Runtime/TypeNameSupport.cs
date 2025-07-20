@@ -263,22 +263,10 @@ namespace WinRT
 #if NET
                 if (resolvedType == typeof(Windows.Foundation.IReferenceArray<>))
                 {
-                    if (genericTypes[0].IsDelegate())
+                    var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsArrayType(genericTypes[0]);
+                    if (referenceArrayType is not null)
                     {
-                        if (FeatureSwitches.EnableIReferenceSupport)
-                        {
-                            return typeof(global::ABI.Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes);
-                        }
-
-                        throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
-                    }
-                    else
-                    {
-                        var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsArrayType(genericTypes[0]);
-                        if (referenceArrayType is not null)
-                        {
-                            return referenceArrayType;
-                        }
+                        return referenceArrayType;
                     }
                 }
 
