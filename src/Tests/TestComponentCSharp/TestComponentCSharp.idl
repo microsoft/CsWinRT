@@ -447,6 +447,8 @@ namespace TestComponentCSharp
         static void UnboxAndCallProgressHandler(Object httpProgressHandler);
         static Object BoxedStringArray{ get; };
         static Object BoxedInt32Array{ get; };
+        static Object BoxedTimeSpanArray{ get; };
+        Object BoxedObjectArray{ get; };
 
         static Int32 UnboxInt32UsingPropertyValue(Object obj);
         static String UnboxStringUsingPropertyValue(Object obj);

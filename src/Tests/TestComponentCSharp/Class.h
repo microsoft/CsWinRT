@@ -443,6 +443,8 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable BoxedEventHandler();
         static Windows::Foundation::IInspectable BoxedStringArray();
         static Windows::Foundation::IInspectable BoxedInt32Array();
+        static Windows::Foundation::IInspectable BoxedTimeSpanArray();
+        Windows::Foundation::IInspectable BoxedObjectArray();
 
         hstring Catch(hstring const& params, hstring& locks);
 

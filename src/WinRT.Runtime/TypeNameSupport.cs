@@ -274,7 +274,7 @@ namespace WinRT
                     }
                     else
                     {
-                        var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsIReferenceArrayType(genericTypes[0]);
+                        var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsArrayType(genericTypes[0]);
                         if (referenceArrayType is not null)
                         {
                             return referenceArrayType;

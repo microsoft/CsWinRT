@@ -1901,6 +1901,18 @@ namespace winrt::TestComponentCSharp::implementation
         return WF::PropertyValue::CreateInt32Array(arr);
     }
 
+    WF::IInspectable Class::BoxedTimeSpanArray()
+    {
+        TimeSpan arr[] = { 10s, 20s, };
+        return WF::PropertyValue::CreateTimeSpanArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedObjectArray()
+    {
+        WF::IInspectable arr[] = {*this, *this};
+        return WF::PropertyValue::CreateInspectableArray(arr);
+    }
+
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
     {
         // Compile-only test for keyword escaping
