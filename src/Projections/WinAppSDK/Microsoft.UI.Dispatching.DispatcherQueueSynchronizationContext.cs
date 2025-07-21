@@ -22,7 +22,18 @@ namespace Microsoft.UI.Dispatching
             if (d == null)
                 throw new ArgumentNullException(nameof(d));
 
-            m_dispatcherQueue.TryEnqueue(() => d(state));
+            m_dispatcherQueue.TryEnqueue(() =>
+            {
+                try
+                {
+                    d(state);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionHelpers.ReportUnhandledError(ex);
+                    throw;
+                }
+            });
         }
 
         public override void Send(SendOrPostCallback d, object state)
