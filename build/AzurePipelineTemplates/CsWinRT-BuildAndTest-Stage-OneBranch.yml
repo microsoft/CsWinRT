@@ -62,7 +62,6 @@ jobs:
         signing_profile: external_distribution
         files_to_sign: |
           native/cswinrt.exe;
-          native/WinRT.Interop.winmd;
           netstandard2.0/WinRT.Runtime.dll;
           netstandard2.0/WinRT.Host.Shim.dll;
           netstandard2.0/roslyn4080/WinRT.SourceGenerator.dll;
@@ -71,11 +70,21 @@ jobs:
           net8.0/WinRT.Runtime.dll;
           net9.0/WinRT.Runtime.dll;
           native/WinRT.Host.dll;
-          native/WinRT.Host.dll.mui;
           net8.0/IIDOptimizer/IIDOptimizer.exe;
           net8.0/IIDOptimizer/IIDOptimizer.dll;
           net8.0/CsWinMD/CsWinMD.exe;
           net8.0/CsWinMD/CsWinMD.dll;
+        search_root: $(StagingFolder)
+
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for cswinrt binaries'
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        command: sign
+        cp_code: '400'
+        files_to_sign: |
+          native/WinRT.Interop.winmd;
+          native/WinRT.Host.dll.mui;
         search_root: $(StagingFolder)
 
 # Signing 3rd Party
