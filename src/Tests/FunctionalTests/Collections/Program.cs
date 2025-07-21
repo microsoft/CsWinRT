@@ -151,6 +151,22 @@ if (propertySet["beta"] is not string str || str != "second")
     return 101;
 }
 
+propertySet.Add("test", new short[] { 1, 2, 3, 4 });
+if (propertySet["test"] is not short[] shortArray || shortArray.Length != 4)
+{
+    return 101;
+}
+
+if (propertySet["delta"] is not byte[] byteArray || byteArray.Length != 4 || byteArray[1] != 2)
+{
+    return 101;
+}
+
+if (propertySet["echo"] is not Point[] pointArray || pointArray.Length != 3 || pointArray[1].X != 2 || pointArray[1].Y != 2)
+{
+    return 101;
+}
+
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
 {
@@ -385,6 +401,34 @@ if (!instance.CheckForBindableObjectInterface(new List<object>()) ||
     !instance.CheckForBindableObjectInterface(new List<IProperties1>()))
 {
     return 103;
+}
+
+var stringArr3 = (string[])Class.BoxedStringArray;
+if (stringArr3.Length != 3 || stringArr3[0] != "one" || stringArr3[1] != "two" || stringArr3[2] != "three")
+{
+    return 104;
+}
+
+var intArr = (int[])Class.BoxedInt32Array;
+if (intArr.Length != 3 || intArr[0] != 1 || intArr[1] != 2 || intArr[2] != 3)
+{
+    return 104;
+}
+
+#if NET9_0_OR_GREATER
+
+var timeSpanArr = (TimeSpan[])Class.BoxedTimeSpanArray;
+if (timeSpanArr.Length != 2 || timeSpanArr[0] != TimeSpan.FromSeconds(10) || timeSpanArr[1] != TimeSpan.FromSeconds(20))
+{
+    return 105;
+}
+
+#endif
+
+var objectArr = (object[])instance.BoxedObjectArray;
+if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || objectArr[1] is not Class c2 || c2 != instance)
+{
+    return 105;
 }
 
 return 100;
