@@ -369,7 +369,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     break;
 
                 default:
-                    ex = new COMException(errorMessage, hr);
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, hr) : new COMException($"0x{hr:X8}", hr);
                     break;
             }
 
