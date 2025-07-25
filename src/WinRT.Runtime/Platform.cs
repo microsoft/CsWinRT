@@ -49,10 +49,10 @@ namespace WinRT.Interop
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         public static extern unsafe int CoCreateFreeThreadedMarshaler(IntPtr outer, IntPtr* marshalerPtr);
 
-        [DllImport("Kernel32.dll")]
+        [DllImport("kernel32.dll")]
         public static extern unsafe uint FormatMessageW(uint dwFlags, void* lpSource, uint dwMessageId, uint dwLanguageId, char** lpBuffer, uint nSize, void* pArguments);
 
-        [DllImport("Kernel32.dll")]
+        [DllImport("kernel32.dll")]
         public static extern unsafe void* LocalFree(void* hMem);
     }
 

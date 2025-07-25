@@ -227,7 +227,7 @@ namespace WinRT
                 }
             }
 
-            if (string.IsNullOrEmpty(errorMessage))
+            if (string.IsNullOrWhiteSpace(errorMessage))
             {
                 char* message = default;
                 if (Platform.FormatMessageW(0x13FF /* FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK */,
