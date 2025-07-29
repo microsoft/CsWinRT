@@ -2750,7 +2750,20 @@ namespace Generator
                     {
                         // Interfaces which are allowed to be implemented on authored types but
                         // aren't WinRT interfaces.
-                        return !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(namedType));
+                        bool isMapped = ImplementedInterfacesWithoutMapping.Contains(QualifiedName(namedType));
+
+                        if (isMapped)
+                            return false;
+
+                        // If the interface is publicly accessible, it is a WinRT interface.
+                        bool isPublic = namedType.IsPubliclyAccessible();
+
+                        if (isPublic)
+                            return true;
+
+                        // If it's not a publicly accessible interface, it's a WinRT interface if it has the
+                        // [WindowsRuntimeType] attribute.
+                        return namedType.GetAttributes().Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
                     }
 
                     return namedType.SpecialType != SpecialType.System_Object &&
