@@ -80,6 +80,7 @@ internal partial class InteropGeneratorArgs
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
             ValidateWinRTRuntimeAssemblyVersion = GetBooleanArgument(argsMap, nameof(ValidateWinRTRuntimeAssemblyVersion)),
             ValidateWinRTRuntimeDllVersion2References = GetBooleanArgument(argsMap, nameof(ValidateWinRTRuntimeDllVersion2References)),
+            EnableIncrementalGeneration = GetBooleanArgument(argsMap, nameof(EnableIncrementalGeneration)),
             TreatWarningsAsErrors = GetBooleanArgument(argsMap, nameof(TreatWarningsAsErrors)),
             MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(MaxDegreesOfParallelism)),
             DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),

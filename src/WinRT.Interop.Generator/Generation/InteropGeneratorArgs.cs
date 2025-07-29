@@ -35,6 +35,10 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--validate-winrt-runtime-dll-version-2-references")]
     public required bool ValidateWinRTRuntimeDllVersion2References { get; init; }
 
+    /// <summary>Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).</summary>
+    [CommandLineArgumentName("--enable-incremental-generation")]
+    public required bool EnableIncrementalGeneration { get; init; }
+
     /// <summary>Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
     [CommandLineArgumentName("--treat-warnings-as-errors")]
     public required bool TreatWarningsAsErrors { get; init; }
