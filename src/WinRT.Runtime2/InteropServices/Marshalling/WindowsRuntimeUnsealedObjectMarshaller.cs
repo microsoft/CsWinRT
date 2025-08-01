@@ -13,6 +13,7 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
     /// <summary>
     /// Converts an unmanaged pointer to an unsealed Windows Runtime object to a managed object.
     /// </summary>
+    /// <typeparam name="TCallback">The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> type to use for marshalling.</typeparam>
     /// <param name="value">The input object to convert to managed.</param>
     /// <returns>The resulting managed managed object.</returns>
     public static object? ConvertToManaged<TCallback>(void* value)

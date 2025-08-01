@@ -90,6 +90,38 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     }
 
     /// <summary>
+    /// Converts an unmanaged pointer to a Windows Runtime object to a managed object.
+    /// </summary>
+    /// <typeparam name="TCallback">The <see cref="IWindowsRuntimeObjectComWrappersCallback"/> type to use for marshalling.</typeparam>
+    /// <param name="value">The input object to convert to managed.</param>
+    /// <returns>The resulting managed managed object.</returns>
+    /// <remarks>
+    /// Unlike <see cref="ConvertToManaged(void*)"/>, this overload is meant to be used primarily for sealed types (e.g. sealed runtime classes),
+    /// whenever there is static type information available for the type. This allows the marshalling logic to be optimized and to avoid having
+    /// to perform a lookup via the interop type map to retrieve the marshalling attribute, and to perform one extra <c>QueryInterface</c> call.
+    /// </remarks>
+    public static object? ConvertToManaged<TCallback>(void* value)
+        where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // If the value is a CCW we recognize, just unwrap it directly
+        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        {
+            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+        }
+
+        // Marshal the object as an opaque object, as we have no static type information available
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>(),
+            unsealedObjectComWrappersCallback: null);
+    }
+
+    /// <summary>
     /// Release a given Windows Runtime object.
     /// </summary>
     /// <param name="value">The input object to free.</param>
