@@ -527,7 +527,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType), // TODO
-                runtimeClassName: arrayType.FullName, // TODO
+                runtimeClassName: $"Windows.Foundation.IReferenceArray`1<{arrayType.BaseType}>", // TODO
                 comWrappersMarshallerAttributeType: arrayComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,
