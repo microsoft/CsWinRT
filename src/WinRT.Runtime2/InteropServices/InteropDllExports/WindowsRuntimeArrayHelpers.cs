@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -15,6 +16,46 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeArrayHelpers
 {
+    /// <summary>
+    /// Validates that the specified destination span has the required number of elements.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the destination span.</typeparam>
+    /// <param name="size">The expected number of elements in the destination span.</param>
+    /// <param name="destination">The span to validate.</param>
+    /// <exception cref="ArgumentException">Thrown if the length of <paramref name="destination"/> does not equal <paramref name="size"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [StackTraceHidden]
+    public static void ValidateDestinationSize<T>(uint size, Span<T> destination)
+    {
+        if (destination.Length != size)
+        {
+            [StackTraceHidden]
+            static void ThrowArgumentException() => throw new ArgumentException("The destination array is too small.", nameof(destination));
+
+            ThrowArgumentException();
+        }
+    }
+
+    /// <summary>
+    /// Validates that the specified destination span has the required number of elements.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the destination span.</typeparam>
+    /// <param name="source">The span to validate.</param>
+    /// <param name="size">The expected number of elements in the destination span.</param>
+    /// <exception cref="ArgumentException">Thrown if the length of <paramref name="source"/> does not equal <paramref name="size"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [StackTraceHidden]
+    public static void ValidateDestinationSize<T>(ReadOnlySpan<T> source, uint size)
+    {
+        if (source.Length != size)
+        {
+            [StackTraceHidden]
+            static void ThrowArgumentException() => throw new ArgumentException("The destination array is too small.", "destination");
+
+            ThrowArgumentException();
+        }
+    }
+
     /// <summary>
     /// Frees an <c>HSTRING</c> reference array.
     /// </summary>
