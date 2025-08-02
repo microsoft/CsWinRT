@@ -52,7 +52,7 @@ internal static class ImportExtensions
     /// <returns>The imported <see cref="MethodSignature"/>.</returns>
     public static MethodSignature Import(this MethodSignature methodSignature, ModuleDefinition module)
     {
-        return (MethodSignature)methodSignature.ImportWith(module.DefaultImporter);
+        return methodSignature.ImportWith(module.DefaultImporter);
     }
 
     /// <summary>
