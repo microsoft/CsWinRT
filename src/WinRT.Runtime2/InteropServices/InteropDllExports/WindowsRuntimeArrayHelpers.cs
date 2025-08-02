@@ -104,6 +104,29 @@ public static unsafe class WindowsRuntimeArrayHelpers
     }
 
     /// <summary>
+    /// Frees a reference array of <see cref="Type"/> values.
+    /// </summary>
+    /// <param name="size">The size of the array.</param>
+    /// <param name="array">The input array.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void FreeTypeArrayUnsafe(uint size, ABI.System.Type* array)
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (int i = 0; i < size; i++)
+        {
+            HStringMarshaller.Free(array[i].Name);
+        }
+
+        Marshal.FreeCoTaskMem((nint)array);
+    }
+
+    /// <summary>
     /// Frees a reference array of some blittable type.
     /// </summary>
     /// <param name="size">The size of the array.</param>

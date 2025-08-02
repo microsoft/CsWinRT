@@ -340,6 +340,12 @@ internal sealed class InteropReferences
     public TypeReference UnmanagedCallersOnlyAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ABIType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1466,6 +1472,17 @@ internal sealed class InteropReferences
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.UInt32,
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeTypeArrayUnsafe</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
+        .CreateMemberReference("FreeTypeArrayUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                ABIType.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeBlittableArrayUnsafe</c>.

@@ -43,8 +43,8 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.UInt32,
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()])); // TODO
 
-            // For 'string', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
-            // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse these stubs for multiple types).
+            // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
+            // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
             if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.CorLibTypeFactory.String))
             {
                 freeMethod.CilMethodBody = new CilMethodBody
@@ -54,6 +54,19 @@ internal partial class InteropMethodDefinitionFactory
                         { Ldarg_0 },
                         { Ldarg_1 },
                         { Call, interopReferences.WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe.Import(module) },
+                        { Ret }
+                    }
+                };
+            }
+            else if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.Type))
+            {
+                freeMethod.CilMethodBody = new CilMethodBody
+                {
+                    Instructions =
+                    {
+                        { Ldarg_0 },
+                        { Ldarg_1 },
+                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe.Import(module) },
                         { Ret }
                     }
                 };
