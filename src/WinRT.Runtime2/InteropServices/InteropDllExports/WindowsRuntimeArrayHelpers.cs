@@ -6,8 +6,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
-namespace WindowsRuntime.InteropServices.Marshalling;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// A helper for generated marshaller types for Windows Runtime arrays.
@@ -108,7 +109,7 @@ public static unsafe class WindowsRuntimeArrayHelpers
     /// <param name="size">The size of the array.</param>
     /// <param name="array">The input array.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void FreeBlittableArrayUnsafe(uint size, void** array)
+    public static void FreeBlittableArrayUnsafe(uint size, void* array)
     {
         if (size == 0)
         {

@@ -156,24 +156,11 @@ internal partial class InteropTypeDefinitionBuilder
 
             marshallerType.Methods.Add(copyToUnmanagedMethod);
 
-            // Define the 'Free' method as follows:
-            //
-            // public static void Free(uint size, <ABI_ELEMENT_TYPE>* destination)
-            MethodDefinition freeMethod = new(
-                name: "Free"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+            // Define the 'Free' method
+            MethodDefinition freeMethod = InteropMethodDefinitionFactory.SzArrayMarshaller.Free(
+                arrayType,
+                interopReferences,
+                module);
 
             marshallerType.Methods.Add(freeMethod);
         }

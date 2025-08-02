@@ -646,10 +646,16 @@ internal sealed class InteropReferences
     public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "HStringMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfo</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference RestrictedErrorInfo => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "RestrictedErrorInfo"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeArrayHelpers => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeArrayHelpers"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller</c>.
@@ -1438,6 +1444,39 @@ internal sealed class InteropReferences
         .CreateMemberReference("ThrowExceptionForHR"u8, MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeHStringArrayUnsafe</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
+        .CreateMemberReference("FreeHStringArrayUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeObjectArrayUnsafe</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeArrayHelpersFreeObjectArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
+        .CreateMemberReference("FreeObjectArrayUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeBlittableArrayUnsafe</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeArrayHelpersFreeBlittableArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
+        .CreateMemberReference("FreeBlittableArrayUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(Exception)</c>.
