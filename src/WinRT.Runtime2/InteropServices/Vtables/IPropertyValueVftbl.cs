@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Binding type for the <c>IPropertyValue</c> interface vtable.
 /// </summary>
-/// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.ipropertyvalue"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue"/>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IPropertyValueVftbl
 {

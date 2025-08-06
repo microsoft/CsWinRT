@@ -57,7 +57,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// This shared factory helper can be used to activate Windows Runtime composable types that have a parameterless constructor.
     /// If additional parameters are needed, separate factory stubs should be used, to marshal them and update the signature.
     /// </remarks>
-    /// <see href="https://learn.microsoft.com/en-us/uwp/winrt-cref/winrt-type-system#composable-activation"/>
+    /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,

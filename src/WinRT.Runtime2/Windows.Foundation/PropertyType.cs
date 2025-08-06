@@ -12,7 +12,7 @@ namespace Windows.Foundation;
 /// <remarks>
 /// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
 /// </remarks>
-/// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.propertytype"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.propertytype"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public enum PropertyType : uint

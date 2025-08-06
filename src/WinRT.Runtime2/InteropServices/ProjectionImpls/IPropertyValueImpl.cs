@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// Unlike other "Impl" types, <c>IPropertyValue</c> is implemented in a specialized manner on different types.
 /// This type provides shared paths for some implementations, and then some specific full implementations.
 /// </remarks>
-/// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.ipropertyvalue"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue"/>
 public static partial class IPropertyValueImpl
 {
     /// <summary>

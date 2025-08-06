@@ -69,7 +69,7 @@ public static unsafe class HStringMarshaller
     /// <remarks>
     /// Because the resulting <c>HSTRING</c> is fast-pass, it is not necessary to call <see cref="Free"/> on it.
     /// </remarks>
-    /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
+    /// <see href="https://learn.microsoft.com/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
     public static void ConvertToUnmanagedUnsafe(char* value, int? length, out HStringReference reference)
     {
         Unsafe.SkipInit(out reference);

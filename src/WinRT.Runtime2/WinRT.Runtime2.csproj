@@ -27,7 +27,7 @@
 
     <!--
       Enable the latest warning wave, which shows additional warnings for invalid language features that are disabled by default.
-      For additional info, see https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/warning-waves.
+      For additional info, see https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/warning-waves.
     -->
     <AnalysisLevel>latest</AnalysisLevel>
 

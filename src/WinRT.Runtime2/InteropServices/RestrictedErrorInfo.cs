@@ -9,7 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Handles the <c>IRestrictedErrorInfo</c> infrastructure for .NET exceptions.
 /// </summary>
-/// <see href="https://learn.microsoft.com/en-us/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
+/// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
 public static unsafe class RestrictedErrorInfo
 {
     /// <summary>

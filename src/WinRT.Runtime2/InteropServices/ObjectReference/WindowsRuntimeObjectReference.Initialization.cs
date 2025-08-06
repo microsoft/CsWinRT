@@ -55,7 +55,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // which will internally track the base object. Otherwise, we can wrap the new instance directly.
         // In the non aggregation case, that would just be the normal native object we just instantiated.
         //
-        // Also see: https://learn.microsoft.com/en-us/windows/win32/com/aggregation.
+        // Also see: https://learn.microsoft.com/windows/win32/com/aggregation.
         void* externalComObject = isAggregation ? innerInstanceUnknown : acquiredNewInstanceUnknown;
 
         // We need to check whether the target COM object is free-threaded or not, as that will
