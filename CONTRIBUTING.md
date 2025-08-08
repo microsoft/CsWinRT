@@ -6,9 +6,8 @@ Below is our guidance for how to build the repo, report issues, propose new feat
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
-- [Visual Studio 17.0](https://visualstudio.microsoft.com/downloads/) 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) 
-- [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+- [Visual Studio 17.0](https://visualstudio.microsoft.com/downloads/)
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - Microsoft.WinUI 3.0.0-preview4.210210.4
 - Microsoft.WindowsAppSDK 1.1.5

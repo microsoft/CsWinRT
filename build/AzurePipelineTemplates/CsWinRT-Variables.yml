@@ -2,17 +2,18 @@ variables:
 - name: MajorVersion
   value: 2
 - name: MinorVersion
-  value: 2
+  value: 3
 - name: PatchVersion
-  value: 1
+  value: 0
 - name: WinRT.Runtime.AssemblyVersion
-  value: '2.2.0.0'
+  value: '2.3.0.0'
 - name: Net5.SDK.Feed
   value: 'https://dotnetcli.blob.core.windows.net/dotnet'
-- name: Net6.SDK.Version
-  value: '6.0.424'
 - name: Net8.SDK.Version
   value: '8.0.303'
+- name: Net9.SDK.Version
+  value: '9.0.201'
+
 - name: NoSamples
   value: 'false'
   
@@ -26,7 +27,10 @@ variables:
 - name: _RunGCStress
   value: $[coalesce(variables.RunGCStress, 'false')]
 - name: _DotNetRuntimeVersion
-  value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.32')]  
+  value: $[coalesce(variables.DotNetRuntimeVersion, '8.0.303')]  
+- name: _DotNet9RuntimeVersion
+  value: $[coalesce(variables.DotNet9RuntimeVersion, '9.0.201')]  
+
 - name: _WindowsSdkVersionSuffix
   value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
 - name: _PublishCsWinMD

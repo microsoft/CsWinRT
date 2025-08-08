@@ -412,6 +412,13 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
 
+        static int32_t UnboxInt32UsingPropertyValue(IInspectable const& obj);
+        static hstring UnboxStringUsingPropertyValue(IInspectable const& obj);
+        static Windows::Foundation::Rect UnboxRectUsingPropertyValue(IInspectable const& obj);
+        static com_array<int32_t> UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<bool> UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<Windows::Foundation::Point> UnboxPointArrayUsingPropertyValue(IInspectable const& obj);
+ 
         static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
@@ -434,6 +441,10 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable BoxedDelegate();
         static Windows::Foundation::IInspectable BoxedEnum();
         static Windows::Foundation::IInspectable BoxedEventHandler();
+        static Windows::Foundation::IInspectable BoxedStringArray();
+        static Windows::Foundation::IInspectable BoxedInt32Array();
+        static Windows::Foundation::IInspectable BoxedTimeSpanArray();
+        Windows::Foundation::IInspectable BoxedObjectArray();
 
         hstring Catch(hstring const& params, hstring& locks);
 

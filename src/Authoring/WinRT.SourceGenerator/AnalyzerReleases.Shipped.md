@@ -55,3 +55,13 @@ CsWinRT1030 | Usage | Warning | Project needs to be updated with '<AllowUnsafeBl
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 CsWinRT1031 | Usage | Error | Source generator failed.
+
+## Release 2.3.0
+
+### New Rules
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+CsWinRT1032 | Usage | Warning | Collection expressions can only be used when statically verifiable for AOT support with WinRT.
+CsWinRT1033 | Usage | Warning | Casts to '[ComImport]' interface types are not supported with WinRT objects in AOT scenarios.
+CsWinRT1034 | Usage | Warning | Casts to WinRT runtime classes are not trim-safe.
+CsWinRT1035 | Usage | Warning | Casts to WinRT 'IReference`1<T>' unboxed values are not trim-safe.

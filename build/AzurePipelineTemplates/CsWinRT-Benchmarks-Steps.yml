@@ -33,6 +33,13 @@ steps:
     version: 8.x
     installationPath: $(LocalAppData)\Microsoft\dotnet\
 
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 9.0
+  inputs:
+    packageType: sdk
+    version: 9.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
+
 # Verify .NET SDK
 - task: CmdLine@2
   displayName: Verify .NET SDK

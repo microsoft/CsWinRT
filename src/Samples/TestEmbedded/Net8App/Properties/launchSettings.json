@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Net6App": {
+    "Net8App": {
       "commandName": "Project",
       "nativeDebugging": true
     }

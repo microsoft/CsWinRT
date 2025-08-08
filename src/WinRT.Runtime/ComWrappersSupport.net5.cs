@@ -167,7 +167,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, IID.IID_IUnknown);
+            return ObjectReference<IUnknownVftbl>.AttachFreeThreadedUnsafe(ref ccw);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
@@ -455,13 +455,9 @@ namespace WinRT
                         // object are followed by an immediately release of the returned
                         // pointer - see below for details.
                         Marshal.Release(referenceTracker);
+                    }
 
-                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, inner, createObjectFlags);
-                    }
-                    else
-                    {
-                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
-                    }
+                    ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, inner, createObjectFlags);
                 }
                 else
                 {

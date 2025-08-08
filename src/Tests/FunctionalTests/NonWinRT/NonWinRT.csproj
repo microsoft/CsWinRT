@@ -5,7 +5,7 @@
     <TargetFrameworks>$(FunctionalTestsBuildTFMs)</TargetFrameworks>
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
-    <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win10-$(Platform).pubxml</PublishProfileFullPath>
+    <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win-$(Platform).pubxml</PublishProfileFullPath>
     <TestUnsafeDisabled Condition="'$(Configuration)' == 'Debug'">true</TestUnsafeDisabled>
     <DefineConstants Condition="'$(TestUnsafeDisabled)' == 'true'">TEST_UNSAFE_DISABLED</DefineConstants>
     <AllowUnsafeBlocks Condition="'$(TestUnsafeDisabled)' == 'true'">false</AllowUnsafeBlocks>
@@ -15,7 +15,7 @@
 
   <!-- Tests non WinRT APIs, so intentionally no reference on projections. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" />
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TestUnsafeDisabled)' == 'true'">

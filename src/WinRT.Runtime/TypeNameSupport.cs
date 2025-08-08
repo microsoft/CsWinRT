@@ -60,9 +60,9 @@ namespace WinRT
                         int count = projectionTypeNameToBaseTypeNameMappings.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            if (projectionTypeNameToBaseTypeNameMappings[i].ContainsKey(runtimeClassName))
+                            if (projectionTypeNameToBaseTypeNameMappings[i].TryGetValue(runtimeClassName, out string value))
                             {
-                                return FindRcwTypeByNameCached(projectionTypeNameToBaseTypeNameMappings[i][runtimeClassName]);
+                                return FindRcwTypeByNameCached(value);
                             }
                         }
 
@@ -261,6 +261,15 @@ namespace WinRT
                 }
 
 #if NET
+                if (resolvedType == typeof(Windows.Foundation.IReferenceArray<>))
+                {
+                    var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsArrayType(genericTypes[0]);
+                    if (referenceArrayType is not null)
+                    {
+                        return referenceArrayType;
+                    }
+                }
+
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     foreach (var type in genericTypes)

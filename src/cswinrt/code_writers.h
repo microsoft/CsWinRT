@@ -7708,6 +7708,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
     [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @MethodsFallback()
     {
@@ -7917,6 +7918,9 @@ return true;
 
 private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+[RequiresDynamicCode("The necessary marshalling code or generic instantiations might not be available.")]
+#endif
 internal static unsafe void InitFallbackCCWVtable()
 {
 %
@@ -8185,6 +8189,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
     [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @Fallback()
     {
@@ -8331,7 +8336,7 @@ nongeneric_delegates);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid)
+if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid || global::WinRT.Interop.IID.IID_IWeakReferenceSource == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
@@ -10220,7 +10225,7 @@ default:
     // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
     // overload just allocating and calling that. We always need both exports to make sure that hosting
     // scenarios also work, since those will be looking up the string overload via reflection.
-    settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
+    settings.netstandard_compat ? "string" : "ReadOnlySpan<char>",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
@@ -10235,21 +10240,21 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     types
         ),
     settings.partial_factory ? "GetActivationFactoryPartial(runtimeClassId)" : "IntPtr.Zero",
-    settings.net7_0_or_greater ? R"(
-public static IntPtr GetActivationFactory(string runtimeClassId)
-{
-    return GetActivationFactory(runtimeClassId.AsSpan());
-}
-)" : R"(
+    settings.netstandard_compat ? R"(
 public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.ToString());
+}
+)" : R"(
+public static IntPtr GetActivationFactory(string runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.AsSpan());
 }
 )",
 bind([&](writer& w) {
         if (settings.partial_factory)
         {
-            if (settings.net7_0_or_greater)
+            if (!settings.netstandard_compat)
             {
                 w.write("private static partial IntPtr GetActivationFactoryPartial(ReadOnlySpan<char> runtimeClassId);");
             }

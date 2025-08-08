@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -146,7 +147,7 @@ namespace Generator
                        // we don't want to change the behavior of those projects who were
                        // relying on it running. If they set the mode, then the mode would
                        // be respected.
-                       provider.GetCsWinRTAotWarningLevel() == 2;
+                       provider.GetCsWinRTAotWarningLevel() >= 2;
             }
 
             // If mode is not the default, check if it is set explicitly to Auto.
@@ -221,6 +222,16 @@ namespace Generator
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTUseWindowsUIXamlProjections", out var csWinRTUseWindowsUIXamlProjections))
             {
                 return bool.TryParse(csWinRTUseWindowsUIXamlProjections, out var isCsWinRTUseWindowsUIXamlProjectionsEnabled) && isCsWinRTUseWindowsUIXamlProjectionsEnabled;
+            }
+
+            return false;
+        }
+
+        public static bool GetEnableAotAnalyzer(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.EnableAotAnalyzer", out var enableAotAnalyzer))
+            {
+                return bool.TryParse(enableAotAnalyzer, out var isAotAnalyzerEnabled) && isAotAnalyzerEnabled;
             }
 
             return false;
@@ -315,6 +326,16 @@ namespace Generator
 
             return false;
         }
+
+        public static bool GetCsWinRTGenerateManagedDllGetActivationFactory(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateManagedDllGetActivationFactory", out var csWinRTGenerateManagedDllGetActivationFactory))
+            {
+                return bool.TryParse(csWinRTGenerateManagedDllGetActivationFactory, out var isCsWinRTGenerateManagedDllGetActivationFactory) && isCsWinRTGenerateManagedDllGetActivationFactory;
+            }
+
+            return false;
+        }
     }
 
     static class GeneratorHelper
@@ -384,6 +405,13 @@ namespace Generator
             return compilation is CSharpCompilation csharpCompilation && csharpCompilation.Options.AllowUnsafe;
         }
 
+        // Returns whether the class is marked with the GeneratedBindableCustomProperty attribute or not.
+        public static bool IsGeneratedBindableCustomPropertyClass(Compilation compilation, ISymbol type)
+        {
+            var generatedBindableCustomPropertyAttribute = compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute");
+            return HasAttributeWithType(type, generatedBindableCustomPropertyAttribute);
+        }
+
         // Returns whether it is a WinRT class or interface.
         // If the bool parameter is true, then custom mapped interfaces are also considered.
         // This function is similar to whether it is a WinRT type, but custom type mapped
@@ -417,7 +445,14 @@ namespace Generator
 
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                string qualifiedTypeName = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                isProjectedType = mapper.HasMappingForType(qualifiedTypeName);
+
+                // Check if CsWinRT component projected type from another project.
+                if (!isProjectedType)
+                {
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName(GetAuthoringMetadataTypeName(qualifiedTypeName)) != null;
+                }
             }
 
             // Ensure all generic parameters are WinRT types.
@@ -450,7 +485,14 @@ namespace Generator
             bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                string qualifiedTypeName = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                isProjectedType = mapper.HasMappingForType(qualifiedTypeName);
+
+                // Check if CsWinRT component projected type from another project.
+                if (!isProjectedType)
+                {
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName(GetAuthoringMetadataTypeName(qualifiedTypeName)) != null;
+                }
             }
 
             // Ensure all generic parameters are WinRT types.
@@ -658,6 +700,25 @@ namespace Generator
             foreach (AttributeData attribute in symbol.GetAttributes())
             {
                 if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeTypeSymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks whether or not a given symbol has an attribute with any types in a given sequence.
+        /// </summary>
+        /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+        /// <param name="attributeTypeSymbols">The <see cref="INamedTypeSymbol"/> instances for the attributes type to look for.</param>
+        /// <returns>Whether or not <paramref name="symbol"/> has an attribute with any of the specified types.</returns>
+        public static bool HasAttributeWithAnyType(ISymbol symbol, ImmutableArray<INamedTypeSymbol> attributeTypeSymbols)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (attributeTypeSymbols.Contains(attribute.AttributeClass, SymbolEqualityComparer.Default))
                 {
                     return true;
                 }
@@ -1003,12 +1064,21 @@ namespace Generator
             }
         }
 
-        public static string GetCopyManagedArrayMarshaler(string type, string abiType, TypeKind kind)
+        public static string GetCopyManagedArrayMarshaler(string type, string abiType, TypeKind kind, TypeFlags typeFlags)
         {
             if (kind == TypeKind.Class || kind == TypeKind.Delegate)
             {
-                // TODO: Classes and delegates are missing CopyManagedArray.
-                return $$"""Marshaler<{{type}}>""";
+                if (type is "System.String") return "global::WinRT.MarshalString";
+                if (type is "System.Type") return "global::ABI.System.Type";
+                if (type is "System.Object") return "global::WinRT.MarshalInspectable<object>";
+
+                if (typeFlags.HasFlag(TypeFlags.Exception))
+                {
+                    return "global::WinRT.MarshalNonBlittable<Exception>";
+                }
+
+                // Handles all other classes and delegate types
+                return $"global::WinRT.MarshalGenericHelper<{type}>";
             }
             else
             {
@@ -1177,7 +1247,13 @@ namespace Generator
 
         public static string EscapeAssemblyNameForIdentifier(string typeName)
         {
-            return Regex.Replace(typeName, """[^a-zA-Z0-9_]""", "_");
+            if (string.IsNullOrEmpty(typeName))
+            {
+                return typeName;
+            }
+
+            var prefixedTypeName = char.IsDigit(typeName[0]) ? "_" + typeName : typeName;
+            return Regex.Replace(prefixedTypeName, @"[^a-zA-Z0-9_]", "_");
         }
 
         public static string EscapeTypeNameForIdentifier(string typeName)
@@ -1263,6 +1339,32 @@ namespace Generator
         public static string TrimGlobalFromTypeName(string typeName)
         {
             return typeName.StartsWith("global::") ? typeName[8..] : typeName;
+        }
+
+        public static string GetEscapedAssemblyName(string assemblyName)
+        {
+            // Make sure to escape invalid characters for namespace names.
+            // See ECMA 335, II.6.2 and II.5.2/3.
+            if (assemblyName.AsSpan().IndexOfAny("$@`?".AsSpan()) != -1)
+            {
+                char[] buffer = new char[assemblyName.Length];
+
+                for (int i = 0; i < assemblyName.Length; i++)
+                {
+                    buffer[i] = assemblyName[i] is '$' or '@' or '`' or '?'
+                        ? '_'
+                        : assemblyName[i];
+                }
+
+                assemblyName = new string(buffer);
+            }
+
+            return assemblyName;
+        }
+
+        public static string GetAuthoringMetadataTypeName(string authoringTypeName)
+        {
+            return $"ABI.Impl.{authoringTypeName}";
         }
     }
 }

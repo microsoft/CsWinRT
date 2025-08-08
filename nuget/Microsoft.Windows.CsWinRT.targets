@@ -14,8 +14,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
-    <!-- Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run in WPF scenarios
-         causing for our targeting pack to not get included or conflicts to be resolved. -->
+
+    <!--
+      Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run
+      in WPF scenarios causing for our targeting pack to not get included or conflicts to be resolved.
+    -->
     <CoreCompileDependsOn>ResolveAssemblyReferences;CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
@@ -42,6 +45,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
+
+    <!--
+      Default to using the environment tools if in a Visual Studio Developer Command Prompt (or PowerShell).
+      See: https://learn.microsoft.com/visualstudio/ide/reference/command-prompt-powershell#developer-command-prompt.
+    -->
+    <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == '' AND '$(VSCMD_VER)' != ''">true</CsWinRTUseEnvironmentalTools>
+    <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == ''">false</CsWinRTUseEnvironmentalTools>
+
+    <!-- Generate a C# version of DllGetActivationFactory which matches the native export. -->
+    <CsWinRTGenerateManagedDllGetActivationFactory Condition="'$(CsWinRTGenerateManagedDllGetActivationFactory)' != 'true'">false</CsWinRTGenerateManagedDllGetActivationFactory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,12 +65,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
   <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
     <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
+  </Target>
+
+  <Target Name="CsWinRTNet6EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6 or $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7" BeforeTargets="CsWinRTPrepareProjection">
+    <Error Text="Support for .NET 6 and .NET 7 ended with C#/WinRT 2.2. For .NET 6 or .NET 7 support, use C#/WinRT version 2.2.x." />
   </Target>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
@@ -104,10 +122,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
 
       <!--
-	    CsWinRTAotWarningLevel decides the level of warning from the AOT analyzer.
+        CsWinRTAotWarningLevel decides the level of warning from the AOT analyzer.
             0: No warnings
            *1: Warnings for scenarios involving WinRT types that are not built-in system types mapped to WinRT.
             2: Level 1 warnings and warnings for scenarios involving built-in system types mapped to WinRT.
+            3: Level 2 warnings and warnings for additional trim/AOT scenarios, including those that can be noisy (eg. casts to WinRT runtime class types).
         This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated.
         Level 1 is currently the default to avoid noise from built-in system types that might not be used in WinRT scenarios
         but level 2 should be enabled and the warnings from it should be evaluated to ensure AOT and trimming compatibility.
@@ -118,22 +137,22 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                                                         '$(OutputType)' == 'Library' and
                                                         '$(CsWinRTHasAnyIncludes)' == 'true'">0</CsWinRTAotWarningLevel>
       <CsWinRTAotWarningLevel Condition="'$(CsWinRTAotWarningLevel)' == ''">1</CsWinRTAotWarningLevel>
-	</PropertyGroup>
+    </PropertyGroup>
   </Target>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
-      <CsWinRTPkg-Net6Dir>$(CsWinRTPath)lib\net6.0</CsWinRTPkg-Net6Dir>
+      <CsWinRTPkg-Net8Dir>$(CsWinRTPath)lib\net8.0</CsWinRTPkg-Net8Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
     </PropertyGroup>
     <ItemGroup>
      <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <Reference                      Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
-     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
+     <Reference                      Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
+     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
+     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
@@ -312,6 +331,228 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
+  <!--
+    Produces a stub .exe for the application, if requested. This target is only executed when publishing, and
+    it's injected right after Native AOT invokes MSVC to produce the final binary, and before gathering all
+    publish artifacts. It's important for this target to run right after that, so that we can make sure that
+    the resulting stub .exe is gathered by the following MSIX packaging steps, which need to include it too.
+  -->
+  <Target
+    Name="_CsWinRTGenerateStubExe"
+    DependsOnTargets="PrepareForPublish"
+    AfterTargets="LinkNative"
+    BeforeTargets="ComputeLinkedFilesToPublish"
+    Condition="'$(_CsWinRTEnableStubExeGeneration)' == 'true' AND '$(PublishAot)' == 'true'">
+    <PropertyGroup>
+    
+      <!-- Prepare the generated files directory -->
+      <_StubExeFolderName>StubExe</_StubExeFolderName>
+      <_StubExeGeneratedFilesDir Condition="'$(_StubExeGeneratedFilesDir)' == '' AND '$(GeneratedFilesDir)' != ''">$(GeneratedFilesDir)\$(_StubExeFolderName)\</_StubExeGeneratedFilesDir>
+      <_StubExeGeneratedFilesDir Condition="'$(_StubExeGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files', '$(_StubExeFolderName)'))</_StubExeGeneratedFilesDir>
+    
+      <!-- The path of the .lib file produced by the Native AOT toolchain, which we need for the linker -->
+      <_StubExeNativeLibraryPath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(NativeOutputPath), $(AssemblyName).lib))</_StubExeNativeLibraryPath>
+    
+      <!-- Prepare the path of the .c file with the stub .exe source we need to compile -->
+      <_StubExeSourceFileName>$(AssemblyName).c</_StubExeSourceFileName>
+      <_StubExeSourceFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeSourceFileName)))</_StubExeSourceFilePath>
+
+      <!-- Get the path to the source in the NuGet package -->
+      <_StubExeOriginalSourceFilePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), 'sources', 'StubExe.c'))</_StubExeOriginalSourceFilePath>
+    
+      <!-- Prepare the output path of the resulting stub .exe -->
+      <_StubExeBinaryFileName>$(AssemblyName).exe</_StubExeBinaryFileName>
+      <_StubExeBinaryOutputFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeBinaryFileName)))</_StubExeBinaryOutputFilePath>
+      <_StubExeBinaryDestinationFilePath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(NativeOutputPath), $(_StubExeBinaryFileName)))</_StubExeBinaryDestinationFilePath>
+
+      <!-- Get the target platform (we either use 'Platform', if set and not 'AnyCPU', or fallback to 'PlatformTarget' ) -->
+      <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(Platform)' != '' AND '$(Platform)' != 'AnyCPU'">$(Platform)</_StubExePlatform>
+      <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
+
+      <_StubExeWin32ManifestPath Condition="'$(Win32Manifest)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(Win32Manifest)))</_StubExeWin32ManifestPath>
+    </PropertyGroup>
+    
+    <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
+    <Message Text="Generating stub .exe" />
+
+    <!-- Ensure the folder exists, or writing to the source file will fail -->
+    <MakeDir Directories="$(_StubExeGeneratedFilesDir)"/>
+      
+    <!-- Write the stub .exe source -->
+    <Copy SourceFiles="$(_StubExeOriginalSourceFilePath)" DestinationFiles="$(_StubExeSourceFilePath)" />
+
+    <!--
+      Get the path of 'cl.exe' from the Native AOT tooling, which finds the install folder for MSVC already.
+      By doing this, we make sure that this can work from a normal terminal too, not just a VS Developer cmd.
+    -->
+    <PropertyGroup>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(CsWinRTUseEnvironmentalTools)' == 'true'">cl</_ClExeFilePath>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(_CppToolsDirectory)' != ''">"$([System.IO.Path]::Combine($(_CppToolsDirectory), 'cl.exe'))"</_ClExeFilePath>
+    </PropertyGroup>
+
+    <!-- Fail if we can't find any 'cl.exe' -->
+    <Error
+      Condition="'$(_ClExeFilePath)' == ''"
+      Text="Failed to find 'cl.exe', which is needed to compile the project in the current configuration. Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
+
+    <!-- Get the path to the include directories, if not using the environmental tools -->
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'">
+
+      <!-- Find the 'include' folder in the MSVC install folder -->
+      <_MsvcCurrentVersionInstallDirectory>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(_CppToolsDirectory), '..', '..', '..'))))</_MsvcCurrentVersionInstallDirectory>
+      <_MsvcIncludePath>$([System.IO.Path]::Combine($(_MsvcCurrentVersionInstallDirectory), 'include'))</_MsvcIncludePath>
+      <_MsvcLibPath>$([System.IO.Path]::Combine($(_MsvcCurrentVersionInstallDirectory), 'lib', '$(_StubExePlatform)'))</_MsvcLibPath>
+      <_MsvcLibWildcardPath>$([System.IO.Path]::Combine($(_MsvcLibPath), '*.lib'))</_MsvcLibWildcardPath>
+
+      <!-- Also get the root for the Windows SDK headers -->
+      <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == '' AND '$(WindowsSdkPath)' != ''">$(WindowsSdkPath)</_WindowsSdk10InstallDirectory>
+      <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == ''">C:\Program Files (x86)\Windows Kits\10</_WindowsSdk10InstallDirectory>
+      <_WindowsSdkIncludePath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(TargetPlatformVersion)'))</_WindowsSdkIncludePath>
+      <_WindowsSdk-ucrt-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'ucrt'))</_WindowsSdk-ucrt-IncludePath>
+      <_WindowsSdk-um-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'um'))</_WindowsSdk-um-IncludePath>
+
+      <!-- Do the same for libs as well -->
+      <_WindowsSdkLibPath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(TargetPlatformVersion)'))</_WindowsSdkLibPath>
+      <_WindowsSdk-ucrt-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'ucrt', '$(_StubExePlatform)'))</_WindowsSdk-ucrt-LibPath>
+      <_WindowsSdk-um-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'um', '$(_StubExePlatform)'))</_WindowsSdk-um-LibPath>
+      <_WindowsSdk-ucrt-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-ucrt-LibPath), '*.lib'))</_WindowsSdk-ucrt-LibWildcardPath>
+      <_WindowsSdk-um-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-um-LibPath), '*.lib'))</_WindowsSdk-um-LibWildcardPath>
+    </PropertyGroup>
+
+    <!-- We can't find some of the additional include folders -->
+    <Error
+      Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' AND ('$(_MsvcIncludePath)' == '' OR !Exists('$(_MsvcIncludePath)') OR '$(_WindowsSdkIncludePath)' == '' OR !Exists('$(_WindowsSdkIncludePath)'))"
+      Text="Failed to find the paths for the include folders to pass to MSVC, which are needed to compile the project in the current configuration. Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
+    
+    <!-- Error on unsupported platforms -->
+    <Error
+      Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' AND '$(_StubExePlatform)' != 'arm64' AND '$(_StubExePlatform)' != 'x64' AND '$(_StubExePlatform)' != 'x86'"
+      Text="Invalid platform selected to invoke MSVC. Make sure to set 'Platform' to either 'arm64', 'x64', or 'x86'. Alternatively, try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
+
+    <!-- Prepare the arguments for MSVC -->
+    <ItemGroup>
+
+      <!-- If not using the environmental tools, manually pass the paths to the required libs -->
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_MsvcLibWildcardPath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_WindowsSdk-ucrt-LibWildcardPath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_WindowsSdk-um-LibWildcardPath)"' />
+
+      <!-- Hide the copyright banner, to reduce visual clutter (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp) -->
+      <_StubExeMsvcArgs Include="/nologo" />
+
+      <!-- If not using the environmental tools, also pass the paths to the necessary include folders -->
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_MsvcIncludePath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_WindowsSdk-ucrt-IncludePath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_WindowsSdk-um-IncludePath)"' />
+
+      <!--
+        Configure the binary to statically link the C runtime library (https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library).
+        This library (UCRT) has the implementation of all standard C runtime methods, like 'printf'. We want to actually link it dynamically, so we
+        will opt-in that individual library below. The dynamically linked version ships in the OS as 'ucrt.dll'. This matches the behavior of
+        Native AOT as well, which links UCRT dynamically, and VCRUNTIME140 (the MSVC-specific part of the C runtime) statically. The latter is much
+        smaller in size, so it does not matter. Dynamically linking UCRT reduces the size from 98 KB to 20 KB. The reason why we're not configuring
+        libraries to be dynamically linked, and then just having an opt-out for VCRUNTIME140, is that doing so causes a linker warning.
+      -->
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/MTd" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/MT" />
+
+      <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
+      <_StubExeMsvcArgs Include="/O2" />
+
+      <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
+      <_StubExeMsvcArgs Include="/link" />
+
+      <!-- Hide the copyright banner for the linker as well -->
+      <_StubExeMsvcArgs Include="/NOLOGO" />
+
+      <!-- Embed a manifest if Win32Manifest is specified. (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
+      <_StubExeMsvcArgs Include="/MANIFEST:NO" Condition="'$(_StubExeWin32ManifestPath)'==''" />
+      <_StubExeMsvcArgs Include="/MANIFEST:EMBED /MANIFESTINPUT:$(_StubExeWin32ManifestPath)" Condition="'$(_StubExeWin32ManifestPath)'!=''" />
+
+      <!--
+        Change the behavior for UCRT to be dynamically linked (the default would be to statically link it, due to '/MT[d]').
+        See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
+        Also see: https://learn.microsoft.com/cpp/build/reference/nodefaultlib-ignore-libraries.
+      -->
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/NODEFAULTLIB:libucrtd.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/NODEFAULTLIB:libucrt.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/DEFAULTLIB:ucrtd.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/DEFAULTLIB:ucrt.lib" />
+
+      <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
+      <_StubExeMsvcArgs Include="/INCREMENTAL:NO" />
+
+      <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
+      <_StubExeMsvcArgs Include="/OPT:ICF" />
+      <_StubExeMsvcArgs Include="/OPT:REF" />
+
+      <!--
+        Set the bit for AppContainer, for UWP apps (https://learn.microsoft.com/cpp/build/reference/appcontainer-windows-store-app).
+        This is not strictly needed on new Windows versions, but doing so matches the behavior of .NET Native as well.
+      -->
+      <_StubExeMsvcArgs Condition="'$(UseUwpTools)' == 'true'" Include="/APPCONTAINER" />
+
+      <!-- Set the right subsystem type, to match the project type (https://learn.microsoft.com/cpp/build/reference/subsystem-specify-subsystem) -->
+      <_StubExeMsvcArgs Condition="'$(OutputType)' == 'WinExe'" Include="/SUBSYSTEM:WINDOWS" />
+      <_StubExeMsvcArgs Condition="'$(OutputType)' != 'WinExe'" Include="/SUBSYSTEM:CONSOLE" />
+
+      <!--
+        Always set 'wmainCRTStartup' as the entry point (https://learn.microsoft.com/cpp/build/reference/entry-entry-point-symbol).
+        This matches what Native AOT does, and it allows us to always use 'wmain' for all application types, including 'WinExe'.
+      -->
+      <_StubExeMsvcArgs Include="/ENTRY:wmainCRTStartup" />
+
+      <!-- Enable CFG, if requested (https://learn.microsoft.com/cpp/build/reference/guard-enable-control-flow-guard) -->
+      <_StubExeMsvcArgs Condition="'$(ControlFlowGuard)' == 'Guard'" Include="/guard:cf" />
+
+      <!-- Configure the CET shadow stack compatibility (https://learn.microsoft.com/cpp/build/reference/cetcompat) -->
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(_StubExePlatform)' == 'x64'" Include="/CETCOMPAT" />
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' == 'false' and '$(_StubExePlatform)' == 'x64'" Include="/CETCOMPAT:NO" />
+
+      <!--
+        Enable EH continuation metadata if CET is not disabled and CFG is enabled, to match what Native AOT does.
+        See: https://learn.microsoft.com/cpp/build/reference/guard-enable-eh-continuation-metadata.
+      -->
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(_StubExePlatform)' == 'x64' and '$(ControlFlowGuard)' == 'Guard'" Include="/guard:ehcont"/>
+    </ItemGroup>
+
+    <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
+    <PropertyGroup>
+      <_StubExeMsvcArgsText>@(_StubExeMsvcArgs, ' ')</_StubExeMsvcArgsText>
+    </PropertyGroup>
+    
+    <!--
+      Remove the broken .exe, if present (see https://github.com/dotnet/runtime/issues/111313). We want to do this before
+      compiling the binary, to ensure users won't ever see the wrong one in the publish folder and use that by accident.
+    -->
+    <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Add WindowsSDKBuildToolsBinVersionedArchFolder to the path if we're not using environmental tools since mt.exe and rc.exe aren't alongside link.exe. -->
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">
+      <_StubExeAdditionalPath>$(PATH);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
+      <_StubExeEnvVars>PATH=$(_StubExeAdditionalPath.Replace(';','%3B'))</_StubExeEnvVars>
+    </PropertyGroup>
+    
+    <!-- Invoke MSVC to produce the native executable -->
+    <Exec
+      Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
+      ConsoleToMsBuild="true"
+      WorkingDirectory="$(_StubExeGeneratedFilesDir)"
+      EnvironmentVariables="$(_StubExeEnvVars)">
+    </Exec>
+    
+    <!-- Copy the resulting executable to the native directory -->
+    <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Also mark the stub .exe as being part of the published items (so it's gathered by the PRI/MSIX tools) -->
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(_StubExeBinaryDestinationFilePath)" Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
+        <RelativePath>$(_StubExeBinaryFileName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
@@ -324,16 +565,14 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
     <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
+    <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
+    <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
+    <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
       switch are set by the .NET SDK, so that the right projection mode is enabled even when CsWinRT is not directly referenced.
     -->
-  </PropertyGroup>
-
-  <!-- Default values for all other CsWinRT properties (without feature switches) -->
-  <PropertyGroup>
-    <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
   </PropertyGroup>
 
   <!--
@@ -370,6 +609,21 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
                                     Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION"
+                                    Value="$(CsWinRTEnableManifestFreeActivation)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
+                                    Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
+                                    Trim="true" />
+	  
+    <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
+                                    Value="$(CsWinRTLoadComponentsInDefaultALC)"
                                     Trim="true" />
   </ItemGroup>
 

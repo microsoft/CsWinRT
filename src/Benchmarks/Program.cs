@@ -9,6 +9,8 @@ using BenchmarkDotNet.Toolchains;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Characteristics;
 using System.IO;
+using BenchmarkDotNet.Validators;
+using System.Collections.Generic;
 
 #if NET
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
@@ -82,9 +84,9 @@ namespace Benchmarks
             {
             }
 
-            public override bool IsSupported(BenchmarkCase benchmarkCase, ILogger logger, IResolver resolver)
+            public override IEnumerable<ValidationError> Validate(BenchmarkCase benchmarkCase, IResolver resolver)
             {
-                return CsProjCoreToolchain.NetCoreApp31.IsSupported(benchmarkCase, logger, resolver);
+                return CsProjCoreToolchain.NetCoreApp31.Validate(benchmarkCase, resolver);
             }
         }
 

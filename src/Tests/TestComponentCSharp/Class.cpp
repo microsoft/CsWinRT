@@ -1745,6 +1745,68 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
+    int32_t Class::UnboxInt32UsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetInt32();
+        }
+        return -1;
+    }
+
+    hstring Class::UnboxStringUsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetString();
+        }
+
+        return L"";
+    }
+
+    Rect Class::UnboxRectUsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetRect();
+        }
+
+        return Rect(-1, -1, -1, -1);
+    }
+
+    com_array<int32_t> Class::UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<int32_t> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetInt32Array(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<bool> Class::UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<bool> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetBooleanArray(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<Point> Class::UnboxPointArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<Point> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetPointArray(arr);
+        }
+
+        return arr;
+    }
+
     int32_t Class::GetPropertyType(IInspectable const& obj)
     {
         if (auto ipv = obj.try_as<IPropertyValue>())
@@ -1825,6 +1887,30 @@ namespace winrt::TestComponentCSharp::implementation
     {
         Windows::Foundation::EventHandler<int> handler = [](auto&&...) { };
         return winrt::box_value(handler);
+    }
+
+    WF::IInspectable Class::BoxedStringArray()
+    {
+        hstring arr[] = { hstring{ L"one" }, hstring{ L"two" }, hstring{ L"three" } };
+        return WF::PropertyValue::CreateStringArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedInt32Array()
+    {
+        int arr[] = { 1, 2, 3 };
+        return WF::PropertyValue::CreateInt32Array(arr);
+    }
+
+    WF::IInspectable Class::BoxedTimeSpanArray()
+    {
+        TimeSpan arr[] = { 10s, 20s, };
+        return WF::PropertyValue::CreateTimeSpanArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedObjectArray()
+    {
+        WF::IInspectable arr[] = {*this, *this};
+        return WF::PropertyValue::CreateInspectableArray(arr);
     }
 
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
@@ -1960,6 +2046,10 @@ namespace winrt::TestComponentCSharp::implementation
         propertySet.Insert(L"alpha", winrt::box_value(L"first"));
         propertySet.Insert(L"beta", winrt::box_value(L"second"));
         propertySet.Insert(L"charlie", winrt::box_value(L"third"));
+        auto arr = com_array<byte>({ 1, 2, 3, 4 });
+        propertySet.Insert(L"delta", winrt::box_value(arr));
+        auto arr2 = com_array<WF::Point>({ {1, 1}, {2, 2}, {3, 3} });
+        propertySet.Insert(L"echo", winrt::box_value(arr2));
         return propertySet;
     }
 

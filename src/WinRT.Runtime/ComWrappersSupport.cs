@@ -638,6 +638,13 @@ namespace WinRT
                 return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
             }
 
+#if NET
+            if (implementationType.IsSZArray)
+            {
+                return ABI.Windows.Foundation.IReferenceArrayType.GetValueFactory(implementationType.GetElementType());
+            }
+#endif
+
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 

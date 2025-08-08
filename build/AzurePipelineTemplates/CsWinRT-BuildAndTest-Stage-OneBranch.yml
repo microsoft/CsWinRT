@@ -64,15 +64,16 @@ jobs:
           native/cswinrt.exe;
           netstandard2.0/WinRT.Runtime.dll;
           netstandard2.0/WinRT.Host.Shim.dll;
-          netstandard2.0/WinRT.SourceGenerator.dll;
-          net6.0/WinRT.Host.Shim.dll;
-          net6.0/WinRT.Runtime.dll;
+          netstandard2.0/roslyn4080/WinRT.SourceGenerator.dll;
+          netstandard2.0/roslyn4120/WinRT.SourceGenerator.dll;
+          net8.0/WinRT.Host.Shim.dll;
           net8.0/WinRT.Runtime.dll;
+          net9.0/WinRT.Runtime.dll;
           native/WinRT.Host.dll;
-          net6.0/IIDOptimizer/IIDOptimizer.exe;
-          net6.0/IIDOptimizer/IIDOptimizer.dll;
-          net6.0/CsWinMD/CsWinMD.exe;
-          net6.0/CsWinMD/CsWinMD.dll;
+          net8.0/IIDOptimizer/IIDOptimizer.exe;
+          net8.0/IIDOptimizer/IIDOptimizer.dll;
+          net8.0/CsWinMD/CsWinMD.exe;
+          net8.0/CsWinMD/CsWinMD.dll;
         search_root: $(StagingFolder)
 
     - task: onebranch.pipeline.signing@1
@@ -94,10 +95,10 @@ jobs:
         command: sign
         signing_profile: 135020002
         files_to_sign: |
-          net6.0/IIDOptimizer/Mono.Cecil.dll;
-          net6.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
-          net6.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
-          net6.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
+          net8.0/IIDOptimizer/Mono.Cecil.dll;
+          net8.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
+          net8.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
+          net8.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
         search_root: $(StagingFolder)
 
   - job: Benchmarks
@@ -124,10 +125,10 @@ jobs:
         targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
         artifact: drop_BuildAndTest_Benchmarks
 
-  # Seperate job to run object lifetime tests given
-  # they can't run in the other environment.
-  - job: ObjectlifetimeTests
-    displayName: Run Object Lifetime Tests
+  # Seperate job to run certain tests
+  # that can't run in the other environment.
+  - job: Tests
+    displayName: Run Tests
     dependsOn: []
     pool:
       type: windows
@@ -167,5 +168,15 @@ jobs:
       displayName: Run Object Lifetime Tests
       condition: succeeded()
       inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
+
+# Run Source Generator Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Source Generator Tests
+      condition: succeeded()
+      inputs:
+        command: test
+        projects: 'src/Tests/SourceGeneratorTest/SourceGeneratorTest.csproj'
+        arguments: --diag $(StagingFolder)\unittest\test.log --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI;solutiondir=$(Build.SourcesDirectory)\src\;VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion) -- RunConfiguration.TreatNoTestsAsError=true
+        testRunTitle: Unit Tests

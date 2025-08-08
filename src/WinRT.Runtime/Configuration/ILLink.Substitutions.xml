@@ -25,6 +25,14 @@
       <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
       <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="false"/>
       <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="true"/>
+        
+      <!-- CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION switch -->
+      <method signature="System.Boolean get_EnableManifestFreeActivation()" body="stub" value="false" feature="CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION" featurevalue="false"/>
+      <method signature="System.Boolean get_EnableManifestFreeActivation()" body="stub" value="true" feature="CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION" featurevalue="true"/>
+
+      <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
+      <method signature="System.Boolean get_ManifestFreeActivationReportOriginalException()" body="stub" value="false" feature="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION" featurevalue="false"/>
+      <method signature="System.Boolean get_ManifestFreeActivationReportOriginalException()" body="stub" value="true" feature="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION" featurevalue="true"/>
 
       <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch -->
       <method signature="System.Boolean get_UseWindowsUIXamlProjections()" body="stub" value="false" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="false" />

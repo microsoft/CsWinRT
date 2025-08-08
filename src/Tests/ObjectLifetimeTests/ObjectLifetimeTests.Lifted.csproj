@@ -6,9 +6,9 @@
         <RootNamespace>ObjectLifetimeTests.Lifted</RootNamespace>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <Platforms>x86;x64;arm64</Platforms>
-        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
         <EnableMsixTooling>True</EnableMsixTooling>
-        <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+        <PublishProfile>win-$(Platform).pubxml</PublishProfile>
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
@@ -36,6 +36,8 @@
     </ItemGroup>
     <ItemGroup>
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
         <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </ItemGroup>
     <ItemGroup>

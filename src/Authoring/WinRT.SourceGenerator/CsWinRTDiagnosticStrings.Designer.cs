@@ -248,7 +248,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("ClassOldProjectionMultipleInstances_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cast to [ComImport] type not supported.
+        /// </summary>
+        internal static string ComImportInterfaceCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("ComImportInterfaceCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The type '{0}' used in a cast operation is a [ComImport] interface, which is not compatible with CsWinRT objects in AOT scenarios. Consider using the COM generators to define the interface, or manually handling the interface query on the underlying native object..
+        /// </summary>
+        internal static string ComImportInterfaceCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("ComImportInterfaceCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Namespace is disjoint from main (winmd) namespace.
         /// </summary>
@@ -311,7 +333,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("GenericTypeRule_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casts to WinRT &apos;IReference`1&lt;T&gt;&apos; unboxed values are not trim-safe.
+        /// </summary>
+        internal static string IReferenceTypeCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("IReferenceTypeCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casting to type &apos;{0}&apos; is not trim-safe, as it is unboxing a WinRT &apos;IReference`1&lt;T&gt;&apos; value type. Consider using the &apos;WinRT.CastExtensions.Cast&lt;T&gt;&apos; extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use &apos;[DynamicDependency]&apos; to manually root the necessary metadata, and suppress the warning via &apos;[UnconditionalSuppressMessage]&apos;..
+        /// </summary>
+        internal static string IReferenceTypeCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("IReferenceTypeCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Array signature found with jagged array, which is not a valid WinRT type.
         /// </summary>
@@ -466,6 +510,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collection expression not safe for WinRT.
+        /// </summary>
+        internal static string NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief {
+            get {
+                return ResourceManager.GetString("NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collection expressions targeting non mutable interface type &apos;{0}&apos; do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or avoid using a collection expression in this case).
+        /// </summary>
+        internal static string NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text {
+            get {
+                return ResourceManager.GetString("NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid Interface Inherited.
         /// </summary>
         internal static string NonWinRTInterface_Brief {
@@ -572,7 +634,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("RefParameterFound_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casts to WinRT runtime class types are not trim-safe.
+        /// </summary>
+        internal static string RuntimeClassCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("RuntimeClassCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casting to type &apos;{0}&apos; is not trim-safe, as it is a WinRT runtime class type. Consider using the &apos;WinRT.CastExtensions.Cast&lt;T&gt;&apos; extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use &apos;[DynamicDependency]&apos; to manually root the necessary metadata, and suppress the warning via &apos;[UnconditionalSuppressMessage]&apos;..
+        /// </summary>
+        internal static string RuntimeClassCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("RuntimeClassCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Source generator failed.
         /// </summary>

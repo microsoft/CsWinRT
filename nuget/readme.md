@@ -48,8 +48,11 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |
+| CsWinRTEnableManifestFreeActivation | *true \| false | Enables the manifest-free WinRT activation path as fallback when `RoGetActivationFactory` fails to resolve a WinRT type |
+| CsWinRTManifestFreeActivationReportOriginalException | true \| *false | If 'CsWinRTEnableManifestFreeActivation' is set and activating a type fails, ensures the original exception is thrown, rather than 'NotSupportedException' |
+| CsWinRTUseEnvironmentalTools | *true \| false | Makes the invocation of MSVC to produce a stub .exe (for Native AOT scenarios) rely on environmental tools, rather than looking up the MSVC install path. This is enabled by default when running in a Visual Studio Developer Command Prompt (or PowerShell), and false otherwise. |
 | CsWinRTAotOptimizerEnabled | Auto \| OptIn \| *true \| false | Enables the C#/WinRT AOT optimizer. WinRT types can opt-in to AOT optimization by adding the `[GeneratedWinRTExposedType]` attribute.  More details can be found [here](https://github.com/microsoft/CsWinRT/blob/master/docs/aot-trimming.md#source-generator-modes) |
-| CsWinRTAotWarningLevel | 0 \| *1 \| 2 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios) |
+| CsWinRTAotWarningLevel | 0 \| *1 \| 2 \| 3 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios, 3 - for more extensive warnings for trim/AOT, including noisy ones) |
 \*Default value
 
 **If CsWinRTFilters is not defined, the following effective value is used:
@@ -75,6 +78,7 @@ C#/WinRT supports several feature switches to opt-out of some features available
 | CsWinRTEnableICustomPropertyProviderSupport | \*true \| false | Enables marshalling of `ICustomPropertyProvider` objects. Setting this to **false** allows trimming all supporting code for this interface, and will make it not available on marshalled CCW types. |
 | CsWinRTEnableIReferenceSupport | \*true \| false | Enables support and marshalling of `IReference<T>`, `IReferenceArray<T>` and `IPropertyValue` objects. Setting this to **false** allows trimming all supporting code for all three interfaces, and will make all of them not available on marshalled CCW types. |
 | CsWinRTEnableIDynamicInterfaceCastableSupport | \*true \| false | Enables support for the [`IDynamicInterfaceCastable`](https://devblogs.microsoft.com/dotnet/improvements-in-native-code-interop-in-net-5-0/#idynamicinterfacecastable) infrastructure for RCW types. Setting this to **false** allows trimming of all related code, and will disallow casting RCW types to interface types they don't directly implement in metadata. |
+| CsWinRTLoadComponentsInDefaultALC | true \| \*false | Setting this to **true** configures `WinRT.Host.dll` to load CsWinRT components in the default [`Assembly Load Context (ALC)`](https://learn.microsoft.com/dotnet/core/dependency-loading/understanding-assemblyloadcontext). Note you should ensure components and dependencies loaded are compatible and will not conflict in any way to avoid potential issues. By default, when set to **false**, they load in their own ALC. |
 \*Default value
 
 ### Windows Metadata

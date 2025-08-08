@@ -61,7 +61,7 @@ namespace WinRT.Interop
     {
         public static bool FreeLibrary(IntPtr moduleHandle)
         {
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             return LibraryImportStubs.FreeLibrary(moduleHandle);
 #else
             return FreeLibrary(moduleHandle);
@@ -76,7 +76,7 @@ namespace WinRT.Interop
         {
             fixed (byte* lpFunctionName = functionName)
             {
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 return LibraryImportStubs.GetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
 #else
                 return GetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
@@ -103,7 +103,7 @@ namespace WinRT.Interop
         {
             fixed (char* lpFileName = fileName)
             {
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 return LibraryImportStubs.LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
 #else
                 return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
@@ -115,7 +115,7 @@ namespace WinRT.Interop
         }
     }
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
     // Marshalling stubs from [LibraryImport], which are used to get the same semantics (eg. for setting
     // the last P/Invoke errors, etc.) on .NET 6 as well ([LibraryImport] was only introduced in .NET 7).
     internal static class LibraryImportStubs

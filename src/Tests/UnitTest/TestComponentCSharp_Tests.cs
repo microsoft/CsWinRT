@@ -2765,6 +2765,39 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestUnboxingUsingPropertyValue()
+        {
+            int i = 24;
+            Assert.Equal(i, Class.UnboxInt32UsingPropertyValue(i));
+
+            uint j = 42;
+            Assert.Equal((int)j, Class.UnboxInt32UsingPropertyValue(j));
+
+            System.Nullable<int> k = new System.Nullable<int>(34);
+            Assert.Equal(k, Class.UnboxInt32UsingPropertyValue(k));
+
+            string s = "Hello!";
+            Assert.Equal(s, Class.UnboxStringUsingPropertyValue(s));
+
+            Guid guid = new("36AA48DD-ACBB-4570-B12A-86BF71D09A12");
+            Assert.Equal("36AA48DD-ACBB-4570-B12A-86BF71D09A12", Class.UnboxStringUsingPropertyValue(guid), true);
+
+            Assert.Throws<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
+
+            Rect rect = new Rect(1, 2, 3, 4);
+            Assert.Equal(rect, Class.UnboxRectUsingPropertyValue(rect));
+
+            int[] iArr = new[] { 42, 0, -23 };
+            Assert.Equal(iArr, (IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr));
+
+            bool[] bArr = new[] { true, false, false };
+            Assert.Equal((IEnumerable<bool>)bArr, Class.UnboxBooleanArrayUsingPropertyValue(bArr));
+
+            Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
+            Assert.Equal((IEnumerable<Point>)pArr, Class.UnboxPointArrayUsingPropertyValue(pArr));
+        }
+
+        [Fact]
         public void TestListOfTypes()
         {
             var types = Class.ListOfTypes;

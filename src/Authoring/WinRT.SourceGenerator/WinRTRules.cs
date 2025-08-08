@@ -243,5 +243,33 @@ namespace WinRT.SourceGenerator
             "CsWinRT1031",
             CsWinRTDiagnosticStrings.SourceGeneratorFailed_Brief,
             CsWinRTDiagnosticStrings.SourceGeneratorFailed_Text);
+
+        public static DiagnosticDescriptor NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType = MakeRule(
+            "CsWinRT1032",
+            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief,
+            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor ComImportInterfaceCast = MakeRule(
+            "CsWinRT1033",
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Brief,
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor RuntimeClassCast = MakeRule(
+            "CsWinRT1034",
+            CsWinRTDiagnosticStrings.RuntimeClassCast_Brief,
+            CsWinRTDiagnosticStrings.RuntimeClassCast_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor IReferenceTypeCast = MakeRule(
+            "CsWinRT1035",
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Brief,
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Text,
+            false,
+            true);
     }
 } 

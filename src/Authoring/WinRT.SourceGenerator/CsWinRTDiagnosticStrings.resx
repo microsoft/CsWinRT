@@ -357,4 +357,28 @@
   <data name="SourceGeneratorFailed_Text" xml:space="preserve">
     <value>CsWinRT component authoring source generator 'WinRT.SourceGenerator' failed to generate WinMD and projection because of '{0}'</value>
   </data>
+  <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief" xml:space="preserve">
+    <value>Collection expression not safe for WinRT</value>
+  </data>
+  <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text" xml:space="preserve">
+    <value>Collection expressions targeting non mutable interface type '{0}' do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or add an explicit cast for either of these on the collection expression, eg. '(string[])["A", "B", "C"]')</value>
+  </data>
+  <data name="ComImportInterfaceCast_Brief" xml:space="preserve">
+    <value>Cast to [ComImport] type not supported</value>
+  </data>
+  <data name="ComImportInterfaceCast_Text" xml:space="preserve">
+    <value>The type '{0}' used in a cast operation is a [ComImport] interface, which is not compatible with CsWinRT objects in AOT scenarios. Consider using the COM generators to define the interface, or manually handling the interface query on the underlying native object.</value>
+  </data>
+  <data name="RuntimeClassCast_Brief" xml:space="preserve">
+    <value>Casts to WinRT runtime class types are not trim-safe</value>
+  </data>
+  <data name="RuntimeClassCast_Text" xml:space="preserve">
+    <value>Casting to type '{0}' is not trim-safe, as it is a WinRT runtime class type. Add the '[DynamicWindowsRuntimeCast]' attribute to the containing method (or field), which will ensure the necessary metadata is kept. This will allow the cast to always work correctly when using trimming.</value>
+  </data>
+  <data name="IReferenceTypeCast_Brief" xml:space="preserve">
+    <value>Casts to WinRT 'IReference`1&lt;T&gt;' unboxed values are not trim-safe</value>
+  </data>
+  <data name="IReferenceTypeCast_Text" xml:space="preserve">
+    <value>Casting to type '{0}' is not trim-safe, as it is unboxing a WinRT 'IReference`1&lt;T&gt;' value type. Add the '[DynamicWindowsRuntimeCast]' attribute to the containing method (or field), which will ensure the necessary metadata is kept. This will allow the cast to always work correctly when using trimming.</value>
+  </data>
 </root>

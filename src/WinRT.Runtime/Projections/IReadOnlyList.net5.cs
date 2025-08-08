@@ -110,10 +110,11 @@ namespace ABI.Windows.Foundation.Collections
 
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+                [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
 #if NET
                 [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitRcwHelperFallbackIfNeeded()
@@ -190,6 +191,7 @@ namespace ABI.Windows.Foundation.Collections
                 int __items_length = default;
                 IntPtr __items_data = default;
                 uint __retval = default;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 try
                 {
                     __items = Marshaler<T>.CreateMarshalerArray(items);
@@ -203,6 +205,7 @@ namespace ABI.Windows.Foundation.Collections
                 {
                     Marshaler<T>.DisposeMarshalerArray(__items);
                 }
+#pragma warning restore IL3050
             }
         }
     }
@@ -318,13 +321,16 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
         private unsafe static bool InitRcwHelperFallback()
         {
             return InitRcwHelper(&GetAtDynamic, &IndexOfDynamic, null);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private unsafe static T GetAtDynamic(IObjectReference obj, uint index)
         {
             var ThisPtr = obj.ThisPtr;
@@ -342,7 +348,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
         private static unsafe bool IndexOfDynamic(IObjectReference obj, T value, out uint index)
         {
@@ -397,7 +403,7 @@ namespace ABI.System.Collections.Generic
         private static global::System.Delegate[] DelegateCache;
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
         internal static unsafe void InitFallbackCCWVtable()
         {
@@ -419,6 +425,9 @@ namespace ABI.System.Collections.Generic
             );
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, TAbi* __return_value__)
         {
             T ____return_value__ = default;
@@ -437,6 +446,9 @@ namespace ABI.System.Collections.Generic
             return 0;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private static unsafe int Do_Abi_IndexOf_2(IntPtr thisPtr, TAbi value, uint* index, byte* __return_value__)
         {
             bool ____return_value__ = default;
@@ -460,6 +472,9 @@ namespace ABI.System.Collections.Generic
             return 0;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private static unsafe int Do_Abi_GetMany_3(IntPtr thisPtr, uint startIndex, int __itemsSize, IntPtr items, uint* __return_value__)
         {
             uint ____return_value__ = default;
@@ -660,10 +675,11 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+                [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
 #if NET
                 [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

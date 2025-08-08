@@ -185,7 +185,7 @@ namespace WinRT
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
             {
                 RuntimeTypeHandle projectIEnum = typeof(System.Collections.IEnumerable).TypeHandle;
-                AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
+                AdditionalTypeData.GetOrAdd(projectIEnum, static (_, info) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(info.Type, info.This), new AdditionalTypeDataParams { Type = type, This = this });
             }
 
             bool hasMovedObjRefOwnership = false;
@@ -337,5 +337,12 @@ namespace WinRT
         }
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
+    }
+
+    // Custom type to avoid rooting value tuple metadata (saves a few KBs of size)
+    internal struct AdditionalTypeDataParams
+    {
+        public Type Type;
+        public IWinRTObject This;
     }
 }

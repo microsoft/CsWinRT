@@ -54,6 +54,17 @@ internal static class SymbolExtensions
     }
 
     /// <summary>
+    /// Checks whether a type has an attribute with a specified type.
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+    /// <returns>Whether or not <paramref name="symbol"/> has an attribute with the specified name.</returns>
+    public static bool HasAttributeWithType(this ISymbol symbol, ITypeSymbol typeSymbol)
+    {
+        return TryGetAttributeWithType(symbol, typeSymbol, out _);
+    }
+
+    /// <summary>
     /// Tries to get an attribute with the specified type.
     /// </summary>
     /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
@@ -78,6 +89,23 @@ internal static class SymbolExtensions
     }
 
     /// <summary>
+    /// Enumerates all attributes with the specified type.
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+    /// <returns>The matching attributes.</returns>
+    public static IEnumerable<AttributeData> EnumerateAttributesWithType(this ISymbol symbol, ITypeSymbol typeSymbol)
+    {
+        foreach (AttributeData attribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, typeSymbol))
+            {
+                yield return attribute;
+            }
+        }
+    }
+
+    /// <summary>
     /// Checks whether a given symbol is accessible from the assembly of a given compilation (including eg. through nested types).
     /// </summary>
     /// <param name="symbol">The input <see cref="ISymbol"/> instance.</param>
@@ -86,5 +114,28 @@ internal static class SymbolExtensions
     public static bool IsAccessibleFromCompilationAssembly(this ISymbol symbol, Compilation compilation)
     {
         return compilation.IsSymbolAccessibleWithin(symbol, compilation.Assembly);
+    }
+
+    /// <summary>
+    /// Checks whether or not a given <see cref="ITypeSymbol"/> inherits from a specified type.
+    /// </summary>
+    /// <param name="typeSymbol">The target <see cref="ITypeSymbol"/> instance to check.</param>
+    /// <param name="baseTypeSymbol">The <see cref="ITypeSymbol"/> instane to check for inheritance from.</param>
+    /// <returns>Whether or not <paramref name="typeSymbol"/> inherits from <paramref name="baseTypeSymbol"/>.</returns>
+    public static bool InheritsFromType(this ITypeSymbol typeSymbol, ITypeSymbol baseTypeSymbol)
+    {
+        INamedTypeSymbol? currentBaseTypeSymbol = typeSymbol.BaseType;
+
+        while (currentBaseTypeSymbol is not null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(currentBaseTypeSymbol, baseTypeSymbol))
+            {
+                return true;
+            }
+
+            currentBaseTypeSymbol = currentBaseTypeSymbol.BaseType;
+        }
+
+        return false;
     }
 }
