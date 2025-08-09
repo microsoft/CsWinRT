@@ -153,6 +153,7 @@ jobs:
     - checkout: self
       clean: true
       persistCredentials: true
+      path: 's'
     - checkout: TestWinRT
       path: 's\src\TestWinRT'
       displayName: "Checkout TestWinRT"
