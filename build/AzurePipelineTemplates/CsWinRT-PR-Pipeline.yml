@@ -14,7 +14,6 @@ resources:
     name: microsoft/TestWinRT
     endpoint: microsoft
     ref: '00fdd7b98daa0156f4214d0a8eb3afffc89efe48'
-
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
@@ -27,6 +26,9 @@ extends:
     sdl:
       binskim:
         scanOutputDirectoryOnly: true
+      sourceRepositoriesToScan:
+        include:
+        - repository: TestWinRT
     featureFlags:
       autoBaseline: false
     stages:
