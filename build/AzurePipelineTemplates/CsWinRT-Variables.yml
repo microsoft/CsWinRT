@@ -13,6 +13,8 @@ variables:
   value: '8.0.303'
 - name: Net9.SDK.Version
   value: '9.0.201'
+- name: TestWinRTCommit
+  value: '00fdd7b98daa0156f4214d0a8eb3afffc89efe48'
 
 - name: NoSamples
   value: 'false'
