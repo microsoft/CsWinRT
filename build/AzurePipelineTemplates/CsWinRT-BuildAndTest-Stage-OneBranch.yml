@@ -41,6 +41,9 @@ jobs:
       ob_symbolsPublishing_searchPattern: '**/*.@(pdb|dll)'
 
     steps:
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
    
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
