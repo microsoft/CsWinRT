@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />

@@ -26,11 +26,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-    <PackageReference Include="Microsoft.Win32.Registry" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" />
+    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" />
   </ItemGroup>
 
 </Project>
