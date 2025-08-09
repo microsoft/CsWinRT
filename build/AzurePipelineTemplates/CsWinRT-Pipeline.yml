@@ -57,9 +57,6 @@ extends:
         enabled: true
       binskim:
         scanOutputDirectoryOnly: true
-      perStage:
-          sdl_sources:
-            checkout_all_repos: true
 
     nugetPublishing:
       feeds:
