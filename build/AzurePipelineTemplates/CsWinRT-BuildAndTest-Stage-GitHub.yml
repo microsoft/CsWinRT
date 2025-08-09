@@ -93,6 +93,9 @@ stages:
       StagingFolder: $(ob_outputDirectory)
       BuildPlatform: 'x64' 
     steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
     - checkout: TestWinRT
       path: 's\src\TestWinRT'
       displayName: "Checkout TestWinRT"
