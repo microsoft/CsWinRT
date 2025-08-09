@@ -27,7 +27,7 @@ resources:
     type: github
     name: microsoft/TestWinRT
     endpoint: microsoft
-    ref: $(TestWinRTCommit)
+    ref: ${{ variables.TestWinRTCommit }}
 
 extends:
   template: v2/Microsoft.NonOfficial.yml@templates
