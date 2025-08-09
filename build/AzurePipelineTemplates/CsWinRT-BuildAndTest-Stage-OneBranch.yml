@@ -44,6 +44,8 @@ jobs:
     - checkout: TestWinRT
       path: 's\src\TestWinRT'
       displayName: "Checkout TestWinRT"
+      env:
+        ob_restore_phase: true
    
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self

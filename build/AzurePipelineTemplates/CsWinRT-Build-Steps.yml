@@ -14,7 +14,6 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        dir
         git remote add github "https://github.com/microsoft/cswinrt.git"
       workingDirectory: $(Build.SourcesDirectory)
 
