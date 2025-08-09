@@ -66,7 +66,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   --> 
   <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll">
+    <None Condition="Exists('$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -288,7 +288,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
 
-      <Content  Include="$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll">
+      <Content  Include="$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>

@@ -6,12 +6,12 @@
     <authors>Contoso Math Inc.</authors>
     <description>A simple component with basic math operations</description>
     <dependencies>
-      <group targetFramework="net8.0-windows10.0.19041.0" />
+      <group targetFramework="net10.0-windows10.0.19041.0" />
     </dependencies>
   </metadata>
   <files>
     <!--Note: This sample assumes the solution configuration and platform are set to Release and x64-->
-    <file src="..\..\_build\AnyCPU\Release\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net8.0-windows10.0.19041.0\SimpleMathProjection.dll" />
+    <file src="..\..\_build\AnyCPU\Release\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net10.0-windows10.0.19041.0\SimpleMathProjection.dll" />
     <!--Arch-specific implementation DLLs should be copied into RID-relative folders-->
     <file src="..\..\_build\x64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win-x64\native\SimpleMathComponent.dll" />
     <!--To support x86 and ARM64, build SimpleMathComponent for those other architectures and uncomment the entries below.-->
