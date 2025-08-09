@@ -23,10 +23,8 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
-    <IsTargetFrameworkNet5OrGreater>false</IsTargetFrameworkNet5OrGreater>
-    <IsTargetFrameworkNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</IsTargetFrameworkNet5OrGreater>
-    <IsTargetFrameworkNet8OrGreater>false</IsTargetFrameworkNet8OrGreater>
-    <IsTargetFrameworkNet8OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">true</IsTargetFrameworkNet8OrGreater>
+    <IsTargetFrameworkNet5OrGreater>true</IsTargetFrameworkNet5OrGreater>
+    <IsTargetFrameworkNet8OrGreater>true</IsTargetFrameworkNet8OrGreater>
     <AppBuildTFMs>net10.0</AppBuildTFMs>
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</AppBuildTFMs>
     <LibBuildTFMs>net10.0</LibBuildTFMs>
@@ -36,10 +34,6 @@
     <FunctionalTestsBuildTFMs>net10.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
     <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
-    <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

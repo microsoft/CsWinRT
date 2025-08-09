@@ -8,6 +8,7 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
     <!--
@@ -29,7 +30,6 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
-    <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
  

@@ -10,10 +10,6 @@
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
-
-  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
-    <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
-  </PropertyGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
