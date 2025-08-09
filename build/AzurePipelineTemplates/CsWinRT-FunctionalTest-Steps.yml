@@ -31,20 +31,20 @@ steps:
         configuration: $(BuildConfiguration)
   
     - task: MSBuild@1
-      displayName: Publish ${{ functionalTest }} trimmed (net8.0)
+      displayName: Publish ${{ functionalTest }} trimmed (net10.0)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net8.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
     - task: CmdLine@2
-      displayName: Run ${{ functionalTest }} trimmed (net8.0)
+      displayName: Run ${{ functionalTest }} trimmed (net10.0)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
       continueOnError: True
       inputs:
-        workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
+        workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
           dir
           echo Running ${{ functionalTest }}.exe 
@@ -55,27 +55,27 @@ steps:
           exit /b 0 
 
     - task: CopyFiles@2
-      displayName: Copy ${{ functionalTest }} trimmed (net8.0)
+      displayName: Copy ${{ functionalTest }} trimmed (net10.0)
       condition: and(eq(variables['_PublishFunctionalTests'], 'true'), eq(variables['BuildPlatform'], 'x86'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\
 
     - task: MSBuild@1
-      displayName: Publish ${{ functionalTest }} for AOT (net9.0)
+      displayName: Publish ${{ functionalTest }} for AOT (net10.0)
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net9.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
     - task: CmdLine@2
-      displayName: Run ${{ functionalTest }} for AOT (net9.0)
+      displayName: Run ${{ functionalTest }} for AOT (net10.0)
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
       continueOnError: True
       inputs:
-        workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net9.0\win-$(BuildPlatform)\publish
+        workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
           dir
           echo Running ${{ functionalTest }}.exe 
@@ -86,8 +86,8 @@ steps:
           exit /b 0 
 
     - task: CopyFiles@2
-      displayName: Copy ${{ functionalTest }} for AOT (net9.0)
+      displayName: Copy ${{ functionalTest }} for AOT (net10.0)
       condition: and(eq(variables['_PublishFunctionalTests'], 'true'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net9.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\

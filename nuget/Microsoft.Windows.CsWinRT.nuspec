@@ -7,15 +7,14 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>C#/WinRT provides packaged WinRT projection support for the C# language. It is compatible with .NET 6 or later, and does not require any built-in knowledge of WinRT by the C# compiler.</description>
+    <description>C#/WinRT provides packaged WinRT projection support for the C# language. It is compatible with .NET 10 or later, and does not require any built-in knowledge of WinRT by the C# compiler.</description>
     <releaseNotes>Release notes are available at https://github.com/microsoft/CsWinRT/releases</releaseNotes>
     <tags>managed C# WinRT cswinrt WinMD xlang C#/WinRT</tags>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/microsoft/cswinrt</projectUrl>
     <dependencies>
-      <group targetFramework=".NET8.0" />
-      <group targetFramework=".NET9.0" />
+      <group targetFramework=".NET10.0" />
     </dependencies>
   </metadata>
   <files>
@@ -32,15 +31,12 @@
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/>
     <file src="$interop_winmd$" target="metadata"/>
     <file src="readme.txt"/>
-    <file src="$net8_runtime$" target="lib\net8.0\"/>
-    <file src="$net9_runtime$" target="lib\net9.0\"/>
-    <file src="$source_generator_roslyn4080$" target="analyzers\dotnet\cs\roslyn4.8"/>
-    <file src="$source_generator_roslyn4120$" target="analyzers\dotnet\cs\roslyn4.12"/>
+    <file src="$net10_runtime$" target="lib\net10.0\"/>
+    <file src="$source_generator_roslyn4120$" target="analyzers\dotnet\cs\"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
-    <file src="$winrt_shim$" target ="lib\net8.0\"/>
-    <file src="$winrt_shim$" target ="lib\net9.0\"/>
+    <file src="$winrt_shim$" target ="lib\net10.0\"/>
 
     <!-- Localized resources for error strings 
          The paths here leads to a folder of folders, 
@@ -53,28 +49,6 @@
     <file src="$winrt_host_resource_x86$"   target ="hosting\x86\native\en-US"/>
     <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-US"/>
 
-    <!-- Pack the .resx files for WinRT.Runtime for those using the embedded support -->
-    <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net8.0\"/>
-    <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net9.0\"/>
-
-    <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
-
-    <file src="..\src\WinRT.Runtime\*.cs" exclude="..\src\WinRT.Runtime\*.net*.cs" target="embedded\any\" />
-    <file src="..\src\WinRT.Runtime\*net5*.cs" target="embedded\net8.0\" />
-    <file src="..\src\WinRT.Runtime\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
-
-    <file src="..\src\WinRT.Runtime\Interop\*.cs" exclude="..\src\WinRT.Runtime\Interop\*.net*.cs"  target="embedded\any\" />
-    <file src="..\src\WinRT.Runtime\Interop\*net5*.cs" target="embedded\net8.0\" />
-    <file src="..\src\WinRT.Runtime\Interop\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
-
-    <file src="..\src\WinRT.Runtime\Projections\*.cs" exclude="..\src\WinRT.Runtime\Projections\*.net*.cs" target="embedded\any\" />
-    <file src="..\src\WinRT.Runtime\Projections\*net5*.cs" target="embedded\net8.0\" />
-    <file src="..\src\WinRT.Runtime\Projections\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
-
-    <file src="..\src\WinRT.Runtime\Configuration\*.cs" exclude="..\src\WinRT.Runtime\Configuration\*.net*.cs"  target="embedded\any\" />
-
     <file src="sources\StubExe.c" target="build\sources"/>
-
-    <file src="$guid_patch$" target="build\tools\IIDOptimizer"/>
   </files>
 </package>

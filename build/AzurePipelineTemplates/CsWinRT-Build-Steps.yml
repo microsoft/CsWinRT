@@ -41,58 +41,24 @@ steps:
 
         Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
 
-  # Use .NET Core runtme 3.1
-  - task: UseDotNet@2
-    displayName: Use .NET Core runtime 3.1
-    inputs:
-      packageType: runtime
-      version: 3.1.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-  - task: UseDotNet@2
-    displayName: Use .NET Core runtime 3.1 x86
-    condition: eq(variables['BuildPlatform'], 'x86')
-    inputs:
-      packageType: runtime
-      version: 3.1.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-    env:
-      PROCESSOR_ARCHITECTURE: x86
-
-  # Use .NET Core runtime 8.0
-  - task: UseDotNet@2
-    displayName: Use .NET Core runtime 8.0
-    inputs:
-      packageType: runtime
-      version: 8.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-  - task: UseDotNet@2
-    displayName: Use .NET Core runtime 8.0 x86
-    condition: eq(variables['BuildPlatform'], 'x86')
-    inputs:
-      packageType: runtime
-      version: 8.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-    env:
-      PROCESSOR_ARCHITECTURE: x86
-
 # Install x86 first so that it isn't the first on PATH.
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 9.0 x86
+    displayName: Use .NET Core SDK 10.0 x86
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: sdk
-      version: 9.x
+      version: 10.x
+      includePreviewVersions: true
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
 
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 9.0
+    displayName: Use .NET Core SDK 10.0
     inputs:
       packageType: sdk
-      version: 9.x
+      version: 10.x
+      includePreviewVersions: true
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Set Dotnet path for x86.  The normal one already gets set above.
@@ -244,28 +210,6 @@ steps:
           WinRT.Host.dll.mui
         TargetFolder: $(StagingFolder)\native
 
-    # Stage NetStandard 2.0
-    - task: CopyFiles@2
-      displayName: Stage NetStandard 2.0
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\netstandard2.0
-        Contents: |
-          WinRT.Runtime.dll
-          WinRT.Runtime.pdb
-        TargetFolder: $(StagingFolder)\netstandard2.0\
-
-    # Stage Source Generator (Roslyn 4.8)
-    - task: CopyFiles@2
-      displayName: Stage Source Generator
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4080\bin\$(BuildConfiguration)\netstandard2.0
-        Contents: |
-          WinRT.SourceGenerator.dll
-          WinRT.SourceGenerator.pdb
-        TargetFolder: $(StagingFolder)\netstandard2.0\roslyn4080\
-
     # Stage Source Generator (Roslyn 4.12)
     - task: CopyFiles@2
       displayName: Stage Source Generator
@@ -277,27 +221,16 @@ steps:
           WinRT.SourceGenerator.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0\roslyn4120\
 
-    # Stage Net8.0
+    # Stage Net10.0
     - task: CopyFiles@2
-      displayName: Stage Net8.0
+      displayName: Stage Net10.0
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net8.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net10.0
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
-        TargetFolder: $(StagingFolder)\net8.0
-
-    # Stage Net9.0
-    - task: CopyFiles@2
-      displayName: Stage Net9.0
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net9.0
-        Contents: |
-          WinRT.Runtime.dll
-          WinRT.Runtime.pdb
-        TargetFolder: $(StagingFolder)\net9.0
+        TargetFolder: $(StagingFolder)\net10.0
 
     # Stage WinRT.Host.Shim
     - task: CopyFiles@2 
@@ -305,70 +238,18 @@ steps:
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net8.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net10.0
         Contents: |
           WinRT.Host.Shim.dll
           WinRT.Host.Shim.pdb
-        TargetFolder: $(StagingFolder)\net8.0
-
-    # Stage IID Optimizer
-    - task: CopyFiles@2
-      displayName: Stage IID Optimizer
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      continueOnError: True
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net8.0
-        Contents: |
-          IIDOptimizer.exe 
-          IIDOptimizer.dll
-          IIDOptimizer.deps.json
-          IIDOptimizer.runtimeconfig.json
-          Mono.Cecil.dll
-          Mono.Cecil.Mdb.dll
-          Mono.Cecil.Pdb.dll
-          Mono.Cecil.Rocks.dll
-          System.CommandLine.dll
-          cs/System.CommandLine.resources.dll
-          de/System.CommandLine.resources.dll
-          es/System.CommandLine.resources.dll
-          fr/System.CommandLine.resources.dll
-          it/System.CommandLine.resources.dll
-          ja/System.CommandLine.resources.dll
-          ko/System.CommandLine.resources.dll
-          pl/System.CommandLine.resources.dll
-          pt-BR/System.CommandLine.resources.dll
-          ru/System.CommandLine.resources.dll
-          tr/System.CommandLine.resources.dll
-          zh-Hans/System.CommandLine.resources.dll
-          zh-Hant/System.CommandLine.resources.dll 
-        TargetFolder: $(StagingFolder)\net8.0\IIDOptimizer
-
-    # Stage WinRT.Runtime ResX
-    - task: CopyFiles@2
-      displayName: Stage WinRT.Runtime ResX
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime
-        Contents: |
-          WinRTRuntimeErrorStrings.resx
-        TargetFolder: $(StagingFolder)\resx\WinRT.Runtime
-
-    # Stage Authoring Diagnostics ResX
-    - task: CopyFiles@2
-      displayName: Stage Authoring Diagnostics ResX
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator
-        Contents: |
-          CsWinRTDiagnosticStrings.resx
-        TargetFolder: $(StagingFolder)\resx\WinRT.SourceGenerator
+        TargetFolder: $(StagingFolder)\net10.0
 
     # Stage CsWinMD
     - task: CopyFiles@2
       displayName: Stage CsWinMD
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net8.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net10.0
         Contents: |
           CsWinMD.dll
           CsWinMD.exe
@@ -377,4 +258,4 @@ steps:
           CsWinMD.runtimeconfig.json
           Microsoft.CodeAnalysis.CSharp.dll
           Microsoft.CodeAnalysis.dll
-        TargetFolder: $(StagingFolder)\net8.0\CsWinMD
+        TargetFolder: $(StagingFolder)\net10.0\CsWinMD
