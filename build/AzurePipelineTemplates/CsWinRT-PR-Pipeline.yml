@@ -27,7 +27,7 @@ extends:
       binskim:
         scanOutputDirectoryOnly: true
       sourceRepositoriesToScan:
-        include:
+        exclude:
         - repository: TestWinRT
     featureFlags:
       autoBaseline: false
