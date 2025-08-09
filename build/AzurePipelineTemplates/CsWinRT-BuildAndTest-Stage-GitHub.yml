@@ -34,6 +34,9 @@ stages:
     - checkout: self
       clean: true
       persistCredentials: true
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
     
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
