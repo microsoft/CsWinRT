@@ -29,6 +29,7 @@
         <AdditionalIncludeDirectories>$(NetHostDir);%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       </ClCompile>
     </ItemGroup>
+    <Exec Command='dir "$(NetHostDir)"' />
   </Target>
   <Target Name="BeforeLink" Condition="'@(Link)' != ''" BeforeTargets="Link" DependsOnTargets="SetNetHostDir">
     <ItemGroup>
