@@ -9,6 +9,21 @@
       <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
     <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)"' />
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)"' />
+    <Exec Command='dir "$(NetHostDir)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)"' />
+    <Exec Command='dir "$(NetHostDir)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes"' />
+    <Exec Command='dir "$(NetHostDir)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)"' />
+    <Exec Command='dir "$(NetHostDir)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\native"' />
+
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86"' />
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs"' />
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)"' />
+    <Exec Command='dir "$(NetHostDir)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)"' />
+    <Exec Command='dir "$(NetHostDir)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes"' />
+    <Exec Command='dir "$(NetHostDir)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)"' />
+    <Exec Command='dir "$(NetHostDir)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\native"' />
+    
   </Target>
 
 </Project>
