@@ -141,22 +141,6 @@ steps:
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
-    - task: NuGetCommand@2
-      displayName: NuGet restore TestEmbedded.sln
-      inputs:
-        command: 'restore'
-        restoreSolution: '$(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln'
-        feedsToUse: config
-        nugetConfigPath: NuGet.config
-
-    - task: VSBuild@1
-      displayName: Build TestEmbedded.sln
-      inputs:
-        solution: $(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln
-        msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
-        platform: $(BuildPlatform)
-        configuration: $(BuildConfiguration)
-
     # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
