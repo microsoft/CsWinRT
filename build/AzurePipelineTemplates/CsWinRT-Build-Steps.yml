@@ -54,6 +54,17 @@ steps:
       PROCESSOR_ARCHITECTURE: x86
 
   - task: UseDotNet@2
+    displayName: Use .NET Core SDK 10.0 arm64
+    condition: eq(variables['BuildPlatform'], 'arm64')
+    inputs:
+      packageType: sdk
+      version: 10.x
+      includePreviewVersions: true
+      installationPath: $(LocalAppData)\Microsoft\dotnet\arm64\
+    env:
+      PROCESSOR_ARCHITECTURE: arm64
+
+  - task: UseDotNet@2
     displayName: Use .NET Core SDK 10.0
     inputs:
       packageType: sdk

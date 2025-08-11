@@ -6,24 +6,12 @@
 
   <Target Name="GetNetHostDir" Outputs="$(NetHostDir)">
     <PropertyGroup>
-      <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
+      <NetHostDir>$(NetCoreTargetingPackRoot)/$(NetHostSdkSubFolder)Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
     <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
     <Exec Command='dir "$(NetCoreTargetingPackRoot)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\native"' IgnoreExitCode="true" />
-
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)\..\x86\packs\Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\native"' IgnoreExitCode="true" />
-    
+    <Exec Command='dir "$(NetCoreTargetingPackRoot)/$(NetHostSdkSubFolder)"' IgnoreExitCode="true" />
+    <Exec Command='dir "$(NetHostDir)"' IgnoreExitCode="true" />
   </Target>
 
 </Project>

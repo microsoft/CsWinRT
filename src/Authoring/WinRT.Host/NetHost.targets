@@ -14,6 +14,12 @@
       <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='x64'">win-x64</NETCoreSdkRuntimeIdentifier>
       <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='arm'">win-arm</NETCoreSdkRuntimeIdentifier>
       <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='arm64'">win-arm64</NETCoreSdkRuntimeIdentifier>
+      <!-- 
+        The main dotnet folder is for x64 and has the x64 host binaries,
+        while the others are in arch subfolders.
+      -->
+      <NetHostSdkSubFolder>$(Platform)/</NetHostSdkSubFolder>
+      <NetHostSdkSubFolder Condition="'$(Platform)'=='x64'"></NetHostSdkSubFolder>
     </PropertyGroup>
     <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="NETCoreSdkRuntimeIdentifier=$(NETCoreSdkRuntimeIdentifier)">
       <Output TaskParameter="TargetOutputs" ItemName="NetHostDir" />
@@ -29,7 +35,6 @@
         <AdditionalIncludeDirectories>$(NetHostDir);%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       </ClCompile>
     </ItemGroup>
-    <Exec Command='dir "$(NetHostDir)"' />
   </Target>
   <Target Name="BeforeLink" Condition="'@(Link)' != ''" BeforeTargets="Link" DependsOnTargets="SetNetHostDir">
     <ItemGroup>
