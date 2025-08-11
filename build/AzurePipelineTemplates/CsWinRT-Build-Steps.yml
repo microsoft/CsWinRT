@@ -53,16 +53,17 @@ steps:
     env:
       PROCESSOR_ARCHITECTURE: x86
 
-  - task: UseDotNet@2
-    displayName: Use .NET Core SDK 10.0 arm64
+# Install arm64 due to arm64 hosting binaries are only available there.
+# Installing using dotnet script given UseDotNet@2 doesn't work with arm64.
+  - task: PowerShell@2
+    displayName: Install .NET Core SDK 10.0 arm64
     condition: eq(variables['BuildPlatform'], 'arm64')
     inputs:
-      packageType: sdk
-      version: 10.x
-      includePreviewVersions: true
-      installationPath: $(LocalAppData)\Microsoft\dotnet\arm64\
-    env:
-      PROCESSOR_ARCHITECTURE: arm64
+      targetType: inline
+      failOnStderr: true
+      script: |          
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;          
+        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "10.x" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
 
   - task: UseDotNet@2
     displayName: Use .NET Core SDK 10.0
