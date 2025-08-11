@@ -19,6 +19,7 @@
         while the others are in arch subfolders.
       -->
       <NetHostSdkSubFolder>$(Platform)/</NetHostSdkSubFolder>
+      <NetHostSdkSubFolder Condition="'$(Platform)'=='win32'">x86/</NetHostSdkSubFolder>
       <NetHostSdkSubFolder Condition="'$(Platform)'=='x64'"></NetHostSdkSubFolder>
     </PropertyGroup>
     <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="NETCoreSdkRuntimeIdentifier=$(NETCoreSdkRuntimeIdentifier);NetHostSdkSubFolder=$(NetHostSdkSubFolder)">
