@@ -9,9 +9,6 @@
       <NetHostDir>$(NetCoreTargetingPackRoot)/../$(NetHostSdkSubFolder)packs/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
     <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetCoreTargetingPackRoot)/$(NetHostSdkSubFolder)"' IgnoreExitCode="true" />
-    <Exec Command='dir "$(NetHostDir)"' IgnoreExitCode="true" />
   </Target>
 
 </Project>
