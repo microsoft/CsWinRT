@@ -6,7 +6,7 @@
 
   <Target Name="GetNetHostDir" Outputs="$(NetHostDir)">
     <PropertyGroup>
-      <NetHostDir>$(NetCoreTargetingPackRoot)/$(NetHostSdkSubFolder)Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
+      <NetHostDir>$(NetCoreTargetingPackRoot)/../$(NetHostSdkSubFolder)packs/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
     <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
     <Exec Command='dir "$(NetCoreTargetingPackRoot)"' IgnoreExitCode="true" />
