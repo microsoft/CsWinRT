@@ -21,7 +21,7 @@
       <NetHostSdkSubFolder>$(Platform)/</NetHostSdkSubFolder>
       <NetHostSdkSubFolder Condition="'$(Platform)'=='x64'"></NetHostSdkSubFolder>
     </PropertyGroup>
-    <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="NETCoreSdkRuntimeIdentifier=$(NETCoreSdkRuntimeIdentifier)">
+    <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="NETCoreSdkRuntimeIdentifier=$(NETCoreSdkRuntimeIdentifier);NetHostSdkSubFolder=$(NetHostSdkSubFolder)">
       <Output TaskParameter="TargetOutputs" ItemName="NetHostDir" />
     </MSBuild>
     <PropertyGroup>
