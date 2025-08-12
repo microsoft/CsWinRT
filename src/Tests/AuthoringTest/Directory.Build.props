@@ -16,6 +16,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
 </Project>

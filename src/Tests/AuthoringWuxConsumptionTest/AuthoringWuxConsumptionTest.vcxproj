@@ -69,27 +69,27 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringWuxTest\AuthoringWuxTest.csproj">
       <Project>{d60cfcad-4a13-4047-91c8-9d7df4753493}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringWuxTest">
-      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net8.0\AuthoringWuxTest.winmd</HintPath>
+      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0\AuthoringWuxTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>

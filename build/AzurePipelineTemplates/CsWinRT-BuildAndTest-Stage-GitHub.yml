@@ -111,7 +111,7 @@ stages:
       displayName: Run Object Lifetime Tests
       condition: succeeded()
       inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
 
 # Run Source Generator Tests

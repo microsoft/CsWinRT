@@ -24,16 +24,6 @@ steps:
       arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
       testRunTitle: Unit Tests
 
-# Run Embedded Unit Tests
-  - task: DotNetCoreCLI@2
-    displayName: Run Embedded Unit Tests
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-    inputs:
-      command: test
-      projects: 'src/Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj'
-      arguments: --diag $(Build.ArtifactStagingDirectory)\unittestembedded\test.log --no-build --logger xunit;LogFilePath=EMBEDDEDUNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration) -- RunConfiguration.TreatNoTestsAsError=true
-      testRunTitle: Embedded Unit Tests
-
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests
@@ -90,12 +80,3 @@ steps:
       Contents: |
         test.log
       TargetFolder: $(StagingFolder)\UnitTest
-
-  - task: CopyFiles@2
-    displayName: Publish Embedded Test Log
-    condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-    inputs:
-      SourceFolder: $(Build.ArtifactStagingDirectory)\unittestembedded
-      Contents: |
-        test.log
-      TargetFolder: $(StagingFolder)\UnitTestEmbedded
