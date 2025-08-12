@@ -65,18 +65,12 @@ jobs:
         signing_profile: external_distribution
         files_to_sign: |
           native/cswinrt.exe;
-          netstandard2.0/WinRT.Runtime.dll;
-          netstandard2.0/WinRT.Host.Shim.dll;
-          netstandard2.0/roslyn4080/WinRT.SourceGenerator.dll;
           netstandard2.0/roslyn4120/WinRT.SourceGenerator.dll;
-          net8.0/WinRT.Host.Shim.dll;
-          net8.0/WinRT.Runtime.dll;
-          net9.0/WinRT.Runtime.dll;
+          net10.0/WinRT.Host.Shim.dll;
+          net10.0/WinRT.Runtime.dll;
           native/WinRT.Host.dll;
-          net8.0/IIDOptimizer/IIDOptimizer.exe;
-          net8.0/IIDOptimizer/IIDOptimizer.dll;
-          net8.0/CsWinMD/CsWinMD.exe;
-          net8.0/CsWinMD/CsWinMD.dll;
+          net10.0/CsWinMD/CsWinMD.exe;
+          net10.0/CsWinMD/CsWinMD.dll;
         search_root: $(StagingFolder)
 
     - task: onebranch.pipeline.signing@1
@@ -88,20 +82,6 @@ jobs:
         files_to_sign: |
           native/WinRT.Interop.winmd;
           native/WinRT.Host.dll.mui;
-        search_root: $(StagingFolder)
-
-# Signing 3rd Party
-    - task: onebranch.pipeline.signing@1
-      displayName: '🔒 Onebranch Signing for 3rd party binaries'
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        command: sign
-        signing_profile: 135020002
-        files_to_sign: |
-          net8.0/IIDOptimizer/Mono.Cecil.dll;
-          net8.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
-          net8.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
-          net8.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
         search_root: $(StagingFolder)
 
   - job: Benchmarks
@@ -179,7 +159,7 @@ jobs:
       displayName: Run Object Lifetime Tests
       condition: succeeded()
       inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
 
 # Run Source Generator Tests

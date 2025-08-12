@@ -2,17 +2,37 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
+using System;
+using System.IO;
+using System.Linq;
 using WinRT;
 
 namespace SourceGeneratorTest.Helpers;
+
+internal static class Net10Helper
+{
+    public static ReferenceAssemblies Net10 { get;  } = GetNet10ReferenceAssembly();
+
+    /// <summary>
+    /// Gets the reference assemblies for .NET 10.0.
+    /// </summary>
+    /// <returns>The reference assemblies for .NET 10.0.</returns>
+    private static ReferenceAssemblies GetNet10ReferenceAssembly()
+    {
+        return new ReferenceAssemblies(
+            "net10.0",
+            new PackageIdentity(
+                "Microsoft.NETCore.App.Ref",
+                "10.0.0-preview.6.25358.103"),
+            Path.Combine("ref", "net10.0"));
+    }
+}
 
 /// <summary>
 /// A custom <see cref="CSharpCodeFixTest{TAnalyzer, TCodeFix, TVerifier}"/> that uses a specific C# language version to parse code.
@@ -37,7 +57,7 @@ internal sealed class CSharpCodeFixTest<TAnalyzer, TCodeFixer> : CSharpCodeFixTe
     {
         this.languageVersion = languageVersion;
 
-        ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+        ReferenceAssemblies = Net10Helper.Net10;
         TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location));
 
         // Add any editorconfig properties, if present

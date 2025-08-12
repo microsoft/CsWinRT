@@ -143,7 +143,7 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <PropertyGroup Label="CSWinMD overrides">
-    <CsWinMDPath>..\..\Authoring\cswinmd\bin\$(Configuration)\net8.0\CsWinMD.exe</CsWinMDPath>
+    <CsWinMDPath>..\..\Authoring\cswinmd\bin\$(Configuration)\net10.0\CsWinMD.exe</CsWinMDPath>
   </PropertyGroup>
   <ImportGroup Label="ExtensionTargets">
     <!-- <Import Project="..\packages\CsWinMD.0.0.2-prerelease\build\Microsoft.Windows.CsWinMD.targets" Condition="Exists('..\packages\CsWinMD.0.0.2-prerelease\build\Microsoft.Windows.CsWinMD.targets')" /> -->

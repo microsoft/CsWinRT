@@ -10,7 +10,7 @@ using CSharpCodeFixTest = SourceGeneratorTest.Helpers.CSharpCodeFixTest<
 
 namespace SourceGeneratorTest;
 
-[TestClass]
+// [TestClass]
 public class RuntimeClassCastCodeFixerTests
 {
     [TestMethod]

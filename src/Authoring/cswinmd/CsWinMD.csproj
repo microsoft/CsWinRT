@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <RollForward>Major</RollForward>
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
@@ -24,13 +24,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-    <PackageReference Include="Microsoft.Win32.Registry" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" VersionOverride="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.12.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" />
+    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" />
   </ItemGroup>
 
 </Project>

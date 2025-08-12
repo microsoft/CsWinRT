@@ -139,7 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringTest">
-      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net8.0\AuthoringTest.winmd</HintPath>
+      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
@@ -149,19 +149,19 @@
     </ProjectReference>
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Projections\WinAppSDK\WinAppSDK.csproj">
       <Project>{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
-      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
