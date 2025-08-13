@@ -9,6 +9,10 @@ The new design provides several benefits:
 - **Better versioning**: the activation code can be updated without needing new projections.
 - **Better performance**: no need to use interface stub dispatch to access common `IInspectable` functionality.
 
+Additionally, it is worth noting that the new design is structured this way due to several constraints. One of the main problems it solves is that the initialization logic for the derived cases needs to run before the body of any of the constructors. Without the initialization logic, the object is completely unusable (i.e. setting a property in the body of the constructor would crash the program). Because of this, all derived constructors must always pass all parameters required to perform the full initialization to the base constructor, which will fully initialize the object. They can then perform any additional initialization logic for each derived type, if necessary.
+
+Note that while slightly odd, this design with multiple base constructor overloads is only ever meant to be used by generated projection code. User authored code would never see nor have to directly use any of these constructors, in any scenario. This pattern is also required because other possible solutions (e.g. static abstracts) are not viable here. For static abstracts specifically, they can't be used because there is no generic context available (the constructors are not generic), and also because users expect the constructors to be just like all other normal constructors. The CsWinRT design shouldn't force everyone to use static abstracts instead, as that would be too breaking.
+
 ## Constructor patterns
 
 For sealed runtime classes like `WinRTClass`, the generated constructors are relatively straightforward:
