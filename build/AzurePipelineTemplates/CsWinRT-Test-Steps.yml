@@ -1,0 +1,82 @@
+parameters: 
+  - name: "BuildConfiguration"
+    type: string
+  - name: "BuildPlatform"
+    type: string
+    
+steps:
+# Enable GC stress
+  - task: PowerShell@2
+    displayName: Enable GC Stress
+    condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0xC"
+
+# Run Unit Tests
+  - task: DotNetCoreCLI@2
+    displayName: Run Unit Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      command: test
+      projects: 'src/Tests/UnitTest/UnitTest.csproj'
+      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+      testRunTitle: Unit Tests
+
+# Run Host Tests
+  - task: CmdLine@2
+    displayName: Run Host Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
+        _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+
+# Run Source Generator Tests  
+  - task: CmdLine@2
+    displayName: Run Source Generator Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+
+# Run WUX Tests
+  - task: CmdLine@2
+    displayName: Run WUX Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
+
+# Run Functional Tests
+  - template: CsWinRT-FunctionalTest-Steps.yml@self
+    parameters:
+      BuildConfiguration: $(BuildConfiguration)
+      BuildPlatform: $(BuildPlatform) 
+
+# Disable GC stress
+  - task: PowerShell@2
+    displayName: Disable GC Stress
+    condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+
+  - task: CopyFiles@2
+    displayName: Publish Test Log
+    condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      SourceFolder: $(Build.ArtifactStagingDirectory)\unittest
+      Contents: |
+        test.log
+      TargetFolder: $(StagingFolder)\UnitTest

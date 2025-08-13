@@ -1,0 +1,64 @@
+parameters:
+- name: 'debug'
+  displayName: 'Enable debug output'
+  type: boolean
+  default: false
+
+variables:
+- template: CsWinRT-Variables.yml@self
+- template: CsWinRT-OneBranchVariables.yml
+  parameters:
+    debug: ${{ parameters.debug }}
+
+name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
+
+trigger: none 
+
+pool:
+  type: windows
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: OneBranch.Pipelines/GovernedTemplates
+    ref: refs/heads/main
+
+extends:
+  template: v2/Microsoft.NonOfficial.yml@templates
+  parameters:
+    platform:
+      name: 'windows_undocked'
+      product: 'build_tools'
+
+    featureFlags:
+      WindowsHostVersion:
+        Version: 2022
+
+    globalSdl:
+      isNativeCode: true
+      tsa:
+        enabled: false
+        useDynamicRouting: true
+      sbom:
+        enabled: true
+      prefast:
+        enabled: true
+      binskim:
+        scanOutputDirectoryOnly: true
+
+    nugetPublishing:
+      feeds:
+      - name: CsWinRT
+
+    customTags: ES365AIMigrationTooling
+
+    stages:
+      - stage: BuildAndTest
+        jobs: 
+        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage-OneBranch.yml@self
+
+      - stage: Nuget
+        dependsOn: BuildAndTest
+        jobs:
+        - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Stage-OneBranch.yml@self

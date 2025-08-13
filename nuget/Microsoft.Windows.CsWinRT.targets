@@ -38,11 +38,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
       target, because they are also needed in authoring scenarios (which will not run that target).
     -->
-    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
-    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6">net6.0</CsWinRTExeTFM>
-    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7">net7.0</CsWinRTExeTFM>
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
-    <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
 
@@ -52,6 +48,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == '' AND '$(VSCMD_VER)' != ''">true</CsWinRTUseEnvironmentalTools>
     <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == ''">false</CsWinRTUseEnvironmentalTools>
+
+    <!-- Generate a C# version of DllGetActivationFactory which matches the native export. -->
+    <CsWinRTGenerateManagedDllGetActivationFactory Condition="'$(CsWinRTGenerateManagedDllGetActivationFactory)' != 'true'">false</CsWinRTGenerateManagedDllGetActivationFactory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -62,6 +61,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -122,6 +122,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
             0: No warnings
            *1: Warnings for scenarios involving WinRT types that are not built-in system types mapped to WinRT.
             2: Level 1 warnings and warnings for scenarios involving built-in system types mapped to WinRT.
+            3: Level 2 warnings and warnings for additional trim/AOT scenarios, including those that can be noisy (eg. casts to WinRT runtime class types).
         This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated.
         Level 1 is currently the default to avoid noise from built-in system types that might not be used in WinRT scenarios
         but level 2 should be enabled and the warnings from it should be evaluated to ensure AOT and trimming compatibility.
@@ -138,7 +139,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
-      <CsWinRTPkg-Net8Dir>$(CsWinRTPath)lib\net8.0</CsWinRTPkg-Net8Dir>
+      <CsWinRTPkg-Net8Dir>$(CsWinRTPath)lib\net10.0</CsWinRTPkg-Net8Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
     </PropertyGroup>
     <ItemGroup>
@@ -326,14 +327,6 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
-  <!-- Emit a warning when 'CsWinRTMergeReferencedActivationFactories' is used incorrectly -->
-  <Target
-    Name="_CsWinRTErrorForInvalidMergeReferencedActivationFactories"
-    BeforeTargets="BeforeCompile"
-    Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND '$(PublishAot)' != 'true'">
-    <Error Text="The 'CsWinRTMergeReferencedActivationFactories' property can only be set when publishing with Native AOT. Make sure to set the 'PublishAot' property to 'true'." />
-  </Target>
-
   <!--
     Produces a stub .exe for the application, if requested. This target is only executed when publishing, and
     it's injected right after Native AOT invokes MSVC to produce the final binary, and before gathering all
@@ -371,6 +364,8 @@ $(CsWinRTInternalProjection)
       <!-- Get the target platform (we either use 'Platform', if set and not 'AnyCPU', or fallback to 'PlatformTarget' ) -->
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(Platform)' != '' AND '$(Platform)' != 'AnyCPU'">$(Platform)</_StubExePlatform>
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
+
+      <_StubExeWin32ManifestPath Condition="'$(Win32Manifest)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(Win32Manifest)))</_StubExeWin32ManifestPath>
     </PropertyGroup>
     
     <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
@@ -466,8 +461,9 @@ $(CsWinRTInternalProjection)
       <!-- Hide the copyright banner for the linker as well -->
       <_StubExeMsvcArgs Include="/NOLOGO" />
 
-      <!-- Skip generating a manifest file, matching Native AOT (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
-      <_StubExeMsvcArgs Include="/MANIFEST:NO" />
+      <!-- Embed a manifest if Win32Manifest is specified. (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
+      <_StubExeMsvcArgs Include="/MANIFEST:NO" Condition="'$(_StubExeWin32ManifestPath)'==''" />
+      <_StubExeMsvcArgs Include="/MANIFEST:EMBED /MANIFESTINPUT:$(_StubExeWin32ManifestPath)" Condition="'$(_StubExeWin32ManifestPath)'!=''" />
 
       <!--
         Change the behavior for UCRT to be dynamically linked (the default would be to statically link it, due to '/MT[d]').
@@ -526,12 +522,20 @@ $(CsWinRTInternalProjection)
       compiling the binary, to ensure users won't ever see the wrong one in the publish folder and use that by accident.
     -->
     <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Add WindowsSDKBuildToolsBinVersionedArchFolder to the path if we're not using environmental tools since mt.exe and rc.exe aren't alongside link.exe. -->
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">
+      <_StubExeAdditionalPath>$(PATH);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
+      <_StubExeEnvVars>PATH=$(_StubExeAdditionalPath.Replace(';','%3B'))</_StubExeEnvVars>
+    </PropertyGroup>
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
       Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
-      WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
+      WorkingDirectory="$(_StubExeGeneratedFilesDir)"
+      EnvironmentVariables="$(_StubExeEnvVars)">
+    </Exec>
     
     <!-- Copy the resulting executable to the native directory -->
     <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
@@ -559,6 +563,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
     <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
+    <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -610,6 +615,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
+                                    Trim="true" />
+	  
+    <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
+                                    Value="$(CsWinRTLoadComponentsInDefaultALC)"
                                     Trim="true" />
   </ItemGroup>
 

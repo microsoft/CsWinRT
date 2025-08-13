@@ -8,6 +8,7 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
     <!--
@@ -23,10 +24,12 @@
           location it is assigned to."
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CA1416;IL2087</WarningsNotAsErrors>
+
+    <!-- Don't fail builds right now due to potentially unsafe casts in generated code -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CsWinRT1034</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
-    <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
  

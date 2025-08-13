@@ -1,0 +1,125 @@
+stages:
+- stage: BuildAndTest
+  displayName: Build/Test Stage
+  jobs: 
+  - job: BuildAndTest
+    timeoutInMinutes: 270
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+    strategy:
+      maxParallel: 10
+      matrix:
+        x64_Debug:
+          BuildPlatform: 'x64'
+          BuildConfiguration: 'debug'
+        x86_Debug:
+          BuildPlatform: 'x86'
+          BuildConfiguration: 'debug'
+        arm64_Debug:
+          BuildPlatform: 'arm64'
+          BuildConfiguration: 'debug'
+        x64_Release:
+          BuildPlatform: 'x64'
+          BuildConfiguration: 'release'
+        x86_Release:
+          BuildPlatform: 'x86'
+          BuildConfiguration: 'release'
+        arm64_Release:
+          BuildPlatform: 'arm64'
+          BuildConfiguration: 'release' 
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      ob_artifactSuffix: $(BuildConfiguration)_$(BuildPlatform)
+      StagingFolder: $(ob_outputDirectory)
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+    
+# Build Steps 
+    - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+
+    - template: CsWinRT-Test-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish pipeline artifacts'
+        condition: or(failed(), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(StagingFolder)
+        artifactName: drop_BuildAndTest_$(ob_artifactSuffix)
+
+  - job: Benchmarks
+    displayName: Run Benchmarks
+    condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
+    dependsOn: []
+    timeoutInMinutes: 120
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      StagingFolder: $(ob_outputDirectory)
+    steps:
+    - template: CsWinRT-Benchmarks-Steps.yml@self
+
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: Publish Benchmarks Results
+        condition: always()
+        targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
+        artifactName: benchmarks
+
+  # Seperate job to run certain tests
+  # that can't run in the other environment.
+  - job: Tests
+    displayName: Run Tests
+    dependsOn: []
+    timeoutInMinutes: 120
+    strategy:
+      matrix:
+        debug:
+          BuildConfiguration: 'debug'
+        release:
+          BuildConfiguration: 'release'
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      StagingFolder: $(ob_outputDirectory)
+      BuildPlatform: 'x64' 
+    steps:
+# Build Steps 
+    - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        SetupForBuildOnly: true
+
+    - task: MSBuild@1
+      displayName: Build Object Lifetime Tests
+      condition: succeeded()
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj
+        msbuildArguments: /restore /p:CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
+        
+# Run Object Lifetime Tests
+    - task: VSTest@3
+      displayName: Run Object Lifetime Tests
+      condition: succeeded()
+      inputs:
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        searchFolder: $(Build.SourcesDirectory)\src
+
+# Run Source Generator Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Source Generator Tests
+      condition: succeeded()
+      inputs:
+        command: test
+        projects: 'src/Tests/SourceGeneratorTest/SourceGeneratorTest.csproj'
+        arguments: --diag $(StagingFolder)\unittest\test.log --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI;solutiondir=$(Build.SourcesDirectory)\src\;VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion) -- RunConfiguration.TreatNoTestsAsError=true
+        testRunTitle: Unit Tests

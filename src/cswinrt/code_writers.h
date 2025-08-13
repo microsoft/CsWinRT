@@ -5883,7 +5883,7 @@ return (eventSource.Subscribe, eventSource.Unsubscribe);
         }
     }
     
-    std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string vmethod_name)
+    std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string)
     {
         method_signature signature{ method };
         if (is_special(method))
@@ -8336,7 +8336,7 @@ nongeneric_delegates);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid)
+if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid || global::WinRT.Interop.IID.IID_IWeakReferenceSource == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }

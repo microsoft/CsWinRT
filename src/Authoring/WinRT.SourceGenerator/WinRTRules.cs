@@ -257,5 +257,19 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ComImportInterfaceCast_Text,
             false,
             true);
+
+        public static DiagnosticDescriptor RuntimeClassCast = MakeRule(
+            "CsWinRT1034",
+            CsWinRTDiagnosticStrings.RuntimeClassCast_Brief,
+            CsWinRTDiagnosticStrings.RuntimeClassCast_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor IReferenceTypeCast = MakeRule(
+            "CsWinRT1035",
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Brief,
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Text,
+            false,
+            true);
     }
 } 

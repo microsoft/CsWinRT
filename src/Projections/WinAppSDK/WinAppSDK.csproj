@@ -7,11 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>

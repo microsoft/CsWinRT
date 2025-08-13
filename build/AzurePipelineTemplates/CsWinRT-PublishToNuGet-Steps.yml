@@ -1,0 +1,98 @@
+parameters:
+- name: 'IsGitHub'
+  displayName: 'GitHub Build'
+  type: boolean
+  default: false
+
+steps:    
+  - task: NuGetAuthenticate@1
+
+  # Download x86 
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download x86 '
+    inputs:
+      artifactName: drop_BuildAndTest_release_x86
+      itemPattern: ''
+      targetPath: $(Build.SourcesDirectory)\release_x86
+
+  # Download x64
+  - task: DownloadPipelineArtifact@2
+    displayName: Download x64
+    inputs:
+      artifactName: drop_BuildAndTest_release_x64
+      itemPattern: ''
+      targetPath: $(Build.SourcesDirectory)\release_x64
+
+  # Download arm64 
+  - task: DownloadPipelineArtifact@2
+    displayName: Download arm64
+    inputs:
+      artifactName: drop_BuildAndTest_release_arm64
+      itemPattern: ''
+      targetPath: $(Build.SourcesDirectory)\release_arm64
+
+  # Parse Versions
+  - task: CmdLine@2
+    displayName: Parse Versions
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)
+      script: |
+        rem Parse the build-generated Build.BuildNumber into components that 
+        rem can be recombined for version resources, nuget packages, etc.
+
+        @echo off
+
+        rem Encode the build date/rev into a 16 bit value for resource versions
+        if "$(PrereleaseVersion)"=="" (
+          set RevisionBase=30000
+        ) else (
+          set RevisionBase=0
+        )
+        for /f "tokens=4,5 delims=." %%i in ("$(Build.BuildNumber)") do set BuildMetadata=%%i.%%j & set /a BuildRevision=%RevisionBase%+(((%%i/10000)-20)*366+((%%i)%%10000)/100*31+((%%i)%%100))*10+%%j
+
+        set VersionNumber=$(MajorVersion).$(MinorVersion).$(PatchVersion).%BuildRevision%
+
+        if "$(PrereleaseVersion)"=="" (
+          set NugetVersion=$(MajorVersion).$(MinorVersion).$(PatchVersion)
+        ) else (
+          set NugetVersion=$(Build.BuildNumber)
+        )
+
+        rem Export generated version numbers back for subsequent tasks
+        echo ##vso[task.setvariable variable=BuildMetadata;]%BuildMetadata%
+        echo ##vso[task.setvariable variable=BuildRevision;]%BuildRevision%
+        echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
+        echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
+
+  # NuGet Pack
+  - task: NuGetCommand@2
+    displayName: NuGet pack
+    inputs:
+      command: pack
+      searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
+      configurationToPack: Release
+      buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\release_x86\native\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\release_x86\native\WinRT.Interop.winmd;net10_runtime=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Runtime.dll;source_generator_roslyn4120=$(Build.SourcesDirectory)\release_x86\netstandard2.0\roslyn4120\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui
+      packDestination: $(ob_outputDirectory)\packages
+
+  - task: NuGetCommand@2
+    displayName: NuGet pack
+    condition: eq(variables['_PublishCsWinMD'], 'true')
+    inputs:
+      command: pack
+      searchPatternPack: nuget/Microsoft.Windows.CsWinMD.nuspec
+      configurationToPack: Release
+      buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\release_x86\net10.0\CsWinMD;source_generator_roslyn4120=$(Build.SourcesDirectory)\release_x86\netstandard2.0\roslyn4120\WinRT.SourceGenerator.dll
+      packDestination: $(ob_outputDirectory)\packages
+
+  - ${{ if eq(parameters.IsGitHub, false) }}:
+
+  # NuGet signing
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for NuGet'
+      inputs:
+        command: sign
+        cp_code: 'CP-401405'
+        files_to_sign: |
+          Microsoft.Windows.CsWinRT.*.nupkg;
+          Microsoft.Windows.CsWinMD.*.nupkg;
+        search_root: $(ob_outputDirectory)\packages

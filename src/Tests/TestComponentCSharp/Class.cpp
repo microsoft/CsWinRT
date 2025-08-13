@@ -1889,6 +1889,30 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::box_value(handler);
     }
 
+    WF::IInspectable Class::BoxedStringArray()
+    {
+        hstring arr[] = { hstring{ L"one" }, hstring{ L"two" }, hstring{ L"three" } };
+        return WF::PropertyValue::CreateStringArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedInt32Array()
+    {
+        int arr[] = { 1, 2, 3 };
+        return WF::PropertyValue::CreateInt32Array(arr);
+    }
+
+    WF::IInspectable Class::BoxedTimeSpanArray()
+    {
+        TimeSpan arr[] = { 10s, 20s, };
+        return WF::PropertyValue::CreateTimeSpanArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedObjectArray()
+    {
+        WF::IInspectable arr[] = {*this, *this};
+        return WF::PropertyValue::CreateInspectableArray(arr);
+    }
+
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
     {
         // Compile-only test for keyword escaping
@@ -2022,6 +2046,10 @@ namespace winrt::TestComponentCSharp::implementation
         propertySet.Insert(L"alpha", winrt::box_value(L"first"));
         propertySet.Insert(L"beta", winrt::box_value(L"second"));
         propertySet.Insert(L"charlie", winrt::box_value(L"third"));
+        auto arr = com_array<byte>({ 1, 2, 3, 4 });
+        propertySet.Insert(L"delta", winrt::box_value(arr));
+        auto arr2 = com_array<WF::Point>({ {1, 1}, {2, 2}, {3, 3} });
+        propertySet.Insert(L"echo", winrt::box_value(arr2));
         return propertySet;
     }
 

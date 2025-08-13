@@ -16,6 +16,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)AotOptimizer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Analyzers\CollectionExpressionAnalyzer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Analyzers\ComImportInterfaceAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Analyzers\RuntimeClassCastAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CodeFixers\RuntimeClassCastCodeFixer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.Designer.cs">
       <DependentUpon>CsWinRTDiagnosticStrings.resx</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -24,12 +26,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)DiagnosticHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DiagnosticUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\SymbolExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\TypeSymbolExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GenericVtableInitializerStrings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArrayBufferWriter{T}.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ImmutableEquatableArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MergeReferencedActivationFactoriesGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DynamicWindowsRuntimeCastGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RcwReflectionFallbackGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TypeMapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WinRTAotCodeFixer.cs" />

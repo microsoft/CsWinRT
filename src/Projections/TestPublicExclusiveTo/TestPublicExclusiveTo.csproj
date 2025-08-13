@@ -10,7 +10,6 @@
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />

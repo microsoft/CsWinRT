@@ -1,14 +1,21 @@
-using System;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// Ported from 'CSharpAnalyzerTest<TAnalyzer>' in ComputeSharp (https://github.com/Sergio0694/ComputeSharp).
+// Licensed under the MIT License (MIT) (see: https://github.com/Sergio0694/ComputeSharp?tab=MIT-1-ov-file).
+// Source: https://github.com/Sergio0694/ComputeSharp/blob/main/tests/ComputeSharp.Tests.SourceGenerators/Helpers/CSharpAnalyzerTest%7BTAnalyzer%7D.cs.
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Text;
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using WinRT;
 
 namespace SourceGeneratorTest.Helpers;
@@ -17,7 +24,6 @@ namespace SourceGeneratorTest.Helpers;
 /// A custom <see cref="CSharpAnalyzerTest{TAnalyzer, TVerifier}"/> that uses a specific C# language version to parse code.
 /// </summary>
 /// <typeparam name="TAnalyzer">The type of the analyzer to test.</typeparam>
-// Ported from https://github.com/Sergio0694/ComputeSharp
 internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
     where TAnalyzer : DiagnosticAnalyzer, new()
 {
@@ -61,7 +67,7 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };
 
-        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+        test.TestState.ReferenceAssemblies = Net10Helper.Net10;
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location));
 
         // Add any editorconfig properties, if present

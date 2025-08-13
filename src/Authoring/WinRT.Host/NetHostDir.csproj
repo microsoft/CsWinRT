@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-     <TargetFramework>net8.0</TargetFramework> 
+     <TargetFramework>net10.0</TargetFramework> 
   </PropertyGroup>
 
   <Target Name="GetNetHostDir" Outputs="$(NetHostDir)">
     <PropertyGroup>
-      <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
+      <NetHostDir>$(NetCoreTargetingPackRoot)/../$(NetHostSdkSubFolder)packs/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
     <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
   </Target>

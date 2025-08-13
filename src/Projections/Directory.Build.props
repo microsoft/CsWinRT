@@ -22,21 +22,12 @@
     <!-- Projections should not require runtime marshalling. -->
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
     <CsWinRTAotOptimizerEnabled Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">Auto</CsWinRTAotOptimizerEnabled>
+
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>        
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater) AND '$(TargetFramework)' != ''">
-    <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater)">
-    <IsAotCompatible>true</IsAotCompatible>
-  </PropertyGroup>
-    
 </Project>

@@ -18,28 +18,22 @@
     <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">sdk</CsWinRTWindowsMetadata>
     <PlatformToolset>v143</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
-    <IsTargetFrameworkNet5OrGreater>false</IsTargetFrameworkNet5OrGreater>
-    <IsTargetFrameworkNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</IsTargetFrameworkNet5OrGreater>
-    <IsTargetFrameworkNet8OrGreater>false</IsTargetFrameworkNet8OrGreater>
-    <IsTargetFrameworkNet8OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">true</IsTargetFrameworkNet8OrGreater>
-    <AppBuildTFMs>netcoreapp3.1;net8.0</AppBuildTFMs>
-    <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net8.0</AppBuildTFMs>
-    <LibBuildTFMs>netstandard2.0;net8.0;net9.0</LibBuildTFMs>
-    <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netstandard2.0;net8.0;net9.0</LibBuildTFMs>
-    <LibBuildTFMsNoNetStandard>net8.0;net9.0</LibBuildTFMsNoNetStandard>
-    <LibBuildTFMsNoNetStandard Condition="'$(CIBuildReason)' == 'CI'">net8.0;net9.0</LibBuildTFMsNoNetStandard>
-    <TestsBuildTFMs>net8.0-windows10.0.19041.0</TestsBuildTFMs>
-    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net8.0-windows10.0.19041.0</TestsBuildTFMs>
-    <FunctionalTestsBuildTFMs>net8.0</FunctionalTestsBuildTFMs>
+    <IsTargetFrameworkNet5OrGreater>true</IsTargetFrameworkNet5OrGreater>
+    <IsTargetFrameworkNet8OrGreater>true</IsTargetFrameworkNet8OrGreater>
+    <AppBuildTFMs>net10.0</AppBuildTFMs>
+    <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</AppBuildTFMs>
+    <LibBuildTFMs>net10.0</LibBuildTFMs>
+    <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</LibBuildTFMs>
+    <TestsBuildTFMs>net10.0-windows10.0.19041.0</TestsBuildTFMs>
+    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0-windows10.0.19041.0</TestsBuildTFMs>
+    <FunctionalTestsBuildTFMs>net10.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
-    <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
+    <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
   </PropertyGroup>
 
   <PropertyGroup>
