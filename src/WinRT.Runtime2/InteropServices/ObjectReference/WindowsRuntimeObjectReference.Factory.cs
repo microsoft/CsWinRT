@@ -36,7 +36,8 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         Marshal.ThrowExceptionForHR(isFreeThreaded);
 
-        // We're now transferring ownership, so we need to increment the reference count
+        // We're not transferring ownership (meaning the input pointer should remain valid, and callers
+        // are responsible for eventually releasing it), so we need to increment the reference count here.
         _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
 
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
