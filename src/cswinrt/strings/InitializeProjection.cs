@@ -26,7 +26,7 @@ namespace WinRT
         /// The module initializer registering the current assembly via <see cref="ComWrappersSupport.RegisterProjectionAssembly"/>.
         /// </summary>
         [ModuleInitializer]
-        public static void InitalizeProjection()
+        public static void InitializeProjection()
         {
             ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
         }
