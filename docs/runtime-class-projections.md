@@ -47,10 +47,10 @@ public sealed class WinRTClass : WindowsRuntimeObject
 }
 ```
 
-In this example, we have a parameterless constructor and one with a `string` parameter. Any additional constructors taking parameters would use the same callback pattern (see details below), where the parameters are passed via a `ReadOnlySpan<object?>`,
+In this example, we have a parameterless constructor and one with a `string` parameter. Any additional constructors taking parameters would use the same callback pattern (see details below), where the parameters are passed via a `ReadOnlySpan<object?>`.
 
 > [!NOTE]
-> This can be further optimized in the future without a breaking change, if/when C# got support for `ReadOnlySpan<TypedReference>`, to avoid boxing any value type parameters. For now, this approach provides a good enough compromise between code size, simplicity, and performance.
+> This can be further optimized in the future without a breaking change, if/when C# gets support for `ReadOnlySpan<TypedReference>`, to avoid boxing any value type parameters. For now, this approach provides a good enough compromise between code size, simplicity, and performance.
 
 ### Unsealed (composable) runtime classes
 
@@ -163,9 +163,9 @@ public static class WindowsRuntimeActivationFactoryCallback
         out void* innerInterface,
         out void* defaultInterface);
 
-    // For sealed derived types  
+    // For sealed derived types
     public unsafe delegate void DerivedSealed(
-        ReadOnlySpan<object?> additionalParameters, 
+        ReadOnlySpan<object?> additionalParameters,
         out void* defaultInterface);
 }
 ```
@@ -179,7 +179,7 @@ private static unsafe void ActivationCallback(
     out void* innerInterface,
     out void* defaultInterface)
 {
-    using WindowsRuntimeObjectReferenceValue activationFactoryValue = 
+    using WindowsRuntimeObjectReferenceValue activationFactoryValue =
         _objRef_global__Windows_Data_Json_JsonArray.AsValue();
 
     string? name = (string?)additionalParameters[0];
