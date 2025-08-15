@@ -49,6 +49,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(WindowsRuntimeObjectReference nativeObjectReference)
     {
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
@@ -57,8 +58,30 @@ public abstract unsafe class WindowsRuntimeObject :
     }
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters for sealed scenarios.
     /// </summary>
+    /// <param name="_">Marker parameter used to select this constructor for sealed types (unused).</param>
+    /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
+    /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
+    /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
+    /// <remarks>
+    /// This constructor should only be used when activating seald types (both projected and user-defined types).
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedSealed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid)
+    {
+        // TODO
+    }
+
+    /// <summary>
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters for composed scenarios.
+    /// </summary>
+    /// <param name="_">Marker parameter used to select this constructor for composed types (unused).</param>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
@@ -67,7 +90,11 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <remarks>
     /// This constructor should only be used when activating composable types (both projected and user-defined types).
     /// </remarks>
-    protected WindowsRuntimeObject(WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedComposed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -86,7 +113,7 @@ public abstract unsafe class WindowsRuntimeObject :
         //      that needs to be passed (the controlling instance is the same one as the object being constructed).
         //      Callers will ignore the returned 'innerInterface' as well in this example.
         //
-        // For additional info, see: https://learn.microsoft.com/en-us/uwp/winrt-cref/winrt-type-system#composable-activation.
+        // For additional info, see: https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation.
         WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
             activationFactoryObjectReference: activationFactoryObjectReference,
             baseInterface: hasUnwrappableNativeObjectReference ? null : this,
@@ -123,7 +150,34 @@ public abstract unsafe class WindowsRuntimeObject :
     }
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters for sealed scenarios.
+    /// </summary>
+    /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
+    /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
+    /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
+    /// <remarks>
+    /// <para>
+    /// This constructor should only be used when activating sealed types (both projected and user-defined types).
+    /// </para>
+    /// <para>
+    /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid)"/> overload
+    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// </para>
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
+        in Guid iid,
+        params ReadOnlySpan<object?> additionalParameters)
+    {
+        // TODO
+    }
+
+    /// <summary>
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters for composed scenarios.
     /// </summary>
     /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
@@ -135,13 +189,14 @@ public abstract unsafe class WindowsRuntimeObject :
     /// This constructor should only be used when activating composable types (both projected and user-defined types).
     /// </para>
     /// <para>
-    /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory
-    /// method. If no additional parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeObjectReference, in Guid)"/> overload
+    /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid)"/> overload
     /// should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
-        WindowsRuntimeActivationFactoryCallback activationFactoryCallback,
+        WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
         params ReadOnlySpan<object?> additionalParameters)
     {
