@@ -75,6 +75,14 @@ public abstract unsafe class WindowsRuntimeObject :
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         in Guid iid)
     {
+        ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
+
+        // This constructor is only meant to be used for sealed types, so there's never a non-delegating (inner) return value.
+        // See additional notes in the overload below for more details about how and when that parameter is necessary.
+        WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            defaultInterface: out void* defaultInterface);
+
         // TODO
     }
 
@@ -173,6 +181,13 @@ public abstract unsafe class WindowsRuntimeObject :
         in Guid iid,
         params ReadOnlySpan<object?> additionalParameters)
     {
+        ArgumentNullException.ThrowIfNull(activationFactoryCallback);
+
+        // Delegate to the activation factory callback (see detailed explanation above)
+        activationFactoryCallback(
+            additionalParameters: additionalParameters,
+            defaultInterface: out void* defaultInterface);
+
         // TODO
     }
 
