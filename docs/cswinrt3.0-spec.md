@@ -83,7 +83,7 @@ CsWinRT 3.0 is centered around .NET 10, and in particular it relies on several k
 
 ## Projection updates
 
-Like mentioned above, the overall projected WinRT API surface will remain source compatible with previous CsWinRT versions. However, we can take this opportunity to make some targeted improvements and fixes.
+Like mentioned above, the overall projected WinRT API surface will remain source compatible with previous CsWinRT versions. However, we can take this opportunity to make some targeted improvements and fixes. To clarify, the new projections will **not** be binary compatible with previous ones. CsWinRT 2.x and 3.0 are by design fundamentally incompatible.
 
 ### First class `Span<T>` projections for `T[]` parameters
 
