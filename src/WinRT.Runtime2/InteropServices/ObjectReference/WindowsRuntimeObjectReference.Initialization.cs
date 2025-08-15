@@ -56,7 +56,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // In the non aggregation case, that would just be the normal native object we just instantiated.
         //
         // Also see: https://learn.microsoft.com/windows/win32/com/aggregation.
-        void* externalComObject = isAggregation ? innerInstanceUnknown : acquiredNewInstanceUnknown;
+        void* externalComObject = isAggregation ? acquiredInnerInstanceUnknown : acquiredNewInstanceUnknown;
 
         // We need to check whether the target COM object is free-threaded or not, as that will
         // influence how we'll create the resulting 'WindowsRuntimeObjectReference' instance.
