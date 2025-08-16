@@ -34,6 +34,10 @@ stages:
     - checkout: self
       clean: true
       persistCredentials: true
+      path: 's'
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
     
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
@@ -90,6 +94,14 @@ stages:
       StagingFolder: $(ob_outputDirectory)
       BuildPlatform: 'x64' 
     steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+      path: 's'
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
+
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
