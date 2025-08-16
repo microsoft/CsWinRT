@@ -112,7 +112,7 @@ namespace ABI.WinRT.Interop
                     try
                     {
                         var nativeDelegate = marshaler.GetAbi();
-                        state.InitalizeReferenceTracking(nativeDelegate);
+                        state.InitializeReferenceTracking(nativeDelegate);
 
                         EventRegistrationToken token;
 #if NET

@@ -400,7 +400,7 @@ internal static readonly System.Collections.Generic.Dictionary<string, string> T
 };
 
 [System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeProjectionTypes()
+internal static void InitializeProjectionTypes()
 {
 ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);
 }
@@ -430,7 +430,7 @@ internal static class AbiDelegatesInitializer
 {
 
 [System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeAbiDelegates()
+internal static void InitializeAbiDelegates()
 {
 %
 }

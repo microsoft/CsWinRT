@@ -60,7 +60,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <Compile Include="../cswinrt/strings/InitalizeProjection.cs" Link="cswinrt/InitalizeProjection.cs" />
+    <Compile Include="../cswinrt/strings/InitializeProjection.cs" Link="cswinrt/InitializeProjection.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
