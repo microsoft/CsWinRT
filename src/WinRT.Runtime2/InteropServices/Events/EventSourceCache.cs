@@ -111,8 +111,8 @@ internal sealed unsafe class EventSourceCache
             // Add a new cache instance to the global map, or update the existing one, if present
             _ = Caches.AddOrUpdate(
                 key: (nint)thisPtr,
-                addValueFactory: static (nint ThisPtr, CachesFactoryArgs args) => new EventSourceCache(args.Target, args.Index, args.State),
-                updateValueFactory: static (nint ThisPtr, EventSourceCache cache, CachesFactoryArgs args) => cache.Update(args.Target, args.Index, args.State),
+                addValueFactory: static (thisPtr, args) => new EventSourceCache(args.Target, args.Index, args.State),
+                updateValueFactory: static (thisPtr, cache, args) => cache.Update(args.Target, args.Index, args.State),
                 factoryArgument: new CachesFactoryArgs(target, index, state));
         }
         finally
