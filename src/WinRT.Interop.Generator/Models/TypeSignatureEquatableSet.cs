@@ -82,7 +82,18 @@ internal sealed partial class TypeSignatureEquatableSet : IEquatable<TypeSignatu
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        return SetComparer.GetHashCode(_set);
+        // We are intentionally implementing 'GetHashCode' manually here, rather than reusing the
+        // set comparer. This is because that instance will ignore the actual equality comparer
+        // being used by the set, and just always use the default. Which is flat out incorrect.
+        // And results in different hashcodes for equivalent signatures, which breaks everything.
+        HashCode hashCode = default;
+
+        foreach (TypeSignature typeSignature in _set)
+        {
+            hashCode.Add(typeSignature, SignatureComparer.IgnoreVersion);
+        }
+
+        return hashCode.ToHashCode();
     }
 
     /// <inheritdoc/>
