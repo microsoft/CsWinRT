@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropGenerator.Models;
 /// <summary>
 /// An immutable, equatable set of <see cref="TypeSignature"/> values.
 /// </summary>
-internal sealed class TypeSignatureEquatableSet : IEquatable<TypeSignatureEquatableSet>, IEnumerable<TypeSignature>
+internal sealed partial class TypeSignatureEquatableSet : IEquatable<TypeSignatureEquatableSet>, IEnumerable<TypeSignature>
 {
     /// <summary>
     /// The comparer for the <see cref="TypeSignature"/> set.
@@ -47,6 +47,15 @@ internal sealed class TypeSignatureEquatableSet : IEquatable<TypeSignatureEquata
     public TypeSignatureEquatableSet(params IEnumerable<TypeSignature> typeSignatures)
     {
         _set = new HashSet<TypeSignature>(typeSignatures, SignatureComparer.IgnoreVersion);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TypeSignatureEquatableSet"/> instance.
+    /// </summary>
+    /// <param name="typeSignatures">The input <see cref="TypeSignature"/>-s to wrap.</param>
+    private TypeSignatureEquatableSet(HashSet<TypeSignature> typeSignatures)
+    {
+        _set = typeSignatures;
     }
 
     /// <summary>
