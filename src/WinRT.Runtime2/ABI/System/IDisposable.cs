@@ -71,6 +71,11 @@ public static unsafe class IDisposableImpl
     }
 
     /// <summary>
+    /// Gets the IID for <see cref="global::System.IDisposable"/>.
+    /// </summary>
+    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IDisposable;
+
+    /// <summary>
     /// Gets a pointer to the managed <see cref="global::System.IDisposable"/> implementation.
     /// </summary>
     public static nint Vtable
