@@ -43,6 +43,12 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CancellationToken token,
         out TypeDefinition lookupType)
     {
+        // Sanity check: we should always have some type hierarchy entries here
+        if (typeHierarchyEntries.Count == 0)
+        {
+            throw WellKnownInteropExceptions.TypeHierarchyNoDiscoveredKeyValuePairs();
+        }
+
         // Use a sorted dictionary to ensure the resulting lookup is deterministic.
         // That is, we want to guarantee the same ordering if all pairs are the same.
         SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary());

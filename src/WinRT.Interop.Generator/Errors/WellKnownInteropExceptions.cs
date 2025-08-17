@@ -312,6 +312,17 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Exception when no type hierarchy key-value pairs were discovered.
+    /// </summary>
+    public static Exception TypeHierarchyNoDiscoveredKeyValuePairs()
+    {
+        return Exception(36,
+            "No type hierarchy key-value pairs were discovered across referenced assemblies. This should never happen, and it indicates that either " +
+            "the referenced assemblies were not valid (e.g. incorrectly mixing CsWinRT 2.x and 3.0 projection assemblies), or that some other " +
+            "unexpected error occurred during the discovery phase, which wasn't correctly identified earlier in the generation process.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
