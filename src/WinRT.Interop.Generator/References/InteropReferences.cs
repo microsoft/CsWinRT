@@ -7,6 +7,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Factories;
 
+#pragma warning disable IDE0032
+
 namespace WindowsRuntime.InteropGenerator.References;
 
 /// <summary>
@@ -34,6 +36,11 @@ internal sealed class InteropReferences
         _interopModule = interopModule;
         _windowsRuntimeModule = windowsRuntimeModule;
     }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
+    /// </summary>
+    public ModuleDefinition WindowsRuntimeModule => _windowsRuntimeModule;
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> instance associated with this instance (for the interop assembly).
@@ -194,6 +201,36 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IDisposable => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IDisposable"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.IServiceProvider"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IServiceProvider => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ICommand => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference INotifyCollectionChanged => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Specialized"u8, "INotifyCollectionChanged"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyDataErrorInfo"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference INotifyDataErrorInfo => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference INotifyPropertyChanged => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "INotifyPropertyChanged"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerator"/>.
