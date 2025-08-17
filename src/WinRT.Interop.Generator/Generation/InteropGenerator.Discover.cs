@@ -121,6 +121,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Discover all exposed non-generic, user-defined types
+        DiscoverExposedUserDefinedTypes(args, discoveryState, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Discover all generic type instantiations
         DiscoverGenericTypeInstantiations(args, discoveryState, module);
 
@@ -173,6 +178,35 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Discovers all (non-generic) exposed user-defined types in a given assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    private static void DiscoverExposedUserDefinedTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
+    {
+        try
+        {
+            foreach (TypeDefinition type in module.GetAllTypes())
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                if (type.IsPossiblyWindowsRuntimeExposedType && !type.IsProjectedWindowsRuntimeType)
+                {
+                    // TODO
+                }
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e);
+        }
+    }
+
+    /// <summary>
     /// Discovers all generic type instantiations in a given assembly.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -215,6 +249,8 @@ internal partial class InteropGenerator
                      typeSignature.GenericType.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
+
+                    continue;
                 }
 
                 // Gather all 'KeyValuePair<,>' instances
@@ -222,6 +258,8 @@ internal partial class InteropGenerator
                     SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair))
                 {
                     discoveryState.TrackKeyValuePairType(typeSignature);
+
+                    continue;
                 }
 
                 // Track all projected Windows Runtime generic interfaces
@@ -271,6 +309,14 @@ internal partial class InteropGenerator
                     {
                         TrackGenericInterfaceType(discoveryState, interfaceSignature, interopReferences);
                     }
+
+                    continue;
+                }
+
+                // Also track all user-defined types that should be exposed to Windows Runtime
+                if (typeDefinition.IsPossiblyWindowsRuntimeExposedType && !typeDefinition.IsProjectedWindowsRuntimeType)
+                {
+                    // TODO
                 }
             }
         }

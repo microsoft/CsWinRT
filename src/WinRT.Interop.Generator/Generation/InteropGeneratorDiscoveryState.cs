@@ -44,8 +44,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
+    /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
     private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, byte> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>
     /// Indicates whether the current state is readonly.
@@ -116,6 +119,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all SZ array types.
     /// </summary>
     public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
+
+    /// <summary>
+    /// Gets all user-defined types.
+    /// </summary>
+    public IReadOnlyCollection<TypeSignature> UserDefinedTypes => (IReadOnlyCollection<TypeSignature>)_userDefinedTypes.Keys;
 
     /// <summary>
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
@@ -243,6 +251,17 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _szArrayTypes.TryAdd(szArrayType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a user-defined type.
+    /// </summary>
+    /// <param name="userDefinedType">The user-defined type.</param>
+    public void TrackUserDefinedType(TypeSignature userDefinedType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _userDefinedTypes.TryAdd(userDefinedType, 0);
     }
 
     /// <summary>
