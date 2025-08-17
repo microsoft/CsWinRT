@@ -323,6 +323,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to discover exposed user-defined types.
+    /// </summary>
+    public static Exception DiscoverExposedUserDefinedTypesError(string? name, Exception exception)
+    {
+        return Exception(37, $"Failed to discover (non-generic) exposed user-defined types for module '{name}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

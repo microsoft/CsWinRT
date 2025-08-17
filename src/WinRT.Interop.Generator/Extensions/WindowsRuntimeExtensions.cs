@@ -49,6 +49,29 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a type that can be constructed (i.e. instantiated).
+        /// </summary>
+        public bool IsConstructibleType => type is { IsInterface: false, IsAbstract: false };
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a type that can possibly be exposed to Windows Runtime.
+        /// </summary>
+        public bool IsPossiblyWindowsRuntimeExposedType
+        {
+            get
+            {
+                // Only constructible types can possibly be exposed types
+                if (!get_IsConstructibleType(type))
+                {
+                    return false;
+                }
+
+                // Only user-defined class types and struct types (not enums) can be exposed types
+                return type is { IsClass: true } or { IsValueType: true, IsEnum: false };
+            }
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
