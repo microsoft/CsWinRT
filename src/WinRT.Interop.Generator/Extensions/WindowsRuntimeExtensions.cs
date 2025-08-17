@@ -131,14 +131,17 @@ internal static class WindowsRuntimeExtensions
                     SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyDictionary2);
             }
 
+            // We need to go through this to ensure signatures compare correctly against type references
+            ITypeDefOrRef typeDefOrRef = signature.ToTypeDefOrRef();
+
             // Also check all custom-mapped non-generic interface types
             return
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.IDisposable) ||
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.IServiceProvider) ||
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.ICommand) ||
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyCollectionChanged) ||
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyDataErrorInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyPropertyChanged);
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.IDisposable) ||
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.IServiceProvider) ||
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.ICommand) ||
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyCollectionChanged) ||
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyDataErrorInfo) ||
+                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyPropertyChanged);
         }
 
         /// <summary>
@@ -155,7 +158,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The only non-generic custom-mapped delegate type is 'EventHandler'
-            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
+            return SignatureComparer.IgnoreVersion.Equals(signature.ToTypeDefOrRef(), interopReferences.EventHandler);
         }
     }
 
