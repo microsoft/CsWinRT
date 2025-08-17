@@ -111,20 +111,51 @@ internal static class WindowsRuntimeExtensions
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair);
         }
-    }
 
-    extension(GenericInstanceTypeSignature signature)
-    {
         /// <summary>
-        /// Checks whether a <see cref="GenericInstanceTypeSignature"/> represents a projected Windows Runtime delegate type.
+        /// Checks whether a <see cref="GenericInstanceTypeSignature"/> represents a custom-mapped Windows Runtime interface type.
         /// </summary>
-        /// <returns>Whether the type represents a projected Windows Runtime class type.</returns>
+        /// <returns>Whether the type represents a custom-mapped Windows Runtime interface type.</returns>
+        public bool IsCustomMappedWindowsRuntimeInterfaceType(InteropReferences interopReferences)
+        {
+            if (signature is GenericInstanceTypeSignature genericSignature)
+            {
+                return
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerable1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerator1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.ICollection1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IList1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyCollection1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyList1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IDictionary2) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyDictionary2);
+            }
+
+            // Also check all custom-mapped non-generic interface types
+            return
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.IDisposable) ||
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.IServiceProvider) ||
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.ICommand) ||
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyCollectionChanged) ||
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyDataErrorInfo) ||
+                SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.INotifyPropertyChanged);
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="GenericInstanceTypeSignature"/> represents a custom-mapped Windows Runtime delegate type.
+        /// </summary>
+        /// <returns>Whether the type represents a custom-mapped Windows Runtime delegate type.</returns>
         public bool IsCustomMappedWindowsRuntimeDelegateType(InteropReferences interopReferences)
         {
-            return
-                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler) ||
-                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler1) ||
-                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler2);
+            if (signature is GenericInstanceTypeSignature genericSignature)
+            {
+                return
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler1) ||
+                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler2);
+            }
+
+            // The only non-generic custom-mapped delegate type is 'EventHandler'
+            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
         }
     }
 
