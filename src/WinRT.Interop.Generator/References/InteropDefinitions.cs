@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using WindowsRuntime.InteropGenerator.Factories;
@@ -23,6 +24,11 @@ internal sealed class InteropDefinitions
     private readonly ModuleDefinition _interopModule;
 
     /// <summary>
+    /// The map of generated COM interface entries types for user-defined types.
+    /// </summary>
+    private readonly ConcurrentDictionary<int, TypeDefinition> _userDefinedInterfaceEntries;
+
+    /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -31,6 +37,7 @@ internal sealed class InteropDefinitions
     {
         _interopReferences = interopReferences;
         _interopModule = interopModule;
+        _userDefinedInterfaceEntries = [];
     }
 
     /// <summary>
@@ -148,4 +155,16 @@ internal sealed class InteropDefinitions
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences, _interopModule);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the COM interface entries type for user-defined types with the specified number of entries.
+    /// </summary>
+    /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public TypeDefinition UserDefinedInterfaceEntries(int numberOfEntries)
+    {
+        return _userDefinedInterfaceEntries.GetOrAdd(
+            key: numberOfEntries,
+            valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences, _interopModule));
+    }
 }
