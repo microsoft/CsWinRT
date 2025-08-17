@@ -176,14 +176,9 @@ file sealed unsafe class EventHandlerComWrappersMarshallerAttribute : WindowsRun
         return (ComInterfaceEntry*)Unsafe.AsPointer(in EventHandlerInterfaceEntriesImpl.Entries);
     }
 
-    /// <inheritdoc/>
-    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
-    {
-        // Marshalling 'EventHandler' from an opaque object should never happen. If a native method
-        // returns a boxed 'EventHandler' delegate, the RCW we create will always be 'EventHandler<T>'.
-        // We support marshalling to managed, but not in the opaque 'object' scenario that needs this.
-        throw new UnreachableException();
-    }
+    // Marshalling 'EventHandler' from an opaque object should never happen. If a native method
+    // returns a boxed 'EventHandler' delegate, the RCW we create will always be 'EventHandler<T>'.
+    // We support marshalling to managed, but not in the opaque 'object' scenario that needs this.
 }
 
 /// <summary>
