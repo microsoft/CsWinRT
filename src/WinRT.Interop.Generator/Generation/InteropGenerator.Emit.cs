@@ -1273,7 +1273,17 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    interfaceEntriesImplType: out _);
+                    interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.UserDefinedType.ComWrappersMarshallerAttribute(
+                    userDefinedType: typeSignature,
+                    vtableTypes: vtableTypes,
+                    interfaceEntriesImplType: interfaceEntriesImplType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition arrayComWrappersMarshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

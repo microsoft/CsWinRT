@@ -6,9 +6,12 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -20,6 +23,12 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class UserDefinedType
     {
+        /// <summary>
+        /// The number of default, always present COM interface entries.
+        /// We always append some default slots to all user-defined types.
+        /// </summary>
+        private const int NumberOfDefaulComInterfacetEntries = 6;
+
         /// <summary>
         /// The thread-local list to build COM interface entries.
         /// </summary>
@@ -43,9 +52,6 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition interfaceEntriesImplType)
         {
-            // We always append some default slots to all user-defined types (see below)
-            const int NumberOfDefaultEntries = 6;
-
             // Reuse the same list, to minimize allocations (since we always need to build the entries at runtime here)
             List<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> entriesList = UserDefinedType.entriesList ??= [];
 
@@ -95,11 +101,80 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "InterfaceEntriesImpl"),
-                entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultEntries + vtableTypes.Count),
+                entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaulComInterfacetEntries + vtableTypes.Count),
                 interopReferences: interopReferences,
                 module: module,
                 implType: out interfaceEntriesImplType,
                 implTypes: CollectionsMarshal.AsSpan(entriesList));
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller attribute of some user-defined type.
+        /// </summary>
+        /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
+        /// <param name="vtableTypes">The vtable types implemented by <paramref name="userDefinedType"/>.</param>
+        /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void ComWrappersMarshallerAttribute(
+            TypeSignature userDefinedType,
+            TypeSignatureEquatableSet vtableTypes,
+            TypeDefinition interfaceEntriesImplType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal sealed class' type
+            marshallerType = new(
+                ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+            marshallerType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+
+            // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+
+            // Retrieve the cached COM interface entries type, as we need the number of fields
+            TypeDefinition interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaulComInterfacetEntries + vtableTypes.Count);
+
+            // Define the 'ComputeVtables' method as follows:
+            //
+            // public static ComInterfaceEntry* ComputeVtables(out int count)
+            MethodDefinition computeVtablesMethod = new(
+                name: "ComputeVtables"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: computeVtablesReturnType,
+                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+            {
+                CilOutParameterIndices = [1],
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4(interfaceEntriesType.Fields.Count) },
+                    { Stind_I4 },
+                    { Call, interfaceEntriesImplType.GetMethod("get_Vtables"u8) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'ComputeVtables' method
+            marshallerType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
+                method: computeVtablesMethod);
         }
     }
 }
