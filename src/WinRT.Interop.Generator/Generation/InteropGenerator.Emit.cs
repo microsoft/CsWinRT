@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -92,6 +93,11 @@ internal partial class InteropGenerator
 
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for user-defined array types
+        DefineUserDefinedTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1234,6 +1240,64 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for user-defined types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineUserDefinedTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
+        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            TypeSignature? typeSignature = null;
+
+            try
+            {
+                // Get the first user-defined with this vtable set as reference
+                typeSignature = discoveryState.UserDefinedAndVtableTypes.First(kvp => kvp.Value.Equals(vtableTypes)).Key;
+
+                // Define the 'InterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
+                InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
+                    userDefinedType: typeSignature,
+                    vtableTypes: vtableTypes,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceEntriesImplType: out _);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.UserDefinedVtableTypeCodeGenerationError(typeSignature?.Name, e);
+            }
+        }
+
+        // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
+        foreach (TypeSignature typeSignature in discoveryState.UserDefinedTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // TODO
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the implementation detail types.
     /// </summary>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -1259,6 +1323,12 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
+
+            // Also emit all shared COM interface entries types that are programmatically generated
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
+            {
+                module.TopLevelTypes.Add(typeDefinition);
+            }
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

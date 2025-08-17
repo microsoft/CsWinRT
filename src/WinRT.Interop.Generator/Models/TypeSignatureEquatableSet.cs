@@ -67,6 +67,15 @@ internal sealed partial class TypeSignatureEquatableSet : IEquatable<TypeSignatu
         get => _set.Count == 0;
     }
 
+    /// <summary>
+    /// Gets the number of <see cref="TypeSignature"/>-s in the current set.
+    /// </summary>
+    public int Count
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _set.Count;
+    }
+
     /// <inheritdoc/>
     public bool Equals(TypeSignatureEquatableSet? other)
     {

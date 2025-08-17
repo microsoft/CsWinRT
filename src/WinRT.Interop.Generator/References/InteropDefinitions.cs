@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using WindowsRuntime.InteropGenerator.Factories;
@@ -155,6 +156,18 @@ internal sealed class InteropDefinitions
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences, _interopModule);
+
+    /// <summary>
+    /// Enumerates all necessary COM interface entries types.
+    /// </summary>
+    /// <returns>The sequence of all necessary COM interface entries types.</returns>
+    /// <remarks>
+    /// This method must be called after all necessary calls to <see cref="UserDefinedInterfaceEntries"/>.
+    /// </remarks>
+    public IEnumerable<TypeDefinition> EnumerateUserDefinedInterfaceEntriesTypes()
+    {
+        return _userDefinedInterfaceEntries.Values;
+    }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the COM interface entries type for user-defined types with the specified number of entries.

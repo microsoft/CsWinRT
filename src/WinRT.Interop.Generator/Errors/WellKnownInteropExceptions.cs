@@ -331,6 +331,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for a user-defined type.
+    /// </summary>
+    public static Exception UserDefinedTypeCodeGenerationError(string? userDefinedType, Exception exception)
+    {
+        return Exception(38, $"Failed to generate marshalling code for user-defined type '{userDefinedType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a user-defined vtable type.
+    /// </summary>
+    public static Exception UserDefinedVtableTypeCodeGenerationError(string? userDefinedType, Exception exception)
+    {
+        return Exception(39, $"Failed to generate marshalling code for user-defined vtable type '{userDefinedType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
