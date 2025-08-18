@@ -389,6 +389,12 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeManagedOnlyTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeManagedOnlyTypeAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]

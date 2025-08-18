@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -190,11 +191,23 @@ internal partial class InteropGenerator
     {
         try
         {
+            // Create the interop references scoped to this module, which we need to lookup some references from
+            // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
+            // module definition for it. Instead, we just create an empty one here. This is only used to create
+            // type and member references to APIs defined in that module, so this is good enough for this scenario.
+            Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+            ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+            AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
+            InteropReferences interopReferences = new(module, windowsRuntimeModule); // TODO
+
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                if (type.IsPossiblyWindowsRuntimeExposedType && !type.IsProjectedWindowsRuntimeType)
+                // We want to process all non-generic user-defined types that are potentially exposed to Windows Runtime
+                if (type.IsPossiblyWindowsRuntimeExposedType &&
+                    !type.IsProjectedWindowsRuntimeType &&
+                    !type.IsWindowsRuntimeManagedOnlyType(interopReferences))
                 {
                     // TODO
                 }
@@ -277,7 +290,9 @@ internal partial class InteropGenerator
                 }
 
                 // Also track all user-defined types that should be exposed to Windows Runtime
-                if (typeDefinition.IsPossiblyWindowsRuntimeExposedType && !typeDefinition.IsProjectedWindowsRuntimeType)
+                if (typeDefinition.IsPossiblyWindowsRuntimeExposedType &&
+                    !typeDefinition.IsProjectedWindowsRuntimeType &&
+                    !typeDefinition.IsWindowsRuntimeManagedOnlyType(interopReferences))
                 {
                     // TODO
                 }
