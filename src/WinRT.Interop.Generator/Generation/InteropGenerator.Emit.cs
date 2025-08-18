@@ -1323,6 +1323,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
+                    userDefinedType: typeSignature,
+                    proxyType: proxyType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
