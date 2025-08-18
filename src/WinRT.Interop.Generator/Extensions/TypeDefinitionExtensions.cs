@@ -22,6 +22,24 @@ internal static class TypeDefinitionExtensions
         public bool IsStatic => type.IsAbstract && type.IsSealed;
 
         /// <summary>
+        /// Determines whether a type has or inheritsd an attribute that match a particular type.
+        /// </summary>
+        /// <param name="attributeType">The attribute type to look for.</param>
+        /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
+        public bool HasOrInheritsAttribute(TypeReference attributeType)
+        {
+            for (TypeDefinition? currentType = type; currentType is not null; currentType = currentType.BaseType?.Resolve())
+            {
+                if (currentType.HasCustomAttribute(attributeType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the first method with a given name from the specified type.
         /// </summary>
         /// <param name="name">The name of the method to get.</param>
