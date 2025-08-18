@@ -22,6 +22,41 @@ internal static class WindowsRuntimeExtensions
         public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute("WinRT"u8, "WindowsRuntimeTypeAttribute"u8);
     }
 
+    extension(ITypeDefOrRef type)
+    {
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDefOrRef"/> represents a custom-mapped Windows Runtime generic interface type.
+        /// </summary>
+        /// <returns>Whether the type represents a custom-mapped Windows Runtime generic interface type.</returns>
+        public bool IsCustomMappedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICollection1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyCollection1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyList1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDictionary2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyDictionary2);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDefOrRef"/> represents a custom-mapped Windows Runtime non-generic interface type.
+        /// </summary>
+        /// <returns>Whether the type represents a custom-mapped Windows Runtime non-generic interface type.</returns>
+        public bool IsCustomMappedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDisposable) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IServiceProvider) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICommand) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyCollectionChanged) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyDataErrorInfo) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged);
+        }
+    }
+
     extension(TypeDefinition type)
     {
         /// <summary>
@@ -130,28 +165,11 @@ internal static class WindowsRuntimeExtensions
         {
             if (signature is GenericInstanceTypeSignature genericSignature)
             {
-                return
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerable1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerator1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.ICollection1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IList1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyCollection1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyList1) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IDictionary2) ||
-                    SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyDictionary2);
+                return genericSignature.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences);
             }
 
             // We need to go through this to ensure signatures compare correctly against type references
-            ITypeDefOrRef typeDefOrRef = signature.ToTypeDefOrRef();
-
-            // Also check all custom-mapped non-generic interface types
-            return
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.IDisposable) ||
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.IServiceProvider) ||
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.ICommand) ||
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyCollectionChanged) ||
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyDataErrorInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(typeDefOrRef, interopReferences.INotifyPropertyChanged);
+            return signature.ToTypeDefOrRef().IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences);
         }
 
         /// <summary>
