@@ -209,5 +209,30 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out proxyType);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some user-defined type.
+        /// </summary>
+        /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            TypeSignature userDefinedType,
+            TypeDefinition proxyType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: null,
+                externalTypeMapTargetType: null,
+                externalTypeMapTrimTargetType: null,
+                proxyTypeMapSourceType: userDefinedType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: null,
+                interfaceTypeMapProxyType: null,
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }
