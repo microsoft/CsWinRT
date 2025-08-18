@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
@@ -1262,6 +1263,11 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Since we're sharing the marshaller attributes across all identical sets of COM interface entries,
+        // we need a temporary map so we can look them up when we need to reference them once we get to
+        // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
+        Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
+
         // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
         foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes)
         {
@@ -1292,7 +1298,10 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition arrayComWrappersMarshallerType);
+                    out TypeDefinition comWrappersMarshallerType);
+
+                // Track the marshaller attribute for later
+                marshallerAttributeMap.Add(vtableTypes, comWrappersMarshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -1301,13 +1310,19 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach (TypeSignature typeSignature in discoveryState.UserDefinedTypes)
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes)
         {
             args.Token.ThrowIfCancellationRequested();
 
             try
             {
-                // TODO
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
+                    userDefinedType: typeSignature,
+                    comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

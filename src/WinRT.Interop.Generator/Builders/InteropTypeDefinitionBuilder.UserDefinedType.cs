@@ -184,5 +184,30 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
                 method: computeVtablesMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some user-defined type.
+        /// </summary>
+        /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
+        /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            TypeSignature userDefinedType,
+            TypeDefinition comWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                runtimeClassName: "", // TODO
+                comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
     }
 }
