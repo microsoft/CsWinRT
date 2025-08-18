@@ -33,9 +33,7 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICollection1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyCollection1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyList1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDictionary2) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyDictionary2);
