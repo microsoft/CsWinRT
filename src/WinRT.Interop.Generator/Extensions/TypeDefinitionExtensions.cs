@@ -25,10 +25,14 @@ internal static class TypeDefinitionExtensions
         /// Determines whether a type has or inheritsd an attribute that match a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(TypeReference attributeType)
+        public bool HasOrInheritsAttribute(TypeReference attributeType, CorLibTypeFactory corLibTypeFactory)
         {
-            for (TypeDefinition? currentType = type; currentType is not null; currentType = currentType.BaseType?.Resolve())
+            for (
+                TypeDefinition? currentType = type;
+                currentType is not null && !SignatureComparer.IgnoreVersion.Equals(type.BaseType, corLibTypeFactory.Object);
+                currentType = currentType.BaseType?.Resolve())
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {

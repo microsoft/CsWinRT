@@ -72,6 +72,16 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a Windows Runtime managed-only type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the input type is a Windows Runtime managed-only type.</returns>
+        public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
+        {
+            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
