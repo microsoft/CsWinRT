@@ -99,8 +99,9 @@ internal static class WindowsRuntimeExtensions
                     return false;
                 }
 
-                // Only user-defined class types and struct types (not enums) can be exposed types
-                return type is { IsClass: true } or { IsValueType: true, IsEnum: false };
+                // Only user-defined class types and struct types (not enums) can be exposed types.
+                // We ignore delegates too, as generic delegates are already processed separately.
+                return type is { IsInterface: false, IsDelegate: false, IsEnum: false, IsByRefLike: false };
             }
         }
 
