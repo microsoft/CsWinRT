@@ -9,6 +9,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -42,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="vtableTypes">The vtable types implemented by <paramref name="userDefinedType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
@@ -49,6 +51,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignatureEquatableSet vtableTypes,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition interfaceEntriesImplType)
         {
@@ -65,9 +68,14 @@ internal partial class InteropTypeDefinitionBuilder
                 // marshalling code will be in 'WinRT.Interop.dll', and produced at build time by this same executable.
                 // For non-generic ones, their marshalling code will instead usually be in the declaring assembly. The
                 // only exception is for custom-mapped interface types: their ABI types are in 'WinRT.Runtime.dll'.
-                if (typeSignature is GenericInstanceTypeSignature genericTypeSignature)
+                if (typeSignature is GenericInstanceTypeSignature)
                 {
-                    // TODO
+                    TypeDefinition typeDefinition = emitState.LookupTypeDefinition(typeSignature, "Impl");
+
+                    // Add the entry from the ABI type in 'WinRT.Interop.dll'
+                    entriesList.Add((
+                        get_IID: typeDefinition.GetMethod("get_IID"u8),
+                        get_Vtable: typeDefinition.GetMethod("get_Vtable"u8)));
                 }
                 else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences))
                 {
