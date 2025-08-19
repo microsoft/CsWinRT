@@ -198,7 +198,7 @@ internal partial class InteropGenerator
             Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
             ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
             AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
-            InteropReferences interopReferences = new(module, windowsRuntimeModule); // TODO
+            InteropReferences interopReferences = new(module, windowsRuntimeModule);
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -255,11 +255,14 @@ internal partial class InteropGenerator
 
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
-                // Gather all known delegate types. We want to gather all projected delegate types,
-                // plus any custom mapped ones. For now, that's only 'EventHandler<T>'.
+                // Gather all known delegate types. We want to gather all projected delegate types, plus any
+                // custom mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
+                // We need to check whether the type is a projected Windows Runtime type from the resolved type
+                // definition, and not from the generic type definition we can retrieve from the type signature.
+                // If we did the latter, the resulting type definition would not include any custom attributes.
                 if (typeDefinition.IsDelegate &&
                     (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
-                     typeSignature.GenericType.IsProjectedWindowsRuntimeType))
+                     typeDefinition.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
 
