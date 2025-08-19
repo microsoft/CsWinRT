@@ -32,6 +32,7 @@ The **mangled type name** for a given type is defined as follows:
 2. **User-defined types**: the type name is prefixed with the assembly name (or a compact identifier for well-known assemblies) within angle brackets (i.e. `<>`), and suffixed with the type name. The namespace is not included, as it matches the containing namespace for the generated type (without the `ABI[.]` prefix).
 3. **Generic types**: their type arguments are enclosed in angle brackets, right after the type name. Nested generics are recursively processed, and type arguments are separated by a pipe (i.e. `|`). Each type argument also has its name prefixed by the containing namespace.
 4. **Array types**: single-dimensional arrays (SZ arrays) are represented by wrapping the mangled name of the element type in angle brackets, and appending `Array` (i.e., `<NAME>Array`) as a suffix. The element type uses the same mangling rules as any other type (primitive, user-defined, generic, or nested array).
+5. **Nested types**: when a type is nested, the declaring type chain is concatenated using `+` separators (e.g. `Outer+Inner`). The namespace is still omitted (as with top-level user-defined types) at the root depth, and only the chain of nested type names is emitted after the assembly segment. If a declaring (or nested) type is generic, its (unmangled) metadata name, including its arity marker (`` ` ``) is first transformed by replacing the backtick with `'` (apostrophe) like for any other type name, and then used in the chain. For nested types appearing inside generic type arguments (i.e. at non-root depth), their fully-qualified name (namespace plus nested path) is emitted as a single component before character substitutions are applied.
 
 All `.` characters in the final mangled name are replaced with `-` characters. Additionally, all `` ` `` characters (backticks) in the final mangled name are replaced with `'` characters (apostrophes).
 
@@ -61,6 +62,11 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 - Type: `MyNamespace.MyType` (from assembly `MyAssembly`)
 - Mangled name: `ABI.MyNamespace.<MyAssembly>MyType`
 
+**Nested user-defined type**
+
+- Type: `MyNamespace.Outer+Inner` (from assembly `MyAssembly`)
+- Mangled name: `ABI.MyNamespace.<MyAssembly>Outer+Inner`
+
 **Generic type**
 
 - Type: `System.Collections.Generic.IEnumerable<string>`
@@ -70,6 +76,11 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 
 - Type: `System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<string, MyNamespace.MyType>` (`MyType` is from assembly `MyAssembly`)
 - Mangled name: `ABI.System.Collections.Generic.<#corlib>ICollection'1<<#corlib>System-Collections-Generic-KeyValuePair'2<string|<MyAssembly>MyNamespace-MyType>>`
+
+**Generic nested type**
+
+- Type: `MyNamespace.Outer<int>.Inner<string>` (assemblies `MyAssembly` for all types)
+- Mangled name: `ABI.MyNamespace.<MyAssembly>Outer'1<int>+Inner'1<string>`
 
 **Array type (primitive element)**
 
@@ -127,10 +138,10 @@ primitiveType : 'bool'
               | 'object';
 
 // User-defined types
-userDefinedType : '<' assemblyName '>' identifier;
+userDefinedType : '<' assemblyName '>' typePath;
 
 // Generic types
-genericType : '<' assemblyName '>' identifier '<' typeArgument ( '|' typeArgument )* '>';
+genericType : '<' assemblyName '>' typePath '<' typeArgument ( '|' typeArgument )* '>';
 typeArgument : primitiveType
              | userDefinedType
              | genericType
@@ -147,6 +158,8 @@ assemblyName : '#corlib'
              | '#Win2D'
              | identifier;
 
-// Identifier rules
-identifier : [a-zA-Z_][a-zA-Z0-9_]*;
+// After substitutions, identifiers may contain '-' (from namespaces), '+' (nested type separators,
+// as many as needed), and apostrophes (which act as generic arity markers, replacing backticks).
+typePath : simpleIdentifier ( '+' simpleIdentifier )*;
+simpleIdentifier : [a-zA-Z_][a-zA-Z0-9_'-]*;
 ```
