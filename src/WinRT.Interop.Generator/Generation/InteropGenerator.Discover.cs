@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 using WindowsRuntime.InteropGenerator.Visitors;
@@ -200,6 +201,9 @@ internal partial class InteropGenerator
             AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
             InteropReferences interopReferences = new(module, windowsRuntimeModule);
 
+            // We can share a single builder when processing all types to reduce allocations
+            TypeSignatureEquatableSet.Builder interfaces = new();
+
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 args.Token.ThrowIfCancellationRequested();
@@ -209,7 +213,34 @@ internal partial class InteropGenerator
                     !type.IsProjectedWindowsRuntimeType &&
                     !type.IsWindowsRuntimeManagedOnlyType(interopReferences))
                 {
-                    // TODO
+                    // Since we're reusing the builder for all types, make sure to clear it first
+                    interfaces.Clear();
+
+                    // Gather all implemented Windows Runtime interfaces for the current type
+                    for (TypeDefinition? currentType = type;
+                        currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
+                        currentType = currentType.BaseType?.Resolve())
+                    {
+                        foreach (InterfaceImplementation implementation in currentType.Interfaces)
+                        {
+                            if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
+                                implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
+                                (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
+                                genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                                genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
+                            {
+                                interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            }
+                        }
+                    }
+
+                    // If the user-defined type doesn't implement any Windows Runtime interfaces, it's not considered exposed
+                    if (interfaces.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    discoveryState.TrackUserDefinedType(type.ToTypeSignature(), interfaces.ToEquatableSet());
                 }
             }
         }
