@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Models;
@@ -54,12 +55,38 @@ internal partial class TypeSignatureEquatableSet
         }
 
         /// <summary>
+        /// Gets a value indicating whether the current builder is empty.
+        /// </summary>
+        public bool IsEmpty
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _set.Count == 0;
+        }
+
+        /// <summary>
+        /// Gets the number of <see cref="TypeSignature"/>-s in the current builder.
+        /// </summary>
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _set.Count;
+        }
+
+        /// <summary>
         /// Adds a new <see cref="TypeSignature"/> value to the builder.
         /// </summary>
         /// <param name="typeSignature">The <see cref="TypeSignature"/> value to add.</param>
         public void Add(TypeSignature typeSignature)
         {
             _ = _set.Add(typeSignature);
+        }
+
+        /// <summary>
+        /// Removes all elements from the builder.
+        /// </summary>
+        public void Clear()
+        {
+            _set.Clear();
         }
 
         /// <summary>
