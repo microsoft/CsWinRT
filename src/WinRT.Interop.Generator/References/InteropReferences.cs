@@ -34,7 +34,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> currently in use.</param>
+    /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
     /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
     public InteropReferences(
