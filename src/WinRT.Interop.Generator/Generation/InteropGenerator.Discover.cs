@@ -196,10 +196,13 @@ internal partial class InteropGenerator
             // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
             // module definition for it. Instead, we just create an empty one here. This is only used to create
             // type and member references to APIs defined in that module, so this is good enough for this scenario.
+            // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
             Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
             ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
             AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
-            InteropReferences interopReferences = new(module, windowsRuntimeModule);
+            ModuleDefinition windowsFoundationModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+            AssemblyDefinition windowsFoundationAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsFoundationModule } };
+            InteropReferences interopReferences = new(module, windowsRuntimeModule, windowsFoundationModule);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -265,7 +268,7 @@ internal partial class InteropGenerator
         {
             // Create the interop references scoped to this module. We're not going to use any references
             // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module, null!);
+            InteropReferences interopReferences = new(module, null!, null!);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -353,7 +356,7 @@ internal partial class InteropGenerator
         {
             // Create the interop references scoped to this module. We're not going to use any references
             // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module, null!);
+            InteropReferences interopReferences = new(module, null!, null!);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
