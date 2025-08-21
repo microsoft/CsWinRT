@@ -53,6 +53,10 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         {
             discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
         }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
+        {
+            discoveryState.TrackIObservableVector1Type(typeSignature);
+        }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
             discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);

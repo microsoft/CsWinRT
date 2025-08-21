@@ -39,6 +39,9 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="IReadOnlyDictionary2Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyDictionary2Types = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field for <see cref="IObservableVector1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableVector1Types = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="IMapChangedEventArgs1Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _imapChangedEventArgs1Types = new(SignatureComparer.IgnoreVersion);
 
@@ -111,6 +114,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
     /// </summary>
     public IReadOnlyCollection<GenericInstanceTypeSignature> IReadOnlyDictionary2Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ireadOnlyDictionary2Types.Keys;
+
+    /// <summary>
+    /// Gets all <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableVector1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_imapChangedEventArgs1Types.Keys;
 
     /// <summary>
     /// Gets all <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
@@ -240,6 +248,17 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _ireadOnlyDictionary2Types.TryAdd(dictionaryType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> type.
+    /// </summary>
+    /// <param name="vectorType">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> type.</param>
+    public void TrackIObservableVector1Type(GenericInstanceTypeSignature vectorType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _iobservableVector1Types.TryAdd(vectorType, 0);
     }
 
     /// <summary>
