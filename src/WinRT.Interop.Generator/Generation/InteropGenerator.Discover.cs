@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -192,17 +193,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Create the interop references scoped to this module, which we need to lookup some references from
-            // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
-            // module definition for it. Instead, we just create an empty one here. This is only used to create
-            // type and member references to APIs defined in that module, so this is good enough for this scenario.
-            // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
-            Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-            ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
-            AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
-            ModuleDefinition windowsFoundationModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
-            AssemblyDefinition windowsFoundationAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsFoundationModule } };
-            InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -266,9 +257,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Create the interop references scoped to this module. We're not going to use any references
-            // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module.CorLibTypeFactory, null!, null!);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -354,9 +343,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Create the interop references scoped to this module. We're not going to use any references
-            // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module.CorLibTypeFactory, null!, null!);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
@@ -412,5 +399,33 @@ internal partial class InteropGenerator
             .Order();
 
         throw WellKnownInteropExceptions.WinRTRuntimeDllVersion2References(invalidModuleNames);
+    }
+
+    /// <summary>
+    /// Creates an <see cref="InteropReferences"/> instance that can be used for the discovery phase.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> currently in use.</param>
+    /// <returns>The <see cref="InteropReferences"/> instance to use for the discovery phase.</returns>
+    [SuppressMessage("Style", "IDE0059", Justification = "Creating the 'AssemblyDefinition'-s is used to bind them to the contained modules.")]
+    private static InteropReferences CreateDiscoveryInteropReferences(CorLibTypeFactory corLibTypeFactory)
+    {
+        // Create the interop references scoped to this module, which we need to lookup some references from
+        // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
+        // module definition for it. Instead, we just create an empty one here. This is only used to create
+        // type and member references to APIs defined in that module, so this is good enough for this scenario.
+        // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
+        Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+        ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+        AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
+        ModuleDefinition windowsFoundationModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+        AssemblyDefinition windowsFoundationAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsFoundationModule } };
+
+        // Set the public keys, as it's needed to ensure references compare as equals as expected
+        windowsRuntimeAssembly.PublicKey = InteropValues.PublicKeyData;
+        windowsRuntimeAssembly.HasPublicKey = true;
+        windowsFoundationAssembly.PublicKey = InteropValues.PublicKeyData;
+        windowsFoundationAssembly.HasPublicKey = true;
+
+        return new(corLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
     }
 }
