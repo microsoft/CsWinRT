@@ -31,12 +31,16 @@ internal partial class InteropGenerator
         InteropGeneratorEmitState emitState = new();
 
         // Define the module to emit
-        ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition windowsRuntimeModule);
+        ModuleDefinition module = DefineInteropModule(
+            args: args,
+            discoveryState: discoveryState,
+            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
+            windowsFoundationModule: out ModuleDefinition windowsFoundationModule);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        InteropReferences interopReferences = new(module, windowsRuntimeModule);
+        InteropReferences interopReferences = new(module, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
@@ -122,8 +126,13 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
+    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
-    private static ModuleDefinition DefineInteropModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, out ModuleDefinition windowsRuntimeModule)
+    private static ModuleDefinition DefineInteropModule(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        out ModuleDefinition windowsRuntimeModule,
+        out ModuleDefinition windowsFoundationModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.ModuleDefinitions.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -134,7 +143,13 @@ internal partial class InteropGenerator
         // Get the loaded module for the runtime .dll (this should also always be available here)
         if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value) is null)
         {
-            throw WellKnownInteropExceptions.WinRTModuleNotFound();
+            throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
+        }
+
+        // Get the loaded module for the runtime .dll (same as above)
+        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
+        {
+            throw WellKnownInteropExceptions.WinRTFoundationModuleNotFound();
         }
 
         // If assembly version validation is required, ensure that the 'cswinrtgen' version matches that of 'WinRT.Runtime.dll'.

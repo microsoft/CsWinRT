@@ -27,14 +27,24 @@ internal sealed class InteropReferences
     private readonly ModuleDefinition _windowsRuntimeModule;
 
     /// <summary>
+    /// The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
+    /// </summary>
+    private readonly ModuleDefinition _windowsFoundationModule;
+
+    /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopModule">The <see cref="ModuleDefinition"/> for the interop assembly being produced.</param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    public InteropReferences(ModuleDefinition interopModule, ModuleDefinition windowsRuntimeModule)
+    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
+    public InteropReferences(
+        ModuleDefinition interopModule,
+        ModuleDefinition windowsRuntimeModule,
+        ModuleDefinition windowsFoundationModule)
     {
         _interopModule = interopModule;
         _windowsRuntimeModule = windowsRuntimeModule;
+        _windowsFoundationModule = windowsFoundationModule;
     }
 
     /// <summary>
