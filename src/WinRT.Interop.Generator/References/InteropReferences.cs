@@ -735,6 +735,12 @@ internal sealed class InteropReferences
     public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> .
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IMapChangedEventArgs1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Attribute.Attribute()"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -949,7 +955,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("GetInstance"u8, MethodSignature.CreateStatic(
             returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
             genericParameterCount: 1,
-            parameterTypes: [_interopModule.CreateTypeReference("System.Runtime.InteropServices"u8, "ComWrappers/ComInterfaceDispatch"u8).MakePointerType()]));
+            parameterTypes: [ComInterfaceDispatch.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.IID"/>.
