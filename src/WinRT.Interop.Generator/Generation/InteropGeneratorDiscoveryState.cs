@@ -42,6 +42,9 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="IObservableVector1Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableVector1Types = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field for <see cref="IObservableMap2Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableMap2Types = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="IMapChangedEventArgs1Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _imapChangedEventArgs1Types = new(SignatureComparer.IgnoreVersion);
 
@@ -118,7 +121,12 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>
     /// Gets all <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> types.
     /// </summary>
-    public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableVector1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_imapChangedEventArgs1Types.Keys;
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableVector1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iobservableVector1Types.Keys;
+
+    /// <summary>
+    /// Gets all <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableMap2Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iobservableMap2Types.Keys;
 
     /// <summary>
     /// Gets all <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
@@ -259,6 +267,17 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _iobservableVector1Types.TryAdd(vectorType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> type.
+    /// </summary>
+    /// <param name="mapType">The <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> type.</param>
+    public void TrackIObservableMap2Type(GenericInstanceTypeSignature mapType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _iobservableMap2Types.TryAdd(mapType, 0);
     }
 
     /// <summary>
