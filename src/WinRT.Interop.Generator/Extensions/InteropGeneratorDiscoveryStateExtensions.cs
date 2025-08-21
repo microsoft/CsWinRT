@@ -57,6 +57,10 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         {
             discoveryState.TrackIObservableVector1Type(typeSignature);
         }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
+        {
+            discoveryState.TrackIObservableMap2Type(typeSignature);
+        }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
             discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);

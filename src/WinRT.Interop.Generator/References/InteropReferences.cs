@@ -746,6 +746,12 @@ internal sealed class InteropReferences
     public TypeReference IObservableVector1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> .
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IObservableMap2 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> .
     /// </summary>
     [field: MaybeNull, AllowNull]
