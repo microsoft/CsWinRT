@@ -740,6 +740,12 @@ internal sealed class InteropReferences
     public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> .
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IObservableVector1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> .
     /// </summary>
     [field: MaybeNull, AllowNull]
