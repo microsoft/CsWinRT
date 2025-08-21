@@ -40,7 +40,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        InteropReferences interopReferences = new(module, windowsRuntimeModule, windowsFoundationModule);
+        InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();

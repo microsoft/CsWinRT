@@ -202,7 +202,7 @@ internal partial class InteropGenerator
             AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
             ModuleDefinition windowsFoundationModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
             AssemblyDefinition windowsFoundationAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsFoundationModule } };
-            InteropReferences interopReferences = new(module, windowsRuntimeModule, windowsFoundationModule);
+            InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -268,7 +268,7 @@ internal partial class InteropGenerator
         {
             // Create the interop references scoped to this module. We're not going to use any references
             // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module, null!, null!);
+            InteropReferences interopReferences = new(module.CorLibTypeFactory, null!, null!);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -356,7 +356,7 @@ internal partial class InteropGenerator
         {
             // Create the interop references scoped to this module. We're not going to use any references
             // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
-            InteropReferences interopReferences = new(module, null!, null!);
+            InteropReferences interopReferences = new(module.CorLibTypeFactory, null!, null!);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
