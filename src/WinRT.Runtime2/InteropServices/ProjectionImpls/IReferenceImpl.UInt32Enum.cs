@@ -11,26 +11,23 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <summary>
-/// The <c>IReference`1</c> implementation for managed types that can share an implementation.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1"/>
-public static unsafe partial class IReferenceImpl
+/// <inheritdoc cref="IReferenceImpl"/>
+public unsafe partial class IReferenceImpl
 {
     /// <summary>
-    /// Gets a pointer to the managed <c>IReference`1</c> implementation, specifically for <see cref="int"/>-backed enum types.
+    /// Gets a pointer to the managed <c>IReference`1</c> implementation, specifically for <see cref="uint"/>-backed enum types.
     /// </summary>
-    public static nint Int32Enum
+    public static nint UInt32Enum
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in Int32EnumImpl.Vftbl);
+        get => (nint)Unsafe.AsPointer(in UInt32EnumImpl.Vftbl);
     }
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="int"/>-backed enum types.
+/// The <c>IReference`1</c> implementation for <see cref="uint"/>-backed enum types.
 /// </summary>
-file static unsafe class Int32EnumImpl
+file static unsafe class UInt32EnumImpl
 {
     /// <summary>
     /// The <see cref="IReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
@@ -41,16 +38,16 @@ file static unsafe class Int32EnumImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static Int32EnumImpl()
+    static UInt32EnumImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_Value = (delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, HRESULT>)&get_Value;
+        Vftbl.get_Value = (delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT>)&get_Value;
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT get_Value(void* thisPtr, int* result)
+    public static HRESULT get_Value(void* thisPtr, uint* result)
     {
         if (result is null)
         {
@@ -59,7 +56,7 @@ file static unsafe class Int32EnumImpl
 
         try
         {
-            *result = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *result = (uint)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
