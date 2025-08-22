@@ -100,6 +100,7 @@ var entries = new (string Name, string IID)[]
     ("IReferenceOfVector3", "1EE770FF-C954-59CA-A754-6199A9BE282C"),
     ("IReferenceOfVector4", "A5E843C9-ED20-5339-8F8D-9FE404CF3654"),
     ("IReferenceOfEventRegistrationToken", "A9B18291-CE2A-5DAE-8A23-B7F7388416DB"),
+    ("IReferenceOfCollectionChange", "25BCAF91-880D-537D-82FC-9BBF0CACCB8B"),
     ("IReferenceArrayOfInt32", "A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7"),
     ("IReferenceArrayOfString", "0385688E-E3C7-5C5E-A389-5524EDE349F1"),
     ("IReferenceArrayOfByte", "2AF22683-3734-56D0-A60E-688CC85D1619"),
