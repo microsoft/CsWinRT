@@ -457,13 +457,6 @@ namespace TestComponentCSharp
         static Boolean[] UnboxBooleanArrayUsingPropertyValue(Object obj);
         static Windows.Foundation.Point[] UnboxPointArrayUsingPropertyValue(Object obj);
 
-        static Int32 UnboxInt32UsingPropertyValue(Object obj);
-        static String UnboxStringUsingPropertyValue(Object obj);
-        static Windows.Foundation.Rect UnboxRectUsingPropertyValue(Object obj);
-        static Int32[] UnboxInt32ArrayUsingPropertyValue(Object obj);
-        static Boolean[] UnboxBooleanArrayUsingPropertyValue(Object obj);
-        static Windows.Foundation.Point[] UnboxPointArrayUsingPropertyValue(Object obj);
-
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
 
