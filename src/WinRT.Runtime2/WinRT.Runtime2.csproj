@@ -61,6 +61,13 @@
       Once that issue is fixed, this should be moved down to the src\ specific .props file again, and otherwise disabled.
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
+      an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
+      'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
+    -->
+    <NoWarn>$(NoWarn);AD0001</NoWarn>
   </PropertyGroup>
     
   <!--
