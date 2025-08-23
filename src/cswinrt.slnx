@@ -1,0 +1,349 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Authoring/">
+    <Project Path="Authoring/CsWinMD/CsWinMD.csproj" />
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
+    <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Solution="*|ARM" Project="false" />
+    </Project>
+    <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4080/WinRT.SourceGenerator.Roslyn4080.csproj">
+      <Build Project="false" />
+    </Project>
+    <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4120/WinRT.SourceGenerator.Roslyn4120.csproj" />
+    <Project Path="Authoring/WinRT.SourceGenerator/WinRT.SourceGenerator.shproj" />
+  </Folder>
+  <Folder Name="/Files/">
+    <File Path=".gitignore" />
+    <File Path="benchmark.cmd" />
+    <File Path="build.cmd" />
+    <File Path="cswinrt/PreviousPlatforms.linq" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="get_testwinrt.cmd" />
+    <File Path="README.md" />
+    <File Path="Strings.props" />
+  </Folder>
+  <Folder Name="/Nuget/">
+    <File Path="../nuget/LICENSE" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.Embedded.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.IIDOptimizer.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.nuspec" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.props" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.targets" />
+    <File Path="../nuget/readme.md" />
+    <File Path="../nuget/readme.txt" />
+    <File Path="../nuget/SignConfig.xml" />
+  </Folder>
+  <Folder Name="/Perf/">
+    <Project Path="Perf/IIDOptimizer/IIDOptimizer.csproj">
+      <Build Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Projections/">
+    <File Path="Projections/Directory.Build.props" />
+    <Project Path="Projections/Benchmark/Benchmark.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/Test/Test.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Projections/TestHost.ProbeByClass/TestHost.ProbeByClass.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/TestPublicExclusiveTo/TestPublicExclusiveTo.csproj">
+      <Platform Solution="*|ARM" Project="x64" />
+      <Platform Solution="*|ARM64" Project="x64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/TestSubset/TestSubset.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/WinAppSDK/WinAppSDK.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/Windows.UI.Xaml/Windows.UI.Xaml.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/Windows/Windows.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Projections/WinUI/WinUI.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/WinUIDesktopSample/WinUIDesktopSample.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/AuthoringConsumptionTest/AuthoringConsumptionTest.vcxproj" Id="0212a7c5-8d3f-443c-9ebc-1f28091fdf88">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringTest/AuthoringTest.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest (Package)/AuthoringWinUITest (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="arm64" />
+      <Build Project="false" />
+      <Deploy Solution="*|x64" />
+      <Deploy Solution="*|x86" />
+    </Project>
+    <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest/AuthoringWinUITest.vcxproj" Id="493c7729-2f21-4198-ab09-bdf56bf501d3">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Platform Solution="*|ARM64" Project="arm64" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringWuxConsumptionTest/AuthoringWuxConsumptionTest.vcxproj" Id="a04a0416-5e35-4dd0-8226-63d941b28467">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringWuxTest/AuthoringWuxTest.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/CSWinMDComponent/CSWinMDComponent.vcxproj" Id="d10dc47a-db45-491c-852e-2b2165f25f86">
+      <BuildDependency Project="Authoring/CsWinMD/CsWinMD.csproj" />
+    </Project>
+    <Project Path="Tests/DiagnosticTests/DiagnosticTests.csproj">
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/HostTest/HostTest.vcxproj" Id="b511b7c9-c8e2-47ed-a0d1-538c00747d30">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/OOPExe/OOPExe.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/SourceGeneratorTest/SourceGeneratorTest.csproj">
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/TestComponentCSharp/TestComponentCSharp.vcxproj" Id="7e3a9ab3-8cbb-4b9c-ba76-0fe7108dcaeb">
+      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/UnitTest/UnitTest.csproj">
+      <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
+      <BuildDependency Project="WinRT.Runtime/WinRT.Runtime.csproj" />
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="TestWinRT/TestComponent/TestComponent.vcxproj" Id="2954f343-85a7-46f5-a3f3-f106fdd13900">
+      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
+      <Platform Solution="*|ARM64" Project="Win32" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="TestWinRT/test_component_base/test_component_base.vcxproj" Id="13333a6f-6a4a-48cd-865c-0f65135eb018">
+      <Platform Solution="*|ARM64" Project="Win32" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="TestWinRT/test_component_derived/test_component_derived.vcxproj" Id="0080f6d1-aec3-4f89-ade1-3d22a7ebf99e">
+      <BuildDependency Project="TestWinRT/test_component_base/test_component_base.vcxproj" />
+      <Platform Solution="*|ARM64" Project="Win32" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="TestWinRT/test_component_fast/test_component_fast.vcxproj" Id="0e0aca62-a92f-44cf-bd41-aeb541946df8">
+      <Platform Solution="*|ARM64" Project="Win32" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tests/FunctionalTests/">
+    <File Path="Tests/FunctionalTests/Directory.Build.props" />
+    <Project Path="Tests/FunctionalTests/Async/Async.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/CCW/CCW.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ClassActivation/ClassActivation.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/Collections/Collections.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DerivedClassActivation/DerivedClassActivation.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DerivedClassAsBaseClass/DerivedClassAsBaseClass.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DynamicInterfaceCasting/DynamicInterfaceCasting.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/Events/Events.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/JsonValueFunctionCalls/JsonValueFunctionCalls.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/NonWinRT/NonWinRT.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/OptInMode/OptInMode.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/Structs/Structs.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/TestImplementExclusiveTo/TestImplementExclusiveTo.csproj">
+      <Platform Solution="*|ARM" Project="x64" />
+      <Platform Solution="*|ARM64" Project="x64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/TestLibrary/Test-Library.csproj">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tests/FunctionalTests/PublishProfiles/">
+    <File Path="Tests/FunctionalTests/PublishProfiles/win-arm64.pubxml" />
+    <File Path="Tests/FunctionalTests/PublishProfiles/win-x64.pubxml" />
+    <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
+  </Folder>
+  <Project Path="Benchmarks/Benchmarks.csproj">
+    <Platform Solution="*|ARM" Project="x86" />
+    <Platform Solution="*|ARM64" Project="x86" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Build Project="false" />
+  </Project>
+  <Project Path="cswinrt/cswinrt.vcxproj" Id="6acfd2b2-e8aa-4cd4-aad8-213ce8bb2637">
+    <Platform Solution="*|ARM" Project="Win32" />
+    <Platform Solution="*|ARM64" Project="Win32" />
+    <Build Solution="*|ARM" Project="false" />
+  </Project>
+  <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
+    <Platform Solution="*|ARM" Project="x86" />
+    <Platform Solution="*|ARM64" Project="arm64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Build Project="false" />
+  </Project>
+  <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
+    <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
+    <Platform Solution="*|ARM64" Project="Win32" />
+    <Build Solution="*|ARM64" Project="false" />
+  </Project>
+  <Project Path="WinRT.Runtime/WinRT.Runtime.csproj">
+    <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
+  </Project>
+</Solution>
