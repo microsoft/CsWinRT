@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 using WindowsRuntime.InteropGenerator.Visitors;
@@ -121,6 +123,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Discover all exposed non-generic, user-defined types
+        DiscoverExposedUserDefinedTypes(args, discoveryState, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Discover all generic type instantiations
         DiscoverGenericTypeInstantiations(args, discoveryState, module);
 
@@ -173,6 +180,77 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Discovers all (non-generic) exposed user-defined types in a given assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    private static void DiscoverExposedUserDefinedTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
+    {
+        try
+        {
+            // Create the interop references scoped to this module, which we need to lookup some references from
+            // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
+            // module definition for it. Instead, we just create an empty one here. This is only used to create
+            // type and member references to APIs defined in that module, so this is good enough for this scenario.
+            Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+            ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+            AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
+            InteropReferences interopReferences = new(module, windowsRuntimeModule);
+
+            // We can share a single builder when processing all types to reduce allocations
+            TypeSignatureEquatableSet.Builder interfaces = new();
+
+            foreach (TypeDefinition type in module.GetAllTypes())
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                // We want to process all non-generic user-defined types that are potentially exposed to Windows Runtime
+                if (type.IsPossiblyWindowsRuntimeExposedType &&
+                    !type.IsProjectedWindowsRuntimeType &&
+                    !type.IsWindowsRuntimeManagedOnlyType(interopReferences))
+                {
+                    // Since we're reusing the builder for all types, make sure to clear it first
+                    interfaces.Clear();
+
+                    // Gather all implemented Windows Runtime interfaces for the current type
+                    for (TypeDefinition? currentType = type;
+                        currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
+                        currentType = currentType.BaseType?.Resolve())
+                    {
+                        foreach (InterfaceImplementation implementation in currentType.Interfaces)
+                        {
+                            if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
+                                implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
+                                (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
+                                genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                                genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
+                            {
+                                interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            }
+                        }
+                    }
+
+                    // If the user-defined type doesn't implement any Windows Runtime interfaces, it's not considered exposed
+                    if (interfaces.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    discoveryState.TrackUserDefinedType(type.ToTypeSignature(), interfaces.ToEquatableSet());
+                }
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e);
+        }
+    }
+
+    /// <summary>
     /// Discovers all generic type instantiations in a given assembly.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -208,13 +286,18 @@ internal partial class InteropGenerator
 
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
-                // Gather all known delegate types. We want to gather all projected delegate types,
-                // plus any custom mapped ones. For now, that's only 'EventHandler<T>'.
+                // Gather all known delegate types. We want to gather all projected delegate types, plus any
+                // custom mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
+                // We need to check whether the type is a projected Windows Runtime type from the resolved type
+                // definition, and not from the generic type definition we can retrieve from the type signature.
+                // If we did the latter, the resulting type definition would not include any custom attributes.
                 if (typeDefinition.IsDelegate &&
                     (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
-                     typeSignature.GenericType.IsProjectedWindowsRuntimeType))
+                     typeDefinition.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
+
+                    continue;
                 }
 
                 // Gather all 'KeyValuePair<,>' instances
@@ -222,55 +305,30 @@ internal partial class InteropGenerator
                     SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair))
                 {
                     discoveryState.TrackKeyValuePairType(typeSignature);
+
+                    continue;
                 }
 
                 // Track all projected Windows Runtime generic interfaces
                 if (typeDefinition.IsInterface)
                 {
-                    static void TrackGenericInterfaceType(
-                        InteropGeneratorDiscoveryState discoveryState,
-                        GenericInstanceTypeSignature typeSignature,
-                        InteropReferences interopReferences)
-                    {
-                        if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
-                        {
-                            discoveryState.TrackIEnumerator1Type(typeSignature);
-                        }
-                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
-                        {
-                            discoveryState.TrackIEnumerable1Type(typeSignature);
-
-                            // We need special handling for 'IEnumerator<T>' types whenever we discover any constructed 'IEnumerable<T>'
-                            // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
-                            // from other generated code, or projections. This special handling is needed because unlike with the other
-                            // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
-                            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType(typeSignature.TypeArguments[0]));
-                        }
-                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
-                        {
-                            discoveryState.TrackIList1Type(typeSignature);
-                        }
-                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
-                        {
-                            discoveryState.TrackIReadOnlyList1Type(typeSignature);
-                        }
-                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
-                        {
-                            discoveryState.TrackIDictionary2Type(typeSignature);
-                        }
-                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
-                        {
-                            discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
-                        }
-                    }
-
-                    TrackGenericInterfaceType(discoveryState, typeSignature, interopReferences);
+                    discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
 
                     // We also want to crawl base interfaces
                     foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
                     {
-                        TrackGenericInterfaceType(discoveryState, interfaceSignature, interopReferences);
+                        discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
                     }
+
+                    continue;
+                }
+
+                // Also track all user-defined types that should be exposed to Windows Runtime
+                if (typeDefinition.IsPossiblyWindowsRuntimeExposedType &&
+                    !typeDefinition.IsProjectedWindowsRuntimeType &&
+                    !typeDefinition.IsWindowsRuntimeManagedOnlyType(interopReferences))
+                {
+                    // TODO
                 }
             }
         }

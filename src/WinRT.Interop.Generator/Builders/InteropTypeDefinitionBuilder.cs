@@ -625,9 +625,9 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     public static void TypeMapAttributes(
-        string runtimeClassName,
-        TypeSignature externalTypeMapTargetType,
-        TypeSignature externalTypeMapTrimTargetType,
+        string? runtimeClassName,
+        [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
+        [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
         TypeSignature proxyTypeMapSourceType,
         TypeSignature proxyTypeMapProxyType,
         [NotNullIfNotNull(nameof(interfaceTypeMapProxyType))] TypeSignature? interfaceTypeMapSourceType,
@@ -635,13 +635,17 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        // Emit the '[TypeMap]' attribute for the external type map
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
-            value: runtimeClassName,
-            target: externalTypeMapTargetType,
-            trimTarget: externalTypeMapTrimTargetType,
-            interopReferences: interopReferences,
-            module: module));
+        // Emit the '[TypeMap]' attribute for the external type map.
+        // This is optional, only needed for projected types.
+        if (runtimeClassName is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
+                value: runtimeClassName,
+                target: externalTypeMapTargetType!,
+                trimTarget: externalTypeMapTrimTargetType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
 
         // Emit the '[TypeMapAssociation]' attribute for the proxy type map
         module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(

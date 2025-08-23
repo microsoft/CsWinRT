@@ -893,6 +893,33 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
+    /// Creates a new type definition for COM interface entries for a user-defined type.
+    /// </summary>
+    /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition interfaceEntriesType = new(
+            ns: null,
+            name: $"<UserDefinedInterfaceEntries(Count={numberOfEntries})>",
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the signature for the 'ComInterfaceEntry' type
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+
+        // Add a field for each interface entry
+        for (int i = 0; i < numberOfEntries; i++)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition($"InterfaceEntry(Index={i})", FieldAttributes.Public, comInterfaceEntryType));
+        }
+
+        return interfaceEntriesType;
+    }
+
+    /// <summary>
     /// Creates types to use to declare RVA fields.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

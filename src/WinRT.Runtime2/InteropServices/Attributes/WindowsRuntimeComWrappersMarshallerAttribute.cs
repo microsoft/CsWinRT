@@ -125,5 +125,12 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// </para>
     /// </remarks>
     /// <seealso cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>
-    public abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
+    public virtual object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static NotSupportedException GetNotSupportedException()
+            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(CreateObject)}'.");
+
+        throw GetNotSupportedException();
+    }
 }
