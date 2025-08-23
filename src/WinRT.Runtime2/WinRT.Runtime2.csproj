@@ -1,0 +1,107 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+      
+    <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
+    <RootNamespace>WindowsRuntime</RootNamespace>
+      
+    <!--
+      The assembly name must always be 'WinRT.Runtime', as other components have a dependency on
+      the exact .dll name. For instance, the UWP XAML compiler special cases 'WinRT.Runtime.dll'.
+    -->
+    <AssemblyName>WinRT.Runtime2</AssemblyName>
+    
+
+    <!--
+      Treat all warnings as errors, only in release configurations. This allows the dev inner loop to remain
+      convenient, without errors while testing things out and prototyping things, while still ensuring that
+      all CI runs and official builds (including from PRs) will fail if any warnings are not addressed.
+    -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+
+    <!--
+      Enable the latest warning wave, which shows additional warnings for invalid language features that are disabled by default.
+      For additional info, see https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/warning-waves.
+    -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- Import the global configs from the CodeStyle package (enables all IDExxxx warnings)-->
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+
+    <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      
+    <!--
+      Suppress ref safety warnings in unsafe contexts (see https://github.com/dotnet/csharplang/issues/6476).
+      This is used eg. to replace Unsafe.SizeOf<T>() calls with just sizeof(T), or to just use raw pointers to
+      reinterpret references to managed objects when it is safe to do so. The warnings are not necessary in this
+      context, since in order to use these APIs the caller already has to be in an unsafe context.
+    -->
+    <NoWarn>$(NoWarn);CS8500</NoWarn>
+
+    <!--
+      Enable the compiler strict mode (see https://www.meziantou.net/csharp-compiler-strict-mode.htm).
+      This (poorly documented) mode enables additional warnings for incorrect usages of some features.
+      For instance, this will warn when using the == operator to compare a struct with a null literal.
+    -->
+    <Features>strict</Features>
+
+    <!--
+      Generate documentation files. In theory this should only be abled for published, non source generator projects.
+      However, this is always enabled to work around https://github.com/dotnet/roslyn/issues/41640. Until that's fixed,
+      source generators will also produce an .xml file with their documentation. Note that this doesn't really impact
+      NuGet packages, since the analyzer binaries are packed manually after build, so the .xml files aren't included.
+      When this workaround is no longer needed, the same property should also removed for the \samples directory.
+      Once that issue is fixed, this should be moved down to the src\ specific .props file again, and otherwise disabled.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
+      an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
+      'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
+    -->
+    <NoWarn>$(NoWarn);AD0001</NoWarn>
+  </PropertyGroup>
+    
+  <!--
+    Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
+    automatically, but only when targeting the Windows TFM. So here we're manually including it instead.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+      <_Parameter1>windows6.3</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- Import all .tt files with their generated .g.cs files (the T4 service is imported in the .props file) -->
+  <ItemGroup>
+    <None Update="**\*.tt">
+      <LastGenOutput>%(Filename).g.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <Compile Update="**\*.g.cs">
+      <DependentUpon>$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)')).tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Group all 'WellKnownErrorCodes' files -->
+  <ItemGroup>
+    <Compile Update="InteropServices\WellKnownErrorCodes.cs">
+      <DependentUpon>InteropServices\WellKnownErrorCodes.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <!-- T4 template generation service (the .tt/.g.cs files are resolved in the .targets file) -->
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+</Project>
