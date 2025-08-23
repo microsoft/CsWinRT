@@ -77,7 +77,7 @@ stages:
   # that can't run in the other environment.
   - job: Tests
     displayName: Run Tests
-    enabled: false
+    condition: false
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
