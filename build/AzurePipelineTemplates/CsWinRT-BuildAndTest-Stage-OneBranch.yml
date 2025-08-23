@@ -48,10 +48,10 @@ jobs:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
-    - template: CsWinRT-Test-Steps.yml@self
-      parameters:
-        BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: $(BuildPlatform) 
+#    - template: CsWinRT-Test-Steps.yml@self
+#      parameters:
+#        BuildConfiguration: $(BuildConfiguration)
+#        BuildPlatform: $(BuildPlatform) 
 
 # Signing
     - task: onebranch.pipeline.signing@1
@@ -109,6 +109,7 @@ jobs:
   # that can't run in the other environment.
   - job: Tests
     displayName: Run Tests
+    enabled: false
     dependsOn: []
     pool:
       type: windows

@@ -126,13 +126,13 @@ steps:
 
   - task: NuGetAuthenticate@1
 
-  - task: NuGetCommand@2
-    displayName: NuGet restore cswinrt.sln
+  - task: VSBuild@1
+    displayName: Restore cswinrt.slnx
     inputs:
-      command: 'restore'
-      restoreSolution: '$(Build.SourcesDirectory)\src\cswinrt.slnx'
-      feedsToUse: config
-      nugetConfigPath: NuGet.config
+      solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+      msbuildArgs: /p:RestorePackagesConfig=true /t:restore /p:CIBuildReason=CI
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
 
   - task: NuGetCommand@2
     displayName: NuGet restore testwinrt.sln
@@ -146,7 +146,7 @@ steps:
 
 # PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
     - task: VSBuild@1
-      displayName: Build cswinrt.sln
+      displayName: Build cswinrt.slnx
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
         msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog

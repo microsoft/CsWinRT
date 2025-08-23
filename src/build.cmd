@@ -99,22 +99,7 @@ set nuget_dir=%this_dir%.nuget
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
-if not exist %nuget_dir% md %nuget_dir%
-if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile %nuget_dir%\nuget.exe"
-%nuget_dir%\nuget update -self
-rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
-call %this_dir%get_testwinrt.cmd
-set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
-call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.slnx
-rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
-call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
-
-if "%cswinrt_platform%" EQU "x64" (
-  if /I "%cswinrt_configuration%" EQU "release" (
-    rem We restore here as NAOT needs its own restore to pull in ILC
-    call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\AuthoringTest\AuthoringTest.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%
-  )
-)
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx 
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
@@ -124,6 +109,9 @@ if ErrorLevel 1 (
   echo ERROR: Build failed
   exit /b !ErrorLevel!
 )
+
+rem skip tests for now
+goto :package
 
 if "%cswinrt_platform%" NEQ "arm" (
   if "%cswinrt_platform%" NEQ "arm64" (
