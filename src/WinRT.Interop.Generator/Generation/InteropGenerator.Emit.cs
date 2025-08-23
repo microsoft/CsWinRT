@@ -298,7 +298,7 @@ internal partial class InteropGenerator
                     module: module);
 
                 // Define the 'EventSource' types (for when the delegate types are used for events on projected types)
-                if (typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true)
+                if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.EventHandler1))
                 {
                     InteropTypeDefinitionBuilder.EventSource.EventHandler1(
                         delegateType: typeSignature,
@@ -307,9 +307,27 @@ internal partial class InteropGenerator
                         module: module,
                         eventSourceType: out _);
                 }
-                else if (typeSignature.GenericType.Name?.AsSpan().StartsWith("TypedEventHandler`2"u8) is true)
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.EventHandler2))
                 {
                     InteropTypeDefinitionBuilder.EventSource.EventHandler2(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.VectorChangedEventHandler1))
+                {
+                    InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
+                {
+                    InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         interopReferences: interopReferences,

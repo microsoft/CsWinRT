@@ -71,6 +71,58 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the event source type for some <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c> type.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
+        /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="eventSourceType">The resulting event source type.</param>
+        public static void VectorChangedEventHandler1(
+            GenericInstanceTypeSignature delegateType,
+            TypeDefinition marshallerType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition eventSourceType)
+        {
+            DerivedEventSource(
+                delegateType: delegateType,
+                baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
+                baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor,
+                baseEventSourceConvertToUnmanaged: interopReferences.VectorChangedEventHandler1EventSourceConvertToUnmanaged(delegateType),
+                marshallerType: marshallerType,
+                interopReferences: interopReferences,
+                module: module,
+                eventSourceType: out eventSourceType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the event source type for some <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c> type.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
+        /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="eventSourceType">The resulting event source type.</param>
+        public static void MapChangedEventHandler2(
+            GenericInstanceTypeSignature delegateType,
+            TypeDefinition marshallerType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition eventSourceType)
+        {
+            DerivedEventSource(
+                delegateType: delegateType,
+                baseEventSourceType: interopReferences.EventHandler2EventSource,
+                baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor,
+                baseEventSourceConvertToUnmanaged: interopReferences.MapChangedEventHandler2EventSourceConvertToUnmanaged(delegateType),
+                marshallerType: marshallerType,
+                interopReferences: interopReferences,
+                module: module,
+                eventSourceType: out eventSourceType);
+        }
+
+        /// <summary>
         /// Creates a new type definition for the event source type for some delegate type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
