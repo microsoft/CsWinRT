@@ -140,37 +140,37 @@ internal sealed class InteropReferences
     public TypeReference ValueType => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ValueType"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Span{T}"/>.
+    /// Gets the <see cref="TypeReference"/> for <see cref="Span{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference Span1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Span`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ReadOnlySpan{T}"/>.
+    /// Gets the <see cref="TypeReference"/> for <see cref="ReadOnlySpan{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference ReadOnlySpan1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="byte"/>.
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Byte);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="char"/>.
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Char);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="ushort"/>.
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="ushort"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.UInt16);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="int"/>.
+    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Int32);
@@ -200,13 +200,13 @@ internal sealed class InteropReferences
     public TypeReference EventHandler => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.EventHandler{TEventArgs}"/>.
+    /// Gets the <see cref="TypeReference"/> for <see cref="EventHandler{TEventArgs}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference EventHandler1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.EventHandler{TSender, TEventArgs}"/>.
+    /// Gets the <see cref="TypeReference"/> for <see cref="EventHandler{TSender, TEventArgs}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference EventHandler2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler`2"u8);
@@ -740,39 +740,69 @@ internal sealed class InteropReferences
     public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> .
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IObservableVector1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> .
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IObservableMap2 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> .
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IMapChangedEventArgs1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.Attribute.Attribute()"/>.
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference CollectionChange => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference VectorChangedEventHandler1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference VectorChangedEventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "VectorChangedEventHandlerEventSource`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference MapChangedEventHandler2 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference MapChangedEventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "MapChangedEventHandlerEventSource`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference Attribute_ctor => field ??= Attribute
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.NotSupportedException.NotSupportedException()"/>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="NotSupportedException.NotSupportedException()"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference NotSupportedException_ctor => field ??= NotSupportedException
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.Type.GetTypeFromHandle"/>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="Type.GetTypeFromHandle"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference TypeGetTypeFromHandle => field ??= Type
@@ -781,7 +811,7 @@ internal sealed class InteropReferences
             parameterTypes: [RuntimeTypeHandle.ToValueTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.Type.TypeHandle"/>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="Type.TypeHandle"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference Typeget_TypeHandle => field ??= Type
@@ -789,7 +819,7 @@ internal sealed class InteropReferences
             returnType: RuntimeTypeHandle.ToValueTypeSignature()));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
+    /// Gets the <see cref="TypeReference"/> for <see cref="AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference AttributeUsageAttribute_ctor_AttributeTargets => field ??= AttributeUsageAttribute
@@ -816,7 +846,7 @@ internal sealed class InteropReferences
     public MemberReference TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.IDisposable.Dispose"/>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="IDisposable.Dispose"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference IDisposableDispose => field ??= IDisposable
@@ -851,7 +881,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("GetEnumerator"u8, MethodSignature.CreateInstance(IEnumerator.ToReferenceTypeSignature()));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of <see cref="byte"/>).
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="byte"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte
@@ -863,7 +893,7 @@ internal sealed class InteropReferences
                 _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanCharget_Item => field ??= ReadOnlySpanChar
@@ -876,7 +906,7 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Int32]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}.Length"/> (of <see cref="char"/>).
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}.Length"/> (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanCharget_Length => field ??= ReadOnlySpanChar
@@ -884,7 +914,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("get_Length"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Int32));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of <see cref="ushort"/>).
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="ushort"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanUInt16_ctor => field ??= ReadOnlySpanUInt16
@@ -896,7 +926,7 @@ internal sealed class InteropReferences
                 _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
-    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.SequenceEqual{T}(System.Span{T}, System.ReadOnlySpan{T})"/> (for <see cref="ReadOnlySpanChar"/>).
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.SequenceEqual{T}(Span{T}, ReadOnlySpan{T})"/> (for <see cref="ReadOnlySpanChar"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MethodSpecification MemoryExtensionsSequenceEqualChar => field ??= MemoryExtensions
@@ -1313,6 +1343,28 @@ internal sealed class InteropReferences
                 _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1581,7 +1633,7 @@ internal sealed class InteropReferences
             parameterTypes: [new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
     /// </summary>
     public MemberReference ReadOnlySpan1_ctor(SzArrayTypeSignature arrayType)
     {
@@ -2804,7 +2856,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="EventHandler1EventSource"/>'s marshalling method.
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     public MemberReference EventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
@@ -2816,12 +2868,36 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="EventHandler2EventSource"/>'s marshalling method.
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     public MemberReference EventHandler2EventSourceConvertToUnmanaged(TypeSignature delegateType)
     {
         return EventHandler2EventSource
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [delegateType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s marshalling method.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference VectorChangedEventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
+    {
+        return VectorChangedEventHandler1EventSource
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [delegateType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s marshalling method.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference MapChangedEventHandler2EventSourceConvertToUnmanaged(TypeSignature delegateType)
+    {
+        return MapChangedEventHandler2EventSource
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
                 parameterTypes: [delegateType]));
