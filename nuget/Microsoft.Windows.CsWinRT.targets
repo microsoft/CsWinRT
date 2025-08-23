@@ -321,7 +321,7 @@ $(CsWinRTInternalProjection)
   </Target>
 
   <!-- Note: GenerateTargetFrameworkMonikerAttribute is conditional upon @(Compile) not being empty -->
-  <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
+  <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>

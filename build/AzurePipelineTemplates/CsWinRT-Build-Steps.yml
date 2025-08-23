@@ -130,7 +130,7 @@ steps:
     displayName: NuGet restore cswinrt.sln
     inputs:
       command: 'restore'
-      restoreSolution: '$(Build.SourcesDirectory)\src\cswinrt.sln'
+      restoreSolution: '$(Build.SourcesDirectory)\src\cswinrt.slnx'
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
@@ -148,7 +148,7 @@ steps:
     - task: VSBuild@1
       displayName: Build cswinrt.sln
       inputs:
-        solution: $(Build.SourcesDirectory)\src\cswinrt.sln
+        solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
         msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)

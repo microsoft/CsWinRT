@@ -6,21 +6,28 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+    <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+
+  <!--
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
+    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />	
+  -->
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
+	<!-- Uncomment to generate projection -->
+    <!-- <CsWinRTIncludes>TestComponent.Class;TestComponent.IClass;TestComponent.IRequiredOne;TestComponent.Blittable;TestComponent.NonBlittable</CsWinRTIncludes> -->
+  <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>
+  -->
     <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>
@@ -28,5 +35,9 @@
     <!--Explicitly reference WinAppSDK winmds from TFM uap10.0-->
     <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK)/**/*.winmd" />
   </ItemGroup>
-
+    
+  <ItemGroup>
+    <Compile Remove="TestHost.ProbeByHost.cs" />
+  </ItemGroup>
+    
 </Project>

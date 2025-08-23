@@ -105,7 +105,7 @@ if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https:
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
 set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
-call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
+call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.slnx
 rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
 call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
@@ -118,7 +118,7 @@ if "%cswinrt_platform%" EQU "x64" (
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.slnx 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
