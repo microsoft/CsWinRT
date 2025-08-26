@@ -199,14 +199,9 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            iteratorMethodsType.Methods.Add(hasCurrentMethod);
-
-            // Create a method body for the 'HasCurrent' method
-            hasCurrentMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IIteratorMethodsHasCurrent.Import(module) },
@@ -214,28 +209,27 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
+            iteratorMethodsType.Methods.Add(hasCurrentMethod);
+
             // Define the 'MoveNext' method as follows:
             //
-            // public static bool HasCurrent(WindowsRuntimeObjectReference thisReference)
+            // public static bool MoveNext(WindowsRuntimeObjectReference thisReference)
             MethodDefinition moveNextMethod = new(
                 name: "MoveNext"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            iteratorMethodsType.Methods.Add(moveNextMethod);
-
-            // Create a method body for the 'HasCurrent' method
-            moveNextMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IIteratorMethodsMoveNext.Import(module) },
                     { Ret }
                 }
             };
+
+            iteratorMethodsType.Methods.Add(moveNextMethod);
         }
 
         /// <summary>
