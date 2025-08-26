@@ -195,7 +195,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
 
         try
         {
-            return NotifyCollectionChangedEventArgsMarshaller.ConvertToManaged(value)!;
+            return NotifyCollectionChangedEventArgsMarshaller.ConvertToManaged(result)!;
         }
         finally
         {

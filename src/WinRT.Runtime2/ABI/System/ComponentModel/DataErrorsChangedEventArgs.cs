@@ -86,7 +86,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
 
         try
         {
-            return DataErrorsChangedEventArgsMarshaller.ConvertToManaged(value)!;
+            return DataErrorsChangedEventArgsMarshaller.ConvertToManaged(result)!;
         }
         finally
         {
