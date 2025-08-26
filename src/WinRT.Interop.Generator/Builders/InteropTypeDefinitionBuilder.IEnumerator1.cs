@@ -448,7 +448,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
 
-            // Add and implement the 'Reset' method
+            // Add and implement the 'MoveNext' method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumeratorMoveNext.Import(module),
                 method: moveNextMethod);
