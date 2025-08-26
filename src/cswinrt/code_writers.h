@@ -9790,13 +9790,52 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
             bind<write_comwrapper_marshaller_attribute>(type),
             name,
             name);
-        w.write(R"(%)", bind_each([](writer& w, auto&& field)
+
+        // ctor
+        w.write("public %(%)\n{\n%\n}\n",
+            name,
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write("% _%", field.type, field.name);
+            }, ", ", fields),
+            bind_each([](writer& w, auto&& field)
+            {
+                w.write("% = _%; ", field.name, field.name);
+            }, fields));
+
+        // properties
+        w.write("%", 
+            bind_each([](writer& w, auto&& field)
             {
                 w.write("public % %\n{\n", field.type, field.name);
-                w.write("readonly get;\n");
-                w.write("set{ field = value; }\n");
+                w.write("readonly get; set;\n");
                 w.write("}\n");
-            }, fields)),
+            }, fields));
+
+        // ==
+        w.write("public static bool operator ==(% x, % y) => %;\n",
+            name,
+            name,
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write("x.% == y.%", field.name, field.name);
+            }, " && ", fields));
+
+        // !=
+        w.write("public static bool operator !=(% x, % y) => !(x == y);\n",
+            name,
+            name);
+
+        // equals
+        w.write("public bool Equals(% other) => this == other;\n", name);
+        w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", name);
+
+        // hashcode
+        w.write("public override int GetHashCode() => %;\n",
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write("%.GetHashCode()", field.name);
+            }, " ^ ", fields));
 
         w.write("}\n");
     }
