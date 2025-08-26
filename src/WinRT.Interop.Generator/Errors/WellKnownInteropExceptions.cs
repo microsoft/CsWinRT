@@ -308,7 +308,7 @@ internal static class WellKnownInteropExceptions
         return Exception(35,
             $"One or more referenced assemblies were compiled against CsWinRT 2.x (i.e. referencing 'WinRT.Runtime.dll' version '2.x'), which is not compatible with CsWinRT 3.0 (i.e. referencing 'WinRT.Runtime.dll' version '3.0'). " +
             $"CsWinRT 3.0 is not backward-compatible with CsWinRT 2.x, so referencing any assemblies targeting an older version of CsWinRT is not supported. Those assemblies will need to be recompiled using CsWinRT 3.0 (i.e. using" +
-            $"a TFM such as 'net10.0-windows10.0.26100.1', where the '.1' revision number at the end of the target platform version indicates CsWinRT 3.0). The names of the assemblies causing issues are: {combinedNames}.");
+            $"a TFM such as 'net10.0-windows10.0.26100.1', where the '.1' revision number at the end of the target platform version indicates CsWinRT 3.0). The following assemblies are compiled with the older version: {combinedNames}.");
     }
 
     /// <summary>
