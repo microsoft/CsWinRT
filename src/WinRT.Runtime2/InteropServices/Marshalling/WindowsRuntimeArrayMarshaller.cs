@@ -47,7 +47,7 @@ public static unsafe class WindowsRuntimeArrayMarshaller
             void* result;
 
             // Unbox the underlying array (we always just discard the outer reference)
-            IReferenceArrayVftbl.get_ValueUnsafe(value, &count, &result).Assert();
+            IReferenceArrayVftbl.get_ValueUnsafe(referencePtr, &count, &result).Assert();
 
             // Forward to the supplied callback
             return TCallback.CreateArray(count, result);
