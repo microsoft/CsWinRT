@@ -304,7 +304,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         hresult = IUnknownVftbl.QueryInterfaceUnsafe(activationFactoryUnknown, in iid, out activationFactory);
 
         // We can always release the original activation factory at this point
-        _ = IUnknownVftbl.ReleaseUnsafe(activationFactory);
+        _ = IUnknownVftbl.ReleaseUnsafe(activationFactoryUnknown);
 
         return hresult;
     }
