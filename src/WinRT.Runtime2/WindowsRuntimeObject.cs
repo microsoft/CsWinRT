@@ -67,7 +67,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
     /// <remarks>
-    /// This constructor should only be used when activating seald types (both projected and user-defined types).
+    /// This constructor should only be used when activating sealed types (both projected and user-defined types).
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
