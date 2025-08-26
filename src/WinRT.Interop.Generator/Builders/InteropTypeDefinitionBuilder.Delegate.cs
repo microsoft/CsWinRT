@@ -419,7 +419,7 @@ internal partial class InteropTypeDefinitionBuilder
                 .Import(module)
                 .ToValueTypeSignature();
 
-            // Declare 3 variables:
+            // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'WindowsRuntimeObjectReferenceValue' (for 'senderValue')
             //   [2]: 'WindowsRuntimeObjectReferenceValue' (for 'eValue')
@@ -553,7 +553,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'ComputeVtables' method as follows:
             //
-            // public static ComInterfaceEntry* ComputeVtables(out int count)
+            // public override ComInterfaceEntry* ComputeVtables(out int count)
             MethodDefinition computeVtablesMethod = new(
                 name: "ComputeVtables"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
