@@ -87,7 +87,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
 
         try
         {
-            return UriMarshaller.ConvertToManaged(value)!;
+            return UriMarshaller.ConvertToManaged(result)!;
         }
         finally
         {
