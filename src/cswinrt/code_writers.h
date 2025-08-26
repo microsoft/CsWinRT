@@ -3549,6 +3549,18 @@ bind<write_lazy_interface_type_name>(interface_type));
             [&](auto const&) {});
     }
 
+    void write_editor_browsable_never_attribute(writer& w)
+    {
+        w.write("[EditorBrowsable(EditorBrowsableState.Never)]\n");
+    }
+
+    void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n");
+        w.write("   value: \"Windows.Foundation.IReference<%>\",\n", bind<write_projection_type>(type));
+        w.write("   target: typeof(%),\n", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
+        w.write("   trimTarget: typeof(%))]\n", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
+    }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
@@ -9837,6 +9849,7 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
                 w.write("%.GetHashCode()", field.name);
             }, " ^ ", fields));
 
+        // end class
         w.write("}\n");
     }
 
@@ -9846,7 +9859,29 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
         {
             return;
         }
-        w.write("Test");
+
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+
+        w.write("%", bind<write_winrt_typemapgroup_assembly_attribute>(type));
+
+        // Marshaller class
+        w.write(bind<write_editor_browsable_never_attribute>());
+        w.write("public static unsafe class %Marshaller\n{\n", name);
+       
+        // Marshaller.BoxToUnmanaged
+        w.write("public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)\n{\n", name);
+        w.write("return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOf%);\n", name);
+        w.write("}\n");
+        // Marshaller.BoxToUnmanaged End
+ 
+        // Marshaller.UnboxToManaged
+        w.write("public static %? UnboxToManaged(void* value)\n{\n", name);
+        w.write("return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);\n", name);
+        w.write("}\n");
+        // Marshaller.UnboxToManaged End
+        
+        w.write("}\n");
+        // Marshaller class End
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
