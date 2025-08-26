@@ -326,14 +326,14 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeComWrappersCallback.Import(module)) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeObjectComWrappersCallback.Import(module)) }
             };
 
             module.TopLevelTypes.Add(callbackType);
 
             // Define the 'CreateObject' method as follows:
             //
-            // public static object CreateObject(void* value)
+            // public static object CreateObject(void* value, CreatedWrapperFlags wrapperFlags)
             MethodDefinition createObjectMethod = new(
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -363,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'CreateObject' method
             callbackType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeComWrappersCallbackCreateObject.Import(module),
+                declaration: interopReferences.IWindowsRuntimeObjectComWrappersCallbackCreateObject.Import(module),
                 method: createObjectMethod);
         }
 

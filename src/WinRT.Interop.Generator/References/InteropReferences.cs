@@ -574,10 +574,10 @@ internal sealed class InteropReferences
     public TypeReference IWindowsRuntimeInterface => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeInterface"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeObjectComWrappersCallback</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IWindowsRuntimeComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeComWrappersCallback"u8);
+    public TypeReference IWindowsRuntimeObjectComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeObjectComWrappersCallback"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback</c>.
@@ -1154,16 +1154,16 @@ internal sealed class InteropReferences
             returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeObjectComWrappersCallback.CreateObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public MemberReference IWindowsRuntimeComWrappersCallbackCreateObject => field ??= IWindowsRuntimeComWrappersCallback
+    public MemberReference IWindowsRuntimeObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeObjectComWrappersCallback
         .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Object,
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.TryCreateObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject => field ??= IWindowsRuntimeUnsealedObjectComWrappersCallback
