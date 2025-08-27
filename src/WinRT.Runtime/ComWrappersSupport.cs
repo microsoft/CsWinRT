@@ -651,8 +651,10 @@ namespace WinRT
         internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            bool hasRuntimeClassName = !string.IsNullOrEmpty(runtimeClassName);
+
             Type implementationType = null;
-            if (!string.IsNullOrEmpty(runtimeClassName))
+            if (hasRuntimeClassName)
             {
                 // Check if this is a nullable type where there are no references to the nullable version, but
                 // there is to the actual type.
@@ -679,6 +681,13 @@ namespace WinRT
                     (staticallyDeterminedType == implementationType ||
                      staticallyDeterminedType.IsAssignableFrom(implementationType))))
                 {
+                    // We register the type we ended up using so that if we need to create an RCW for the same runtime class name
+                    // again without static type information, we can use this previous knowledge. This is specifcally useful in
+                    // weak reference scenarios where ComWrappers may call us to rehydrate an RCW where we won't have static type information.
+                    if (hasRuntimeClassName && staticallyDeterminedType.IsClass)
+                    {
+                        TypeNameSupport.RegisterBaseTypeForTypeName(runtimeClassName, staticallyDeterminedType);
+                    }
                     return staticallyDeterminedType;
                 }
             }
