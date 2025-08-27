@@ -3555,22 +3555,6 @@ bind<write_lazy_interface_type_name>(interface_type));
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_type = w.write_temp("%", bind<write_abi_type>(type));
-        struct field_info
-        {
-            std::string type;
-            std::string name;
-            bool is_blittable;
-        };
-        std::vector<field_info> fields;
-        for (auto&& field : type.FieldList())
-        {
-            auto semantics = get_type_semantics(field.Signature().Type());
-            field_info field_info{};
-            field_info.type = w.write_temp("%", [&](writer& w) { write_projection_type(w, semantics); });
-            field_info.name = field.Name();
-            field_info.is_blittable = is_type_blittable(semantics);
-            fields.emplace_back(field_info);
-        }
 
         w.write(R"(
 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -3578,36 +3562,77 @@ public static unsafe class %Marshaller
 {
 )", name);
 
-        w.write("public static % ConvertToUnmanaged(% value)\n{\n%\n}\n",
+        w.write("public static % ConvertToUnmanaged(% value)\n{\nreturn new() {\n%\n};\n}\n",
             abi_type,
             projection_name,
             bind_list([](writer& w, auto&& field)
-                {
-                    // Generate assignment logic based on type
-                    if (field.type == "bool")
-                    {
-                        w.write("% = value.% ? (byte)1 : (byte)0", field.name, field.name);
-                    }
-                    else if (field.type == "char")
-                    {
-                        w.write("% = (ushort)value.%", field.name, field.name);
-                    }
-                    else if (field.type == "string")
-                    {
-                        w.write("% = Marshal.StringToHGlobalUni(value.%)", field.name, field.name);
-                    }
-                    else if (field.type.find("Nullable") != std::string::npos)
-                    {
-                        w.write("% = value.%.HasValue ? Marshal.AllocHGlobal(sizeof(long)) : IntPtr.Zero", field.name, field.name);
-                    }
-                    else
-                    {
-                        // Default: direct assignment
-                        w.write("% = value.%", field.name, field.name);
-                    }
+            {
+                auto semantics = get_type_semantics(field.Signature().Type());
+                auto fieldName = field.Name();
 
-                }, ",\n", fields));
-
+                call(semantics,
+                    [&](object_type) 
+                    {
+                        w.write("    % = MarshalInterface<%>.FromManaged(value.%)", fieldName, fieldName);
+                    },
+                    [&](guid_type) 
+                    { 
+                        w.write("    % = value.%.ToGuid()", fieldName, fieldName);
+                    },
+                    [&](type_type) 
+                    { 
+                        w.write("    % = Marshal.GetIUnknownForObject(value.%)", fieldName, fieldName);
+                    },
+                    [&](type_definition const& type)
+                    {
+                        switch (get_category(type))
+                        {
+                        case category::enum_type:
+                            w.write("    % = (ABI.%)(int)value.%",
+                                fieldName, type.TypeName(), fieldName);
+                            break;
+                        case category::struct_type:
+                            w.write("    % = %.ConvertToUnmanaged(value.%)",
+                                fieldName, type.TypeName(), fieldName);
+                            break;
+                        default:
+                            w.write("    // Unsupported type_definition for %", fieldName);
+                            break;
+                        }
+                    },
+                    [&](generic_type_index) 
+                    { 
+                        w.write("    // Cannot marshal generic type parameter % at runtime", fieldName);
+                    },
+                    [&](generic_type_instance)
+                    {
+                        auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
+                        w.write("    % = MarshalInspectable<object>.GetAbi(MarshalInterface<%>.CreateMarshaler2(value.%))", fieldName, typeName, fieldName);
+                    },
+                    [&](generic_type_param)
+                    { 
+                        w.write("    // Cannot marshal generic type param %", fieldName);
+                    },
+                    [&](fundamental_type const& type) 
+                    { 
+                        if (type == fundamental_type::Boolean)
+                        {
+                            w.write("    % = value.% ? (byte)1 : (byte)0", fieldName, fieldName);
+                        }
+                        else if (type == fundamental_type::Char)
+                        {
+                            w.write("    % = (ushort)value.%", fieldName, fieldName);
+                        }
+                        else if (type == fundamental_type::String)
+                        {
+                            w.write("    % = MarshalString.GetAbi(MarshalString.CreateMarshaler(value.%))", fieldName, fieldName);
+                        }
+                        else
+                        {
+                            w.write("    % = value.%", fieldName, fieldName);
+                        } 
+                    });
+            }, ",\n", type.FieldList()));
 
         w.write(R"(
 public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(% value)
