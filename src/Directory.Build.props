@@ -10,7 +10,7 @@
     <MicrosoftWinAppSDKWinUIVersion>1.8.251105000</MicrosoftWinAppSDKWinUIVersion>
     <MicrosoftWinAppSDKIxpVersion>1.8.251104001</MicrosoftWinAppSDKIxpVersion>
     <MicrosoftWinAppSDKFoundationVersion>1.8.251104000</MicrosoftWinAppSDKFoundationVersion>
-    <DebugType>full</DebugType>
+    <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>preview</LangVersion>
     <NoWarn>8305;0618</NoWarn>
