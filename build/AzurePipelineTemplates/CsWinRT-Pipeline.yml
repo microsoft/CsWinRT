@@ -24,10 +24,9 @@ resources:
     name: OneBranch.Pipelines/GovernedTemplates
     ref: refs/heads/main
   - repository: TestWinRT
-    type: github
-    name: microsoft/TestWinRT
-    endpoint: microsoft
-    ref: '00fdd7b98daa0156f4214d0a8eb3afffc89efe48'
+    type: git
+    name: TestWinRT.mirror
+    ref: 'ea7f7d821d4139e6cc3293d28bca214dcef014ea'
 
 extends:
   template: v2/Microsoft.Official.yml@templates
