@@ -3549,38 +3549,329 @@ bind<write_lazy_interface_type_name>(interface_type));
             [&](auto const&) {});
     }
 
-    void write_editor_browsable_never_attribute(writer& w)
+
+    void write_marshaller_class(writer& w, TypeDef const& type)
     {
-        w.write("[EditorBrowsable(EditorBrowsableState.Never)]\n");
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_type = w.write_temp("%", bind<write_abi_type>(type));
+        struct field_info
+        {
+            std::string type;
+            std::string name;
+            bool is_blittable;
+        };
+        std::vector<field_info> fields;
+        for (auto&& field : type.FieldList())
+        {
+            auto semantics = get_type_semantics(field.Signature().Type());
+            field_info field_info{};
+            field_info.type = w.write_temp("%", [&](writer& w) { write_projection_type(w, semantics); });
+            field_info.name = field.Name();
+            field_info.is_blittable = is_type_blittable(semantics);
+            fields.emplace_back(field_info);
+        }
+
+        w.write(R"(
+[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static unsafe class %Marshaller
+{
+)", name);
+
+        w.write("public static % ConvertToUnmanaged(% value)\n{\n%\n}\n",
+            abi_type,
+            projection_name,
+            bind_list([](writer& w, auto&& field)
+                {
+                    // Generate assignment logic based on type
+                    if (field.type == "bool")
+                    {
+                        w.write("% = value.% ? (byte)1 : (byte)0", field.name, field.name);
+                    }
+                    else if (field.type == "char")
+                    {
+                        w.write("% = (ushort)value.%", field.name, field.name);
+                    }
+                    else if (field.type == "string")
+                    {
+                        w.write("% = Marshal.StringToHGlobalUni(value.%)", field.name, field.name);
+                    }
+                    else if (field.type.find("Nullable") != std::string::npos)
+                    {
+                        w.write("% = value.%.HasValue ? Marshal.AllocHGlobal(sizeof(long)) : IntPtr.Zero", field.name, field.name);
+                    }
+                    else
+                    {
+                        // Default: direct assignment
+                        w.write("% = value.%", field.name, field.name);
+                    }
+
+                }, ",\n", fields));
+
+
+        w.write(R"(
+public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(% value)
+{
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOf%);
+}
+
+public static % UnboxToManaged(void* value)
+{
+    return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
+}
+}
+)", projection_name, name, projection_name, projection_name);
+
+    }
+
+    void write_property_value_impl(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+
+        w.write(R"(
+file static unsafe class %PropertyValueImpl
+{
+    [FixedAddressValueType]
+    private static readonly IPropertyValueVftbl Vftbl;
+
+    static %PropertyValueImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        Vftbl.get_Type = &get_Type;
+        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
+        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetRect = &%ReferenceImpl.get_Value;
+        Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, int**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, uint**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, long**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, ulong**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, int*, float**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, %**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+    }
+
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_Type(void* thisPtr, PropertyType* value)
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = PropertyType.OtherType;
+
+        return WellKnownErrorCodes.S_OK;
+    }
+}
+)", name, name);
+    }
+
+    void write_reference_impl(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        w.write(R"(
+file static unsafe class %ReferenceImpl
+{
+    [FixedAddressValueType]
+    private static readonly %ReferenceVftbl Vftbl;
+
+    static %ReferenceImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        Vftbl.get_Value = &get_Value;
+    }
+
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    public static HRESULT get_Value(void* thisPtr, %* result)
+    {
+        if (result is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            *result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+}
+)", name, name, name, projection_name, projection_name);
+    }
+
+    void write_reference_vftbl_impl(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        w.write("[StructLayout(LayoutKind.Sequential)]");
+        w.write(R"(
+file unsafe struct %ReferenceVftbl
+{
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+    public delegate* unmanaged[MemberFunction]<void*, %*, HRESULT> get_Value;
+}
+)", name, projection_name);
+    }
+
+    void write_com_wrappers_marshaller_impl(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        w.write(R"(
+internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+{
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+    }
+
+    public override ComInterfaceEntry* ComputeVtables(out int count)
+    {
+        count = sizeof(%InterfaceEntries) / sizeof(ComInterfaceEntry);
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
+    }
+
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in WellKnownInterfaceIds.IID_IReferenceOf%);
+    }
+}
+)", name, name, name, projection_name, name);
+    }
+
+    void write_interface_entries_impl(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+
+        w.write(R"(
+file static class %InterfaceEntriesImpl
+{
+    [FixedAddressValueType]
+    public static readonly %InterfaceEntries Entries;
+
+    static %InterfaceEntriesImpl()
+    {
+        Entries.IReferenceOf%.IID = WellKnownInterfaceIds.IID_IReferenceOf%;
+        Entries.IReferenceOf%.Vtable = %ReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = %PropertyValueImpl.Vtable;
+        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.Vtable = IStringableImpl.Vtable;
+        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
+        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
+        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
+        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
+    }
+}
+)", name, name, name, name, name, name, name, name);
+    }
+
+    void write_com_interface_entries(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
+
+        w.write(R"(
+file struct %InterfaceEntries
+{
+    public ComInterfaceEntry IReferenceOf%;
+    public ComInterfaceEntry IPropertyValue;
+    public ComInterfaceEntry IStringable;
+    public ComInterfaceEntry IWeakReferenceSource;
+    public ComInterfaceEntry IMarshal;
+    public ComInterfaceEntry IAgileObject;
+    public ComInterfaceEntry IInspectable;
+    public ComInterfaceEntry IUnknown;
+}
+)", name, name);
     }
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
-        w.write("[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n");
-        w.write("   value: \"Windows.Foundation.IReference<%>\",\n", bind<write_projection_type>(type));
-        w.write("   target: typeof(%),\n", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
-        w.write("   trimTarget: typeof(%))]\n", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
+        auto ns = type.TypeNamespace();
+        auto name = type.TypeName();
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        w.write(R"(
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.IReference<%.%>",
+    target: typeof(%),
+    trimTarget: typeof(%))]
+)", ns, name, projection_name, projection_name);
+
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
-        w.write(R"([WindowsRuntimeMetadata("%")]%)",
-            type.TypeName(),
-            "\n");
+        std::filesystem::path db_path(type.get_database().path());
+        w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
     }
 
     void write_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
-        w.write(R"([WindowsRuntimeClassName("%")]%)",
-            type.TypeName(),
-            "\n");
+        w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference<%.%>\")]\n",
+            type.TypeNamespace(), type.TypeName());
     }
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
-        w.write(R"([%ComWrappersMarshaller]%)",
-            type.TypeName(),
-            "\n");
+        w.write("[%ComWrappersMarshaller]\n",
+            type.TypeName());
     }
 
     void write_winrt_attribute(writer& w, TypeDef const& type)
@@ -9860,28 +10151,28 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
             return;
         }
 
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% struct %\n{\n",
+            bind<write_winrt_classname_attribute>(type),
+            bind<write_comwrapper_marshaller_attribute>(type),
+            internal_accessibility(),
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
+
+        for (auto&& field : type.FieldList())
+        {
+            w.write("public ");
+            write_abi_type(w, get_type_semantics(field.Signature().Type()));
+            w.write(" %;\n", field.Name());
+        }
+        w.write("}\n");
 
         w.write("%", bind<write_winrt_typemapgroup_assembly_attribute>(type));
-
-        // Marshaller class
-        w.write(bind<write_editor_browsable_never_attribute>());
-        w.write("public static unsafe class %Marshaller\n{\n", name);
-       
-        // Marshaller.BoxToUnmanaged
-        w.write("public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)\n{\n", name);
-        w.write("return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOf%);\n", name);
-        w.write("}\n");
-        // Marshaller.BoxToUnmanaged End
- 
-        // Marshaller.UnboxToManaged
-        w.write("public static %? UnboxToManaged(void* value)\n{\n", name);
-        w.write("return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);\n", name);
-        w.write("}\n");
-        // Marshaller.UnboxToManaged End
-        
-        w.write("}\n");
-        // Marshaller class End
+        w.write("%", bind<write_marshaller_class>(type));
+        w.write("%", bind<write_com_interface_entries>(type));
+        w.write("%", bind<write_interface_entries_impl>(type));
+        w.write("%", bind<write_com_wrappers_marshaller_impl>(type));
+        w.write("%", bind<write_reference_vftbl_impl>(type));
+        w.write("%", bind<write_reference_impl>(type));
+        w.write("%", bind<write_property_value_impl>(type));
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)

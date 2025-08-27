@@ -399,122 +399,122 @@ namespace cswinrt
     auto bind(Args&&... args)
     {
         return [&](auto& writer)
-        {
-            F(writer, args...);
-        };
+            {
+                F(writer, args...);
+            };
     }
 
     template <typename F, typename... Args>
     auto bind(F fwrite, Args const&... args)
     {
         return [&, fwrite](auto& writer)
-        {
-            fwrite(writer, args...);
-        };
+            {
+                fwrite(writer, args...);
+            };
     }
 
     template <auto F, typename List, typename... Args>
     auto bind_each(List const& list, Args const&... args)
     {
         return [&](auto& writer)
-        {
-            for (auto&& item : list)
             {
-                F(writer, item, args...);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    F(writer, item, args...);
+                }
+            };
     }
 
     template <typename List, typename... Args>
     auto bind_each(List const& list, Args const&... args)
     {
         return [&](auto& writer)
-        {
-            for (auto&& item : list)
             {
-                writer.write(item, args...);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    writer.write(item, args...);
+                }
+            };
     }
 
     template <typename F, typename List, typename... Args>
     auto bind_each(F fwrite, List const& list, Args const&... args)
     {
         return [&, fwrite](auto& writer)
-        {
-            for (auto&& item : list)
             {
-                fwrite(writer, item, args...);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    fwrite(writer, item, args...);
+                }
+            };
     }
 
     template <typename F, typename T, typename... Args>
     auto bind_list(F fwrite, std::string_view const& delimiter, T const& list, Args const&... args)
     {
         return [&](auto& writer)
-        {
-            bool first{ true };
-
-            for (auto&& item : list)
             {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    writer.write(delimiter);
-                }
+                bool first{ true };
 
-                fwrite(writer, item, args...);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        writer.write(delimiter);
+                    }
+
+                    fwrite(writer, item, args...);
+                }
+            };
     }
 
     template <auto F, typename T, typename... Args>
     auto bind_list(std::string_view const& delimiter, T const& list, Args const&... args)
     {
         return [&](auto& writer)
-        {
-            bool first{ true };
-
-            for (auto&& item : list)
             {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    writer.write(delimiter);
-                }
+                bool first{ true };
 
-                F(writer, item, args...);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        writer.write(delimiter);
+                    }
+
+                    F(writer, item, args...);
+                }
+            };
     }
 
     template <typename T>
     auto bind_list(std::string_view const& delimiter, T const& list)
     {
         return [&](auto& writer)
-        {
-            bool first{ true };
-
-            for (auto&& item : list)
             {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    writer.write(delimiter);
-                }
+                bool first{ true };
 
-                writer.write(item);
-            }
-        };
+                for (auto&& item : list)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        writer.write(delimiter);
+                    }
+
+                    writer.write(item);
+                }
+            };
     }
 }
