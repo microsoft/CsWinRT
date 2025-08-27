@@ -4,6 +4,8 @@
 using System;
 using System.Runtime.InteropServices;
 
+#pragma warning disable IDE0060 // TODO
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>

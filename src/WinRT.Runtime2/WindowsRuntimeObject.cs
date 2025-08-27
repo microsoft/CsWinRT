@@ -15,6 +15,8 @@ using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0046
 
+#pragma warning disable CS8618, IDE0059, IDE0060 // TODO
+
 namespace WindowsRuntime;
 
 /// <summary>
