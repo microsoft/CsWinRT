@@ -3636,7 +3636,7 @@ public static unsafe class %Marshaller
                                 else if (type == fundamental_type::String)
                                 {
                                     // TODO: replace with cswinrt 3.0
-                                    w.write("    % = HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                                    w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
                                 }
                                 else
                                 {
@@ -3657,15 +3657,15 @@ public static unsafe class %Marshaller
                         call(semantics,
                             [&](object_type)
                             {
-                                w.write("    % = WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", fieldName, fieldName);
+                                w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", fieldName);
                             },
                             [&](guid_type)
                             {
-                                w.write("    % = value.%", fieldName, fieldName);
+                                w.write("    value.%", fieldName);
                             },
                             [&](type_type)
                             {
-                                w.write("    % = value.%", fieldName, fieldName);
+                                w.write("    value.%", fieldName);
                             },
                             [&](type_definition const& type)
                             {
@@ -3673,12 +3673,12 @@ public static unsafe class %Marshaller
                                 {
                                 // TODO: Handle other categories
                                 case category::enum_type:
-                                    w.write("    % = value.%", fieldName, fieldName);
+                                    w.write("    value.%", fieldName);
                                     // TODO: array case
                                     break;
                                 case category::struct_type:
-                                    w.write("    % = %.ConvertToManaged(value.%)",
-                                        fieldName, type.TypeName(), fieldName);
+                                    w.write("    %.ConvertToManaged(value.%)",
+                                        type.TypeName(), fieldName);
                                     break;
                                 default:
                                     w.write("    // Unsupported type_definition for %", fieldName);
@@ -3691,9 +3691,9 @@ public static unsafe class %Marshaller
                             },
                             [&](generic_type_instance)
                             {
-                                w.write("    // TODO: use 3.0 version", fieldName);
+                                // TODO: use 3.0 version
                                 auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
-                                w.write("    % = MarshalInterface<%>.FromAbi(value.%)", fieldName, typeName, fieldName);
+                                w.write("    MarshalInterface<%>.FromAbi(value.%)", typeName, fieldName);
                             },
                             [&](generic_type_param)
                             {
@@ -3703,19 +3703,19 @@ public static unsafe class %Marshaller
                             {
                                 if (type == fundamental_type::Boolean)
                                 {
-                                    w.write("    % = value.% != 0", fieldName, fieldName);
+                                    w.write("    value.% != 0", fieldName);
                                 }
                                 else if (type == fundamental_type::Char)
                                 {
-                                    w.write("    % = (char)value.%", fieldName, fieldName);
+                                    w.write("    (char)value.%", fieldName);
                                 }
                                 else if (type == fundamental_type::String)
                                 {
-                                    w.write("    % = HStringMarshaller.ConvertToManaged(value.%)", fieldName, fieldName);
+                                    w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", fieldName);
                                 }
                                 else
                                 {
-                                    w.write("    % = value.%", fieldName, fieldName);
+                                    w.write("    value.%", fieldName);
                                 }
                             });
                     }, ",\n", type.FieldList()));
@@ -3769,25 +3769,25 @@ R"(file static unsafe class %PropertyValueImpl
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetRect = &%ReferenceImpl.get_Value;
-        Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, int**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, uint**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, long**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, ulong**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, int*, float**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, %**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, int**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, uint**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, long**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, ulong**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, int*, float**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.DateTimeOffset**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.TimeSpan**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, %**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
     }
 
     public static nint Vtable
@@ -3797,7 +3797,7 @@ R"(file static unsafe class %PropertyValueImpl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_Type(void* thisPtr, PropertyType* value)
+    private static int get_Type(void* thisPtr, PropertyType* value)
     {
         if (value == null)
         {
@@ -3835,7 +3835,7 @@ R"(file static unsafe class %ReferenceImpl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT get_Value(void* thisPtr, %* result)
+    public static int get_Value(void* thisPtr, %* result)
     {
         if (result is null)
         {
@@ -3864,13 +3864,13 @@ R"(file static unsafe class %ReferenceImpl
         w.write(
 R"(file unsafe struct %ReferenceVftbl
 {
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
-    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, %*, HRESULT> get_Value;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, int> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
+    public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
 }
 )", name, projection_name);
     }
@@ -3884,7 +3884,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+        return WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -7189,7 +7189,7 @@ return 0;
 }
 catch (Exception __ex)
 {
-return __ex.HResult;
+return __ex.int;
 }
 })",
 !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
@@ -7226,7 +7226,7 @@ return 0;
 }
 catch (Exception __ex)
 {
-return __ex.HResult;
+return __ex.int;
 }
 })",
 !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
@@ -10199,7 +10199,7 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
         }
 
         // struct
-        w.write("%%%struct %: IEquatable<%>\n{\n",
+        w.write("%%%public struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
