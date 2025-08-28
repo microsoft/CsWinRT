@@ -7,6 +7,7 @@
 #include <regex>
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
+#include "guid_gen.h"
 
 #define INSPECTABLE_METHOD_COUNT 6
 
@@ -68,6 +69,53 @@ namespace cswinrt
     static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
     {
         return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
+    }
+
+    static void write_guid_from_signature(writer& w, std::string const& signature)
+    {
+        // 1. Convert the input string into a std::array<char, N> for generate_guid
+        // Include the null terminator because your helpers likely expect full literal
+        std::array<char, 512> sig_array{}; // large enough buffer
+        size_t len = signature.size();
+        for (size_t i = 0; i < len; ++i)
+        {
+            sig_array[i] = signature[i];
+        }
+
+        // 2. Generate the GUID using your constexpr pipeline
+        auto guid_value = generate_guid(sig_array);
+
+        // 3. Emit the ReadOnlySpan<byte> block in little-endian layout
+        w.write("ReadOnlySpan<byte> asdfasdf =\n[\n    ");
+        w.write_printf(
+            "0x%X, 0x%X, 0x%X, 0x%X,\n    "
+            "0x%X, 0x%X,\n    "
+            "0x%X, 0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X,\n    "
+            "0x%X\n",
+            (guid_value.Data1 >> 0) & 0xFF,
+            (guid_value.Data1 >> 8) & 0xFF,
+            (guid_value.Data1 >> 16) & 0xFF,
+            (guid_value.Data1 >> 24) & 0xFF,
+            (guid_value.Data2 >> 0) & 0xFF,
+            (guid_value.Data2 >> 8) & 0xFF,
+            (guid_value.Data3 >> 0) & 0xFF,
+            (guid_value.Data3 >> 8) & 0xFF,
+            guid_value.Data4[0],
+            guid_value.Data4[1],
+            guid_value.Data4[2],
+            guid_value.Data4[3],
+            guid_value.Data4[4],
+            guid_value.Data4[5],
+            guid_value.Data4[6],
+            guid_value.Data4[7]);
+        w.write("];\n");
     }
 
     std::string internal_accessibility()
@@ -10290,7 +10338,8 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
             }
             w.write("}\n\n");
         }
-
+        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type)).c_str();
+        w.write("%\n", bind<write_guid_from_signature>(guid_sig));
         w.write("%\n", bind<write_winrt_typemapgroup_assembly_attribute>(type));
         w.write("%\n", bind<write_marshaller_class>(type));
         w.write("%\n", bind<write_com_interface_entries>(type));

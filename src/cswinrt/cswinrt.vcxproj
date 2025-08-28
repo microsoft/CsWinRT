@@ -51,6 +51,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="guid_gen.h" />
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="code_writers.h" />
     <ClInclude Include="helpers.h" />

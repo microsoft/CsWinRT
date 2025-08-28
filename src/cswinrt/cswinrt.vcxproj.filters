@@ -13,6 +13,7 @@
     <ClInclude Include="text_writer.h" />
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="task_group.h" />
+    <ClInclude Include="guid_gen.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
@@ -195,6 +196,12 @@
     <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />
