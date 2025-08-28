@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -10,6 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// Binding type for the <c>IUnknown</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IUnknownVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

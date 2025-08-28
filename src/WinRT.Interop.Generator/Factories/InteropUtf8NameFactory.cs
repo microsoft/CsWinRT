@@ -111,7 +111,7 @@ internal static class InteropUtf8NameFactory
             else
             {
                 // If the type is a type definition, append the name of the type definition.
-                // Just like with generic types, we can skip the namespace if the deth is '0'.
+                // Just like with generic types, we can skip the namespace if the depth is '0'.
                 interpolatedStringHandler.AppendFormatted(depth == 0 ? typeSignature.Name! : typeSignature.FullName);
             }
 

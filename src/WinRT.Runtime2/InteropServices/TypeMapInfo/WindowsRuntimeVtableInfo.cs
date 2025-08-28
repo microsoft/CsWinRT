@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A type holding infor on a computed vtable for a given managed type.
+/// A type holding info on a computed vtable for a given managed type.
 /// </summary>
 internal sealed unsafe class WindowsRuntimeVtableInfo
 {
@@ -27,7 +27,7 @@ internal sealed unsafe class WindowsRuntimeVtableInfo
     public ComWrappers.ComInterfaceEntry* VtableEntries { get; }
 
     /// <summary>
-    /// Gets tt\he number of elements in <see cref="VtableEntries"/>.
+    /// Gets the number of elements in <see cref="VtableEntries"/>.
     /// </summary>
     public int Count { get; }
 }

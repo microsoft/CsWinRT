@@ -96,8 +96,8 @@ public static unsafe class INotifyPropertyChangedImpl
     /// Gets the IID for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-        : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+        ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
+        : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged;
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="global::System.ComponentModel.INotifyPropertyChanged"/> implementation.

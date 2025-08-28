@@ -44,7 +44,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(eventSourceType);
 
-            // Define the constructor
+            // Define the constructor:
+            //
+            // public <EVENT_SOURCE_TYPE>(WindowsRuntimeObjectReference nativeObjectReference, int index)
+            //     : base(nativeObjectReference, index)
+            // {
+            // }
+            //
+            // All the actual initialization logic is done in the base 'EventSource<T>' type.
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 module: module,
                 parameterTypes: [
@@ -108,7 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(eventSourceType);
 
-            // Define the constructor
+            // Define the constructor (same as above)
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 module: module,
                 parameterTypes: [

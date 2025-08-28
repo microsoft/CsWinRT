@@ -97,7 +97,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
 
         try
         {
-            return PropertyChangedEventArgsMarshaller.ConvertToManaged(value)!;
+            return PropertyChangedEventArgsMarshaller.ConvertToManaged(result)!;
         }
         finally
         {
