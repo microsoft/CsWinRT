@@ -3568,82 +3568,90 @@ public static unsafe class %Marshaller
                 abi_type,
                 projection_name,
                 bind_list([](writer& w, auto&& field)
-                    {
-                        auto semantics = get_type_semantics(field.Signature().Type());
-                        auto fieldName = field.Name();
+                {
+                    auto semantics = get_type_semantics(field.Signature().Type());
+                    auto fieldName = field.Name();
 
-                        call(semantics,
-                            [&](object_type)
+                    call(semantics,
+                        [&](object_type)
+                        {
+                            w.write("    % = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                        },
+                        [&](guid_type)
+                        {
+                            w.write("    % = value.%", fieldName, fieldName);
+                        },
+                        [&](type_type)
+                        {
+                            w.write("    % = value.%", fieldName, fieldName);
+                        },
+                        [&](type_definition const& td)
+                        {
+                            switch (get_category(td))
                             {
-                                w.write("    % = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
-                            },
-                            [&](guid_type)
-                            {
+                            case category::interface_type:
+                                w.write("    // Unsupported interface_type for %", fieldName);
+                                break;
+                            case category::class_type:
+                                w.write("    % = %.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
+                                break;
+                            case category::delegate_type:
+                                w.write("    % = WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                                break;
+                            case category::enum_type:
                                 w.write("    % = value.%", fieldName, fieldName);
-                            },
-                            [&](type_type)
-                            {
-                                w.write("    % = value.%", fieldName, fieldName);
-                            },
-                            [&](type_definition const& td)
-                            {
-                                switch (get_category(td))
+                                // TODO: consider arrays
+                                break;
+                            case category::struct_type:
+                                if (!is_type_blittable(td))
                                 {
-                                case category::enum_type:
-                                    w.write("    % = value.%", fieldName, fieldName);
-                                    // TODO: consider arrays
-                                    break;
-                                case category::struct_type:
-                                    if (!is_type_blittable(td))
-                                    {
-                                        w.write("    % = %.ConvertToUnmanaged(value.%)",
-                                            fieldName, td.TypeName(), fieldName);
-                                    }
-                                    else
-                                    {
-                                        w.write("    % = value.%", fieldName, fieldName);
-                                    }
-                                    break;
-                                default:
-                                    w.write("    // Unsupported type_definition for %", fieldName);
-                                    break;
-                                }
-                            },
-                            [&](generic_type_index)
-                            {
-                                w.write("    // TODO: generic_type_index for ", fieldName);
-                            },
-                            [&](generic_type_instance)
-                            {
-                                auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
-                                // TODO: replace with cswinrt 3.0
-                                w.write("    % = MarshalInspectable<object>.GetAbi(MarshalInterface<%>.CreateMarshaler2(value.%))", fieldName, typeName, fieldName);
-                            },
-                            [&](generic_type_param)
-                            {
-                                w.write("    // TODO: generic_type_param for %", fieldName);
-                            },
-                            [&](fundamental_type const& type)
-                            {
-                                if (type == fundamental_type::Boolean)
-                                {
-                                    w.write("    % = value.% ? (byte)1 : (byte)0", fieldName, fieldName);
-                                }
-                                else if (type == fundamental_type::Char)
-                                {
-                                    w.write("    % = (ushort)value.%", fieldName, fieldName);
-                                }
-                                else if (type == fundamental_type::String)
-                                {
-                                    // TODO: replace with cswinrt 3.0
-                                    w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                                    w.write("    % = %.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
                                 }
                                 else
                                 {
                                     w.write("    % = value.%", fieldName, fieldName);
                                 }
-                            });
-                    }, ",\n", type.FieldList()));
+                                break;
+                            default:
+                                w.write("    // Unsupported type_definition for %", fieldName);
+                                break;
+                            }
+                        },
+                        [&](generic_type_index)
+                        {
+                            w.write("    // TODO: generic_type_index for ", fieldName);
+                        },
+                        [&](generic_type_instance)
+                        {
+                            auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
+                            // TODO: replace with cswinrt 3.0
+                            w.write("    % = MarshalInspectable<object>.GetAbi(MarshalInterface<%>.CreateMarshaler2(value.%))", fieldName, typeName, fieldName);
+                        },
+                        [&](generic_type_param)
+                        {
+                            w.write("    // TODO: generic_type_param for %", fieldName);
+                        },
+                        [&](fundamental_type const& type)
+                        {
+                            if (type == fundamental_type::Boolean)
+                            {
+                                w.write("    % = value.% ? (byte)1 : (byte)0", fieldName, fieldName);
+                            }
+                            else if (type == fundamental_type::Char)
+                            {
+                                w.write("    % = (ushort)value.%", fieldName, fieldName);
+                            }
+                            else if (type == fundamental_type::String)
+                            {
+                                // TODO: replace with cswinrt 3.0
+                                w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                            }
+                            else
+                            {
+                                w.write("    % = value.%", fieldName, fieldName);
+                            }
+                        });
+                }, ",\n", type.FieldList()));
 
             w.write("public static % ConvertToManaged(% value)\n{\nreturn new %(\n%\n);\n}\n",
                 projection_name,
@@ -3667,18 +3675,25 @@ public static unsafe class %Marshaller
                             {
                                 w.write("    value.%", fieldName);
                             },
-                            [&](type_definition const& type)
+                            [&](type_definition const& td)
                             {
-                                switch (get_category(type))
+                                switch (get_category(td))
                                 {
-                                // TODO: Handle other categories
+                                case category::interface_type:
+                                    w.write("    // Unsupported interface_type for %", fieldName);
+                                    break;
+                                case category::class_type:
+                                    w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                    break;
+                                case category::delegate_type:
+                                    w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", fieldName);
+                                    break;
                                 case category::enum_type:
                                     w.write("    value.%", fieldName);
                                     // TODO: array case
                                     break;
                                 case category::struct_type:
-                                    w.write("    %.ConvertToManaged(value.%)",
-                                        type.TypeName(), fieldName);
+                                    w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
                                     break;
                                 default:
                                     w.write("    // Unsupported type_definition for %", fieldName);
@@ -3768,7 +3783,7 @@ R"(file static unsafe class %PropertyValueImpl
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetRect = &%ReferenceImpl.get_Value;
+        Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
@@ -3780,14 +3795,14 @@ R"(file static unsafe class %PropertyValueImpl
         Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.DateTimeOffset**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.TimeSpan**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, %**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, Rect**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
     }
 
     public static nint Vtable
@@ -3868,7 +3883,7 @@ R"(file unsafe struct %ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, int> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
 }
