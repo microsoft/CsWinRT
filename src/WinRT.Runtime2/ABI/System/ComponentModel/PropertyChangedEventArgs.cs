@@ -9,6 +9,7 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
@@ -18,6 +19,7 @@ using WindowsRuntime.InteropServices.Marshalling;
     value: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
     trimTarget: typeof(PropertyChangedEventArgs))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(PropertyChangedEventArgs),

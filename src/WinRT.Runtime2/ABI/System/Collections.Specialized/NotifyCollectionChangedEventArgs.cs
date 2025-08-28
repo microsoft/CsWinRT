@@ -13,6 +13,7 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0008, IDE0055
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
@@ -22,6 +23,7 @@ using WindowsRuntime.InteropServices.Marshalling;
     value: "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
     trimTarget: typeof(NotifyCollectionChangedEventArgs))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(NotifyCollectionChangedEventArgs),

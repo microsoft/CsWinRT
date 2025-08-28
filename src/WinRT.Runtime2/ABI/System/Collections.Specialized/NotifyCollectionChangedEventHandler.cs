@@ -14,6 +14,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
@@ -23,6 +24,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
     trimTarget: typeof(NotifyCollectionChangedEventHandler))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(NotifyCollectionChangedEventHandler),
