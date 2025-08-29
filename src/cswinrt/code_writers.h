@@ -3793,7 +3793,7 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(% value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOf%);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID_IReferenceOf%);
 }
 
 public static % UnboxToManaged(void* value)
@@ -3801,7 +3801,7 @@ public static % UnboxToManaged(void* value)
     return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
 }
 }
-)", projection_name, name, projection_name, projection_name);
+)", projection_name, name, name, projection_name, projection_name);
 
     }
 
@@ -3885,6 +3885,7 @@ R"(file static unsafe class %PropertyValueImpl
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto result_param = is_type_blittable(type) ? projection_name : name;
         std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type)).c_str();
 
         w.write(
@@ -3926,16 +3927,16 @@ R"(file static unsafe class %ReferenceImpl
 
     %
 }
-)", name, name, name, projection_name, projection_name, bind<write_guid_property_from_signature>(type, guid_sig));
+)", name, name, name, result_param, result_param, bind<write_guid_property_from_signature>(type, guid_sig));
     }
 
     void write_reference_vftbl_impl(writer& w, TypeDef const& type)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        w.write("[StructLayout(LayoutKind.Sequential)]");
         w.write(
-R"(file unsafe struct %ReferenceVftbl
+R"([StructLayout(LayoutKind.Sequential)]
+file unsafe struct %ReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -3969,10 +3970,10 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in WellKnownInterfaceIds.IID_IReferenceOf%);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
     }
 }
-)", name, name, name, projection_name, name);
+)", name, name, name, projection_name, name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -10349,7 +10350,6 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
             w.write("}\n\n");
          }
 
-        w.write("%\n", bind<write_winrt_typemapgroup_assembly_attribute>(type));
         w.write("%\n", bind<write_marshaller_class>(type));
         w.write("%\n", bind<write_com_interface_entries>(type));
         w.write("%\n", bind<write_interface_entries_impl>(type));
