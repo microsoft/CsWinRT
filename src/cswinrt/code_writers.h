@@ -3608,7 +3608,7 @@ bind<write_lazy_interface_type_name>(interface_type));
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_type = w.write_temp("%", bind<write_abi_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
 
         w.write(
 R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -3619,7 +3619,7 @@ public static unsafe class %Marshaller
         if (!is_type_blittable(type))
         {
             w.write("public static % ConvertToUnmanaged(% value)\n{\nreturn new() {\n%\n};\n}\n",
-                abi_type,
+                abi_name,
                 projection_name,
                 bind_list([](writer& w, auto&& field)
                 {
@@ -3709,7 +3709,7 @@ public static unsafe class %Marshaller
 
             w.write("public static % ConvertToManaged(% value)\n{\nreturn new %(\n%\n);\n}\n",
                 projection_name,
-                abi_type,
+                abi_name,
                 projection_name,
                 bind_list([](writer& w, auto&& field)
                     {
@@ -3795,21 +3795,37 @@ R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(% value)
 {
     return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID_IReferenceOf%);
 }
+)", projection_name, name, name);
 
-public static % UnboxToManaged(void* value)
+        if (!is_type_blittable(type))
+        {
+            w.write(
+R"(public static %? UnboxToManaged(void* value)
+{
+    %? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
+    return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+}
+}
+)", projection_name, abi_name, abi_name);
+        }
+        else
+        {
+            w.write(
+ R"(public static %? UnboxToManaged(void* value)
 {
     return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
 }
 }
-)", projection_name, name, name, projection_name, projection_name);
-
+)", projection_name, projection_name);
+        }
     }
 
     void write_reference_impl(writer& w, TypeDef const& type)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto result_param = is_type_blittable(type) ? projection_name : name;
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        auto result_param = is_type_blittable(type) ? projection_name : abi_name;
         std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type)).c_str();
 
         w.write(
@@ -3818,9 +3834,12 @@ R"(file static unsafe class %ReferenceImpl
     [FixedAddressValueType]
     private static readonly %ReferenceVftbl Vftbl;
 
+    private const int S_OK = unchecked((int)0x00000000);
+    private const int E_POINTER = unchecked((int)0x80004003);
+
     static %ReferenceImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        *(void**)Unsafe.AsPointer(ref Vftbl) = *(void**)IInspectableImpl.Vtable;
         Vftbl.get_Value = &get_Value;
     }
 
@@ -3835,13 +3854,13 @@ R"(file static unsafe class %ReferenceImpl
     {
         if (result is null)
         {
-            return WellKnownErrorCodes.E_POINTER;
+            return E_POINTER;
         }
 
         try
         {
             *result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
-            return WellKnownErrorCodes.S_OK;
+            return S_OK;
         }
         catch (Exception e)
         {
@@ -3858,6 +3877,7 @@ R"(file static unsafe class %ReferenceImpl
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         w.write(
 R"([StructLayout(LayoutKind.Sequential)]
 file unsafe struct %ReferenceVftbl
@@ -3870,13 +3890,14 @@ file unsafe struct %ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
 }
-)", name, projection_name);
+)", name, is_type_blittable(type) ? projection_name : abi_name);
     }
 
     void write_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         w.write(
 R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
@@ -3897,7 +3918,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
     }
 }
-)", name, name, name, projection_name, name, name);
+)", name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
