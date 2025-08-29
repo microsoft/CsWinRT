@@ -3805,82 +3805,6 @@ public static % UnboxToManaged(void* value)
 
     }
 
-    void write_property_value_impl(writer& w, TypeDef const& type)
-    {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-
-        w.write(
-R"(file static unsafe class %PropertyValueImpl
-{
-    [FixedAddressValueType]
-    private static readonly IPropertyValueVftbl Vftbl;
-
-    static %PropertyValueImpl()
-    {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
-        Vftbl.get_Type = &get_Type;
-        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
-        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, int**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, uint**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, long**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, ulong**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, int*, float**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, int*, void***, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.DateTimeOffset**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, System.TimeSpan**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, Rect**, int>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, int>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-    }
-
-    public static nint Vtable
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in Vftbl);
-    }
-
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static int get_Type(void* thisPtr, PropertyType* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        *value = PropertyType.OtherType;
-
-        return WellKnownErrorCodes.S_OK;
-    }
-}
-)", name, name);
-    }
-
     void write_reference_impl(writer& w, TypeDef const& type)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
@@ -3990,23 +3914,23 @@ R"(file static class %InterfaceEntriesImpl
     {
         Entries.IReferenceOf%.IID = %ReferenceImpl.IID_IReferenceOf%;
         Entries.IReferenceOf%.Vtable = %ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = %PropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
         Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
-)", name, name, name, name, name, name, name, name, name);
+)", name, name, name, name, name, name, name, name);
     }
 
     void write_com_interface_entries(writer& w, TypeDef const& type)
@@ -10356,8 +10280,7 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
         w.write("%\n", bind<write_interface_entries_impl>(type));
         w.write("%\n", bind<write_com_wrappers_marshaller_attribute_impl>(type));
         w.write("%\n", bind<write_reference_vftbl_impl>(type));
-        w.write("%\n", bind<write_reference_impl>(type));
-        w.write("%", bind<write_property_value_impl>(type));
+        w.write("%", bind<write_reference_impl>(type));
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
