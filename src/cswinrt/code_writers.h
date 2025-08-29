@@ -3791,7 +3791,7 @@ public static unsafe class %Marshaller
         }
 
         w.write(
-R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(% value)
+R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
     return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID_IReferenceOf%);
 }
