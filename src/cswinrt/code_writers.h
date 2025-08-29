@@ -4056,8 +4056,9 @@ R"([assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
-        w.write("[%ComWrappersMarshaller]\n",
-            type.TypeName());
+        auto ns = type.TypeNamespace();
+        w.write("[ABI.%.%ComWrappersMarshaller]\n",
+            type.TypeNamespace(), type.TypeName());
     }
 
     void write_winrt_attribute(writer& w, TypeDef const& type)
