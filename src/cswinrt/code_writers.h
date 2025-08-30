@@ -605,7 +605,7 @@ namespace cswinrt
     void write_abi_type(writer& w, type_semantics const& semantics)
     {
         call(semantics,
-            [&](object_type) { w.write("IntPtr"); },
+            [&](object_type) { w.write("nint"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_type) { throw_invalid("System.Type not implemented"); },
             [&](type_definition const& type)
@@ -621,7 +621,7 @@ namespace cswinrt
                     break;
 
                 default:
-                    w.write("IntPtr");
+                    w.write("nint");
                     break;
                 };
             },
@@ -631,7 +631,7 @@ namespace cswinrt
             },
             [&](generic_type_instance const&)
             {
-                w.write("IntPtr");
+                w.write("nint");
             },
             [&](generic_type_param const& param)
             {
@@ -641,7 +641,7 @@ namespace cswinrt
             {
                 if (type == fundamental_type::String)
                 {
-                    w.write("IntPtr");
+                    w.write("nint");
                 }
                 else
                 {
@@ -3675,27 +3675,32 @@ public static unsafe class %Marshaller
                         {
                             w.write("    // TODO: generic_type_index for ", fieldName);
                         },
-                        [&](generic_type_instance)
+                        [&](generic_type_instance const& td)
                         {
-                            auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
-                            // TODO: replace with cswinrt 3.0
-                            w.write("    % = MarshalInspectable<object>.GetAbi(MarshalInterface<%>.CreateMarshaler2(value.%))", fieldName, typeName, fieldName);
+                            call(td.generic_args[0],
+                                [&](fundamental_type const& gtd)
+                                {
+                                    w.write("    % = (nint)ABI.System.%Marshaller.BoxToUnmanaged(value.%).DetachThisPtrUnsafe()", fieldName, to_string(gtd), fieldName);
+                                },
+                                [&](auto const&) { w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types"); }
+                            );
+
                         },
                         [&](generic_type_param)
                         {
                             w.write("    // TODO: generic_type_param for %", fieldName);
                         },
-                        [&](fundamental_type const& type)
+                        [&](fundamental_type const& td)
                         {
-                            if (type == fundamental_type::Boolean)
+                            if (td == fundamental_type::Boolean)
                             {
                                 w.write("    % = value.% ? (byte)1 : (byte)0", fieldName, fieldName);
                             }
-                            else if (type == fundamental_type::Char)
+                            else if (td == fundamental_type::Char)
                             {
                                 w.write("    % = (ushort)value.%", fieldName, fieldName);
                             }
-                            else if (type == fundamental_type::String)
+                            else if (td == fundamental_type::String)
                             {
                                 // TODO: replace with cswinrt 3.0
                                 w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
@@ -3758,11 +3763,15 @@ public static unsafe class %Marshaller
                             {
                                 w.write("    // TODO: generic_type_index for %", fieldName);
                             },
-                            [&](generic_type_instance)
+                            [&](generic_type_instance const& td)
                             {
-                                // TODO: use 3.0 version
-                                auto typeName = w.write_temp("%", bind<write_projection_type>(semantics));
-                                w.write("    MarshalInterface<%>.FromAbi(value.%)", typeName, fieldName);
+                                call(td.generic_args[0],
+                                    [&](fundamental_type const& gtd)
+                                    {
+                                        w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), fieldName);
+                                    },
+                                    [&](auto const&) { w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types"); }
+                                );
                             },
                             [&](generic_type_param)
                             {

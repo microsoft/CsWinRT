@@ -28,7 +28,7 @@ namespace WinRT
         [ModuleInitializer]
         public static void InitalizeProjection()
         {
-            ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
+            // ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
         }
     }
 }
