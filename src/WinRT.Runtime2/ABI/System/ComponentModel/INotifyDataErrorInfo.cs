@@ -91,11 +91,11 @@ public static unsafe class INotifyDataErrorInfoMethods
             try
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-                static extern IEnumerable<object>? ConvertToMananaged(
+                static extern IEnumerable<object>? ConvertToManaged(
                     [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>, WinRT.Interop.dll")] object? _,
                     void* value);
 
-                return ConvertToMananaged(null, result)!;
+                return ConvertToManaged(null, result)!;
             }
             finally
             {
