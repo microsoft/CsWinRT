@@ -96,8 +96,18 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
         // First, make sure we have the right 'IReference<T>' interface on 'value'
         IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
+        T result;
+
         // Now that we have the 'IReference<T>' pointer, unbox it normally
-        return UnboxToManaged<T>(referencePtr);
+        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(referencePtr, &result);
+
+        // Always release the temporary interface pointer before possibly throwing
+        _ = IUnknownVftbl.ReleaseUnsafe(referencePtr);
+
+        // There's a small chance that 'get_Value' might fail, so we need to check the result
+        hresult.Assert();
+
+        return result;
     }
 
     /// <summary>
@@ -128,7 +138,12 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
 
         T result;
 
-        IReferenceVftbl.get_ValueUnsafe(referencePtr, &result).Assert();
+        // Try to get the value and handle errors, see notes in 'UnboxToManaged' above
+        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(referencePtr, &result);
+
+        _ = IUnknownVftbl.ReleaseUnsafe(referencePtr);
+
+        hresult.Assert();
 
         return result;
     }
