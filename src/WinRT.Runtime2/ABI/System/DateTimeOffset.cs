@@ -50,7 +50,7 @@ public static unsafe class DateTimeOffsetMarshaller
     /// The number of ticks counted between <c>0001-01-01, 00:00:00</c> and <c>1601-01-01, 00:00:00</c>.
     /// This is equivalent to the result of this expression:
     /// <code lang="csharp">
-    /// var ticks = new DateTimeOffset(1601, 1, 1, 0, 0, 1, TimeSpan.Zero).Ticks;
+    /// var ticks = new DateTimeOffset(1601, 1, 1, 0, 0, 0, TimeSpan.Zero).Ticks;
     /// </code>
     /// </summary>
     private const long ManagedUtcTicksAtNativeZero = 504911232000000000;
