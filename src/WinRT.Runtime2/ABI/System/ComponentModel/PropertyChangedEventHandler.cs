@@ -303,7 +303,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     }
 
     /// <summary>
-    /// Gets the IID for The IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+    /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
         ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler

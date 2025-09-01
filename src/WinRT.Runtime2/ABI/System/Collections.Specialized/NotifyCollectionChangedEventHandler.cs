@@ -304,7 +304,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
     }
 
     /// <summary>
-    /// Gets the IID for The IID for <c>IReference`1</c> of <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+    /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
         ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
