@@ -50,46 +50,81 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
             return windowsRuntimeInterface.GetInterface();
         }
 
-        // Marshal 'value' as an 'IInspectable' (same as in 'WindowsRuntimeObjectMarshaller')
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value);
-
-        // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
-        // The local cache for object references only applies to projected runtime classes, not managed types.
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
-
-        // We can release the 'IUnknown' reference now, it's no longer needed. We would normally just
-        // use the 'GetOrCreateComInterfaceForObject' overload taking care of all of this 'QueryInterface'
-        // logic automatically, but here we specifically want to throw a custom exception in case of failure.
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-        // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
-        // or something else happened that is not really supported). Still, we can produce a nice error message for it.
-        if (!WellKnownErrorCodes.Succeeded(hresult))
+        // It is possible to call this method with an anonymous inspectable object retrieved via a dynamic interface cast.
+        // That is, where 'value' would just be some 'WindowsRuntimeInspectable' instance. In that case, it would not
+        // implement the generic interface above, but we'd still want to just unwrap the native object reference, rather
+        // than creating a CCW around that managed object. So, we check for this scenario next.
+        if (value is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
         {
-            // Helper to throw the exception without increasing the codegen in the fast path.
-            // The JIT can already optimize throw helpers, but that's only when they contain
-            // a 'throw new Exception(...)' body. Because this method is more complex, chances
-            // are that optimization would not kick in. So we're just manually not inlining it.
-            [StackTraceHidden]
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static void ThrowException(object value, in Guid iid, HRESULT hresult)
+            // Manually do 'QueryInterface' so we can provide a better exception message in case of failures
+            HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
+
+            // This is unlikely to fail, since we'd only get here with an object that passed a cast to the interface type
+            if (!WellKnownErrorCodes.Succeeded(hresult))
             {
-                // Special case 'E_NOINTERFACE' to provide a better exception message. It is intentional that this exception is
-                // thrown inline like this and without setting up the 'IErrorInfo' infrastructure. That is because APIs do not
-                // typically originate the 'IErrorInfo' data for 'E_NOINTERFACE', so that is not necessary here for consistency.
-                if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+                // Helper to throw the exception without increasing the codegen in the fast path.
+                // The JIT can already optimize throw helpers, but that's only when they contain
+                // a 'throw new Exception(...)' body. Because this method is more complex, chances
+                // are that optimization would not kick in. So we're just manually not inlining it.
+                [StackTraceHidden]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void ThrowException(object value, in Guid iid, HRESULT hresult)
                 {
-                    throw new InvalidCastException(
-                        $"Failed to create a CCW for object of type '{value.GetType()}' for interface with " +
-                        $"IID '{iid.ToString().ToUpperInvariant()}': the specified cast is not valid.");
+                    // Special case 'E_NOINTERFACE' to provide a better exception message. It is intentional that this exception is
+                    // thrown inline like this and without setting up the 'IErrorInfo' infrastructure. That is because APIs do not
+                    // typically originate the 'IErrorInfo' data for 'E_NOINTERFACE', so that is not necessary here for consistency.
+                    if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+                    {
+                        throw new InvalidCastException(
+                            $"Failed to resolve a native interface pointer from an object of type '{value.GetType()}' for interface " +
+                            $"'{typeof(T)}' (IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
+                    }
+
+                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
                 }
 
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+                ThrowException(value, in iid, hresult);
             }
 
-            ThrowException(value, in iid, hresult);
+            return new(interfacePtr);
         }
+        else
+        {
+            // Marshal 'value' as an 'IInspectable' (same as in 'WindowsRuntimeObjectMarshaller')
+            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value);
 
-        return new(interfacePtr);
+            // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
+            // The local cache for object references only applies to projected runtime classes, not managed types.
+            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
+
+            // We can release the 'IUnknown' reference now, it's no longer needed. We would normally just
+            // use the 'GetOrCreateComInterfaceForObject' overload taking care of all of this 'QueryInterface'
+            // logic automatically, but here we specifically want to throw a custom exception in case of failure.
+            _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+            // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
+            // or something else happened that is not really supported). Still, we can produce a nice error message for it.
+            if (!WellKnownErrorCodes.Succeeded(hresult))
+            {
+                // Same exception logic as above, see notes there
+                [StackTraceHidden]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void ThrowException(object value, in Guid iid, HRESULT hresult)
+                {
+                    if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+                    {
+                        throw new InvalidCastException(
+                            $"Failed to create a CCW for object of type '{value.GetType()}' for interface '{typeof(T)}' " +
+                            $"(IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
+                    }
+
+                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+                }
+
+                ThrowException(value, in iid, hresult);
+            }
+
+            return new(interfacePtr);
+        }
     }
 }
