@@ -130,6 +130,12 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> is the Windows Runtime assembly.
+        /// </summary>
+        /// <returns>Whether the module is the Windows Runtime assembly.</returns>
+        public bool IsWindowsRuntimeAssembly => module.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8) is true;
+
+        /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references 'WinRT.Runtime.dll' version 2.
         /// </summary>
         /// <returns>Whether the module references 'WinRT.Runtime.dll' version 2.</returns>
