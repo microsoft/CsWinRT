@@ -121,7 +121,6 @@
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
-    <None Include="strings\InitalizeProjection.cs" />
     <None Include="strings\InspectableVftbl.cs" />
     <None Include="strings\ReferenceInterfaceEntries.cs" />
   </ItemGroup>
