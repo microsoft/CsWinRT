@@ -400,7 +400,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Create the 'IEnumerator<T>.Current' property
             PropertyDefinition enumerator1CurrentProperty = new(
-                name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
+                name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.Current",
                 attributes: PropertyAttributes.None,
                 signature: PropertySignature.FromGetMethod(get_IEnumerator1CurrentMethod))
             {
@@ -433,7 +433,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Create the 'IEnumerator.Current' property
             PropertyDefinition enumeratorCurrentProperty = new(
-                name: "System.Collections.IEnumerator.get_Current"u8,
+                name: "System.Collections.IEnumerator.Current"u8,
                 attributes: PropertyAttributes.None,
                 signature: PropertySignature.FromGetMethod(get_IEnumeratorCurrentMethod))
             {
