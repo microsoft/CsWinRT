@@ -1219,6 +1219,16 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ImplType(
+                    argsType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
                 // Define the 'Methods' type (with the public thunks for 'IMapChangedEventArgs<K>' native calls)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Methods(
                     argsType: typeSignature,
