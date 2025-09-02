@@ -355,6 +355,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> type.
+    /// </summary>
+    public static Exception IMapChangedEventArgs1TypeCodeGenerationError(TypeSignature argsType, Exception exception)
+    {
+        return Exception(41, $"Failed to generate marshalling code for 'IMapChangedEventArgs<K>' type '{argsType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
