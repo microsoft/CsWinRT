@@ -315,16 +315,11 @@ Where <spec> is one or more of:
                                         write_winrt_exposed_type_class(w, type, false);
                                         break;
                                     case category::interface_type:
-                                        if (settings.netstandard_compat)
-                                        {
-                                            write_static_abi_classes(w, type);
-                                            write_abi_interface_netstandard(w, type);
-                                        }
-                                        else
-                                        {
-                                            write_static_abi_classes(w, type);
-                                            write_abi_interface(w, type);
-                                        }
+                                        write_static_abi_classes(w, type);
+										write_interface_vftbl(w, type);
+										write_interface_impl(w, type);
+                                        write_interface_idic_impl(w, type);
+                                     //   write_abi_interface(w, type);
                                         break;
                                     case category::struct_type:
                                         if (!is_type_blittable(type))
@@ -415,69 +410,6 @@ bind([&](writer& w) {
                         }
     }));
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
-            }
-
-            if (!abiDelegateEntries.empty() && settings.netstandard_compat)
-            {
-                writer baseTypeWriter("WinRT");
-                write_file_header(baseTypeWriter);
-                baseTypeWriter.write(R"(
-using System;
-
-namespace WinRT
-{
-internal static class AbiDelegatesInitializer
-{
-
-[System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeAbiDelegates()
-{
-%
-}
-
-%
-}
-})",
-                bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
-                    {
-                        w.write("Projections.RegisterAbiDelegate(%, typeof(%));\n", entry.abi_delegate_types, entry.abi_delegate_name);
-                    }
-
-                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
-                    {
-                        w.write("Projections.RegisterAbiDelegate(new Type[] { typeof(void*), typeof(IntPtr), typeof(global::Windows.Foundation.AsyncStatus), typeof(int) }, typeof(_invoke_IntPtr_AsyncStatus));\n");
-                    }
-                }),
-                bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
-                    {
-                        w.write("%\n", entry.abi_delegate_declaration);
-                    }
-
-                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
-                    {
-                        w.write("internal unsafe delegate int _invoke_IntPtr_AsyncStatus(void* thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus);\n");
-                    }
-                }));
-                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
-            }
-
-            if (!settings.netstandard_compat && has_generic_type_instantiations())
-            {
-                writer genericTypeInstantiationWriter("WinRT.GenericTypeInstantiations");
-                write_file_header(genericTypeInstantiationWriter);
-                genericTypeInstantiationWriter.write(R"(
-using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-namespace WinRT.GenericTypeInstantiations
-{
-%
-})",
-                bind<write_generic_type_instantiations>());
-                genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
             }
 
             if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)

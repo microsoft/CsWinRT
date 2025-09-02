@@ -48,12 +48,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 using WinRT;
-using WinRT.Interop;
+using static System.Runtime.InteropServices.ComWrappers;
 
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
