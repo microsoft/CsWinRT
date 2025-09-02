@@ -512,6 +512,12 @@ internal sealed class InteropReferences
     public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapViewMethodsImpl`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -560,6 +566,12 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyDictionaryMethods2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryMethods`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethods</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IMapChangedEventArgsMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsMethods"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -600,6 +612,12 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference WindowsRuntimeReadOnlyDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReadOnlyDictionary`5"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMapChangedEventArgs&lt;TKey, ...&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeMapChangedEventArgs2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMapChangedEventArgs`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.DictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
@@ -1232,6 +1250,15 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionaryMethodsCount => field ??= IReadOnlyDictionaryMethods
         .CreateMemberReference("Count"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethods.CollectionChange</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IMapChangedEventArgsMethodsCollectionChange => field ??= IMapChangedEventArgsMethods
+        .CreateMemberReference("CollectionChange"u8, MethodSignature.CreateStatic(
+            returnType: CollectionChange.ToValueTypeSignature(),
             parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
     /// <summary>
@@ -2853,6 +2880,44 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;.CollectionChange</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IMapChangedEventArgs1get_CollectionChange(TypeSignature elementType)
+    {
+        return IMapChangedEventArgs1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_CollectionChange"u8, MethodSignature.CreateInstance(CollectionChange.ToValueTypeSignature()));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;.Key</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IMapChangedEventArgs1get_Key(TypeSignature elementType)
+    {
+        return IMapChangedEventArgs1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Key"u8, MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;.Key</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IMapChangedEventArgsImpl1Key(TypeSignature elementType)
+    {
+        return IMapChangedEventArgsImpl1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Key"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>
