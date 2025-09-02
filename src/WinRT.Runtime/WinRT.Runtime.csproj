@@ -59,9 +59,6 @@
     </Compile>
   </ItemGroup>
     
-  <ItemGroup>
-    <Compile Include="../cswinrt/strings/InitalizeProjection.cs" Link="cswinrt/InitalizeProjection.cs" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <Compile Remove="**/*.net5.cs" />

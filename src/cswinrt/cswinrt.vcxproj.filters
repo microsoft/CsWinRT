@@ -68,9 +68,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="strings\InitalizeProjection.cs">
-      <Filter>strings</Filter>
-    </None>
     <None Include="packages.config" />
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
@@ -194,6 +191,9 @@
     </None>
     <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\InspectableVftbl.cs">
+      <Filter>strings</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
