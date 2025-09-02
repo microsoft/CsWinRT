@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -321,6 +322,53 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             interfaceImplType.Properties.Add(keyProperty);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IMapChangedEventArgs&lt;K&gt;</c> interface.
+        /// </summary>
+        /// <param name="argsType">The <see cref="GenericInstanceTypeSignature"/> for the args type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="argsType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature argsType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            // Define the 'get_CollectionChange' method
+            MethodDefinition collectionChangeMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.CollectionChanged(
+                argsType: argsType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'get_Key' method
+            MethodDefinition keyMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.Key(
+                argsType: argsType,
+                interopReferences: interopReferences,
+                module: module);
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(argsType),
+                name: InteropUtf8NameFactory.TypeName(argsType, "Impl"),
+                vftblType: interopDefinitions.IMapChangedEventArgsVftbl,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: [collectionChangeMethod, keyMethod]);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, argsType, "Impl");
         }
 
         /// <summary>
