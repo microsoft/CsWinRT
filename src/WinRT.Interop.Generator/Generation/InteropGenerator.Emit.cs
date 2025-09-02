@@ -96,6 +96,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IMapChangedEventArgs<>' types
+        DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
@@ -1179,6 +1184,112 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIMapChangedEventArgsTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the 'IID' property
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.IID(
+                    argsType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                // Define the 'Methods' type (with the public thunks for 'IMapChangedEventArgs<K>' native calls)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Methods(
+                    argsType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    argsMethodsType: out TypeDefinition argsMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.NativeObject(
+                    argsType: typeSignature,
+                    argsMethodsType: argsMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersCallbackType(
+                    argsType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition argsComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersMarshallerAttribute(
+                    argsType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition argsComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Marshaller(
+                    argsType: typeSignature,
+                    argsComWrappersCallbackType: argsComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.InterfaceImpl(
+                    argsType: typeSignature,
+                    argsMethodsType: argsMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Proxy(
+                    argsType: typeSignature,
+                    argsComWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.TypeMapAttributes(
+                    argsType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IMapChangedEventArgs1TypeCodeGenerationError(typeSignature, e);
             }
         }
     }
