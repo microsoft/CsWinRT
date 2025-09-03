@@ -3848,7 +3848,7 @@ R"(file static unsafe class %ReferenceImpl
 
     static %ReferenceImpl()
     {
-        *(void**)Unsafe.AsPointer(ref Vftbl) = *(void**)IInspectableImpl.Vtable;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
         Vftbl.get_Value = &get_Value;
     }
 
@@ -3895,7 +3895,7 @@ file unsafe struct %ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, int> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
 }
