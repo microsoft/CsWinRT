@@ -11,8 +11,7 @@ namespace Windows.Foundation.Collections;
 /// </summary>
 /// <remarks>
 /// There is only one notification per type of change to a collection. For example, if an item is inserted, then only a notification
-/// for an insertion is sent to a listener that is subscribed to receive change notifications. Use the <c>Index</c> property of the
-/// event arguments interface in use (e.g. <see cref="IMapChangedEventArgs{K}"/>) to determine the location o the change.
+/// event arguments interface in use (e.g. <see cref="IMapChangedEventArgs{K}"/>) to determine the location of the change.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.collectionchange"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
