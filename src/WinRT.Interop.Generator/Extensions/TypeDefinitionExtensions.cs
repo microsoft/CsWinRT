@@ -22,7 +22,7 @@ internal static class TypeDefinitionExtensions
         public bool IsStatic => type.IsAbstract && type.IsSealed;
 
         /// <summary>
-        /// Determines whether a type has or inheritsd an attribute that match a particular type.
+        /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
