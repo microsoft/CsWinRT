@@ -67,7 +67,7 @@ namespace ABI.System
         public long UniversalTime;
 
         // Numer of ticks counted between 0001-01-01, 00:00:00 and 1601-01-01, 00:00:00.
-        // You can get this through:  (new DateTimeOffset(1601, 1, 1, 0, 0, 1, TimeSpan.Zero)).Ticks;
+        // You can get this through:  (new DateTimeOffset(1601, 1, 1, 0, 0, 0, TimeSpan.Zero)).Ticks;
         private const long ManagedUtcTicksAtNativeZero = 504911232000000000;
         // DO NOT use ToFileTime/FromFileTime, which don't support negative UniversalTime.
 
