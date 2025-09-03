@@ -106,7 +106,6 @@ public static unsafe class IVectorChangedEventArgsImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorchangedeventargs.collectionchange"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT get_CollectionChange(void* thisPtr, CollectionChange* result)
     {
         try
@@ -125,7 +124,6 @@ public static unsafe class IVectorChangedEventArgsImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorchangedeventargs.index"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT get_Index(void* thisPtr, uint* result)
     {
         try
