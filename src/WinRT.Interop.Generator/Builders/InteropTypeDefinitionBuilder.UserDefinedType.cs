@@ -28,7 +28,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// The number of default, always present COM interface entries.
         /// We always append some default slots to all user-defined types.
         /// </summary>
-        private const int NumberOfDefaulComInterfacetEntries = 6;
+        private const int NumberOfDefaultComInterfaceEntries = 6;
 
         /// <summary>
         /// The thread-local list to build COM interface entries.
@@ -109,7 +109,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "InterfaceEntriesImpl"),
-                entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaulComInterfacetEntries + vtableTypes.Count),
+                entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count),
                 interopReferences: interopReferences,
                 module: module,
                 implType: out interfaceEntriesImplType,
@@ -156,7 +156,7 @@ internal partial class InteropTypeDefinitionBuilder
             PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
 
             // Retrieve the cached COM interface entries type, as we need the number of fields
-            TypeDefinition interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaulComInterfacetEntries + vtableTypes.Count);
+            TypeDefinition interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count);
 
             // Define the 'ComputeVtables' method as follows:
             //
