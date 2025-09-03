@@ -131,7 +131,6 @@ public static unsafe class INotifyPropertyChangedImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT add_PropertyChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
@@ -156,7 +155,6 @@ public static unsafe class INotifyPropertyChangedImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT remove_PropertyChanged(void* thisPtr, EventRegistrationToken token)
     {
         try

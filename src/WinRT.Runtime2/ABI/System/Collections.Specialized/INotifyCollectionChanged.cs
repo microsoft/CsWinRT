@@ -132,7 +132,6 @@ public static unsafe class INotifyCollectionChangedImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.INotifyCollectionChanged.CollectionChanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT add_CollectionChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
@@ -157,7 +156,6 @@ public static unsafe class INotifyCollectionChangedImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.INotifyCollectionChanged.CollectionChanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT remove_CollectionChanged(void* thisPtr, EventRegistrationToken token)
     {
         try

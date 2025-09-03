@@ -185,7 +185,6 @@ public static unsafe class INotifyDataErrorInfoImpl
 
     /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.inotifydataerrorinfo.haserrors"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT get_HasErrors(void* thisPtr, bool* result)
     {
         *result = false;
@@ -206,7 +205,6 @@ public static unsafe class INotifyDataErrorInfoImpl
 
     /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.inotifydataerrorinfo.errorschanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT add_ErrorsChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
@@ -236,7 +234,6 @@ public static unsafe class INotifyDataErrorInfoImpl
 
     /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.inotifydataerrorinfo.errorschanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT remove_ErrorsChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
@@ -258,7 +255,6 @@ public static unsafe class INotifyDataErrorInfoImpl
 
     /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.inotifydataerrorinfo.geterrors"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT GetErrors(void* thisPtr, HSTRING propertyName, void** result)
     {
         *result = null;
