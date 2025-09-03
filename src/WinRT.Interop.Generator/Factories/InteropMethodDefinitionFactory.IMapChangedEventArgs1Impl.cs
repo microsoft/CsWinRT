@@ -164,7 +164,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(argsType).Import(module) },
-                    { Callvirt, interopReferences.IMapChangedEventArgs1get_CollectionChange(elementType).Import(module) },
+                    { Callvirt, interopReferences.IMapChangedEventArgs1get_Key(elementType).Import(module) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
