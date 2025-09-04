@@ -3765,6 +3765,7 @@ public static unsafe class %Marshaller
                             },
                             [&](generic_type_instance const& td)
                             {
+                                XLANG_ASSERT(td.generic_args.size() == 1);
                                 call(td.generic_args[0],
                                     [&](fundamental_type const& gtd)
                                     {
@@ -3895,7 +3896,7 @@ file unsafe struct %ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, int> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
 }
@@ -3912,7 +3913,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID_IReferenceOf%).DetachThisPtrUnsafe();
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3927,7 +3928,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
     }
 }
-)", name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
+)", name, projection_name, projection_name, name, name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -3953,7 +3954,7 @@ R"(file static class %InterfaceEntriesImpl
         Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
         Entries.IAgileObject.IID = IAgileObjectImpl.IID;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
         Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
         Entries.IUnknown.IID = IUnknownImpl.IID;
@@ -3968,7 +3969,8 @@ R"(file static class %InterfaceEntriesImpl
         auto name = w.write_temp("%", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
 
         w.write(
-R"(file struct %InterfaceEntries
+R"([StructLayout(LayoutKind.Sequential)]
+file struct %InterfaceEntries
 {
     public ComInterfaceEntry IReferenceOf%;
     public ComInterfaceEntry IPropertyValue;

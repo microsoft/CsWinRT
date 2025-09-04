@@ -42,8 +42,6 @@ namespace cswinrt
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-global using unsafe HSTRING = void*;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
