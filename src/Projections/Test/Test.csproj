@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-	<!-- Uncomment to generate projection -->
+    <!-- Uncomment to generate projection -->
     <!-- <CsWinRTIncludes>TestComponent.Class;TestComponent.IClass;TestComponent.IRequiredOne;TestComponent.Blittable;TestComponent.NonBlittable</CsWinRTIncludes> -->
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
