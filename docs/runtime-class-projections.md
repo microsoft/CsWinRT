@@ -135,7 +135,7 @@ public sealed class DerivedWinRTClass : UnsealedWinRTClass
 ### Composable Derived Class
 
 ```csharp
-public sealed class AnotherUnsealedWinRTClass : UnsealedWinRTClass
+public class AnotherUnsealedWinRTClass : UnsealedWinRTClass
 {
     public AnotherUnsealedWinRTClass()
         : base(
