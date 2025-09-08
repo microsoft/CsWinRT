@@ -3665,7 +3665,7 @@ public static unsafe class %Marshaller
                             case category::struct_type:
                                 if (!is_type_blittable(td))
                                 {
-                                    w.write("    % = %.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
+                                    w.write("    % = %Marshaller.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
                                 }
                                 else
                                 {
@@ -3758,7 +3758,14 @@ public static unsafe class %Marshaller
                                     // TODO: array case
                                     break;
                                 case category::struct_type:
-                                    w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                    if (!is_type_blittable(td))
+                                    {
+                                        w.write("    %Marshaller.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                    }
+                                    else
+                                    {
+                                        w.write("    value.%", fieldName);
+                                    }
                                     break;
                                 default:
                                     w.write("    // Unsupported type_definition for %", fieldName);
