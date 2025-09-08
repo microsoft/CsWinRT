@@ -25,7 +25,6 @@ public static unsafe class INotifyPropertyChangedMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,7 +110,6 @@ public static unsafe class INotifyPropertyChangedImpl
     /// <summary>
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

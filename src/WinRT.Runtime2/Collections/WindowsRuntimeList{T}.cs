@@ -51,7 +51,6 @@ public abstract class WindowsRuntimeList<
     }
 
     /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T, TIIterable, TIEnumerableMethods, TIReadOnlyListMethods}.IIterableObjectReference"/>
-    [field: AllowNull, MaybeNull]
     private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get
