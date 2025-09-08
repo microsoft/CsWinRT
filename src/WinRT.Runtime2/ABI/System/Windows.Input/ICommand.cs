@@ -26,7 +26,6 @@ public static unsafe class ICommandMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> CanExecuteChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,7 +140,6 @@ public static unsafe class ICommandImpl
     /// <summary>
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> CanExecuteChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

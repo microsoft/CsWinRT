@@ -63,7 +63,6 @@ public abstract class WindowsRuntimeDictionary<
     /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> for the current object.
     /// </summary>
-    [field: AllowNull, MaybeNull]
     private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get
