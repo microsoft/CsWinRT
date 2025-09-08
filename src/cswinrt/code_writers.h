@@ -3551,18 +3551,24 @@ bind<write_lazy_interface_type_name>(interface_type));
     }
 
 
+    std::string WideToUtf8(LPCOLESTR wideStr)
+    {
+        if (!wideStr) return {};
+
+        int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, nullptr, 0, nullptr, nullptr);
+        if (sizeNeeded <= 0) return {};
+
+        std::string result(sizeNeeded - 1, '\0'); // exclude null terminator
+        WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, result.data(), sizeNeeded, nullptr, nullptr);
+        return result;
+    }
+
+
     static void write_guid_property_from_signature(writer& w, TypeDef const& type, std::string const& signature)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
 
-        std::array<char, 512> sig_array{}; // large enough buffer
-        size_t len = signature.size();
-        if (len > sig_array.size())
-        {
-            len = sig_array.size();
-        }
-        std::memcpy(sig_array.data(), signature.data(), len);
-        auto guid_value = generate_guid(sig_array);
+        GUID guid_value = generate_guid(signature);
 
         w.write(R"(public static ref readonly Guid IID_IReferenceOf%
     {
@@ -3830,13 +3836,14 @@ R"(public static %? UnboxToManaged(void* value)
         }
     }
 
-    void write_reference_impl(writer& w, TypeDef const& type)
+    void write_reference_impl_struct(writer& w, TypeDef const& type)
     {
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         auto result_param = is_type_blittable(type) ? projection_name : abi_name;
-        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type)).c_str();
+        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
+        std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
 
         w.write(
 R"(file static unsafe class %ReferenceImpl
@@ -3880,7 +3887,7 @@ R"(file static unsafe class %ReferenceImpl
 
     %
 }
-)", name, name, name, result_param, result_param, bind<write_guid_property_from_signature>(type, guid_sig));
+)", name, name, name, result_param, result_param, bind<write_guid_property_from_signature>(type, ireference_guid_sig));
     }
 
     void write_reference_vftbl_impl(writer& w, TypeDef const& type)
@@ -10312,7 +10319,7 @@ bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlyin
         w.write("%\n", bind<write_interface_entries_impl>(type));
         w.write("%\n", bind<write_com_wrappers_marshaller_attribute_impl>(type));
         w.write("%\n", bind<write_reference_vftbl_impl>(type));
-        w.write("%", bind<write_reference_impl>(type));
+        w.write("%", bind<write_reference_impl_struct>(type));
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
