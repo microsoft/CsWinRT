@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishAot>true</PublishAot>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <StackTraceSupport>false</StackTraceSupport>
+      
+    <!-- Set the root namespace to match the runtime -->
+    <RootNamespace>WindowsRuntime.InteropGenerator</RootNamespace>
+
+    <!-- This project produces a CLI tool, so we want a nice short name for it -->
+    <AssemblyName>cswinrtgen</AssemblyName>
+      
+    <!-- Same settings as WinRT.Runtime2 -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Features>strict</Features>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
+      an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
+      'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
+    -->
+    <NoWarn>$(NoWarn);AD0001</NoWarn>
+
+    <!-- Workaround for some methods not being fully implemented yet -->
+    <NoWarn>$(NoWarn);IDE0060</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" />
+    <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
+    <PackageReference Include="System.Numerics.Tensors" />
+  </ItemGroup>
+</Project>

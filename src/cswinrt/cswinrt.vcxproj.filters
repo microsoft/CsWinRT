@@ -68,7 +68,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="strings\InitializeProjection.cs">
+    <None Include="strings\InitalizeProjection.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
