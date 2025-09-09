@@ -475,8 +475,8 @@ namespace ABI.TestComponent
     {
         public byte A;
         public ushort B;
-        public nint C;
-        public nint D;
+        public IntPtr C;
+        public IntPtr D;
     }
 
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]

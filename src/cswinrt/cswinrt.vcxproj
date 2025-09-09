@@ -73,7 +73,6 @@
   <ItemGroup>
     <None Include="Directory.Build.props" />
     <None Include="Directory.Build.targets" />
-    <None Include="InspectableVftbl.cs" />
     <None Include="packages.config" />
     <None Include="PreviousPlatforms.linq" />
     <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
