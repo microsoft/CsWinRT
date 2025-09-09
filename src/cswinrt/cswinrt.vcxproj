@@ -122,6 +122,7 @@
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
     <None Include="strings\InitalizeProjection.cs" />
+    <None Include="strings\InspectableVftbl.cs" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

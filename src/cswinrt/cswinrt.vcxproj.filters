@@ -202,6 +202,9 @@
     <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
+    <None Include="strings\InspectableVftbl.cs">
+      <Filter>strings</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />
