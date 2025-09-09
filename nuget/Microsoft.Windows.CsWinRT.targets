@@ -179,6 +179,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                                Condition="'%(CsWinRTRemovedReferences.Implementation)' != '' AND Exists('%(CsWinRTRemovedReferences.RootDir)%(CsWinRTRemovedReferences.Directory)%(CsWinRTRemovedReferences.DestinationSubDirectory)%(CsWinRTRemovedReferences.Implementation)')" />
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
+
+      <!-- ReferenceCopyLocalPaths above will cause the Implementation dlls to be copied from references to the output dir but
+           those copies aren't included in the VS UpToDate check, so add them manually. -->
+      <_CsWinRT_CopyLocalImplementationDlls
+          Include="@(CsWinRTInputs->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')"
+          Condition="'%(CsWinRTInputs.Implementation)'!=''" />
+
+      <UpToDateCheckBuilt
+        Original="%(_CsWinRT_CopyLocalImplementationDlls.Identity)"
+        Include="@(_CsWinRT_CopyLocalImplementationDlls->'$(OutDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
+        Condition="Exists(%(_CsWinRT_CopyLocalImplementationDlls.Identity))" />
     </ItemGroup>
   </Target>
 
