@@ -7,6 +7,7 @@
 #include <regex>
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
+#include "guid_generator.h"
 
 #define INSPECTABLE_METHOD_COUNT 6
 

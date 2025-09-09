@@ -53,6 +53,7 @@
   <ItemGroup>
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="code_writers.h" />
+    <ClInclude Include="guid_generator.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="settings.h" />

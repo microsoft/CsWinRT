@@ -1,9 +1,11 @@
+#pragma once
 #include <set>
 #include <filesystem>
 #include <iostream>
 #include <regex>
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
+#include <array>
 
 namespace cswinrt
 {
