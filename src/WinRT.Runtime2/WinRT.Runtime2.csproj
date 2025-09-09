@@ -43,7 +43,7 @@
       reinterpret references to managed objects when it is safe to do so. The warnings are not necessary in this
       context, since in order to use these APIs the caller already has to be in an unsafe context.
     -->
-    <NoWarn>$(NoWarn);CS8500;IL2026</NoWarn>
+    <NoWarn>$(NoWarn);CS8500</NoWarn>
 
     <!--
       Enable the compiler strict mode (see https://www.meziantou.net/csharp-compiler-strict-mode.htm).
