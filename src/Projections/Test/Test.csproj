@@ -27,8 +27,10 @@
       TestComponent.Blittable;
       TestComponent.NonBlittable;
       TestComponent.Nested;
-      <!--TestComponentCSharp.FlagStruct;-->
-      <!--TestComponentCSharp.EnumStruct;-->
+      TestComponentCSharp.FlagValue;
+      TestComponentCSharp.EnumValue;
+      TestComponentCSharp.FlagStruct;
+      TestComponentCSharp.EnumStruct;
       TestComponentCSharp.BlittableStruct;
       TestComponentCSharp.ComposedBlittableStruct;
       TestComponentCSharp.NonBlittableStringStruct;

@@ -10167,19 +10167,16 @@ return true;
             return;
         }
 
-        if (is_flags_enum(type))
-        {
-            w.write("[FlagsAttribute]\n");
-        }
-
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"(%%%% enum % : %
+        w.write(
+R"(
+%[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+% enum % : %
 {
-)", 
-        bind<write_winrt_attribute>(type),
-        bind<write_winrt_exposed_type_attribute>(type, false),
-        bind<write_type_custom_attributes>(type, true),
+)",             
+        is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
@@ -10193,7 +10190,7 @@ return true;
                 }
             }
         }
-        w.write("}\n");
+        w.write("}\n\n");
     }
 
     void write_struct(writer& w, TypeDef const& type)
