@@ -10290,7 +10290,6 @@ return true;
 
     void write_abi_struct(writer& w, TypeDef const& type)
     {
-        w.write("\n// ---------------- abi struct implemention for %  ----------------  \n", bind<write_type_name>(type, typedef_name_type::Projected, false));
         if (!is_type_blittable(type))
         {
             w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% struct %\n{\n",
@@ -10307,13 +10306,13 @@ return true;
             }
             w.write("}\n\n");
         }
-
-        w.write("%\n", bind<write_marshaller_class>(type));
-        w.write("%\n", bind<write_com_interface_entries>(type));
-        w.write("%\n", bind<write_interface_entries_impl>(type));
-        w.write("%\n", bind<write_com_wrappers_marshaller_attribute_impl>(type));
-        w.write("%\n", bind<write_reference_vftbl_impl>(type));
-        w.write("%", bind<write_reference_impl_struct>(type));
+        w.write("%\n%\n%\n%\n%\n%\n",
+            bind<write_marshaller_class>(type),
+            bind<write_com_interface_entries>(type),
+            bind<write_interface_entries_impl>(type),
+            bind<write_com_wrappers_marshaller_attribute_impl>(type),
+            bind<write_reference_vftbl_impl>(type),
+            bind<write_reference_impl_struct>(type));
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
