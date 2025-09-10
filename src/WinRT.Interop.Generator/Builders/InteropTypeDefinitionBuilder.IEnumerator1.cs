@@ -507,6 +507,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumeratorType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
@@ -514,6 +515,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition implType)
         {
@@ -558,6 +560,9 @@ internal partial class InteropTypeDefinitionBuilder
                     hasCurrentMethod,
                     moveNextMethod,
                     getManyMethod]);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, enumeratorType, "Impl");
         }
 
         /// <summary>

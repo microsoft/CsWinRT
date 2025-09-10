@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -78,10 +77,5 @@ file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeCo
         return (ComInterfaceEntry*)Unsafe.AsPointer(in ObjectInterfaceEntriesImpl.Entries);
     }
 
-    /// <inheritdoc/>
-    public override unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
-    {
-        // Marshalling 'object' instances is not supported, and it should just never happen
-        throw new UnreachableException();
-    }
+    // Marshalling 'object' instances is not supported, and it should just never happen
 }

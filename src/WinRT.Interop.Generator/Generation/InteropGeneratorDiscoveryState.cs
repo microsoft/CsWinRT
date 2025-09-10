@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -44,8 +45,14 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
+    /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
     private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _userDefinedVtableTypes = [];
 
     /// <summary>
     /// Indicates whether the current state is readonly.
@@ -116,6 +123,21 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all SZ array types.
     /// </summary>
     public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
+
+    /// <summary>
+    /// Gets all user-defined types.
+    /// </summary>
+    public IReadOnlyCollection<TypeSignature> UserDefinedTypes => (IReadOnlyCollection<TypeSignature>)_userDefinedTypes.Keys;
+
+    /// <summary>
+    /// Gets all user-defined types and their vtable types.
+    /// </summary>
+    public IReadOnlyDictionary<TypeSignature, TypeSignatureEquatableSet> UserDefinedAndVtableTypes => _userDefinedTypes;
+
+    /// <summary>
+    /// Gets all user-defined vtable types (for each user-defined type).
+    /// </summary>
+    public IReadOnlyCollection<TypeSignatureEquatableSet> UserDefinedVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_userDefinedVtableTypes.Keys;
 
     /// <summary>
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
@@ -243,6 +265,24 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _szArrayTypes.TryAdd(szArrayType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a user-defined type.
+    /// </summary>
+    /// <param name="userDefinedType">The user-defined type.</param>
+    /// <param name="vtableTypes">The vtable types for <paramref name="userDefinedType"/>.</param>
+    public void TrackUserDefinedType(TypeSignature userDefinedType, TypeSignatureEquatableSet vtableTypes)
+    {
+        ThrowIfReadOnly();
+
+        // We want to de-duplicate all vtables across all user-defined types we need to generate CCW code for.
+        // This is because a significant portion of these vtables will be identical (it will be the case for
+        // all user-defined types that implement the same set of projected Windows Runtime interfaces). So here
+        // we first add this set to our map, and reuse the cached instance for this set (if it exists) later.
+        TypeSignatureEquatableSet cachedVtableTypes = _userDefinedVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
+
+        _ = _userDefinedTypes.TryAdd(userDefinedType, cachedVtableTypes);
     }
 
     /// <summary>

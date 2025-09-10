@@ -10,6 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// A type representing all associated state for a given <see cref="EventSource{TDelegate}"/> instance.
 /// </summary>
 /// <typeparam name="T">The type of delegate being managed from the associated event.</typeparam>
+[WindowsRuntimeManagedOnlyType]
 public abstract unsafe class EventSourceState<T> : IDisposable
     where T : MulticastDelegate
 {

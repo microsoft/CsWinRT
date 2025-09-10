@@ -143,7 +143,7 @@ internal static class InteropCustomAttributeFactory
         // Create the following attribute:
         //
         // [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(<SOURCE>, <PROXY>)]
-        return new(interopReferences.TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor.Import(module), new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
