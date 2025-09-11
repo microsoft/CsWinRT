@@ -911,6 +911,18 @@ internal sealed class InteropReferences
                 _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="int"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ReadOnlySpanInt32_ctor => field ??= ReadOnlySpanInt32
+        .ToTypeDefOrRef()
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
