@@ -485,6 +485,31 @@ internal static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>IVectorChangedEventArgs</c> (575933DF-34FE-4480-AF15-07691F3D5D9B).</summary>
+    public static ref readonly Guid IID_IVectorChangedEventArgs
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xDF, 0x33, 0x59, 0x57,
+                0xFE, 0x34,
+                0x80, 0x44,
+                0xAF,
+                0x15,
+                0x07,
+                0x69,
+                0x1F,
+                0x3D,
+                0x5D,
+                0x9B
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>MUX_INotifyPropertyChanged</c> (90B17601-B065-586E-83D9-9ADC3A695284).</summary>
     public static ref readonly Guid IID_MUX_INotifyPropertyChanged
     {
@@ -2079,6 +2104,31 @@ internal static class WellKnownInterfaceIds
                 0x84,
                 0x16,
                 0xDB
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfCollectionChange</c> (25BCAF91-880D-537D-82FC-9BBF0CACCB8B).</summary>
+    public static ref readonly Guid IID_IReferenceOfCollectionChange
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x91, 0xAF, 0xBC, 0x25,
+                0x0D, 0x88,
+                0x7D, 0x53,
+                0x82,
+                0xFC,
+                0x9B,
+                0xBF,
+                0x0C,
+                0xAC,
+                0xCB,
+                0x8B
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));

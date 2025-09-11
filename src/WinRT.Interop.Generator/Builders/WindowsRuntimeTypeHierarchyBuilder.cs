@@ -491,7 +491,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldsflda, bucketsRvaField },
                 { Conv_U },
                 { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize / sizeof(int))) },
-                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Newobj, interopReferences.ReadOnlySpanInt32_ctor.Import(module) },
                 { Ret }
             }
         };
