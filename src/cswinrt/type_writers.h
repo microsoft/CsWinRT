@@ -53,8 +53,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
-
+using Windows.Foundation;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to

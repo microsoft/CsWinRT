@@ -327,10 +327,7 @@ Where <spec> is one or more of:
                                         }
                                         break;
                                     case category::struct_type:
-                                        if (!is_type_blittable(type))
-                                        {
-                                            write_abi_struct(w, type);
-                                        }
+                                        write_abi_struct(w, type);
                                         break;
                                     }
                                 }
