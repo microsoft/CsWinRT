@@ -10,7 +10,7 @@ namespace Windows.Foundation.Collections;
 /// <summary>
 /// Notifies listeners of changes to the vector.
 /// </summary>
-/// <typeparam name="T"></typeparam>
+/// <typeparam name="T">The type of elements in the observable vector.</typeparam>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 public interface IObservableVector<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable
 {
