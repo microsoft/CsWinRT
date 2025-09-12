@@ -152,6 +152,12 @@ internal sealed class InteropDefinitions
     public TypeDefinition IMapChangedEventArgsVftbl => field ??= WellKnownTypeDefinitionFactory.IMapChangedEventArgsVftbl(_interopReferences, _interopModule);
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IObservableVectorVftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IObservableVectorVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableVectorVftbl(_interopReferences, _interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]

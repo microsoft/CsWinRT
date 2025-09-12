@@ -746,6 +746,12 @@ internal sealed class InteropReferences
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "RestrictedErrorInfoExceptionMarshaller"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationToken</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventRegistrationToken => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationToken"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
