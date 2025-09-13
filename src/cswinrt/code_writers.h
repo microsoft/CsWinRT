@@ -3987,7 +3987,12 @@ event % %;)",
         bool is_object_in() const
         {
             return ((category == param_category::in) || (category == param_category::ref)) &&
-                marshaler_type.empty() && local_type == "IntPtr";
+                marshaler_type.empty() && local_type == "void*";
+        }
+
+        bool is_interface() const
+        {
+            return marshaler_type == "WindowsRuntimeInterfaceMarshaller";
         }
 
         // We pass using in for .NET Standard.  Outside of .NET Standard,
@@ -4040,10 +4045,12 @@ event % %;)",
                 return;
             }
 
-            w.write("using WindowsRuntimeObjectReferenceValue % = %.ConvertToUnmanaged(%)",
+            w.write("using WindowsRuntimeObjectReferenceValue % = %.ConvertToUnmanaged(%%%);\n",
                 get_marshaler_local(w),
                 marshaler_type,
-                param_name);
+                param_name,
+                interface_guid != "" ? ", " : "",
+                interface_guid);
         }
 
         void write_locals2(writer& w) const
@@ -4213,7 +4220,7 @@ event % %;)",
 
             if (marshaler_type.empty())
             {
-                if (local_type == "IntPtr" && param_type != "IntPtr")
+                if (local_type == "void*" && param_type != "void*")
                 {
                     w.write("%.FromAbi(%)", param_type, source);
                     return;
@@ -4232,9 +4239,19 @@ event % %;)",
                 return;
             }
 
-            w.write("%.ConvertToManaged(null, %)",
-                marshaler_type,
-                source);
+            if (is_interface() && !is_generic())
+            {
+                w.write("(%) WindowsRuntimeObjectMarshaller.ConvertToManaged(%)",
+                    param_type,
+                    source);
+            }
+            else
+            {
+                w.write("%.ConvertToManaged(%%)",
+                    marshaler_type,
+                    is_generic() ? "null, " : "",
+                    source);
+            }
         }
 
         void write_from_managed(writer& w, std::string_view source) const
@@ -4244,7 +4261,7 @@ event % %;)",
 
             if (marshaler_type.empty())
             {
-                if (local_type == "IntPtr")
+                if (local_type == "void*")
                 {
                     w.write("%.FromManaged(%)", param_type, source);
                     return;
@@ -4295,12 +4312,17 @@ event % %;)",
 
         void write_dispose(writer& w) const
         {
-            if (is_pinnable || is_object_in() || local_type.empty())
+            // if (is_pinnable || is_object_in() || local_type.empty())
+            //    return;
+
+            if (!is_out())
+            {
                 return;
+            }
 
             if (marshaler_type.empty())
             {
-                if (is_out() && (local_type == "IntPtr" && param_type != "IntPtr"))
+                if (is_out() && (local_type == "void*" && param_type != "void*"))
                 {
                     w.write("MarshalInspectable<object>.DisposeAbi(%);\n", get_marshaler_local(w));
                 }
@@ -4309,10 +4331,18 @@ event % %;)",
 
             if (is_out())
             {
-                w.write("%.DisposeAbi%(%);\n",
-                    marshaler_type,
-                    is_array() ? "Array" : "",
-                    get_param_local(w));
+                if (is_array())
+                {
+                    w.write("%.DisposeAbi%(%);\n",
+                        marshaler_type,
+                        is_array() ? "Array" : "",
+                        get_param_local(w));
+                }
+                else
+                {
+                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
+                        get_param_local(w));
+                }
             }
             else
             {
@@ -4372,7 +4402,7 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
+                m.marshaler_type = "WindowsRuntimeInterfaceMarshaller";
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -4380,42 +4410,10 @@ event % %;)",
                 else
                 {
                     m.marshal_by_object_reference_value = true;
-                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
-                    if (settings.netstandard_compat)
-                    {
-                        m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
-                    }
-                    else if (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1")
-                    {
-                        m.interface_guid = w.write_temp("%.PIID", bind<write_type_name>(semantics, typedef_name_type::ABI, false));
-                    }
-                    else
-                    {
-                        m.interface_guid = w.write_temp("%.IID", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
-                    }
+                    m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
+                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
                 }
 
-                // Make sure this isn't being called for a generic instance
-                // that was already processed.
-                if (!m.has_generic_instantiation)
-                {
-                    for (auto&& iface : type.InterfaceImpl())
-                    {
-                        auto ifaceSemantics = get_type_semantics(iface.Interface());
-                        call(ifaceSemantics,
-                            [&](generic_type_instance const& generic)
-                            {
-                                m.has_generic_instantiation = true;
-                                m.generic_instantiations.emplace_back(generic);
-                            },
-                            [&](auto) { });
-                    }
-
-                    if (has_derived_generic_interface(type))
-                    {
-                        m.interface_init_rcw_helper = w.write_temp("%.InitRcwHelper();\n", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
-                    }
-                }
                 break;
             case category::class_type:
                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
@@ -4426,7 +4424,7 @@ event % %;)",
                 else
                 {
                     m.marshal_by_object_reference_value = true;
-                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
+                    m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                 }
                 break;
             case category::delegate_type:
@@ -4438,7 +4436,7 @@ event % %;)",
                 else
                 {
                     m.marshal_by_object_reference_value = true;
-                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
+                    m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                 }
                 break;
             }
@@ -4457,7 +4455,7 @@ event % %;)",
                     else
                     {
                         m.marshal_by_object_reference_value = true;
-                        m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
+                        m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                     }
                 },
                 [&](type_definition const& type)
@@ -4541,7 +4539,7 @@ event % %;)",
                         else
                         {
                             m.marshaler_type = "MarshalString";
-                            m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                            m.local_type = m.is_out() ? "void*" : "MarshalString";
                             m.is_pinnable = (m.category == param_category::in);
                         }
                     }
@@ -4686,7 +4684,7 @@ event % %;)",
 
         bool have_disposers = std::find_if(marshalers.begin(), marshalers.end(), [](abi_marshaler const& m)
         {
-            return !m.marshaler_type.empty() && !m.is_pinnable;
+            return !m.marshaler_type.empty() && m.is_out();
         }) != marshalers.end();
 
         if (!have_disposers)
@@ -5775,7 +5773,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             }
             if (marshaler_type.empty())
             {
-                if (local_type == "IntPtr")
+                if (local_type == "void*")
                 {
                     w.write("%.ConvertToUnmanaged(%);",
                         param_type,
@@ -7969,36 +7967,12 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
         auto write_delegate = [&](writer& w, bool is_abi_helper_method)
         {
             std::string invoke;
-            if (settings.netstandard_compat)
-            {
-                invoke = w.write_temp(R"(
-global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
-{
-%
-}))",
-                    !is_abi_helper_method && have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
-                    type_name,
-                    bind([&](writer& w)
-                    {
-                        if (signature.return_signature())
-                        {
-                            w.write("return invoke(%);", "%");
-                        }
-                        else
-                        {
-                            w.write("invoke(%);");
-                        }
-                    }));
-            }
-            else
-            {
-                invoke = w.write_temp(R"(
+            invoke = w.write_temp(R"(
 global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )",
-                    type_name,
-                    !is_abi_helper_method && have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
-                    "%");
-            }
+                type_name,
+                !is_abi_helper_method && have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
+                "%");
 
             if (is_abi_helper_method)
             {
