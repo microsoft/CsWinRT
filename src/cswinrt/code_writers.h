@@ -4644,27 +4644,6 @@ event % %;)",
             if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
-            if (!settings.netstandard_compat &&
-                has_generic_instantiation)
-            {
-                for (auto&& generic_instantiation : generic_instantiations)
-                {
-                    auto guard{ w.push_generic_args(generic_instantiation) };
-                    auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, generic_instantiation.generic_type);
-                    if (get_category(generic_instantiation.generic_type) == category::delegate_type)
-                    {
-                        generic_type_instances.insert(
-                            generic_type_instantiation
-                            {
-                                generic_instantiation,
-                                generic_instantiation_class_name
-                            });
-
-                        w.write("_ = global::WinRT.GenericTypeInstantiations.%.EnsureInitialized();\n", generic_instantiation_class_name);
-                    }
-                }
-            }
-
             w.write("% = %.CreateMarshaler%%(%%%);\n",
                 get_marshaler_local(w),
                 marshaler_type,
@@ -4853,36 +4832,6 @@ event % %;)",
                         param_name);
                 }
                 return;
-            }
-
-            if (!settings.netstandard_compat && 
-                has_generic_instantiation)
-            {
-                // If we have an InitRcwHelper call for the RCW impl class, we leave it to that to instantiate the generic interfaces
-                // instead of doing them here.
-                if (interface_init_rcw_helper != "")
-                {
-                    w.write(interface_init_rcw_helper);
-                }
-                else
-                {
-                    for (auto&& generic_instantiation : generic_instantiations)
-                    {
-                        auto guard{ w.push_generic_args(generic_instantiation) };
-                        auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, generic_instantiation.generic_type);
-                        if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
-                        {
-                            generic_type_instances.insert(
-                                generic_type_instantiation
-                                {
-                                    generic_instantiation,
-                                    generic_instantiation_class_name
-                                });
-
-                            w.write("_ = global::WinRT.GenericTypeInstantiations.%.EnsureInitialized();\n", generic_instantiation_class_name);
-                        }
-                    }
-                }
             }
 
             is_return ?
@@ -6199,6 +6148,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         std::string param_type;
         std::string local_type;
         std::string marshaler_type;
+        std::string interface_guid;
         bool abi_boxed;
         bool use_pointers;
 
@@ -6216,6 +6166,11 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         bool is_array() const
         {
             return category >= param_category::pass_array;
+        }
+
+        bool is_interface() const
+        {
+            return marshaler_type == "WindowsRuntimeInterfaceMarshaller";
         }
 
         std::string get_param_local(writer& w) const
@@ -6325,11 +6280,18 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                     marshaler_type,
                     param_name, bind<write_escaped_identifier>(param_name));
             }
+            else if (is_interface())
+            {
+                w.write("(%) WindowsRuntimeObjectMarshaller.ConvertToManaged(%%)",
+                    param_type,
+                    category == param_category::ref ? "*" : "",
+                    bind<write_escaped_identifier>(param_name));
+            }
             else
             {
                 w.write("%.FromAbi(%%)",
                     marshaler_type,
-                    category == param_category::ref ? use_pointers ? "*" : "__" : "",
+                    category == param_category::ref ? "*" : "",
                     bind<write_escaped_identifier>(param_name));
             }
         }
@@ -6363,7 +6325,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             {
                 if (local_type == "IntPtr")
                 {
-                    w.write("%.FromManaged(%);",
+                    w.write("%.ConvertToUnmanaged(%);",
                         param_type,
                         param_local);
                 }
@@ -6383,9 +6345,17 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                     }
                 }
             }
+            else if (is_interface())
+            {
+                w.write("%.ConvertToUnmanaged<%>(%, %).DetachThisPtrUnsafe();",
+                    marshaler_type,
+					param_type,
+                    param_local,
+                    interface_guid);
+            }
             else
             {
-                w.write("%%.FromManaged%(%);",
+                w.write("%%.ConvertToUnmanaged%(%);",
                     abi_boxed && !is_array() ?
                         w.write_temp("(%)", param_type) : "",
                     marshaler_type,
@@ -6428,8 +6398,9 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                     }
                     break;
                 case category::interface_type:
-                    m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
+                    m.marshaler_type = "WindowsRuntimeInterfaceMarshaller";
                     m.local_type = m.param_type;
+                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     break;
                 case category::class_type:
                     m.marshaler_type = get_abi_type();
@@ -6651,30 +6622,6 @@ bind<write_managed_method_call>(
         false));
     }
 
-    void write_method_abi_invoke_helper(writer& w, MethodDef const& method)
-    {
-        if (method.SpecialName()) return;
-
-        method_signature signature{ method };
-        auto return_sig = signature.return_signature();
-        auto type_name = write_type_name_temp(w, method.Parent());
-        auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
-
-        w.write(R"(
-public static % Do_Abi_%(IntPtr thisPtr%%)
-{
-%global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr).%(%);
-})",
-bind<write_projection_return_type>(signature),
-vmethod_name,
-signature.has_params() ? ", " : "",
-bind_list<write_projection_parameter>(", ", signature.params()),
-return_sig ? "return " : "",
-type_name,
-method.Name(),
-bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
-    }
-
     void write_property_abi_invoke(writer& w, Property const& prop)
     {
         auto [getter, setter] = get_property_methods(prop);
@@ -6728,49 +6675,6 @@ private static unsafe int Do_Abi_%%
                         prop.Name(),
                         "%"),
                     false));
-        }
-    }
-
-    void write_property_abi_invoke_helper(writer& w, Property const& prop)
-    {
-        auto [getter, setter] = get_property_methods(prop);
-        auto type_name = write_type_name_temp(w, prop.Parent());
-        if (setter)
-        {
-            method_signature setter_sig{ setter };
-            auto vmethod_name = get_vmethod_name(w, setter.Parent(), setter);
-
-            // WinRT properties can't be indexers.
-            XLANG_ASSERT(setter_sig.params().size() == 1);
-
-            w.write(R"(
-public static void Do_Abi_%(IntPtr thisPtr, %)
-{
-global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr).% = %;
-})",
-vmethod_name,
-bind_list<write_projection_parameter>(", ", setter_sig.params()),
-type_name,
-prop.Name(),
-bind_list<write_parameter_name_with_modifier>(", ", setter_sig.params()));
-        }
-
-        if (getter)
-        {
-            method_signature getter_sig{ getter };
-            auto vmethod_name = get_vmethod_name(w, getter.Parent(), getter);
-
-            // WinRT properties can't be indexers.
-            XLANG_ASSERT(getter_sig.params().size() == 0);
-            w.write(R"(
-public static % Do_Abi_%(IntPtr thisPtr)
-{
-return global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr).%;
-})",
-bind<write_projection_return_type>(getter_sig),
-vmethod_name,
-type_name,
-prop.Name());
         }
     }
 
