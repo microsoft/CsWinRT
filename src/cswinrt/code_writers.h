@@ -3869,7 +3869,23 @@ R"(file static unsafe class %ReferenceImpl
 
         try
         {
-            *result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+)", name, name, name, result_param);
+        
+        if (is_type_blittable(type))
+        {
+            w.write(
+R"(            * result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));)", result_param);
+        }
+        else
+        {
+            w.write(
+R"(            % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+)", projection_name, projection_name);
+            w.write(
+R"(            *result = %Marshaller.ConvertToUnmanaged(unboxedValue);)", name);
+        }
+
+     w.write(R"(
             return S_OK;
         }
         catch (Exception e)
@@ -3880,7 +3896,7 @@ R"(file static unsafe class %ReferenceImpl
 
     %
 }
-)", name, name, name, result_param, result_param, bind<write_guid_property_from_signature>(type, ireference_guid_sig));
+)", bind<write_guid_property_from_signature>(type, ireference_guid_sig));
     }
 
     void write_reference_vftbl_impl(writer& w, TypeDef const& type)
