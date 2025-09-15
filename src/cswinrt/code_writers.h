@@ -1757,10 +1757,6 @@ remove => %;
 
     std::string get_platform(writer& w, CustomAttributeSig const& signature, std::vector<std::string> const& params)
     {
-        if (settings.netstandard_compat)
-        {
-            return {};
-        }
         auto& arg0 = signature.FixedArgs()[0];
         auto& elem = std::get<ElemSig>(arg0.value);
         std::string_view contract_name;
@@ -4068,8 +4064,17 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             {
                 w.write(", ");
             }
-            w.write("___% = __%", param_name, param_name);
+            w.write("_% = %", param_name, param_name);
             write_delimiter = true;
+        }
+
+        void write_fixed_marshaler(writer& w) const
+        {
+            if (!is_pinnable)
+                return;
+
+            w.write("%.ConvertToUnmanagedUnsafe(_%, %.Length, out HStringReference __%);", 
+                marshaler_type, param_name, param_name, param_name);
         }
 
         void write_marshal_to_abi(writer& w, std::string_view source = "") const
@@ -4113,6 +4118,13 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                     w.write("%%%",
                         category == param_category::ref ? "_" : "",
                         source, bind<write_escaped_identifier>(param_name));
+                    return;
+                }
+
+                if (is_pinnable && marshaler_type == "HStringMarshaller")
+                {
+                    w.write("%.HString",
+                        get_marshaler_local(w));
                     return;
                 }
             }
@@ -4268,7 +4280,8 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 }
                 else
                 {
-                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
+                    w.write("%.Free(%);\n",
+                        is_marshal_by_object_reference_value() ? "WindowsRuntimeObjectMarshaller" : marshaler_type,
                         get_param_local(w));
                 }
             }
@@ -4426,7 +4439,7 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                         }
                         else
                         {
-                            m.marshaler_type = "MarshalString";
+                            m.marshaler_type = "HStringMarshaller";
                             m.local_type = m.is_out() ? "void*" : "MarshalString";
                             m.is_pinnable = (m.category == param_category::in);
                         }
@@ -4526,10 +4539,16 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             if (have_pinnables)
             {
                 bool write_delimiter{};
-                w.write("fixed(void* %)\n{\n",
+                w.write("fixed(char* %)\n{\n",
                     bind_each([&](writer& w, abi_marshaler const& m)
                     {
                         m.write_fixed_expression(w, write_delimiter);
+                    }, marshalers));
+
+                w.write("%\n",
+                    bind_each([&](writer& w, abi_marshaler const& m)
+                    {
+                        m.write_fixed_marshaler(w);
                     }, marshalers));
 
                 // TODO: Write out the marshalers for the pinned expressions.
@@ -5434,6 +5453,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         bool abi_boxed;
         bool use_pointers;
         std::string interop_dll_type;
+        bool marshal_by_object_reference_value;
 
         bool is_out() const
         {
@@ -5454,6 +5474,11 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         bool is_interface() const
         {
             return marshaler_type == "WindowsRuntimeInterfaceMarshaller";
+        }
+
+        bool is_marshal_by_object_reference_value() const
+        {
+            return marshal_by_object_reference_value;
         }
 
         std::string get_param_local(writer& w) const
@@ -5653,12 +5678,13 @@ interop_dll_type);
             }
             else
             {
-                w.write("%%.ConvertToUnmanaged%(%).DetachThisPtrUnsafe();",
+                w.write("%%.ConvertToUnmanaged%(%)%;",
                     abi_boxed && !is_array() ?
                         w.write_temp("(%)", param_type) : "",
                     marshaler_type,
                     is_array() ? "Array" : "",
-                    param_local);
+                    param_local,
+                    is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
             }
             w.write("\n");
         }
@@ -5699,14 +5725,17 @@ interop_dll_type);
                     m.marshaler_type = "WindowsRuntimeInterfaceMarshaller";
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    m.marshal_by_object_reference_value = true;
                     break;
                 case category::class_type:
                     m.marshaler_type = get_abi_type();
                     m.local_type = m.param_type;
+                    m.marshal_by_object_reference_value = true;
                     break;
                 case category::delegate_type:
                     m.marshaler_type = get_abi_type();
                     m.local_type = m.param_type;
+                    m.marshal_by_object_reference_value = true;
                     if (distance(type.GenericParam()) > 0)
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
@@ -5720,6 +5749,7 @@ interop_dll_type);
                 {
                     m.marshaler_type = "WindowsRuntimeObjectMarshaller";
                     m.local_type = "object";
+                    m.marshal_by_object_reference_value = true;
                 },
                 [&](type_definition const& type)
                 {
@@ -5748,7 +5778,7 @@ interop_dll_type);
                 {
                     if (type == fundamental_type::String)
                     {
-                        m.marshaler_type = "MarshalString";
+                        m.marshaler_type = "HStringMarshaller";
                         m.local_type = m.is_out() ? "string" : "";
                     }
                 },
