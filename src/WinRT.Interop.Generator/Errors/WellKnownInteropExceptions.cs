@@ -45,9 +45,9 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The WinRT runtime module was not found.
     /// </summary>
-    public static Exception WinRTModuleNotFound()
+    public static Exception WinRTRuntimeModuleNotFound()
     {
-        return Exception(4, "The WinRT runtime module was not found (this might mean that its path was not valid, or that it failed to load).");
+        return Exception(4, "The WinRT runtime module (i.e. 'WinRT.Runtime.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
     }
 
     /// <summary>
@@ -344,6 +344,22 @@ internal static class WellKnownInteropExceptions
     public static Exception UserDefinedVtableTypeCodeGenerationError(string? userDefinedType, Exception exception)
     {
         return Exception(39, $"Failed to generate marshalling code for user-defined vtable type '{userDefinedType}'.", exception);
+    }
+
+    /// <summary>
+    /// The Windows SDK projection module was not found.
+    /// </summary>
+    public static Exception WindowsSdkProjectionModuleNotFound()
+    {
+        return Exception(40, "The Windows SDK projection module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> type.
+    /// </summary>
+    public static Exception IMapChangedEventArgs1TypeCodeGenerationError(TypeSignature argsType, Exception exception)
+    {
+        return Exception(41, $"Failed to generate marshalling code for 'IMapChangedEventArgs<K>' type '{argsType}'.", exception);
     }
 
     /// <summary>

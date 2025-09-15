@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// An interface providing information on a given Windows Runtime interface.
 /// </summary>
 /// <remarks>
-/// This type should only be used as a base type by generated generic instantiations.
+/// This interface is only meant to be used to support marshalling code for generic instantiations.
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]

@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropGenerator;
 internal static class InteropGeneratorDiscoveryStateExtensions
 {
     /// <summary>
-    /// Tracks a generic interface type of any custom-mapped type.
+    /// Tracks a generic interface type of any projected or custom-mapped type.
     /// </summary>
     /// <param name="discoveryState">The current <see cref="InteropGeneratorDiscoveryState"/> instance.</param>
     /// <param name="typeSignature">The generic interface type.</param>
@@ -52,6 +52,18 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
         {
             discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
+        {
+            discoveryState.TrackIObservableVector1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
+        {
+            discoveryState.TrackIObservableMap2Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
+        {
+            discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);
         }
     }
 }
