@@ -3860,7 +3860,7 @@ R"(file static unsafe class %ReferenceImpl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static int get_Value(void* thisPtr, %* result)
+    public static int get_Value(void* thisPtr, void* result)
     {
         if (result is null)
         {
@@ -3868,21 +3868,24 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
-        {
-)", name, name, name, result_param);
+        {)", name, name, name);
         
         if (is_type_blittable(type))
         {
             w.write(
-R"(            * result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));)", result_param);
+R"(            
+            var value = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+            *(%*)result = value; // Explicit cast back to the correct type)"
+                , result_param, result_param);
         }
         else
         {
             w.write(
-R"(            % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-)", projection_name, projection_name);
-            w.write(
-R"(            *result = %Marshaller.ConvertToUnmanaged(unboxedValue);)", name);
+R"(            
+            % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
+            var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
+            *(%*)result = value;)"
+                , projection_name, projection_name, name, result_param);
         }
 
      w.write(R"(
@@ -3914,9 +3917,9 @@ file unsafe struct %ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
+    public delegate* unmanaged[MemberFunction]<void*, void*, int> get_Value;
 }
-)", name, is_type_blittable(type) ? projection_name : abi_name);
+)", name);
     }
 
     void write_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
