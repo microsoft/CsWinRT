@@ -151,10 +151,10 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
-        // Get the loaded module for the runtime .dll (same as above)
+        // Get the loaded module for the Windows SDK projection .dll (same as above)
         if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
-            throw WellKnownInteropExceptions.WinRTFoundationModuleNotFound();
+            throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }
 
         // If assembly version validation is required, ensure that the 'cswinrtgen' version matches that of 'WinRT.Runtime.dll'.

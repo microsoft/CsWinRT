@@ -347,11 +347,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// The WinRT foundation module was not found.
+    /// The Windows SDK projection module was not found.
     /// </summary>
-    public static Exception WinRTFoundationModuleNotFound()
+    public static Exception WindowsSdkProjectionModuleNotFound()
     {
-        return Exception(40, "The WinRT foundation module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
+        return Exception(40, "The Windows SDK projection module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
     }
 
     /// <summary>

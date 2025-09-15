@@ -417,15 +417,15 @@ internal partial class InteropGenerator
         Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
         ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
         AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
-        ModuleDefinition windowsFoundationModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
-        AssemblyDefinition windowsFoundationAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsFoundationModule } };
+        ModuleDefinition windowsSdkProjectionModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
+        AssemblyDefinition windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsSdkProjectionModule } };
 
         // Set the public keys, as it's needed to ensure references compare as equals as expected
         windowsRuntimeAssembly.PublicKey = InteropValues.PublicKeyData;
         windowsRuntimeAssembly.HasPublicKey = true;
-        windowsFoundationAssembly.PublicKey = InteropValues.PublicKeyData;
-        windowsFoundationAssembly.HasPublicKey = true;
+        windowsSdkProjectionAssembly.PublicKey = InteropValues.PublicKeyData;
+        windowsSdkProjectionAssembly.HasPublicKey = true;
 
-        return new(corLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
+        return new(corLibTypeFactory, windowsRuntimeModule, windowsSdkProjectionModule);
     }
 }

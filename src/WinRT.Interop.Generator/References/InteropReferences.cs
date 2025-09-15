@@ -27,24 +27,24 @@ internal sealed class InteropReferences
     private readonly ModuleDefinition _windowsRuntimeModule;
 
     /// <summary>
-    /// The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
+    /// The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.
     /// </summary>
-    private readonly ModuleDefinition _windowsFoundationModule;
+    private readonly ModuleDefinition _windowsSdkProjectionModule;
 
     /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
+    /// <param name="windowsSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
     public InteropReferences(
         CorLibTypeFactory corLibTypeFactory,
         ModuleDefinition windowsRuntimeModule,
-        ModuleDefinition windowsFoundationModule)
+        ModuleDefinition windowsSdkProjectionModule)
     {
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
-        _windowsFoundationModule = windowsFoundationModule;
+        _windowsSdkProjectionModule = windowsSdkProjectionModule;
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
     /// </summary>
-    public ModuleDefinition WindowsFoundationModule => _windowsFoundationModule;
+    public ModuleDefinition WindowsFoundationModule => _windowsSdkProjectionModule;
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
@@ -761,31 +761,31 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IObservableVector1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
+    public TypeReference IObservableVector1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IObservableMap2 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
+    public TypeReference IObservableMap2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IMapChangedEventArgs1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
+    public TypeReference IMapChangedEventArgs1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference CollectionChange => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
+    public TypeReference CollectionChange => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference VectorChangedEventHandler1 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
+    public TypeReference VectorChangedEventHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
@@ -797,7 +797,7 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference MapChangedEventHandler2 => field ??= _windowsFoundationModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
+    public TypeReference MapChangedEventHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
