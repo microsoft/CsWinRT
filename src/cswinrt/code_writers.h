@@ -3842,7 +3842,7 @@ R"(public static %? UnboxToManaged(void* value)
 R"(file static unsafe class %ReferenceImpl
 {
     [FixedAddressValueType]
-    private static readonly %ReferenceVftbl Vftbl;
+    private static readonly ReferenceVftbl Vftbl;
 
     private const int S_OK = unchecked((int)0x00000000);
     private const int E_POINTER = unchecked((int)0x80004003);
@@ -3868,7 +3868,7 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
-        {)", name, name, name);
+        {)", name, name);
         
         if (is_type_blittable(type))
         {
@@ -3900,26 +3900,6 @@ R"(
     %
 }
 )", bind<write_guid_property_from_signature>(type, ireference_guid_sig));
-    }
-
-    void write_reference_vftbl_impl(writer& w, TypeDef const& type)
-    {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        w.write(
-R"([StructLayout(LayoutKind.Sequential)]
-file unsafe struct %ReferenceVftbl
-{
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
-    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, void*, int> get_Value;
-}
-)", name);
     }
 
     void write_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
@@ -10325,12 +10305,11 @@ return true;
             }
             w.write("}\n\n");
         }
-        w.write("%\n%\n%\n%\n%\n%\n",
+        w.write("%\n%\n%\n%\n%\n",
             bind<write_marshaller_class>(type),
             bind<write_com_interface_entries>(type),
             bind<write_interface_entries_impl>(type),
             bind<write_com_wrappers_marshaller_attribute_impl>(type),
-            bind<write_reference_vftbl_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
 
