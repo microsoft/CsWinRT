@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -29,12 +31,16 @@ internal partial class InteropGenerator
         InteropGeneratorEmitState emitState = new();
 
         // Define the module to emit
-        ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition windowsRuntimeModule);
+        ModuleDefinition module = DefineInteropModule(
+            args: args,
+            discoveryState: discoveryState,
+            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
+            windowsFoundationModule: out ModuleDefinition windowsFoundationModule);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        InteropReferences interopReferences = new(module, windowsRuntimeModule);
+        InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
@@ -90,8 +96,18 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IMapChangedEventArgs<>' types
+        DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for user-defined array types
+        DefineUserDefinedTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -115,8 +131,13 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
+    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
-    private static ModuleDefinition DefineInteropModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, out ModuleDefinition windowsRuntimeModule)
+    private static ModuleDefinition DefineInteropModule(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        out ModuleDefinition windowsRuntimeModule,
+        out ModuleDefinition windowsFoundationModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.ModuleDefinitions.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -127,7 +148,13 @@ internal partial class InteropGenerator
         // Get the loaded module for the runtime .dll (this should also always be available here)
         if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value) is null)
         {
-            throw WellKnownInteropExceptions.WinRTModuleNotFound();
+            throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
+        }
+
+        // Get the loaded module for the Windows SDK projection .dll (same as above)
+        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
+        {
+            throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }
 
         // If assembly version validation is required, ensure that the 'cswinrtgen' version matches that of 'WinRT.Runtime.dll'.
@@ -276,7 +303,7 @@ internal partial class InteropGenerator
                     module: module);
 
                 // Define the 'EventSource' types (for when the delegate types are used for events on projected types)
-                if (typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true)
+                if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.EventHandler1))
                 {
                     InteropTypeDefinitionBuilder.EventSource.EventHandler1(
                         delegateType: typeSignature,
@@ -285,9 +312,27 @@ internal partial class InteropGenerator
                         module: module,
                         eventSourceType: out _);
                 }
-                else if (typeSignature.GenericType.Name?.AsSpan().StartsWith("TypedEventHandler`2"u8) is true)
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.EventHandler2))
                 {
                     InteropTypeDefinitionBuilder.EventSource.EventHandler2(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.VectorChangedEventHandler1))
+                {
+                    InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
+                {
+                    InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         interopReferences: interopReferences,
@@ -339,6 +384,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -463,6 +509,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -596,6 +643,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -729,6 +777,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -863,6 +912,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -996,6 +1046,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out _);
 
@@ -1138,6 +1189,122 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIMapChangedEventArgsTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the 'IID' property
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.IID(
+                    argsType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ImplType(
+                    argsType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
+                // Define the 'Methods' type (with the public thunks for 'IMapChangedEventArgs<K>' native calls)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Methods(
+                    argsType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    argsMethodsType: out TypeDefinition argsMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.NativeObject(
+                    argsType: typeSignature,
+                    argsMethodsType: argsMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersCallbackType(
+                    argsType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition argsComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersMarshallerAttribute(
+                    argsType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition argsComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Marshaller(
+                    argsType: typeSignature,
+                    argsComWrappersCallbackType: argsComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.InterfaceImpl(
+                    argsType: typeSignature,
+                    argsMethodsType: argsMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Proxy(
+                    argsType: typeSignature,
+                    argsComWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.TypeMapAttributes(
+                    argsType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IMapChangedEventArgs1TypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the interop types for SZ array types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -1234,6 +1401,98 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for user-defined types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineUserDefinedTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Since we're sharing the marshaller attributes across all identical sets of COM interface entries,
+        // we need a temporary map so we can look them up when we need to reference them once we get to
+        // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
+        Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
+
+        // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
+        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            TypeSignature? typeSignature = null;
+
+            try
+            {
+                // Get the first user-defined with this vtable set as reference
+                typeSignature = discoveryState.UserDefinedAndVtableTypes.First(kvp => kvp.Value.Equals(vtableTypes)).Key;
+
+                // Define the 'InterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
+                InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
+                    userDefinedType: typeSignature,
+                    vtableTypes: vtableTypes,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.UserDefinedType.ComWrappersMarshallerAttribute(
+                    userDefinedType: typeSignature,
+                    vtableTypes: vtableTypes,
+                    interfaceEntriesImplType: interfaceEntriesImplType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition comWrappersMarshallerType);
+
+                // Track the marshaller attribute for later
+                marshallerAttributeMap.Add(vtableTypes, comWrappersMarshallerType);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.UserDefinedVtableTypeCodeGenerationError(typeSignature?.Name, e);
+            }
+        }
+
+        // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
+                    userDefinedType: typeSignature,
+                    comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                // Define the type map attributes
+                InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
+                    userDefinedType: typeSignature,
+                    proxyType: proxyType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the implementation detail types.
     /// </summary>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -1257,8 +1516,15 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IDictionary2Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
+            module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
+
+            // Also emit all shared COM interface entries types that are programmatically generated
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
+            {
+                module.TopLevelTypes.Add(typeDefinition);
+            }
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

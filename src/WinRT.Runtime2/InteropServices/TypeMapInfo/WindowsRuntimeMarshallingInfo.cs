@@ -494,8 +494,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if created successfully.</returns>
     private static WindowsRuntimeMarshallingInfo? GetMetadataProviderType(Type managedType)
     {
-        // Same as above: if the type is a projected type, then it is also used as the metadata source
-        if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false))
+        // Same as above: if the type is a projected type, then it is also used as the metadata source.
+        // We need to special-case generic types, as the marshalling code for them is also on proxies.
+        if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false) && !managedType.IsGenericType)
         {
             return new(managedType, publicType: managedType);
         }
