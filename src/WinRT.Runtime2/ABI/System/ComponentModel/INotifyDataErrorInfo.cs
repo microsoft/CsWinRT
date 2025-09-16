@@ -19,6 +19,25 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.ComponentModel;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class INotifyDataErrorInfoMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyDataErrorInfo? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_INotifyDataErrorInfo);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.ComponentModel.INotifyDataErrorInfo? ConvertToManaged(void* value)
+    {
+        return (global::System.ComponentModel.INotifyDataErrorInfo?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]

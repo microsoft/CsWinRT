@@ -16,6 +16,25 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.IDisposable"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IDisposableMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IDisposable? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IDisposable);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.IDisposable? ConvertToManaged(void* value)
+    {
+        return (global::System.IDisposable?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]

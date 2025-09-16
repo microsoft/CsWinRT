@@ -10,11 +10,34 @@ using System.Threading;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
 namespace ABI.System.Collections.Specialized;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class INotifyCollectionChangedMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.INotifyCollectionChanged? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value,
+            in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
+                : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.Collections.Specialized.INotifyCollectionChanged? ConvertToManaged(void* value)
+    {
+        return (global::System.Collections.Specialized.INotifyCollectionChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
 
 /// <summary>
 /// Interop methods for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
