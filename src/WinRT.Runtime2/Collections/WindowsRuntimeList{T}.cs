@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
@@ -51,7 +50,6 @@ public abstract class WindowsRuntimeList<
     }
 
     /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T, TIIterable, TIEnumerableMethods, TIReadOnlyListMethods}.IIterableObjectReference"/>
-    [field: AllowNull, MaybeNull]
     private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get

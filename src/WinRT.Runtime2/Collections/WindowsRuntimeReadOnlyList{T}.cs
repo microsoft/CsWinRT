@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
@@ -50,7 +49,6 @@ public abstract class WindowsRuntimeReadOnlyList<
     /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> for the current object.
     /// </summary>
-    [field: AllowNull, MaybeNull]
     private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get
