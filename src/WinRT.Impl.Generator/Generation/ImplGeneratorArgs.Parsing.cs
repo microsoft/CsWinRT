@@ -73,6 +73,7 @@ internal partial class ImplGeneratorArgs
         // Parse all commands to create the managed arguments to use
         return new()
         {
+            ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ReferenceAssemblyPaths)),
             OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
             TreatWarningsAsErrors = GetBooleanArgument(argsMap, nameof(TreatWarningsAsErrors)),
@@ -95,6 +96,22 @@ internal partial class ImplGeneratorArgs
         {
             throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName, e);
         }
+    }
+
+    /// <summary>
+    /// Parses a <see cref="string"/> array argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    private static string[] GetStringArrayArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+
+        throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName);
     }
 
     /// <summary>

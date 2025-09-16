@@ -40,6 +40,30 @@ internal static class WellKnownImplExceptions
     }
 
     /// <summary>
+    /// Some exception was thrown when trying to read the output assembly file.
+    /// </summary>
+    public static Exception OutputAssemblyFileReadError(string filename, Exception? exception = null)
+    {
+        return Exception(4, $"Failed to read the output assembly file '{filename}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to define the impl assembly.
+    /// </summary>
+    public static Exception DefineImplAssemblyError(Exception exception)
+    {
+        return Exception(5, "Failed to define the impl module and assembly.", exception);
+    }
+
+    /// <summary>
+    /// Exception when emitting the impl .dll to disk.
+    /// </summary>
+    public static Exception EmitDllError(Exception exception)
+    {
+        return Exception(6, "Failed to emit the impl .dll to disk.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

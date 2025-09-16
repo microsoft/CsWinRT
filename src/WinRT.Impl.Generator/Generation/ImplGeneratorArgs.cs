@@ -11,6 +11,10 @@ namespace WindowsRuntime.ImplGenerator.Generation;
 /// </summary>
 internal sealed partial class ImplGeneratorArgs
 {
+    /// <summary>Gets the input .dll paths.</summary>
+    [CommandLineArgumentName("--reference-assembly-paths")]
+    public required string[] ReferenceAssemblyPaths { get; init; }
+
     /// <summary>Gets the path of the assembly that was built.</summary>
     [CommandLineArgumentName("--output-assembly-path")]
     public required string OutputAssemblyPath { get; init; }
