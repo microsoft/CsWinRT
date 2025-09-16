@@ -27,6 +27,18 @@ public unsafe ref struct TypeReference
     /// </summary>
     /// <returns>The resulting <see cref="ABI.System.Type"/> value for marshalling.</returns>
     /// <remarks>
+    /// Unlike <see cref="ConvertToUnmanagedUnsafe"/>, this method will not use a fast-pass <c>HSTRING</c>, so it doesn't need pinning.
+    /// </remarks>
+    public ABI.System.Type ConvertToUnmanaged()
+    {
+        return new() { Name = HStringMarshaller.ConvertToUnmanaged(Name), Kind = Kind };
+    }
+
+    /// <summary>
+    /// Converts the current <see cref="TypeReference"/> value into a <see cref="ABI.System.Type"/> value for marshalling.
+    /// </summary>
+    /// <returns>The resulting <see cref="ABI.System.Type"/> value for marshalling.</returns>
+    /// <remarks>
     /// This method can only be used within a <see langword="fixed"/> block on <see cref="GetPinnableReference"/>.
     /// Calling this method while the <see cref="TypeReference"/> value is not fixed this way is undefined behavior.
     /// </remarks>
