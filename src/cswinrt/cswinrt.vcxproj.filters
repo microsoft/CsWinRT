@@ -205,6 +205,9 @@
     <None Include="strings\InspectableVftbl.cs">
       <Filter>strings</Filter>
     </None>
+    <None Include="strings\InterfaceEntries.cs">
+      <Filter>strings</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

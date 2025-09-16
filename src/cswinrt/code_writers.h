@@ -3917,7 +3917,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(%InterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(InterfaceEntries) / sizeof(ComInterfaceEntry);
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
 
@@ -3927,7 +3927,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
     }
 }
-)", name, projection_name, projection_name, name, name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
+)", name, projection_name, projection_name, name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -3938,12 +3938,12 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 R"(file static class %InterfaceEntriesImpl
 {
     [FixedAddressValueType]
-    public static readonly %InterfaceEntries Entries;
+    public static readonly InterfaceEntries Entries;
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceOf%.IID = %ReferenceImpl.IID_IReferenceOf%;
-        Entries.IReferenceOf%.Vtable = %ReferenceImpl.Vtable;
+        Entries.IReferenceValue.IID = %ReferenceImpl.IID_IReferenceOf%;
+        Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = IStringableImpl.IID;
@@ -3960,27 +3960,7 @@ R"(file static class %InterfaceEntriesImpl
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
-)", name, name, name, name, name, name, name, name);
-    }
-
-    void write_com_interface_entries(writer& w, TypeDef const& type)
-    {
-        auto name = w.write_temp("%", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
-
-        w.write(
-R"([StructLayout(LayoutKind.Sequential)]
-file struct %InterfaceEntries
-{
-    public ComInterfaceEntry IReferenceOf%;
-    public ComInterfaceEntry IPropertyValue;
-    public ComInterfaceEntry IStringable;
-    public ComInterfaceEntry IWeakReferenceSource;
-    public ComInterfaceEntry IMarshal;
-    public ComInterfaceEntry IAgileObject;
-    public ComInterfaceEntry IInspectable;
-    public ComInterfaceEntry IUnknown;
-}
-)", name, name);
+)", name, name, name, name, name);
     }
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
@@ -10305,9 +10285,8 @@ return true;
             }
             w.write("}\n\n");
         }
-        w.write("%\n%\n%\n%\n%\n",
+        w.write("%\n%\n%\n%\n",
             bind<write_marshaller_class>(type),
-            bind<write_com_interface_entries>(type),
             bind<write_interface_entries_impl>(type),
             bind<write_com_wrappers_marshaller_attribute_impl>(type),
             bind<write_reference_impl_struct>(type));
