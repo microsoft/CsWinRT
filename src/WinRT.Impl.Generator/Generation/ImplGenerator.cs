@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using AsmResolver.DotNet;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.Resolvers;
@@ -62,6 +63,7 @@ internal static partial class ImplGenerator
             // Add the module to the parent assembly
             implAssembly.Modules.Add(implModule);
 
+            EmitTypeForwards(module, implModule);
             WriteImplModuleToDisk(args, implModule);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -71,6 +73,40 @@ internal static partial class ImplGenerator
 
         // Notify the user that generation was successful
         ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, "test")}");
+    }
+
+    /// <summary>
+    /// Emits the type forwards for all types in the input module.
+    /// </summary>
+    /// <param name="inputModule">The input module.</param>
+    /// <param name="implModule">The impl module being generated.</param>
+    private static void EmitTypeForwards(ModuleDefinition inputModule, ModuleDefinition implModule)
+    {
+        try
+        {
+            AssemblyReference projectionAssembly = new("WinRT.Projection.dll"u8, new Version(0, 0, 0, 0));
+
+            foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
+            {
+                // We only need to forward public types
+                if (!exportedType.IsPublic)
+                {
+                    continue;
+                }
+
+                implModule.ExportedTypes.Add(new ExportedType(
+                    implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
+                    ns: exportedType.Namespace,
+                    name: exportedType.Name)
+                {
+                    Attributes = TypeAttributes.Forwarder
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            throw WellKnownImplExceptions.EmitDllError(e);
+        }
     }
 
     /// <summary>
