@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
+using ConsoleAppFramework;
+using WindowsRuntime.ImplGenerator.Generation;
 
-Console.WriteLine("Hello, World!");
+// Run the impl generator with all parsed arguments
+ConsoleApp.Run(args, ImplGenerator.Run);
