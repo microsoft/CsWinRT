@@ -27,7 +27,9 @@ public static unsafe class INotifyDataErrorInfoMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyDataErrorInfo? value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_INotifyDataErrorInfo);
+        return WindowsRuntimeInterfaceMarshaller<global::System.ComponentModel.INotifyDataErrorInfo>.ConvertToUnmanaged(
+            value: value,
+            iid: in WellKnownInterfaceIds.IID_INotifyDataErrorInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

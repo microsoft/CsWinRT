@@ -26,8 +26,9 @@ public static unsafe class INotifyCollectionChangedMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.INotifyCollectionChanged? value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value,
-            in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.Specialized.INotifyCollectionChanged>.ConvertToUnmanaged(
+            value: value,
+            iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
                 ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
                 : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged);
     }

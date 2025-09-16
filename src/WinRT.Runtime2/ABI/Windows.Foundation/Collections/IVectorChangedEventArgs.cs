@@ -25,7 +25,9 @@ public static unsafe class IVectorChangedEventArgsMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::Windows.Foundation.Collections.IVectorChangedEventArgs? value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
+        return WindowsRuntimeInterfaceMarshaller<global::Windows.Foundation.Collections.IVectorChangedEventArgs>.ConvertToUnmanaged(
+            value: value,
+            iid: in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

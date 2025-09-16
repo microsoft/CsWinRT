@@ -24,7 +24,7 @@ public static unsafe class IServiceProviderMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IServiceProvider? value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
+        return WindowsRuntimeInterfaceMarshaller<global::System.IServiceProvider>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
