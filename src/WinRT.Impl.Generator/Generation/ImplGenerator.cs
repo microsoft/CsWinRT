@@ -14,6 +14,7 @@ using System.Threading;
 using AsmResolver.DotNet;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
+using WindowsRuntime.ImplGenerator.References;
 using WindowsRuntime.ImplGenerator.Resolvers;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
@@ -230,7 +231,11 @@ internal static partial class ImplGenerator
             // We need an assembly reference for the merged projection .dll that will be generated.
             // The version doesn't matter here (as long as it's not '255.255.255.255'). The real .dll
             // will always have a version number equal or higher than this, so it will load correctly.
-            AssemblyReference projectionAssembly = new("WinRT.Projection.dll"u8, new Version(0, 0, 0, 0));
+            AssemblyReference projectionAssembly = new("WinRT.Projection.dll"u8, new Version(0, 0, 0, 0))
+            {
+                PublicKeyOrToken = ImplValues.PublicKeyData,
+                HasPublicKey = true
+            };
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
