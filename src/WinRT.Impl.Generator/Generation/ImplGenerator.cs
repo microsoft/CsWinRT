@@ -36,43 +36,114 @@ internal static partial class ImplGenerator
             throw new UnhandledImplException("parsing", e);
         }
 
-        // Initialize the assembly resolver (we need to reuse this to allow caching)
-        PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
+        args.Token.ThrowIfCancellationRequested();
 
-        ModuleDefinition module;
+        PathAssemblyResolver assemblyResolver;
+        ModuleDefinition outputModule;
+
+        // Initialize the assembly resolver and load the output module
+        try
+        {
+            LoadOutputModule(args, out assemblyResolver, out outputModule);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledImplException("loading", e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        ModuleDefinition implModule;
+
+        // Define the impl module to emit
+        try
+        {
+            implModule = DefineImplModule(assemblyResolver, outputModule);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledImplException("loading", e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit all necessary IL code in the impl module
+        try
+        {
+            EmitTypeForwards(outputModule, implModule);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledImplException("generation", e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Write the module to disk with all the generated contents
+        try
+        {
+            WriteImplModuleToDisk(args, implModule);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledImplException("emit", e);
+        }
+
+        // Notify the user that generation was successful
+        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, "test")}");
+    }
+
+    /// <summary>
+    /// Loads the output assembly being produced.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="assemblyResolver">The <see cref="IAssemblyResolver"/> instance in use.</param>
+    /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
+    private static void LoadOutputModule(
+        ImplGeneratorArgs args,
+        out PathAssemblyResolver assemblyResolver,
+        out ModuleDefinition outputModule)
+    {
+        // Initialize the assembly resolver (we need to reuse this to allow caching)
+        assemblyResolver = new(args.ReferenceAssemblyPaths);
 
         // Try to load the .dll at the current path
         try
         {
-            module = ModuleDefinition.FromFile(args.OutputAssemblyPath, pathAssemblyResolver.ReaderParameters);
+            outputModule = ModuleDefinition.FromFile(args.OutputAssemblyPath, assemblyResolver.ReaderParameters);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownImplExceptions.OutputAssemblyFileReadError(Path.GetFileName(args.OutputAssemblyPath), e);
         }
+    }
 
+    /// <summary>
+    /// Defines the impl module to emit.
+    /// </summary>
+    /// <param name="assemblyResolver">The <see cref="IAssemblyResolver"/> instance in use.</param>
+    /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
+    /// <returns>The impl module to populate and emit.</returns>
+    private static ModuleDefinition DefineImplModule(PathAssemblyResolver assemblyResolver, ModuleDefinition outputModule)
+    {
         try
         {
             // Create the impl module and its containing assembly
-            AssemblyDefinition implAssembly = new(module.Assembly?.Name, module.Assembly?.Version ?? new Version(0, 0, 0, 0));
-            ModuleDefinition implModule = new(module.Name, module.OriginalTargetRuntime.GetDefaultCorLib())
+            AssemblyDefinition implAssembly = new(outputModule.Assembly?.Name, outputModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
+            ModuleDefinition implModule = new(outputModule.Name, outputModule.OriginalTargetRuntime.GetDefaultCorLib())
             {
-                MetadataResolver = new DefaultMetadataResolver(pathAssemblyResolver)
+                MetadataResolver = new DefaultMetadataResolver(assemblyResolver)
             };
 
             // Add the module to the parent assembly
             implAssembly.Modules.Add(implModule);
 
-            EmitTypeForwards(module, implModule);
-            WriteImplModuleToDisk(args, implModule);
+            return implModule;
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownImplExceptions.DefineImplAssemblyError(e);
         }
-
-        // Notify the user that generation was successful
-        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, "test")}");
     }
 
     /// <summary>
@@ -84,6 +155,9 @@ internal static partial class ImplGenerator
     {
         try
         {
+            // We need an assembly reference for the merged projection .dll that will be generated.
+            // The version doesn't matter here (as long as it's not '255.255.255.255'). The real .dll
+            // will always have a version number equal or higher than this, so it will load correctly.
             AssemblyReference projectionAssembly = new("WinRT.Projection.dll"u8, new Version(0, 0, 0, 0));
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
@@ -94,6 +168,7 @@ internal static partial class ImplGenerator
                     continue;
                 }
 
+                // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(
                     implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
                     ns: exportedType.Namespace,
