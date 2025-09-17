@@ -343,7 +343,7 @@
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM64" Project="false" />
   </Project>
-  <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" Id="ebbab31e-c1bb-4c3f-b711-8cefdb66066b" />
+  <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Runtime/WinRT.Runtime.csproj">
     <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
