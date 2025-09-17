@@ -64,6 +64,22 @@ internal static class WellKnownImplExceptions
     }
 
     /// <summary>
+    /// Failed to emit the assembly attributes.
+    /// </summary>
+    public static Exception EmitAssemblyAttributes(Exception exception)
+    {
+        return Exception(7, "Failed to emit the assembly attributes for impl module.", exception);
+    }
+
+    /// <summary>
+    /// Failed to emit the type forwards.
+    /// </summary>
+    public static Exception EmitTypeForwards(Exception exception)
+    {
+        return Exception(8, "Failed to emit the '[TypeForwardedTo]' attributes for the impl module.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

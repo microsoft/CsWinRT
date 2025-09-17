@@ -2,10 +2,16 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Frozen;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
+using System.Security;
+using System.Security.Permissions;
 using System.Threading;
 using AsmResolver.DotNet;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.Resolvers;
@@ -17,6 +23,30 @@ namespace WindowsRuntime.ImplGenerator.Generation;
 /// </summary>
 internal static partial class ImplGenerator
 {
+    /// <summary>
+    /// The set of well known attribute types to copy over to the generated assemblies.
+    /// </summary>
+    private static readonly FrozenSet<string> WellKnownAttributeTypes =
+    [
+        typeof(CompilationRelaxationsAttribute).FullName!,
+        typeof(RuntimeCompatibilityAttribute).FullName!,
+        typeof(DebuggableAttribute).FullName!,
+        typeof(AssemblyMetadataAttribute).FullName!,
+        typeof(AssemblyCompanyAttribute).FullName!,
+        typeof(AssemblyConfigurationAttribute).FullName!,
+        typeof(AssemblyFileVersionAttribute).FullName!,
+        typeof(AssemblyInformationalVersionAttribute).FullName!,
+        typeof(AssemblyProductAttribute).FullName!,
+        typeof(AssemblyTitleAttribute).FullName!,
+        typeof(TargetPlatformAttribute).FullName!,
+        typeof(SupportedOSPlatformAttribute).FullName!,
+#pragma warning disable SYSLIB0003 // Type or member is obsolete
+        typeof(SecurityPermissionAttribute).FullName!,
+#pragma warning restore SYSLIB0003
+        typeof(AssemblyVersionAttribute).FullName!,
+        typeof(UnverifiableCodeAttribute).FullName!
+    ];
+
     /// <summary>
     /// Runs the interop generator to produce the resulting <c>WinRT.Interop.dll</c> assembly.
     /// </summary>
@@ -70,6 +100,7 @@ internal static partial class ImplGenerator
         // Emit all necessary IL code in the impl module
         try
         {
+            EmitAssemblyAttributes(outputModule, implModule);
             EmitTypeForwards(outputModule, implModule);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -147,6 +178,47 @@ internal static partial class ImplGenerator
     }
 
     /// <summary>
+    /// Emits the assembly attributes for the impl module.
+    /// </summary>
+    /// <param name="inputModule">The input module.</param>
+    /// <param name="implModule">The impl module being generated.</param>
+    private static void EmitAssemblyAttributes(ModuleDefinition inputModule, ModuleDefinition implModule)
+    {
+        try
+        {
+            // Copy over all module attributes
+            foreach (CustomAttribute moduleAttribute in inputModule.CustomAttributes)
+            {
+                if (!WellKnownAttributeTypes.Contains(moduleAttribute.Constructor?.DeclaringType?.FullName ?? ""))
+                {
+                    continue;
+                }
+
+                implModule.CustomAttributes.Add(new CustomAttribute(
+                    constructor: (ICustomAttributeType)moduleAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    signature: moduleAttribute.Signature));
+            }
+
+            // Copy over all assembly attributes
+            foreach (CustomAttribute assemblyAttribute in inputModule.Assembly!.CustomAttributes)
+            {
+                if (!WellKnownAttributeTypes.Contains(assemblyAttribute.Constructor?.DeclaringType?.FullName ?? ""))
+                {
+                    continue;
+                }
+
+                implModule.Assembly!.CustomAttributes.Add(new CustomAttribute(
+                    constructor: (ICustomAttributeType)assemblyAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    signature: assemblyAttribute.Signature));
+            }
+        }
+        catch (Exception e)
+        {
+            throw WellKnownImplExceptions.EmitAssemblyAttributes(e);
+        }
+    }
+
+    /// <summary>
     /// Emits the type forwards for all types in the input module.
     /// </summary>
     /// <param name="inputModule">The input module.</param>
@@ -174,13 +246,13 @@ internal static partial class ImplGenerator
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
                 {
-                    Attributes = TypeAttributes.Forwarder
+                    Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
                 });
             }
         }
         catch (Exception e)
         {
-            throw WellKnownImplExceptions.EmitDllError(e);
+            throw WellKnownImplExceptions.EmitTypeForwards(e);
         }
     }
 
