@@ -57,7 +57,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for generic delegates
-        DefineGenericDelegateTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineGenericDelegateTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -98,6 +98,11 @@ internal partial class InteropGenerator
 
         // Emit interop types for 'IMapChangedEventArgs<>' types
         DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for 'IObservableVector<>' types
+        DefineIObservableVectorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -195,12 +200,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineGenericDelegateTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -327,6 +334,7 @@ internal partial class InteropGenerator
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         interopReferences: interopReferences,
+                        emitState: emitState,
                         module: module,
                         eventSourceType: out _);
                 }
@@ -1300,6 +1308,45 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.IMapChangedEventArgs1TypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIObservableVectorTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the 'IID' property
+                InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
+                    vectorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    factoryType: out TypeDefinition factoryType);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IObservableVectorTypeCodeGenerationError(typeSignature, e);
             }
         }
     }

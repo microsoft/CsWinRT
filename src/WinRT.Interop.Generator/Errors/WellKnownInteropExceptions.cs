@@ -363,6 +363,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> type.
+    /// </summary>
+    public static Exception IObservableVectorTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    {
+        return Exception(41, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

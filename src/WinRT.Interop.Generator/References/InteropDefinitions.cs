@@ -136,7 +136,6 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IObservableVectorVftbl</c> type.
     /// </summary>
-    [field: MaybeNull, AllowNull]
     public TypeDefinition IObservableVectorVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableVectorVftbl(_interopReferences, _interopModule);
 
     /// <summary>
