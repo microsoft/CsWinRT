@@ -17,6 +17,27 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.ComponentModel;
 
 /// <summary>
+/// Marshaller for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IVectorChangedEventArgsMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::Windows.Foundation.Collections.IVectorChangedEventArgs? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::Windows.Foundation.Collections.IVectorChangedEventArgs>.ConvertToUnmanaged(
+            value: value,
+            iid: in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::Windows.Foundation.Collections.IVectorChangedEventArgs? ConvertToManaged(void* value)
+    {
+        return (global::Windows.Foundation.Collections.IVectorChangedEventArgs?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]

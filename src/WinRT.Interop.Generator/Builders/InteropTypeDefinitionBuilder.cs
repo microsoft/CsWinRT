@@ -287,9 +287,7 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
 
         // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
-        MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
-            interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
-            .MakeGenericInstanceMethod(typeSignature);
+        MemberReference windowsRuntimeInterfaceMarshallerConvertToUnmanaged = interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged(typeSignature);
 
         // Define the 'ConvertToUnmanaged' method as follows:
         //
