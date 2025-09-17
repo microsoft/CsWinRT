@@ -121,7 +121,7 @@ internal static partial class ImplGenerator
         }
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, "test")}");
+        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, implModule.Name!)}");
     }
 
     /// <summary>
