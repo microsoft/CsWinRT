@@ -80,6 +80,22 @@ internal static class WellKnownImplExceptions
     }
 
     /// <summary>
+    /// Exception when trying to read an .snk file.
+    /// </summary>
+    public static Exception SnkLoadError(Exception exception)
+    {
+        return Exception(9, "Failed to read the .snk file to sign the impl .dll on disk.", exception);
+    }
+
+    /// <summary>
+    /// Exception when signing the impl .dll to disk.
+    /// </summary>
+    public static Exception SignDllError(Exception exception)
+    {
+        return Exception(10, "Failed to sign the impl .dll on disk.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

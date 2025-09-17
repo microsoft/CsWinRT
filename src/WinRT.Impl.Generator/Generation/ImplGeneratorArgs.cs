@@ -27,6 +27,10 @@ internal sealed partial class ImplGeneratorArgs
     [CommandLineArgumentName("--treat-warnings-as-errors")]
     public required bool TreatWarningsAsErrors { get; init; }
 
+    /// <summary>Gets the path to the file containing the key to sign the output assembly, if any.</summary>
+    [CommandLineArgumentName("--assembly-originator-key-file")]
+    public string? AssemblyOriginatorKeyFile { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }

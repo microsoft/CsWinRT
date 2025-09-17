@@ -77,6 +77,7 @@ internal partial class ImplGeneratorArgs
             OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
             TreatWarningsAsErrors = GetBooleanArgument(argsMap, nameof(TreatWarningsAsErrors)),
+            AssemblyOriginatorKeyFile = GetNullableStringArgument(argsMap, nameof(AssemblyOriginatorKeyFile)),
             Token = token
         };
     }
@@ -128,6 +129,22 @@ internal partial class ImplGeneratorArgs
         }
 
         throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName);
+    }
+
+    /// <summary>
+    /// Parses a nullable (optional) <see cref="string"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return null;
     }
 
     /// <summary>

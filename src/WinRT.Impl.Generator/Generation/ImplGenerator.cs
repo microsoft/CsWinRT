@@ -12,6 +12,7 @@ using System.Security;
 using System.Security.Permissions;
 using System.Threading;
 using AsmResolver.DotNet;
+using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
@@ -114,11 +115,21 @@ internal static partial class ImplGenerator
         // Write the module to disk with all the generated contents
         try
         {
-            WriteImplModuleToDisk(args, implModule);
+            WriteImplModuleToDisk(args, outputModule, implModule);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledImplException("emit", e);
+        }
+
+        // Signs the module on disk, if needed
+        try
+        {
+            SignImplModuleOnDisk(args, outputModule);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledImplException("sign", e);
         }
 
         // Notify the user that generation was successful
@@ -265,18 +276,72 @@ internal static partial class ImplGenerator
     /// Writes the impl module to disk.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="module">The module to write to disk.</param>
-    private static void WriteImplModuleToDisk(ImplGeneratorArgs args, ModuleDefinition module)
+    /// <param name="inputModule">The input module.</param>
+    /// <param name="implModule">The impl module to write to disk.</param>
+    private static void WriteImplModuleToDisk(ImplGeneratorArgs args, ModuleDefinition inputModule, ModuleDefinition implModule)
     {
-        string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, module.Name!);
+        // If the input assembly is strongly named, we need to copy over the public key and the hash
+        // method. These steps are required so that we can sign the generated .dll correctly later.
+        // E.g. setting the hash algorithm allows reserving the right signature space in the file.
+        if (inputModule.Assembly!.HasPublicKey)
+        {
+            implModule.Assembly!.PublicKey = inputModule.Assembly.PublicKey;
+            implModule.Assembly!.HasPublicKey = true;
+            implModule.Assembly!.HashAlgorithm = inputModule.Assembly.HashAlgorithm;
+        }
+
+        string implAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, implModule.Name!);
 
         try
         {
-            module.Write(winRTInteropAssemblyPath);
+            implModule.Write(implAssemblyPath);
         }
         catch (Exception e)
         {
             throw WellKnownImplExceptions.EmitDllError(e);
+        }
+    }
+
+    /// <summary>
+    /// Signs the impl module on disk, if needed.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="inputModule">The input module.</param>
+    private static void SignImplModuleOnDisk(ImplGeneratorArgs args, ModuleDefinition inputModule)
+    {
+        // If there is no assembly originator key file, then we don't sign the impl assembly
+        if (args.AssemblyOriginatorKeyFile is null or "")
+        {
+            return;
+        }
+
+        StrongNamePrivateKey snk;
+
+        // Try to load the key file (we don't know that the path is actually valid)
+        try
+        {
+            snk = StrongNamePrivateKey.FromFile(args.AssemblyOriginatorKeyFile);
+        }
+        catch (Exception e)
+        {
+            throw WellKnownImplExceptions.SnkLoadError(e);
+        }
+
+        string implAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, inputModule.Name!);
+
+        try
+        {
+            StrongNameSigner signer = new(snk);
+
+            // We're doing full signing with the private key, so we must overwrite the file on disk
+            using FileStream assemblyStream = File.Open(implAssemblyPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            // Sign the file with the hashing algorithm that was used in the original module
+            signer.SignImage(assemblyStream, inputModule.Assembly!.HashAlgorithm);
+        }
+        catch (Exception e)
+        {
+            throw WellKnownImplExceptions.SignDllError(e);
         }
     }
 }
