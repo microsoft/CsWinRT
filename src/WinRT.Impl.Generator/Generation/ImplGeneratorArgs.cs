@@ -23,7 +23,7 @@ internal sealed partial class ImplGeneratorArgs
     [CommandLineArgumentName("--generated-assembly-directory")]
     public required string GeneratedAssemblyDirectory { get; init; }
 
-    /// <summary>Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
+    /// <summary>Gets whether to treat warnings coming from 'cswinrtimplgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
     [CommandLineArgumentName("--treat-warnings-as-errors")]
     public required bool TreatWarningsAsErrors { get; init; }
 
