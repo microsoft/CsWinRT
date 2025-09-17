@@ -23,23 +23,23 @@ internal sealed class InteropReferences
     /// <summary>
     /// The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
     /// </summary>
-    private readonly ModuleDefinition _windowsRuntimeModule;
+    private readonly IResolutionScope _windowsRuntimeModule;
 
     /// <summary>
     /// The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.
     /// </summary>
-    private readonly ModuleDefinition _windowsSdkProjectionModule;
+    private readonly IResolutionScope _windowsSdkProjectionModule;
 
     /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
-    /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    /// <param name="windowsSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
+    /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly.</param>
+    /// <param name="windowsSdkProjectionModule">The <see cref="IResolutionScope"/> for the Windows SDK projection assembly.</param>
     public InteropReferences(
         CorLibTypeFactory corLibTypeFactory,
-        ModuleDefinition windowsRuntimeModule,
-        ModuleDefinition windowsSdkProjectionModule)
+        IResolutionScope windowsRuntimeModule,
+        IResolutionScope windowsSdkProjectionModule)
     {
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
@@ -54,12 +54,12 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
     /// </summary>
-    public ModuleDefinition WindowsRuntimeModule => _windowsRuntimeModule;
+    public IResolutionScope WindowsRuntimeModule => _windowsRuntimeModule;
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
     /// </summary>
-    public ModuleDefinition WindowsFoundationModule => _windowsSdkProjectionModule;
+    public IResolutionScope WindowsFoundationModule => _windowsSdkProjectionModule;
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
@@ -695,13 +695,13 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
     /// </summary>
     public MemberReference Attribute_ctor => field ??= Attribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="NotSupportedException.NotSupportedException()"/>.
     /// </summary>
     public MemberReference NotSupportedException_ctor => field ??= NotSupportedException
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Type.GetTypeFromHandle"/>.
@@ -777,10 +777,10 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte
         .ToTypeDefOrRef()
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="int"/>).
@@ -788,10 +788,10 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlySpanInt32_ctor => field ??= ReadOnlySpanInt32
         .ToTypeDefOrRef()
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
@@ -818,10 +818,10 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlySpanUInt16_ctor => field ??= ReadOnlySpanUInt16
         .ToTypeDefOrRef()
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.SequenceEqual{T}(Span{T}, ReadOnlySpan{T})"/> (for <see cref="ReadOnlySpanChar"/>).
@@ -915,7 +915,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IUnknownImplget_Vtable => field ??= IUnknownImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl.get_IID()</c>.
@@ -929,7 +929,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IInspectableImplget_Vtable => field ??= IInspectableImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_IID()</c>.
@@ -943,21 +943,21 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IPropertyValueImplget_OtherTypeVtable => field ??= IPropertyValueImpl
         .CreateMemberReference("get_OtherTypeVtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_OtherTypeArrayVtable()</c>.
     /// </summary>
     public MemberReference IPropertyValueImplget_OtherTypeArrayVtable => field ??= IPropertyValueImpl
         .CreateMemberReference("get_OtherTypeArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_InspectableArrayVtable()</c>.
     /// </summary>
     public MemberReference IPropertyValueImplget_InspectableArrayVtable => field ??= IPropertyValueImpl
         .CreateMemberReference("get_InspectableArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_IID()</c>.
@@ -971,7 +971,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl.get_IID()</c>.
@@ -985,7 +985,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IMarshalImplget_Vtable => field ??= IMarshalImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.get_IID()</c>.
@@ -999,7 +999,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IWeakReferenceSourceImplget_Vtable => field ??= IWeakReferenceSourceImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl.get_IID()</c>.
@@ -1013,7 +1013,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IAgileObjectImplget_Vtable => field ??= IAgileObjectImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr));
+            returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.AsValue()</c>.
@@ -1061,7 +1061,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods.Count</c>.
@@ -1130,19 +1130,19 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IWindowsRuntimeObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeObjectComWrappersCallback
         .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Object,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            returnType: _corLibTypeFactory.Object,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.TryCreateObject</c>.
     /// </summary>
     public MemberReference IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject => field ??= IWindowsRuntimeUnsealedObjectComWrappersCallback
         .CreateMemberReference("TryCreateObject"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+            returnType: _corLibTypeFactory.Boolean,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 ReadOnlySpanChar,
-                _windowsRuntimeModule.CorLibTypeFactory.Object.MakeByReferenceType(),
+                _corLibTypeFactory.Object.MakeByReferenceType(),
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
@@ -1152,97 +1152,97 @@ internal sealed class InteropReferences
         .CreateMemberReference("CreateArray"u8, MethodSignature.CreateStatic(
             returnType: Array.ToReferenceTypeSignature(),
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe => field ??= WindowsRuntimeObjectReferenceValue
-        .CreateMemberReference("GetThisPtrUnsafe"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
+        .CreateMemberReference("GetThisPtrUnsafe"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void.MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.DetachThisPtrUnsafe()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe => field ??= WindowsRuntimeObjectReferenceValue
-        .CreateMemberReference("DetachThisPtrUnsafe"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
+        .CreateMemberReference("DetachThisPtrUnsafe"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void.MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.Dispose()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectReferenceValueDispose => field ??= WindowsRuntimeObjectReferenceValue
-        .CreateMemberReference("Dispose"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
     /// </summary>
     public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
     /// </summary>
     public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
     /// </summary>
     public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
     /// </summary>
     public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource
         .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+                _corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Object]));
+            returnType: _corLibTypeFactory.Void.MakePointerType(),
+            parameterTypes: [_corLibTypeFactory.Object]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ComputeVtables(out int)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeComputeVtables => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("ComputeVtables"u8, MethodSignature.CreateStatic(
-            returnType: new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System.Runtime.InteropServices"u8, "ComWrappers/ComInterfaceEntry"u8).MakePointerType(),
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Int32.MakeByReferenceType()]));
+            returnType: new TypeReference(_corLibTypeFactory.CorLibScope, "System.Runtime.InteropServices"u8, "ComWrappers/ComInterfaceEntry"u8).MakePointerType(),
+            parameterTypes: [_corLibTypeFactory.Int32.MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.CreateObject(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeCreateObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Object,
+            returnType: _corLibTypeFactory.Object,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 CreatedWrapperFlags.ToValueTypeSignature()]));
 
     /// <summary>
@@ -1250,9 +1250,9 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeMarshalGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeMarshal
         .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+            returnType: _corLibTypeFactory.Void.MakePointerType(),
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Object,
+                _corLibTypeFactory.Object,
                 CreateComInterfaceFlags.ToValueTypeSignature()]));
 
     /// <summary>
@@ -1262,7 +1262,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("CreateObjectReference"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 Guid.MakeByReferenceType(),
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
@@ -1273,7 +1273,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("CreateObjectReferenceUnsafe"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 Guid.MakeByReferenceType(),
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
@@ -1283,7 +1283,7 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeObjectMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Object]));
+            parameterTypes: [_corLibTypeFactory.Object]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
@@ -1291,15 +1291,15 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: Delegate.ToReferenceTypeSignature(),
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.Free(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerFree => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnsealedObject.ConvertToManaged</c>.
@@ -1308,7 +1308,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: Delegate.ToReferenceTypeSignature(),
             genericParameterCount: 1,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(Delegate, in Guid)</c>.
@@ -1327,7 +1327,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: Delegate.ToReferenceTypeSignature(),
             genericParameterCount: 1,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(Delegate, in Guid)</c>.
@@ -1346,7 +1346,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("UnboxToManaged"u8, MethodSignature.CreateStatic(
             returnType: Delegate.ToReferenceTypeSignature(),
             genericParameterCount: 1,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.UnboxToManaged&lt;TCallback&gt;(void*, in Guid)</c>.
@@ -1356,7 +1356,7 @@ internal sealed class InteropReferences
             returnType: Delegate.ToReferenceTypeSignature(),
             genericParameterCount: 1,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 Guid.MakeByReferenceType()]));
 
     /// <summary>
@@ -1367,7 +1367,7 @@ internal sealed class InteropReferences
             returnType: Array.ToReferenceTypeSignature(),
             genericParameterCount: 1,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                _corLibTypeFactory.Void.MakePointerType(),
                 Guid.MakeByReferenceType()]));
 
     /// <summary>
@@ -1399,37 +1399,37 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference RestrictedErrorInfoThrowExceptionForHR => field ??= RestrictedErrorInfo
         .CreateMemberReference("ThrowExceptionForHR"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
-            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Int32]));
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeHStringArrayUnsafe</c>.
     /// </summary>
     public MemberReference WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
         .CreateMemberReference("FreeHStringArrayUnsafe"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeObjectArrayUnsafe</c>.
     /// </summary>
     public MemberReference WindowsRuntimeArrayHelpersFreeObjectArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
         .CreateMemberReference("FreeObjectArrayUnsafe"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeTypeArrayUnsafe</c>.
     /// </summary>
     public MemberReference WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
         .CreateMemberReference("FreeTypeArrayUnsafe"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
                 ABIType.MakePointerType()]));
 
     /// <summary>
@@ -1437,18 +1437,18 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeArrayHelpersFreeBlittableArrayUnsafe => field ??= WindowsRuntimeArrayHelpers
         .CreateMemberReference("FreeBlittableArrayUnsafe"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.UInt32,
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(Exception)</c>.
     /// </summary>
     public MemberReference RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged => field ??= RestrictedErrorInfoExceptionMarshaller
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
-            returnType: _windowsRuntimeModule.CorLibTypeFactory.Int32,
-            parameterTypes: [new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
+            returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [new TypeReference(_corLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
@@ -1459,7 +1459,7 @@ internal sealed class InteropReferences
             .MakeGenericValueType(arrayType.BaseType)
             .ToTypeDefOrRef()
             .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 parameterTypes: [arrayType]));
     }
 
@@ -1626,7 +1626,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("get_HasCurrent"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean));
+                returnType: _corLibTypeFactory.Boolean));
     }
 
     /// <summary>
@@ -1639,7 +1639,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("MoveNext"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean));
+                returnType: _corLibTypeFactory.Boolean));
     }
 
     /// <summary>
@@ -1655,7 +1655,7 @@ internal sealed class InteropReferences
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.UInt32]));
+                    _corLibTypeFactory.UInt32]));
     }
 
     /// <summary>
@@ -1668,10 +1668,10 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("SetAt"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                    _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
@@ -1685,7 +1685,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Append"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
@@ -1701,11 +1701,11 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("IndexOf"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    _windowsRuntimeModule.CorLibTypeFactory.UInt32.MakeByReferenceType()]));
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
     }
 
     /// <summary>
@@ -1718,10 +1718,10 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("InsertAt"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.UInt32,
+                    _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
@@ -1738,7 +1738,7 @@ internal sealed class InteropReferences
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.UInt32]));
+                    _corLibTypeFactory.UInt32]));
     }
 
     /// <summary>
@@ -1950,7 +1950,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+                    _corLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
     }
 
@@ -1965,11 +1965,11 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Item"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                    _corLibTypeFactory.Int32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
             .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
     }
@@ -1985,7 +1985,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2004,7 +2004,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Contains"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2023,12 +2023,12 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyTo"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+                    _corLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
     }
 
@@ -2043,7 +2043,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2062,7 +2062,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                returnType: _corLibTypeFactory.Int32,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2081,11 +2081,11 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                    _corLibTypeFactory.Int32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
             .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
     }
@@ -2105,7 +2105,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+                    _corLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorViewMethods.ToReferenceTypeSignature());
     }
 
@@ -2120,7 +2120,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("HasKey"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
@@ -2154,7 +2154,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Insert"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
@@ -2172,7 +2172,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
@@ -2189,7 +2189,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("HasKey"u8, MethodSignature.CreateInstance(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
@@ -2244,7 +2244,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Item"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2265,7 +2265,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2286,7 +2286,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2306,7 +2306,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2326,7 +2326,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2347,7 +2347,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2369,7 +2369,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Contains"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2396,7 +2396,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyTo"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 2,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2404,7 +2404,7 @@ internal sealed class InteropReferences
                     KeyValuePair.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+                    _corLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature(), iterableMethods.ToReferenceTypeSignature());
     }
 
@@ -2420,7 +2420,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2462,7 +2462,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2482,7 +2482,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateStatic(
-                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),

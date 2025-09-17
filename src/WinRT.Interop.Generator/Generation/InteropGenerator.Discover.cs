@@ -193,7 +193,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -257,7 +257,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -343,7 +343,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module.CorLibTypeFactory);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
@@ -404,10 +404,10 @@ internal partial class InteropGenerator
     /// <summary>
     /// Creates an <see cref="InteropReferences"/> instance that can be used for the discovery phase.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> currently in use.</param>
+    /// <param name="module">The module currently being analyzed.</param>
     /// <returns>The <see cref="InteropReferences"/> instance to use for the discovery phase.</returns>
     [SuppressMessage("Style", "IDE0059", Justification = "Creating the 'AssemblyDefinition'-s is used to bind them to the contained modules.")]
-    private static InteropReferences CreateDiscoveryInteropReferences(CorLibTypeFactory corLibTypeFactory)
+    private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module)
     {
         // Create the interop references scoped to this module, which we need to lookup some references from
         // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
@@ -415,17 +415,15 @@ internal partial class InteropGenerator
         // type and member references to APIs defined in that module, so this is good enough for this scenario.
         // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
         Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-        ModuleDefinition windowsRuntimeModule = new("WinRT.Runtime2.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
-        AssemblyDefinition windowsRuntimeAssembly = new("WinRT.Runtime2", windowsRuntimeVersion) { Modules = { windowsRuntimeModule } };
-        ModuleDefinition windowsSdkProjectionModule = new("Microsoft.Windows.SDK.NET.dll"u8, KnownCorLibs.SystemRuntime_v10_0_0_0);
-        AssemblyDefinition windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET", new Version(10, 0, 0, 0)) { Modules = { windowsSdkProjectionModule } };
+        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime"u8, new Version(10, 0, 0, 0));
+        AssemblyReference windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET"u8, new Version(10, 0, 0, 0));
 
         // Set the public keys, as it's needed to ensure references compare as equals as expected
-        windowsRuntimeAssembly.PublicKey = InteropValues.PublicKeyData;
+        windowsRuntimeAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
         windowsRuntimeAssembly.HasPublicKey = true;
-        windowsSdkProjectionAssembly.PublicKey = InteropValues.PublicKeyData;
+        windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
-        return new(corLibTypeFactory, windowsRuntimeModule, windowsSdkProjectionModule);
+        return new(module.CorLibTypeFactory, windowsRuntimeAssembly.Import(module), windowsSdkProjectionAssembly.Import(module));
     }
 }
