@@ -62,18 +62,21 @@ internal partial class InteropTypeDefinitionBuilder
             // Add the parameterless constructor
             factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(module));
 
+            // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+
             // Get the constructor for the generic event source type
-            MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(vectorType, "EventSource").GetConstructor(
+            MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.CorLibTypeFactory.Int32])!;
 
             // Define the 'Callback' method as follows:
             //
-            // public static VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>> Callback(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+            // public VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>> Callback(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
             MethodDefinition callbackMethod = new(
                 name: "Callback"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
+                signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType).Import(module),
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
@@ -102,7 +105,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the delegate type and store it in the 'Value' field
             _ = cctor.CilInstructions.Add(Ldsfld, factoryType.Fields[0]);
             _ = cctor.CilInstructions.Add(Ldftn, callbackMethod);
-            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType));
+            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType).Import(module));
             _ = cctor.CilInstructions.Add(Stsfld, factoryType.Fields[1]);
 
             _ = cctor.CilInstructions.Add(Ret);

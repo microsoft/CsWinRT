@@ -112,7 +112,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
                     { Ldarg_2 },
                     { Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
-                    { Callvirt, interopReferences.DelegateInvoke(delegateType).Import(module) },
+                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module).Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -392,7 +392,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(nativeDelegateType);
 
             // Construct the 'Invoke' method on the delegate type, so we can get the constructed parameter types
-            MethodSignature invokeSignature = delegateType.Resolve()!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
+            MethodSignature invokeSignature = delegateType.Import(module).Resolve()!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
 
             // Define the 'Invoke' method as follows:
             //
