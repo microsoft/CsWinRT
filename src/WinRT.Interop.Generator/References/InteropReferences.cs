@@ -282,6 +282,11 @@ internal sealed class InteropReferences
     public TypeReference MemoryExtensions => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "MemoryExtensions"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
+    /// </summary>
+    public TypeReference Interlocked => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
     /// </summary>
     public TypeReference MemoryMarshal => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "MemoryMarshal"u8);
@@ -317,6 +322,11 @@ internal sealed class InteropReferences
     public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
+    /// </summary>
+    public TypeReference IsVolatile => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "IsVolatile"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute"/>.
     /// </summary>
     public TypeReference IsReadOnlyAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "IsReadOnlyAttribute"u8);
@@ -335,6 +345,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.CallConvMemberFunction"/>.
     /// </summary>
     public TypeReference CallConvMemberFunction => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "CallConvMemberFunction"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}"/>.
+    /// </summary>
+    public TypeReference ConditionalWeakTable2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "ConditionalWeakTable`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute"/>.
@@ -440,6 +455,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapViewMethodsImpl`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
@@ -827,6 +847,18 @@ internal sealed class InteropReferences
         .CreateMemberReference("AsSpan"u8, MethodSignature.CreateStatic(
             returnType: ReadOnlySpanChar,
             parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Threading.Interlocked.CompareExchange{T}(ref T, T, T)"/>.
+    /// </summary>
+    public MemberReference InterlockedCompareExchange1 => field ??= Interlocked
+        .CreateMemberReference("CompareExchange"u8, MethodSignature.CreateStatic(
+            returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
+            genericParameterCount: 1,
+            parameterTypes: [
+                new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
+                new GenericParameterSignature(GenericParameterType.Method, 0),
+                new GenericParameterSignature(GenericParameterType.Method, 0)]));
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal.CreateSpan"/>.
@@ -1504,6 +1536,28 @@ internal sealed class InteropReferences
             .CreateMemberReference("Invoke"u8, MethodSignature.CreateInstance(
                 returnType: invokeSignature.ReturnType,
                 parameterTypes: invokeSignature.ParameterTypes));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.GetOrAdd{TArg}(TKey, Func{TKey, TArg, TValue}, TArg)"/>.
+    /// </summary>
+    /// <param name="conditionalWeakTableType">The input table type.</param>
+    /// <param name="argType">The argument type.</param>
+    public MethodSpecification ConditionalWeakTableGetOrAdd(TypeSignature conditionalWeakTableType, TypeSignature argType)
+    {
+        return conditionalWeakTableType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetOrAdd"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    Func3.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Method, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Method, 0)]))
+            .MakeGenericInstanceMethod(argType);
     }
 
     /// <summary>
@@ -2661,6 +2715,22 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl1&lt;T&gt;.VectorChanged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IObservableVectorMethodsImpl1VectorChanged(TypeSignature elementType)
+    {
+        return IObservableVectorMethodsImpl1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    WindowsRuntimeObject.ToReferenceTypeSignature(),
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>

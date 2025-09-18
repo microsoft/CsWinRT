@@ -4,6 +4,7 @@
 using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
@@ -23,7 +24,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <summary>
         /// Creates the 'IID' property for some <c>IObservableVector&lt;T&gt;</c> interface.
         /// </summary>
-        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
@@ -134,6 +135,143 @@ internal partial class InteropTypeDefinitionBuilder
             _ = cctor.CilInstructions.Add(Stsfld, factoryType.Fields[1]);
 
             _ = cctor.CilInstructions.Add(Ret);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="eventSourceFactoryType">The type returned by <see cref="EventSourceFactory"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="methodsType">The resulting methods type.</param>
+        public static void Methods(
+            GenericInstanceTypeSignature vectorType,
+            TypeDefinition eventSourceFactoryType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition methodsType)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // We're declaring an 'internal abstract class' type
+            methodsType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
+                name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+            };
+
+            module.TopLevelTypes.Add(methodsType);
+
+            // Prepare the 'VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>' signature
+            TypeSignature eventHandlerEventSourceType = interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType);
+
+            // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>' signature
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+                interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                eventHandlerEventSourceType);
+
+            // Define the backing field for 'VectorChangedTable'
+            methodsType.Fields.Add(new FieldDefinition(
+                name: "<VectorChangedTable>k__BackingField"u8,
+                attributes: FieldAttributes.Private | FieldAttributes.Static,
+                fieldType: conditionalWeakTableType.MakeModifierType(interopReferences.IsVolatile, isRequired: true).Import(module)));
+
+            // Define the '<get_VectorChangedTable>g__MakeVectorChanged|2_0' method as follows:
+            //
+            // public ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>> <get_VectorChangedTable>g__MakeVectorChanged|2_0()
+            MethodDefinition makeVectorChangedMethod = new(
+                name: "<get_VectorChangedTable>g__MakeVectorChanged|2_0"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
+            {
+                CilInstructions =
+                {
+                    // _ = Interlocked.CompareExchange(ref <VectorChangedTable>k__BackingField, value: new(), comparand: null);
+                    { Ldsflda, methodsType.Fields[0] },
+                    { Newobj, conditionalWeakTableType.ToTypeDefOrRef().CreateConstructorReference(module.CorLibTypeFactory).Import(module) },
+                    { Ldnull },
+                    { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(conditionalWeakTableType).Import(module) },
+                    { Pop },
+
+                    // return <VectorChangedTable>k__BackingField;
+                    { Ldsfld, methodsType.Fields[0] },
+                    { Ret }
+                }
+            };
+
+            methodsType.Methods.Add(makeVectorChangedMethod);
+
+            // Label for the 'ret' (we are doing lazy-init for the backing 'ConditionalWeakTable<,>' field)
+            CilInstruction ret = new(Ret);
+
+            // Create the 'VectorChangedTable' getter method
+            MethodDefinition get_VectorChangedTableMethod = new(
+                name: "get_VectorChangedTable"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
+            {
+                CilInstructions =
+                {
+                    { Ldsfld, methodsType.Fields[0] },
+                    { Dup },
+                    { Brtrue_S, ret.CreateLabel() },
+                    { Pop },
+                    { Call, makeVectorChangedMethod },
+                    { ret }
+                }
+            };
+
+            methodsType.Methods.Add(get_VectorChangedTableMethod);
+
+            // Create the 'VectorChangedTable' property
+            PropertyDefinition enumerator1CurrentProperty = new(
+                name: "VectorChangedTable"u8,
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.FromGetMethod(get_VectorChangedTableMethod))
+            {
+                GetMethod = get_VectorChangedTableMethod
+            };
+
+            methodsType.Properties.Add(enumerator1CurrentProperty);
+
+            // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>.GetOrAdd<WindowsRuntimeObjectReference>' method
+            MethodSpecification conditionalWeakTableGetOrAddMethod = interopReferences.ConditionalWeakTableGetOrAdd(
+                conditionalWeakTableType: conditionalWeakTableType,
+                argType: interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
+
+            // Create the 'VectorChanged' getter method
+            MethodDefinition vectorChangedMethod = new(
+                name: "VectorChanged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: eventHandlerEventSourceType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+            {
+                CilInstructions =
+                {
+                    { Call, get_VectorChangedTableMethod },
+                    { Ldarg_0 },
+                    { Ldsfld, eventSourceFactoryType.GetField("Value"u8) },
+                    { Ldarg_1 },
+                    { Callvirt, conditionalWeakTableGetOrAddMethod.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'IObservableVectorMethodsImpl<T>.VectorChanged' method
+            methodsType.AddMethodImplementation(
+                declaration: interopReferences.IObservableVectorMethodsImpl1VectorChanged(elementType).Import(module),
+                method: vectorChangedMethod);
         }
     }
 }

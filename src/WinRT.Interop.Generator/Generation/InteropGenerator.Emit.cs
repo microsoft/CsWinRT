@@ -1256,6 +1256,15 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     factoryType: out TypeDefinition factoryType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.Methods(
+                    vectorType: typeSignature,
+                    eventSourceFactoryType: factoryType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    methodsType: out TypeDefinition methodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
