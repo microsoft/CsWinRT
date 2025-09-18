@@ -1335,7 +1335,13 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
+                InteropTypeDefinitionBuilder.IObservableVector1.IID(
+                    vectorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
                     vectorType: typeSignature,
                     interopDefinitions: interopDefinitions,

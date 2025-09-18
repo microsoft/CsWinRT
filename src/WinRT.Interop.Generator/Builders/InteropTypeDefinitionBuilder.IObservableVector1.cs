@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -19,6 +20,30 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IObservableVector1
     {
+        /// <summary>
+        /// Creates the 'IID' property for some <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="vectorType"/>.</param>
+        public static void IID(
+            GenericInstanceTypeSignature vectorType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(vectorType, "IID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_IidMethod);
+        }
+
         /// <summary>
         /// Creates the cached factory type for the property for the event args for the vector.
         /// </summary>
