@@ -273,5 +273,45 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IObservableVectorMethodsImpl1VectorChanged(elementType).Import(module),
                 method: vectorChangedMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="vectorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature vectorType,
+            TypeDefinition vectorMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // Get the base interfaces for the current element type
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
+            TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType(elementType);
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeObservableVector<<ELEMENT_TYPE>, ...>'
+            TypeSignature windowsRuntimeObservableVector1Type = interopReferences.WindowsRuntimeObservableVector6.MakeGenericReferenceType(
+                elementType,
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(listType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(listType, "IVectorMethods").ToReferenceTypeSignature(),
+                vectorMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: vectorType,
+                nativeObjectBaseType: windowsRuntimeObservableVector1Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
     }
 }

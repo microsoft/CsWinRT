@@ -725,6 +725,14 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IList1.Interface(
+                    listType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceType: out _);
+
                 InteropTypeDefinitionBuilder.IList1.Vftbl(
                     listType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -746,6 +754,7 @@ internal partial class InteropGenerator
                     listType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     vectorMethodsType: out TypeDefinition vectorMethodsType);
 
@@ -1265,6 +1274,14 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.NativeObject(
+                    vectorType: typeSignature,
+                    vectorMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

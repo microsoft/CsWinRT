@@ -547,6 +547,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeReadOnlyDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReadOnlyDictionary`5"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableVector&lt;T, ...&gt;</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeObservableVector6 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObservableVector`6"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMapChangedEventArgs&lt;TKey, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMapChangedEventArgs2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMapChangedEventArgs`2"u8);

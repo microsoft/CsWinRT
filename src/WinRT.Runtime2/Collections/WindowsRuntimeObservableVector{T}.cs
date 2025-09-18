@@ -64,7 +64,7 @@ public abstract class WindowsRuntimeObservableVector<
     }
 
     /// <inheritdoc/>
-    public WindowsRuntimeObjectReferenceValue GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IObservableVector<T>>.GetInterface()
     {
         return _observableVectorObjectReference.AsValue();
     }
