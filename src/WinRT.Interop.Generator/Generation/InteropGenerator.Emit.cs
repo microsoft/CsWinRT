@@ -218,7 +218,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' properties
                 InteropTypeDefinitionBuilder.Delegate.IIDs(
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -227,7 +226,6 @@ internal partial class InteropGenerator
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
 
-                // Define the 'NativeDelegate' type (with the extension method implementation)
                 InteropTypeDefinitionBuilder.Delegate.NativeDelegateType(
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -235,7 +233,6 @@ internal partial class InteropGenerator
                     module: module,
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.Delegate.ComWrappersCallbackType(
                     delegateType: typeSignature,
                     nativeDelegateType: nativeDelegateType,
@@ -244,7 +241,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition delegateComWrappersCallbackType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.Delegate.Marshaller(
                     delegateType: typeSignature,
                     delegateComWrappersCallbackType: delegateComWrappersCallbackType,
@@ -254,7 +250,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.Delegate.ImplType(
                     delegateType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -263,7 +258,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out TypeDefinition delegateImplType);
 
-                // Define the 'DelegateReferenceImpl' type (with the boxed delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.Delegate.ReferenceImplType(
                     delegateType: typeSignature,
                     marshallerType: marshallerType,
@@ -273,7 +267,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out TypeDefinition delegateReferenceImplType);
 
-                // Define the 'DelegateInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
                 InteropTypeDefinitionBuilder.Delegate.InterfaceEntriesImpl(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
@@ -283,7 +276,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceEntriesImplType: out TypeDefinition delegateInterfaceEntriesImplType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.Delegate.ComWrappersMarshallerAttribute(
                     delegateType: typeSignature,
                     delegateInterfaceEntriesImplType: delegateInterfaceEntriesImplType,
@@ -294,7 +286,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition delegateComWrappersMarshallerType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.Delegate.Proxy(
                     delegateType: typeSignature,
                     delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
@@ -302,7 +293,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.Delegate.TypeMapAttributes(
                     delegateType: typeSignature,
                     proxyType: proxyType,
@@ -378,7 +368,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IEnumerator1.IID(
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -386,7 +375,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IEnumerator1.ImplType(
                     enumeratorType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -396,7 +384,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IIteratorMethods' type (with the public thunks for 'IIterator<T>' native calls)
                 InteropTypeDefinitionBuilder.IEnumerator1.IIteratorMethods(
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -404,7 +391,6 @@ internal partial class InteropGenerator
                     module: module,
                     iteratorMethodsType: out TypeDefinition iteratorMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IEnumerator1.NativeObject(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
@@ -412,7 +398,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersCallbackType(
                     enumeratorType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -421,7 +406,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumeratorComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersMarshallerAttribute(
                     enumeratorType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -430,7 +414,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumeratorComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IEnumerator1.Marshaller(
                     enumeratorType: typeSignature,
                     enumeratorComWrappersCallbackType: enumeratorComWrappersCallbackType,
@@ -440,7 +423,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IEnumerator1.InterfaceImpl(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
@@ -448,7 +430,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IEnumerator1.Proxy(
                     enumeratorType: typeSignature,
                     enumeratorComWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
@@ -456,7 +437,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IEnumerator1.TypeMapAttributes(
                     enumeratorType: typeSignature,
                     proxyType: proxyType,
@@ -494,7 +474,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IEnumerable1.IID(
                     enumerableType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -502,7 +481,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Interface' type (with the IID property)
                 InteropTypeDefinitionBuilder.IEnumerable1.Interface(
                     enumerableType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -511,7 +489,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceType: out _);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IEnumerable1.ImplType(
                     enumerableType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -521,7 +498,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IIterableMethods' type (with the public thunks for 'IIterable<T>' native calls)
                 InteropTypeDefinitionBuilder.IEnumerable1.IIterableMethods(
                     enumerableType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -530,7 +506,6 @@ internal partial class InteropGenerator
                     module: module,
                     iterableMethodsType: out TypeDefinition iterableMethodsType);
 
-                // Define the 'IEnumerableMethods' type (with the public thunks for 'IEnumerable<T>' calls)
                 InteropTypeDefinitionBuilder.IEnumerable1.IEnumerableMethods(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
@@ -539,7 +514,6 @@ internal partial class InteropGenerator
                     module: module,
                     enumerableMethodsType: out TypeDefinition enumerableMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IEnumerable1.NativeObject(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
@@ -547,7 +521,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersCallbackType(
                     enumerableType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -556,7 +529,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumerableComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersMarshallerAttribute(
                     enumerableType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -565,7 +537,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumerableComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IEnumerable1.Marshaller(
                     enumerableType: typeSignature,
                     enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
@@ -574,7 +545,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IEnumerable1.InterfaceImpl(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
@@ -582,7 +552,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IEnumerable1.Proxy(
                     enumerableType: typeSignature,
                     enumerableComWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
@@ -590,7 +559,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IEnumerable1.TypeMapAttributes(
                     enumerableType: typeSignature,
                     proxyType: proxyType,
@@ -628,7 +596,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IReadOnlyList1.IID(
                     readOnlyListType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -636,7 +603,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Vftbl' type
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Vftbl(
                     readOnlyListType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -644,7 +610,6 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.ImplType(
                     readOnlyListType: typeSignature,
                     vftblType: vftblType,
@@ -655,7 +620,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IVectorViewMethods' type (with the public thunks for 'IVectorView<T>' native calls)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.IVectorViewMethods(
                     readOnlyListType: typeSignature,
                     vftblType: vftblType,
@@ -663,7 +627,6 @@ internal partial class InteropGenerator
                     module: module,
                     vectorViewMethodsType: out TypeDefinition vectorViewMethodsType);
 
-                // Define the 'IReadOnlyListMethods' type
                 InteropTypeDefinitionBuilder.IReadOnlyList1.IReadOnlyListMethods(
                     readOnlyListType: typeSignature,
                     vectorViewMethodsType: vectorViewMethodsType,
@@ -671,7 +634,6 @@ internal partial class InteropGenerator
                     module: module,
                     readOnlyListMethodsType: out TypeDefinition readOnlyListMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.NativeObject(
                     readOnlyListType: typeSignature,
                     readOnlyListMethodsType: readOnlyListMethodsType,
@@ -680,7 +642,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.ComWrappersCallbackType(
                     readOnlyListType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -689,7 +650,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyListComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IReadOnlyList1.ComWrappersMarshallerAttribute(
                     readOnlyListType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -698,7 +658,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyListComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Marshaller(
                     readOnlyListType: typeSignature,
                     readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
@@ -707,7 +666,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IReadOnlyList1.InterfaceImpl(
                     readOnlyListType: typeSignature,
                     readOnlyListMethodsType: readOnlyListMethodsType,
@@ -716,7 +674,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Proxy(
                     readOnlyListType: typeSignature,
                     readOnlyListComWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
@@ -724,7 +681,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
                     readOnlyListType: typeSignature,
                     proxyType: proxyType,
@@ -762,7 +718,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IList1.IID(
                     listType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -770,7 +725,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Vftbl' type
                 InteropTypeDefinitionBuilder.IList1.Vftbl(
                     listType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -778,7 +732,6 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IList1.ImplType(
                     listType: typeSignature,
                     vftblType: vftblType,
@@ -789,7 +742,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IVectorMethods' type (with the public thunks for 'IVector<T>' native calls)
                 InteropTypeDefinitionBuilder.IList1.IVectorMethods(
                     listType: typeSignature,
                     vftblType: vftblType,
@@ -797,7 +749,6 @@ internal partial class InteropGenerator
                     module: module,
                     vectorMethodsType: out TypeDefinition vectorMethodsType);
 
-                // Define the 'ListMethods' type
                 InteropTypeDefinitionBuilder.IList1.IListMethods(
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
@@ -805,7 +756,6 @@ internal partial class InteropGenerator
                     module: module,
                     listMethodsType: out TypeDefinition listMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IList1.NativeObject(
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
@@ -814,7 +764,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IList1.ComWrappersCallbackType(
                     listType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -823,7 +772,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition listComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IList1.ComWrappersMarshallerAttribute(
                     listType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -832,7 +780,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition listComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IList1.Marshaller(
                     listType: typeSignature,
                     listComWrappersCallbackType: listComWrappersCallbackType,
@@ -841,7 +788,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IList1.InterfaceImpl(
                     listType: typeSignature,
                     listMethodsType: listMethodsType,
@@ -850,7 +796,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IList1.Proxy(
                     listType: typeSignature,
                     listComWrappersMarshallerAttributeType: listComWrappersMarshallerType,
@@ -858,7 +803,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
                     listType: typeSignature,
                     proxyType: proxyType,
@@ -896,7 +840,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IID(
                     readOnlyDictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -904,7 +847,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Vftbl' type
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Vftbl(
                     readOnlyDictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -913,7 +855,6 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ImplType(
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
@@ -924,7 +865,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IMapViewMethods' type (with the public thunks for 'IMapView<K, V>' native calls)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IMapViewMethods(
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
@@ -932,7 +872,6 @@ internal partial class InteropGenerator
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
 
-                // Define the 'ReadOnlyDictionaryMethods' type
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IReadOnlyDictionaryMethods(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
@@ -940,7 +879,6 @@ internal partial class InteropGenerator
                     module: module,
                     readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.NativeObject(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
@@ -949,7 +887,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersCallbackType(
                     readOnlyDictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -958,7 +895,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyDictionaryComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersMarshallerAttribute(
                     readOnlyDictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -967,7 +903,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyDictionaryComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Marshaller(
                     readOnlyDictionaryType: typeSignature,
                     readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
@@ -976,7 +911,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.InterfaceImpl(
                     readOnlyDictionaryType: typeSignature,
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
@@ -984,7 +918,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Proxy(
                     readOnlyDictionaryType: typeSignature,
                     readOnlyDictionaryComWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
@@ -992,7 +925,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.TypeMapAttributes(
                     readOnlyDictionaryType: typeSignature,
                     proxyType: proxyType,
@@ -1030,7 +962,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IDictionary2.IID(
                     dictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1038,7 +969,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Vftbl' type
                 InteropTypeDefinitionBuilder.IDictionary2.Vftbl(
                     dictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1047,7 +977,6 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IDictionary2.ImplType(
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
@@ -1058,7 +987,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'IMapMethods' type (with the public thunks for 'IMap<K, V>' native calls)
                 InteropTypeDefinitionBuilder.IDictionary2.IMapMethods(
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
@@ -1066,7 +994,6 @@ internal partial class InteropGenerator
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
 
-                // Define the 'DictionaryMethods' type
                 InteropTypeDefinitionBuilder.IDictionary2.IDictionaryMethods(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
@@ -1075,7 +1002,6 @@ internal partial class InteropGenerator
                     module: module,
                     dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IDictionary2.NativeObject(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
@@ -1084,7 +1010,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IDictionary2.ComWrappersCallbackType(
                     dictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -1093,7 +1018,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition dictionaryComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IDictionary2.ComWrappersMarshallerAttribute(
                     dictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -1102,7 +1026,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition dictionaryComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IDictionary2.Marshaller(
                     dictionaryType: typeSignature,
                     dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
@@ -1111,7 +1034,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IDictionary2.InterfaceImpl(
                     dictionaryType: typeSignature,
                     dictionaryMethodsType: dictionaryMethodsType,
@@ -1119,7 +1041,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IDictionary2.Proxy(
                     dictionaryType: typeSignature,
                     dictionaryComWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
@@ -1127,7 +1048,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IDictionary2.TypeMapAttributes(
                     dictionaryType: typeSignature,
                     proxyType: proxyType,
@@ -1163,7 +1083,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.KeyValuePair.IID(
                     keyValuePairType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1171,7 +1090,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'KeyValuePairImpl' type (with the delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -1180,7 +1098,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out TypeDefinition keyValuePairTypeImplType);
 
-                // Define the 'KeyValuePairInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
                 InteropTypeDefinitionBuilder.KeyValuePair.InterfaceEntriesImplType(
                     keyValuePairType: typeSignature,
                     keyValuePairTypeImplType: keyValuePairTypeImplType,
@@ -1219,7 +1136,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.IID(
                     argsType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1227,7 +1143,6 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Impl' type (with the CCW vtable implementation)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ImplType(
                     argsType: typeSignature,
                     get_IidMethod: get_IidMethod,
@@ -1237,7 +1152,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                // Define the 'Methods' type (with the public thunks for 'IMapChangedEventArgs<K>' native calls)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Methods(
                     argsType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1245,7 +1159,6 @@ internal partial class InteropGenerator
                     module: module,
                     argsMethodsType: out TypeDefinition argsMethodsType);
 
-                // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.NativeObject(
                     argsType: typeSignature,
                     argsMethodsType: argsMethodsType,
@@ -1253,7 +1166,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition nativeObjectType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersCallbackType(
                     argsType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -1262,7 +1174,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition argsComWrappersCallbackType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersMarshallerAttribute(
                     argsType: typeSignature,
                     nativeObjectType: nativeObjectType,
@@ -1271,7 +1182,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition argsComWrappersMarshallerType);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Marshaller(
                     argsType: typeSignature,
                     argsComWrappersCallbackType: argsComWrappersCallbackType,
@@ -1281,7 +1191,6 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.InterfaceImpl(
                     argsType: typeSignature,
                     argsMethodsType: argsMethodsType,
@@ -1289,7 +1198,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Proxy(
                     argsType: typeSignature,
                     argsComWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
@@ -1297,7 +1205,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.TypeMapAttributes(
                     argsType: typeSignature,
                     proxyType: proxyType,
@@ -1378,7 +1285,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'IID' property
                 InteropTypeDefinitionBuilder.SzArray.IID(
                     arrayType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1386,14 +1292,12 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
-                // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropTypeDefinitionBuilder.SzArray.Marshaller(
                     arrayType: typeSignature,
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeArrayComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersCallback(
                     arrayType: typeSignature,
                     marshallerType: marshallerType,
@@ -1401,7 +1305,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition arrayComWrappersCallbackType);
 
-                // Define the 'ArrayImpl' type (with the boxed delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.SzArray.ArrayImpl(
                     arrayType: typeSignature,
                     marshallerType: marshallerType,
@@ -1411,7 +1314,6 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out TypeDefinition arrayImplType);
 
-                // Define the 'ArrayInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
                     implType: arrayImplType,
@@ -1420,7 +1322,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersMarshallerAttribute(
                     arrayType: typeSignature,
                     arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
@@ -1431,7 +1332,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
 
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.SzArray.Proxy(
                     arrayType: typeSignature,
                     arrayComWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
@@ -1439,7 +1339,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.SzArray.TypeMapAttributes(
                     arrayType: typeSignature,
                     proxyType: proxyType,
@@ -1487,7 +1386,6 @@ internal partial class InteropGenerator
                 // Get the first user-defined with this vtable set as reference
                 typeSignature = discoveryState.UserDefinedAndVtableTypes.First(kvp => kvp.Value.Equals(vtableTypes)).Key;
 
-                // Define the 'InterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
@@ -1497,7 +1395,6 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
-                // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.UserDefinedType.ComWrappersMarshallerAttribute(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
@@ -1523,7 +1420,6 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
                     comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
@@ -1531,7 +1427,6 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition proxyType);
 
-                // Define the type map attributes
                 InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
                     userDefinedType: typeSignature,
                     proxyType: proxyType,
