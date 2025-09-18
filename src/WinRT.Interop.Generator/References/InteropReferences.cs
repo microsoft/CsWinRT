@@ -694,14 +694,12 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
     /// </summary>
-    public MemberReference Attribute_ctor => field ??= Attribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
+    public MemberReference Attribute_ctor => field ??= Attribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="NotSupportedException.NotSupportedException()"/>.
     /// </summary>
-    public MemberReference NotSupportedException_ctor => field ??= NotSupportedException
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
+    public MemberReference NotSupportedException_ctor => field ??= NotSupportedException.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Type.GetTypeFromHandle"/>.
@@ -721,10 +719,9 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
     /// </summary>
-    public MemberReference AttributeUsageAttribute_ctor_AttributeTargets => field ??= AttributeUsageAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [AttributeTargets.ToValueTypeSignature()]));
+    public MemberReference AttributeUsageAttribute_ctor_AttributeTargets => field ??= AttributeUsageAttribute.CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [AttributeTargets.ToValueTypeSignature()]);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
@@ -774,24 +771,16 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="byte"/>).
     /// </summary>
-    public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte
-        .ToTypeDefOrRef()
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                _corLibTypeFactory.Void.MakePointerType(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte.ToTypeDefOrRef().CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="int"/>).
     /// </summary>
-    public MemberReference ReadOnlySpanInt32_ctor => field ??= ReadOnlySpanInt32
-        .ToTypeDefOrRef()
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                _corLibTypeFactory.Void.MakePointerType(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference ReadOnlySpanInt32_ctor => field ??= ReadOnlySpanInt32.ToTypeDefOrRef().CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
@@ -815,13 +804,9 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="ushort"/>).
     /// </summary>
-    public MemberReference ReadOnlySpanUInt16_ctor => field ??= ReadOnlySpanUInt16
-        .ToTypeDefOrRef()
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                _corLibTypeFactory.Void.MakePointerType(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference ReadOnlySpanUInt16_ctor => field ??= ReadOnlySpanUInt16.ToTypeDefOrRef().CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.SequenceEqual{T}(Span{T}, ReadOnlySpan{T})"/> (for <see cref="ReadOnlySpanChar"/>).
@@ -857,32 +842,27 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.FixedAddressValueTypeAttribute.FixedAddressValueTypeAttribute()"/>.
     /// </summary>
-    public MemberReference FixedAddressValueTypeAttribute_ctor => field ??= FixedAddressValueTypeAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(returnType: _corLibTypeFactory.Void));
+    public MemberReference FixedAddressValueTypeAttribute_ctor => field ??= FixedAddressValueTypeAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute.DynamicInterfaceCastableImplementationAttribute()"/>.
     /// </summary>
-    public MemberReference DynamicInterfaceCastableImplementationAttribute_ctor => field ??= DynamicInterfaceCastableImplementationAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(returnType: _corLibTypeFactory.Void));
+    public MemberReference DynamicInterfaceCastableImplementationAttribute_ctor => field ??= DynamicInterfaceCastableImplementationAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute.IsReadOnlyAttribute()"/>.
     /// </summary>
-    public MemberReference IsReadOnlyAttribute_ctor => field ??= IsReadOnlyAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(returnType: _corLibTypeFactory.Void));
+    public MemberReference IsReadOnlyAttribute_ctor => field ??= IsReadOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.ScopedRefAttribute.ScopedRefAttribute()"/>.
     /// </summary>
-    public MemberReference ScopedRefAttribute_ctor => field ??= ScopedRefAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(returnType: _corLibTypeFactory.Void));
+    public MemberReference ScopedRefAttribute_ctor => field ??= ScopedRefAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
     /// </summary>
-    public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(returnType: _corLibTypeFactory.Void));
+    public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance"/>.
@@ -1176,48 +1156,35 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
     /// </summary>
-    public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
+    public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
     /// </summary>
-    public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource.CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
     /// </summary>
-    public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource.CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
     /// </summary>
-    public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource.CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
     /// </summary>
-    public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource
-        .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _corLibTypeFactory.Int32]));
+    public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource.CreateConstructorReference(
+        corLibTypeFactory: _corLibTypeFactory,
+        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
@@ -1458,9 +1425,7 @@ internal sealed class InteropReferences
         return ReadOnlySpan1
             .MakeGenericValueType(arrayType.BaseType)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [arrayType]));
+            .CreateConstructorReference(_corLibTypeFactory, [arrayType]);
     }
 
     /// <summary>
@@ -1472,12 +1437,12 @@ internal sealed class InteropReferences
         return TypeMapAttribute1
             .MakeGenericReferenceType(typeMapGroup)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
                 parameterTypes: [
                     _corLibTypeFactory.String,
                     Type.ToReferenceTypeSignature(),
-                    Type.ToReferenceTypeSignature()]));
+                    Type.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -1489,11 +1454,11 @@ internal sealed class InteropReferences
         return TypeMapAssociationAttribute1
             .MakeGenericReferenceType(typeMapGroup)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                Type.ToReferenceTypeSignature(),
-                Type.ToReferenceTypeSignature()]));
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [
+                    Type.ToReferenceTypeSignature(),
+                    Type.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -1506,9 +1471,9 @@ internal sealed class InteropReferences
         // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
         return delegateType
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [_corLibTypeFactory.Object, _corLibTypeFactory.IntPtr]));
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [_corLibTypeFactory.Object, _corLibTypeFactory.IntPtr]);
     }
 
     /// <summary>
@@ -2792,9 +2757,7 @@ internal sealed class InteropReferences
     {
         return enumeratorType
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+            .CreateConstructorReference(_corLibTypeFactory, WindowsRuntimeObjectReference.ToReferenceTypeSignature()!); // TODO: file issue
     }
 
     /// <summary>
@@ -2807,11 +2770,11 @@ internal sealed class InteropReferences
         return DictionaryKeyCollection2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
                 parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
 
     /// <summary>
@@ -2824,11 +2787,11 @@ internal sealed class InteropReferences
         return DictionaryValueCollection2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
                 parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
 
     /// <summary>
@@ -2841,11 +2804,11 @@ internal sealed class InteropReferences
         return ReadOnlyDictionaryKeyCollection2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
                 parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
 
     /// <summary>
@@ -2858,10 +2821,10 @@ internal sealed class InteropReferences
         return ReadOnlyDictionaryValueCollection2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Void,
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
                 parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
 }
