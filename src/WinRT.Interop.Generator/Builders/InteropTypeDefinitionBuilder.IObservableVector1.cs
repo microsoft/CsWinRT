@@ -516,5 +516,32 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out proxyType);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature vectorType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: $"Windows.Foundation.Collections.IObservableVector`1<{vectorType.TypeArguments[0]}>", // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: vectorType,
+                proxyTypeMapSourceType: vectorType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: vectorType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }

@@ -1320,6 +1320,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.TypeMapAttributes(
+                    vectorType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
