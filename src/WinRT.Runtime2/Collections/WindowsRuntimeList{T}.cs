@@ -55,7 +55,7 @@ public abstract class WindowsRuntimeList<
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            WindowsRuntimeObjectReference InitializeInspectableObjectReference()
+            WindowsRuntimeObjectReference InitializeIIterableObjectReference()
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
@@ -65,7 +65,7 @@ public abstract class WindowsRuntimeList<
                 return field;
             }
 
-            return field ?? InitializeInspectableObjectReference();
+            return field ?? InitializeIIterableObjectReference();
         }
     }
 

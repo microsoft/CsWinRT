@@ -66,7 +66,7 @@ public abstract class WindowsRuntimeObservableVector<
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            WindowsRuntimeObjectReference InitializeInspectableObjectReference()
+            WindowsRuntimeObjectReference InitializeIVectorObjectReference()
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
@@ -76,7 +76,7 @@ public abstract class WindowsRuntimeObservableVector<
                 return field;
             }
 
-            return field ?? InitializeInspectableObjectReference();
+            return field ?? InitializeIVectorObjectReference();
         }
     }
 
@@ -86,7 +86,7 @@ public abstract class WindowsRuntimeObservableVector<
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            WindowsRuntimeObjectReference InitializeInspectableObjectReference()
+            WindowsRuntimeObjectReference InitializeIIterableObjectReference()
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
@@ -96,7 +96,7 @@ public abstract class WindowsRuntimeObservableVector<
                 return field;
             }
 
-            return field ?? InitializeInspectableObjectReference();
+            return field ?? InitializeIIterableObjectReference();
         }
     }
 
