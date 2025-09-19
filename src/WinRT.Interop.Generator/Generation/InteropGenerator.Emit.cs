@@ -1313,6 +1313,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.Proxy(
+                    vectorType: typeSignature,
+                    vectorComWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
