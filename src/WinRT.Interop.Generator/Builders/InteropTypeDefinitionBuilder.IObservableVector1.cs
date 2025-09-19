@@ -24,7 +24,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <summary>
         /// Creates the 'IID' property for some <c>IObservableVector&lt;T&gt;</c> interface.
         /// </summary>
-        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
@@ -312,6 +312,33 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="TypeSignature"/> for the vector type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="vectorType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature vectorType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            ComWrappersCallback(
+                runtimeClassName: vectorType.FullName, // TODO
+                typeSignature: vectorType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out callbackType);
         }
     }
 }
