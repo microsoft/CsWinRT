@@ -536,8 +536,8 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: $"Windows.Foundation.Collections.IObservableVector`1<{vectorType.TypeArguments[0]}>", // TODO
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: vectorType,
-                proxyTypeMapSourceType: vectorType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
                 interfaceTypeMapSourceType: vectorType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,

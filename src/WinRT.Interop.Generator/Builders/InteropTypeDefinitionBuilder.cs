@@ -626,8 +626,8 @@ internal static partial class InteropTypeDefinitionBuilder
         string? runtimeClassName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
-        TypeSignature proxyTypeMapSourceType,
-        TypeSignature proxyTypeMapProxyType,
+        [NotNullIfNotNull(nameof(proxyTypeMapProxyType))] TypeSignature? proxyTypeMapSourceType,
+        [NotNullIfNotNull(nameof(proxyTypeMapSourceType))] TypeSignature? proxyTypeMapProxyType,
         [NotNullIfNotNull(nameof(interfaceTypeMapProxyType))] TypeSignature? interfaceTypeMapSourceType,
         [NotNullIfNotNull(nameof(interfaceTypeMapSourceType))] TypeSignature? interfaceTypeMapProxyType,
         InteropReferences interopReferences,
@@ -645,12 +645,16 @@ internal static partial class InteropTypeDefinitionBuilder
                 module: module));
         }
 
-        // Emit the '[TypeMapAssociation]' attribute for the proxy type map
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
-            source: proxyTypeMapSourceType,
-            proxy: proxyTypeMapProxyType,
-            interopReferences: interopReferences,
-            module: module));
+        // Emit the '[TypeMapAssociation]' attribute for the proxy type map.
+        // This is only needed for types that can actually be instantiated.
+        if (proxyTypeMapSourceType is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
+                source: proxyTypeMapSourceType,
+                proxy: proxyTypeMapProxyType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
 
         // Emit the '[TypeMapAssociation]' attribute for 'IDynamicInterfaceCastable' scenarios.
         // This is not always needed, as it is specifically only for interface types.
