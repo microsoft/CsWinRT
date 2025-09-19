@@ -107,7 +107,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// Failed to generate marshalling code for a <see cref="KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     public static Exception KeyValuePairTypeCodeGenerationError(string? keyValuePairType, Exception exception)
     {
@@ -171,7 +171,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IEnumerator{T}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IEnumerator{T}"/> type.
     /// </summary>
     public static Exception IEnumerator1TypeCodeGenerationError(TypeSignature enumeratorType, Exception exception)
     {
@@ -179,7 +179,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IEnumerable{T}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IEnumerable{T}"/> type.
     /// </summary>
     public static Exception IEnumerable1TypeCodeGenerationError(TypeSignature enumerableType, Exception exception)
     {
@@ -187,7 +187,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IReadOnlyList{T}"/> type.
     /// </summary>
     public static Exception IReadOnlyList1TypeCodeGenerationError(TypeSignature readOnlyListType, Exception exception)
     {
@@ -215,7 +215,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IList{T}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IList{T}"/> type.
     /// </summary>
     public static Exception IList1TypeCodeGenerationError(TypeSignature listType, Exception exception)
     {
@@ -223,7 +223,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IReadOnlyDictionary{TKey, TValue}"/> type.
     /// </summary>
     public static Exception IReadOnlyDictionary2TypeCodeGenerationError(TypeSignature readOnlyDictionaryType, Exception exception)
     {
@@ -231,7 +231,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.
+    /// Failed to generate marshalling code for an <see cref="IDictionary{TKey, TValue}"/> type.
     /// </summary>
     public static Exception IDictionary2TypeCodeGenerationError(TypeSignature dictionaryType, Exception exception)
     {

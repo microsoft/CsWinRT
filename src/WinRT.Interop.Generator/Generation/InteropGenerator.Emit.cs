@@ -346,7 +346,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
+    /// Defines the interop types for <see cref="IEnumerator{T}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -452,7 +452,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IEnumerable{T}"/> types.
+    /// Defines the interop types for <see cref="IEnumerable{T}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -574,7 +574,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
+    /// Defines the interop types for <see cref="IReadOnlyList{T}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -696,7 +696,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IList{T}"/> types.
+    /// Defines the interop types for <see cref="IList{T}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -827,7 +827,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> types.
+    /// Defines the interop types for <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -949,7 +949,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> types.
+    /// Defines the interop types for <see cref="IDictionary{TKey, TValue}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
@@ -1072,7 +1072,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
+    /// Defines the interop types for <see cref="KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
