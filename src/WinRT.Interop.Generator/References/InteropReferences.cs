@@ -667,6 +667,11 @@ internal sealed class InteropReferences
     public TypeReference EventRegistrationToken => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationToken"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference EventSource1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventSource`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
     /// </summary>
     public TypeReference EventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`1"u8);
@@ -2723,7 +2728,35 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl1&lt;T&gt;.VectorChanged</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;.VectorChanged</c>'s adder.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IObservableVector1add_VectorChanged(TypeSignature elementType)
+    {
+        return IObservableVector1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("add_VectorChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [VectorChangedEventHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;.VectorChanged</c>'s remover.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IObservableVector1remove_VectorChanged(TypeSignature elementType)
+    {
+        return IObservableVector1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("remove_VectorChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [VectorChangedEventHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;.VectorChanged</c>'s getter.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     public MemberReference IObservableVectorMethodsImpl1VectorChanged(TypeSignature elementType)
@@ -2774,6 +2807,34 @@ internal sealed class InteropReferences
             .CreateMemberReference("Key"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;.Subscribe(...)</c>.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference EventSource1Subscribe(TypeSignature delegateType)
+    {
+        return EventSource1
+            .MakeGenericReferenceType(delegateType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Subscribe"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;.Unsubscribe(...)</c>.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference EventSource1Unsubscribe(TypeSignature delegateType)
+    {
+        return EventSource1
+            .MakeGenericReferenceType(delegateType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Unsubscribe"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>

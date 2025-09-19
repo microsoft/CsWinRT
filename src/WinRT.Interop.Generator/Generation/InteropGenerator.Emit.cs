@@ -1306,6 +1306,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.InterfaceImpl(
+                    vectorType: typeSignature,
+                    vectorMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

@@ -3,6 +3,7 @@
 
 using System;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -391,6 +392,147 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="vectorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature vectorType,
+            TypeDefinition vectorMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
+                name: InteropUtf8NameFactory.TypeName(vectorType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(vectorType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IList1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.ICollection1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Prepare the 'VectorChangedEventHandler<T>' signature
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+
+            // Create the 'IObservableVector<T>.VectorChanged' add method
+            MethodDefinition add_IObservableVector1VectorChangedMethod = new(
+                name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.add_VectorChanged",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [handlerType.Import(module)]))
+            {
+                CilMethodBody = new CilMethodBody()
+                {
+                    LocalVariables =
+                    {
+                        // Declare the local variables:
+                        //   [0]: 'WindowsRuntimeObject' (for 'thisObject')
+                        //   [1]: 'WindowsRuntimeObjectReference' (for 'thisReference')
+                        new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module)),
+                        new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module))
+                    },
+                    Instructions =
+                    {
+                        // Cast 'this' and resolve the 'WindowsRuntimeObjectReference' instance for the interface
+                        { Ldarg_0 },
+                        { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                        { Stloc_0 },
+                        { Ldloc_0 },
+                        { Ldtoken, vectorType.Import(module).ToTypeDefOrRef() },
+                        { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                        { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                        { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                        { Stloc_1 },
+
+                        // <METHODS_TYPE>.VectorChanged(thisObject, thisReference).Subscribe(value);
+                        { Ldloc_0 },
+                        { Ldloc_1 },
+                        { Call, vectorMethodsType.GetMethod("VectorChanged"u8) },
+                        { Ldarg_1 },
+                        { Callvirt, interopReferences.EventSource1Subscribe(handlerType).Import(module) },
+                        { Ret }
+                    }
+                }
+            };
+
+            // Add and implement the 'IObservableVector<T>.VectorChanged' add accessor method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IObservableVector1add_VectorChanged(elementType).Import(module),
+                method: add_IObservableVector1VectorChangedMethod);
+
+            // Create the 'IObservableVector<T>.VectorChanged' remove method
+            MethodDefinition remove_IObservableVector1VectorChangedMethod = new(
+                name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.remove_VectorChanged",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [handlerType.Import(module)]))
+            {
+                CilMethodBody = new CilMethodBody()
+                {
+                    LocalVariables =
+                    {
+                        new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module)),
+                        new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module))
+                    },
+                    Instructions =
+                    {
+                        { Ldarg_0 },
+                        { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                        { Stloc_0 },
+                        { Ldloc_0 },
+                        { Ldtoken, vectorType.Import(module).ToTypeDefOrRef() },
+                        { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                        { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                        { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                        { Stloc_1 },
+                        { Ldloc_0 },
+                        { Ldloc_1 },
+                        { Call, vectorMethodsType.GetMethod("VectorChanged"u8) },
+                        { Ldarg_1 },
+                        { Callvirt, interopReferences.EventSource1Unsubscribe(handlerType).Import(module) },
+                        { Ret }
+                    }
+                }
+            };
+
+            // Add and implement the 'IObservableVector<T>.VectorChanged' remove accessor method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IObservableVector1remove_VectorChanged(elementType).Import(module),
+                method: remove_IObservableVector1VectorChangedMethod);
+
+            // Create the 'IObservableVector<T>.VectorChanged' event
+            EventDefinition observableVector1VectorChangedProperty = new(
+                name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.VectorChanged",
+                attributes: default,
+                eventType: handlerType.Import(module).ToTypeDefOrRef())
+            {
+                AddMethod = add_IObservableVector1VectorChangedMethod,
+                RemoveMethod = remove_IObservableVector1VectorChangedMethod
+            };
+
+            interfaceImplType.Events.Add(observableVector1VectorChangedProperty);
         }
     }
 }
