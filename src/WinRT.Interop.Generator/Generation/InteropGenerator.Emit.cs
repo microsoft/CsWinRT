@@ -1298,6 +1298,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IObservableVector1.Marshaller(
+                    vectorType: typeSignature,
+                    vectorComWrappersCallbackType: comWrappersMarshallerType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
