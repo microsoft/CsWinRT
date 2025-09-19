@@ -3556,14 +3556,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
         GUID guid_value = generate_guid(signature);
 
-        w.write(R"(public static ref readonly Guid IID_IReferenceOf%
+        w.write(R"(public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             ReadOnlySpan<byte> data =
             [
-                )", name);
+                )");
 
         w.write_printf(
             "0x%X, 0x%X, 0x%X, 0x%X,\n                "
@@ -3802,9 +3802,9 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID_IReferenceOf%);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID);
 }
-)", projection_name, name, name);
+)", projection_name, name);
 
         if (!is_type_blittable(type))
         {
@@ -3912,7 +3912,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID_IReferenceOf%).DetachThisPtrUnsafe();
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID).DetachThisPtrUnsafe();
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3924,10 +3924,10 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID);
     }
 }
-)", name, projection_name, projection_name, name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
+)", name, projection_name, projection_name, name, name, is_type_blittable(type) ? projection_name : abi_name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -3942,7 +3942,7 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceValue.IID = %ReferenceImpl.IID_IReferenceOf%;
+        Entries.IReferenceValue.IID = %ReferenceImpl.IID;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -3960,7 +3960,7 @@ R"(file static class %InterfaceEntriesImpl
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
-)", name, name, name, name, name);
+)", name, name, name, name);
     }
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
