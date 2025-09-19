@@ -3,7 +3,6 @@
 
 using System;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -442,38 +441,13 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [handlerType.Import(module)]))
             {
-                CilMethodBody = new CilMethodBody()
-                {
-                    LocalVariables =
-                    {
-                        // Declare the local variables:
-                        //   [0]: 'WindowsRuntimeObject' (for 'thisObject')
-                        //   [1]: 'WindowsRuntimeObjectReference' (for 'thisReference')
-                        new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module)),
-                        new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module))
-                    },
-                    Instructions =
-                    {
-                        // Cast 'this' and resolve the 'WindowsRuntimeObjectReference' instance for the interface
-                        { Ldarg_0 },
-                        { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                        { Stloc_0 },
-                        { Ldloc_0 },
-                        { Ldtoken, vectorType.Import(module).ToTypeDefOrRef() },
-                        { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                        { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                        { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                        { Stloc_1 },
-
-                        // <METHODS_TYPE>.VectorChanged(thisObject, thisReference).Subscribe(value);
-                        { Ldloc_0 },
-                        { Ldloc_1 },
-                        { Call, vectorMethodsType.GetMethod("VectorChanged"u8) },
-                        { Ldarg_1 },
-                        { Callvirt, interopReferences.EventSource1Subscribe(handlerType).Import(module) },
-                        { Ret }
-                    }
-                }
+                CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: vectorType,
+                    handlerType: handlerType,
+                    eventMethod: vectorMethodsType.GetMethod("VectorChanged"u8),
+                    eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
+                    interopReferences: interopReferences,
+                    module: module)
             };
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' add accessor method
@@ -489,32 +463,13 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [handlerType.Import(module)]))
             {
-                CilMethodBody = new CilMethodBody()
-                {
-                    LocalVariables =
-                    {
-                        new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module)),
-                        new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module))
-                    },
-                    Instructions =
-                    {
-                        { Ldarg_0 },
-                        { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                        { Stloc_0 },
-                        { Ldloc_0 },
-                        { Ldtoken, vectorType.Import(module).ToTypeDefOrRef() },
-                        { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                        { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                        { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                        { Stloc_1 },
-                        { Ldloc_0 },
-                        { Ldloc_1 },
-                        { Call, vectorMethodsType.GetMethod("VectorChanged"u8) },
-                        { Ldarg_1 },
-                        { Callvirt, interopReferences.EventSource1Unsubscribe(handlerType).Import(module) },
-                        { Ret }
-                    }
-                }
+                CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: vectorType,
+                    handlerType: handlerType,
+                    eventMethod: vectorMethodsType.GetMethod("VectorChanged"u8),
+                    eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
+                    interopReferences: interopReferences,
+                    module: module)
             };
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' remove accessor method
