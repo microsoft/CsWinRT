@@ -10,7 +10,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace WindowsRuntime.InteropServices;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct InterfaceEntries
+internal struct ReferenceInterfaceEntries
 {
     public ComInterfaceEntry IReferenceValue;
     public ComInterfaceEntry IPropertyValue;

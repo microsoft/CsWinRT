@@ -205,7 +205,7 @@
     <None Include="strings\InspectableVftbl.cs">
       <Filter>strings</Filter>
     </None>
-    <None Include="strings\InterfaceEntries.cs">
+    <None Include="strings\ReferenceInterfaceEntries.cs">
       <Filter>strings</Filter>
     </None>
   </ItemGroup>

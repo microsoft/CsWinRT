@@ -3917,7 +3917,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(InterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
 
@@ -3938,7 +3938,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 R"(file static class %InterfaceEntriesImpl
 {
     [FixedAddressValueType]
-    public static readonly InterfaceEntries Entries;
+    public static readonly ReferenceInterfaceEntries Entries;
     
     static %InterfaceEntriesImpl()
     {
