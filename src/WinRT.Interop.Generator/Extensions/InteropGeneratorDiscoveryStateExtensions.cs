@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 

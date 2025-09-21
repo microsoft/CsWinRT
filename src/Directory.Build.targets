@@ -9,7 +9,7 @@
     <GeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(GeneratedFilesRootDir)', '$(TargetFramework)'))</GeneratedFilesDir>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
     <Compile Remove="$(GeneratedFilesRootDir)**/*.cs" />
     <None Include="$(GeneratedFilesRootDir)**/*.cs" />
     <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.ImplGenerator.Errors;
 
@@ -104,7 +105,7 @@ internal static class WellKnownImplExceptions
     /// <returns>The resulting exception.</returns>
     private static Exception Exception(int id, string message, Exception? innerException = null)
     {
-        return new WellKnownImplException($"{ErrorPrefix}{id:0000}", message, innerException);
+        return new WellKnownGeneratorException($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 }
 

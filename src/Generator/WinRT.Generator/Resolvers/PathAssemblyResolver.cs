@@ -8,8 +8,9 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Serialized;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 
-namespace WindowsRuntime.ImplGenerator.Resolvers;
+namespace WindowsRuntime.Generator.Resolvers;
 
 /// <summary>
 /// A custom <see cref="IAssemblyResolver"/> from a specific set of reference paths.

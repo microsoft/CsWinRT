@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime.InteropGenerator.Attributes;
+namespace WindowsRuntime.Generator.Attributes;
 
 /// <summary>
 /// An attribute indicating the name of a given command line argument.

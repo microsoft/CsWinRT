@@ -43,4 +43,6 @@
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
     <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
+
+  <Import Project="..\Generator\WinRT.Generator\WinRT.Generator.projitems" Label="Shared" />
 </Project>

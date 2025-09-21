@@ -3,20 +3,20 @@
 
 using System;
 
-namespace WindowsRuntime.ImplGenerator.Errors;
+namespace WindowsRuntime.Generator.Errors;
 
 /// <summary>
-/// A well known exceptions for the interop generator.
+/// A well known exceptions for the generator.
 /// </summary>
-internal sealed class WellKnownImplException : Exception
+internal sealed class WellKnownGeneratorException : Exception
 {
     /// <summary>
-    /// Creates a new <see cref="WellKnownImplException"/> instance with the specified parameters.
+    /// Creates a new <see cref="WellKnownGeneratorException"/> instance with the specified parameters.
     /// </summary>
     /// <param name="id">The id of the exception.</param>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public WellKnownImplException(string id, string message, Exception? innerException)
+    public WellKnownGeneratorException(string id, string message, Exception? innerException)
         : base(message, innerException)
     {
         Id = id;

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet.Signatures;
 
-namespace WindowsRuntime.ImplGenerator;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Extensions for <see cref="SignatureComparer"/>.

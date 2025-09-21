@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
@@ -371,7 +372,7 @@ internal static class WellKnownInteropExceptions
     /// <returns>The resulting exception.</returns>
     private static Exception Exception(int id, string message, Exception? innerException = null)
     {
-        return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message, innerException);
+        return new WellKnownGeneratorException($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 }
 

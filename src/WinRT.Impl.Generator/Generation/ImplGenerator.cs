@@ -14,9 +14,10 @@ using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Resolvers;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
-using WindowsRuntime.ImplGenerator.Resolvers;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 

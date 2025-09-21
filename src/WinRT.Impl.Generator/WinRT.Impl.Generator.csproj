@@ -38,4 +38,10 @@
     <PackageReference Include="AsmResolver.DotNet" />
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Errors\" />
+  </ItemGroup>
+
+  <Import Project="..\Generator\WinRT.Generator\WinRT.Generator.projitems" Label="Shared" />
 </Project>

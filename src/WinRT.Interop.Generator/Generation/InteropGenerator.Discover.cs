@@ -9,10 +9,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Resolvers;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Resolvers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;

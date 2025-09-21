@@ -29,6 +29,11 @@
     <File Path="README.md" />
     <File Path="Strings.props" />
   </Folder>
+  <Folder Name="/Generator/">
+    <Project Path="Generator/WinRT.Generator/WinRT.Generator.shproj" Id="2b87e3dd-4d21-44f4-a1b8-b11b61a881a7" />
+    <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
+    <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+  </Folder>
   <Folder Name="/Nuget/">
     <File Path="../nuget/LICENSE" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
@@ -343,8 +348,6 @@
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM64" Project="false" />
   </Project>
-  <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-  <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Runtime/WinRT.Runtime.csproj">
     <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
   </Project>

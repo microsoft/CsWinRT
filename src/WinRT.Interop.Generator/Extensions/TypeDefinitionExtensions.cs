@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 
 namespace WindowsRuntime.InteropGenerator;
 

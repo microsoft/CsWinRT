@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using WindowsRuntime.ImplGenerator.Attributes;
+using WindowsRuntime.Generator.Attributes;
 using WindowsRuntime.ImplGenerator.Errors;
 
 #pragma warning disable IDE0046

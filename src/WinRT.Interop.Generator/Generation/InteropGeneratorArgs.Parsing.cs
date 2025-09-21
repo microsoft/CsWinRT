@@ -7,7 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using WindowsRuntime.InteropGenerator;
-using WindowsRuntime.InteropGenerator.Attributes;
+using WindowsRuntime.Generator.Attributes;
 using WindowsRuntime.InteropGenerator.Errors;
 
 #pragma warning disable IDE0046
