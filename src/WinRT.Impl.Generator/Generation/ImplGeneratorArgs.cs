@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Threading;
 using WindowsRuntime.Generator.Attributes;
+using WindowsRuntime.Generator.Generation;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
@@ -33,4 +35,26 @@ internal sealed partial class ImplGeneratorArgs
 
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
+
+    /// <summary>
+    /// Parses an <see cref="ImplGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="path">The path to the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="ImplGeneratorArgs"/> instance.</returns>
+    public static ImplGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
+    {
+        Dictionary<string, string> argsMap = GeneratorArgs.ParseFromResponseFile(path);
+
+        // Parse all commands to create the managed arguments to use
+        return new()
+        {
+            ReferenceAssemblyPaths = GeneratorArgs.GetStringArrayArgument<ImplGeneratorArgs>(argsMap, nameof(ReferenceAssemblyPaths)),
+            OutputAssemblyPath = GeneratorArgs.GetStringArgument<ImplGeneratorArgs>(argsMap, nameof(OutputAssemblyPath)),
+            GeneratedAssemblyDirectory = GeneratorArgs.GetStringArgument<ImplGeneratorArgs>(argsMap, nameof(GeneratedAssemblyDirectory)),
+            TreatWarningsAsErrors = GeneratorArgs.GetBooleanArgument<ImplGeneratorArgs>(argsMap, nameof(TreatWarningsAsErrors)),
+            AssemblyOriginatorKeyFile = GeneratorArgs.GetNullableStringArgument<ImplGeneratorArgs>(argsMap, nameof(AssemblyOriginatorKeyFile)),
+            Token = token
+        };
+    }
 }

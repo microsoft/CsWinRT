@@ -12,8 +12,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\CommandLineArgumentNameAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Errors\UnhandledGeneratorException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Errors\WellKnownGeneratorException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Errors\WellKnownGeneratorExceptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\GeneratorExceptionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\SignatureComparerExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generation\GeneratorArgs.Parsing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resolvers\PathAssemblyResolver.cs" />
   </ItemGroup>
 </Project>

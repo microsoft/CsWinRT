@@ -17,30 +17,6 @@ internal static class WellKnownImplExceptions
     public const string ErrorPrefix = "CSWINRTIMPLGEN";
 
     /// <summary>
-    /// Some exception was thrown when trying to read the response file.
-    /// </summary>
-    public static Exception ResponseFileReadError(Exception exception)
-    {
-        return Exception(1, "Failed to read the response file to run 'cswinrtgen'.", exception);
-    }
-
-    /// <summary>
-    /// Failed to parse an argument from the response file.
-    /// </summary>
-    public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
-    {
-        return Exception(2, $"Failed to parse argument '{argumentName}' from response file.", exception);
-    }
-
-    /// <summary>
-    /// The input response file is malformed.
-    /// </summary>
-    public static Exception MalformedResponseFile()
-    {
-        return Exception(3, "The response file is malformed and contains invalid content.");
-    }
-
-    /// <summary>
     /// Some exception was thrown when trying to read the output assembly file.
     /// </summary>
     public static Exception OutputAssemblyFileReadError(string filename, Exception? exception = null)

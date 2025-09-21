@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using WindowsRuntime.Generator.Generation;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Helpers;
 
@@ -75,19 +76,19 @@ internal partial class InteropGenerator
         // Prepare the .rsp file with all updated arguments
         StringBuilder builder = new();
 
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.ReferenceAssemblyPaths)));
+        _ = builder.Append(GeneratorArgs.GetCommandLineArgumentName<InteropGeneratorArgs>(nameof(InteropGeneratorArgs.ReferenceAssemblyPaths)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(string.Join(',', updatedDllNames));
 
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.OutputAssemblyPath)));
+        _ = builder.Append(GeneratorArgs.GetCommandLineArgumentName<InteropGeneratorArgs>(nameof(InteropGeneratorArgs.OutputAssemblyPath)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(outputAssemblyDestination);
 
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.UseWindowsUIXamlProjections)));
+        _ = builder.Append(GeneratorArgs.GetCommandLineArgumentName<InteropGeneratorArgs>(nameof(InteropGeneratorArgs.UseWindowsUIXamlProjections)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(args.UseWindowsUIXamlProjections.ToString());
 
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.MaxDegreesOfParallelism)));
+        _ = builder.Append(GeneratorArgs.GetCommandLineArgumentName<InteropGeneratorArgs>(nameof(InteropGeneratorArgs.MaxDegreesOfParallelism)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(args.MaxDegreesOfParallelism.ToString());
 

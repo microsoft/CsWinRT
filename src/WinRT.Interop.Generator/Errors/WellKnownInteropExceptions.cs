@@ -240,30 +240,6 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Some exception was thrown when trying to read the response file.
-    /// </summary>
-    public static Exception ResponseFileReadError(Exception exception)
-    {
-        return Exception(28, "Failed to read the response file to run 'cswinrtgen'.", exception);
-    }
-
-    /// <summary>
-    /// Failed to parse an argument from the response file.
-    /// </summary>
-    public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
-    {
-        return Exception(29, $"Failed to parse argument '{argumentName}' from response file.", exception);
-    }
-
-    /// <summary>
-    /// The input response file is malformed.
-    /// </summary>
-    public static Exception MalformedResponseFile()
-    {
-        return Exception(30, "The response file is malformed and contains invalid content.");
-    }
-
-    /// <summary>
     /// The debug repro directory does not exist.
     /// </summary>
     public static Exception DebugReproDirectoryDoesNotExist(string path)

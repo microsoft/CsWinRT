@@ -3,26 +3,28 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
-using System.Threading;
 using WindowsRuntime.Generator.Attributes;
-using WindowsRuntime.ImplGenerator.Errors;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Errors;
 
 #pragma warning disable IDE0046
 
-namespace WindowsRuntime.ImplGenerator.Generation;
+namespace WindowsRuntime.Generator.Generation;
 
-/// <inheritdoc cref="ImplGeneratorArgs"/>
-internal partial class ImplGeneratorArgs
+/// <summary>
+/// Parsing functions for GeneratorArgs.
+/// </summary>
+internal static class GeneratorArgs
 {
     /// <summary>
-    /// Parses an <see cref="ImplGeneratorArgs"/> instance from a target response file.
+    /// Parses key-value input from a target response file.
     /// </summary>
     /// <param name="path">The path to the response file.</param>
-    /// <param name="token">The token for the operation.</param>
-    /// <returns>The resulting <see cref="ImplGeneratorArgs"/> instance.</returns>
-    public static ImplGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
+    /// <returns>The resulting <see cref="Dictionary{TKey, TValue}"/> instance.</returns>
+    public static Dictionary<string, string> ParseFromResponseFile(string path)
     {
         // If the path is a response file, it will start with the '@' character.
         // This matches the default escaping 'ToolTask' uses for response files.
@@ -40,7 +42,7 @@ internal partial class ImplGeneratorArgs
         }
         catch (Exception e)
         {
-            throw WellKnownImplExceptions.ResponseFileReadError(e);
+            throw WellKnownGeneratorExceptions.ResponseFileReadError(e);
         }
 
         Dictionary<string, string> argsMap = [];
@@ -56,7 +58,7 @@ internal partial class ImplGeneratorArgs
 
             if (indexOfSpace == -1)
             {
-                throw WellKnownImplExceptions.MalformedResponseFile();
+                throw WellKnownGeneratorExceptions.MalformedResponseFile();
             }
 
             // Now we can parse the actual command line argument name and value
@@ -66,20 +68,11 @@ internal partial class ImplGeneratorArgs
             // We should never have duplicate commands
             if (!argsMap.TryAdd(argumentName, argumentValue))
             {
-                throw WellKnownImplExceptions.MalformedResponseFile();
+                throw WellKnownGeneratorExceptions.MalformedResponseFile();
             }
         }
 
-        // Parse all commands to create the managed arguments to use
-        return new()
-        {
-            ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ReferenceAssemblyPaths)),
-            OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
-            GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
-            TreatWarningsAsErrors = GetBooleanArgument(argsMap, nameof(TreatWarningsAsErrors)),
-            AssemblyOriginatorKeyFile = GetNullableStringArgument(argsMap, nameof(AssemblyOriginatorKeyFile)),
-            Token = token
-        };
+        return argsMap;
     }
 
     /// <summary>
@@ -87,15 +80,15 @@ internal partial class ImplGeneratorArgs
     /// </summary>
     /// <param name="propertyName">The target property name.</param>
     /// <returns>The command line argument name for <paramref name="propertyName"/>.</returns>
-    public static string GetCommandLineArgumentName(string propertyName)
+    public static string GetCommandLineArgumentName<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(string propertyName)
     {
         try
         {
-            return typeof(ImplGeneratorArgs).GetProperty(propertyName)!.GetCustomAttribute<CommandLineArgumentNameAttribute>()!.Name;
+            return typeof(GeneratorArgs).GetProperty(propertyName)!.GetCustomAttribute<CommandLineArgumentNameAttribute>()!.Name;
         }
         catch (Exception e)
         {
-            throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName, e);
+            throw WellKnownGeneratorExceptions.ResponseFileArgumentParsingError(propertyName, e);
         }
     }
 
@@ -105,14 +98,14 @@ internal partial class ImplGeneratorArgs
     /// <param name="argsMap">The input map with raw arguments.</param>
     /// <param name="propertyName">The target property name.</param>
     /// <returns>The resulting argument.</returns>
-    private static string[] GetStringArrayArgument(Dictionary<string, string> argsMap, string propertyName)
+    public static string[] GetStringArrayArgument<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(Dictionary<string, string> argsMap, string propertyName)
     {
-        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        if (argsMap.TryGetValue(GetCommandLineArgumentName<GeneratorArgs>(propertyName), out string? argumentValue))
         {
             return argumentValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
-        throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName);
+        throw WellKnownGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
     }
 
     /// <summary>
@@ -121,14 +114,14 @@ internal partial class ImplGeneratorArgs
     /// <param name="argsMap">The input map with raw arguments.</param>
     /// <param name="propertyName">The target property name.</param>
     /// <returns>The resulting argument.</returns>
-    private static string GetStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    public static string GetStringArgument<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(Dictionary<string, string> argsMap, string propertyName)
     {
-        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        if (argsMap.TryGetValue(GetCommandLineArgumentName<GeneratorArgs>(propertyName), out string? argumentValue))
         {
             return argumentValue;
         }
 
-        throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName);
+        throw WellKnownGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
     }
 
     /// <summary>
@@ -137,9 +130,9 @@ internal partial class ImplGeneratorArgs
     /// <param name="argsMap">The input map with raw arguments.</param>
     /// <param name="propertyName">The target property name.</param>
     /// <returns>The resulting argument.</returns>
-    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    public static string? GetNullableStringArgument<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(Dictionary<string, string> argsMap, string propertyName)
     {
-        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        if (argsMap.TryGetValue(GetCommandLineArgumentName<GeneratorArgs>(propertyName), out string? argumentValue))
         {
             return argumentValue;
         }
@@ -148,14 +141,33 @@ internal partial class ImplGeneratorArgs
     }
 
     /// <summary>
+    /// Parses an <see cref="int"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    public static int GetInt32Argument<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName<GeneratorArgs>(propertyName), out string? argumentValue))
+        {
+            if (int.TryParse(argumentValue, out int parsedValue))
+            {
+                return parsedValue;
+            }
+        }
+
+        throw WellKnownGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
+    }
+
+    /// <summary>
     /// Parses a <see cref="bool"/> argument.
     /// </summary>
     /// <param name="argsMap">The input map with raw arguments.</param>
     /// <param name="propertyName">The target property name.</param>
     /// <returns>The resulting argument.</returns>
-    private static bool GetBooleanArgument(Dictionary<string, string> argsMap, string propertyName)
+    public static bool GetBooleanArgument<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] GeneratorArgs>(Dictionary<string, string> argsMap, string propertyName)
     {
-        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        if (argsMap.TryGetValue(GetCommandLineArgumentName<GeneratorArgs>(propertyName), out string? argumentValue))
         {
             if (bool.TryParse(argumentValue, out bool parsedValue))
             {
@@ -163,6 +175,6 @@ internal partial class ImplGeneratorArgs
             }
         }
 
-        throw WellKnownImplExceptions.ResponseFileArgumentParsingError(propertyName);
+        throw WellKnownGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
     }
 }
