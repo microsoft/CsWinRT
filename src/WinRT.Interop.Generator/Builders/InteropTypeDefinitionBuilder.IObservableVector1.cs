@@ -4,7 +4,6 @@
 using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
@@ -178,72 +177,22 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                 eventHandlerEventSourceType);
 
-            // Define the backing field for 'VectorChangedTable'
-            methodsType.Fields.Add(new FieldDefinition(
-                name: "<VectorChangedTable>k__BackingField"u8,
-                attributes: FieldAttributes.Private | FieldAttributes.Static,
-                fieldType: conditionalWeakTableType.MakeModifierType(interopReferences.IsVolatile, isRequired: true).Import(module)));
+            // Define the lazy 'VectorChangedTable' property for the conditional weak table
+            InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
+                propertyName: "VectorChangedTable",
+                index: 2, // Arbitrary index, just copied from what Roslyn does here
+                propertyType: conditionalWeakTableType,
+                interopReferences: interopReferences,
+                module: module,
+                backingField: out FieldDefinition vectorChangedTableField,
+                factoryMethod: out MethodDefinition makeVectorChangedMethod,
+                getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
+                propertyDefinition: out PropertyDefinition vectorChangedTableProperty);
 
-            // Define the '<get_VectorChangedTable>g__MakeVectorChanged|2_0' method as follows:
-            //
-            // [MethodImpl(MethodImplOptions.NoInlining)]
-            // public ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>> <get_VectorChangedTable>g__MakeVectorChanged|2_0()
-            MethodDefinition makeVectorChangedMethod = new(
-                name: "<get_VectorChangedTable>g__MakeVectorChanged|2_0"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
-            {
-                NoInlining = true,
-                CilInstructions =
-                {
-                    // _ = Interlocked.CompareExchange(ref <VectorChangedTable>k__BackingField, value: new(), comparand: null);
-                    { Ldsflda, methodsType.Fields[0] },
-                    { Newobj, conditionalWeakTableType.ToTypeDefOrRef().CreateConstructorReference(module.CorLibTypeFactory).Import(module) },
-                    { Ldnull },
-                    { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(conditionalWeakTableType).Import(module) },
-                    { Pop },
-
-                    // return <VectorChangedTable>k__BackingField;
-                    { Ldsfld, methodsType.Fields[0] },
-                    { Ret }
-                }
-            };
-
+            methodsType.Fields.Add(vectorChangedTableField);
             methodsType.Methods.Add(makeVectorChangedMethod);
-
-            // Label for the 'ret' (we are doing lazy-init for the backing 'ConditionalWeakTable<,>' field)
-            CilInstruction ret = new(Ret);
-
-            // Create the 'VectorChangedTable' getter method
-            MethodDefinition get_VectorChangedTableMethod = new(
-                name: "get_VectorChangedTable"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
-            {
-                IsAggressiveInlining = true,
-                CilInstructions =
-                {
-                    { Ldsfld, methodsType.Fields[0] },
-                    { Dup },
-                    { Brtrue_S, ret.CreateLabel() },
-                    { Pop },
-                    { Call, makeVectorChangedMethod },
-                    { ret }
-                }
-            };
-
             methodsType.Methods.Add(get_VectorChangedTableMethod);
-
-            // Create the 'VectorChangedTable' property
-            PropertyDefinition enumerator1CurrentProperty = new(
-                name: "VectorChangedTable"u8,
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_VectorChangedTableMethod))
-            {
-                GetMethod = get_VectorChangedTableMethod
-            };
-
-            methodsType.Properties.Add(enumerator1CurrentProperty);
+            methodsType.Properties.Add(vectorChangedTableProperty);
 
             // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>.GetOrAdd<WindowsRuntimeObjectReference>' method
             MethodSpecification conditionalWeakTableGetOrAddMethod = interopReferences.ConditionalWeakTableGetOrAdd(
