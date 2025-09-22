@@ -320,6 +320,9 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.VectorChangedEventHandler1))
                 {
+                    // We need the marshaller type for the 'IObservableVector<T>' implementation
+                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
+
                     InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,

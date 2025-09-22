@@ -196,7 +196,7 @@ internal partial class InteropTypeDefinitionBuilder
             methodsType.Properties.Add(vectorChangedTableProperty);
 
             // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>.GetOrAdd<WindowsRuntimeObjectReference>' method
-            MethodSpecification conditionalWeakTableGetOrAddMethod = interopReferences.ConditionalWeakTableGetOrAdd(
+            MethodSpecification conditionalWeakTableGetOrAddMethod = interopReferences.ConditionalWeakTable2GetOrAdd(
                 conditionalWeakTableType: conditionalWeakTableType,
                 argType: interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
 
@@ -484,6 +484,14 @@ internal partial class InteropTypeDefinitionBuilder
                 getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
                 propertyDefinition: out PropertyDefinition vectorChangedTableProperty);
 
+            // Prepare the two exported methods
+            MethodDefinition add_VectorChangedMethod = InteropMethodDefinitionFactory.IObservableVector1Impl.add_VectorChanged(
+                vectorType: vectorType,
+                get_VectorChangedTableMethod: get_VectorChangedTableMethod,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
@@ -494,7 +502,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [add_VectorChangedMethod]);
 
             // Add the members for the conditional weak table
             implType.Fields.Add(vectorChangedTableField);

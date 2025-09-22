@@ -732,6 +732,11 @@ internal sealed class InteropReferences
     public MemberReference Attribute_ctor => field ??= Attribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="Exception.HResult"/>.
+    /// </summary>
+    public MemberReference Exceptionget_HResult => field ??= Exception.CreateMemberReference("get_HResult"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Int32));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="NotSupportedException.NotSupportedException()"/>.
     /// </summary>
     public MemberReference NotSupportedException_ctor => field ??= NotSupportedException.CreateConstructorReference(_corLibTypeFactory);
@@ -1465,6 +1470,19 @@ internal sealed class InteropReferences
             parameterTypes: [new TypeReference(_corLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToReferenceTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>AddEventHandler</c> for <see cref="EventRegistrationTokenTable1"/>.
+    /// </summary>
+    /// <param name="eventRegistrationTokenTableType">The input table type.</param>
+    public MemberReference EventRegistrationTokenTableAddEventHandler(TypeSignature eventRegistrationTokenTableType)
+    {
+        return eventRegistrationTokenTableType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("AddEventHandler"u8, MethodSignature.CreateInstance(
+                returnType: EventRegistrationToken.ToValueTypeSignature(),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
     /// </summary>
     public MemberReference ReadOnlySpan1_ctor(SzArrayTypeSignature arrayType)
@@ -1554,11 +1572,24 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.GetOrCreateValue"/>.
+    /// </summary>
+    /// <param name="conditionalWeakTableType">The input table type.</param>
+    public MemberReference ConditionalWeakTable2GetOrCreateValue(TypeSignature conditionalWeakTableType)
+    {
+        return conditionalWeakTableType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetOrCreateValue"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.GetOrAdd{TArg}(TKey, Func{TKey, TArg, TValue}, TArg)"/>.
     /// </summary>
     /// <param name="conditionalWeakTableType">The input table type.</param>
     /// <param name="argType">The argument type.</param>
-    public MethodSpecification ConditionalWeakTableGetOrAdd(TypeSignature conditionalWeakTableType, TypeSignature argType)
+    public MethodSpecification ConditionalWeakTable2GetOrAdd(TypeSignature conditionalWeakTableType, TypeSignature argType)
     {
         return conditionalWeakTableType
             .ToTypeDefOrRef()
