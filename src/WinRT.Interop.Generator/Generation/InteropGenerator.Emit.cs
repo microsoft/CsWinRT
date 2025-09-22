@@ -1258,6 +1258,15 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IObservableVector1.ImplType(
+                    vectorType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
                     vectorType: typeSignature,
                     interopDefinitions: interopDefinitions,

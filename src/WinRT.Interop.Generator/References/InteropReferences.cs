@@ -667,6 +667,11 @@ internal sealed class InteropReferences
     public TypeReference EventRegistrationToken => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationToken"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationTokenTable&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference EventRegistrationTokenTable1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationTokenTable`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;</c>.
     /// </summary>
     public TypeReference EventSource1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventSource`1"u8);

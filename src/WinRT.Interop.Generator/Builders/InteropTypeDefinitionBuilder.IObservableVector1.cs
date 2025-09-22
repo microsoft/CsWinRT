@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -440,6 +441,66 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             interfaceImplType.Events.Add(observableVector1VectorChangedProperty);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="vectorType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature vectorType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // Prepare the 'VectorChangedEventHandler<<ELEMENT_TYPE>>' signature
+            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+
+            // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+                vectorType,
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+
+            // Define the lazy 'VectorChangedTable' property for the conditional weak table
+            InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
+                propertyName: "VectorChangedTable",
+                index: 8, // Arbitrary index, just copied from what Roslyn does here
+                propertyType: conditionalWeakTableType,
+                interopReferences: interopReferences,
+                module: module,
+                backingField: out FieldDefinition vectorChangedTableField,
+                factoryMethod: out MethodDefinition makeVectorChangedMethod,
+                getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
+                propertyDefinition: out PropertyDefinition vectorChangedTableProperty);
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
+                name: InteropUtf8NameFactory.TypeName(vectorType, "Impl"),
+                vftblType: interopDefinitions.IObservableVectorVftbl,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: []);
+
+            // Add the members for the conditional weak table
+            implType.Fields.Add(vectorChangedTableField);
+            implType.Methods.Add(makeVectorChangedMethod);
+            implType.Methods.Add(get_VectorChangedTableMethod);
+            implType.Properties.Add(vectorChangedTableProperty);
         }
 
         /// <summary>
