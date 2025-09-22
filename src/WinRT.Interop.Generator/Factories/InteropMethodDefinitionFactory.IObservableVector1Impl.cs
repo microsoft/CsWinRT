@@ -79,7 +79,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'VectorChangedEventHandler<<ELEMENT_TYPE>>' (the 'managedHandler' object)
             //   [2]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_unboxedValue = new(vectorType.Import(module));
-            CilLocalVariable loc_1_managedHandler = new(interopReferences.VectorChangedEventHandler1.MakeGenericInstanceType(elementType).Import(module));
+            CilLocalVariable loc_1_managedHandler = new(eventHandlerType.Import(module));
             CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Create a method body for the 'add_VectorChanged' method
@@ -150,6 +150,127 @@ internal partial class InteropMethodDefinitionFactory
             };
 
             return add_VectorChangedMethod;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>remove_VectorChanged</c> export method.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="TypeSignature"/> for the vector type.</param>
+        /// <param name="get_VectorChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition remove_VectorChanged(
+            GenericInstanceTypeSignature vectorType,
+            MethodDefinition get_VectorChangedTableMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // Prepare the 'VectorChangedEventHandler<<ELEMENT_TYPE>>' signature
+            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+
+            // Prepare the 'EventRegistrationTokenTable<VectorChangedEventHandler<ELEMENT_TYPE>>' signature
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+
+            // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+                vectorType,
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+
+            // Define the 'remove_VectorChanged' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int remove_VectorChanged(void* thisPtr, EventRegistrationToken token)
+            MethodDefinition remove_VectorChangedMethod = new(
+                name: "remove_VectorChanged"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.EventRegistrationToken.ToValueTypeSignature().Import(module)]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Jump labels
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldc_i4_0_return0 = new(Ldc_I4_0);
+            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult.Import(module));
+            CilInstruction ldloc_3_returnHResult = new(Ldloc_3);
+
+            // Declare the local variables:
+            //   [0]: '<VECTOR_TYPE>' (the 'unboxedValue' object)
+            //   [1]: 'EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' (the 'table' object)
+            //   [2]: 'VectorChangedEventHandler<<ELEMENT_TYPE>>' (the 'managedHandler' object)
+            //   [3]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_unboxedValue = new(vectorType.Import(module));
+            CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType.Import(module));
+            CilLocalVariable loc_2_managedHandler = new(eventHandlerType.Import(module));
+            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Create a method body for the 'add_VectorChanged' method
+            remove_VectorChangedMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_unboxedValue, loc_1_table, loc_2_managedHandler, loc_3_hresult },
+                Instructions =
+                {
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType).Import(module) },
+                    { Stloc_0 },
+
+                    // if (unboxedValue != null && VectorChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>> table))
+                    { Ldloc_0 },
+                    { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
+                    { Call, get_VectorChangedTableMethod },
+                    { Ldloc_0 },
+                    { Ldloca_S, loc_1_table },
+                    { Callvirt, interopReferences.ConditionalWeakTable2TryGetValue(conditionalWeakTableType).Import(module) },
+                    { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
+
+                    // if (table.RemoveEventHandler(token, out VectorChangedEventHandler<<ELEMENT_TYPE>> managedHandler))
+                    { Ldloc_1 },
+                    { Ldarg_1 },
+                    { Ldloca_S, loc_2_managedHandler },
+                    { Callvirt, interopReferences.EventRegistrationTokenTableRemoveEventHandler(eventRegistrationTokenTableType).Import(module) },
+                    { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
+
+                    // unboxedValue.VectorChanged -= managedHandler;
+                    { Ldloc_0 },
+                    { Ldloc_2 },
+                    { Callvirt, interopReferences.IObservableVector1remove_VectorChanged(elementType).Import(module) },
+
+                    // Return S_OK
+                    { ldc_i4_0_return0 },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { callvirt_catchHResult },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [2]
+                    { ldloc_3_returnHResult },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = callvirt_catchHResult.CreateLabel(),
+                        HandlerStart = callvirt_catchHResult.CreateLabel(),
+                        HandlerEnd = ldloc_3_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            return remove_VectorChangedMethod;
         }
     }
 }

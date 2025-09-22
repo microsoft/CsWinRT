@@ -1483,6 +1483,21 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>RemoveEventHandler</c> for <see cref="EventRegistrationTokenTable1"/>.
+    /// </summary>
+    /// <param name="eventRegistrationTokenTableType">The input table type.</param>
+    public MemberReference EventRegistrationTokenTableRemoveEventHandler(TypeSignature eventRegistrationTokenTableType)
+    {
+        return eventRegistrationTokenTableType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("RemoveEventHandler"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    EventRegistrationToken.ToValueTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Type, 0).MakeByReferenceType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
     /// </summary>
     public MemberReference ReadOnlySpan1_ctor(SzArrayTypeSignature arrayType)
@@ -1582,6 +1597,21 @@ internal sealed class InteropReferences
             .CreateMemberReference("GetOrCreateValue"u8, MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.TryGetValue"/>.
+    /// </summary>
+    /// <param name="conditionalWeakTableType">The input table type.</param>
+    public MemberReference ConditionalWeakTable2TryGetValue(TypeSignature conditionalWeakTableType)
+    {
+        return conditionalWeakTableType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]));
     }
 
     /// <summary>

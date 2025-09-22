@@ -484,12 +484,17 @@ internal partial class InteropTypeDefinitionBuilder
                 getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
                 propertyDefinition: out PropertyDefinition vectorChangedTableProperty);
 
-            // Prepare the two exported methods
             MethodDefinition add_VectorChangedMethod = InteropMethodDefinitionFactory.IObservableVector1Impl.add_VectorChanged(
                 vectorType: vectorType,
                 get_VectorChangedTableMethod: get_VectorChangedTableMethod,
                 interopReferences: interopReferences,
                 emitState: emitState,
+                module: module);
+
+            MethodDefinition remove_VectorChangedMethod = InteropMethodDefinitionFactory.IObservableVector1Impl.remove_VectorChanged(
+                vectorType: vectorType,
+                get_VectorChangedTableMethod: get_VectorChangedTableMethod,
+                interopReferences: interopReferences,
                 module: module);
 
             Impl(
@@ -502,7 +507,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: [add_VectorChangedMethod]);
+                vtableMethods: [add_VectorChangedMethod, remove_VectorChangedMethod]);
 
             // Add the members for the conditional weak table
             implType.Fields.Add(vectorChangedTableField);
