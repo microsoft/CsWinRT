@@ -31,6 +31,7 @@
   </Folder>
   <Folder Name="/Generator/">
     <Project Path="Generator/WinRT.Generator/WinRT.Generator.shproj" Id="2b87e3dd-4d21-44f4-a1b8-b11b61a881a7" />
+    <Project Path="Generator/WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="09cfcdae-feec-490b-af59-ade296846cac" />
     <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
     <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   </Folder>

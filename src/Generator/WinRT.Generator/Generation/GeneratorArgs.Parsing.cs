@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
-using WindowsRuntime.Generator.Attributes;
 using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 using WindowsRuntime.Generator.Errors;
 
 #pragma warning disable IDE0046

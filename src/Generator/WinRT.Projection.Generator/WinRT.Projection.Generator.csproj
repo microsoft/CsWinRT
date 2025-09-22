@@ -12,10 +12,10 @@
     <StackTraceSupport>false</StackTraceSupport>
       
     <!-- Set the root namespace to match the other projects -->
-    <RootNamespace>WindowsRuntime.ImplGenerator</RootNamespace>
+    <RootNamespace>WindowsRuntime.ProjectionGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
-    <AssemblyName>cswinrtimplgen</AssemblyName>
+    <AssemblyName>cswinrtprojectiongen</AssemblyName>
       
     <!-- Same settings as WinRT.Runtime2 -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
@@ -37,7 +37,8 @@
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />	  
   </ItemGroup>
 
-  <Import Project="..\Generator\WinRT.Generator\WinRT.Generator.projitems" Label="Shared" />
+  <Import Project="..\WinRT.Generator\WinRT.Generator.projitems" Label="Shared" />
 </Project>
