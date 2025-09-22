@@ -186,12 +186,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the '<get_VectorChangedTable>g__MakeVectorChanged|2_0' method as follows:
             //
+            // [MethodImpl(MethodImplOptions.NoInlining)]
             // public ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>> <get_VectorChangedTable>g__MakeVectorChanged|2_0()
             MethodDefinition makeVectorChangedMethod = new(
                 name: "<get_VectorChangedTable>g__MakeVectorChanged|2_0"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
             {
+                NoInlining = true,
                 CilInstructions =
                 {
                     // _ = Interlocked.CompareExchange(ref <VectorChangedTable>k__BackingField, value: new(), comparand: null);
@@ -218,6 +220,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(conditionalWeakTableType.Import(module)))
             {
+                IsAggressiveInlining = true,
                 CilInstructions =
                 {
                     { Ldsfld, methodsType.Fields[0] },
