@@ -342,6 +342,7 @@ internal partial class InteropGenerator
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         interopReferences: interopReferences,
+                        emitState: emitState,
                         module: module,
                         eventSourceType: out _);
                 }
@@ -1381,6 +1382,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
+                    mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    factoryType: out TypeDefinition factoryType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
