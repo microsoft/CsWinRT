@@ -987,6 +987,14 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IDictionary2.Interface(
+                    dictionaryType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceType: out _);
+
                 InteropTypeDefinitionBuilder.IDictionary2.Vftbl(
                     dictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
