@@ -462,6 +462,11 @@ internal sealed class InteropReferences
     public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
     /// </summary>
     public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
@@ -2831,7 +2836,26 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateInstance(
-                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                returnType: VectorChangedEventHandler1EventSource.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [
+                    WindowsRuntimeObject.ToReferenceTypeSignature(),
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;.MapChanged</c>'s getter.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMapMethodsImpl2MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
                 parameterTypes: [
                     WindowsRuntimeObject.ToReferenceTypeSignature(),
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));

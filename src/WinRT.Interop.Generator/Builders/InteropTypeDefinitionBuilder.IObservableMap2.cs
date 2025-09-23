@@ -5,7 +5,6 @@ using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using CommunityToolkit.HighPerformance;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -136,6 +135,97 @@ internal partial class InteropTypeDefinitionBuilder
             _ = cctor.CilInstructions.Add(Stsfld, factoryType.Fields[1]);
 
             _ = cctor.CilInstructions.Add(Ret);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="eventSourceFactoryType">The type returned by <see cref="EventSourceFactory"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="methodsType">The resulting methods type.</param>
+        public static void Methods(
+            GenericInstanceTypeSignature mapType,
+            TypeDefinition eventSourceFactoryType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition methodsType)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            // We're declaring an 'internal abstract class' type
+            methodsType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
+                name: InteropUtf8NameFactory.TypeName(mapType, "Methods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).Import(module).ToTypeDefOrRef()) }
+            };
+
+            module.TopLevelTypes.Add(methodsType);
+
+            // Prepare the 'MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>' signature
+            TypeSignature eventHandlerEventSourceType = interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType);
+
+            // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>>' signature
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+                interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                eventHandlerEventSourceType);
+
+            // Define the lazy 'MapChangedTable' property for the conditional weak table
+            InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
+                propertyName: "MapChangedTable",
+                index: 2, // Arbitrary index, just copied from what Roslyn does here
+                propertyType: conditionalWeakTableType,
+                interopReferences: interopReferences,
+                module: module,
+                backingField: out FieldDefinition mapChangedTableField,
+                factoryMethod: out MethodDefinition makeMapChangedMethod,
+                getAccessorMethod: out MethodDefinition get_MapChangedTableMethod,
+                propertyDefinition: out PropertyDefinition mapChangedTableProperty);
+
+            methodsType.Fields.Add(mapChangedTableField);
+            methodsType.Methods.Add(makeMapChangedMethod);
+            methodsType.Methods.Add(get_MapChangedTableMethod);
+            methodsType.Properties.Add(mapChangedTableProperty);
+
+            // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>>.GetOrAdd<WindowsRuntimeObjectReference>' method
+            MethodSpecification conditionalWeakTableGetOrAddMethod = interopReferences.ConditionalWeakTable2GetOrAdd(
+                conditionalWeakTableType: conditionalWeakTableType,
+                argType: interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
+
+            // Create the 'MapChanged' getter method
+            MethodDefinition mapChangedMethod = new(
+                name: "MapChanged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: eventHandlerEventSourceType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+            {
+                CilInstructions =
+                {
+                    { Call, get_MapChangedTableMethod },
+                    { Ldarg_0 },
+                    { Ldsfld, eventSourceFactoryType.GetField("Value"u8) },
+                    { Ldarg_1 },
+                    { Callvirt, conditionalWeakTableGetOrAddMethod.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'IObservableMapMethodsImpl<TKey, TValue>.MapChanged' method
+            methodsType.AddMethodImplementation(
+                declaration: interopReferences.IObservableMapMethodsImpl2MapChanged(keyType, valueType).Import(module),
+                method: mapChangedMethod);
         }
     }
 }
