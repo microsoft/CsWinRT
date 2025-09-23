@@ -168,12 +168,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="mapMethodsType">The resulting methods type.</param>
         public static void IMapMethods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition mapMethodsType)
         {
@@ -191,6 +193,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             module.TopLevelTypes.Add(mapMethodsType);
+
+            // Track the type (it's needed by 'IObservableMap<K, V>')
+            emitState.TrackTypeDefinition(mapMethodsType, dictionaryType, "IMapMethods");
 
             // Define the 'HasKey' method as follows:
             //

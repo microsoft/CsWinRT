@@ -1009,6 +1009,7 @@ internal partial class InteropGenerator
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
 
@@ -1399,6 +1400,14 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.NativeObject(
+                    mapType: typeSignature,
+                    mapMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

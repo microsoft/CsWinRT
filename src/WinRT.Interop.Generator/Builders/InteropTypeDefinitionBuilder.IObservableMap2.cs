@@ -227,5 +227,48 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IObservableMapMethodsImpl2MapChanged(keyType, valueType).Import(module),
                 method: mapChangedMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature mapType,
+            TypeDefinition mapMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            // Get the base interfaces for the current element type
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeObservableMap<<KEY_TYPE>, <VALUE_TYPE>, ...>'
+            TypeSignature windowsRuntimeObservableMap2Type = interopReferences.WindowsRuntimeObservableMap7.MakeGenericReferenceType(
+                keyType,
+                valueType,
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(dictionaryType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(dictionaryType, "IMapMethods").ToReferenceTypeSignature(),
+                mapMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: mapType,
+                nativeObjectBaseType: windowsRuntimeObservableMap2Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
     }
 }
