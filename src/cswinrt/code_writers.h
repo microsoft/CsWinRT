@@ -3596,7 +3596,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
     )");
     }
 
-    void write_convert_to_unmanaged_method(writer& w, TypeDef const& type)
+    void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -3695,7 +3695,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 }, ",\n", type.FieldList()));
     }
 
-    void write_convert_to_managed_method(writer& w, TypeDef const& type)
+    void write_convert_to_managed_method_struct(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -3759,7 +3759,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         },
                         [&](generic_type_instance const& td)
                         {
-                            XLANG_ASSERT(td.generic_args.size() == 1);
+                            XLANG_ASSERT(td.generic_args.size() == 1);  // Only applicable to structs
                             call(td.generic_args[0],
                                 [&](fundamental_type const& gtd)
                                 {
@@ -3797,7 +3797,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 }, ",\n", type.FieldList()));
     }
 
-    void write_dipose_method(writer& w, TypeDef const& type)
+    void write_dipose_method_struct(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -3825,10 +3825,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             switch (get_category(td))
                             {
                             case category::interface_type:
-                                w.write("// Unsupported interface_type for %\n", fieldName);
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
                                 break;
                             case category::class_type:
-                                w.write("// TODO: class_type %\n", fieldName);
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
                                 break;
                             case category::delegate_type:
                                 w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
@@ -3852,11 +3852,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         },
                         [&](generic_type_instance td)
                         {
-                            XLANG_ASSERT(td.generic_args.size() == 1);
+                            XLANG_ASSERT(td.generic_args.size() == 1); // Only applicable to structs
                             call(td.generic_args[0],
                                 [&](fundamental_type)
                                 {
-                                    w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);", fieldName);
+                                    w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
                                 },
                                 [&](auto const&)
                                 {
@@ -3893,9 +3893,9 @@ public static unsafe class %Marshaller
         
         if (!is_type_blittable(type))
         {
-            write_convert_to_unmanaged_method(w, type);
-            write_convert_to_managed_method(w, type);
-            write_dipose_method(w, type);
+            write_convert_to_unmanaged_method_struct(w, type);
+            write_convert_to_managed_method_struct(w, type);
+            write_dipose_method_struct(w, type);
         }
 
         w.write(
