@@ -6,9 +6,10 @@ using System;
 namespace WindowsRuntime;
 
 /// <summary>
-/// Identifies an assembly as a Windows Runtime reference assembly, which contains metadata but no executable code.
-/// This is analogous to <see cref="System.Runtime.CompilerServices.ReferenceAssemblyAttribute"/>, but specifically
-/// for reference assemblies for generated Windows Runtime projections for a given Windows Runtime metadata file.
+/// Identifies an assembly as containing generated Windows Runtime APIs from a given Windows Runtime metadata file
+/// (.winmd). The annotated assembly can either be a reference assembly, which contains metadata but no executable code
+/// (analogous to <see cref="System.Runtime.CompilerServices.ReferenceAssemblyAttribute"/>), or an implementation assembly
+/// for Windows Runtime projections consumed directly from a local project reference.
 /// </summary>
 /// <remarks>
 /// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly.
