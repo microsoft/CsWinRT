@@ -106,6 +106,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IObservableMap<>' types
+        DefineIObservableMapTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
@@ -1343,6 +1348,43 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.IObservableVectorTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIObservableMapTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropTypeDefinitionBuilder.IObservableMap2.IID(
+                    mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IObservableMapTypeCodeGenerationError(typeSignature, e);
             }
         }
     }

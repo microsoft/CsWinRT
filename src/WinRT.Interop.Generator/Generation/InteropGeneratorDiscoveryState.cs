@@ -124,7 +124,7 @@ internal sealed class InteropGeneratorDiscoveryState
     public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableVector1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iobservableVector1Types.Keys;
 
     /// <summary>
-    /// Gets all <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> types.
+    /// Gets all <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> types.
     /// </summary>
     public IReadOnlyCollection<GenericInstanceTypeSignature> IObservableMap2Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iobservableMap2Types.Keys;
 
@@ -270,9 +270,9 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
-    /// Tracks a <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> type.
+    /// Tracks a <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> type.
     /// </summary>
-    /// <param name="mapType">The <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c> type.</param>
+    /// <param name="mapType">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> type.</param>
     public void TrackIObservableMap2Type(GenericInstanceTypeSignature mapType)
     {
         ThrowIfReadOnly();
