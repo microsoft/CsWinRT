@@ -483,5 +483,35 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out proxyType);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IObservableMap&lt;K,V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature mapType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: $"Windows.Foundation.Collections.IObservableMap`2<{keyType},{valueType}>", // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: mapType,
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
+                interfaceTypeMapSourceType: mapType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }
