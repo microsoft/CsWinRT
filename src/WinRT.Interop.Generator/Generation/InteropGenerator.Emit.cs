@@ -338,6 +338,9 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
                 {
+                    // We need the marshaller type for the 'IObservableMap<K, V>' implementation
+                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
+
                     InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
