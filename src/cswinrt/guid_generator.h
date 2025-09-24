@@ -1,3 +1,9 @@
+// Copyright (C) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+// Copied from 
+// https://github.com/microsoft/cppwinrt/blob/master/strings/base_identity.h
+// https://github.com/microsoft/cppwinrt/blob/master/natvis/type_resolver.cpp
+
 #pragma once
 #include <set>
 #include <filesystem>
