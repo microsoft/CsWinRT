@@ -1416,6 +1416,14 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.ComWrappersCallbackType(
+                    mapType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition comWrappersCallbackType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

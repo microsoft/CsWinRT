@@ -270,5 +270,32 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out nativeObjectType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="TypeSignature"/> for the vector type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="mapType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature mapType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            ComWrappersCallback(
+                runtimeClassName: mapType.FullName, // TODO
+                typeSignature: mapType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out callbackType);
+        }
     }
 }
