@@ -4450,11 +4450,6 @@ event % %;)",
                 marshaler_type.empty() && local_type == "void*";
         }
 
-        bool is_interface() const
-        {
-            return marshaler_type == "WindowsRuntimeInterfaceMarshaller";
-        }
-
         // We pass using in for .NET Standard.  Outside of .NET Standard,
         // we want our function pointers to be blittable and be able to disable
         // runtime marshaling, so we use ptrs with the managed function calling the
@@ -4516,13 +4511,11 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 param_type);
             }
 
-            w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged(%%%%);\n",
+            w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged(%%);\n",
                 get_marshaler_local(w),
                 interop_dll_type != "" ? "" : marshaler_type + ".",
                 interop_dll_type != "" ? "null, " : "",
-                param_name,
-                interface_guid != "" ? ", " : "",
-                interface_guid);
+                param_name);
         }
 
         void write_locals2(writer& w) const
@@ -4727,19 +4720,10 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 return;
             }
 
-            if (is_interface() && !is_generic())
-            {
-                w.write("(%) WindowsRuntimeObjectMarshaller.ConvertToManaged(%)",
-                    param_type,
-                    source);
-            }
-            else
-            {
-                w.write("%.ConvertToManaged(%%)",
-                    marshaler_type,
-                    is_generic() ? "null, " : "",
-                    source);
-            }
+            w.write("%.ConvertToManaged(%%)",
+                marshaler_type,
+                is_generic() ? "null, " : "",
+                source);
         }
 
         void write_from_managed(writer& w, std::string_view source) const
@@ -4891,7 +4875,7 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                m.marshaler_type = "WindowsRuntimeInterfaceMarshaller";
+                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -6019,11 +6003,6 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             return category >= param_category::pass_array;
         }
 
-        bool is_interface() const
-        {
-            return marshaler_type == "WindowsRuntimeInterfaceMarshaller";
-        }
-
         bool is_marshal_by_object_reference_value() const
         {
             return marshal_by_object_reference_value;
@@ -6150,13 +6129,6 @@ interop_dll_type);
                     marshaler_type,
                     param_name, bind<write_escaped_identifier>(param_name));
             }
-            else if (is_interface())
-            {
-                w.write("(%) WindowsRuntimeObjectMarshaller.ConvertToManaged(%%)",
-                    param_type,
-                    category == param_category::ref ? "*" : "",
-                    bind<write_escaped_identifier>(param_name));
-            }
             else
             {
                 w.write("%ConvertToManaged(%%%)",
@@ -6216,14 +6188,6 @@ interop_dll_type);
                     }
                 }
             }
-            else if (is_interface())
-            {
-                w.write("%.ConvertToUnmanaged<%>(%, %).DetachThisPtrUnsafe();",
-                    marshaler_type,
-					param_type,
-                    param_local,
-                    interface_guid);
-            }
             else
             {
                 w.write("%%.ConvertToUnmanaged%(%)%;",
@@ -6270,7 +6234,7 @@ interop_dll_type);
                     }
                     break;
                 case category::interface_type:
-                    m.marshaler_type = "WindowsRuntimeInterfaceMarshaller";
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.marshal_by_object_reference_value = true;
@@ -7432,241 +7396,51 @@ file interface % : %
             });
     }
 
-    bool write_abi_interface(writer& w, TypeDef const& type)
+    void write_interface_marshaller(writer& w, TypeDef const& type)
     {
-        bool is_generic = distance(type.GenericParam()) > 0;
-        XLANG_ASSERT(get_category(type) == category::interface_type);
-        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
-
-        bool shouldOmitCcwCodegen = false;
-
-        // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
-        // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
-        // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
-        // We avoid this path if we want to generate IDIC implementations for them though.
-        if (!is_generic &&
-            (is_exclusive_to(type) && !settings.public_exclusiveto) &&
-            // check for !authored type
-            !(settings.component && settings.filter.includes(type)))
+        if (is_exclusive_to(type))
         {
-            bool hasOverridableAttribute = false;
-            auto exclusive_to_type = get_exclusive_to_type(type);
-            for (auto&& iface : exclusive_to_type.InterfaceImpl())
-            {
-                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto interface_type)
-                {
-                    if (type == interface_type && is_overridable(iface))
-                    {
-                        hasOverridableAttribute = true;
-                    }
-                });
-
-                if (hasOverridableAttribute)
-                {
-                    break;
-                }
-            }
-
-            if (!hasOverridableAttribute)
-            {
-                // Under normal conditions, we would stop here and just emit a minimal amount of code.
-                // However, if IDIC is requested, just continue normally, but omit the CCW generation.
-                // We know we can safely omit that because it wouldn't have normally be generated.
-                if (settings.idic_exclusiveto)
-                {
-                    shouldOmitCcwCodegen = true;
-                }
-                else
-                {
-                    // Otherwise, just write the minimal non-IDIC interface
-                    w.write(R"(%
-internal interface % : %
-{
-}
-)",
-                    bind<write_guid_attribute>(type),
-                    type_name,
-                    bind<write_type_name>(type, typedef_name_type::CCW, false));
-                    
-                    return true;
-                }
-            }
+            return;
         }
 
-        auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
-
-        std::string nongeneric_delegates = "";
-
-        std::map<std::string, required_interface> required_interfaces;
-        write_required_interface_members_for_abi_type(w, type, required_interfaces);
-
-        w.write(R"(%
-%
-internal unsafe interface % : %
+		auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
+        w.write(R"(
+[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static unsafe class %Marshaller
 {
-%%%%}
-)",
-            // Interface abi implementation
-            is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
-            bind<write_guid_attribute>(type),
-            type_name,
-            bind<write_type_name>(type, does_abi_interface_implement_ccw_interface(type) ? typedef_name_type::CCW : typedef_name_type::Projected, false),
-            // Vftbl
-            bind([&](writer& w)
-            {
-                if (shouldOmitCcwCodegen)
-                {
-                    return;
-                }
-
-                auto methods = type.MethodList();
-                if (is_generic)
-                {
-                    w.write(R"(
-public static readonly Guid PIID = %.IID;
-public static readonly IntPtr AbiToProjectionVftablePtr;
-static unsafe @()
-{
-if (RuntimeFeature.IsDynamicCodeCompiled)
-{
-#if NET8_0_OR_GREATER
-    [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
-#endif
-    [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
-    [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = "ABI types never have constructors.")]
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    static void @Fallback()
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        if (%.AbiToProjectionVftablePtr == default)
-        {
-            var initFallbackCCWVtable = (Action)typeof(@Methods<%>).MakeGenericType(%).
-            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-            CreateDelegate(typeof(Action));
-            initFallbackCCWVtable();
-        }
+        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, %Impl.IID);
     }
 
-    @Fallback();
-}
-
-AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
-}
-
-%
-public unsafe struct Vftbl
-{
-internal IInspectable.Vftbl IInspectableVftbl;
-
-public static readonly IntPtr AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
-
-public static readonly Guid PIID = %.IID;
+    public static % ConvertToManaged(void* value)
+    {
+        return (%) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
 }
 )",
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
-                        type.TypeName(),
-                        type.TypeName(),
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
-                        type.TypeName(),
-                        bind([&](writer& w)
-                        {
-                            for (auto i = 0; i < (distance(type.GenericParam()) * 2) - 1; i++)
-                            {
-                                w.write(",");
-                            }
-                        }),
-                        bind([&](writer& w)
-                        {
-                            for (auto i = 0; i < distance(type.GenericParam()); i++)
-                            {
-                                if (i != 0)
-                                {
-                                    w.write(", ");
-                                }
+    type.TypeName(),
+	projected_type,
+    bind<write_type_name>(type, typedef_name_type::ABI, false),
+    projected_type,
+	projected_type
+);
+    }
 
-                                w.write("typeof(%), Marshaler<%>.AbiType",
-                                    bind<write_generic_type_name>(i),
-                                    bind<write_generic_type_name>(i));
-                            }
-                        }),
-                        type.TypeName(),
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
-                        bind<write_guid_attribute>(type),
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false));
-
-                    nongeneric_delegates = 
-                        w.write_temp("%",
-                            bind_each([&](writer& w, MethodDef const& method) {
-                                bool signature_has_generic_parameters = false;
-                                writer::write_generic_type_name_guard g(w, [&](writer& /*w*/, uint32_t /*index*/) {
-                                    signature_has_generic_parameters = true;
-                                });
-
-                                auto delegate_definition = w.write_temp("public unsafe delegate int %(%);\n",
-                                    get_vmethod_name(w, type, method),
-                                    bind<write_abi_parameters>(method_signature{ method }));
-                                if (!signature_has_generic_parameters)
-                                {
-                                    w.write(delegate_definition);
-                                }
-                            }, methods));
-                }
-                else
-                {
-                    w.write(R"(
-public static readonly IntPtr AbiToProjectionVftablePtr;
-static unsafe @()
-{
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * %);
-*(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-%
-}
-%%%
-)",
-                    type.TypeName(),
-                    type.TypeName(),
-                    distance(methods),
-                    bind_list([&](writer& w, MethodDef const& method)
-                    {
-                        auto method_index = get_vmethod_index(method.Parent(), method);
-                        auto method_name = method.Name();
-                        w.write("((delegate* unmanaged[Stdcall]<%, int>*)AbiToProjectionVftablePtr)[%] = &Do_Abi_%_%;",
-                            bind<write_abi_parameter_types_pointer>(method_signature{ method }),
-                            method_index + 6 /* number of entries in IInspectable */,
-                            method_name,
-                            method_index);
-                    }, "\n", methods),
-                    bind_each<write_method_abi_invoke>(methods),
-                    bind_each<write_property_abi_invoke>(type.PropertyList()),
-                    bind_each<write_event_abi_invoke>(type.EventList()));
-                }
-            }),
-            bind<write_interface_members>(type),
-            "",
-            [&](writer& w) {
-                if (!is_exclusive_to(type) || settings.idic_exclusiveto)
-                {
-                    for (auto required_interface : required_interfaces)
-                    {
-                        w.write("%", required_interface.second.members);
-                    }
-                }
-            }
-        );
-
-        if (nongeneric_delegates.length() != 0)
+    void write_abi_interface(writer& w, TypeDef const& type)
+    {
+        XLANG_ASSERT(get_category(type) == category::interface_type);
+        auto is_generic = distance(type.GenericParam()) > 0;
+        if (is_generic)
         {
-            w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-internal static class %
-{
-%}
-)",
-nongenerics_class,
-nongeneric_delegates);
+            return;
         }
-        w.write("\n");
 
-        return true;
+        write_static_abi_classes(w, type);
+        write_interface_vftbl(w, type);
+        write_interface_impl(w, type);
+        write_interface_idic_impl(w, type);
+        write_interface_marshaller(w, type);
     }
 
     void write_custom_query_interface_impl(writer& w, TypeDef const& type)
