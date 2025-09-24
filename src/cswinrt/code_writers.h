@@ -3790,7 +3790,6 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-[field: MaybeNull]
 private static ConditionalWeakTable<WindowsRuntimeObject, %> _%
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -5964,7 +5963,6 @@ private static unsafe int Do_Abi_%%
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
         w.write(R"(
-[field: MaybeNull]
 private static ConditionalWeakTable<%, EventRegistrationTokenTable<%>> _%
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -6862,7 +6860,7 @@ public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, %Impl.IID);
+        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %Impl.IID);
     }
 
     public static % ConvertToManaged(void* value)
@@ -6873,6 +6871,7 @@ public static unsafe class %Marshaller
 )",
     type.TypeName(),
 	projected_type,
+    projected_type,
     bind<write_type_name>(type, typedef_name_type::ABI, false),
     projected_type,
 	projected_type
