@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ABI.Windows.Foundation.Collections;
+using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -18,6 +19,7 @@ namespace Windows.Foundation.Collections;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.collectionchange"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Collections.CollectionChange>")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
 [CollectionChangeComWrappersMarshaller]
 public enum CollectionChange
 {

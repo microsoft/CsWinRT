@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -12,6 +13,7 @@ namespace Windows.Foundation.Collections;
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IObservableVector<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable
 {
     /// <summary>
