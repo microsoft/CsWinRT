@@ -125,6 +125,45 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the add accessor for some event.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature add_EventHandler(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.EventRegistrationToken.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the remove for some event.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature remove_EventHandler(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.EventRegistrationToken.ToValueTypeSignature()]);
+    }
+
+    /// <summary>
     /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate, taking objects for both parameters.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

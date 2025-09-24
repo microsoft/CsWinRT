@@ -889,28 +889,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>'
-        MethodSignature add_VectorChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>'
-        MethodSignature remove_VectorChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.ToValueTypeSignature()]);
+        // Signatures for 'VectorChanged'
+        MethodSignature add_VectorChanged = WellKnownTypeSignatureFactory.add_EventHandler(interopReferences);
+        MethodSignature remove_VectorChanged = WellKnownTypeSignatureFactory.remove_EventHandler(interopReferences);
 
         // The vtable layout for 'IObservableVector`1<T>' looks like this:
         //
@@ -958,28 +939,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>'
-        MethodSignature add_MapChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>'
-        MethodSignature remove_MapChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.ToValueTypeSignature()]);
+        // Signatures for 'MapChanged'
+        MethodSignature add_MapChanged = WellKnownTypeSignatureFactory.add_EventHandler(interopReferences);
+        MethodSignature remove_MapChanged = WellKnownTypeSignatureFactory.remove_EventHandler(interopReferences);
 
         // The vtable layout for 'IObservableMap`2<K, V>' looks like this:
         //
