@@ -315,11 +315,7 @@ Where <spec> is one or more of:
                                         write_winrt_exposed_type_class(w, type, false);
                                         break;
                                     case category::interface_type:
-                                        write_static_abi_classes(w, type);
-										write_interface_vftbl(w, type);
-										write_interface_impl(w, type);
-                                        write_interface_idic_impl(w, type);
-                                     //   write_abi_interface(w, type);
+                                        write_abi_interface(w, type);
                                         break;
                                     case category::struct_type:
                                         if (!is_type_blittable(type))
