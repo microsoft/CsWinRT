@@ -2848,6 +2848,40 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;.MapChanged</c>'s adder.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMap2add_MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMap2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("add_MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;.MapChanged</c>'s remover.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMap2remove_MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMap2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("remove_MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;.MapChanged</c>'s getter.
     /// </summary>
     /// <param name="keyType">The type of keys.</param>

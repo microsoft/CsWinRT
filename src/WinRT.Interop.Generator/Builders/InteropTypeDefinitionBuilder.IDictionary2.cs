@@ -812,7 +812,9 @@ internal partial class InteropTypeDefinitionBuilder
                 Interfaces =
                 {
                     new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
                 }
             };
 

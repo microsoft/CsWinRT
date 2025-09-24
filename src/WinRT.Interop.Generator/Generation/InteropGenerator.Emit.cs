@@ -1440,6 +1440,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.InterfaceImpl(
+                    mapType: typeSignature,
+                    mapMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

@@ -349,5 +349,109 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature mapType,
+            TypeDefinition mapMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            // Prepare all the necessary base interface types
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
+                name: InteropUtf8NameFactory.TypeName(mapType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(mapType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Prepare the 'MapChangedEventHandler<K, V>' signature
+            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+
+            // Create the 'IObservableMap<K, V>.MapChanged' add method
+            MethodDefinition add_IObservableMap2MapChangedMethod = new(
+                name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.add_MapChanged",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [handlerType.Import(module)]))
+            {
+                CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: mapType,
+                    handlerType: handlerType,
+                    eventMethod: mapMethodsType.GetMethod("MapChanged"u8),
+                    eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
+                    interopReferences: interopReferences,
+                    module: module)
+            };
+
+            // Add and implement the 'IObservableMap<K, V>.MapChanged' add accessor method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IObservableMap2add_MapChanged(keyType, valueType).Import(module),
+                method: add_IObservableMap2MapChangedMethod);
+
+            // Create the 'IObservableMap<K, V>.MapChanged' remove method
+            MethodDefinition remove_IObservableMap2MapChangedMethod = new(
+                name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.remove_MapChanged",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [handlerType.Import(module)]))
+            {
+                CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: mapType,
+                    handlerType: handlerType,
+                    eventMethod: mapMethodsType.GetMethod("MapChanged"u8),
+                    eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
+                    interopReferences: interopReferences,
+                    module: module)
+            };
+
+            // Add and implement the 'IObservableMap<K, V>.MapChanged' remove accessor method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IObservableMap2remove_MapChanged(keyType, valueType).Import(module),
+                method: remove_IObservableMap2MapChangedMethod);
+
+            // Create the 'IObservableMap<K, V>.MapChanged' event
+            EventDefinition observableMap2MapChangedProperty = new(
+                name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.MapChanged",
+                attributes: default,
+                eventType: handlerType.Import(module).ToTypeDefOrRef())
+            {
+                AddMethod = add_IObservableMap2MapChangedMethod,
+                RemoveMethod = remove_IObservableMap2MapChangedMethod
+            };
+
+            interfaceImplType.Events.Add(observableMap2MapChangedProperty);
+        }
     }
 }
