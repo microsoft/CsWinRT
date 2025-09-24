@@ -5,6 +5,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
 
+#pragma warning disable IDE1006
+
 namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <summary>
