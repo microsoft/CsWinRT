@@ -323,5 +323,31 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="mapComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="mapType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature mapType,
+            TypeDefinition mapComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            InteropTypeDefinitionBuilder.Marshaller(
+                typeSignature: mapType,
+                interfaceComWrappersCallbackType: mapComWrappersCallbackType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
+        }
     }
 }
