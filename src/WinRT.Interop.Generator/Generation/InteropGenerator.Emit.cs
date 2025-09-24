@@ -1447,6 +1447,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.Proxy(
+                    mapType: typeSignature,
+                    mapComWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
