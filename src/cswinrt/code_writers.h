@@ -10273,12 +10273,10 @@ R"(
 
     void write_abi_enum(writer& w, TypeDef const& type)
     {
-        w.write("%\n%\n%\n%\n%\n%\n",
+        w.write("%\n%\n%\n%\n",
             bind<write_marshaller_class>(type),
-            bind<write_com_interface_entries>(type),
             bind<write_interface_entries_impl>(type),
             bind<write_com_wrappers_marshaller_attribute_impl>(type),
-            bind<write_reference_vftbl_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
     
