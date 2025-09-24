@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,7 +27,6 @@ public static unsafe class INotifyDataErrorInfoMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource<DataErrorsChangedEventArgs>> ErrorsChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,7 +163,6 @@ public static unsafe class INotifyDataErrorInfoImpl
     /// <summary>
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, EventRegistrationTokenTable<EventHandler<DataErrorsChangedEventArgs>>> ErrorsChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

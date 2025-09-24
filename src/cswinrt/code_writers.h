@@ -3556,14 +3556,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
         GUID guid_value = generate_guid(signature);
 
-        w.write(R"(public static ref readonly Guid IID_IReferenceOf%
+        w.write(R"(public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             ReadOnlySpan<byte> data =
             [
-                )", name);
+                )");
 
         w.write_printf(
             "0x%X, 0x%X, 0x%X, 0x%X,\n                "
@@ -3596,24 +3596,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
     )");
     }
 
-    void write_marshaller_class(writer& w, TypeDef const& type)
+    void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-
-        w.write(
-R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public static unsafe class %Marshaller
-{
-)", name);
-        
-        if (!is_type_blittable(type))
-        {
-            w.write("public static % ConvertToUnmanaged(% value)\n{\nreturn new() {\n%\n};\n}\n",
-                abi_name,
-                projection_name,
-                bind_list([](writer& w, auto&& field)
+        w.write("public static % ConvertToUnmanaged(% value)\n{\nreturn new() {\n%\n};\n}\n",
+            abi_name,
+            projection_name,
+            bind_list([](writer& w, auto&& field)
                 {
                     auto semantics = get_type_semantics(field.Signature().Type());
                     auto fieldName = field.Name();
@@ -3703,108 +3693,217 @@ public static unsafe class %Marshaller
                             }
                         });
                 }, ",\n", type.FieldList()));
+    }
 
-            w.write("public static % ConvertToManaged(% value)\n{\nreturn new %(\n%\n);\n}\n",
-                projection_name,
-                abi_name,
-                projection_name,
-                bind_list([](writer& w, auto&& field)
-                    {
-                        auto semantics = get_type_semantics(field.Signature().Type());
-                        auto fieldName = field.Name();
+    void write_convert_to_managed_method_struct(writer& w, TypeDef const& type)
+    {
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        w.write("public static % ConvertToManaged(% value)\n{\nreturn new %(\n%\n);\n}\n",
+            projection_name,
+            abi_name,
+            projection_name,
+            bind_list([](writer& w, auto&& field)
+                {
+                    auto semantics = get_type_semantics(field.Signature().Type());
+                    auto fieldName = field.Name();
 
-                        call(semantics,
-                            [&](object_type)
+                    call(semantics,
+                        [&](object_type)
+                        {
+                            w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", fieldName);
+                        },
+                        [&](guid_type)
+                        {
+                            w.write("    value.%", fieldName);
+                        },
+                        [&](type_type)
+                        {
+                            w.write("    value.%", fieldName);
+                        },
+                        [&](type_definition const& td)
+                        {
+                            switch (get_category(td))
                             {
-                                w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", fieldName);
-                            },
-                            [&](guid_type)
-                            {
+                            case category::interface_type:
+                                w.write("    // Unsupported interface_type for %", fieldName);
+                                break;
+                            case category::class_type:
+                                w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                break;
+                            case category::delegate_type:
+                                w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", fieldName);
+                                break;
+                            case category::enum_type:
                                 w.write("    value.%", fieldName);
-                            },
-                            [&](type_type)
-                            {
-                                w.write("    value.%", fieldName);
-                            },
-                            [&](type_definition const& td)
-                            {
-                                switch (get_category(td))
+                                // TODO: array case
+                                break;
+                            case category::struct_type:
+                                if (!is_type_blittable(td))
                                 {
-                                case category::interface_type:
-                                    w.write("    // Unsupported interface_type for %", fieldName);
-                                    break;
-                                case category::class_type:
-                                    w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
-                                    break;
-                                case category::delegate_type:
-                                    w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", fieldName);
-                                    break;
-                                case category::enum_type:
-                                    w.write("    value.%", fieldName);
-                                    // TODO: array case
-                                    break;
-                                case category::struct_type:
-                                    if (!is_type_blittable(td))
-                                    {
-                                        w.write("    %Marshaller.ConvertToManaged(value.%)", td.TypeName(), fieldName);
-                                    }
-                                    else
-                                    {
-                                        w.write("    value.%", fieldName);
-                                    }
-                                    break;
-                                default:
-                                    w.write("    // Unsupported type_definition for %", fieldName);
-                                    break;
-                                }
-                            },
-                            [&](generic_type_index)
-                            {
-                                w.write("    // TODO: generic_type_index for %", fieldName);
-                            },
-                            [&](generic_type_instance const& td)
-                            {
-                                XLANG_ASSERT(td.generic_args.size() == 1);
-                                call(td.generic_args[0],
-                                    [&](fundamental_type const& gtd)
-                                    {
-                                        w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), fieldName);
-                                    },
-                                    [&](auto const&) { w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types"); }
-                                );
-                            },
-                            [&](generic_type_param)
-                            {
-                                w.write("    // TODO: generic_type_param for %", fieldName);
-                            },
-                            [&](fundamental_type const& type)
-                            {
-                                if (type == fundamental_type::Boolean)
-                                {
-                                    w.write("    value.% != 0", fieldName);
-                                }
-                                else if (type == fundamental_type::Char)
-                                {
-                                    w.write("    (char)value.%", fieldName);
-                                }
-                                else if (type == fundamental_type::String)
-                                {
-                                    w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", fieldName);
+                                    w.write("    %Marshaller.ConvertToManaged(value.%)", td.TypeName(), fieldName);
                                 }
                                 else
                                 {
                                     w.write("    value.%", fieldName);
                                 }
-                            });
-                    }, ",\n", type.FieldList()));
+                                break;
+                            default:
+                                w.write("    // Unsupported type_definition for %", fieldName);
+                                break;
+                            }
+                        },
+                        [&](generic_type_index)
+                        {
+                            w.write("    // TODO: generic_type_index for %", fieldName);
+                        },
+                        [&](generic_type_instance const& td)
+                        {
+                            XLANG_ASSERT(td.generic_args.size() == 1);  // Only applicable to structs
+                            call(td.generic_args[0],
+                                [&](fundamental_type const& gtd)
+                                {
+                                    w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), fieldName);
+                                },
+                                [&](auto const&)
+                                {
+                                    w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types");
+                                }
+                            );
+                        },
+                        [&](generic_type_param)
+                        {
+                            w.write("    // TODO: generic_type_param for %", fieldName);
+                        },
+                        [&](fundamental_type const& td)
+                        {
+                            if (td == fundamental_type::Boolean)
+                            {
+                                w.write("    value.% != 0", fieldName);
+                            }
+                            else if (td == fundamental_type::Char)
+                            {
+                                w.write("    (char)value.%", fieldName);
+                            }
+                            else if (td == fundamental_type::String)
+                            {
+                                w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", fieldName);
+                            }
+                            else
+                            {
+                                w.write("    value.%", fieldName);
+                            }
+                        });
+                }, ",\n", type.FieldList()));
+    }
+
+    void write_dipose_method_struct(writer& w, TypeDef const& type)
+    {
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        w.write("public static void Dipose(% value)\n{\n%}\n",
+            abi_name,
+            bind_list([](writer& w, auto&& field)
+                {
+                    auto semantics = get_type_semantics(field.Signature().Type());
+                    auto fieldName = field.Name();
+                    call(semantics,
+                        [&](object_type)
+                        {
+                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                        },
+                        [&](guid_type)
+                        {
+                            w.write("// TODO: guid_type %\n", fieldName);
+                        },
+                        [&](type_type)
+                        {
+                            w.write("// TODO: type_type %\n", fieldName);
+                        },
+                        [&](type_definition const& td)
+                        {
+                            switch (get_category(td))
+                            {
+                            case category::interface_type:
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                break;
+                            case category::class_type:
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                break;
+                            case category::delegate_type:
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                break;
+                            case category::enum_type:
+                                break;
+                            case category::struct_type:
+                                if (!is_type_blittable(td))
+                                {
+                                    w.write("%Marshaller.Dipose(value.%);\n", td.TypeName(), fieldName);
+                                }
+                                break;
+                            default:
+                                w.write("// Unsupported type_definition for %\n", fieldName);
+                                break;
+                            }
+                        },
+                        [&](generic_type_index)
+                        {
+                            w.write("// TODO: generic_type_index for %\n", fieldName);
+                        },
+                        [&](generic_type_instance td)
+                        {
+                            XLANG_ASSERT(td.generic_args.size() == 1); // Only applicable to structs
+                            call(td.generic_args[0],
+                                [&](fundamental_type)
+                                {
+                                    w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                },
+                                [&](auto const&)
+                                {
+                                    w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types");
+                                }
+                            );
+                        },
+                        [&](generic_type_param)
+                        {
+                            w.write("// TODO: generic_type_param for %\n", fieldName);
+                        },
+                        [&](fundamental_type const& type)
+                        {
+                            if (type == fundamental_type::String)
+                            {
+                                w.write("HStringMarshaller.Free((void*)value.%);\n", fieldName);
+                            }
+                        });
+                }, "", type.FieldList()));
+
+    }
+
+    void write_marshaller_class(writer& w, TypeDef const& type)
+    {
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+
+        w.write(
+R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static unsafe class %Marshaller
+{
+)", name);
+        
+        if (!is_type_blittable(type))
+        {
+            write_convert_to_unmanaged_method_struct(w, type);
+            write_convert_to_managed_method_struct(w, type);
+            write_dipose_method_struct(w, type);
         }
 
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID_IReferenceOf%);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID);
 }
-)", projection_name, name, name);
+)", projection_name, name);
 
         if (!is_type_blittable(type))
         {
@@ -3842,7 +3941,7 @@ R"(public static %? UnboxToManaged(void* value)
 R"(file static unsafe class %ReferenceImpl
 {
     [FixedAddressValueType]
-    private static readonly %ReferenceVftbl Vftbl;
+    private static readonly ReferenceVftbl Vftbl;
 
     private const int S_OK = unchecked((int)0x00000000);
     private const int E_POINTER = unchecked((int)0x80004003);
@@ -3860,7 +3959,7 @@ R"(file static unsafe class %ReferenceImpl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static int get_Value(void* thisPtr, %* result)
+    public static int get_Value(void* thisPtr, void* result)
     {
         if (result is null)
         {
@@ -3868,8 +3967,27 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
+        {)", name, name);
+        
+        if (is_type_blittable(type))
         {
-            *result = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+            w.write(
+R"(            
+            var value = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+            *(%*)result = value; // Explicit cast back to the correct type)"
+                , result_param, result_param);
+        }
+        else
+        {
+            w.write(
+R"(            
+            % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
+            var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
+            *(%*)result = value;)"
+                , projection_name, projection_name, name, result_param);
+        }
+
+     w.write(R"(
             return S_OK;
         }
         catch (Exception e)
@@ -3880,27 +3998,7 @@ R"(file static unsafe class %ReferenceImpl
 
     %
 }
-)", name, name, name, result_param, result_param, bind<write_guid_property_from_signature>(type, ireference_guid_sig));
-    }
-
-    void write_reference_vftbl_impl(writer& w, TypeDef const& type)
-    {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        w.write(
-R"([StructLayout(LayoutKind.Sequential)]
-file unsafe struct %ReferenceVftbl
-{
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
-    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, %*, int> get_Value;
-}
-)", name, is_type_blittable(type) ? projection_name : abi_name);
+)", bind<write_guid_property_from_signature>(type, ireference_guid_sig));
     }
 
     void write_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
@@ -3913,22 +4011,22 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID_IReferenceOf%).DetachThisPtrUnsafe();
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID).DetachThisPtrUnsafe();
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(%InterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
 
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID_IReferenceOf%);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID);
     }
 }
-)", name, projection_name, projection_name, name, name, name, name, is_type_blittable(type) ? projection_name : abi_name, name, name);
+)", name, projection_name, projection_name, name, name, is_type_blittable(type) ? projection_name : abi_name, name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -3939,12 +4037,12 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 R"(file static class %InterfaceEntriesImpl
 {
     [FixedAddressValueType]
-    public static readonly %InterfaceEntries Entries;
+    public static readonly ReferenceInterfaceEntries Entries;
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceOf%.IID = %ReferenceImpl.IID_IReferenceOf%;
-        Entries.IReferenceOf%.Vtable = %ReferenceImpl.Vtable;
+        Entries.IReferenceValue.IID = %ReferenceImpl.IID;
+        Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = IStringableImpl.IID;
@@ -3961,27 +4059,7 @@ R"(file static class %InterfaceEntriesImpl
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
-)", name, name, name, name, name, name, name, name);
-    }
-
-    void write_com_interface_entries(writer& w, TypeDef const& type)
-    {
-        auto name = w.write_temp("%", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
-
-        w.write(
-R"([StructLayout(LayoutKind.Sequential)]
-file struct %InterfaceEntries
-{
-    public ComInterfaceEntry IReferenceOf%;
-    public ComInterfaceEntry IPropertyValue;
-    public ComInterfaceEntry IStringable;
-    public ComInterfaceEntry IWeakReferenceSource;
-    public ComInterfaceEntry IMarshal;
-    public ComInterfaceEntry IAgileObject;
-    public ComInterfaceEntry IInspectable;
-    public ComInterfaceEntry IUnknown;
-}
-)", name, name);
+)", name, name, name, name);
     }
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
@@ -10314,12 +10392,10 @@ R"(
             }
             w.write("}\n\n");
         }
-        w.write("%\n%\n%\n%\n%\n%\n",
+        w.write("%\n%\n%\n%\n",
             bind<write_marshaller_class>(type),
-            bind<write_com_interface_entries>(type),
             bind<write_interface_entries_impl>(type),
             bind<write_com_wrappers_marshaller_attribute_impl>(type),
-            bind<write_reference_vftbl_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
 

@@ -798,6 +798,74 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
+    /// Creates a new type definition for the vtable of an 'IMapChangedEventArgs`1&lt;K&gt;' instantiation for some type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IMapChangedEventArgsVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IMapChangedEventArgsVftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, int>'
+        MethodSignature collectionChangeType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: module.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CollectionChange.MakePointerType()]);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, int>'
+        MethodSignature keyType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: module.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.Void.MakePointerType()]);
+
+        // The vtable layout for 'IMapChangedEventArgs`1<K>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT> get_CollectionChange;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_CollectionChange"u8, FieldAttributes.Public, collectionChangeType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, keyType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
     /// Creates a new type definition for the vtable of an 'IReferenceArray`1&lt;T&gt;' instantiation for some SZ array type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -888,6 +956,33 @@ internal static partial class WellKnownTypeDefinitionFactory
         interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        return interfaceEntriesType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for COM interface entries for a user-defined type.
+    /// </summary>
+    /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition interfaceEntriesType = new(
+            ns: null,
+            name: $"<UserDefinedInterfaceEntries(Count={numberOfEntries})>",
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the signature for the 'ComInterfaceEntry' type
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+
+        // Add a field for each interface entry
+        for (int i = 0; i < numberOfEntries; i++)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition($"InterfaceEntry(Index={i})", FieldAttributes.Public, comInterfaceEntryType));
+        }
 
         return interfaceEntriesType;
     }

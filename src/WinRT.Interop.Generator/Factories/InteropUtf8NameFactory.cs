@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using AsmResolver;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
@@ -23,6 +24,13 @@ internal static class InteropUtf8NameFactory
     /// <returns>The namespace to use.</returns>
     public static Utf8String TypeNamespace(TypeSignature typeSignature)
     {
+        // Special case for nested types: these don't have a namespace, as the namespace is only
+        // on the declaring type. So, find the outer-most declaring type to read the namespace.
+        if (typeSignature.TopLevelDeclaringType is ITypeDescriptor declaringType)
+        {
+            return TypeNamespace(declaringType.ToTypeSignature());
+        }
+
         // Special case when there's no namespace: just put the generated types under 'ABI'.
         // Otherwise, we just add the "ABI." prefix to the namespace of the input type.
         if (typeSignature.Namespace?.Length is not > 0)
@@ -80,11 +88,8 @@ internal static class InteropUtf8NameFactory
             // If the type is generic, append the definition name and the type arguments
             if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
             {
-                // We can skip the namespace when the indentation level is '0', as that means
-                // the type will already be defined in the same namespace (so we can omit it).
-                interpolatedStringHandler.AppendFormatted(depth == 0
-                    ? genericInstanceTypeSignature.GenericType.Name!.Value
-                    : genericInstanceTypeSignature.GenericType.FullName);
+                // Append the name of the generic type, without any type arguments (those are appended below)
+                AppendRawTypeName(ref interpolatedStringHandler, genericInstanceTypeSignature.GenericType, depth);
 
                 interpolatedStringHandler.AppendLiteral("<");
 
@@ -105,20 +110,59 @@ internal static class InteropUtf8NameFactory
             }
             else if (typeSignature is SzArrayTypeSignature arrayTypeSignature)
             {
-                // Same as below (see comments there), but we use the element type name, not the array type name
-                interpolatedStringHandler.AppendFormatted(depth == 0 ? arrayTypeSignature.BaseType.Name! : arrayTypeSignature.BaseType.FullName);
+                // Same as below, but we use the element type name, not the array type name
+                AppendRawTypeName(ref interpolatedStringHandler, arrayTypeSignature.BaseType, depth);
             }
             else
             {
-                // If the type is a type definition, append the name of the type definition.
-                // Just like with generic types, we can skip the namespace if the depth is '0'.
-                interpolatedStringHandler.AppendFormatted(depth == 0 ? typeSignature.Name! : typeSignature.FullName);
+                // Simple case for normal type signatures
+                AppendRawTypeName(ref interpolatedStringHandler, typeSignature, depth);
             }
 
             // Complete the name mangling for SZ arrays
             if (typeSignature is SzArrayTypeSignature)
             {
                 interpolatedStringHandler.AppendLiteral(">Array");
+            }
+        }
+
+        // Helper to recursively build the type name (to handle nested generic types too)
+        static void AppendRawTypeName(
+            ref DefaultInterpolatedStringHandler interpolatedStringHandler,
+            IMemberDescriptor type,
+            int depth)
+        {
+            // We can skip the namespace when the indentation level is '0', as that means
+            // the type will already be defined in the same namespace (so we can omit it).
+            if (depth > 0)
+            {
+                interpolatedStringHandler.AppendLiteral(type.FullName);
+            }
+            else if (type.DeclaringType is null)
+            {
+                // Fast path when we have a top level type
+                interpolatedStringHandler.AppendLiteral(type.Name!);
+            }
+            else
+            {
+                // Helper to recursively print all parts
+                static void AppendRawTypeName(
+                    ref DefaultInterpolatedStringHandler interpolatedStringHandler,
+                    ITypeDescriptor typeDescriptor)
+                {
+                    if (typeDescriptor.DeclaringType is ITypeDescriptor declaringType)
+                    {
+                        AppendRawTypeName(ref interpolatedStringHandler, declaringType);
+                    }
+
+                    interpolatedStringHandler.AppendLiteral(typeDescriptor.Name!);
+                    interpolatedStringHandler.AppendLiteral("+");
+                }
+
+                // If the type is nested, we need to print all declaring types in pre-order, top-down
+                AppendRawTypeName(ref interpolatedStringHandler, type.DeclaringType);
+
+                interpolatedStringHandler.AppendLiteral(type.Name!);
             }
         }
 

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -26,7 +25,6 @@ public static unsafe class INotifyCollectionChangedMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,7 +110,6 @@ public static unsafe class INotifyCollectionChangedImpl
     /// <summary>
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
-    [field: MaybeNull]
     private static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
