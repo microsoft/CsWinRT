@@ -5,6 +5,8 @@ using System;
 using System.Runtime.Versioning;
 using WindowsRuntime;
 
+#pragma warning disable IDE0060
+
 namespace Windows.Foundation.Metadata;
 
 /// <summary>
