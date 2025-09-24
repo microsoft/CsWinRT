@@ -514,7 +514,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "Impl"),
-                vftblType: interopDefinitions.IObservableVectorVftbl,
+                vftblType: interopDefinitions.IObservableMapVftbl,
                 get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
