@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ComponentModel;
+using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -15,6 +16,7 @@ namespace Windows.UI.Xaml.Interop;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typekind"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public enum TypeKind

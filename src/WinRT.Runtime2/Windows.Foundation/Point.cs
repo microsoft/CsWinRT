@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using ABI.Windows.Foundation;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
@@ -19,6 +20,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Point>")]
+[SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [PointComWrappersMarshaller]
 public struct Point : IEquatable<Point>, IFormattable
