@@ -1392,6 +1392,15 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IObservableMap2.ImplType(
+                    mapType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
                 InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
                     mapType: typeSignature,
                     interopDefinitions: interopDefinitions,

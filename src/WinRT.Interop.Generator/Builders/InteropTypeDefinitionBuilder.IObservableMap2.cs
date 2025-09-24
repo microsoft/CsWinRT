@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -452,6 +453,80 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             interfaceImplType.Events.Add(observableMap2MapChangedProperty);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IObservableMap&lt;K,V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="mapType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature mapType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            // Prepare the 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' signature
+            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+
+            // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+                mapType,
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+
+            // Define the lazy 'MapChangedTable' property for the conditional weak table
+            InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
+                propertyName: "MapChangedTable",
+                index: 8, // Arbitrary index, just copied from what Roslyn does here
+                propertyType: conditionalWeakTableType,
+                interopReferences: interopReferences,
+                module: module,
+                backingField: out FieldDefinition mapChangedTableField,
+                factoryMethod: out MethodDefinition makeMapChangedMethod,
+                getAccessorMethod: out MethodDefinition get_MapChangedTableMethod,
+                propertyDefinition: out PropertyDefinition mapChangedTableProperty);
+
+            MethodDefinition add_MapChangedMethod = InteropMethodDefinitionFactory.IObservableMap2Impl.add_MapChanged(
+                mapType: mapType,
+                get_MapChangedTableMethod: get_MapChangedTableMethod,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            MethodDefinition remove_MapChangedMethod = InteropMethodDefinitionFactory.IObservableMap2Impl.remove_MapChanged(
+                mapType: mapType,
+                get_MapChangedTableMethod: get_MapChangedTableMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
+                name: InteropUtf8NameFactory.TypeName(mapType, "Impl"),
+                vftblType: interopDefinitions.IObservableVectorVftbl,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: [add_MapChangedMethod, remove_MapChangedMethod]);
+
+            // Add the members for the conditional weak table
+            implType.Fields.Add(mapChangedTableField);
+            implType.Methods.Add(makeMapChangedMethod);
+            implType.Methods.Add(get_MapChangedTableMethod);
+            implType.Properties.Add(mapChangedTableProperty);
         }
 
         /// <summary>
