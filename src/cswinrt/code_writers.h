@@ -4064,16 +4064,18 @@ R"(file static class %InterfaceEntriesImpl
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
-        auto ns = type.TypeNamespace();
-        auto name = type.TypeName();
-        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
+        auto abi_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        auto target = is_type_blittable(type) ? projection_name : abi_name;
         w.write(
-R"([assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<%.%>",
+R"(#pragma warning disable IL2026
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.IReference<%>",
     target: typeof(%),
     trimTarget: typeof(%))]
-)", ns, name, projection_name, projection_name);
+#pragma warning restore IL2026
 
+)", projection_name, target, projection_name);
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
