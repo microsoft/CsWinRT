@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.Versioning;
 using ABI.Windows.Foundation.Collections;
+using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -18,6 +20,8 @@ namespace Windows.Foundation.Collections;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.collectionchange"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Collections.CollectionChange>")]
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
 [CollectionChangeComWrappersMarshaller]
 public enum CollectionChange
 {

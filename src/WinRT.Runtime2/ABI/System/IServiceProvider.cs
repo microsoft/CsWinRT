@@ -16,6 +16,25 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.IServiceProvider"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IServiceProviderMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IServiceProvider? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::System.IServiceProvider>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.IServiceProvider? ConvertToManaged(void* value)
+    {
+        return (global::System.IServiceProvider?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -77,6 +96,11 @@ public static unsafe class IServiceProviderImpl
 
         Vftbl.GetService = &GetService;
     }
+
+    /// <summary>
+    /// Gets the IID for <see cref="global::System.IServiceProvider"/>.
+    /// </summary>
+    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IServiceProvider;
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="global::System.IServiceProvider"/> implementation.

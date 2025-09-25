@@ -8,7 +8,7 @@ using Windows.Foundation;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IDE1006, CA1416
 
 namespace WindowsRuntime.InteropServices;
 

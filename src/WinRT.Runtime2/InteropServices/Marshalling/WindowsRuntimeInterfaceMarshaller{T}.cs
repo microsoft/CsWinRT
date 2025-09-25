@@ -10,12 +10,13 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime interfaces.
 /// </summary>
-public static unsafe class WindowsRuntimeInterfaceMarshaller
+/// <typeparam name="T">The type of the interface being marshalled.</typeparam>
+public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
+    where T : class
 {
     /// <summary>
     /// Marshals a Windows Runtime interface to a <see cref="WindowsRuntimeObjectReferenceValue"/> instance.
     /// </summary>
-    /// <typeparam name="T">The type of the interface being marshalled.</typeparam>
     /// <param name="value">The input <typeparamref name="T"/> object to marshal.</param>
     /// <param name="iid">The IID for the interface being marshalled.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> instance for the requested interface.</returns>
@@ -35,8 +36,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
     /// Calling this method with <typeparamref name="T"/> being a non-interface type results in undefined behavior.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value, scoped in Guid iid)
-        where T : class
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value, scoped in Guid iid)
     {
         if (value is null)
         {

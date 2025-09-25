@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
-#pragma warning disable IDE1006
+#pragma warning disable IDE1006, CA1416
 
 namespace WindowsRuntime.InteropServices;
 
