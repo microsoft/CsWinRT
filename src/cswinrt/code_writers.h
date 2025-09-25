@@ -10304,31 +10304,31 @@ return true;
         w.write("public %(%)\n{\n%\n}\n",
             type.TypeName(),
             bind_list([](writer& w, auto&& field)
-                {
-                    w.write("% _%", field.type, field.name);
-                }, ", ", fields),
+            {
+                w.write("% _%", field.type, field.name);
+            }, ", ", fields),
             bind_each([](writer& w, auto&& field)
-                {
-                    w.write("% = _%; ", field.name, field.name);
-                }, fields));
+            {
+                w.write("% = _%; ", field.name, field.name);
+            }, fields));
 
         // properties
         w.write("%",
             bind_each([](writer& w, auto&& field)
-                {
-                    w.write("public % %\n{\n", field.type, field.name);
-                    w.write("readonly get; set;\n");
-                    w.write("}\n");
-                }, fields));
+            {
+                w.write("public % %\n{\n", field.type, field.name);
+                w.write("readonly get; set;\n");
+                w.write("}\n");
+            }, fields));
 
         // ==
         w.write("public static bool operator ==(% x, % y) => %;\n",
             projection_name,
             projection_name,
             bind_list([](writer& w, auto&& field)
-                {
-                    w.write("x.% == y.%", field.name, field.name);
-                }, " && ", fields));
+            {
+                w.write("x.% == y.%", field.name, field.name);
+            }, " && ", fields));
 
         // !=
         w.write("public static bool operator !=(% x, % y) => !(x == y);\n",
@@ -10342,9 +10342,9 @@ return true;
         // hashcode
         w.write("public override int GetHashCode() => %;\n",
             bind_list([](writer& w, auto&& field)
-                {
-                    w.write("%.GetHashCode()", field.name);
-                }, " ^ ", fields));
+            {
+                w.write("%.GetHashCode()", field.name);
+            }, " ^ ", fields));
 
         // end class
         w.write("}\n");
