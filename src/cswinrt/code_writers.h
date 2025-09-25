@@ -3550,10 +3550,8 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             [&](auto const&) {});
     }
 
-    static void write_guid_property_from_signature(writer& w, TypeDef const& type, std::string const& signature)
+    static void write_guid_property_from_signature(writer& w, std::string const& signature)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-
         GUID guid_value = generate_guid(signature);
 
         w.write(R"(public static ref readonly Guid IID
@@ -3881,15 +3879,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     void write_struct_marshaller_class(writer& w, TypeDef const& type)
     {
-        auto abi_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-        auto projection_type = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_type = w.write_temp("%", bind<write_abi_type>(type));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
 
         w.write(
 R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
-)", abi_name);
+)", type.TypeName());
         
         if (!is_type_blittable(type))
         {
@@ -3903,7 +3900,7 @@ R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
     return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID);
 }
-)", projection_type, abi_name);
+)", projection_name, type.TypeName());
 
         if (!is_type_blittable(type))
         {
@@ -3914,7 +3911,7 @@ R"(public static %? UnboxToManaged(void* value)
     return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
 }
 }
-)", projection_type, abi_type, abi_type);
+)", projection_name, abi_name, abi_name);
         }
         else
         {
@@ -3924,13 +3921,12 @@ R"(public static %? UnboxToManaged(void* value)
     return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
 }
 }
-)", projection_type, projection_type);
+)", projection_name, projection_name);
         }
     }
 
     void write_reference_impl_struct(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         auto result_param = is_type_blittable(type) ? projection_name : abi_name;
@@ -3967,14 +3963,14 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
-        {)", name, name);
+        {)", type.TypeName(), type.TypeName());
         
         if (is_type_blittable(type))
         {
             w.write(
 R"(            
             var value = (%)(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
-            *(%*)result = value; // Explicit cast back to the correct type)"
+            *(%*)result = value;)" // Explicit cast back to the correct type
                 , result_param, result_param);
         }
         else
@@ -3984,7 +3980,7 @@ R"(
             % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
             var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
             *(%*)result = value;)"
-                , projection_name, projection_name, name, result_param);
+                , projection_name, projection_name, type.TypeName(), result_param);
         }
 
      w.write(R"(
@@ -3998,12 +3994,12 @@ R"(
 
     %
 }
-)", bind<write_guid_property_from_signature>(type, ireference_guid_sig));
+)", bind<write_guid_property_from_signature>(ireference_guid_sig));
     }
 
-    void write_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
+    void write_struct_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         w.write(
@@ -4031,7 +4027,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto name = type.TypeName();
 
         w.write(
 R"(file static class %InterfaceEntriesImpl
@@ -4082,7 +4078,7 @@ R"([assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
     }
 
-    void write_winrt_classname_attribute(writer& w, TypeDef const& type)
+    void write_struct_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
         w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference<%.%>\")]\n",
             type.TypeNamespace(), type.TypeName());
@@ -4090,7 +4086,6 @@ R"([assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
-        auto ns = type.TypeNamespace();
         w.write("[ABI.%.%ComWrappersMarshaller]\n",
             type.TypeNamespace(), type.TypeName());
     }
@@ -10282,7 +10277,7 @@ return true;
             return;
         }
 
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         struct field_info
         {
             std::string type;
@@ -10310,14 +10305,14 @@ return true;
         // struct
         w.write("%%%public struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_winrt_classname_attribute>(type),
+            bind<write_struct_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
-            name,
-            name);
+            type.TypeName(),
+            type.TypeName());
 
         // ctor
         w.write("public %(%)\n{\n%\n}\n",
-            name,
+            type.TypeName(),
             bind_list([](writer& w, auto&& field)
                 {
                     w.write("% _%", field.type, field.name);
@@ -10338,8 +10333,8 @@ return true;
 
         // ==
         w.write("public static bool operator ==(% x, % y) => %;\n",
-            name,
-            name,
+            projection_name,
+            projection_name,
             bind_list([](writer& w, auto&& field)
                 {
                     w.write("x.% == y.%", field.name, field.name);
@@ -10347,12 +10342,12 @@ return true;
 
         // !=
         w.write("public static bool operator !=(% x, % y) => !(x == y);\n",
-            name,
-            name);
+            projection_name,
+            projection_name);
 
         // equals
-        w.write("public bool Equals(% other) => this == other;\n", name);
-        w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", name);
+        w.write("public bool Equals(% other) => this == other;\n", projection_name);
+        w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", projection_name);
 
         // hashcode
         w.write("public override int GetHashCode() => %;\n",
@@ -10371,7 +10366,7 @@ return true;
         if (!is_type_blittable(type))
         {
             w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% struct %\n{\n",
-                bind<write_winrt_classname_attribute>(type),
+                bind<write_struct_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false));
@@ -10387,7 +10382,7 @@ return true;
         w.write("%\n%\n%\n%\n",
             bind<write_struct_marshaller_class>(type),
             bind<write_interface_entries_impl>(type),
-            bind<write_com_wrappers_marshaller_attribute_impl>(type),
+            bind<write_struct_com_wrappers_marshaller_attribute_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
 
