@@ -6,6 +6,7 @@ using System.Collections.Frozen;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Security;
@@ -42,6 +43,7 @@ internal static partial class ImplGenerator
         typeof(AssemblyTitleAttribute).FullName!,
         typeof(TargetPlatformAttribute).FullName!,
         typeof(SupportedOSPlatformAttribute).FullName!,
+        typeof(NeutralResourcesLanguageAttribute).FullName!,
         typeof(DisableRuntimeMarshallingAttribute).FullName!,
 #pragma warning disable SYSLIB0003 // Type or member is obsolete
         typeof(SecurityPermissionAttribute).FullName!,
