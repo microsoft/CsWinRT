@@ -3879,17 +3879,17 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     }
 
-    void write_marshaller_class(writer& w, TypeDef const& type)
+    void write_struct_marshaller_class(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
-        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        auto projection_type = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_type = w.write_temp("%", bind<write_abi_type>(type));
 
         w.write(
 R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
-)", name);
+)", abi_name);
         
         if (!is_type_blittable(type))
         {
@@ -3903,7 +3903,7 @@ R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
     return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %ReferenceImpl.IID);
 }
-)", projection_name, name);
+)", projection_type, abi_name);
 
         if (!is_type_blittable(type))
         {
@@ -3914,7 +3914,7 @@ R"(public static %? UnboxToManaged(void* value)
     return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
 }
 }
-)", projection_name, abi_name, abi_name);
+)", projection_type, abi_type, abi_type);
         }
         else
         {
@@ -3924,7 +3924,7 @@ R"(public static %? UnboxToManaged(void* value)
     return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
 }
 }
-)", projection_name, projection_name);
+)", projection_type, projection_type);
         }
     }
 
@@ -10385,7 +10385,7 @@ return true;
             w.write("}\n\n");
         }
         w.write("%\n%\n%\n%\n",
-            bind<write_marshaller_class>(type),
+            bind<write_struct_marshaller_class>(type),
             bind<write_interface_entries_impl>(type),
             bind<write_com_wrappers_marshaller_attribute_impl>(type),
             bind<write_reference_impl_struct>(type));
