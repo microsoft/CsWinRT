@@ -4062,6 +4062,20 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, name, name);
     }
 
+    void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        auto ns = type.TypeNamespace();
+        auto name = type.TypeName();
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        w.write(
+R"([assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.IReference<%.%>",
+    target: typeof(%),
+    trimTarget: typeof(%))]
+)", ns, name, projection_name, projection_name);
+
+    }
+
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
