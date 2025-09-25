@@ -150,6 +150,25 @@ namespace cswinrt
         String,
     };
 
+    inline const char* to_string(fundamental_type ft) {
+        switch (ft) {
+        case fundamental_type::Boolean: return "Boolean";
+        case fundamental_type::Char:    return "Char";
+        case fundamental_type::Int8:    return "Byte";
+        case fundamental_type::UInt8:   return "Byte";
+        case fundamental_type::Int16:   return "Int16";
+        case fundamental_type::UInt16:  return "UInt16";
+        case fundamental_type::Int32:   return "Int32";
+        case fundamental_type::UInt32:  return "UInt32";
+        case fundamental_type::Int64:   return "Int64";
+        case fundamental_type::UInt64:  return "UInt64";
+        case fundamental_type::Float:   return "Float";
+        case fundamental_type::Double:  return "Double";
+        case fundamental_type::String:  return "String";
+        default:                        return "Unknown";
+        }
+    }
+
     struct generic_type_instance;
     struct object_type {};
     struct guid_type {};

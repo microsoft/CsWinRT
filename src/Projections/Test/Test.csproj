@@ -6,7 +6,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
@@ -22,8 +22,20 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- Uncomment to generate projection -->
-    <!-- <CsWinRTIncludes>TestComponent.Class;TestComponent.IClass;TestComponent.IRequiredOne;TestComponent.Blittable;TestComponent.NonBlittable</CsWinRTIncludes> -->
+	<!-- Uncomment to generate projection -->
+    <CsWinRTIncludes>
+      TestComponent.Blittable;
+      TestComponent.NonBlittable;
+      TestComponent.Nested;
+      <!--TestComponentCSharp.FlagStruct;-->
+      <!--TestComponentCSharp.EnumStruct;-->
+      TestComponentCSharp.BlittableStruct;
+      TestComponentCSharp.ComposedBlittableStruct;
+      TestComponentCSharp.NonBlittableStringStruct;
+      TestComponentCSharp.NonBlittableBoolStruct;
+      TestComponentCSharp.NonBlittableRefStruct;
+      TestComponentCSharp.ComposedNonBlittableStruct
+    </CsWinRTIncludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>

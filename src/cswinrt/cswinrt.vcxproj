@@ -53,6 +53,7 @@
   <ItemGroup>
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="code_writers.h" />
+    <ClInclude Include="guid_generator.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="settings.h" />
@@ -121,6 +122,8 @@
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
     <None Include="strings\InitalizeProjection.cs" />
+    <None Include="strings\InspectableVftbl.cs" />
+    <None Include="strings\ReferenceInterfaceEntries.cs" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />
