@@ -3604,63 +3604,64 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             bind_list([](writer& w, auto&& field)
                 {
                     auto semantics = get_type_semantics(field.Signature().Type());
-                    auto fieldName = field.Name();
+                    auto field_name = field.Name();
 
                     call(semantics,
                         [&](object_type)
                         {
-                            w.write("    % = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                            w.write("    % = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
                         },
                         [&](guid_type)
                         {
-                            w.write("    % = value.%", fieldName, fieldName);
+                            w.write("    % = value.%", field_name, field_name);
                         },
                         [&](type_type)
                         {
-                            w.write("    % = value.%", fieldName, fieldName);
+                            w.write("    % = value.%", field_name, field_name);
                         },
                         [&](type_definition const& td)
                         {
+                            auto field_abi_name = w.write_temp("%", bind<write_type_name>(td, typedef_name_type::ABI, false));
                             switch (get_category(td))
                             {
                             case category::interface_type:
-                                w.write("    // Unsupported interface_type for %", fieldName);
+                                w.write("    // Unsupported interface_type for %", field_name);
                                 break;
                             case category::class_type:
-                                w.write("    % = %.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
+                                w.write("    % = %Marshaller.ConvertToUnmanaged(value.%)", field_name, field_abi_name, field_name);
                                 break;
                             case category::delegate_type:
-                                w.write("    % = WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                                w.write("    % = WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
                                 break;
                             case category::enum_type:
-                                w.write("    % = value.%", fieldName, fieldName);
+                                w.write("    % = value.%", field_name, field_name);
                                 // TODO: consider arrays
                                 break;
                             case category::struct_type:
                                 if (!is_type_blittable(td))
                                 {
-                                    w.write("    % = %Marshaller.ConvertToUnmanaged(value.%)", fieldName, td.TypeName(), fieldName);
+                                    w.write("    % = %Marshaller.ConvertToUnmanaged(value.%)", field_name, field_abi_name, field_name);
                                 }
                                 else
                                 {
-                                    w.write("    % = value.%", fieldName, fieldName);
+                                    w.write("    % = value.%", field_name, field_name);
                                 }
                                 break;
                             default:
-                                w.write("    // Unsupported type_definition for %", fieldName);
+                                w.write("    // Unsupported type_definition for %", field_name);
                                 break;
                             }
                         },
                         [&](generic_type_index)
                         {
-                            w.write("    // TODO: generic_type_index for ", fieldName);
+                            w.write("    // TODO: generic_type_index for ", field_name);
                         },
                         [&](generic_type_instance const& td)
                         {
                             call(td.generic_args[0],
                                 [&](fundamental_type const& gtd)
                                 {
-                                    w.write("    % = (nint)ABI.System.%Marshaller.BoxToUnmanaged(value.%).DetachThisPtrUnsafe()", fieldName, to_string(gtd), fieldName);
+                                    w.write("    % = (nint)ABI.System.%Marshaller.BoxToUnmanaged(value.%).DetachThisPtrUnsafe()", field_name, to_string(gtd), field_name);
                                 },
                                 [&](auto const&) { w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types"); }
                             );
@@ -3668,26 +3669,26 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         },
                         [&](generic_type_param)
                         {
-                            w.write("    // TODO: generic_type_param for %", fieldName);
+                            w.write("    // TODO: generic_type_param for %", field_name);
                         },
                         [&](fundamental_type const& td)
                         {
                             if (td == fundamental_type::Boolean)
                             {
-                                w.write("    % = value.% ? (byte)1 : (byte)0", fieldName, fieldName);
+                                w.write("    % = value.% ? (byte)1 : (byte)0", field_name, field_name);
                             }
                             else if (td == fundamental_type::Char)
                             {
-                                w.write("    % = (ushort)value.%", fieldName, fieldName);
+                                w.write("    % = (ushort)value.%", field_name, field_name);
                             }
                             else if (td == fundamental_type::String)
                             {
                                 // TODO: replace with cswinrt 3.0
-                                w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", fieldName, fieldName);
+                                w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
                             }
                             else
                             {
-                                w.write("    % = value.%", fieldName, fieldName);
+                                w.write("    % = value.%", field_name, field_name);
                             }
                         });
                 }, ",\n", type.FieldList()));
@@ -3704,56 +3705,57 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             bind_list([](writer& w, auto&& field)
                 {
                     auto semantics = get_type_semantics(field.Signature().Type());
-                    auto fieldName = field.Name();
+                    auto field_name = field.Name();
 
                     call(semantics,
                         [&](object_type)
                         {
-                            w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", fieldName);
+                            w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", field_name);
                         },
                         [&](guid_type)
                         {
-                            w.write("    value.%", fieldName);
+                            w.write("    value.%", field_name);
                         },
                         [&](type_type)
                         {
-                            w.write("    value.%", fieldName);
+                            w.write("    value.%", field_name);
                         },
                         [&](type_definition const& td)
                         {
+                            auto field_abi_name = w.write_temp("%", bind<write_type_name>(td, typedef_name_type::ABI, false));
                             switch (get_category(td))
                             {
                             case category::interface_type:
-                                w.write("    // Unsupported interface_type for %", fieldName);
+                                w.write("    // Unsupported interface_type for %", field_name);
                                 break;
                             case category::class_type:
-                                w.write("    %.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                w.write("    %Marshaller.ConvertToManaged(value.%)", field_abi_name, field_name);
                                 break;
                             case category::delegate_type:
-                                w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", fieldName);
+                                w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", field_name);
                                 break;
                             case category::enum_type:
-                                w.write("    value.%", fieldName);
+                                w.write("    value.%", field_name);
                                 // TODO: array case
                                 break;
                             case category::struct_type:
                                 if (!is_type_blittable(td))
                                 {
-                                    w.write("    %Marshaller.ConvertToManaged(value.%)", td.TypeName(), fieldName);
+                                    w.write("    %Marshaller.ConvertToManaged(value.%)", field_abi_name, field_name);
                                 }
                                 else
                                 {
-                                    w.write("    value.%", fieldName);
+                                    w.write("    value.%", field_name);
                                 }
                                 break;
                             default:
-                                w.write("    // Unsupported type_definition for %", fieldName);
+                                w.write("    // Unsupported type_definition for %", field_name);
                                 break;
                             }
                         },
                         [&](generic_type_index)
                         {
-                            w.write("    // TODO: generic_type_index for %", fieldName);
+                            w.write("    // TODO: generic_type_index for %", field_name);
                         },
                         [&](generic_type_instance const& td)
                         {
@@ -3761,7 +3763,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             call(td.generic_args[0],
                                 [&](fundamental_type const& gtd)
                                 {
-                                    w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), fieldName);
+                                    w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), field_name);
                                 },
                                 [&](auto const&)
                                 {
@@ -3771,25 +3773,25 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         },
                         [&](generic_type_param)
                         {
-                            w.write("    // TODO: generic_type_param for %", fieldName);
+                            w.write("    // TODO: generic_type_param for %", field_name);
                         },
                         [&](fundamental_type const& td)
                         {
                             if (td == fundamental_type::Boolean)
                             {
-                                w.write("    value.% != 0", fieldName);
+                                w.write("    value.% != 0", field_name);
                             }
                             else if (td == fundamental_type::Char)
                             {
-                                w.write("    (char)value.%", fieldName);
+                                w.write("    (char)value.%", field_name);
                             }
                             else if (td == fundamental_type::String)
                             {
-                                w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", fieldName);
+                                w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", field_name);
                             }
                             else
                             {
-                                w.write("    value.%", fieldName);
+                                w.write("    value.%", field_name);
                             }
                         });
                 }, ",\n", type.FieldList()));
@@ -3804,49 +3806,49 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             bind_list([](writer& w, auto&& field)
                 {
                     auto semantics = get_type_semantics(field.Signature().Type());
-                    auto fieldName = field.Name();
+                    auto field_name = field.Name();
                     call(semantics,
                         [&](object_type)
                         {
-                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
                         },
                         [&](guid_type)
                         {
-                            w.write("// TODO: guid_type %\n", fieldName);
+                            w.write("// TODO: guid_type %\n", field_name);
                         },
                         [&](type_type)
                         {
-                            w.write("// TODO: type_type %\n", fieldName);
+                            w.write("// TODO: type_type %\n", field_name);
                         },
                         [&](type_definition const& td)
                         {
                             switch (get_category(td))
                             {
                             case category::interface_type:
-                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
                                 break;
                             case category::class_type:
-                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
                                 break;
                             case category::delegate_type:
-                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
                                 break;
                             case category::enum_type:
                                 break;
                             case category::struct_type:
                                 if (!is_type_blittable(td))
                                 {
-                                    w.write("%Marshaller.Dipose(value.%);\n", td.TypeName(), fieldName);
+                                    w.write("%Marshaller.Dipose(value.%);\n", td.TypeName(), field_name);
                                 }
                                 break;
                             default:
-                                w.write("// Unsupported type_definition for %\n", fieldName);
+                                w.write("// Unsupported type_definition for %\n", field_name);
                                 break;
                             }
                         },
                         [&](generic_type_index)
                         {
-                            w.write("// TODO: generic_type_index for %\n", fieldName);
+                            w.write("// TODO: generic_type_index for %\n", field_name);
                         },
                         [&](generic_type_instance td)
                         {
@@ -3854,7 +3856,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             call(td.generic_args[0],
                                 [&](fundamental_type)
                                 {
-                                    w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", fieldName);
+                                    w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
                                 },
                                 [&](auto const&)
                                 {
@@ -3864,13 +3866,13 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         },
                         [&](generic_type_param)
                         {
-                            w.write("// TODO: generic_type_param for %\n", fieldName);
+                            w.write("// TODO: generic_type_param for %\n", field_name);
                         },
                         [&](fundamental_type const& type)
                         {
                             if (type == fundamental_type::String)
                             {
-                                w.write("HStringMarshaller.Free((void*)value.%);\n", fieldName);
+                                w.write("HStringMarshaller.Free((void*)value.%);\n", field_name);
                             }
                         });
                 }, "", type.FieldList()));
