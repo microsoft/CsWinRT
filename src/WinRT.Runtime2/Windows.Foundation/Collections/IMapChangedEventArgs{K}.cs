@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -10,6 +11,7 @@ namespace Windows.Foundation.Collections;
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IMapChangedEventArgs<K>
 {
     /// <summary>

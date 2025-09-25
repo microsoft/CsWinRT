@@ -111,7 +111,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
                 static extern IEnumerable<object>? ConvertToManaged(
-                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>, WinRT.Interop.dll")] object? _,
+                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop.dll")] object? _,
                     void* value);
 
                 return ConvertToManaged(null, result)!;
@@ -233,7 +233,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>Marshaller, WinRT.Interop.dll")] object? _,
                 void* value);
 
             EventHandler<DataErrorsChangedEventArgs>? managedHandler = ConvertToManaged(null, handler);
@@ -284,11 +284,11 @@ public static unsafe class INotifyDataErrorInfoImpl
             IEnumerable managedResult = unboxedValue.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-            static extern void* ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>, WinRT.Interop.dll")] object? _,
+            static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
+                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop.dll")] object? _,
                 IEnumerable<object>? value);
 
-            *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult);
+            *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }
