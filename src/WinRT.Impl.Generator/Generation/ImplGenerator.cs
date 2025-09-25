@@ -42,6 +42,7 @@ internal static partial class ImplGenerator
         typeof(AssemblyTitleAttribute).FullName!,
         typeof(TargetPlatformAttribute).FullName!,
         typeof(SupportedOSPlatformAttribute).FullName!,
+        typeof(DisableRuntimeMarshallingAttribute).FullName!,
 #pragma warning disable SYSLIB0003 // Type or member is obsolete
         typeof(SecurityPermissionAttribute).FullName!,
 #pragma warning restore SYSLIB0003
