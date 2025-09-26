@@ -208,8 +208,40 @@ Where <spec> is one or more of:
                     {
                         writer w(ns);
                         writer helperWriter("WinRT");
-                        
                         w.write_begin();
+                        for (auto&& [name, type] : members.types)
+                        {
+                            currentType = name;
+                            if (!settings.filter.includes(type)) { continue; }
+                            if (get_mapped_type(ns, name))
+                            {
+                                continue;
+                            }
+                            auto guard{ w.push_generic_params(type.GenericParam()) };
+                            auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
+
+                            switch (get_category(type))
+                            {
+                            case category::class_type:
+                                // TODO class_type
+                                break;
+                            case category::delegate_type:
+                                // TODO delegate_type
+                                break;
+                            case category::enum_type:
+                                // TODO enum_type
+                                break;
+                            case category::interface_type:
+                                // TODO interface_type
+                                break;
+                            case category::struct_type:
+                                write_winrt_typemapgroup_assembly_attribute(w, type);
+                                break;
+                            }
+                        }
+                        currentType = "";
+
+                        w.write_begin_projected();
                         bool written = false;
                         bool requires_abi = false;
                         for (auto&& [name, type] : members.types)
@@ -287,7 +319,7 @@ Where <spec> is one or more of:
                         currentType = "";
                         if (written)
                         {
-                            w.write_end();
+                            w.write_end_projected();
                             if (requires_abi)
                             {
                                 w.write_begin_abi();
