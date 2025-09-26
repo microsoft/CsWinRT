@@ -3,10 +3,12 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 using WindowsRuntime;
+using WindowsRuntime.AsyncInfo;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
@@ -30,7 +32,38 @@ public static unsafe class IAsyncActionMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static global::Windows.Foundation.IAsyncAction? ConvertToManaged(void* value)
     {
-        return (global::Windows.Foundation.IAsyncAction?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::Windows.Foundation.IAsyncAction?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IAsyncActionComWrappersCallback>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IAsyncAction"/>.
+/// </summary>
+file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static unsafe bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        if (runtimeClassName.SequenceEqual("Windows.Foundation.IAsyncAction"))
+        {
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
+
+            wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+            wrapperObject = new WindowsRuntimeAsyncAction(objectReference);
+
+            return true;
+        }
+
+        wrapperFlags = CreatedWrapperFlags.None;
+
+        wrapperObject = null;
+
+        return false;
     }
 }
 
