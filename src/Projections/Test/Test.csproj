@@ -24,19 +24,19 @@
   <PropertyGroup>
 	<!-- Uncomment to generate projection -->
     <CsWinRTIncludes>
-      <!--TestComponent.Blittable;
+      TestComponent.Blittable;
       TestComponent.NonBlittable;
-      TestComponent.Nested;-->
+      TestComponent.Nested;
       TestComponentCSharp.FlagValue;
       TestComponentCSharp.EnumValue;
-      <!--TestComponentCSharp.FlagStruct;
-      TestComponentCSharp.EnumStruct;-->
-      <!--TestComponentCSharp.BlittableStruct;
+      TestComponentCSharp.FlagStruct;
+      TestComponentCSharp.EnumStruct;
+      TestComponentCSharp.BlittableStruct;
       TestComponentCSharp.ComposedBlittableStruct;
       TestComponentCSharp.NonBlittableStringStruct;
       TestComponentCSharp.NonBlittableBoolStruct;
       TestComponentCSharp.NonBlittableRefStruct;
-      TestComponentCSharp.ComposedNonBlittableStruct-->
+      TestComponentCSharp.ComposedNonBlittableStruct
     </CsWinRTIncludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
