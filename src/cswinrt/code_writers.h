@@ -3590,7 +3590,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         call(td.generic_args[0],
                             [&](fundamental_type const& gtd)
                             {
-                                w.write("    % = (nint)ABI.System.%Marshaller.BoxToUnmanaged(value.%).DetachThisPtrUnsafe()", field_name, to_string(gtd), field_name);
+                                w.write("    % = ABI.System.%Marshaller.BoxToUnmanaged(value.%).DetachThisPtrUnsafe()", field_name, to_string(gtd), field_name);
                             },
                             [&](auto const&) { w.write("    // TODO: Handle generic_type_instance for other non fundamental_type types"); }
                         );
@@ -3613,7 +3613,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         else if (td == fundamental_type::String)
                         {
                             // TODO: replace with cswinrt 3.0
-                            w.write("    % = (nint)HStringMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
+                            w.write("    % = HStringMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
                         }
                         else
                         {
@@ -3693,7 +3693,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         call(td.generic_args[0],
                             [&](fundamental_type const& gtd)
                             {
-                                w.write("    ABI.System.%Marshaller.UnboxToManaged((void*)value.%)", to_string(gtd), field_name);
+                                w.write("    ABI.System.%Marshaller.UnboxToManaged(value.%)", to_string(gtd), field_name);
                             },
                             [&](auto const&)
                             {
@@ -3717,7 +3717,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         }
                         else if (td == fundamental_type::String)
                         {
-                            w.write("    HStringMarshaller.ConvertToManaged((void*)value.%)", field_name);
+                            w.write("    HStringMarshaller.ConvertToManaged(value.%)", field_name);
                         }
                         else
                         {
@@ -3741,7 +3741,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 call(semantics,
                     [&](object_type)
                     {
-                        w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
+                        w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
                     },
                     [&](guid_type)
                     {
@@ -3756,13 +3756,13 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         switch (get_category(td))
                         {
                         case category::interface_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
+                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
                             break;
                         case category::class_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
+                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
                             break;
                         case category::delegate_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
+                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
                             break;
                         case category::enum_type:
                             break;
@@ -3787,7 +3787,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         call(td.generic_args[0],
                             [&](fundamental_type)
                             {
-                                w.write("WindowsRuntimeObjectMarshaller.Free((void*)value.%);\n", field_name);
+                                w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
                             },
                             [&](auto const&)
                             {
@@ -3803,7 +3803,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                     {
                         if (type == fundamental_type::String)
                         {
-                            w.write("HStringMarshaller.Free((void*)value.%);\n", field_name);
+                            w.write("HStringMarshaller.Free(value.%);\n", field_name);
                         }
                     });
             }, "", type.FieldList())
@@ -8973,7 +8973,7 @@ R"(%%%%[global::System.ComponentModel.EditorBrowsable(global::System.ComponentMo
     {
         if (!is_type_blittable(type))
         {
-            w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% struct %\n{\n",
+            w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% unsafe struct %\n{\n",
                 bind<write_struct_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
