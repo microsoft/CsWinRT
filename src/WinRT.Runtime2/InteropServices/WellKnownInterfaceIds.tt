@@ -36,6 +36,7 @@ var entries = new (string Name, string IID)[]
     ("ILanguageExceptionErrorInfo", "04A2DBF3-DF83-116C-0946-0812ABF6E07D"),
     ("ILanguageExceptionErrorInfo2", "5746E5C4-5B97-424C-B620-2822915734DD"),
     ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E"),
+    ("IAsyncInfo", "00000036-0000-0000-C000-000000000046"),
     ("IVectorChangedEventArgs", "575933DF-34FE-4480-AF15-07691F3D5D9B"),
     ("MUX_INotifyPropertyChanged", "90B17601-B065-586E-83D9-9ADC3A695284"),
     ("WUX_INotifyPropertyChanged", "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA"),

@@ -485,6 +485,31 @@ internal static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>IAsyncInfo</c> (00000036-0000-0000-C000-000000000046).</summary>
+    public static ref readonly Guid IID_IAsyncInfo
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x36, 0x00, 0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0xC0,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x46
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IVectorChangedEventArgs</c> (575933DF-34FE-4480-AF15-07691F3D5D9B).</summary>
     public static ref readonly Guid IID_IVectorChangedEventArgs
     {
