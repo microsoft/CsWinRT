@@ -17,6 +17,8 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(IAsyncAction), typeof(ABI.Windows.Foundation.IAsyncAction))]
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(typeof(IAsyncAction), typeof(ABI.Windows.Foundation.IAsyncActionInterfaceImpl))]
+
 namespace ABI.Windows.Foundation;
 
 /// <summary>

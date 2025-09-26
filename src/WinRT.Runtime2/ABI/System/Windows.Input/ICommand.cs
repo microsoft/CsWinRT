@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Input;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -17,34 +18,34 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.Windows.Input;
 
 /// <summary>
-/// Marshaller for <see cref="global::System.Windows.Input.ICommand"/>.
+/// Marshaller for <see cref="ICommand"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class ICommandMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Windows.Input.ICommand? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(ICommand? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Windows.Input.ICommand>.ConvertToUnmanaged(
+        return WindowsRuntimeInterfaceMarshaller<ICommand>.ConvertToUnmanaged(
             value: value,
             iid: in WellKnownInterfaceIds.IID_ICommand);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.Windows.Input.ICommand? ConvertToManaged(void* value)
+    public static ICommand? ConvertToManaged(void* value)
     {
-        return (global::System.Windows.Input.ICommand?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (ICommand?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.Windows.Input.ICommand"/>.
+/// Interop methods for <see cref="ICommand"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class ICommandMethods
 {
     /// <summary>
-    /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
+    /// The <see cref="EventSource{T}"/> table for <see cref="ICommand.CanExecuteChanged"/>.
     /// </summary>
     private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> CanExecuteChangedTable
     {
@@ -63,7 +64,7 @@ public static unsafe class ICommandMethods
         }
     }
 
-    /// <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>
+    /// <see cref="ICommand.CanExecuteChanged"/>
     public static EventHandlerEventSource CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return CanExecuteChangedTable.GetOrAdd(
@@ -72,7 +73,7 @@ public static unsafe class ICommandMethods
             factoryArgument: thisReference);
     }
 
-    /// <see cref="global::System.Windows.Input.ICommand.CanExecute"/>
+    /// <see cref="ICommand.CanExecute"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool CanExecute(WindowsRuntimeObjectReference thisReference, object? parameter)
     {
@@ -87,7 +88,7 @@ public static unsafe class ICommandMethods
         return Unsafe.BitCast<bool, byte>(result) != 0;
     }
 
-    /// <see cref="global::System.Windows.Input.ICommand.Execute"/>
+    /// <see cref="ICommand.Execute"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Execute(WindowsRuntimeObjectReference thisReference, object? parameter)
     {
@@ -101,7 +102,7 @@ public static unsafe class ICommandMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::System.Windows.Input.ICommand"/>.
+/// Binding type for <see cref="ICommand"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct ICommandVftbl
@@ -119,13 +120,13 @@ internal unsafe struct ICommandVftbl
 }
 
 /// <summary>
-/// The <see cref="global::System.Windows.Input.ICommand"/> implementation.
+/// The <see cref="ICommand"/> implementation.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class ICommandImpl
 {
     /// <summary>
-    /// The <see cref="ICommandVftbl"/> value for the managed <see cref="global::System.Windows.Input.ICommand"/> implementation.
+    /// The <see cref="ICommandVftbl"/> value for the managed <see cref="ICommand"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly ICommandVftbl Vftbl;
@@ -144,12 +145,12 @@ public static unsafe class ICommandImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.Windows.Input.ICommand"/>.
+    /// Gets the IID for <see cref="ICommand"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_ICommand;
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.Windows.Input.ICommand"/> implementation.
+    /// Gets a pointer to the managed <see cref="ICommand"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -158,15 +159,15 @@ public static unsafe class ICommandImpl
     }
 
     /// <summary>
-    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
+    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="ICommand.CanExecuteChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> CanExecuteChangedTable
+    private static ConditionalWeakTable<ICommand, EventRegistrationTokenTable<EventHandler>> CanExecuteChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> MakeCanExecuteChangedTable()
+            static ConditionalWeakTable<ICommand, EventRegistrationTokenTable<EventHandler>> MakeCanExecuteChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -186,7 +187,7 @@ public static unsafe class ICommandImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             EventHandler? managedHandler = EventHandlerMarshaller.ConvertToManaged(handler);
 
@@ -209,7 +210,7 @@ public static unsafe class ICommandImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             // This 'null' check on the unboxed object is intentional, and we're only do this specifically from 'remove_EventName' methods.
             // The reason is that for tracker objects (ie. in XAML scenarios), the framework will often mark objects as not rooted, and then
@@ -239,7 +240,7 @@ public static unsafe class ICommandImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             *result = unboxedValue.CanExecute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
 
@@ -258,7 +259,7 @@ public static unsafe class ICommandImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue.Execute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
 
@@ -272,42 +273,42 @@ public static unsafe class ICommandImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Windows.Input.ICommand"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="ICommand"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface ICommand : global::System.Windows.Input.ICommand
+file interface ICommandInterfaceImpl : ICommand
 {
     /// <inheritdoc/>
-    event EventHandler? global::System.Windows.Input.ICommand.CanExecuteChanged
+    event EventHandler? ICommand.CanExecuteChanged
     {
         add
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(ICommand).TypeHandle);
 
             ICommandMethods.CanExecuteChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(ICommand).TypeHandle);
 
             ICommandMethods.CanExecuteChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 
     /// <inheritdoc/>
-    bool global::System.Windows.Input.ICommand.CanExecute(object? parameter)
+    bool ICommand.CanExecute(object? parameter)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(ICommand).TypeHandle);
 
         return ICommandMethods.CanExecute(thisReference, parameter);
     }
 
     /// <inheritdoc/>
-    void global::System.Windows.Input.ICommand.Execute(object? parameter)
+    void ICommand.Execute(object? parameter)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(ICommand).TypeHandle);
 
         ICommandMethods.Execute(thisReference, parameter);
     }

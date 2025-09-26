@@ -16,31 +16,31 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System;
 
 /// <summary>
-/// Marshaller for <see cref="global::System.IServiceProvider"/>.
+/// Marshaller for <see cref="IServiceProvider"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IServiceProvider? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IServiceProvider? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.IServiceProvider>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
+        return WindowsRuntimeInterfaceMarshaller<IServiceProvider>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.IServiceProvider? ConvertToManaged(void* value)
+    public static IServiceProvider? ConvertToManaged(void* value)
     {
-        return (global::System.IServiceProvider?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (IServiceProvider?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.IServiceProvider"/>.
+/// Interop methods for <see cref="IServiceProvider"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMethods
 {
-    /// <see cref="global::System.IServiceProvider.GetService"/>
+    /// <see cref="IServiceProvider.GetService"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static object? GetService(WindowsRuntimeObjectReference thisReference, global::System.Type serviceType)
     {
@@ -61,7 +61,7 @@ public static unsafe class IServiceProviderMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::System.IServiceProvider"/>.
+/// Binding type for <see cref="IServiceProvider"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IServiceProviderVftbl
@@ -76,13 +76,13 @@ internal unsafe struct IServiceProviderVftbl
 }
 
 /// <summary>
-/// The <see cref="global::System.IServiceProvider"/> implementation.
+/// The <see cref="IServiceProvider"/> implementation.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderImpl
 {
     /// <summary>
-    /// The <see cref="IServiceProviderVftbl"/> value for the managed <see cref="global::System.IServiceProvider"/> implementation.
+    /// The <see cref="IServiceProviderVftbl"/> value for the managed <see cref="IServiceProvider"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IServiceProviderVftbl Vftbl;
@@ -98,12 +98,12 @@ public static unsafe class IServiceProviderImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.IServiceProvider"/>.
+    /// Gets the IID for <see cref="IServiceProvider"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IServiceProvider;
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.IServiceProvider"/> implementation.
+    /// Gets a pointer to the managed <see cref="IServiceProvider"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -122,7 +122,7 @@ public static unsafe class IServiceProviderImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.IServiceProvider>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IServiceProvider>((ComInterfaceDispatch*)thisPtr);
 
             global::System.Type? managedType = TypeMarshaller.ConvertToManaged(serviceType);
 
@@ -146,15 +146,15 @@ public static unsafe class IServiceProviderImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IServiceProvider"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IServiceProvider"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface IServiceProvider : global::System.IServiceProvider
+file interface IServiceProviderInterfaceImpl : IServiceProvider
 {
     /// <inheritdoc/>
-    object? global::System.IServiceProvider.GetService(global::System.Type serviceType)
+    object? IServiceProvider.GetService(global::System.Type serviceType)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.IServiceProvider).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IServiceProvider).TypeHandle);
 
         return IServiceProviderMethods.GetService(thisReference, serviceType);
     }
