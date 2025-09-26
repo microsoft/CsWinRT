@@ -4043,13 +4043,6 @@ R"(#pragma warning disable IL2026
         }
     }
 
-    void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
-    {
-        std::filesystem::path db_path(type.get_database().path());
-        w.write(R"([WindowsRuntimeMetadata("%")])",
-            db_path.stem().string());
-    }
-
     void write_winrt_helper_type_attribute(writer& w, TypeDef const& type)
     {
         if (get_category(type) == category::struct_type && is_type_blittable(type))
