@@ -1,0 +1,237 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Windows.Foundation;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
+
+#pragma warning disable IDE0008, IDE1006, CA2256
+
+namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// Marshaller for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IAsyncActionMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::Windows.Foundation.IAsyncAction? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::Windows.Foundation.IAsyncAction>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncAction);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::Windows.Foundation.IAsyncAction? ConvertToManaged(void* value)
+    {
+        return (global::Windows.Foundation.IAsyncAction?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
+/// Interop methods for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IAsyncActionMethods
+{
+    /// <see cref="global::Windows.Foundation.IAsyncAction.Completed"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static AsyncActionCompletedHandler? Completed(WindowsRuntimeObjectReference thisReference)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+        void* result;
+
+        HRESULT hresult = ((IAsyncActionVftbl*)*(void***)thisPtr)->get_Completed(thisPtr, &result);
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+
+        return AsyncActionCompletedHandlerMarshaller.ConvertToManaged(result);
+    }
+
+    /// <see cref="global::Windows.Foundation.IAsyncAction.Completed"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void Completed(WindowsRuntimeObjectReference thisReference, AsyncActionCompletedHandler? handler)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue handlerValue = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(handler);
+
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+        HRESULT hresult = ((IAsyncActionVftbl*)*(void***)thisPtr)->set_Completed(thisPtr, handlerValue.GetThisPtrUnsafe());
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+    }
+
+    /// <see cref="global::Windows.Foundation.IAsyncAction.GetResults"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void GetResults(WindowsRuntimeObjectReference thisReference)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+        HRESULT hresult = ((IAsyncActionVftbl*)*(void***)thisPtr)->GetResults(thisPtr);
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+    }
+}
+
+/// <summary>
+/// Binding type for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct IAsyncActionVftbl
+{
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
+    public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+    public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
+}
+
+/// <summary>
+/// The <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IAsyncActionImpl
+{
+    /// <summary>
+    /// The <see cref="IAsyncActionVftbl"/> value for the managed <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+    /// </summary>
+    [FixedAddressValueType]
+    private static readonly IAsyncActionVftbl Vftbl;
+
+    /// <summary>
+    /// Initializes <see cref="Vftbl"/>.
+    /// </summary>
+    static IAsyncActionImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+
+        Vftbl.get_Completed = &get_Completed;
+        Vftbl.set_Completed = &set_Completed;
+        Vftbl.GetResults = &GetResults;
+    }
+
+    /// <summary>
+    /// Gets the IID for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+    /// </summary>
+    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IAsyncAction;
+
+    /// <summary>
+    /// Gets a pointer to the managed <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+    /// </summary>
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction.completed"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_Completed(void* thisPtr, void** handler)
+    {
+        if (handler is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+
+            *handler = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(unboxedValue.Completed).DetachThisPtrUnsafe();
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction.completed"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT set_Completed(void* thisPtr, void* handler)
+    {
+        if (handler is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+
+            unboxedValue.Completed = AsyncActionCompletedHandlerMarshaller.ConvertToManaged(handler);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction.getresults"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetResults(void* thisPtr)
+    {
+        try
+        {
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+
+            unboxedValue.GetResults();
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+}
+
+/// <summary>
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+[DynamicInterfaceCastableImplementation]
+file interface IAsyncAction : global::Windows.Foundation.IAsyncAction
+{
+    /// <inheritdoc/>
+    AsyncActionCompletedHandler? global::Windows.Foundation.IAsyncAction.Completed
+    {
+        get
+        {
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+
+            return IAsyncActionMethods.Completed(thisReference);
+        }
+        set
+        {
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+
+            IAsyncActionMethods.Completed(thisReference, value);
+        }
+    }
+
+    /// <inheritdoc/>
+    void global::Windows.Foundation.IAsyncAction.GetResults()
+    {
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+
+        IAsyncActionMethods.GetResults(thisReference);
+    }
+}

@@ -16,7 +16,7 @@ namespace Windows.Foundation;
 /// upon completion, but don't report progress. This constitutes over 650 different Windows Runtime APIs. APIs that report
 /// progress and have a result use another interface, <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.
 /// </remarks>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncOperation<TResult> : IAsyncInfo
