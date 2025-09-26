@@ -4483,6 +4483,34 @@ event % %;)",
                 w.write_temp("__params[%]", param_index);
         }
 
+        void write_convert_to_managed_function(writer& w) const
+        {
+            if (interop_dll_type != "")
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
+
+)",
+param_type,
+interop_dll_type);
+            }
+        }
+
+        void write_convert_to_unmanaged_function(writer& w) const
+        {
+            if (interop_dll_type != "")
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
+
+)",
+interop_dll_type,
+param_type);
+            }
+        }
+
         void write_locals(writer& w) const
         {
             if (is_pinnable)
@@ -4499,16 +4527,7 @@ event % %;)",
                 return;
             }
 
-            if (interop_dll_type != "")
-            {
-                w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
-
-)",
-                interop_dll_type,
-                param_type);
-            }
+            write_convert_to_unmanaged_function(w);
 
             w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged(%%);\n",
                 get_marshaler_local(w),
@@ -4567,15 +4586,6 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
-            w.write("% = %.CreateMarshaler%%(%%%);\n",
-                get_marshaler_local(w),
-                marshaler_type,
-                is_array() ? "Array" : "",
-                is_marshal_by_object_reference_value() ? "2" : "",
-                bind<write_escaped_identifier>(param_name),
-                interface_guid != "" ? ", " : "",
-                interface_guid);
-
             if (is_generic() || is_array() || (is_const_ref() && !marshaler_type.empty()))
             {
                 w.write("%% = %.GetAbi%(%);\n",
@@ -4587,13 +4597,13 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             }
         }
 
-        bool write_pinnable(writer& w) const
+        void write_pinnable(writer& w) const
         {
-            if (!is_pinnable)
-                return false;
-            w.write("%.Pinnable __% = new(%);\n", marshaler_type, param_name,
-                bind<write_escaped_identifier>(param_name));
-            return true;
+            if (!is_pinnable || marshaler_type != "global::ABI.System.TypeMarshaller")
+                return;
+
+            w.write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(%, out TypeReference __%);\n",
+                get_escaped_param_name(w), param_name);
         }
 
         void write_fixed_expression(writer& w, bool& write_delimiter) const
@@ -4604,7 +4614,10 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             {
                 w.write(", ");
             }
-            w.write("_% = %", param_name, param_name);
+            w.write("_% = %",
+                param_name,
+                marshaler_type == "global::ABI.System.TypeMarshaller" 
+                    ? "__" + param_name : get_escaped_param_name(w));
             write_delimiter = true;
         }
 
@@ -4613,8 +4626,11 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             if (!is_pinnable)
                 return;
 
-            w.write("%.ConvertToUnmanagedUnsafe(_%, %.Length, out HStringReference __%);", 
-                marshaler_type, param_name, param_name, param_name);
+            if (marshaler_type == "HStringMarshaller")
+            {
+                w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
+                    param_name, get_escaped_param_name(w), param_name);
+            }
         }
 
         void write_marshal_to_abi(writer& w, std::string_view source = "") const
@@ -4661,11 +4677,20 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                     return;
                 }
 
-                if (is_pinnable && marshaler_type == "HStringMarshaller")
+                if (is_pinnable)
                 {
-                    w.write("%.HString",
-                        get_marshaler_local(w));
-                    return;
+                    if (marshaler_type == "HStringMarshaller")
+                    {
+                        w.write("%.HString",
+                            get_marshaler_local(w));
+                        return;
+                    }
+                    else if (marshaler_type == "global::ABI.System.TypeMarshaller")
+                    {
+                        w.write("%.ConvertToUnmanagedUnsafe()",
+                            get_marshaler_local(w));
+                        return;
+                    }
                 }
             }
 
@@ -4719,9 +4744,9 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 return;
             }
 
-            w.write("%.ConvertToManaged(%%)",
-                marshaler_type,
-                is_generic() ? "null, " : "",
+            w.write("%ConvertToManaged(%%)",
+                interop_dll_type != "" ? "" : marshaler_type + ".",
+                is_generic() || interop_dll_type != "" ? "null, " : "",
                 source);
         }
 
@@ -4773,6 +4798,8 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                 }
                 return;
             }
+
+            write_convert_to_managed_function(w);
 
             is_return ?
                 w.write("return ") :
@@ -4852,12 +4879,12 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             }
             else if (!is_type_blittable(type))
             {
-                m.marshaler_type = get_abi_type();
-                m.local_type = m.marshaler_type;
+                m.local_type = get_abi_type();
+                m.marshaler_type = m.local_type + "Marshaller";
                 if (!m.is_out()) m.local_type += ".Marshaler";
 
                 auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
-                if (m.marshaler_type == "global::ABI.System.Type")
+                if (m.marshaler_type == "global::ABI.System.TypeMarshaller")
                 {
                     m.is_pinnable = (m.category == param_category::in);
                 }
@@ -4884,6 +4911,10 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                     m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    if (distance(type.GenericParam()) > 0)
+                    {
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                    }
                 }
 
                 break;
@@ -5052,6 +5083,7 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             for (auto&& m : marshalers)
             {
                 have_pinnables |= m.is_pinnable;
+                m.write_pinnable(w);
             }
 
             // Write out of the fixed expression.
@@ -5070,7 +5102,7 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAcces
             if (have_pinnables)
             {
                 bool write_delimiter{};
-                w.write("fixed(char* %)\n{\n",
+                w.write("fixed(void* %)\n{\n",
                     bind_each([&](writer& w, abi_marshaler const& m)
                     {
                         m.write_fixed_expression(w, write_delimiter);
@@ -6088,6 +6120,20 @@ interop_dll_type);
             }
         }
 
+        void write_convert_to_unmanaged_function(writer& w) const
+        {
+            if (interop_dll_type != "")
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
+
+)",
+interop_dll_type,
+param_type);
+            }
+        }
+
         void write_marshal_to_managed(writer& w) const
         {
             if(is_out() || is_ref())
@@ -6189,11 +6235,12 @@ interop_dll_type);
             }
             else
             {
-                w.write("%%.ConvertToUnmanaged%(%)%;",
+                w.write("%%ConvertToUnmanaged%(%%)%;",
                     abi_boxed && !is_array() ?
                         w.write_temp("(%)", param_type) : "",
-                    marshaler_type,
+                    interop_dll_type != "" ? "" : marshaler_type + ".",
                     is_array() ? "Array" : "",
+                    interop_dll_type != "" ? "null, " : "",
                     param_local,
                     is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
             }
@@ -6237,6 +6284,10 @@ interop_dll_type);
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.marshal_by_object_reference_value = true;
+                    if (distance(type.GenericParam()) > 0)
+                    {
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                    }
                     break;
                 case category::class_type:
                     m.marshaler_type = get_abi_type();
@@ -6365,6 +6416,11 @@ return 0;)",
                 {
                     m.write_convert_to_managed_function(w);
                 }, marshalers));
+
+                if (return_sig)
+                {
+                    return_marshaler.write_convert_to_unmanaged_function(w);
+				}
             },
             [&](writer& w) {
                 if (!return_sig) return;
