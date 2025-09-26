@@ -4065,8 +4065,6 @@ R"(file static class %InterfaceEntriesImpl
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
-        auto abi_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        auto target = is_type_blittable(type) ? projection_name : abi_name;
         w.write(
 R"(#pragma warning disable IL2026
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
@@ -4075,7 +4073,7 @@ R"(#pragma warning disable IL2026
     trimTarget: typeof(%))]
 #pragma warning restore IL2026
 
-)", projection_name, target, projection_name);
+)", projection_name, projection_name, projection_name);
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
