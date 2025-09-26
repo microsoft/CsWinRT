@@ -19,6 +19,27 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.ComponentModel;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class INotifyDataErrorInfoMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyDataErrorInfo? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::System.ComponentModel.INotifyDataErrorInfo>.ConvertToUnmanaged(
+            value: value,
+            iid: in WellKnownInterfaceIds.IID_INotifyDataErrorInfo);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.ComponentModel.INotifyDataErrorInfo? ConvertToManaged(void* value)
+    {
+        return (global::System.ComponentModel.INotifyDataErrorInfo?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -90,7 +111,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
                 static extern IEnumerable<object>? ConvertToManaged(
-                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>, WinRT.Interop.dll")] object? _,
+                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop.dll")] object? _,
                     void* value);
 
                 return ConvertToManaged(null, result)!;
@@ -212,7 +233,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>Marshaller, WinRT.Interop.dll")] object? _,
                 void* value);
 
             EventHandler<DataErrorsChangedEventArgs>? managedHandler = ConvertToManaged(null, handler);
@@ -263,11 +284,11 @@ public static unsafe class INotifyDataErrorInfoImpl
             IEnumerable managedResult = unboxedValue.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-            static extern void* ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>, WinRT.Interop.dll")] object? _,
+            static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
+                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop.dll")] object? _,
                 IEnumerable<object>? value);
 
-            *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult);
+            *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

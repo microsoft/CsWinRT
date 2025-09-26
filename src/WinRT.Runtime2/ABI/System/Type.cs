@@ -17,7 +17,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
@@ -63,13 +63,33 @@ public static unsafe class TypeMarshaller
     /// </summary>
     /// <param name="value">The managed <see cref="global::System.Type"/> value.</param>
     /// <returns>The unmanaged <see cref="Type"/> value.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>"
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static Type ConvertToUnmanaged(global::System.Type value)
+    {
+        ConvertToUnmanagedUnsafe(value, out TypeReference reference);
+
+        return reference.ConvertToUnmanaged();
+    }
+
+    /// <summary>
+    /// Converts a managed <see cref="global::System.Type"/> to an unmanaged <see cref="Type"/> with fast-pass.
+    /// </summary>
+    /// <param name="value">The managed <see cref="global::System.Type"/> value.</param>
+    /// <param name="reference">
+    /// The resulting <see cref="TypeReference"/> instance. This must be kept in scope as long
+    /// as the <see cref="Type"/> value retrieved from it is being used. It is not valid to escape that
+    /// value, as the reference is required to exist for the fast-pass <see cref="Type"/> to be valid.
+    /// </param>
+    /// <returns>The unmanaged <see cref="Type"/> value.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
+    public static void ConvertToUnmanagedUnsafe(global::System.Type value, out TypeReference reference)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        // TODO
-        return default;
+        string abiName = ""; // TODO
+        TypeKind kind = default; // TODO
+
+        reference = new TypeReference { Name = abiName, Kind = kind };
     }
 
     /// <summary>

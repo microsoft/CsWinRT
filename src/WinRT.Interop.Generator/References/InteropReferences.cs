@@ -597,9 +597,9 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeUnsealedObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeUnsealedObject"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeInterfaceMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeInterfaceMarshaller"u8);
+    public TypeReference WindowsRuntimeInterfaceMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeInterfaceMarshaller`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller</c>.
@@ -1301,17 +1301,6 @@ internal sealed class InteropReferences
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged</c>.
-    /// </summary>
-    public MemberReference WindowsRuntimeInterfaceMarshallerConvertToUnmanaged => field ??= WindowsRuntimeInterfaceMarshaller
-        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
-            returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-            genericParameterCount: 1,
-            parameterTypes: [
-                new GenericParameterSignature(GenericParameterType.Method, 0),
-                Guid.MakeByReferenceType()]));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(Delegate, in Guid)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeDelegateMarshallerConvertToUnmanaged => field ??= WindowsRuntimeDelegateMarshaller
@@ -1571,6 +1560,23 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("GetEnumerator"u8, MethodSignature.CreateInstance(
                 returnType: IEnumerator1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="interfaceType">The input interface type.</param>
+    public MemberReference WindowsRuntimeInterfaceMarshallerConvertToUnmanaged(TypeSignature interfaceType)
+    {
+        return WindowsRuntimeInterfaceMarshaller1
+            .MakeGenericReferenceType(interfaceType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    Guid.MakeByReferenceType()]));
     }
 
     /// <summary>

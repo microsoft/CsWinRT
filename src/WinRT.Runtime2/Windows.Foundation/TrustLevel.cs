@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.ComponentModel;
-using WindowsRuntime;
 
 namespace Windows.Foundation;
 
@@ -13,7 +12,6 @@ namespace Windows.Foundation;
 /// This type is required for ABI projection of Windows Runtime types, but marshalling it is not supported.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/ne-inspectable-trustlevel"/>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public enum TrustLevel
 {

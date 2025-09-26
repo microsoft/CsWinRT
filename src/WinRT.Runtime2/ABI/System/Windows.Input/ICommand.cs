@@ -17,6 +17,27 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.Windows.Input;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.Windows.Input.ICommand"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class ICommandMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Windows.Input.ICommand? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::System.Windows.Input.ICommand>.ConvertToUnmanaged(
+            value: value,
+            iid: in WellKnownInterfaceIds.IID_ICommand);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.Windows.Input.ICommand? ConvertToManaged(void* value)
+    {
+        return (global::System.Windows.Input.ICommand?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+
+/// <summary>
 /// Interop methods for <see cref="global::System.Windows.Input.ICommand"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]

@@ -9,11 +9,35 @@ using System.Threading;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
 namespace ABI.System.ComponentModel;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class INotifyPropertyChangedMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyPropertyChanged? value)
+    {
+        return WindowsRuntimeInterfaceMarshaller<global::System.ComponentModel.INotifyPropertyChanged>.ConvertToUnmanaged(
+            value: value,
+            iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
+                : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.ComponentModel.INotifyPropertyChanged? ConvertToManaged(void* value)
+    {
+        return (global::System.ComponentModel.INotifyPropertyChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
 
 /// <summary>
 /// Interop methods for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
