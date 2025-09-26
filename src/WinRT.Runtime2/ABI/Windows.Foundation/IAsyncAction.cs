@@ -15,7 +15,17 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006, CA2256
 
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(IAsyncAction), typeof(ABI.Windows.Foundation.IAsyncAction))]
+
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// ABI type for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction"/>
+[WindowsRuntimeClassName("Windows.Foundation.IAsyncAction")]
+[IAsyncActionComWrappersMarshaller]
+file static class IAsyncAction;
 
 /// <summary>
 /// Marshaller for <see cref="global::Windows.Foundation.IAsyncAction"/>.
@@ -37,7 +47,7 @@ public static unsafe class IAsyncActionMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IAsyncAction"/>.
+/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
 /// </summary>
 file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
@@ -64,6 +74,22 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
         wrapperObject = null;
 
         return false;
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+file sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
+
+        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+        return new WindowsRuntimeAsyncAction(objectReference);
     }
 }
 
@@ -236,7 +262,7 @@ public static unsafe class IAsyncActionImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface IAsyncAction : global::Windows.Foundation.IAsyncAction
+file interface IAsyncActionInterfaceImpl : global::Windows.Foundation.IAsyncAction
 {
     /// <inheritdoc/>
     AsyncActionCompletedHandler? global::Windows.Foundation.IAsyncAction.Completed
