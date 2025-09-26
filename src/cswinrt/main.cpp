@@ -229,7 +229,7 @@ Where <spec> is one or more of:
                                 // TODO delegate_type
                                 break;
                             case category::enum_type:
-                                // TODO enum_type
+                                write_winrt_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::interface_type:
                                 // TODO interface_type
@@ -243,7 +243,6 @@ Where <spec> is one or more of:
 
                         w.write_begin_projected();
                         bool written = false;
-                        bool requires_abi = false;
                         for (auto&& [name, type] : members.types)
                         {
                             currentType = name;
@@ -256,7 +255,6 @@ Where <spec> is one or more of:
                             auto guard{ w.push_generic_params(type.GenericParam()) };
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
-                            bool type_requires_abi = true;
                             switch (get_category(type))
                             {
                             case category::class_type:
@@ -291,7 +289,6 @@ Where <spec> is one or more of:
                             case category::enum_type:
                                 write_enum(w, type);
                                 add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
-                                type_requires_abi = false;
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
@@ -307,67 +304,64 @@ Where <spec> is one or more of:
                                 {
                                     write_struct(w, type);
                                     add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
-                                    type_requires_abi = !is_type_blittable(type);
                                 }
                                 break;
                             }
 
                             add_generic_type_references_in_type(type, abiDelegateEntries);
                             written = true;
-                            requires_abi = requires_abi || type_requires_abi;
                         }
                         currentType = "";
                         if (written)
                         {
                             w.write_end_projected();
-                            if (requires_abi)
+             
+                            w.write_begin_abi();
+                            for (auto&& [name, type] : members.types)
                             {
-                                w.write_begin_abi();
-                                for (auto&& [name, type] : members.types)
-                                {
-                                    currentType = name;
-                                    if (!settings.filter.includes(type)) { continue; }
-                                    if (get_mapped_type(ns, name)) continue;
-                                    if (is_api_contract_type(type)) { continue; }
-                                    if (is_attribute_type(type)) { continue; }
-                                    auto guard{ w.push_generic_params(type.GenericParam()) };
+                                currentType = name;
+                                if (!settings.filter.includes(type)) { continue; }
+                                if (get_mapped_type(ns, name)) continue;
+                                if (is_api_contract_type(type)) { continue; }
+                                if (is_attribute_type(type)) { continue; }
+                                auto guard{ w.push_generic_params(type.GenericParam()) };
 
-                                    switch (get_category(type))
+                                switch (get_category(type))
+                                {
+                                case category::class_type:
+                                    write_abi_class(w, type);
+                                    if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
-                                    case category::class_type:
-                                        write_abi_class(w, type);
-                                        if (settings.component && componentActivatableClasses.count(type) == 1)
-                                        {
-                                            write_winrt_exposed_type_class(w, type, true);
-                                        }
-                                        write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
-                                        break;
-                                    case category::delegate_type:
-                                        write_abi_delegate(w, type);
-                                        write_winrt_exposed_type_class(w, type, false);
-                                        break;
-                                    case category::enum_type:
-                                        write_abi_enum(w, type);
-                                        break;
-                                    case category::interface_type:
-                                        if (settings.netstandard_compat)
-                                        {
-                                            write_static_abi_classes(w, type);
-                                            write_abi_interface_netstandard(w, type);
-                                        }
-                                        else
-                                        {
-                                            write_static_abi_classes(w, type);
-                                            write_abi_interface(w, type);
-                                        }
-                                        break;
-                                    case category::struct_type:
-                                        write_abi_struct(w, type);
-                                        break;
+                                        write_winrt_exposed_type_class(w, type, true);
                                     }
+                                    write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
+                                    break;
+                                case category::delegate_type:
+                                    write_abi_delegate(w, type);
+                                    write_winrt_exposed_type_class(w, type, false);
+                                    break;
+                                case category::enum_type:
+                                    write_abi_enum(w, type);
+                                    break;
+                                case category::interface_type:
+                                    if (settings.netstandard_compat)
+                                    {
+                                        write_static_abi_classes(w, type);
+                                        write_abi_interface_netstandard(w, type);
+                                    }
+                                    else
+                                    {
+                                        write_static_abi_classes(w, type);
+                                        write_abi_interface(w, type);
+                                    }
+                                    break;
+                                case category::struct_type:
+                                    write_abi_struct(w, type);
+                                    break;
                                 }
-                                w.write_end_abi();
                             }
+                            w.write_end_abi();
+
                             currentType = "";
 
                             // Custom additions to namespaces

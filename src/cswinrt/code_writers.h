@@ -10250,15 +10250,15 @@ return true;
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
         w.write(
-R"(
-%%%[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+R"(%%%%[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 % enum % : %
 {
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         bind<write_winrt_metadata_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        (settings.internal) ? (settings.public_enums ? "public" : "internal") : "public",
+        bind<write_comwrapper_marshaller_attribute>(type),
+        (settings.internal) ? "internal" : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
