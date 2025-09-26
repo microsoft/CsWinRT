@@ -4067,7 +4067,7 @@ R"(file static class %InterfaceEntriesImpl
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
-        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
 R"(#pragma warning disable IL2026
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
