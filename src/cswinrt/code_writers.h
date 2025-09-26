@@ -377,6 +377,7 @@ namespace cswinrt
 
     void write_interop_dll_type_name(writer& w, type_semantics const& /*semantics*/)
     {
+        // TODO
         w.write("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>");
 
         /*for_typedef(w, semantics, [&](auto type)
