@@ -125,6 +125,6 @@ internal partial class ProjectionGenerator
     /// <returns><c>true</c> if the module is a reference assembly; otherwise, <c>false</c>.</returns>
     private static bool IsReferenceAssembly(ModuleDefinition moduleDefinition)
     {
-        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("System.Runtime.CompilerServices", "ReferenceAssemblyAttribute");
+        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("System.Runtime.CompilerServices"u8, "ReferenceAssemblyAttribute"u8);
     }
 }
