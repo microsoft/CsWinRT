@@ -3881,7 +3881,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         );
     }
 
-    void write_struct_marshaller_class(writer& w, TypeDef const& type)
+    void write_struct_and_enum_marshaller_class(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -4001,7 +4001,7 @@ R"(
 )", bind<write_guid_property_from_signature>(ireference_guid_sig));
     }
 
-    void write_struct_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
+    void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
         auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
@@ -10259,9 +10259,9 @@ R"(
     void write_abi_enum(writer& w, TypeDef const& type)
     {
         w.write("%\n%\n%\n%\n",
-            bind<write_marshaller_class>(type),
+            bind<write_struct_and_enum_marshaller_class>(type),
             bind<write_interface_entries_impl>(type),
-            bind<write_com_wrappers_marshaller_attribute_impl>(type),
+            bind<write_struct_and_enum_com_wrappers_marshaller_attribute_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
     
@@ -10376,9 +10376,9 @@ R"(
             w.write("}\n\n");
         }
         w.write("%\n%\n%\n%\n",
-            bind<write_struct_marshaller_class>(type),
+            bind<write_struct_and_enum_marshaller_class>(type),
             bind<write_interface_entries_impl>(type),
-            bind<write_struct_com_wrappers_marshaller_attribute_impl>(type),
+            bind<write_struct_and_enum_com_wrappers_marshaller_attribute_impl>(type),
             bind<write_reference_impl_struct>(type));
     }
 
