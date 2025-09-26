@@ -10,6 +10,7 @@ namespace Windows.Foundation;
 /// Represents an asynchronous action that can report progress updates to callers. This is the return type for all
 /// Windows Runtime asynchronous methods that don't have a result object, but do report progress to callback listeners.
 /// </summary>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
 /// <remarks>
 /// <see cref="IAsyncActionWithProgress{TProgress}"/> is the return type for all Windows Runtime asynchronous methods that
 /// don't communicate a result object, but do enable an app to check the progress of the action. There aren't nearly as many
