@@ -115,7 +115,10 @@ public static unsafe class IServiceProviderImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetService(void* thisPtr, Type serviceType, void** result)
     {
-        *result = null;
+        if (result is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
 
         try
         {
