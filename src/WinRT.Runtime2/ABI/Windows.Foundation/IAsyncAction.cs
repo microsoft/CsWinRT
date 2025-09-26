@@ -166,11 +166,6 @@ public static unsafe class IAsyncActionImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT set_Completed(void* thisPtr, void* handler)
     {
-        if (handler is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
