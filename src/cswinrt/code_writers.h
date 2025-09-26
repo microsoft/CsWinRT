@@ -3590,8 +3590,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         w.write(R"(            ];
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
-    }
-    )");
+    })");
     }
 
     void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
@@ -3881,7 +3880,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         );
     }
 
-    void write_struct_marshaller_class(writer& w, TypeDef const& type)
+    void write_struct_and_enum_marshaller_class(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -3925,6 +3924,7 @@ R"(public static %? UnboxToManaged(void* value)
     return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<%>(value);
 }
 }
+
 )", projection_name, projection_name);
         }
     }
@@ -3998,10 +3998,11 @@ R"(
 
     %
 }
+
 )", bind<write_guid_property_from_signature>(ireference_guid_sig));
     }
 
-    void write_struct_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
+    void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
         auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
@@ -4026,6 +4027,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID);
     }
 }
+
 )", name, projection_name, projection_name, name, name, is_type_blittable(type) ? projection_name : abi_name, name);
     }
 
@@ -4059,12 +4061,13 @@ R"(file static class %InterfaceEntriesImpl
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
+
 )", name, name, name, name);
     }
 
     void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
-        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
 R"(#pragma warning disable IL2026
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
@@ -10244,20 +10247,18 @@ return true;
             return;
         }
 
-        if (is_flags_enum(type))
-        {
-            w.write("[FlagsAttribute]\n");
-        }
-
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"(%%%% enum % : %
+        w.write(
+R"(%%%%[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+% enum % : %
 {
-)", 
-        bind<write_winrt_attribute>(type),
-        bind<write_winrt_exposed_type_attribute>(type, false),
+)",             
+        is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
+        bind<write_winrt_metadata_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
+        bind<write_comwrapper_marshaller_attribute>(type),
+        (settings.internal) ? "internal" : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
@@ -10270,9 +10271,17 @@ return true;
                 }
             }
         }
-        w.write("}\n");
+        w.write("}\n\n");
     }
 
+    void write_abi_enum(writer& w, TypeDef const& type)
+    {
+        write_struct_and_enum_marshaller_class(w, type);
+        write_interface_entries_impl(w, type);
+        write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+        write_reference_impl_struct(w, type);
+    }
+    
     void write_struct(writer& w, TypeDef const& type)
     {
         if (settings.component)
@@ -10361,7 +10370,7 @@ return true;
             }, " ^ ", fields));
 
         // end class
-        w.write("}\n");
+        w.write("}\n\n");
     }
 
 
@@ -10383,11 +10392,11 @@ return true;
             }
             w.write("}\n\n");
         }
-        w.write("%\n%\n%\n%\n",
-            bind<write_struct_marshaller_class>(type),
-            bind<write_interface_entries_impl>(type),
-            bind<write_struct_com_wrappers_marshaller_attribute_impl>(type),
-            bind<write_reference_impl_struct>(type));
+
+        write_struct_and_enum_marshaller_class(w, type);
+        write_interface_entries_impl(w, type);
+        write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+        write_reference_impl_struct(w, type);
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
