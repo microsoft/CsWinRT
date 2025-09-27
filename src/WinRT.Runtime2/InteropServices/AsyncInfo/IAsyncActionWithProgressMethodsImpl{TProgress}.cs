@@ -24,7 +24,7 @@ public interface IAsyncActionWithProgressMethodsImpl<TProgress>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The callback.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1.progress"/>
-    static abstract AsyncActionProgressHandler<TProgress> Progress(WindowsRuntimeObjectReference thisReference);
+    static abstract AsyncActionProgressHandler<TProgress>? Progress(WindowsRuntimeObjectReference thisReference);
 
     /// <summary>
     /// Sets the callback method that receives progress notification.
@@ -32,7 +32,7 @@ public interface IAsyncActionWithProgressMethodsImpl<TProgress>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <param name="handler">The callback.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1.progress"/>
-    static abstract void Progress(WindowsRuntimeObjectReference thisReference, AsyncActionProgressHandler<TProgress> handler);
+    static abstract void Progress(WindowsRuntimeObjectReference thisReference, AsyncActionProgressHandler<TProgress>? handler);
 
     /// <summary>
     /// Gets the delegate that is called when the action completes.
@@ -40,7 +40,7 @@ public interface IAsyncActionWithProgressMethodsImpl<TProgress>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The delegate.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1.completed"/>
-    static abstract AsyncActionWithProgressCompletedHandler<TProgress> Completed(WindowsRuntimeObjectReference thisReference);
+    static abstract AsyncActionWithProgressCompletedHandler<TProgress>? Completed(WindowsRuntimeObjectReference thisReference);
 
     /// <summary>
     /// Sets the delegate that is called when the action completes.
@@ -48,5 +48,5 @@ public interface IAsyncActionWithProgressMethodsImpl<TProgress>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <param name="handler">The delegate.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1.completed"/>
-    static abstract void Completed(WindowsRuntimeObjectReference thisReference, AsyncActionWithProgressCompletedHandler<TProgress> handler);
+    static abstract void Completed(WindowsRuntimeObjectReference thisReference, AsyncActionWithProgressCompletedHandler<TProgress>? handler);
 }
