@@ -3728,11 +3728,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         );
     }
 
-    void write_dipose_method_struct(writer& w, TypeDef const& type)
+    void write_dispose_method_struct(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        w.write("public static void Dipose(% value)\n{\n%}\n",
+        w.write("public static void Dispose(% value)\n{\n%}\n",
             abi_name,
             bind_list([](writer& w, auto&& field)
             {
@@ -3769,7 +3769,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         case category::struct_type:
                             if (!is_type_blittable(td))
                             {
-                                w.write("%Marshaller.Dipose(value.%);\n", td.TypeName(), field_name);
+                                w.write("%Marshaller.Dispose(value.%);\n", td.TypeName(), field_name);
                             }
                             break;
                         default:
@@ -3825,7 +3825,7 @@ public static unsafe class %Marshaller
         {
             write_convert_to_unmanaged_method_struct(w, type);
             write_convert_to_managed_method_struct(w, type);
-            write_dipose_method_struct(w, type);
+            write_dispose_method_struct(w, type);
         }
 
         w.write(
@@ -4415,6 +4415,7 @@ event % %;)",
         std::string interface_guid;
         std::string interface_init_rcw_helper;
         std::string interop_dll_type;
+        bool skip_disposer;
 
         bool is_out() const
         {
@@ -4513,7 +4514,26 @@ param_type);
             if (is_object_in() || local_type.empty())
                 return;
 
-            if (is_out())
+            if (is_array())
+            {
+                w.write("int __%_length = default;\n", param_name);
+                w.write("IntPtr __%_data = default;\n", param_name);
+                return;
+            }
+
+            // If we are skipping the disposer, it implies there is a marshaler.
+            // It also means we won't handle it as part of writing assignments.
+            if (!is_out() && skip_disposer)
+            {
+                w.write("% % = %.ConvertToUnmanaged(%);\n",
+                    local_type,
+                    get_marshaler_local(w),
+                    marshaler_type,
+                    param_name);
+                return;
+            }
+
+            if (is_out() || !is_marshal_by_object_reference_value())
             {
                 w.write("% __% = default;\n",
                     local_type,
@@ -4528,46 +4548,6 @@ param_type);
                 interop_dll_type != "" ? "" : marshaler_type + ".",
                 interop_dll_type != "" ? "null, " : "",
                 param_name);
-        }
-
-        void write_locals2(writer& w) const
-        {
-            if (is_pinnable)
-                return;
-
-            if (is_generic())
-            {
-                if (!is_out() && !marshaler_type.empty())
-                {
-                    w.write("% __% = default;\n", local_type, param_name);
-                }
-                return;
-            }
-
-            if (is_object_in() || local_type.empty())
-                return;
-
-            if (!is_array() || !is_out())
-            {
-                w.write("% __% = default;\n",
-                    local_type,
-                    param_name);
-            }
-
-            if (is_array())
-            {
-                w.write("int __%_length = default;\n", param_name);
-                w.write("IntPtr __%_data = default;\n", param_name);
-            }
-        }
-
-        void write_create(writer& w, std::string_view source) const
-        {
-            w.write("%.CreateMarshaler%%(%)",
-                marshaler_type,
-                is_array() ? "Array" : "",
-                is_marshal_by_object_reference_value() ? "2" : "",
-                source);
         }
 
         auto get_escaped_param_name(writer& w) const
@@ -4588,6 +4568,15 @@ param_type);
                     is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
+                return;
+            }
+
+            if (!marshaler_type.empty() && !is_marshal_by_object_reference_value())
+            {
+                w.write("% = %.ConvertToUnmanaged(%);\n",
+                    get_marshaler_local(w),
+                    marshaler_type,
+                    param_name);
             }
         }
 
@@ -4685,6 +4674,13 @@ param_type);
                             get_marshaler_local(w));
                         return;
                     }
+                }
+
+                if (!is_marshal_by_object_reference_value())
+                {
+                    w.write("%",
+                        get_marshaler_local(w));
+                    return;
                 }
             }
 
@@ -4804,19 +4800,14 @@ param_type);
 
         void write_dispose(writer& w) const
         {
-            // if (is_pinnable || is_object_in() || local_type.empty())
-            //    return;
-
-            if (!is_out())
-            {
+            if (is_pinnable || is_object_in() || local_type.empty() || (!is_out() && is_marshal_by_object_reference_value()) || skip_disposer)
                 return;
-            }
 
             if (marshaler_type.empty())
             {
                 if (is_out() && (local_type == "void*" && param_type != "void*"))
                 {
-                    w.write("MarshalInspectable<object>.DisposeAbi(%);\n", get_marshaler_local(w));
+                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n", get_marshaler_local(w));
                 }
                 return;
             }
@@ -4830,19 +4821,31 @@ param_type);
                         is_array() ? "Array" : "",
                         get_param_local(w));
                 }
-                else
+				else if (is_marshal_by_object_reference_value())
+                {
+                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
+                        get_param_local(w));
+                }
+                else if (marshaler_type == "HStringMarshaller" || 
+                         marshaler_type == "global::ABI.System.TypeMarshaller")
                 {
                     w.write("%.Free(%);\n",
-                        is_marshal_by_object_reference_value() ? "WindowsRuntimeObjectMarshaller" : marshaler_type,
+                        marshaler_type,
+                        get_param_local(w));
+                }
+                else
+                {
+                    w.write("%.Dispose(%);\n",
+                        marshaler_type,
                         get_param_local(w));
                 }
             }
             else
             {
-                w.write("%.DisposeMarshaler%(%);\n",
-                    is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
-                    is_array() ? "Array" : "",
-                    get_marshaler_local(w));
+                // TODO arrays
+                w.write("%.Dispose(%);\n",
+                    marshaler_type,
+                    get_param_local(w));
             }
         }
     };
@@ -4875,12 +4878,17 @@ param_type);
             {
                 m.local_type = get_abi_type();
                 m.marshaler_type = m.local_type + "Marshaller";
-                if (!m.is_out()) m.local_type += ".Marshaler";
 
                 auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.marshaler_type == "global::ABI.System.TypeMarshaller")
                 {
                     m.is_pinnable = (m.category == param_category::in);
+                }
+                else if (m.marshaler_type == "global::ABI.System.DateTimeOffsetMarshaller" || 
+                         m.marshaler_type == "global::ABI.System.TimeSpanMarshaller" ||
+                         m.marshaler_type == "global::ABI.System.ExceptionMarshaller")
+                {
+					m.skip_disposer = true;
                 }
             }
         };
@@ -5148,7 +5156,7 @@ param_type);
 
         bool have_disposers = std::find_if(marshalers.begin(), marshalers.end(), [](abi_marshaler const& m)
         {
-            return !m.marshaler_type.empty() && m.is_out();
+            return !m.marshaler_type.empty() && !m.skip_disposer && (m.is_out() || (!m.is_pinnable && !m.is_marshal_by_object_reference_value()));
         }) != marshalers.end();
 
         if (!have_disposers)
@@ -6268,7 +6276,7 @@ param_type);
                     {
                         if (!m.is_array())
                         {
-                            m.marshaler_type = get_abi_type();
+                            m.marshaler_type = get_abi_type() + "Marshaller";
                         }
                         m.local_type = m.param_type;
                     }
