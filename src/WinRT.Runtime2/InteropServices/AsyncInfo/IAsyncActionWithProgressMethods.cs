@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -18,6 +19,7 @@ public static unsafe class IAsyncActionWithProgressMethods
 {
     /// <inheritdoc cref="Windows.Foundation.IAsyncActionWithProgress{TProgress}.GetResults"/>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void GetResults(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
