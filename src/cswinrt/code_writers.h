@@ -4483,11 +4483,12 @@ event % %;)",
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToManaged")]
+static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
 param_type,
+param_name,
 interop_dll_type);
             }
         }
@@ -4734,8 +4735,9 @@ param_type);
                 return;
             }
 
-            w.write("%ConvertToManaged(%%)",
+            w.write("%ConvertToManaged%(%%)",
                 interop_dll_type != "" ? "" : marshaler_type + ".",
+                interop_dll_type != "" ? "_" + param_name : "",
                 is_generic() || interop_dll_type != "" ? "null, " : "",
                 source);
         }
@@ -5125,7 +5127,7 @@ param_type);
                     invoke_target,
                     bind_each([](writer& w, abi_marshaler const& m)
                     {
-                        w.write(", ");
+                        w.write(",\n  ");
                         m.write_marshal_to_abi(w);
                     }, marshalers));
             }
@@ -5134,7 +5136,7 @@ param_type);
                     invoke_target,
                     bind_each([](writer& w, abi_marshaler const& m)
                         {
-                            w.write(", ");
+                            w.write(",\n  ");
                             m.write_marshal_to_abi(w);
                         }, marshalers));
             }
@@ -6113,11 +6115,12 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToManaged")]
+static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
 param_type,
+param_name,
 interop_dll_type);
             }
         }
@@ -6176,11 +6179,17 @@ param_type);
                     marshaler_type,
                     param_name, bind<write_escaped_identifier>(param_name));
             }
+            else if (interop_dll_type != "")
+            {
+                w.write("ConvertToManaged_%(null, %%)",
+                    param_name,
+                    category == param_category::ref ? "*" : "",
+                    bind<write_escaped_identifier>(param_name));
+            }
             else
             {
-                w.write("%ConvertToManaged(%%%)",
-                    interop_dll_type != "" ? "" : marshaler_type + ".",
-                    interop_dll_type != "" ? "null, " : "",
+                w.write("%.ConvertToManaged(%%)",
+                    marshaler_type,
                     category == param_category::ref ? "*" : "",
                     bind<write_escaped_identifier>(param_name));
             }
@@ -6459,7 +6468,7 @@ return 0;)",
                             bind_list([](writer& w, managed_marshaler const& m)
                                 {
                                     m.write_marshal_to_managed(w);
-                                }, ", ", marshalers));
+                                }, ",\n  ", marshalers));
                     }));
             },
             bind_each([](writer& w, managed_marshaler const& m)
