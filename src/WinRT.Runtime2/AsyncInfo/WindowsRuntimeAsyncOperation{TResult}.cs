@@ -11,22 +11,22 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime.AsyncInfo;
 
 /// <summary>
-/// The implementation of a native object for <see cref="IAsyncActionWithProgress{TProgress}"/>.
+/// The implementation of a native object for <see cref="IAsyncOperation{TResult}"/>.
 /// </summary>
-/// <typeparam name="TProgress">The type of progress information.</typeparam>
-/// <typeparam name="TIAsyncActionWithProgressMethods">The <see cref="IAsyncActionWithProgress{TProgress}"/> implementation type.</typeparam>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
-public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncActionWithProgressMethods> : WindowsRuntimeObject,
-    IAsyncActionWithProgress<TProgress>,
-    IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>
-    where TIAsyncActionWithProgressMethods : IAsyncActionWithProgressMethodsImpl<TProgress>
+/// <typeparam name="TResult">The result type.</typeparam>
+/// <typeparam name="TIAsyncOperationMethods">The <see cref="IAsyncOperationMethodsImpl{TResult}"/> implementation type.</typeparam>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
+public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMethods> : WindowsRuntimeObject,
+    IAsyncOperation<TResult>,
+    IWindowsRuntimeInterface<IAsyncOperation<TResult>>
+    where TIAsyncOperationMethods : IAsyncOperationMethodsImpl<TResult>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeAsyncAction"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    protected WindowsRuntimeAsyncActionWithProgress(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeAsyncOperation(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
@@ -55,17 +55,10 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public AsyncActionProgressHandler<TProgress>? Progress
+    public AsyncOperationCompletedHandler<TResult>? Completed
     {
-        get => TIAsyncActionWithProgressMethods.Progress(NativeObjectReference);
-        set => TIAsyncActionWithProgressMethods.Progress(NativeObjectReference, value);
-    }
-
-    /// <inheritdoc/>
-    public AsyncActionWithProgressCompletedHandler<TProgress>? Completed
-    {
-        get => TIAsyncActionWithProgressMethods.Completed(NativeObjectReference);
-        set => TIAsyncActionWithProgressMethods.Completed(NativeObjectReference, value);
+        get => TIAsyncOperationMethods.Completed(NativeObjectReference);
+        set => TIAsyncOperationMethods.Completed(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
@@ -78,9 +71,9 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     public Exception? ErrorCode => IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public void GetResults()
+    public TResult GetResults()
     {
-        IAsyncActionWithProgressMethods.GetResults(NativeObjectReference);
+        return TIAsyncOperationMethods.GetResults(NativeObjectReference);
     }
 
     /// <inheritdoc/>
@@ -96,7 +89,7 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncOperation<TResult>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }
