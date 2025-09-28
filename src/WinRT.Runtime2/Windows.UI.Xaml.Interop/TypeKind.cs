@@ -3,6 +3,7 @@
 
 using System.ComponentModel;
 using System.Runtime.Versioning;
+using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 

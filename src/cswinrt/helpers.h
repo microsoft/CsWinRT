@@ -787,6 +787,7 @@ namespace cswinrt
                     { "DateTime", "System", "DateTimeOffset", true },
                     { "EventHandler`1", "System", "EventHandler", false },
                     { "EventRegistrationToken", "WindowsRuntime.InteropServices", "EventRegistrationToken", false },
+                    { "FoundationContract", "Windows.Foundation", "FoundationContract"},
                     { "HResult", "System", "Exception", true },
                     { "IClosable", "System", "IDisposable", true, true },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
@@ -814,6 +815,7 @@ namespace cswinrt
                 {
                     { "AttributeTargets", "System", "AttributeTargets" },
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
+                    { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"}
                 }
             },
             { "Windows.Foundation.Numerics",

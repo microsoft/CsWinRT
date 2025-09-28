@@ -3995,7 +3995,7 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, name, name);
     }
 
-    void write_winrt_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
@@ -4007,6 +4007,30 @@ R"(#pragma warning disable IL2026
 #pragma warning restore IL2026
 
 )", projection_name, projection_name, projection_name);
+    }
+
+    void write_winrt_idic_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        // Generic interfaces are handled by cswinrtgen.
+        if (distance(type.GenericParam()) != 0)
+        {
+            return;
+        }
+
+        if (is_exclusive_to(type) && !settings.idic_exclusiveto)
+        {
+            return;
+        }
+
+        w.write(
+            R"(
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    typeof(%),
+    typeof(%))]
+
+)",
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            bind<write_type_name>(type, typedef_name_type::ABI, true));
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
@@ -7829,6 +7853,37 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             bind<write_custom_query_interface_impl>(type));
     }
 
+/*    void write_class2(writer& w, TypeDef const& type)
+    {
+        writer::write_platform_guard guard{ w };
+
+        if (settings.component)
+        {
+            write_wrapper_class(w, type);
+            return;
+        }
+
+        if (is_static(type))
+        {
+            write_static_class(w, type);
+            return;
+        }
+
+        auto type_namespace = type.TypeNamespace();
+        auto type_name = write_type_name_temp(w, type);
+        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto base_semantics = get_type_semantics(type.Extends());
+        auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
+
+        auto gc_pressure_amount = get_gc_pressure_amount(type);
+
+        auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
+        auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
+
+        w.write(R"(
+)");
+
+    }*/
     
     void write_class(writer& w, TypeDef const& type)
     {

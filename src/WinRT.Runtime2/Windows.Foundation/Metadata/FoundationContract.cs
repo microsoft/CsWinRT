@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Windows.Foundation.Metadata;
+using Windows.Foundation.Metadata;
+
+namespace Windows.Foundation;
 
 /// <summary>
 /// Represents the Windows Foundation API contract.

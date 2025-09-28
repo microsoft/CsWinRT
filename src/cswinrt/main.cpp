@@ -229,13 +229,13 @@ Where <spec> is one or more of:
                                 // TODO delegate_type
                                 break;
                             case category::enum_type:
-                                write_winrt_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::interface_type:
-                                // TODO interface_type
+                                write_winrt_idic_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::struct_type:
-                                write_winrt_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type);
                                 break;
                             }
                         }
