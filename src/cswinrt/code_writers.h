@@ -4375,7 +4375,7 @@ private static ConditionalWeakTable<WindowsRuntimeObject, %> _%
 )",
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::EventSource, false),
             evt.Name(),
-			bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::EventSource, false)
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::EventSource, false)
 );
     }
 
@@ -4847,7 +4847,7 @@ param_type);
                         is_array() ? "Array" : "",
                         get_param_local(w));
                 }
-				else if (is_marshal_by_object_reference_value())
+                else if (is_marshal_by_object_reference_value())
                 {
                     w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
                         get_param_local(w));
@@ -4914,7 +4914,7 @@ param_type);
                          m.marshaler_type == "global::ABI.System.TimeSpanMarshaller" ||
                          m.marshaler_type == "global::ABI.System.ExceptionMarshaller")
                 {
-					m.skip_disposer = true;
+                    m.skip_disposer = true;
                 }
             }
         };
@@ -5571,7 +5571,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
 )",
                 bind<write_event_source_table>(evt),
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::EventSource, false),
-				evt.Name(),
+                evt.Name(),
                 bind<write_event_source_ctor>(evt),
                 evt.Name(),
                 bind<write_event_source_ctor_call>(evt, abi_methods_start_index));
@@ -6455,7 +6455,7 @@ return 0;)",
                 if (return_sig)
                 {
                     return_marshaler.write_convert_to_unmanaged_function(w);
-				}
+                }
             },
             [&](writer& w) {
                 if (!return_sig) return;
@@ -6663,7 +6663,7 @@ bind<write_interop_dll_type_name>(semantics)
                 }
                 else
                 {
-					w.write("var __handler = %Marshaller.ConvertToManaged(handler);",
+                    w.write("var __handler = %Marshaller.ConvertToManaged(handler);",
                         bind<write_type_name>(semantics, typedef_name_type::ABI, false));
                 }
             },
@@ -7388,7 +7388,7 @@ public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
 }
 )",
             type.TypeName(),
-			bind_each([&](writer& w, MethodDef const& method)
+            bind_each([&](writer& w, MethodDef const& method)
             {
                 auto vmethod_name = get_vmethod_name(w, type, method);
                 w.write("public delegate* unmanaged[MemberFunction]<%, int> %;\n",
@@ -7399,7 +7399,7 @@ public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
 
     void write_interface_impl(writer& w, TypeDef const& type)
     {
-		w.write(R"(
+        w.write(R"(
 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Impl
 {
@@ -7434,7 +7434,7 @@ public static nint Vtable
 }
 )",
         type.TypeName(),
-		type.TypeName(),
+        type.TypeName(),
         // static ctor
         type.TypeName(),
         bind_each([&](writer& w, MethodDef const& method)
@@ -7492,7 +7492,7 @@ file interface % : %
             return;
         }
 
-		auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
+        auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
@@ -7509,11 +7509,11 @@ public static unsafe class %Marshaller
 }
 )",
     type.TypeName(),
-	projected_type,
+    projected_type,
     projected_type,
     bind<write_type_name>(type, typedef_name_type::ABI, false),
     projected_type,
-	projected_type
+    projected_type
 );
     }
 
