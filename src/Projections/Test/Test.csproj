@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-	<!-- Uncomment to generate projection -->
+    <!-- Uncomment to generate projection -->
     <CsWinRTIncludes>
       TestComponent.Blittable;
       TestComponent.NonBlittable;
@@ -37,6 +37,19 @@
       TestComponentCSharp.NonBlittableBoolStruct;
       TestComponentCSharp.NonBlittableRefStruct;
       TestComponentCSharp.ComposedNonBlittableStruct
+      TestComponentCSharp.CustomDisposableTest;
+      TestComponentCSharp.ICustomDisposableTest;
+      TestComponent.Composable;
+      TestComponent.IComposableStatics;
+      TestComponent.IRequiredOne;
+      TestComponent.IRequiredTwo;
+      TestComponent.IRequiredThree;
+      TestComponent.IRequiredFour;
+      TestComponent.IComposable;
+      TestComponentCSharp.ComImports;
+      TestComponentCSharp.IComImports;
+      TestComponentCSharp.ISingleton;
+      TestComponentCSharp.Singleton;	  
     </CsWinRTIncludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
