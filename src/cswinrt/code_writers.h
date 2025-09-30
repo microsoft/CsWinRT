@@ -4349,10 +4349,11 @@ interop_dll_type);
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
 )",
+param_name,
 interop_dll_type,
 param_type);
             }
@@ -4395,9 +4396,10 @@ param_type);
 
             write_convert_to_unmanaged_function(w);
 
-            w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged(%%);\n",
+            w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged%(%%);\n",
                 get_marshaler_local(w),
                 interop_dll_type != "" ? "" : marshaler_type + ".",
+                interop_dll_type != "" ? "_" + param_name : "",
                 interop_dll_type != "" ? "null, " : "",
                 param_name);
         }
@@ -4774,7 +4776,7 @@ param_type);
 
                 break;
             case category::class_type:
-                m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -5985,10 +5987,11 @@ interop_dll_type);
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
 )",
+param_name,
 interop_dll_type,
 param_type);
             }
@@ -6101,11 +6104,12 @@ param_type);
             }
             else
             {
-                w.write("%%ConvertToUnmanaged%(%%)%;",
+                w.write("%%ConvertToUnmanaged%%(%%)%;",
                     abi_boxed && !is_array() ?
                         w.write_temp("(%)", param_type) : "",
                     interop_dll_type != "" ? "" : marshaler_type + ".",
                     is_array() ? "Array" : "",
+                    interop_dll_type != "" ? "_" + param_name : "",
                     interop_dll_type != "" ? "null, " : "",
                     param_local,
                     is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
@@ -6156,7 +6160,7 @@ param_type);
                     }
                     break;
                 case category::class_type:
-                    m.marshaler_type = get_abi_type();
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
                     m.local_type = m.param_type;
                     m.marshal_by_object_reference_value = true;
                     break;
@@ -7010,8 +7014,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
-%
-%
+%%
 %% interface %%
 {%
 }
@@ -8307,8 +8310,8 @@ return true;
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
         w.write(
-R"(%%%%[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-% enum % : %
+R"(
+%%%%% enum % : %
 {
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
