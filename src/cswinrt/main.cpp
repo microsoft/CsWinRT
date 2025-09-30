@@ -223,19 +223,22 @@ Where <spec> is one or more of:
                             switch (get_category(type))
                             {
                             case category::class_type:
-                                // TODO class_type
+                                if (!is_static(type))
+                                {
+                                    write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                }
                                 break;
                             case category::delegate_type:
                                 // TODO delegate_type
                                 break;
                             case category::enum_type:
-                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                 break;
                             case category::interface_type:
                                 write_winrt_idic_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::struct_type:
-                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                 break;
                             }
                         }

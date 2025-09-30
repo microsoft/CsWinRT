@@ -3810,18 +3810,30 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, name, name);
     }
 
-    void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
 R"(#pragma warning disable IL2026
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<%>",
+    value: "%",
     target: typeof(%),
     trimTarget: typeof(%))]
 #pragma warning restore IL2026
 
-)", projection_name, projection_name, projection_name);
+)",
+        bind([&](writer& w) {
+            if (is_value_type)
+            {
+                w.write("Windows.Foundation.IReference<%>", projection_name);
+            }
+            else
+            {
+                w.write(projection_name);
+            }
+        }),
+        projection_name, 
+        projection_name);
     }
 
     void write_winrt_idic_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
@@ -4053,7 +4065,7 @@ Vtable = %.AbiToProjectionVftablePtr
 {
 %}
 )",
-            bind<write_winrt_attribute>(type),
+            bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
@@ -6931,44 +6943,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         );
     }
 
-    void write_base_constructor_dispatch_netstandard(writer& w, type_semantics type)
-    {
-        std::string base_default_interface_name;
-        call(type,
-            [&](object_type) {},
-            [&](type_definition const& def)
-            {
-                base_default_interface_name = get_default_interface_name(w, def);
-            },
-            [&](generic_type_instance const& inst)
-            {
-                auto guard{ w.push_generic_args(inst) };
-                base_default_interface_name = get_default_interface_name(w, inst.generic_type);
-            },
-                [](auto)
-            {
-                throw_invalid("Invalid base class type.");
-            });
-
-        if (!std::holds_alternative<object_type>(type))
-        {
-            w.write(R"(
-    : base(ifc.As<%>())
-)",
-                base_default_interface_name);
-        }
-    }
-
-    void write_base_constructor_dispatch(writer& w, type_semantics type)
-    {
-        if (!std::holds_alternative<object_type>(type))
-        {
-            w.write(R"(
-    : base(global::WinRT.DerivedComposed.Instance)
-)");
-        }
-    }
-
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
         w.write("%%%%internal class % {}\n",
@@ -7533,9 +7507,9 @@ public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
 return default;
 }
 
-public static % ConvertToManaged(void* value)
+public static %? ConvertToManaged(void* value)
 {
-return (%)%.ConvertToManaged<%ComWrappersCallback>(value);
+return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
 }
 }
 )",
@@ -7649,15 +7623,18 @@ return false;
 
     void write_abi_class(writer& w, TypeDef const& type)
     {
+        write_runtime_class_name_class(w, type);
+
         if (is_static(type))
         {
             return;
         }
 
-        write_runtime_class_name_class(w, type);
+        w.write("#nullable enable\n");
         write_class_marshaller(w, type);
         write_class_comwrappers_marshaller_attribute(w, type);
         write_class_comwrappers_callback(w, type);
+        w.write("#nullable disable\n");
     }
 
     void write_delegate(writer& w, TypeDef const& type)
