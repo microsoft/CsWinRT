@@ -3852,8 +3852,8 @@ R"(#pragma warning disable IL2026
         w.write(
             R"(
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
-    typeof(%),
-    typeof(%))]
+    source: typeof(%),
+    proxy: typeof(%))]
 
 )",
             bind<write_type_name>(type, typedef_name_type::Projected, true),
@@ -4334,7 +4334,7 @@ event % %;)",
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToManaged")]
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
 static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
@@ -4349,7 +4349,7 @@ interop_dll_type);
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToUnmanaged")]
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
 )",
@@ -5968,7 +5968,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToManaged")]
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
 static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
@@ -5983,7 +5983,7 @@ interop_dll_type);
             if (interop_dll_type != "")
             {
                 w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name="ConvertToUnmanaged")]
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
 )",
@@ -6271,12 +6271,13 @@ try
 {
 %
 %%
+return 0;
 }
 catch (Exception __exception__)
 {
 return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
 }
-return 0;)",
+)",
             [&](writer& w) {
                 w.write(bind_each([](writer& w, managed_marshaler const& m)
                 {
