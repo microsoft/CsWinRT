@@ -24,38 +24,70 @@
   <PropertyGroup>
     <!-- Uncomment to generate projection -->
     <CsWinRTIncludes>
-      TestComponent.Blittable;
-      TestComponent.NonBlittable;
-      TestComponent.Nested;
-      TestComponentCSharp.FlagValue;
-      TestComponentCSharp.EnumValue;
-      TestComponentCSharp.FlagStruct;
-      TestComponentCSharp.EnumStruct;
-      TestComponentCSharp.BlittableStruct;
-      TestComponentCSharp.ComposedBlittableStruct;
-      TestComponentCSharp.NonBlittableStringStruct;
-      TestComponentCSharp.NonBlittableBoolStruct;
-      TestComponentCSharp.NonBlittableRefStruct;
-      TestComponentCSharp.ComposedNonBlittableStruct
-      TestComponentCSharp.CustomDisposableTest;
-      TestComponentCSharp.ICustomDisposableTest;
-      TestComponent.Composable;
-      TestComponent.IComposableStatics;
-      TestComponent.IRequiredOne;
-      TestComponent.IRequiredTwo;
-      TestComponent.IRequiredThree;
-      TestComponent.IRequiredFour;
-      TestComponent.IComposable;
-      TestComponentCSharp.ComImports;
-      TestComponentCSharp.IComImports;
-      TestComponentCSharp.ISingleton;
-      TestComponentCSharp.Singleton;	  
-    </CsWinRTIncludes>
-  <!--
+		TestComponentCSharp.CustomDisposableTest;
+		TestComponentCSharp.ICustomDisposableTest;
+<!--		TestComponentCSharp.NonAgileClass;
+		TestComponentCSharp.INonAgileClass;
+		Microsoft.UI.Xaml.Interop.IBindableObservableVector; -->
+		TestComponent.Composable;
+		TestComponent.IComposableStatics;
+		TestComponent.IRequiredOne;
+		TestComponent.IRequiredTwo;
+		TestComponent.IRequiredThree;
+		TestComponent.IRequiredFour;
+		TestComponent.IComposable;
+		TestComponentCSharp.ComImports;
+		TestComponentCSharp.IComImports;
+		TestComponentCSharp.ISingleton;
+		TestComponentCSharp.Singleton;
+		<!--
+		TestComponentCSharp.Class;
+		TestComponentCSharp.CustomDisposableTest;
+		TestComponentCSharp.NonAgileClass;
+		TestComponentCSharp.IClass;
+		TestComponentCSharp.IUriHandler;
+		TestComponent.IRequiredOne;
+		TestComponent.IComposable;
+		TestComponentCSharp.ISingleton;
+		TestComponentCSharp.IProperties1;
+		TestComponentCSharp.IComImports;
+		TestComponentCSharp.ICowboy;
+		Windows.Foundation.IStringable;
+		TestComponentCSharp.WinRT.IClass;
+		TestComponentCSharp.TestPublicExclusiveTo.INonUniqueClass;
+		TestComponentCSharp.IArtist;
+		TestComponentCSharp.IProperties2;
+		TestComponentCSharp.IBoolChanged;
+		Windows.Foundation.FoundationContract;
+		Windows.Foundation.Metadata.Overload;
+		Windows.Foundation.Metadata.ContractVersion;
+		TestComponent.Blittable;
+		TestComponent.NonBlittable;
+		TestComponent.Nested;
+		TestComponentCSharp.FlagValue;
+		TestComponentCSharp.EnumValue;
+		TestComponentCSharp.FlagStruct;
+		TestComponentCSharp.EnumStruct;
+		TestComponentCSharp.BlittableStruct;
+		TestComponentCSharp.ComposedBlittableStruct;
+		TestComponentCSharp.NonBlittableStringStruct;
+		TestComponentCSharp.NonBlittableBoolStruct;
+		TestComponentCSharp.NonBlittableRefStruct;
+		TestComponentCSharp.ComposedNonBlittableStruct;
+		Windows.Foundation.IAsyncOperation;
+		Windows.Foundation.IAsyncAction;
+		Microsoft.UI.Xaml.Duration;
+		Microsoft.UI.Xaml.CornerRadius;
+		Microsoft.UI.Xaml.GridLength;
+		Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition;
+		Windows.Foundation.Collections.IPropertySet;-->
+	</CsWinRTIncludes>
+	  <!-- <CsWinRTExcludes>TestComponent.IComposableFactory;TestComponent.IComposableStatics;</CsWinRTExcludes>-->
+	  <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>
-  -->
-    <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+  -->    
+	  <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>
   <ItemGroup>
