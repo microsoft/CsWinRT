@@ -5058,7 +5058,7 @@ finally
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size(); i++)
             {
-                w.write("% = (%)additionalParameters[%]!;\n",
+                w.write("% = (%)additionalParameters[%];\n",
                     bind<write_projection_parameter>(params[i]),
                     bind<write_projection_parameter_type>(params[i]),
                     i);
@@ -5073,10 +5073,9 @@ finally
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
         w.write(R"(
-#nullable enable
 [MethodImpl(MethodImplOptions.NoInlining)]
 private static unsafe void %(
-  ReadOnlySpan<object?> additionalParameters,
+  ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
 using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
@@ -5085,7 +5084,6 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
-#nullable disable
 )",
             method.Name(),
             cache_object,
@@ -5108,7 +5106,7 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size() - 2; i++)
             {
-                w.write("% = (%)additionalParameters[%]!;\n",
+                w.write("% = (%)additionalParameters[%];\n",
                     bind<write_projection_parameter>(params[i]),
                     bind<write_projection_parameter_type>(params[i]),
                     i);
@@ -5137,11 +5135,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 		abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
         w.write(R"(
-#nullable enable
 [MethodImpl(MethodImplOptions.NoInlining)]
 private static unsafe void %(
-  ReadOnlySpan<object?> additionalParameters,
-  WindowsRuntimeObject? baseInterface,
+  ReadOnlySpan<object> additionalParameters,
+  WindowsRuntimeObject baseInterface,
   out void* innerInterface,
   out void* retval)
 {
@@ -5151,7 +5148,6 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
-#nullable disable
 )",
             method.Name(),
             cache_object,
