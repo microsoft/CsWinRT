@@ -146,10 +146,10 @@ public static unsafe class TypeMarshaller
     }
 
     /// <summary>
-    /// Frees resources associated with an unmanaged <see cref="Type"/> value.
+    /// Disposes resources associated with an unmanaged <see cref="Type"/> value.
     /// </summary>
-    /// <param name="value">The unmanaged <see cref="Type"/> value to free.</param>
-    public static void Free(Type value)
+    /// <param name="value">The unmanaged <see cref="Type"/> value to dispose.</param>
+    public static void Dispose(Type value)
     {
         HStringMarshaller.Free(value.Name);
     }

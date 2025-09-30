@@ -4681,8 +4681,7 @@ param_type);
                     w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
                         get_param_local(w));
                 }
-                else if (marshaler_type == "HStringMarshaller" || 
-                         marshaler_type == "global::ABI.System.TypeMarshaller")
+                else if (marshaler_type == "HStringMarshaller")
                 {
                     w.write("%.Free(%);\n",
                         marshaler_type,
