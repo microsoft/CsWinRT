@@ -264,16 +264,8 @@ Where <spec> is one or more of:
                                 }
                                 else
                                 {
-                                    if (settings.netstandard_compat)
-                                    {
-                                        write_class_netstandard(w, type);
-                                    }
-                                    else
-                                    {
-                                        write_class(w, type);
-                                        add_base_type_entry(type, typeNameToBaseTypeMap);
-                                        add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
-                                    }
+                                    write_class(w, type);
+                                    add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
                                         write_factory_class(w, type);
@@ -334,7 +326,6 @@ Where <spec> is one or more of:
                                     {
                                         write_winrt_exposed_type_class(w, type, true);
                                     }
-                                    write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
                                     break;
                                 case category::delegate_type:
                                     write_abi_delegate(w, type);
@@ -401,7 +392,7 @@ Where <spec> is one or more of:
                     w.write("%", value);
                 }
             }));
-            eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
+            // eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
             if (!typeNameToBaseTypeMap.empty())
             {
