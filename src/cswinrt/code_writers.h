@@ -3056,7 +3056,7 @@ visibility, self, objref_name);
             // Otherwise, write the default interface in composable scenarios using its own function.
             if (!is_default_interface)
             {
-                w.write(R"(
+				w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
 {
 return %.AsValue();
@@ -3067,7 +3067,7 @@ return %.AsValue();
             }
             else if (!type.Flags().Sealed())
             {
-                w.write(R"(
+				w.write(R"(
 internal WindowsRuntimeObjectReferenceValue GetDefaultInterface()
 {
 return %.AsValue();
@@ -5132,7 +5132,7 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
             true
         };
         // The last abi marshaler is the return value which we want to treat as an out.
-        abi_marshalers[inner_inspectable_index + 1].is_return = false;
+		abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
         w.write(R"(
 [MethodImpl(MethodImplOptions.NoInlining)]
@@ -5644,7 +5644,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         {
             write_delimiter();
             w.write("WindowsRuntimeObject");
-        }
+		}
 
         for (auto&& iface : type.InterfaceImpl())
         {
@@ -7440,7 +7440,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_type_inheritance>(type, base_semantics, false, false, true),
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
-            // ObjectReference constructor
+			// ObjectReference constructor
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             [&](writer& w)
@@ -7497,7 +7497,7 @@ public const string RuntimeClassName = "%";
     void write_class_marshaller(writer& w, TypeDef const& type)
     {
         auto projected_type_name = write_type_name_temp(w, type);
-        bool sealed = type.Flags().Sealed();
+		bool sealed = type.Flags().Sealed();
 
         w.write(R"(
 public static unsafe class %Marshaller
