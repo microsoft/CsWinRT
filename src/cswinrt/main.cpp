@@ -223,19 +223,22 @@ Where <spec> is one or more of:
                             switch (get_category(type))
                             {
                             case category::class_type:
-                                // TODO class_type
+                                if (!is_static(type))
+                                {
+                                    write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                }
                                 break;
                             case category::delegate_type:
                                 // TODO delegate_type
                                 break;
                             case category::enum_type:
-                                write_winrt_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                 break;
                             case category::interface_type:
-                                // TODO interface_type
+                                write_winrt_idic_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::struct_type:
-                                write_winrt_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                 break;
                             }
                         }
@@ -264,16 +267,8 @@ Where <spec> is one or more of:
                                 }
                                 else
                                 {
-                                    if (settings.netstandard_compat)
-                                    {
-                                        write_class_netstandard(w, type);
-                                    }
-                                    else
-                                    {
-                                        write_class(w, type);
-                                        add_base_type_entry(type, typeNameToBaseTypeMap);
-                                        add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
-                                    }
+                                    write_class(w, type);
+                                    add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
                                         write_factory_class(w, type);
@@ -334,7 +329,6 @@ Where <spec> is one or more of:
                                     {
                                         write_winrt_exposed_type_class(w, type, true);
                                     }
-                                    write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
                                     break;
                                 case category::delegate_type:
                                     write_abi_delegate(w, type);
@@ -344,16 +338,7 @@ Where <spec> is one or more of:
                                     write_abi_enum(w, type);
                                     break;
                                 case category::interface_type:
-                                    if (settings.netstandard_compat)
-                                    {
-                                        write_static_abi_classes(w, type);
-                                        write_abi_interface_netstandard(w, type);
-                                    }
-                                    else
-                                    {
-                                        write_static_abi_classes(w, type);
-                                        write_abi_interface(w, type);
-                                    }
+                                    write_abi_interface(w, type);
                                     break;
                                 case category::struct_type:
                                     write_abi_struct(w, type);
@@ -410,7 +395,7 @@ Where <spec> is one or more of:
                     w.write("%", value);
                 }
             }));
-            eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
+            // eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
             if (!typeNameToBaseTypeMap.empty())
             {
@@ -441,69 +426,6 @@ bind([&](writer& w) {
                         }
     }));
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
-            }
-
-            if (!abiDelegateEntries.empty() && settings.netstandard_compat)
-            {
-                writer baseTypeWriter("WinRT");
-                write_file_header(baseTypeWriter);
-                baseTypeWriter.write(R"(
-using System;
-
-namespace WinRT
-{
-internal static class AbiDelegatesInitializer
-{
-
-[System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeAbiDelegates()
-{
-%
-}
-
-%
-}
-})",
-                bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
-                    {
-                        w.write("Projections.RegisterAbiDelegate(%, typeof(%));\n", entry.abi_delegate_types, entry.abi_delegate_name);
-                    }
-
-                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
-                    {
-                        w.write("Projections.RegisterAbiDelegate(new Type[] { typeof(void*), typeof(IntPtr), typeof(global::Windows.Foundation.AsyncStatus), typeof(int) }, typeof(_invoke_IntPtr_AsyncStatus));\n");
-                    }
-                }),
-                bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
-                    {
-                        w.write("%\n", entry.abi_delegate_declaration);
-                    }
-
-                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
-                    {
-                        w.write("internal unsafe delegate int _invoke_IntPtr_AsyncStatus(void* thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus);\n");
-                    }
-                }));
-                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
-            }
-
-            if (!settings.netstandard_compat && has_generic_type_instantiations())
-            {
-                writer genericTypeInstantiationWriter("WinRT.GenericTypeInstantiations");
-                write_file_header(genericTypeInstantiationWriter);
-                genericTypeInstantiationWriter.write(R"(
-using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-namespace WinRT.GenericTypeInstantiations
-{
-%
-})",
-                bind<write_generic_type_instantiations>());
-                genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
             }
 
             if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)

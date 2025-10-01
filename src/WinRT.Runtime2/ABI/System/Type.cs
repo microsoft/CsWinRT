@@ -144,6 +144,15 @@ public static unsafe class TypeMarshaller
 
         return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
     }
+
+    /// <summary>
+    /// Disposes resources associated with an unmanaged <see cref="Type"/> value.
+    /// </summary>
+    /// <param name="value">The unmanaged <see cref="Type"/> value to dispose.</param>
+    public static void Dispose(Type value)
+    {
+        HStringMarshaller.Free(value.Name);
+    }
 }
 
 /// <summary>
