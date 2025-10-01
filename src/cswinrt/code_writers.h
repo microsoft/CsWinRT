@@ -1059,7 +1059,7 @@ namespace cswinrt
 
     void write_abi_get_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
-        w.write("%.get_%(%)",
+        w.write("%.%(%)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
             targetObjRef);
@@ -1067,7 +1067,7 @@ namespace cswinrt
 
     void write_abi_set_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
-        w.write("%.set_%(%, value)",
+        w.write("%.%(%, value)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
             targetObjRef);
@@ -5339,7 +5339,7 @@ public static unsafe % %(WindowsRuntimeObjectReference thisReference%%)
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 w.write(R"(
 [MethodImpl(MethodImplOptions.NoInlining)]
-public static unsafe % get_%(WindowsRuntimeObjectReference thisReference)
+public static unsafe % %(WindowsRuntimeObjectReference thisReference)
 {%}
 )",
                     write_prop_type(w, prop),
@@ -5358,7 +5358,7 @@ public static unsafe % get_%(WindowsRuntimeObjectReference thisReference)
 
                 w.write(R"(
 [MethodImpl(MethodImplOptions.NoInlining)]
-public static unsafe void set_%(WindowsRuntimeObjectReference thisReference, % value)
+public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value)
 {%}
 )",                 
                     prop.Name(),
