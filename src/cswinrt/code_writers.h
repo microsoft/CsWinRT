@@ -7640,19 +7640,12 @@ return false;
 
     void write_delegate(writer& w, TypeDef const& type)
     {
-        if (settings.component)
-        {
-            write_authoring_metadata_type(w, type);
-            return;
-        }
-
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(%%%%% delegate % %(%);
+        w.write(R"(%%%% delegate % %(%);
 )",
-            bind<write_winrt_attribute>(type),
-            bind<write_winrt_helper_type_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type, false),
-            bind<write_type_custom_attributes>(type, false),
+            bind<write_winrt_metadata_attribute>(type),
+            bind<write_type_custom_attributes>(type, true),
+            bind<write_comwrapper_marshaller_attribute>(type),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
