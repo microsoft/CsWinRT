@@ -7652,6 +7652,7 @@ return false;
             bind_list<write_projection_parameter>(", ", signature.params()));
     }
 
+
     void write_abi_delegate(writer& w, TypeDef const& type)
     {
         auto method = get_delegate_invoke(type);
