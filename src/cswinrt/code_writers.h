@@ -7652,8 +7652,78 @@ return false;
             bind_list<write_projection_parameter>(", ", signature.params()));
     }
 
+    void write_delegate_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
+    {
+        auto name = type.TypeName();
+        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
+        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        w.write(
+            R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+{
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID).DetachThisPtrUnsafe();
+    }
+
+    public override ComInterfaceEntry* ComputeVtables(out int count)
+    {
+        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
+    }
+}
+
+)", name, projection_name, projection_name, name, name);
+    }
+
+    void write_delegate_marshaller(writer& w, TypeDef const& type)
+    {
+        if (is_exclusive_to(type))
+        {
+            return;
+        }
+
+        auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
+        w.write(R"(
+#nullable enable
+[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static unsafe class %Marshaller
+{
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
+    {
+        return WindowsRuntimeDelegateMarshaller<%>.ConvertToUnmanaged(value, %Impl.IID);
+    }
+
+    public static %? ConvertToManaged(void* value)
+    {
+        return (%?) WindowsRuntimeDelegateMarshaller.ConvertToManaged(value);
+    }
+}
+#nullable disable
+)",
+type.TypeName(),
+projected_type,
+projected_type,
+bind<write_type_name>(type, typedef_name_type::ABI, false),
+projected_type,
+projected_type
+);
+    }
 
     void write_abi_delegate(writer& w, TypeDef const& type)
+    {
+        //auto method = get_delegate_invoke(type);
+        //method_signature signature{ method };
+        //auto type_name = write_type_name_temp(w, type);
+        //auto type_params = w.write_temp("%", bind<write_type_params>(type));
+        //auto is_generic = distance(type.GenericParam()) > 0;
+        //auto generic_abi_types = get_generic_abi_types(w, signature);
+        //bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
+        //    [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
+        write_delegate_marshaller(w, type);
+        write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
+    }
+
+    void write_abi_delegate_old(writer& w, TypeDef const& type)
     {
         auto method = get_delegate_invoke(type);
         method_signature signature{ method };
