@@ -332,7 +332,6 @@ Where <spec> is one or more of:
                                     break;
                                 case category::delegate_type:
                                     write_abi_delegate(w, type);
-                                    write_winrt_exposed_type_class(w, type, false);
                                     break;
                                 case category::enum_type:
                                     write_abi_enum(w, type);

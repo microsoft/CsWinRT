@@ -3674,7 +3674,7 @@ R"(public static %? UnboxToManaged(void* value)
         }
     }
 
-    void write_reference_impl_struct(writer& w, TypeDef const& type)
+    void write_reference_impl(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
@@ -7684,13 +7684,12 @@ return false;
 
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
-#nullable enable
 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeDelegateMarshaller<%>.ConvertToUnmanaged(value, %Impl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in %ReferenceImpl.IID);
     }
 
     public static %? ConvertToManaged(void* value)
@@ -7698,15 +7697,39 @@ public static unsafe class %Marshaller
         return (%?) WindowsRuntimeDelegateMarshaller.ConvertToManaged(value);
     }
 }
-#nullable disable
 )",
-type.TypeName(),
-projected_type,
-projected_type,
-bind<write_type_name>(type, typedef_name_type::ABI, false),
-projected_type,
-projected_type
-);
+            type.TypeName(),
+            bind<write_type_name>(type, typedef_name_type::Projected, false),
+            type.TypeName(),
+            projected_type,
+            projected_type
+        );
+    }
+
+    void write_native_delegate(writer& w, TypeDef const& type)
+    {
+        w.write(R"(
+public static unsafe class %NativeDelegate
+{
+    #nullable enable
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, EventArgs e)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
+        using WindowsRuntimeObjectReferenceValue eValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(e);
+
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+        int hresult = ((DelegateVftbl*)*(void***)thisPtr)->Invoke(
+            thisPtr,
+            senderValue.GetThisPtrUnsafe(),
+            eValue.GetThisPtrUnsafe());
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+    }
+    #nullable disable
+}
+)",
+            type.TypeName()
+        );
     }
 
     void write_abi_delegate(writer& w, TypeDef const& type)
@@ -7719,8 +7742,12 @@ projected_type
         //auto generic_abi_types = get_generic_abi_types(w, signature);
         //bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
         //    [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
+        write_native_delegate(w, type);
         write_delegate_marshaller(w, type);
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
+        write_reference_impl(w, type);
+        write_interface_entries_impl(w, type);
+
     }
 
     void write_abi_delegate_old(writer& w, TypeDef const& type)
@@ -8401,7 +8428,7 @@ R"(
         write_struct_and_enum_marshaller_class(w, type);
         write_interface_entries_impl(w, type);
         write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
-        write_reference_impl_struct(w, type);
+        write_reference_impl(w, type);
     }
     
     void write_struct(writer& w, TypeDef const& type)
@@ -8518,7 +8545,7 @@ R"(
         write_struct_and_enum_marshaller_class(w, type);
         write_interface_entries_impl(w, type);
         write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
-        write_reference_impl_struct(w, type);
+        write_reference_impl(w, type);
     }
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)

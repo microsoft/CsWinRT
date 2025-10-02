@@ -30,3 +30,12 @@ internal unsafe struct ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, void*, int> get_Value;
 }
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct DelegateVftbl
+{
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, void*, void*, int> Invoke;
+}
