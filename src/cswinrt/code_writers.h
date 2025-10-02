@@ -7652,6 +7652,30 @@ return false;
             bind_list<write_projection_parameter>(", ", signature.params()));
     }
 
+    void write_delegate_comwrappers_callback(writer& w, TypeDef const& type)
+    {
+        w.write(R"(
+file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in %ReferenceImpl.IID,
+            wrapperFlags: out wrapperFlags);
+
+        return new %(valueReference.Invoke);
+    }
+}
+)",
+            type.TypeName(),
+            type.TypeName(),
+            bind<write_type_name>(type, typedef_name_type::Projected, false)
+        );
+    }
+
+
     void write_delegate_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
         auto name = type.TypeName();
@@ -7691,18 +7715,20 @@ public static unsafe class %Marshaller
     {
         return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in %ReferenceImpl.IID);
     }
-
+    #nullable enable
     public static %? ConvertToManaged(void* value)
     {
-        return (%?) WindowsRuntimeDelegateMarshaller.ConvertToManaged(value);
+        return (%?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<%ComWrappersCallback>(value);
     }
+    #nullable disable
 }
 )",
             type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             type.TypeName(),
             projected_type,
-            projected_type
+            projected_type,
+            type.TypeName()
         );
     }
 
@@ -7744,6 +7770,7 @@ public static unsafe class %NativeDelegate
         //    [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
         write_native_delegate(w, type);
         write_delegate_marshaller(w, type);
+        write_delegate_comwrappers_callback(w, type);
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_reference_impl(w, type);
         write_interface_entries_impl(w, type);
