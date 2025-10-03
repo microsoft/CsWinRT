@@ -47,9 +47,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
-                mapType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(mapType, eventRegistrationTokenTableType);
 
             // Define the 'add_MapChanged' method as follows:
             //
@@ -176,9 +174,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
-                mapType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(mapType, eventRegistrationTokenTableType);
 
             // Define the 'remove_MapChanged' method as follows:
             //
