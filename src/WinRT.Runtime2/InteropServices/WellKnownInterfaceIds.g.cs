@@ -485,6 +485,81 @@ internal static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>IAsyncInfo</c> (00000036-0000-0000-C000-000000000046).</summary>
+    public static ref readonly Guid IID_IAsyncInfo
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x36, 0x00, 0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0xC0,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x46
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IAsyncAction</c> (5A648006-843A-4DA9-865B-9D26E5DFAD7B).</summary>
+    public static ref readonly Guid IID_IAsyncAction
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x06, 0x80, 0x64, 0x5A,
+                0x3A, 0x84,
+                0xA9, 0x4D,
+                0x86,
+                0x5B,
+                0x9D,
+                0x26,
+                0xE5,
+                0xDF,
+                0xAD,
+                0x7B
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>AsyncActionCompletedHandler</c> (A4ED5C81-76C9-40BD-8BE6-B1D90FB20AE7).</summary>
+    public static ref readonly Guid IID_AsyncActionCompletedHandler
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x81, 0x5C, 0xED, 0xA4,
+                0xC9, 0x76,
+                0xBD, 0x40,
+                0x8B,
+                0xE6,
+                0xB1,
+                0xD9,
+                0x0F,
+                0xB2,
+                0x0A,
+                0xE7
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IVectorChangedEventArgs</c> (575933DF-34FE-4480-AF15-07691F3D5D9B).</summary>
     public static ref readonly Guid IID_IVectorChangedEventArgs
     {
@@ -2129,6 +2204,31 @@ internal static class WellKnownInterfaceIds
                 0xAC,
                 0xCB,
                 0x8B
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfAsyncActionCompletedHandler</c> (F31DBB29-606D-5A89-A23A-C09AB9605B8F).</summary>
+    public static ref readonly Guid IID_IReferenceOfAsyncActionCompletedHandler
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x29, 0xBB, 0x1D, 0xF3,
+                0x6D, 0x60,
+                0x89, 0x5A,
+                0xA2,
+                0x3A,
+                0xC0,
+                0x9A,
+                0xB9,
+                0x60,
+                0x5B,
+                0x8F
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));

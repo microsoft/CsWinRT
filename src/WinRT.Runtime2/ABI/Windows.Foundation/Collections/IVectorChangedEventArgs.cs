@@ -17,33 +17,33 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.ComponentModel;
 
 /// <summary>
-/// Marshaller for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// Marshaller for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::Windows.Foundation.Collections.IVectorChangedEventArgs? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IVectorChangedEventArgs? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::Windows.Foundation.Collections.IVectorChangedEventArgs>.ConvertToUnmanaged(
+        return WindowsRuntimeInterfaceMarshaller<IVectorChangedEventArgs>.ConvertToUnmanaged(
             value: value,
             iid: in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::Windows.Foundation.Collections.IVectorChangedEventArgs? ConvertToManaged(void* value)
+    public static IVectorChangedEventArgs? ConvertToManaged(void* value)
     {
-        return (global::Windows.Foundation.Collections.IVectorChangedEventArgs?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (IVectorChangedEventArgs?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// Interop methods for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsMethods
 {
-    /// <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs.CollectionChange"/>
+    /// <see cref="IVectorChangedEventArgs.CollectionChange"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static CollectionChange CollectionChange(WindowsRuntimeObjectReference thisReference)
     {
@@ -57,7 +57,7 @@ public static unsafe class IVectorChangedEventArgsMethods
         return result;
     }
 
-    /// <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs.Index"/>
+    /// <see cref="IVectorChangedEventArgs.Index"/>
     public static uint Index(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
@@ -72,7 +72,7 @@ public static unsafe class IVectorChangedEventArgsMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// Binding type for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorchangedeventargs"/>
 [StructLayout(LayoutKind.Sequential)]
@@ -89,13 +89,13 @@ internal unsafe struct IVectorChangedEventArgsVftbl
 }
 
 /// <summary>
-/// The <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/> implementation.
+/// The <see cref="IVectorChangedEventArgs"/> implementation.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsImpl
 {
     /// <summary>
-    /// The <see cref="IVectorChangedEventArgsVftbl"/> value for the managed <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/> implementation.
+    /// The <see cref="IVectorChangedEventArgsVftbl"/> value for the managed <see cref="IVectorChangedEventArgs"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IVectorChangedEventArgsVftbl Vftbl;
@@ -112,12 +112,12 @@ public static unsafe class IVectorChangedEventArgsImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+    /// Gets the IID for <see cref="IVectorChangedEventArgs"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/> implementation.
+    /// Gets a pointer to the managed <see cref="IVectorChangedEventArgs"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -131,7 +131,7 @@ public static unsafe class IVectorChangedEventArgsImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.Collections.IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
 
             *result = unboxedValue.CollectionChange;
 
@@ -149,7 +149,7 @@ public static unsafe class IVectorChangedEventArgsImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.Collections.IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
 
             *result = unboxedValue.Index;
 
@@ -163,28 +163,28 @@ public static unsafe class IVectorChangedEventArgsImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface IVectorChangedEventArgs : global::Windows.Foundation.Collections.IVectorChangedEventArgs
+file interface IVectorChangedEventArgsInterfaceImpl : IVectorChangedEventArgs
 {
     /// <inheritdoc/>
-    CollectionChange global::Windows.Foundation.Collections.IVectorChangedEventArgs.CollectionChange
+    CollectionChange IVectorChangedEventArgs.CollectionChange
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.Collections.IVectorChangedEventArgs).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IVectorChangedEventArgs).TypeHandle);
 
             return IVectorChangedEventArgsMethods.CollectionChange(thisReference);
         }
     }
 
     /// <inheritdoc/>
-    uint global::Windows.Foundation.Collections.IVectorChangedEventArgs.Index
+    uint IVectorChangedEventArgs.Index
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.Collections.IVectorChangedEventArgs).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IVectorChangedEventArgs).TypeHandle);
 
             return IVectorChangedEventArgsMethods.Index(thisReference);
         }

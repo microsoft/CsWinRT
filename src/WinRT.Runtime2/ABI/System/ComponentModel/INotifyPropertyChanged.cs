@@ -17,15 +17,15 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.ComponentModel;
 
 /// <summary>
-/// Marshaller for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+/// Marshaller for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyPropertyChanged? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(INotifyPropertyChanged? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.ComponentModel.INotifyPropertyChanged>.ConvertToUnmanaged(
+        return WindowsRuntimeInterfaceMarshaller<INotifyPropertyChanged>.ConvertToUnmanaged(
             value: value,
             iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
                 ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
@@ -33,20 +33,20 @@ public static unsafe class INotifyPropertyChangedMarshaller
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.ComponentModel.INotifyPropertyChanged? ConvertToManaged(void* value)
+    public static INotifyPropertyChanged? ConvertToManaged(void* value)
     {
-        return (global::System.ComponentModel.INotifyPropertyChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (INotifyPropertyChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+/// Interop methods for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedMethods
 {
     /// <summary>
-    /// The <see cref="EventSource{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
+    /// The <see cref="EventSource{T}"/> table for <see cref="INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
     private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> PropertyChangedTable
     {
@@ -65,7 +65,7 @@ public static unsafe class INotifyPropertyChangedMethods
         }
     }
 
-    /// <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>
+    /// <see cref="INotifyPropertyChanged.PropertyChanged"/>
     public static PropertyChangedEventSource PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return PropertyChangedTable.GetOrAdd(
@@ -76,7 +76,7 @@ public static unsafe class INotifyPropertyChangedMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+/// Binding type for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct INotifyPropertyChangedVftbl
@@ -92,13 +92,13 @@ internal unsafe struct INotifyPropertyChangedVftbl
 }
 
 /// <summary>
-/// The <see cref="global::System.ComponentModel.INotifyPropertyChanged"/> implementation.
+/// The <see cref="INotifyPropertyChanged"/> implementation.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedImpl
 {
     /// <summary>
-    /// The <see cref="INotifyPropertyChangedVftbl"/> value for the managed <see cref="global::System.ComponentModel.INotifyPropertyChanged"/> implementation.
+    /// The <see cref="INotifyPropertyChangedVftbl"/> value for the managed <see cref="INotifyPropertyChanged"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly INotifyPropertyChangedVftbl Vftbl;
@@ -115,14 +115,14 @@ public static unsafe class INotifyPropertyChangedImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+    /// Gets the IID for <see cref="INotifyPropertyChanged"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
         ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
         : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged;
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.ComponentModel.INotifyPropertyChanged"/> implementation.
+    /// Gets a pointer to the managed <see cref="INotifyPropertyChanged"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -131,15 +131,15 @@ public static unsafe class INotifyPropertyChangedImpl
     }
 
     /// <summary>
-    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
+    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> PropertyChangedTable
+    private static ConditionalWeakTable<INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> MakePropertyChangedTable()
+            static ConditionalWeakTable<INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> MakePropertyChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -158,7 +158,7 @@ public static unsafe class INotifyPropertyChangedImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
 
             PropertyChangedEventHandler? managedHandler = PropertyChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
@@ -180,7 +180,7 @@ public static unsafe class INotifyPropertyChangedImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
 
             if (unboxedValue is not null && PropertyChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out PropertyChangedEventHandler? managedHandler))
             {
@@ -197,25 +197,25 @@ public static unsafe class INotifyPropertyChangedImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+file interface INotifyPropertyChangedInterfaceImpl : INotifyPropertyChanged
 {
     /// <inheritdoc/>
-    event PropertyChangedEventHandler? global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
     {
         add
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyPropertyChanged).TypeHandle);
 
             INotifyPropertyChangedMethods.PropertyChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyPropertyChanged).TypeHandle);
 
             INotifyPropertyChangedMethods.PropertyChanged(thisObject, thisReference).Unsubscribe(value);
         }

@@ -18,15 +18,15 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.Collections.Specialized;
 
 /// <summary>
-/// Marshaller for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+/// Marshaller for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.INotifyCollectionChanged? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(INotifyCollectionChanged? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.Specialized.INotifyCollectionChanged>.ConvertToUnmanaged(
+        return WindowsRuntimeInterfaceMarshaller<INotifyCollectionChanged>.ConvertToUnmanaged(
             value: value,
             iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
                 ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
@@ -34,20 +34,20 @@ public static unsafe class INotifyCollectionChangedMarshaller
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.Collections.Specialized.INotifyCollectionChanged? ConvertToManaged(void* value)
+    public static INotifyCollectionChanged? ConvertToManaged(void* value)
     {
-        return (global::System.Collections.Specialized.INotifyCollectionChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (INotifyCollectionChanged?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+/// Interop methods for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMethods
 {
     /// <summary>
-    /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
+    /// The <see cref="EventSource{T}"/> table for <see cref="INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
     private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChangedTable
     {
@@ -66,7 +66,7 @@ public static unsafe class INotifyCollectionChangedMethods
         }
     }
 
-    /// <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>
+    /// <see cref="INotifyCollectionChanged.CollectionChanged"/>
     public static NotifyCollectionChangedEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return CollectionChangedTable.GetOrAdd(
@@ -77,7 +77,7 @@ public static unsafe class INotifyCollectionChangedMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+/// Binding type for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct INotifyCollectionChangedVftbl
@@ -93,13 +93,13 @@ internal unsafe struct INotifyCollectionChangedVftbl
 }
 
 /// <summary>
-/// The <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/> implementation.
+/// The <see cref="INotifyCollectionChanged"/> implementation.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedImpl
 {
     /// <summary>
-    /// The <see cref="INotifyCollectionChangedVftbl"/> value for the managed <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/> implementation.
+    /// The <see cref="INotifyCollectionChangedVftbl"/> value for the managed <see cref="INotifyCollectionChanged"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly INotifyCollectionChangedVftbl Vftbl;
@@ -116,14 +116,14 @@ public static unsafe class INotifyCollectionChangedImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+    /// Gets the IID for <see cref="INotifyCollectionChanged"/>.
     /// </summary>
     public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
         ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
         : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/> implementation.
+    /// Gets a pointer to the managed <see cref="INotifyCollectionChanged"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -132,15 +132,15 @@ public static unsafe class INotifyCollectionChangedImpl
     }
 
     /// <summary>
-    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
+    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> CollectionChangedTable
+    private static ConditionalWeakTable<INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> MakeCollectionChangedTable()
+            static ConditionalWeakTable<INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> MakeCollectionChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -159,7 +159,7 @@ public static unsafe class INotifyCollectionChangedImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
 
             NotifyCollectionChangedEventHandler? managedHandler = NotifyCollectionChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
@@ -181,7 +181,7 @@ public static unsafe class INotifyCollectionChangedImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
 
             if (unboxedValue is not null && CollectionChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out NotifyCollectionChangedEventHandler? managedHandler))
             {
@@ -198,25 +198,25 @@ public static unsafe class INotifyCollectionChangedImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
+file interface INotifyCollectionChangedInterfaceImpl : INotifyCollectionChanged
 {
     /// <inheritdoc/>
-    event NotifyCollectionChangedEventHandler? global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged
+    event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
     {
         add
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
 
             INotifyCollectionChangedMethods.CollectionChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
 
             INotifyCollectionChangedMethods.CollectionChanged(thisObject, thisReference).Unsubscribe(value);
         }
