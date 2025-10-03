@@ -704,7 +704,7 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
-    /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;TKey, TValue&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;K, V&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -889,28 +889,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>'
-        MethodSignature add_VectorChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>'
-        MethodSignature remove_VectorChanged = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.ToValueTypeSignature()]);
+        // Signatures for 'VectorChanged'
+        MethodSignature add_VectorChanged = WellKnownTypeSignatureFactory.add_EventHandler(interopReferences);
+        MethodSignature remove_VectorChanged = WellKnownTypeSignatureFactory.remove_EventHandler(interopReferences);
 
         // The vtable layout for 'IObservableVector`1<T>' looks like this:
         //
@@ -930,6 +911,56 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("add_VectorChanged"u8, FieldAttributes.Public, add_VectorChanged.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("remove_VectorChanged"u8, FieldAttributes.Public, remove_VectorChanged.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an 'IObservableMap`2&lt;K, V&gt;' instantiation for some type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IObservableMapVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IObservableMapVftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Signatures for 'MapChanged'
+        MethodSignature add_MapChanged = WellKnownTypeSignatureFactory.add_EventHandler(interopReferences);
+        MethodSignature remove_MapChanged = WellKnownTypeSignatureFactory.remove_EventHandler(interopReferences);
+
+        // The vtable layout for 'IObservableMap`2<K, V>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int> add_MapChanged;
+        // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int> remove_MapChanged;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("add_MapChanged"u8, FieldAttributes.Public, add_MapChanged.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("remove_MapChanged"u8, FieldAttributes.Public, remove_MapChanged.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }

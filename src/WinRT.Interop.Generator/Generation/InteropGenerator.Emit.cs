@@ -106,6 +106,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IObservableMap<>' types
+        DefineIObservableMapTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
@@ -333,10 +338,14 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
                 {
+                    // We need the marshaller type for the 'IObservableMap<K, V>' implementation
+                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
+
                     InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         interopReferences: interopReferences,
+                        emitState: emitState,
                         module: module,
                         eventSourceType: out _);
                 }
@@ -981,6 +990,14 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IDictionary2.Interface(
+                    dictionaryType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceType: out _);
+
                 InteropTypeDefinitionBuilder.IDictionary2.Vftbl(
                     dictionaryType: typeSignature,
                     interopDefinitions: interopDefinitions,
@@ -1003,6 +1020,7 @@ internal partial class InteropGenerator
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
 
@@ -1348,6 +1366,122 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIObservableMapTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropTypeDefinitionBuilder.IObservableMap2.IID(
+                    mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.ImplType(
+                    mapType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
+                    mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    factoryType: out TypeDefinition factoryType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.Methods(
+                    mapType: typeSignature,
+                    eventSourceFactoryType: factoryType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    methodsType: out TypeDefinition methodsType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.NativeObject(
+                    mapType: typeSignature,
+                    mapMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.ComWrappersCallbackType(
+                    mapType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition comWrappersCallbackType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.ComWrappersMarshallerAttribute(
+                    mapType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition comWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.Marshaller(
+                    mapType: typeSignature,
+                    mapComWrappersCallbackType: comWrappersMarshallerType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.InterfaceImpl(
+                    mapType: typeSignature,
+                    mapMethodsType: methodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.Proxy(
+                    mapType: typeSignature,
+                    mapComWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IObservableMap2.TypeMapAttributes(
+                    mapType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IObservableMapTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the interop types for SZ array types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -1548,6 +1682,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.IObservableVectorVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IObservableMapVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);

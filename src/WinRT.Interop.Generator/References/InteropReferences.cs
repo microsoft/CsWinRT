@@ -462,6 +462,11 @@ internal sealed class InteropReferences
     public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
     /// </summary>
     public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
@@ -550,6 +555,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableVector&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObservableVector6 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObservableVector`6"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableMap&lt;TKey, TValue, ...&gt;</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeObservableMap7 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObservableMap`7"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMapChangedEventArgs&lt;TKey, ...&gt;</c>.
@@ -692,7 +702,7 @@ internal sealed class InteropReferences
     public TypeReference IObservableVector1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference IObservableMap2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
 
@@ -2831,7 +2841,60 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateInstance(
-                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                returnType: VectorChangedEventHandler1EventSource.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [
+                    WindowsRuntimeObject.ToReferenceTypeSignature(),
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;.MapChanged</c>'s adder.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMap2add_MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMap2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("add_MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;.MapChanged</c>'s remover.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMap2remove_MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMap2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("remove_MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;.MapChanged</c>'s getter.
+    /// </summary>
+    /// <param name="keyType">The type of keys.</param>
+    /// <param name="valueType">The type of values.</param>
+    public MemberReference IObservableMapMethodsImpl2MapChanged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IObservableMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("MapChanged"u8, MethodSignature.CreateInstance(
+                returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
                 parameterTypes: [
                     WindowsRuntimeObject.ToReferenceTypeSignature(),
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));

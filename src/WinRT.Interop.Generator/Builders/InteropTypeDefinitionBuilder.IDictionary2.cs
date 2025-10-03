@@ -47,6 +47,54 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the interface type for some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="interfaceType">The resulting interface type.</param>
+        public static void Interface(
+            GenericInstanceTypeSignature dictionaryType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition interfaceType)
+        {
+            // We're declaring an 'internal abstract class' type
+            interfaceType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Interface"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface.Import(module)) }
+            };
+
+            module.TopLevelTypes.Add(interfaceType);
+
+            // Track the type (it's needed by 'IObservableMap<K, V>')
+            emitState.TrackTypeDefinition(interfaceType, dictionaryType, "Interface");
+
+            // Create the public 'IID' property
+            WellKnownMemberDefinitionFactory.IID(
+                forwardedIidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
+
+            interfaceType.Properties.Add(iidProperty);
+
+            // Add and implement the 'get_IID' method
+            interfaceType.AddMethodImplementation(
+                declaration: interopReferences.IWindowsRuntimeInterfaceget_IID.Import(module),
+                method: get_IidMethod2);
+        }
+
+        /// <summary>
         /// Creates a new type definition for the vtable for an <c>IMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
@@ -168,12 +216,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="mapMethodsType">The resulting methods type.</param>
         public static void IMapMethods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition mapMethodsType)
         {
@@ -191,6 +241,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             module.TopLevelTypes.Add(mapMethodsType);
+
+            // Track the type (it's needed by 'IObservableMap<K, V>')
+            emitState.TrackTypeDefinition(mapMethodsType, dictionaryType, "IMapMethods");
 
             // Define the 'HasKey' method as follows:
             //
@@ -759,7 +812,9 @@ internal partial class InteropTypeDefinitionBuilder
                 Interfaces =
                 {
                     new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
                 }
             };
 

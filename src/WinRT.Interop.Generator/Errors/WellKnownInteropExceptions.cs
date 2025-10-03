@@ -371,6 +371,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> type.
+    /// </summary>
+    public static Exception IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    {
+        return Exception(42, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

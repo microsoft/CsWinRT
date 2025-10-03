@@ -108,24 +108,29 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="eventSourceType">The resulting event source type.</param>
         public static void MapChangedEventHandler2(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
             DerivedEventSource(
                 delegateType: delegateType,
-                baseEventSourceType: interopReferences.EventHandler2EventSource,
+                baseEventSourceType: interopReferences.MapChangedEventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor,
                 baseEventSourceConvertToUnmanaged: interopReferences.MapChangedEventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
+
+            // We need the event source later, for the 'IObservableMap<K, V>' implementation
+            emitState.TrackTypeDefinition(eventSourceType, delegateType, "EventSource");
         }
 
         /// <summary>
