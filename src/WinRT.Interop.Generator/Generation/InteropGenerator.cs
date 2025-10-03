@@ -34,6 +34,8 @@ internal static partial class InteropGenerator
             throw new UnhandledInteropException("parsing", e);
         }
 
+        args.Token.ThrowIfCancellationRequested();
+
         // Same a debug repro, if needed
         try
         {
@@ -50,6 +52,8 @@ internal static partial class InteropGenerator
         {
             throw new UnhandledInteropException("debug-repro", e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
 
         InteropGeneratorDiscoveryState discoveryState;
 
