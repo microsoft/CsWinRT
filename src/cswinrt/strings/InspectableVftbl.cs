@@ -32,15 +32,6 @@ internal unsafe struct ReferenceVftbl
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct DelegateVftbl
-{
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, void*, void*, int> Invoke;
-}
-
-[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IUnknownVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;

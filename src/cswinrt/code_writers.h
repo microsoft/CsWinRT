@@ -560,6 +560,7 @@ namespace cswinrt
             bind<write_parameter_name>(param));
     }
 
+
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
         w.write("%Source", bind<write_type_name>(eventTypeSemantics, typedef_name_type::ABI, false));
@@ -7658,7 +7659,7 @@ return false;
 internal static unsafe class %Impl
 {
     [FixedAddressValueType]
-    private static readonly DelegateVftbl Vftbl;
+    private static readonly %Vftbl Vftbl;
 
     private const int S_OK = unchecked((int)0x00000000);
 
@@ -7696,6 +7697,7 @@ internal static unsafe class %Impl
 }
 
 )",
+            type.TypeName(),
             type.TypeName(),
             type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, false)
@@ -7783,27 +7785,30 @@ public static unsafe class %Marshaller
 
     void write_native_delegate(writer& w, TypeDef const& type)
     {
+        auto method = get_delegate_invoke(type);
+        method_signature signature{ method };
+        auto generic_abi_types = get_generic_abi_types(w, signature);
+        bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
+            [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
+
         w.write(R"(
 public static unsafe class %NativeDelegate
 {
-    #nullable enable
-    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, EventArgs e)
+    public static % Invoke(this WindowsRuntimeObjectReference objectReference, %)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
-        using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
-        using WindowsRuntimeObjectReferenceValue eValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(e);
-
-        void* thisPtr = thisValue.GetThisPtrUnsafe();
-        int hresult = ((DelegateVftbl*)*(void***)thisPtr)->Invoke(
-            thisPtr,
-            senderValue.GetThisPtrUnsafe(),
-            eValue.GetThisPtrUnsafe());
-        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        using WindowsRuntimeObjectReferenceValue ThisValue = objectReference.AsValue();
+        void* ThisPtr = ThisValue.GetThisPtrUnsafe();
+        var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)((%Vftbl*)ThisPtr);
+                %
     }
-    #nullable disable
 }
 )",
-            type.TypeName()
+            type.TypeName(), 
+            bind<write_projection_return_type>(signature),
+            bind_list<write_projection_parameter>(", ", signature.params()),
+            bind<write_abi_parameter_types_pointer>(signature),
+            type.TypeName(),
+            bind<write_abi_method_call>(signature, "abiInvoke", "_nativeDelegate", have_generic_params, false, is_noexcept(method), false)
         );
     }
 
