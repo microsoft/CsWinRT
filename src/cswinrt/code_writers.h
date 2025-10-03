@@ -7652,6 +7652,55 @@ return false;
             bind_list<write_projection_parameter>(", ", signature.params()));
     }
 
+    void write_delegate_impl(writer& w, TypeDef const& type)
+    {
+        w.write(R"(
+internal static unsafe class %Impl
+{
+    [FixedAddressValueType]
+    private static readonly DelegateVftbl Vftbl;
+
+    private const int S_OK = unchecked((int)0x00000000);
+
+    static %Impl()
+    {
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
+
+        Vftbl.Invoke = &Invoke;
+    }
+
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static int Invoke(void* thisPtr, void* sender, void* e)
+    {
+        try
+        {
+            var unboxedValue = ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr);
+
+            unboxedValue(
+                WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
+                WindowsRuntimeObjectMarshaller.ConvertToManaged(e) as EventArgs ?? EventArgs.Empty);
+
+            return S_OK;
+        }
+        catch (global::System.Exception ex)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
+        }
+    }
+}
+
+)",
+            type.TypeName(),
+            type.TypeName(),
+            bind<write_type_name>(type, typedef_name_type::Projected, false)
+        );
+    }
     void write_delegate_comwrappers_callback(writer& w, TypeDef const& type)
     {
         w.write(R"(
@@ -7774,7 +7823,7 @@ public static unsafe class %NativeDelegate
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_reference_impl(w, type);
         write_interface_entries_impl(w, type);
-
+        write_delegate_impl(w, type);
     }
 
     void write_abi_delegate_old(writer& w, TypeDef const& type)

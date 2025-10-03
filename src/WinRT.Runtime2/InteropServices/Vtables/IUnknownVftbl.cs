@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"/>
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct IUnknownVftbl
+public unsafe struct IUnknownVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
