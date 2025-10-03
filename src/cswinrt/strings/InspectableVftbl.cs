@@ -43,7 +43,7 @@ internal unsafe struct DelegateVftbl
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IUnknownVftbl
 {
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
 }

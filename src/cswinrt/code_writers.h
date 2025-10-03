@@ -7807,16 +7807,26 @@ public static unsafe class %NativeDelegate
         );
     }
 
+    void write_delegate_vtbl(writer& w, TypeDef const& type)
+    {
+        method_signature signature{ get_delegate_invoke(type) };
+        w.write(R"(
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct %Vftbl
+{
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<%, int> Invoke;
+}
+)",
+        type.TypeName(),
+        bind<write_abi_parameter_types_pointer>(signature));
+    }
+
     void write_abi_delegate(writer& w, TypeDef const& type)
     {
-        //auto method = get_delegate_invoke(type);
-        //method_signature signature{ method };
-        //auto type_name = write_type_name_temp(w, type);
-        //auto type_params = w.write_temp("%", bind<write_type_params>(type));
-        //auto is_generic = distance(type.GenericParam()) > 0;
-        //auto generic_abi_types = get_generic_abi_types(w, signature);
-        //bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
-        //    [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
+        write_delegate_vtbl(w, type);
         write_native_delegate(w, type);
         write_delegate_marshaller(w, type);
         write_delegate_comwrappers_callback(w, type);
