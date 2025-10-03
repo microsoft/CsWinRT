@@ -68,12 +68,16 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         {
             discoveryState.TrackIObservableMap2Type(typeSignature);
 
-            // Same handling as below for 'MapChangedEventHandler<K,V>' types
+            // Same handling as above for 'MapChangedEventHandler<K,V>' types
             discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
             discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperation1))
+        {
+            discoveryState.TrackIAsyncOperation1Type(typeSignature);
         }
     }
 }

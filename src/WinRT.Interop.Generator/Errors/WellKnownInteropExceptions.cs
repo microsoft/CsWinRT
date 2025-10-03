@@ -387,6 +387,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    {
+        return Exception(44, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{elementType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

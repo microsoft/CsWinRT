@@ -86,33 +86,38 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IReadOnlyDictionary<,>' types
+        // Emit interop types for 'IReadOnlyDictionary<TKey, TValue>' types
         DefineIReadOnlyDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IDictionary<,>' types
+        // Emit interop types for 'IDictionary<TKey, TValue>' types
         DefineIDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'KeyValuePair<,>' types
+        // Emit interop types for 'KeyValuePair<TKey, TValue>' types
         DefineKeyValuePairTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IMapChangedEventArgs<>' types
+        // Emit interop types for 'IMapChangedEventArgs<K, V>' types
         DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IObservableVector<>' types
+        // Emit interop types for 'IObservableVector<T>' types
         DefineIObservableVectorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IObservableMap<>' types
+        // Emit interop types for 'IObservableMap<K, V>' types
         DefineIObservableMapTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for 'IAsyncOperation<TResult>' types
+        DefineIAsyncOperationTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1473,6 +1478,38 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.IObservableMapTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIAsyncOperationTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IAsyncOperationTypeCodeGenerationError(typeSignature, e);
             }
         }
     }
