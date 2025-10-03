@@ -1215,8 +1215,8 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: $"Windows.Foundation.Collections.IMap`2<{keyType},{valueType}>", // TODO
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: dictionaryType,
-                proxyTypeMapSourceType: dictionaryType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
                 interfaceTypeMapSourceType: dictionaryType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,

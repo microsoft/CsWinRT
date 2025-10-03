@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -76,12 +77,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="eventSourceType">The resulting event source type.</param>
         public static void VectorChangedEventHandler1(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
@@ -94,6 +97,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
+
+            // We need the event source later, for the 'IObservableVector<T>' implementation
+            emitState.TrackTypeDefinition(eventSourceType, delegateType, "EventSource");
         }
 
         /// <summary>

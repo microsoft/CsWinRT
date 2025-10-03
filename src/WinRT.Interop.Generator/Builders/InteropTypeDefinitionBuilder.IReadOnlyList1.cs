@@ -646,8 +646,8 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>", // TODO
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: readOnlyListType,
-                proxyTypeMapSourceType: readOnlyListType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
                 interfaceTypeMapSourceType: readOnlyListType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,

@@ -417,8 +417,8 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: $"Windows.Foundation.Collections.IMapChangedEventArgs`1<{argsType.TypeArguments[0]}>", // TODO
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: argsType,
-                proxyTypeMapSourceType: argsType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
                 interfaceTypeMapSourceType: argsType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,

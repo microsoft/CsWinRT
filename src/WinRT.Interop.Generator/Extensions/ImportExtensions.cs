@@ -36,12 +36,23 @@ internal static class ImportExtensions
     /// <summary>
     /// Imports a type signature into a module using the default reference importer.
     /// </summary>
-    /// <param name="methodSignature">The <see cref="TypeSignature"/> instance to import.</param>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> instance to import.</param>
     /// <param name="module">The module to import into.</param>
     /// <returns>The imported <see cref="TypeSignature"/>.</returns>
-    public static TypeSignature Import(this TypeSignature methodSignature, ModuleDefinition module)
+    public static TypeSignature Import(this TypeSignature typeSignature, ModuleDefinition module)
     {
-        return methodSignature.ImportWith(module.DefaultImporter);
+        return typeSignature.ImportWith(module.DefaultImporter);
+    }
+
+    /// <summary>
+    /// Imports a type signature into a module using the default reference importer.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> instance to import.</param>
+    /// <param name="module">The module to import into.</param>
+    /// <returns>The imported <see cref="TypeSignature"/>.</returns>
+    public static GenericInstanceTypeSignature Import(this GenericInstanceTypeSignature typeSignature, ModuleDefinition module)
+    {
+        return (GenericInstanceTypeSignature)typeSignature.ImportWith(module.DefaultImporter);
     }
 
     /// <summary>
@@ -53,6 +64,17 @@ internal static class ImportExtensions
     public static MethodSignature Import(this MethodSignature methodSignature, ModuleDefinition module)
     {
         return methodSignature.ImportWith(module.DefaultImporter);
+    }
+
+    /// <summary>
+    /// Imports a member reference into a module using the default reference importer.
+    /// </summary>
+    /// <param name="assemblyReference">The <see cref="AssemblyReference"/> instance to import.</param>
+    /// <param name="module">The module to import into.</param>
+    /// <returns>The imported <see cref="AssemblyReference"/>.</returns>
+    public static AssemblyReference Import(this AssemblyReference assemblyReference, ModuleDefinition module)
+    {
+        return assemblyReference.ImportWith(module.DefaultImporter);
     }
 
     /// <summary>

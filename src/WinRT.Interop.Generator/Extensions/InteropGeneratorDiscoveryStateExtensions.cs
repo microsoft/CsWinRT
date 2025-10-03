@@ -56,10 +56,20 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
         {
             discoveryState.TrackIObservableVector1Type(typeSignature);
+
+            // We need special handling for constructed 'VectorChangedEventHandler<T>' types, as those are required for each
+            // discovered 'IObservableVector<T>' type. These are not necessarily discovered in the same way, as while we are
+            // recursively constructing interfaces, we don't have the same logic for delegate types (or for types used in
+            // any signature of interface members). Because we only need this delegate type and the one below, we can just
+            // special case it. That is, we manually construct it every time we discover a constructed 'IObservableVector<T>'.
+            discoveryState.TrackGenericDelegateType(interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
         {
             discoveryState.TrackIObservableMap2Type(typeSignature);
+
+            // Same handling as below for 'MapChangedEventHandler<K,V>' types
+            discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {

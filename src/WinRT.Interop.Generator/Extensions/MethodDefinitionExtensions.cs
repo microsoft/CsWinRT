@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
+using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -16,6 +18,33 @@ internal static class MethodDefinitionExtensions
 {
     extension(MethodDefinition method)
     {
+        /// <summary>
+        /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// </summary>
+        /// <param name="module">The target module the method will be added to.</param>
+        /// <returns>The constructor.</returns>
+        public static MethodDefinition CreateDefaultConstructor(ModuleDefinition module)
+        {
+            // We should call the 'object' constructor, for correctness
+            MemberReference object_ctor = module.CorLibTypeFactory.CorLibScope
+                .CreateTypeReference("System"u8, "Object"u8)
+                .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+
+            // Create the parameterless constructor
+            return new(
+                name: ".ctor"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, object_ctor.Import(module) },
+                    { Ret }
+                }
+            };
+        }
+
         /// <inheritdoc cref="CilMethodBody.Instructions"/>
         public CilInstructionCollection CilInstructions => (method.CilMethodBody ??= new CilMethodBody()).Instructions;
 

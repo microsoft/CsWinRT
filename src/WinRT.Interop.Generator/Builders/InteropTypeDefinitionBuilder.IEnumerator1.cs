@@ -611,8 +611,8 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>", // TODO
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: enumeratorType,
-                proxyTypeMapSourceType: enumeratorType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
                 interfaceTypeMapSourceType: enumeratorType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,
