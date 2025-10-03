@@ -208,7 +208,7 @@ internal partial class InteropMethodDefinitionFactory
             CilLocalVariable loc_2_managedHandler = new(eventHandlerType.Import(module));
             CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
 
-            // Create a method body for the 'add_MapChanged' method
+            // Create a method body for the 'remove_MapChanged' method
             remove_MapChangedMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_unboxedValue, loc_1_table, loc_2_managedHandler, loc_3_hresult },
