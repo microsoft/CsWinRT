@@ -7655,6 +7655,9 @@ return false;
 
     void write_delegate_impl(writer& w, TypeDef const& type)
     {
+        auto method = get_delegate_invoke(type);
+        method_signature signature{ method };
+
         w.write(R"(
 internal static unsafe class %Impl
 {
@@ -7677,31 +7680,25 @@ internal static unsafe class %Impl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static int Invoke(void* thisPtr, void* sender, void* e)
+    private static int Invoke(%)
     {
-        try
-        {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr);
-
-            unboxedValue(
-                WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
-                WindowsRuntimeObjectMarshaller.ConvertToManaged(e) as EventArgs ?? EventArgs.Empty);
-
-            return S_OK;
-        }
-        catch (global::System.Exception ex)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
-        }
+        %
     }
 }
-
 )",
             type.TypeName(),
             type.TypeName(),
             type.TypeName(),
-            bind<write_type_name>(type, typedef_name_type::Projected, false)
+            bind<write_abi_parameters>(signature),
+            bind<write_managed_method_call>(
+                signature,
+                w.write_temp("ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr).%%",
+                    bind<write_type_name>(type, typedef_name_type::Projected, false),
+                    method.Name(),
+                    "(%)"),
+                false)
         );
+
     }
     void write_delegate_comwrappers_callback(writer& w, TypeDef const& type)
     {
