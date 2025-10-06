@@ -223,7 +223,9 @@ Where <spec> is one or more of:
                             switch (get_category(type))
                             {
                             case category::class_type:
-                                if (!is_static(type))
+                                // For both static and attributes, we don't need to pass them across the ABI.
+                                if (!is_static(type) &&
+                                    !is_attribute_type(type))
                                 {
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
                                 }
@@ -238,7 +240,11 @@ Where <spec> is one or more of:
                                 write_winrt_idic_typemapgroup_assembly_attribute(w, type);
                                 break;
                             case category::struct_type:
-                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                // Similarly for API contracts, we don't expect them to be passed across the ABI.
+                                if (!is_api_contract_type(type))
+                                {
+                                    write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                }
                                 break;
                             }
                         }
