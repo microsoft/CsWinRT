@@ -2050,7 +2050,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %Impl.IID);
     }
 }
 )",
@@ -2059,7 +2059,8 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true));
+            bind<write_type_name>(classType, typedef_name_type::ABI, true),
+            bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
     }
 
     template<auto method_writer>
