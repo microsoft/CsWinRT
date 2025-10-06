@@ -106,7 +106,14 @@ public static unsafe class IAsyncActionMethods
 
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-        return AsyncActionCompletedHandlerMarshaller.ConvertToManaged(result);
+        try
+        {
+            return AsyncActionCompletedHandlerMarshaller.ConvertToManaged(result);
+        }
+        finally
+        {
+            WindowsRuntimeObjectMarshaller.Free(result);
+        }
     }
 
     /// <see cref="IAsyncAction.Completed"/>

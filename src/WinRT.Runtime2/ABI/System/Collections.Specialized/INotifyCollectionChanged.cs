@@ -155,8 +155,6 @@ public static unsafe class INotifyCollectionChangedImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT add_CollectionChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
-        *token = default;
-
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
