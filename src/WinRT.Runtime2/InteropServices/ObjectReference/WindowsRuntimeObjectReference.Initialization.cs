@@ -90,7 +90,10 @@ public unsafe partial class WindowsRuntimeObjectReference
             // transfer the ownership to the returned object reference, which would handle releases later on.
             // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of
             // the inner instance would've been extended, if we fail, we just need to ensure we release that object.
-            _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
+            if (acquiredInnerInstanceUnknown != null)
+            {
+                _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
+            }
 
             Marshal.ThrowExceptionForHR(isFreeThreaded);
         }
@@ -202,28 +205,34 @@ public unsafe partial class WindowsRuntimeObjectReference
                 _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
             }
         }
-        else if (referenceTracker != null)
+        else
         {
-            // Special handling in case we have a reference tracker. Like mentioned, this object is used to tell
-            // the reference tracker runtime whenever 'AddRef' and 'Release' are performed on 'acquiredNewInstanceUnknown'.
-            // The non-aggregation case is the only one where we actually need to carry the reference tracker along.
-            externalReferenceTracker = referenceTracker;
+            if (referenceTracker != null)
+            {
+                // Special handling in case we have a reference tracker. Like mentioned, this object is used to tell
+                // the reference tracker runtime whenever 'AddRef' and 'Release' are performed on 'acquiredNewInstanceUnknown'.
+                // The non-aggregation case is the only one where we actually need to carry the reference tracker along.
+                externalReferenceTracker = referenceTracker;
 
-            // The runtime has already done 'AddRefFromTrackerSource' for this instance, so it would also handle doing
-            // 'ReleaseFromTrackerSource' upon finalization. Because of that, we prevent it in the object reference.
-            createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
+                // The runtime has already done 'AddRefFromTrackerSource' for this instance, so it would also handle doing
+                // 'ReleaseFromTrackerSource' upon finalization. Because of that, we prevent it in the object reference.
+                createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
 
-            // To balance the overall reference count on the inner instance (see notes at the start of the method),
-            // we need to release it here. This would've been handled in a 'finally' block in caller methods otherwise.
-            // We can only avoid this in the aggregation scenario, because we balance it out with the initial 'AddRef'
-            // that we can skip. But when not aggregating, that 'AddRef' is on the new instance, so the inner instance
-            // would have an extra reference count by the end of this method. We can fix that here to balance it again.
-            _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
+                // If we're not in a COM aggregation scenario, we can release the reference tracker object. This is because
+                // it is already considered kept alive, even if we don't hold a reference to it, due to the fact that its
+                // implementation lives in the same object as the target COM object (it will be a native object).
+                _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
+            }
 
-            // If we're not in a COM aggregation scenario, we can release the reference tracker object. This is because
-            // it is already considered kept alive, even if we don't hold a reference to it, due to the fact that its
-            // implementation lives in the same object as the target COM object (it will be a native object).
-            _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
+            if (acquiredInnerInstanceUnknown != null)
+            {
+                // To balance the overall reference count on the inner instance (see notes at the start of the method),
+                // we need to release it here. This would've been handled in a 'finally' block in caller methods otherwise.
+                // We can only avoid this in the aggregation scenario, because we balance it out with the initial 'AddRef'
+                // that we can skip. But when not aggregating, that 'AddRef' is on the new instance, so the inner instance
+                // would have an extra reference count by the end of this method. We can fix that here to balance it again.
+                _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
+            }
         }
 
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'

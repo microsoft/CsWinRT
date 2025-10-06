@@ -85,7 +85,16 @@ public abstract unsafe class WindowsRuntimeObject :
             activationFactoryObjectReference: activationFactoryObjectReference,
             defaultInterface: out void* defaultInterface);
 
-        // TODO
+        // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
+        // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
+        // reference tracker infrastructure, in case the native object implements the 'IReferenceTracker' interface.
+        void* innerInterface = null; // unused for sealed scenarios
+        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+            isAggregation: false,
+            thisInstance: this,
+            newInstanceUnknown: ref defaultInterface,
+            innerInstanceUnknown: ref innerInterface,
+            newInstanceIid: in iid);
     }
 
     /// <summary>
