@@ -7727,14 +7727,12 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     void write_delegate_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
     {
         auto name = type.TypeName();
-        auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
         w.write(
             R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %ReferenceImpl.IID).DetachThisPtrUnsafe();
+        return WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -7744,7 +7742,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     }
 }
 
-)", name, projection_name, projection_name, name, name);
+)", name, name);
     }
 
     void write_delegate_marshaller(writer& w, TypeDef const& type)
