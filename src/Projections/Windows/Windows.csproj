@@ -8,17 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <InternalsVisibleTo Include="UnitTest" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" />
   </ItemGroup>
 
   <PropertyGroup>
+    <!-- TODO: -include Windows -->
     <CsWinRTFilters>
--include Windows
+-include Windows.Foundation.Metadata
+-include Windows.Foundation.UniversalApiContract
 # Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
--include Windows.UI.Popups
+# TODO: -include Windows.UI.Popups
 -exclude Windows.UI.Colors
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
@@ -34,6 +36,7 @@
 -include Windows.UI.Text.FontStretch
 -include Windows.UI.Text.FontStyle
 -include Windows.UI.Text.FontWeight
+-include Windows.UI.Text.IFontWeights
 -include Windows.UI.Text.UnderlineType
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute     
     </CsWinRTFilters>
