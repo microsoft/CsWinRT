@@ -3728,7 +3728,7 @@ R"(
             w.write(
 R"(            
             % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
-            var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
+            var value = %Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
             *(%*)result = value;)"
                 , projection_name, projection_name, type.TypeName(), result_param);
         }
@@ -7828,14 +7828,14 @@ internal unsafe struct %Vftbl
 
     void write_abi_delegate(writer& w, TypeDef const& type)
     {
+        write_delegate_marshaller(w, type);
         write_delegate_vtbl(w, type);
         write_native_delegate(w, type);
-        write_delegate_marshaller(w, type);
         write_delegate_comwrappers_callback(w, type);
-        write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
-        write_reference_impl(w, type);
         write_interface_entries_impl(w, type);
+        write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_delegate_impl(w, type);
+        write_reference_impl(w, type);
     }
 
     void write_abi_delegate_old(writer& w, TypeDef const& type)
