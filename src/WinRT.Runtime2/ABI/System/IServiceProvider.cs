@@ -56,7 +56,14 @@ public static unsafe class IServiceProviderMethods
 
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-        return WindowsRuntimeObjectMarshaller.ConvertToManaged(result);
+        try
+        {
+            return WindowsRuntimeObjectMarshaller.ConvertToManaged(result);
+        }
+        finally
+        {
+            WindowsRuntimeObjectMarshaller.Free(result);
+        }
     }
 }
 
