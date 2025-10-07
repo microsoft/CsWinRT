@@ -7783,7 +7783,7 @@ public static unsafe class %Marshaller
 }
 )",
             type.TypeName(),
-            bind<write_type_name>(type, typedef_name_type::Projected, false),
+            projected_type,
             type.TypeName(),
             projected_type,
             projected_type,
