@@ -7803,8 +7803,8 @@ public static unsafe class %NativeDelegate
 {
     public static % Invoke(this WindowsRuntimeObjectReference objectReference%%)
     {
-        using WindowsRuntimeObjectReferenceValue ThisValue = objectReference.AsValue();
-        void* ThisPtr = ThisValue.GetThisPtrUnsafe();
+        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();
+        void* ThisPtr = objectValue.GetThisPtrUnsafe();
         var abiInvoke = ((%Vftbl*)*(void***)ThisPtr)->Invoke;
                 %
     }
