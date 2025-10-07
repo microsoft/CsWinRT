@@ -28,7 +28,7 @@ internal static partial class IgnoreAccessChecksToBuilder
         foreach (ModuleDefinition assemblyModule in referencePathModules)
         {
             // We only need this for assemblies targeting the Windows TFM
-            if (!assemblyModule.IsOrReferencesWindowsSDKProjectionsAssembly &&
+            if (!assemblyModule.IsOrReferencesWindowsRuntimeAssembly &&
                 !assemblyModule.IsWindowsRuntimeAssembly)
             {
                 continue;
