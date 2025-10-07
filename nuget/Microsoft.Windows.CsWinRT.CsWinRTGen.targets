@@ -7,8 +7,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Setup common properties for '_RunCsWinRTGenerator' below -->
   <PropertyGroup>
       
-    <CsWinRTGenTasksAssembly>$(SolutionDir)RunCsWinRTGeneratorTask\bin\Release\netstandard2.0\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
-    <CsWinRTToolsDirectory>$(SolutionDir)WinRT.Interop.Generator\bin\Release\net10.0\</CsWinRTToolsDirectory>
+    <CsWinRTGenTasksAssembly>$(SolutionDir)RunCsWinRTGeneratorTask\bin\$(Configuration)\netstandard2.0\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
+    <CsWinRTToolsDirectory>$(SolutionDir)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\</CsWinRTToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
     <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>
 
