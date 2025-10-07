@@ -3725,12 +3725,24 @@ R"(
         }
         else
         {
-            w.write(
+            if (get_category(type) == category::delegate_type)
+            {
+                w.write(
 R"(            
             % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
             var value = %Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
             *(%*)result = value;)"
-                , projection_name, projection_name, type.TypeName(), result_param);
+                    , projection_name, projection_name, type.TypeName(), result_param);
+            }
+            else
+            {
+                w.write(
+R"(            
+            % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
+            var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
+            *(%*)result = value;)"
+                    , projection_name, projection_name, type.TypeName(), result_param);
+            }
         }
 
      w.write(R"(
@@ -7793,7 +7805,7 @@ public static unsafe class %NativeDelegate
     {
         using WindowsRuntimeObjectReferenceValue ThisValue = objectReference.AsValue();
         void* ThisPtr = ThisValue.GetThisPtrUnsafe();
-        var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)((%Vftbl*)ThisPtr);
+        var abiInvoke = ((%Vftbl*)ThisPtr)->Invoke;
                 %
     }
 }
@@ -7801,7 +7813,6 @@ public static unsafe class %NativeDelegate
             type.TypeName(), 
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
-            bind<write_abi_parameter_types_pointer>(signature),
             type.TypeName(),
             bind<write_abi_method_call>(signature, "abiInvoke", "_nativeDelegate", have_generic_params, false, is_noexcept(method), false)
         );
