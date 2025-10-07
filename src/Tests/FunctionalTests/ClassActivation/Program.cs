@@ -2,6 +2,9 @@
 using TestComponent;
 using TestComponentCSharp;
 
+// TODO: This shouldn't be needed if transitive references are detected correctly.
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
 CustomDisposableTest customDisposableTest = new();
 customDisposableTest.Dispose();
 
@@ -20,18 +23,14 @@ _ = Composable.ExpectComposable(composable2);
 _ = Composable.ExpectRequiredOne(composable2);
 
 _ = ComImports.NumObjects;
+_ = ComImports.MakeObject();
 
-
-/*TestComposable testComposable = new();
+TestComposable testComposable = new();
 
 _ = testComposable.Value;
 
 _ = Composable.ExpectComposable(testComposable);
 _ = Composable.ExpectRequiredOne(testComposable);
-
-_ = ComImports.MakeObject();
-
-*/
 
 sealed class TestComposable : Composable
 {
