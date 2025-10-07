@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
 namespace WindowsRuntime.InteropServices;
 
 [StructLayout(LayoutKind.Sequential)]

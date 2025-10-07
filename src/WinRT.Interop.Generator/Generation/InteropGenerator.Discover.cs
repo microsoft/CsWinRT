@@ -103,7 +103,7 @@ internal partial class InteropGenerator
         // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
         // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
         // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
-        if (!module.IsOrReferencesWindowsSDKProjectionsAssembly && !module.IsWindowsRuntimeAssembly)
+        if (!module.IsOrReferencesWindowsRuntimeAssembly && !module.IsWindowsRuntimeAssembly)
         {
             return;
         }
