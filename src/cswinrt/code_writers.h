@@ -7749,6 +7749,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
+
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
 }
