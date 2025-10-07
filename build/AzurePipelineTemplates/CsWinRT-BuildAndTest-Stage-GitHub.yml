@@ -41,6 +41,14 @@ stages:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
+# Run Functional Test (ClassActivation)
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTests:
+        - ClassActivation
+
 #    - template: CsWinRT-Test-Steps.yml@self
 #      parameters:
 #        BuildConfiguration: $(BuildConfiguration)
