@@ -4993,7 +4993,7 @@ param_type);
                     }, marshalers));
             }
             else {
-                w.write("%(ThisPtr%);\n",
+                w.write("%(ThisPtr%);\n", // TODO: rename to camelcase thisPtr
                     invoke_target,
                     bind_each([](writer& w, abi_marshaler const& m)
                         {
