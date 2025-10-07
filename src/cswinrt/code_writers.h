@@ -4287,6 +4287,11 @@ event % %;)",
                 (category == param_category::receive_array);
         }
 
+        bool is_value_type_in() const
+        {
+            return is_const_ref() && !marshaler_type.empty();
+        }
+
         bool is_ref() const
         {
             return (category == param_category::fill_array);
@@ -4427,16 +4432,7 @@ param_type);
             if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
-            if (is_generic() || is_array() || (is_const_ref() && !marshaler_type.empty()))
-            {
-                w.write("%% = %.GetAbi%(%);\n",
-                    is_const_ref() && !marshaler_type.empty() ? "var __" : "",
-                    get_param_local(w),
-                    is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
-                    is_array() ? "Array" : "",
-                    get_marshaler_local(w));
-                return;
-            }
+            // TODO: Arrays
 
             if (!marshaler_type.empty() && !is_marshal_by_object_reference_value())
             {
@@ -4495,7 +4491,7 @@ param_type);
                     return;
                 }
 
-                if (is_out())
+                if (is_out() || is_value_type_in())
                 {
                     w.write("&__%", param_name);
                     return;
