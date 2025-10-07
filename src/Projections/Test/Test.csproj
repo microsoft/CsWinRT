@@ -63,8 +63,8 @@
       TestComponent.Param11Handler;
       TestComponent.Param12Handler;
       TestComponent.Param13Handler;
-      TestComponent.Param14Handler;
-      TestComponent.Param15Handler;
+      <!--TestComponent.Param14Handler;
+      TestComponent.Param15Handler;-->
       <!--TestComponentCSharp.EventHandler0;
       TestComponentCSharp.EventHandler1;
       TestComponentCSharp.EventHandler2;
