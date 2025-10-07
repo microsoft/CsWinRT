@@ -7654,7 +7654,8 @@ return false;
     void write_delegate(writer& w, TypeDef const& type)
     {
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(%%%% delegate % %(%);
+        w.write(R"(
+%%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, true),

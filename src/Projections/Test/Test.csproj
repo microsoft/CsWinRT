@@ -24,7 +24,7 @@
   <PropertyGroup>
     <!-- Uncomment to generate projection -->
     <CsWinRTIncludes>
-      <!--TestComponent.Blittable;
+      TestComponent.Blittable;
       TestComponent.NonBlittable;
       TestComponent.Nested;
       TestComponentCSharp.FlagValue;
@@ -49,9 +49,9 @@
       TestComponentCSharp.ComImports;
       TestComponentCSharp.IComImports;
       TestComponentCSharp.ISingleton;
-      TestComponentCSharp.Singleton;-->
+      TestComponentCSharp.Singleton;
       TestComponent.Param1Handler;
-      <!--TestComponent.Param2Handler;
+      TestComponent.Param2Handler;
       TestComponent.Param3Handler;
       TestComponent.Param4Handler;
       TestComponent.Param5Handler;
@@ -64,7 +64,31 @@
       TestComponent.Param12Handler;
       TestComponent.Param13Handler;
       TestComponent.Param14Handler;
-      TestComponent.Param15Handler;-->
+      TestComponent.Param15Handler;
+      <!--TestComponentCSharp.EventHandler0;
+      TestComponentCSharp.EventHandler1;
+      TestComponentCSharp.EventHandler2;
+      TestComponentCSharp.EventHandler3;
+      TestComponentCSharp.EventHandlerCollection;-->
+      TestComponentCSharp.EventWithReturn;
+      TestComponentCSharp.EventWithGuid;
+      TestComponentCSharp.ProvideInt;
+      TestComponentCSharp.ProvideBool;
+      TestComponentCSharp.ProvideString;
+      <!--TestComponentCSharp.ProvideObject;-->
+      <!--TestComponentCSharp.ProvideEnum;-->
+      <!--TestComponentCSharp.ProvideEnums;
+      TestComponentCSharp.ProvideFlag;
+      TestComponentCSharp.ProvideFlags;
+      TestComponentCSharp.ProvideEnumStruct;
+      TestComponentCSharp.ProvideEnumStructs;
+      TestComponentCSharp.ProvideFlagStruct;
+      TestComponentCSharp.ProvideFlagStructs;
+      TestComponentCSharp.ProvideObjectIterable;-->
+      <!--TestComponentCSharp.ProvideUri;-->
+      <!--TestComponentCSharp.ProvideStringPair;
+      TestComponentCSharp.ProvideBindableIterable;
+      TestComponentCSharp.ProvideBindableVector;-->
     </CsWinRTIncludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
