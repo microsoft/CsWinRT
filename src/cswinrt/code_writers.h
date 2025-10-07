@@ -7751,6 +7751,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
+
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
 }
