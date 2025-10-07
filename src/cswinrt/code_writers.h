@@ -7801,7 +7801,7 @@ public static unsafe class %Marshaller
         w.write(R"(
 public static unsafe class %NativeDelegate
 {
-    public static % Invoke(this WindowsRuntimeObjectReference objectReference, %)
+    public static % Invoke(this WindowsRuntimeObjectReference objectReference%%)
     {
         using WindowsRuntimeObjectReferenceValue ThisValue = objectReference.AsValue();
         void* ThisPtr = ThisValue.GetThisPtrUnsafe();
@@ -7812,6 +7812,7 @@ public static unsafe class %NativeDelegate
 )",
             type.TypeName(), 
             bind<write_projection_return_type>(signature),
+            signature.has_params() ? ", " : "",
             bind_list<write_projection_parameter>(", ", signature.params()),
             type.TypeName(),
             bind<write_abi_method_call>(signature, "abiInvoke", "_nativeDelegate", have_generic_params, false, is_noexcept(method), false)
