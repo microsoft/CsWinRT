@@ -3686,11 +3686,11 @@ R"(public static %? UnboxToManaged(void* value)
         w.write(
 R"(file static unsafe class %ReferenceImpl
 {
-    [FixedAddressValueType]
-    private static readonly ReferenceVftbl Vftbl;
-
     private const int S_OK = unchecked((int)0x00000000);
     private const int E_POINTER = unchecked((int)0x80004003);
+
+    [FixedAddressValueType]
+    private static readonly ReferenceVftbl Vftbl;
 
     static %ReferenceImpl()
     {
@@ -7670,10 +7670,10 @@ return false;
         w.write(R"(
 internal static unsafe class %Impl
 {
+    private const int S_OK = unchecked((int)0x00000000);
+
     [FixedAddressValueType]
     private static readonly %Vftbl Vftbl;
-
-    private const int S_OK = unchecked((int)0x00000000);
 
     static %Impl()
     {
@@ -7737,13 +7737,15 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     {
         auto name = type.TypeName();
         w.write(
-            R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
+    /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
+    /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
