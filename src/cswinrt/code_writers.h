@@ -3730,18 +3730,18 @@ R"(
                 w.write(
 R"(            
             % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
-            var value = %Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+            % value = %Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
             *(%*)result = value;)"
-                    , projection_name, projection_name, type.TypeName(), result_param);
+                    , projection_name, projection_name, result_param, type.TypeName(), result_param);
             }
             else
             {
                 w.write(
 R"(            
             % unboxedValue = (%)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);  
-            var value = %Marshaller.ConvertToUnmanaged(unboxedValue);
+            % value = %Marshaller.ConvertToUnmanaged(unboxedValue);
             *(%*)result = value;)"
-                    , projection_name, projection_name, type.TypeName(), result_param);
+                    , projection_name, projection_name, result_param, type.TypeName(), result_param);
             }
         }
 
