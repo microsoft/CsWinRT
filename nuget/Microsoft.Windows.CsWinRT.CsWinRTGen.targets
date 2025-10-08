@@ -167,15 +167,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!-- 'ReferencePath' handles adding the interop .dll to '.deps.json', which is needed for '[UnsafeAccessor]' to work -->
       <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
 
+      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorInteropAssemblyPath)" />     
+
       <!-- '_SourceItemsToCopyToOutputDirectory' handles copying the interop .dll to the build output folder -->
       <_SourceItemsToCopyToOutputDirectory
         Include="@(CsWinRTGeneratorInteropAssemblyPath)"
         TargetPath="$(_CsWinRTGeneratorInteropAssemblyFileName)" />
 
       <!-- '_SourceItemsToCopyToPublishDirectory' handles copying the interop .dll to the publish output folder -->
-      <_SourceItemsToCopyToPublishDirectory
+      <!-- <_SourceItemsToCopyToPublishDirectory
         Include="@(CsWinRTGeneratorInteropAssemblyPath)"
-        TargetPath="$(_CsWinRTGeneratorInteropAssemblyFileName)" />
+        TargetPath="$(_CsWinRTGeneratorInteropAssemblyFileName)" /> -->
     </ItemGroup>
 
     <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->
