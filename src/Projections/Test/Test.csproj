@@ -65,6 +65,12 @@
       TestComponent.Param13Handler;
       TestComponent.Param14Handler;
       TestComponent.Param15Handler;
+      <!--TestComponentCSharp.Class;
+      TestComponentCSharp.IProperties1;
+      TestComponentCSharp.IProperties2;
+      TestComponentCSharp.IBoolChanged;
+      TestComponentCSharp.IClass;
+      Windows.Foundation.IStringable;-->
       <!--TestComponentCSharp.EventHandler0;
       TestComponentCSharp.EventHandler1;
       TestComponentCSharp.EventHandler2;
@@ -75,21 +81,31 @@
       TestComponentCSharp.ProvideInt;
       TestComponentCSharp.ProvideBool;
       TestComponentCSharp.ProvideString;
-      <!--TestComponentCSharp.ProvideObject;-->
-      <!--TestComponentCSharp.ProvideEnum;-->
-      <!--TestComponentCSharp.ProvideEnums;
+      TestComponentCSharp.ProvideObject;
+      <!--TestComponentCSharp.ProvideObjectIterable;-->
+      TestComponentCSharp.ProvideEnum;
+      <!--TestComponentCSharp.ProvideEnums;-->
+      TestComponentCSharp.ProvideStruct;
+      <!--TestComponentCSharp.ProvideStructs;-->
       TestComponentCSharp.ProvideFlag;
-      TestComponentCSharp.ProvideFlags;
+      <!--TestComponentCSharp.ProvideFlags;-->
       TestComponentCSharp.ProvideEnumStruct;
-      TestComponentCSharp.ProvideEnumStructs;
+      <!--TestComponentCSharp.ProvideEnumStructs;-->
       TestComponentCSharp.ProvideFlagStruct;
-      TestComponentCSharp.ProvideFlagStructs;
-      TestComponentCSharp.ProvideObjectIterable;-->
-      <!--TestComponentCSharp.ProvideUri;-->
-      <!--TestComponentCSharp.ProvideStringPair;
-      TestComponentCSharp.ProvideBindableIterable;
-      TestComponentCSharp.ProvideBindableVector;-->
+      <!--TestComponentCSharp.ProvideFlagStructs;-->
+      TestComponentCSharp.ProvideUri;
+      TestComponentCSharp.ProvideStringPair;
+      <!--TestComponentCSharp.ProvideBindableIterable;-->
+      <!--TestComponentCSharp.ProvideBindableVector;-->
     </CsWinRTIncludes>
+    <CsWinRTExcludes>
+      TestComponentCSharp.ProvideObjectIterable;
+      TestComponentCSharp.ProvideEnums;
+      TestComponentCSharp.ProvideStructs;
+      TestComponentCSharp.ProvideEnumStructs;
+      TestComponentCSharp.ProvideFlags;
+      TestComponentCSharp.ProvideFlagStructs;
+    </CsWinRTExcludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>

@@ -7722,13 +7722,14 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
             iid: in %ReferenceImpl.IID,
             wrapperFlags: out wrapperFlags);
 
-        return new %(valueReference.Invoke);
+        return new %(valueReference.%Invoke);
     }
 }
 )",
             type.TypeName(),
             type.TypeName(),
-            bind<write_type_name>(type, typedef_name_type::Projected, false)
+            bind<write_type_name>(type, typedef_name_type::Projected, false),
+            type.TypeName()
         );
     }
 
@@ -7801,7 +7802,7 @@ public static unsafe class %Marshaller
         w.write(R"(
 public static unsafe class %NativeDelegate
 {
-    public static % Invoke(this WindowsRuntimeObjectReference objectReference%%)
+    public static % %Invoke(this WindowsRuntimeObjectReference objectReference%%)
     {
         using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();
         void* ThisPtr = objectValue.GetThisPtrUnsafe();
@@ -7812,6 +7813,7 @@ public static unsafe class %NativeDelegate
 )",
             type.TypeName(), 
             bind<write_projection_return_type>(signature),
+            type.TypeName(),
             signature.has_params() ? ", " : "",
             bind_list<write_projection_parameter>(", ", signature.params()),
             type.TypeName(),
