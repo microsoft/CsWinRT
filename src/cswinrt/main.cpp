@@ -229,7 +229,7 @@ Where <spec> is one or more of:
                                 }
                                 break;
                             case category::delegate_type:
-                                // TODO delegate_type
+                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                 break;
                             case category::enum_type:
                                 write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
@@ -274,8 +274,6 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
-
-                                write_temp_class_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
@@ -287,7 +285,6 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
-                                write_temp_interface_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
                                 add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::struct_type:
@@ -332,7 +329,7 @@ Where <spec> is one or more of:
                                     break;
                                 case category::delegate_type:
                                     write_abi_delegate(w, type);
-                                    write_winrt_exposed_type_class(w, type, false);
+                                    write_temp_delegate_event_source_subclass(w, type);
                                     break;
                                 case category::enum_type:
                                     write_abi_enum(w, type);
