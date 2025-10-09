@@ -65,30 +65,11 @@
       TestComponent.Param13Handler;
       TestComponent.Param14Handler;
       TestComponent.Param15Handler;
-      <!--TestComponentCSharp.EventHandler0;
-      TestComponentCSharp.EventHandler1;
-      TestComponentCSharp.EventHandler2;
-      TestComponentCSharp.EventHandler3;
-      TestComponentCSharp.EventHandlerCollection;-->
       TestComponentCSharp.EventWithReturn;
       TestComponentCSharp.EventWithGuid;
       TestComponentCSharp.ProvideInt;
       TestComponentCSharp.ProvideBool;
       TestComponentCSharp.ProvideString;
-      <!--TestComponentCSharp.ProvideObject;-->
-      <!--TestComponentCSharp.ProvideEnum;-->
-      <!--TestComponentCSharp.ProvideEnums;
-      TestComponentCSharp.ProvideFlag;
-      TestComponentCSharp.ProvideFlags;
-      TestComponentCSharp.ProvideEnumStruct;
-      TestComponentCSharp.ProvideEnumStructs;
-      TestComponentCSharp.ProvideFlagStruct;
-      TestComponentCSharp.ProvideFlagStructs;
-      TestComponentCSharp.ProvideObjectIterable;-->
-      <!--TestComponentCSharp.ProvideUri;-->
-      <!--TestComponentCSharp.ProvideStringPair;
-      TestComponentCSharp.ProvideBindableIterable;
-      TestComponentCSharp.ProvideBindableVector;-->
     </CsWinRTIncludes>
   <!--
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
