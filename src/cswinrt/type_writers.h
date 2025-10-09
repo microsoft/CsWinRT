@@ -77,6 +77,21 @@ namespace %%
             _in_abi_impl_namespace = false;
         }
 
+        void write_begin_interface_iids()
+        {
+            write(R"(
+internal static class InterfaceIIDs
+{
+)"          
+            );
+        }
+
+        void write_end_interface_iids()
+        {
+            write("}\n");
+            _in_abi_impl_namespace = false;
+        }
+
         void write_begin_abi()
         {
             if (!settings.netstandard_compat)

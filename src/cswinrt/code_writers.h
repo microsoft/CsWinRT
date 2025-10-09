@@ -3318,47 +3318,52 @@ return %.AsValue();
             [&](auto const&) {});
     }
 
-    static void write_guid_property_from_signature(writer& w, std::string const& signature)
+    static void write_guid_property_from_signature(writer& w, TypeDef const& type)
     {
-        GUID guid_value = generate_guid(signature);
+        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
+        std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
+        GUID guid_value = generate_guid(ireference_guid_sig);
 
-        w.write(R"(public static ref readonly Guid IID
+        w.write(
+R"(public static ref readonly Guid IID_%
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                )");
+        ReadOnlySpan<byte> data =
+        [
+            )", type.TypeName());
 
-        w.write_printf(
-            "0x%X, 0x%X, 0x%X, 0x%X,\n                "
-            "0x%X, 0x%X,\n                "
-            "0x%X, 0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X\n",
-            (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
-            (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
-            (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
-            guid_value.Data4[0],
-            guid_value.Data4[1],
-            guid_value.Data4[2],
-            guid_value.Data4[3],
-            guid_value.Data4[4],
-            guid_value.Data4[5],
-            guid_value.Data4[6],
-            guid_value.Data4[7]);
+    w.write_printf(
+        "0x%X, 0x%X, 0x%X, 0x%X,\n                "
+        "0x%X, 0x%X,\n                "
+        "0x%X, 0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X,\n                "
+        "0x%X\n",
+        (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
+        (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
+        (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
+        guid_value.Data4[0],
+        guid_value.Data4[1],
+        guid_value.Data4[2],
+        guid_value.Data4[3],
+        guid_value.Data4[4],
+        guid_value.Data4[5],
+        guid_value.Data4[6],
+        guid_value.Data4[7]);
 
-        w.write(R"(            ];
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    })");
+    w.write(R"(        ];
+        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+    }
+}
+
+)");
     }
 
     void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
@@ -3776,10 +3781,14 @@ R"(
         }
     }
 
-    %
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref InterfaceIIDs.IID_%;
+    }
 }
 
-)", bind<write_guid_property_from_signature>(ireference_guid_sig));
+)", type.TypeName());
     }
 
     void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)

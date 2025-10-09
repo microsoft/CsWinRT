@@ -307,8 +307,33 @@ Where <spec> is one or more of:
                         if (written)
                         {
                             w.write_end_projected();
-             
                             w.write_begin_abi();
+
+                            // Write GUID properties out to InterfaceIIDs static class 
+                            w.write_begin_interface_iids();
+                            for (auto&& [name, type] : members.types)
+                            {
+                                currentType = name;
+                                if (!settings.filter.includes(type)) { continue; }
+                                if (get_mapped_type(ns, name)) continue;
+                                if (is_api_contract_type(type)) { continue; }
+                                if (is_attribute_type(type)) { continue; }
+
+                                switch (get_category(type))
+                                {
+                                case category::delegate_type:
+                                    write_guid_property_from_signature(w, type);
+                                    break;
+                                case category::enum_type:
+                                    write_guid_property_from_signature(w, type);
+                                    break;
+                                case category::struct_type:
+                                    write_guid_property_from_signature(w, type);
+                                    break;
+                                }
+                            }
+                            w.write_end_interface_iids();
+
                             for (auto&& [name, type] : members.types)
                             {
                                 currentType = name;
