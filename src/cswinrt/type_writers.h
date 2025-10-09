@@ -88,7 +88,7 @@ internal static class InterfaceIIDs
 
         void write_end_interface_iids()
         {
-            write("}\n");
+            write("}\n\n");
             _in_abi_impl_namespace = false;
         }
 
