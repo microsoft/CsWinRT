@@ -274,11 +274,10 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
-
-                                write_temp_class_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
+                                write_temp_delegate_event_source_subclass(w, type);
                                 add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::enum_type:
@@ -287,7 +286,6 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
-                                write_temp_interface_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
                                 add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::struct_type:
