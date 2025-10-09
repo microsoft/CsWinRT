@@ -330,6 +330,9 @@ Where <spec> is one or more of:
                                 case category::struct_type:
                                     write_iid_guid_property_from_signature(w, type);
                                     break;
+                                case category::interface_type:
+                                    write_iid_guid_property_from_type(w, type);
+                                    break;
                                 }
                             }
                             w.write_end_interface_iids();
