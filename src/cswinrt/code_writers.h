@@ -560,6 +560,28 @@ namespace cswinrt
             bind<write_parameter_name>(param));
     }
 
+    void write_parmaeters(writer& w, method_signature::param_t const& param)
+    {
+        switch (get_param_category(param))
+        {
+            case param_category::in:
+                w.write("%", bind<write_parameter_name>(param));
+                break;
+            case param_category::ref:
+                w.write("in %", bind<write_parameter_name>(param));
+                break;
+            case param_category::out:
+                w.write("out %", bind<write_parameter_name>(param));
+                break;
+            case param_category::pass_array:
+            case param_category::fill_array:
+                w.write("%[]", bind<write_parameter_name>(param));
+                break;
+            case param_category::receive_array:
+                w.write("out %[]", bind<write_parameter_name>(param));
+                break;
+        }
+    }
 
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
@@ -8311,6 +8333,61 @@ bind<write_event_invoke_return_default>(invokeMethodSig),
 bind<write_event_invoke_return>(invokeMethodSig),
 bind<write_event_invoke_args>(invokeMethodSig));
 });
+    }
+
+    void write_temp_delegate_event_source_subclass(writer& w, TypeDef const& type)
+    {
+        auto method = get_delegate_invoke(type);
+        method_signature signature{ method };
+
+        w.write(R"(
+public sealed unsafe class %EventSource : EventSource<%>
+{
+    /// <inheritdoc cref="EventSource{T}.EventSource"/>
+    public %EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+        : base(nativeObjectReference, index)
+    {
+    }
+
+    /// <inheritdoc/>
+    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
+    {
+        return %Marshaller.ConvertToUnmanaged(value);
+    }
+
+    /// <inheritdoc/>
+    protected override EventSourceState<%> CreateEventSourceState()
+    {
+        return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);
+    }
+
+    private sealed class EventState : EventSourceState<%>
+    {
+        /// <inheritdoc cref="EventSourceState{T}.EventSourceState"/>
+        public EventState(void* thisPtr, int index)
+            : base(thisPtr, index)
+        {
+        }
+
+        /// <inheritdoc/>
+        protected override % GetEventInvoke()
+        {
+            return (%) => TargetDelegate.Invoke(%);
+        }
+    }
+}
+    )",
+            type.TypeName(), 
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            type.TypeName(),
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            type.TypeName(),
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            bind<write_type_name>(type, typedef_name_type::Projected, true),
+            bind_list<write_parmaeters>(", ", signature.params()),
+            bind_list<write_parmaeters>(", ", signature.params())
+        );
     }
 
     void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
