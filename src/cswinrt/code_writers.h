@@ -9006,7 +9006,7 @@ public sealed unsafe class %EventSource : EventSource<%>
             bind<write_type_name>(type, typedef_name_type::Projected, true),
             type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, true),
-            bind<write_type_name>(type, typedef_name_type::ABI, false),
+            type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, true),
             bind<write_type_name>(type, typedef_name_type::Projected, true),
             bind<write_type_name>(type, typedef_name_type::Projected, true),

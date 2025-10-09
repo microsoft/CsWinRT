@@ -277,7 +277,6 @@ Where <spec> is one or more of:
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
-                                write_temp_delegate_event_source_subclass(w, type);
                                 add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::enum_type:
@@ -330,6 +329,7 @@ Where <spec> is one or more of:
                                     break;
                                 case category::delegate_type:
                                     write_abi_delegate(w, type);
+                                    write_temp_delegate_event_source_subclass(w, type);
                                     break;
                                 case category::enum_type:
                                     write_abi_enum(w, type);
