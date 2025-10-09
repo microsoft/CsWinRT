@@ -3324,7 +3324,7 @@ return %.AsValue();
         w.write("IID_%%", type.TypeName(), category == category::enum_type || category == category::struct_type ? "Reference" : "");
     }
 
-    static void write_guid_property_from_signature(writer& w, TypeDef const& type)
+    static void write_iid_guid_property_from_signature(writer& w, TypeDef const& type)
     {
         std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
         std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
