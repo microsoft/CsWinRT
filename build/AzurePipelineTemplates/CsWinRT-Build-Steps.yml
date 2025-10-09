@@ -8,13 +8,6 @@ parameters:
     default: false
     
 steps:
-  # Clone TestWinRT
-  - task: CmdLine@2
-    displayName: Clone TestWinRT
-    inputs: 
-      script: get_testwinrt.cmd
-      workingDirectory: $(Build.SourcesDirectory)\src
-
   # Setup remote for source link to pick up
   - task: PowerShell@2
     condition: eq(variables['AdoMirrorBuild'], 'true')

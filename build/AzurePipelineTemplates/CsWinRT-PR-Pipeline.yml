@@ -9,6 +9,11 @@ resources:
     type: git
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
+  - repository: TestWinRT
+    type: github
+    name: microsoft/TestWinRT
+    endpoint: microsoft
+    ref: 'aa4edcd52542cfe036473d008d3f66c8a220d59d'
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
@@ -21,6 +26,9 @@ extends:
     sdl:
       binskim:
         scanOutputDirectoryOnly: true
+      sourceRepositoriesToScan:
+        exclude:
+        - repository: TestWinRT
     featureFlags:
       autoBaseline: false
     stages:

@@ -175,6 +175,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                                Condition="'%(CsWinRTRemovedReferences.Implementation)' != '' AND Exists('%(CsWinRTRemovedReferences.RootDir)%(CsWinRTRemovedReferences.Directory)%(CsWinRTRemovedReferences.DestinationSubDirectory)%(CsWinRTRemovedReferences.Implementation)')" />
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
+
+      <!-- ReferenceCopyLocalPaths above will cause the Implementation dlls to be copied from references to the output dir but
+           those copies aren't included in the VS UpToDate check, so add them manually. -->
+      <_CsWinRT_CopyLocalImplementationDlls
+          Include="@(CsWinRTInputs->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')"
+          Condition="'%(CsWinRTInputs.Implementation)'!=''" />
+
+      <UpToDateCheckBuilt
+        Original="%(_CsWinRT_CopyLocalImplementationDlls.Identity)"
+        Include="@(_CsWinRT_CopyLocalImplementationDlls->'$(OutDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
+        Condition="Exists(%(_CsWinRT_CopyLocalImplementationDlls.Identity))" />
     </ItemGroup>
   </Target>
 
@@ -295,6 +306,8 @@ $(CsWinRTInternalProjection)
     <PropertyGroup>
       <CsWinRTContinueOnError>false</CsWinRTContinueOnError>
       <CsWinRTContinueOnError Condition="'$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'">true</CsWinRTContinueOnError>
+      <CsWinRTProjectionExitCode>0</CsWinRTProjectionExitCode>
+      <CsWinRTPrivateProjectionExitCode>0</CsWinRTPrivateProjectionExitCode>
     </PropertyGroup>
 
     <ItemGroup>
@@ -305,10 +318,14 @@ $(CsWinRTInternalProjection)
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
     <WriteLinesToFile File="$(CsWinRTResponseFilePrivateProjection)" Lines="$(CsWinRTPrivateParams)" Overwrite="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)" />
+    <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)">
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTProjectionExitCode" />
+    </Exec>
 
     <Message Text="$(CsWinRTCommandPrivateProjection)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommandPrivateProjection)" ContinueOnError="$(CsWinRTContinueOnError)" Condition="'$(CsWinRTPrivateProjection)' == 'true'"/>
+    <Exec Command="$(CsWinRTCommandPrivateProjection)" ContinueOnError="$(CsWinRTContinueOnError)" Condition="'$(CsWinRTPrivateProjection)' == 'true'">
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTPrivateProjectionExitCode" />
+    </Exec>
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTResponseFile)')">
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
@@ -316,7 +333,8 @@ $(CsWinRTInternalProjection)
       <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
     </ItemGroup>
 
-    <!-- Clean the output file if the target failed to indicate it needs to be rebuild -->
+    <!-- Clean the output file if the target failed to indicate it needs to be rebuild including for design time builds which won't trigger OnError. -->
+    <CallTarget Targets="CsWinRTCleanGenerateProjectionOutputs" Condition="'$(CsWinRTContinueOnError)' == 'true' AND ('$(CsWinRTProjectionExitCode)' != '0' OR '$(CsWinRTPrivateProjectionExitCode)' != '0')" />
     <OnError ExecuteTargets="CsWinRTCleanGenerateProjectionOutputs" />
   </Target>
 

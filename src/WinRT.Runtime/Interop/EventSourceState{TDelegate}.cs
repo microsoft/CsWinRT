@@ -111,7 +111,7 @@ namespace ABI.WinRT.Interop
             return cacheEntry;
         }
 
-        internal void InitalizeReferenceTracking(IntPtr ptr)
+        internal void InitializeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
             int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_IReferenceTrackerTarget), out referenceTrackerTargetPtr);
