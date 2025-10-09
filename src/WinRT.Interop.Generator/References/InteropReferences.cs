@@ -1927,7 +1927,7 @@ internal sealed class InteropReferences
         return ICollection1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Contains"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("CopyTo"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
