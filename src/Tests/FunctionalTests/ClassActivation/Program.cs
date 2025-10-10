@@ -1,9 +1,14 @@
-﻿using System;
+﻿using System.Runtime.InteropServices;
 using TestComponent;
 using TestComponentCSharp;
+using WindowsRuntime.InteropServices;
 
 // TODO: This shouldn't be needed if transitive references are detected correctly.
 [assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
 
 CustomDisposableTest customDisposableTest = new();
 customDisposableTest.Dispose();
