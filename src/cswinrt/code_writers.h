@@ -2050,7 +2050,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %Impl.IID);
     }
 }
 )",
@@ -2059,7 +2059,8 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true));
+            bind<write_type_name>(classType, typedef_name_type::ABI, true),
+            bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
     }
 
     template<auto method_writer>
@@ -3090,12 +3091,15 @@ return %.AsValue();
             }
             else if (!type.Flags().Sealed())
             {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+
                 w.write(R"(
-internal WindowsRuntimeObjectReferenceValue GetDefaultInterface()
+internal %WindowsRuntimeObjectReferenceValue GetDefaultInterface()
 {
 return %.AsValue();
 }
 )",
+                has_base_type ? "new " : "",
                 bind<write_objref_type_name>(interface_type));
             }
 
