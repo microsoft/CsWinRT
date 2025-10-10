@@ -34,6 +34,7 @@ file static class Boolean;
 /// <summary>
 /// Marshaller for <see cref="bool"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class BooleanMarshaller
 {

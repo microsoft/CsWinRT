@@ -34,6 +34,7 @@ file static class UInt32;
 /// <summary>
 /// Marshaller for <see cref="uint"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class UInt32Marshaller
 {

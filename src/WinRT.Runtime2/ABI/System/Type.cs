@@ -34,9 +34,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Type"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
 [TypeComWrappersMarshaller]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public unsafe struct Type
 {
     /// <summary>
@@ -55,6 +56,7 @@ public unsafe struct Type
 /// <summary>
 /// Marshaller for <see cref="global::System.Type"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class TypeMarshaller
 {

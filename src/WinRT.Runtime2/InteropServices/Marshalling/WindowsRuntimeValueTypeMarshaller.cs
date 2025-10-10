@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -9,6 +10,8 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime value types.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeValueTypeMarshaller
 {
     /// <summary>

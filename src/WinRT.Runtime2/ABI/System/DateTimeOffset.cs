@@ -28,9 +28,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
 [DateTimeOffsetComWrappersMarshaller]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public struct DateTimeOffset
 {
     /// <summary>
@@ -43,6 +44,7 @@ public struct DateTimeOffset
 /// <summary>
 /// Marshaller for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class DateTimeOffsetMarshaller
 {

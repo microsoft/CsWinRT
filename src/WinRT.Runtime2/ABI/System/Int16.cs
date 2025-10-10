@@ -34,6 +34,7 @@ file static class Int16;
 /// <summary>
 /// Marshaller for <see cref="short"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Int16Marshaller
 {

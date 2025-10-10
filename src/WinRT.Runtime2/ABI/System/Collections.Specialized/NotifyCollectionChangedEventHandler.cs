@@ -44,6 +44,7 @@ file static class NotifyCollectionChangedEventHandler;
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
 {

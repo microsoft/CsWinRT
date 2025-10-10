@@ -24,6 +24,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="IAsyncAction"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionMarshaller
 {
@@ -90,6 +91,7 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
 /// <summary>
 /// Interop methods for <see cref="IAsyncAction"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionMethods
 {
@@ -164,6 +166,7 @@ internal unsafe struct IAsyncActionVftbl
 /// <summary>
 /// The <see cref="IAsyncAction"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionImpl
 {

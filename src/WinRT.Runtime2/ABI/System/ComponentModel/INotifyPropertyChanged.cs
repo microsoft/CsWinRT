@@ -19,6 +19,7 @@ namespace ABI.System.ComponentModel;
 /// <summary>
 /// Marshaller for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedMarshaller
 {
@@ -42,6 +43,7 @@ public static unsafe class INotifyPropertyChangedMarshaller
 /// <summary>
 /// Interop methods for <see cref="INotifyPropertyChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedMethods
 {
@@ -94,6 +96,7 @@ internal unsafe struct INotifyPropertyChangedVftbl
 /// <summary>
 /// The <see cref="INotifyPropertyChanged"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyPropertyChangedImpl
 {

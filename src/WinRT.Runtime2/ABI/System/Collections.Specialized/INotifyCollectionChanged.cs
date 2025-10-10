@@ -20,6 +20,7 @@ namespace ABI.System.Collections.Specialized;
 /// <summary>
 /// Marshaller for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMarshaller
 {
@@ -43,6 +44,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
 /// <summary>
 /// Interop methods for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMethods
 {
@@ -95,6 +97,7 @@ internal unsafe struct INotifyCollectionChangedVftbl
 /// <summary>
 /// The <see cref="INotifyCollectionChanged"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedImpl
 {

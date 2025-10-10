@@ -36,6 +36,7 @@ file static class Vector3;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Vector3"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Vector3Marshaller
 {

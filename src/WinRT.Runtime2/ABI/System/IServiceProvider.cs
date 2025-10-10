@@ -18,6 +18,7 @@ namespace ABI.System;
 /// <summary>
 /// Marshaller for <see cref="IServiceProvider"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMarshaller
 {
@@ -37,6 +38,7 @@ public static unsafe class IServiceProviderMarshaller
 /// <summary>
 /// Interop methods for <see cref="IServiceProvider"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMethods
 {
@@ -85,6 +87,7 @@ internal unsafe struct IServiceProviderVftbl
 /// <summary>
 /// The <see cref="IServiceProvider"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderImpl
 {

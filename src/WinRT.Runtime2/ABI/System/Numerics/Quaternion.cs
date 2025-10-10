@@ -36,6 +36,7 @@ file static class Quaternion;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Quaternion"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class QuaternionMarshaller
 {

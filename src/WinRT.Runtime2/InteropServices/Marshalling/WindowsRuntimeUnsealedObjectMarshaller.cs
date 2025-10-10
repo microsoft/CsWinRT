@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -8,6 +10,8 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for unsealed Windows Runtime objects.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
 {
     /// <summary>

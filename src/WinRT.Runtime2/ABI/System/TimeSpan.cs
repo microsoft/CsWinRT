@@ -28,9 +28,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
 [TimeSpanComWrappersMarshaller]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public struct TimeSpan
 {
     /// <summary>
@@ -43,6 +44,7 @@ public struct TimeSpan
 /// <summary>
 /// Marshaller for <see cref="global::System.TimeSpan"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class TimeSpanMarshaller
 {

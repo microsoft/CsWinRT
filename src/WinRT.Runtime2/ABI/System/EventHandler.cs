@@ -45,6 +45,7 @@ file static class EventHandler;
 /// <summary>
 /// Marshaller for <see cref="global::System.EventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class EventHandlerMarshaller
 {

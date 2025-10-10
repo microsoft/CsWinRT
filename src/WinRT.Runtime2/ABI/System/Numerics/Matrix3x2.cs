@@ -36,6 +36,7 @@ file static class Matrix3x2;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Matrix3x2Marshaller
 {

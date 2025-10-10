@@ -35,6 +35,7 @@ file static class String;
 /// <summary>
 /// Marshaller for <see cref="string"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class StringMarshaller
 {

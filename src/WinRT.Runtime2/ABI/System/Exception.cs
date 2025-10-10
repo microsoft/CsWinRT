@@ -28,9 +28,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.HResult>")]
 [ExceptionComWrappersMarshaller]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public struct Exception
 {
     /// <summary>
@@ -44,6 +45,7 @@ public struct Exception
 /// Marshaller for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <remarks>This marshaller is backed by the infrastructure provided by <see cref="RestrictedErrorInfo"/>.</remarks>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExceptionMarshaller
 {

@@ -34,6 +34,7 @@ file static class Single;
 /// <summary>
 /// Marshaller for <see cref="float"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class SingleMarshaller
 {

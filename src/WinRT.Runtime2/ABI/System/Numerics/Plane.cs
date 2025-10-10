@@ -36,6 +36,7 @@ file static class Plane;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PlaneMarshaller
 {

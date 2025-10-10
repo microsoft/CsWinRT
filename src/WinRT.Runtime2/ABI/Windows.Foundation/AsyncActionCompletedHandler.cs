@@ -25,6 +25,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="AsyncActionCompletedHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class AsyncActionCompletedHandlerMarshaller
 {

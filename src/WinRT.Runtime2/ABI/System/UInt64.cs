@@ -34,6 +34,7 @@ file static class UInt64;
 /// <summary>
 /// Marshaller for <see cref="ulong"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class UInt64Marshaller
 {

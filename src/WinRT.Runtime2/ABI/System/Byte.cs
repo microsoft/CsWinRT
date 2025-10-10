@@ -34,6 +34,7 @@ file static class Byte;
 /// <summary>
 /// Marshaller for <see cref="byte"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class ByteMarshaller
 {

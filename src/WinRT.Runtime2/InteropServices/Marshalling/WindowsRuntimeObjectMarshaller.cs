@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -100,6 +101,8 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     /// whenever there is static type information available for the type. This allows the marshalling logic to be optimized and to avoid having
     /// to perform a lookup via the interop type map to retrieve the marshalling attribute, and to perform one extra <c>QueryInterface</c> call.
     /// </remarks>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static object? ConvertToManaged<TCallback>(void* value)
         where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {

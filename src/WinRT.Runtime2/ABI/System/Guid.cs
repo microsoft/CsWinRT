@@ -34,6 +34,7 @@ file static class Guid;
 /// <summary>
 /// Marshaller for <see cref="global::System.Guid"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class GuidMarshaller
 {
