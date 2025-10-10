@@ -21,3 +21,17 @@ internal struct ReferenceInterfaceEntries
     public ComInterfaceEntry IInspectable;
     public ComInterfaceEntry IUnknown;
 }
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct DelegateReferenceInterfaceEntries
+{
+    public ComInterfaceEntry Delegate;
+    public ComInterfaceEntry DelegateReference;
+    public ComInterfaceEntry IPropertyValue;
+    public ComInterfaceEntry IStringable;
+    public ComInterfaceEntry IWeakReferenceSource;
+    public ComInterfaceEntry IMarshal;
+    public ComInterfaceEntry IAgileObject;
+    public ComInterfaceEntry IInspectable;
+    public ComInterfaceEntry IUnknown;
+}
