@@ -7621,7 +7621,7 @@ file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrap
 {
 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
-WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReference(
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
     externalComObject: value,
     iid: I%Impl.IID,
     wrapperFlags: out wrapperFlags);
@@ -7645,7 +7645,7 @@ file sealed unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappers
 {
 public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
-WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: I%Impl.IID,
     wrapperFlags: out wrapperFlags);
@@ -7671,7 +7671,7 @@ public static unsafe bool TryCreateObject(
 {
 if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordinal))
 {
-    WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+    WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
         iid: I%Impl.IID,
         wrapperFlags: out wrapperFlags);
@@ -7791,7 +7791,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in %ReferenceImpl.IID,
             wrapperFlags: out wrapperFlags);
@@ -7817,7 +7817,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>
