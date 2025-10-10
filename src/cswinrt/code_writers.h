@@ -2050,7 +2050,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %Impl.IID);
     }
 }
 )",
@@ -2059,7 +2059,8 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true));
+            bind<write_type_name>(classType, typedef_name_type::ABI, true),
+            bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
     }
 
     template<auto method_writer>
@@ -3090,12 +3091,15 @@ return %.AsValue();
             }
             else if (!type.Flags().Sealed())
             {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+
                 w.write(R"(
-internal WindowsRuntimeObjectReferenceValue GetDefaultInterface()
+internal %WindowsRuntimeObjectReferenceValue GetDefaultInterface()
 {
 return %.AsValue();
 }
 )",
+                has_base_type ? "new " : "",
                 bind<write_objref_type_name>(interface_type));
             }
 
@@ -3941,6 +3945,42 @@ R"(file static class %InterfaceEntriesImpl
 }
 
 )", name, name, name, name);
+    }
+
+    void write_delegates_interface_entries_impl(writer& w, TypeDef const& type)
+    {
+        auto name = type.TypeName();
+
+        w.write(
+            R"(file static class %InterfaceEntriesImpl
+{
+    [FixedAddressValueType]
+    public static readonly DelegateReferenceInterfaceEntries Entries;
+    
+    static %InterfaceEntriesImpl()
+    {
+        Entries.Delegate.IID = %Impl.IID;
+        Entries.Delegate.Vtable = %Impl.Vtable;
+        Entries.DelegateReference.IID = %ReferenceImpl.IID;
+        Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
+        Entries.IStringable.IID = IStringableImpl.IID;
+        Entries.IStringable.Vtable = IStringableImpl.Vtable;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
+        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
+        Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
+        Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
+        Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
+    }
+}
+
+)", name, name, name, name, name, name);
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
@@ -7740,6 +7780,16 @@ internal static unsafe class %Impl
     {
         %
     }
+
+    public static ref readonly global::System.Guid IID
+    {
+        [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            global::System.ReadOnlySpan<byte> data = new byte[] { % };
+            return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+        }
+    }
 }
 )",
             type.TypeName(),
@@ -7752,7 +7802,9 @@ internal static unsafe class %Impl
                     bind<write_type_name>(type, typedef_name_type::Projected, false),
                     method.Name(),
                     "(%)"),
-                false)
+                false),
+            // IID
+            bind<write_guid_bytes>(type)
         );
 
     }
@@ -7796,7 +7848,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
 
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
@@ -7891,7 +7943,7 @@ internal unsafe struct %Vftbl
         write_delegate_vtbl(w, type);
         write_native_delegate(w, type);
         write_delegate_comwrappers_callback(w, type);
-        write_interface_entries_impl(w, type);
+        write_delegates_interface_entries_impl(w, type);
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_delegate_impl(w, type);
         write_reference_impl(w, type);

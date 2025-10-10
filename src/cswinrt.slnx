@@ -33,6 +33,7 @@
     <File Path="../nuget/LICENSE" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Embedded.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.IIDOptimizer.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.nuspec" />
@@ -104,7 +105,8 @@
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/WinUI/WinUI.csproj">
       <Platform Solution="*|ARM" Project="x86" />
@@ -234,7 +236,8 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/Collections/Collections.csproj">
       <Platform Solution="*|ARM" Project="ARM" />
@@ -331,6 +334,7 @@
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM" Project="false" />
   </Project>
+  <Project Path="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" Id="d71298e7-f1c7-4534-8f5f-b9ef7c40d9de" />
   <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
     <Platform Solution="*|ARM" Project="x86" />
     <Platform Solution="*|ARM64" Project="arm64" />

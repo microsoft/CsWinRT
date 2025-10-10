@@ -738,6 +738,7 @@ internal static class WellKnownTypeSignatureFactory
         // Signature for 'Guid& modreq(InAttribute)'
         return
             interopReferences.Guid
+            .ToValueTypeSignature()
             .MakeByReferenceType()
             .MakeModifierType(interopReferences.InAttribute, isRequired: true);
     }

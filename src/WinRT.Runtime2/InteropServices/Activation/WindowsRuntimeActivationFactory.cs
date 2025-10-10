@@ -83,7 +83,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
         void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName, in iid);
 
-        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in WellKnownInterfaceIds.IID_IActivationFactory)!;
+        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in iid)!;
     }
 
     /// <returns>A pointer to the activation factory for the specified Windows Runtime type.</returns>

@@ -13,11 +13,11 @@
     <ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
-
-  <!--
     <ProjectReference Include="..\Windows\Windows.csproj" />
+
+    <!--
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />	
-  -->
+    -->
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
@@ -70,11 +70,10 @@
       TestComponentCSharp.ProvideInt;
       TestComponentCSharp.ProvideBool;
       TestComponentCSharp.ProvideString;
+      test_component_base;
+      test_component_derived;
     </CsWinRTIncludes>
-  <!--
-    <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
-    <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>
-  -->
+
     <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>

@@ -19,7 +19,7 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute("WinRT"u8, "WindowsRuntimeTypeAttribute"u8);
+        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
     }
 
     extension(ITypeDefOrRef type)
@@ -192,24 +192,24 @@ internal static class WindowsRuntimeExtensions
     extension(ModuleDefinition module)
     {
         /// <summary>
-        /// Checks whether a <see cref="ModuleDefinition"/> is or references the Windows SDK projections assembly.
+        /// Checks whether a <see cref="ModuleDefinition"/> is or references the Windows Runtime assembly.
         /// </summary>
-        /// <returns>Whether the module is or references the Windows SDK projections assembly.</returns>
-        public bool IsOrReferencesWindowsSDKProjectionsAssembly
+        /// <returns>Whether the module is or references the Windows Runtime assembly.</returns>
+        public bool IsOrReferencesWindowsRuntimeAssembly
         {
             get
             {
-                // If the assembly references the Windows SDK projections, gather it
+                // If the assembly references the Windows Runtime assembly, gather it
                 foreach (AssemblyReference reference in module.AssemblyReferences)
                 {
-                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8[..^4]) is true)
+                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntime2DllNameUtf8[..^4]) is true)
                     {
                         return true;
                     }
                 }
 
-                // Otherwise, check if it's the Windows SDK projections assembly itself
-                return module.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8) is true;
+                // Otherwise, check if it's the Windows Runtime assembly itself
+                return module.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntime2DllNameUtf8) is true;
             }
         }
 
@@ -217,7 +217,7 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="ModuleDefinition"/> is the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module is the Windows Runtime assembly.</returns>
-        public bool IsWindowsRuntimeAssembly => module.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8) is true;
+        public bool IsWindowsRuntimeAssembly => module.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntimeDllNameUtf8) is true;
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references 'WinRT.Runtime.dll' version 2.
