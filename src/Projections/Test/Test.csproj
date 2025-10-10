@@ -15,19 +15,50 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
-    <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
-    <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>
-    <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+	  <CsWinRTIncludes>
+		  TestComponent.Blittable;
+		  TestComponent.NonBlittable;
+		  TestComponent.Nested;
+		  TestComponentCSharp.FlagValue;
+		  TestComponentCSharp.EnumValue;
+		  TestComponentCSharp.FlagStruct;
+		  TestComponentCSharp.EnumStruct;
+		  TestComponentCSharp.BlittableStruct;
+		  TestComponentCSharp.ComposedBlittableStruct;
+		  TestComponentCSharp.NonBlittableStringStruct;
+		  TestComponentCSharp.NonBlittableBoolStruct;
+		  TestComponentCSharp.NonBlittableRefStruct;
+		  TestComponentCSharp.ComposedNonBlittableStruct
+		  TestComponentCSharp.CustomDisposableTest;
+		  TestComponentCSharp.ICustomDisposableTest;
+		  TestComponent.Composable;
+		  TestComponent.IComposableStatics;
+		  TestComponent.IRequiredOne;
+		  TestComponent.IRequiredTwo;
+		  TestComponent.IRequiredThree;
+		  TestComponent.IRequiredFour;
+		  TestComponent.IComposable;
+		  TestComponentCSharp.ComImports;
+		  TestComponentCSharp.IComImports;
+		  TestComponentCSharp.ISingleton;
+		  TestComponentCSharp.Singleton;
+		  test_component_base;
+		  test_component_derived;
+	  </CsWinRTIncludes>
+	  <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>
   <ItemGroup>
     <!--Explicitly reference WinAppSDK winmds from TFM uap10.0-->
     <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK)/**/*.winmd" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="TestHost.ProbeByHost.cs" />
+	</ItemGroup>
 
 </Project>
