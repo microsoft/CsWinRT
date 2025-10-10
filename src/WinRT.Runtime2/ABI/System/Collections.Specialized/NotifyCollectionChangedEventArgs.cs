@@ -220,9 +220,13 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// Gets the IID for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
     /// </summary>
-    private static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
-        : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
+    private static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
+            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
+    }
 
     /// <summary>
     /// Gets the runtime class name for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.

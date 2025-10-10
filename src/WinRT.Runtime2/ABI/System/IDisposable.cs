@@ -95,7 +95,11 @@ public static unsafe class IDisposableImpl
     /// <summary>
     /// Gets the IID for <see cref="IDisposable"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IDisposable;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IDisposable;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IDisposable"/> implementation.

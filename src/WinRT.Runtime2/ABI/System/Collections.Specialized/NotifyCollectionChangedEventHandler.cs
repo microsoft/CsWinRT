@@ -234,9 +234,13 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     /// <summary>
     /// Gets the IID for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
@@ -307,9 +311,13 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
     /// <summary>
     /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <c>IReference`1</c> implementation.

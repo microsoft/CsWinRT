@@ -110,7 +110,11 @@ public static unsafe class IServiceProviderImpl
     /// <summary>
     /// Gets the IID for <see cref="IServiceProvider"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IServiceProvider;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IServiceProvider;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IServiceProvider"/> implementation.

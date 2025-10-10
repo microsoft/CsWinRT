@@ -233,9 +233,13 @@ file static unsafe class PropertyChangedEventHandlerImpl
     /// <summary>
     /// Gets the IID for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
@@ -306,9 +310,13 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     /// <summary>
     /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <c>IReference`1</c> implementation.

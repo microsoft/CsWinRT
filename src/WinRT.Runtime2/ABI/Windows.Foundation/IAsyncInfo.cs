@@ -167,7 +167,11 @@ public static unsafe class IAsyncInfoImpl
     /// <summary>
     /// Gets the IID for <see cref="IAsyncInfo"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IAsyncInfo"/> implementation.

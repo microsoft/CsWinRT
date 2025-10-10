@@ -117,7 +117,11 @@ public static unsafe class IVectorChangedEventArgsImpl
     /// <summary>
     /// Gets the IID for <see cref="IVectorChangedEventArgs"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IVectorChangedEventArgs"/> implementation.
