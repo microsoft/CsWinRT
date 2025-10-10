@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -40,6 +41,8 @@ namespace WindowsRuntime.InteropServices;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attribute
 {
     /// <summary>
@@ -57,9 +60,10 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// tracking support, where applicable). They can also return new "equivalent values" when needed (eg. for custom mapped types).
     /// </para>
     /// <para>
-    /// Implementations are allowed to use <see cref="WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject"/> if they need to directly
-    /// marshal a managed object via the built-in <see cref="ComWrappers"/> implementation in CsWinRT. If instead they need to use custom
-    /// logic to marshal types, they are also allowed to create a native object to return in whichever manner is required for the scenario.
+    /// Implementations are allowed to use <see cref="Marshalling.WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject"/>
+    /// if they need to directly marshal a managed object via the built-in <see cref="ComWrappers"/> implementation in CsWinRT. If instead
+    /// they need to use custom logic to marshal types, they are also allowed to create a native object to return in whichever manner is
+    /// required for the scenario.
     /// </para>
     /// <para>
     /// The <paramref name="value"/> argument will never be <see langword="null"/>, and implementations don't have to validate that.

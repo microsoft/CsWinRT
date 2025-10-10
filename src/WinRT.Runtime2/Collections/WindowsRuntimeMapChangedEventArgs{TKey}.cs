@@ -35,6 +35,8 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -50,6 +52,8 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

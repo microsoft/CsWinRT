@@ -108,7 +108,7 @@ file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallbac
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshaller.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in NotifyCollectionChangedEventHandlerImpl.IID,
             wrapperFlags: out wrapperFlags);

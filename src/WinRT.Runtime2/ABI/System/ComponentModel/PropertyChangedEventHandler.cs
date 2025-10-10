@@ -107,7 +107,7 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshaller.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in PropertyChangedEventHandlerImpl.IID,
             wrapperFlags: out wrapperFlags);
