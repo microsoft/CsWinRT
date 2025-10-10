@@ -13,7 +13,7 @@ namespace WindowsRuntime;
 /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
 [Guid("00000037-0000-0000-C000-000000000046")]
 [GeneratedComInterface]
-public unsafe partial interface IWeakReference
+internal unsafe partial interface IWeakReference
 {
     /// <summary>
     /// Resolves a weak reference by returning a strong reference to the object.
