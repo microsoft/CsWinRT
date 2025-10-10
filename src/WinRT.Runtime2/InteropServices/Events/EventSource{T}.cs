@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -11,6 +12,8 @@ namespace WindowsRuntime.InteropServices;
 /// A managed wrapper for an event to expose to a native Windows Runtime consumer.
 /// </summary>
 /// <typeparam name="T">The type of delegate being managed.</typeparam>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class EventSource<T>
     where T : MulticastDelegate
 {

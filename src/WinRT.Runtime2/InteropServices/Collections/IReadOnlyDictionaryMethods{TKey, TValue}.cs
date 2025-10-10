@@ -18,7 +18,7 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This type should only be used by generated code.
 /// </remarks>
-[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyDictionaryMethods<TKey, TValue>
 {

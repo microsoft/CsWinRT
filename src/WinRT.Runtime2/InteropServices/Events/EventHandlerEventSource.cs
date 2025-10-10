@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using ABI.System;
 
 namespace WindowsRuntime.InteropServices;
@@ -9,6 +10,8 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="EventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

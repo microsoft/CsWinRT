@@ -17,7 +17,7 @@ namespace WindowsRuntime.InteropServices;
 /// This type should only be used by generated code.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
-[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapter<T>
 {
