@@ -181,9 +181,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'ComputeVtables' method
             marshallerType.Methods.Add(computeVtablesMethod);
-            // marshallerType.AddMethodImplementation(
-            //    declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-            //    method: computeVtablesMethod);
 
             // Define the 'GetOrCreateComInterfaceForObject' method as follows:
             //
@@ -206,11 +203,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'GetOrCreateComInterfaceForObject' method
             marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
-
-            // marshallerType.AddMethodImplementation(
-            //    declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject.Import(module),
-            //    method: getOrCreateComInterfaceForObjectMethod);
-
         }
 
         /// <summary>
