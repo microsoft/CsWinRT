@@ -7404,6 +7404,8 @@ public static unsafe class %Marshaller
         bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
         separator s{ w, " || " };
         w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool IsOverridableInterface(in Guid iid) => %%;
 )",
             bind_each([&](writer& w, InterfaceImpl const& iface)
@@ -7538,12 +7540,16 @@ GC.RemoveMemoryPressure(%);
                 if (!type.Flags().Sealed())
                 {
                     w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => GetType() == typeof(%);)",
                         type.TypeName());
                 }
                 else
                 {
                     w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => true;)");
                 }
             },
