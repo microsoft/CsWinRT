@@ -129,9 +129,9 @@ file static class AsyncActionCompletedHandlerInterfaceEntriesImpl
     /// </summary>
     static AsyncActionCompletedHandlerInterfaceEntriesImpl()
     {
-        Entries.AsyncActionCompletedHandler.IID = AsyncActionCompletedHandlerImpl.IID;
+        Entries.AsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_AsyncActionCompletedHandler;
         Entries.AsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerImpl.Vtable;
-        Entries.IReferenceOfAsyncActionCompletedHandler.IID = AsyncActionCompletedHandlerReferenceImpl.IID;
+        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler;
         Entries.IReferenceOfAsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
