@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -10,6 +11,8 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IAgileObject</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/objidlbase/nn-objidlbase-iagileobject"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAgileObjectImpl
 {
     /// <summary>

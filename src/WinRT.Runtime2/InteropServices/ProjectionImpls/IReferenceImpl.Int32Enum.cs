@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -15,6 +16,8 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IReference`1</c> implementation for managed types that can share an implementation.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe partial class IReferenceImpl
 {
     /// <summary>
