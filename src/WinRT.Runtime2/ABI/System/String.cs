@@ -38,7 +38,7 @@ file static class String;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class StringMarshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(string? value)
     {
         return value is null
