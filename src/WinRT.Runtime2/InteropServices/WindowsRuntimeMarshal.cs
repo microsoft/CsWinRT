@@ -36,6 +36,38 @@ public static unsafe class WindowsRuntimeMarshal
     }
 
     /// <summary>
+    /// Checks whether two objects are the same, or represent the same underlying native object.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>Whether <paramref name="left"/> and <paramref name="right"/> are the same object or wrap the same underlying native object.</returns>
+    public static bool NativeReferenceEquals(object? left, object? right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
+        // Unwrap both objects and check whether the underlying object is the same. To do this we also need
+        // to query for the 'IUnknown' interface pointer, to ensure we get the actual identity of the objects.
+        if (TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
+            TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
+        {
+            using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
+            using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
+
+            return leftUnknown.GetThisPtrUnsafe() == rightUnknown.GetThisPtrUnsafe();
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Tries to retrieve a managed object from a pointer to a COM object, if it is actually a reference to a CCW that was marshalled to native code.
     /// </summary>
     /// <param name="externalComObject">The external COM object to try to get a managed object from.</param>
