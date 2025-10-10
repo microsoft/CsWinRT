@@ -67,6 +67,11 @@ internal sealed class InteropReferences
     public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference("System.Runtime.InteropServices"u8, new Version(10, 0, 0, 0));
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
+    /// </summary>
+    public AssemblyReference SystemMemory => field ??= new AssemblyReference("System.Memory"u8, new Version(10, 0, 0, 0));
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Attribute"/>.
     /// </summary>
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);
@@ -279,7 +284,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.MemoryExtensions"/>.
     /// </summary>
-    public TypeReference MemoryExtensions => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "MemoryExtensions"u8);
+    public TypeReference MemoryExtensions => field ??= SystemMemory.CreateTypeReference("System"u8, "MemoryExtensions"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
@@ -627,34 +632,34 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMarshal"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeObjectMarshaller"u8);
+    public TypeReference WindowsRuntimeObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnsealedObject</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeUnsealedObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeUnsealedObject"u8);
+    public TypeReference WindowsRuntimeUnsealedObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnsealedObjectMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeInterfaceMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeInterfaceMarshaller`1"u8);
+    public TypeReference WindowsRuntimeInterfaceMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeInterfaceMarshaller`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeDelegateMarshaller"u8);
+    public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeDelegateMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeArrayMarshaller"u8);
+    public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
     /// </summary>
-    public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "HStringMarshaller"u8);
+    public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "HStringMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo</c>.
@@ -1319,7 +1324,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-            returnType: Delegate.ToReferenceTypeSignature(),
+            returnType: _corLibTypeFactory.Object,
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
@@ -1335,7 +1340,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeUnsealedObjectMarshallerConvertToManaged => field ??= WindowsRuntimeUnsealedObjectMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-            returnType: Delegate.ToReferenceTypeSignature(),
+            returnType: _corLibTypeFactory.Object,
             genericParameterCount: 1,
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
