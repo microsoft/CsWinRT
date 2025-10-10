@@ -60,7 +60,7 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// tracking support, where applicable). They can also return new "equivalent values" when needed (eg. for custom mapped types).
     /// </para>
     /// <para>
-    /// Implementations are allowed to use <see cref="Marshalling.WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject"/>
+    /// Implementations are allowed to use <see cref="WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject"/>
     /// if they need to directly marshal a managed object via the built-in <see cref="ComWrappers"/> implementation in CsWinRT. If instead
     /// they need to use custom logic to marshal types, they are also allowed to create a native object to return in whichever manner is
     /// required for the scenario.

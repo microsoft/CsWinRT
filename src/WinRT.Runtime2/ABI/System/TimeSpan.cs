@@ -141,7 +141,7 @@ internal sealed unsafe class TimeSpanComWrappersMarshallerAttribute : WindowsRun
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
 
     /// <inheritdoc/>

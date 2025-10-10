@@ -109,7 +109,7 @@ internal sealed unsafe class UInt64ComWrappersMarshallerAttribute : WindowsRunti
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
 
     /// <inheritdoc/>

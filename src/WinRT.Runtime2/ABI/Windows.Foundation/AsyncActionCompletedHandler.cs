@@ -88,7 +88,7 @@ file abstract unsafe class AsyncActionCompletedHandlerComWrappersCallback : IWin
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshaller.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in WellKnownInterfaceIds.IID_AsyncActionCompletedHandler,
             wrapperFlags: out wrapperFlags);
@@ -158,7 +158,7 @@ internal sealed unsafe class AsyncActionCompletedHandlerComWrappersMarshallerAtt
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>

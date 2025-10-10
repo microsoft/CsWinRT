@@ -4,15 +4,16 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
-namespace WindowsRuntime.InteropServices.Marshalling;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// A marshaller with some utility methods that directly wrap <see cref="ComWrappers"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class WindowsRuntimeComWrappersMarshaller
+public static unsafe class WindowsRuntimeComWrappersMarshal
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObjectReference"/> object for a given COM pointer, using <c>QueryInterface</c>.

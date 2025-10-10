@@ -95,7 +95,7 @@ file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeObje
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshaller.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in WellKnownInterfaceIds.IID_EventHandler,
             wrapperFlags: out wrapperFlags);
@@ -165,7 +165,7 @@ file sealed unsafe class EventHandlerComWrappersMarshallerAttribute : WindowsRun
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>

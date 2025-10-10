@@ -313,7 +313,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
             // We couldn't find any partially derived type to marshal: just return an opaque object.
             // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
-            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshaller.CreateObjectReference(
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
                 externalComObject: interfacePointer,
                 iid: in WellKnownInterfaceIds.IID_IInspectable,
                 wrapperFlags: out wrapperFlags);

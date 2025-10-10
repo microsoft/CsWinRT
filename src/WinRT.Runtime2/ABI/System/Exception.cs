@@ -128,7 +128,7 @@ file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntim
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshaller.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>
