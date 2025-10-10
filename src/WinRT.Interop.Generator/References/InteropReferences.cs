@@ -294,22 +294,22 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch"/>.
     /// </summary>
-    public TypeReference ComInterfaceDispatch => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers"u8, "ComWrappers/ComInterfaceDispatch"u8);
+    public TypeReference ComInterfaceDispatch => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "ComWrappers"u8).CreateTypeReference("ComInterfaceDispatch"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry"/>.
     /// </summary>
-    public TypeReference ComInterfaceEntry => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers"u8, "ComWrappers/ComInterfaceEntry"u8);
+    public TypeReference ComInterfaceEntry => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "ComWrappers"u8).CreateTypeReference("ComInterfaceEntry"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreateComInterfaceFlags"/>.
     /// </summary>
-    public TypeReference CreateComInterfaceFlags => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "CreateComInterfaceFlags"u8);
+    public TypeReference CreateComInterfaceFlags => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "CreateComInterfaceFlags"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreatedWrapperFlags"/>.
     /// </summary>
-    public TypeReference CreatedWrapperFlags => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "CreatedWrapperFlags"u8);
+    public TypeReference CreatedWrapperFlags => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "CreatedWrapperFlags"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.InAttribute"/>.
@@ -319,7 +319,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute"/>.
     /// </summary>
-    public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
+    public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
@@ -354,7 +354,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute"/>.
     /// </summary>
-    public TypeReference UnmanagedCallersOnlyAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
+    public TypeReference UnmanagedCallersOnlyAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
@@ -1261,7 +1261,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeComputeVtables => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("ComputeVtables"u8, MethodSignature.CreateStatic(
-            returnType: new TypeReference(_corLibTypeFactory.CorLibScope, "System.Runtime.InteropServices"u8, "ComWrappers/ComInterfaceEntry"u8).MakePointerType(),
+            returnType: new TypeReference(SystemRuntimeInteropServices, "System.Runtime.InteropServices"u8, "ComWrappers"u8).CreateTypeReference("ComInterfaceEntry"u8).MakePointerType(),
             parameterTypes: [_corLibTypeFactory.Int32.MakeByReferenceType()]));
 
     /// <summary>
