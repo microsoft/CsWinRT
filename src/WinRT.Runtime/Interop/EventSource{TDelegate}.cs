@@ -29,13 +29,39 @@ namespace ABI.WinRT.Interop
     {
         private readonly IObjectReference _objectReference;
         private readonly int _index;
-#if NET
-        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
-#else
-        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> _addHandler;
-#endif
-        private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
+        private readonly long _vtableOffsetForHandler;
         private global::System.WeakReference<object>? _state;
+
+        // The add / remove handlers given to us can be for an object which is not agile meaning we may have
+        // a proxy which we need to call through.  Due to this, we store the offset of the add handler
+        // we are given rather than directly caching it. Then we use that offset, to determine the add and
+        // remove handler to call based on the pointer from the current context.
+#if NET
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> AddHandler
+#else
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> AddHandler
+#endif
+        {
+            get
+            {
+                var thisPtr = _objectReference.ThisPtr;
+#if NET
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)thisPtr)[_vtableOffsetForHandler];
+#else
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int>**)thisPtr)[_vtableOffsetForHandler];
+#endif
+            }
+        }
+
+        private delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> RemoveHandler
+        {
+            get
+            {
+                var thisPtr = _objectReference.ThisPtr;
+                // Add 1 to the offset to get remove handler from add handler offset.
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int>**)thisPtr)[_vtableOffsetForHandler  + 1];
+            }
+        }
 
         /// <summary>
         /// Creates a new <see cref="EventSource{TDelegate}"/> instance with the specified parameters.
@@ -55,10 +81,9 @@ namespace ABI.WinRT.Interop
             int index = 0)
         {
             _objectReference = objectReference;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
             _index = index;
             _state = EventSourceCache.GetState(objectReference, index);
+            _vtableOffsetForHandler = (byte*)(void*)addHandler - (byte*)(void*)objectReference.ThisPtr;
         }
 
         /// <summary>
@@ -116,9 +141,9 @@ namespace ABI.WinRT.Interop
 
                         EventRegistrationToken token;
 #if NET
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, &token));
+                        ExceptionHelpers.ThrowExceptionForHR(AddHandler(_objectReference.ThisPtr, nativeDelegate, &token));
 #else
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, out token));
+                        ExceptionHelpers.ThrowExceptionForHR(AddHandler(_objectReference.ThisPtr, nativeDelegate, out token));
 #endif
                         global::System.GC.KeepAlive(_objectReference);
                         state.token = token;
@@ -157,7 +182,7 @@ namespace ABI.WinRT.Interop
 
         private void UnsubscribeFromNative(EventSourceState<TDelegate> state)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_objectReference.ThisPtr, state.token));
+            ExceptionHelpers.ThrowExceptionForHR(RemoveHandler(_objectReference.ThisPtr, state.token));
             global::System.GC.KeepAlive(_objectReference);
             state.Dispose();
             _state = null;
