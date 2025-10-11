@@ -109,11 +109,7 @@ namespace ABI.System.ComponentModel
         internal INotifyPropertyChanged(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
-
-            _PropertyChanged =
-                new PropertyChangedEventSource(_obj,
-                _obj.Vftbl.add_PropertyChanged_0,
-                _obj.Vftbl.remove_PropertyChanged_1);
+            _PropertyChanged = new PropertyChangedEventSource(_obj, 6);
         }
 
 

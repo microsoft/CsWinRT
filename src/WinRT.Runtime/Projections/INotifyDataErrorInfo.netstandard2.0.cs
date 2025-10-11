@@ -170,12 +170,7 @@ namespace ABI.System.ComponentModel
         internal INotifyDataErrorInfo(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
-
-            _ErrorsChanged =
-                new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
-                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int>)_obj.Vftbl.add_ErrorsChanged_1,
-                _obj.Vftbl.remove_ErrorsChanged_2,
-                0);
+            _ErrorsChanged = new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj, 7);
         }
 
         public unsafe global::System.Collections.IEnumerable GetErrors(string propertyName)

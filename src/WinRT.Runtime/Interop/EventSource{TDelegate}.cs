@@ -127,7 +127,7 @@ namespace ABI.WinRT.Interop
         /// <param name="vtableIndexForAddHandler">The vtable index for the add handler of the event being managed.</param>
         protected EventSource(
             IObjectReference objectReference,
-            int vtableIndexForAddHandler = 0)
+            int vtableIndexForAddHandler)
         {
             _objectReference = objectReference;
             _index = vtableIndexForAddHandler;

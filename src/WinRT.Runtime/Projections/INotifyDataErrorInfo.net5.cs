@@ -75,12 +75,7 @@ namespace ABI.System.ComponentModel
         {
             return ErrorsChanged.GetValue(thisObj, (key) =>
             {
-                var ThisPtr = obj.ThisPtr;
-
-                return new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(obj,
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[7],
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[8],
-                    0);
+                return new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(obj, 7);
             });
         }
     }
