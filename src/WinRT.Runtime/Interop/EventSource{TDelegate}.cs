@@ -29,7 +29,13 @@ namespace ABI.WinRT.Interop
     {
         private readonly IObjectReference _objectReference;
         private readonly int _index;
-        private readonly long _vtableOffsetForHandler;
+        private readonly long _vtableIndexForAddHandler;
+#if NET
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
+#else
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> _addHandler;
+#endif
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
         private global::System.WeakReference<object>? _state;
 
         // The add / remove handlers given to us can be for an object which is not agile meaning we may have
@@ -44,11 +50,16 @@ namespace ABI.WinRT.Interop
         {
             get
             {
+                if (_addHandler is not null)
+                {
+                    return _addHandler;
+                }
+
                 var thisPtr = _objectReference.ThisPtr;
 #if NET
-                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)thisPtr)[_vtableOffsetForHandler];
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)thisPtr)[_vtableIndexForAddHandler];
 #else
-                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int>**)thisPtr)[_vtableOffsetForHandler];
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int>**)thisPtr)[_vtableIndexForAddHandler];
 #endif
             }
         }
@@ -57,9 +68,14 @@ namespace ABI.WinRT.Interop
         {
             get
             {
+                if (_removeHandler is not null)
+                {
+                    return _removeHandler;
+                }
+
                 var thisPtr = _objectReference.ThisPtr;
                 // Add 1 to the offset to get remove handler from add handler offset.
-                return (*(delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int>**)thisPtr)[_vtableOffsetForHandler  + 1];
+                return (*(delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int>**)thisPtr)[_vtableIndexForAddHandler  + 1];
             }
         }
 
@@ -84,12 +100,39 @@ namespace ABI.WinRT.Interop
             _index = index;
             _state = EventSourceCache.GetState(objectReference, index);
 
-            int vtableOffsetForHandler = 0;
-            while ((*(void***)objectReference.ThisPtr)[vtableOffsetForHandler] != addHandler)
+            // If this isn't a free threaded object, we can't cache the handlers due to we
+            // might be accessing it from a different context which would have its own add handler address
+            // for the proxy. So caching it would end up calling the wrong vtable.
+            // We instead use it to calculate the vtable offset for the add handler to use later.
+            if (objectReference is IObjectReferenceWithContext)
             {
-                vtableOffsetForHandler++;
+                int vtableIndexForAddHandler = 0;
+                while ((*(void***)objectReference.ThisPtr)[vtableIndexForAddHandler] != addHandler)
+                {
+                    vtableIndexForAddHandler++;
+                }
+                _vtableIndexForAddHandler = vtableIndexForAddHandler;
             }
-            _vtableOffsetForHandler = vtableOffsetForHandler;
+            else
+            {
+                _addHandler = addHandler;
+                _removeHandler = removeHandler;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="EventSource{TDelegate}"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="objectReference">The <see cref="IObjectReference"/> instance holding the event.</param>
+        /// <param name="vtableIndexForAddHandler">The vtable index for the add handler of the event being managed.</param>
+        protected EventSource(
+            IObjectReference objectReference,
+            int vtableIndexForAddHandler = 0)
+        {
+            _objectReference = objectReference;
+            _index = vtableIndexForAddHandler;
+            _state = EventSourceCache.GetState(objectReference, vtableIndexForAddHandler);
+            _vtableIndexForAddHandler = vtableIndexForAddHandler;
         }
 
         /// <summary>
