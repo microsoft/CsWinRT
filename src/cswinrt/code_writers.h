@@ -3673,9 +3673,9 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateObjectFlags.TrackerObject, in %ReferenceImpl.IID);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.TrackerSupport, in %ReferenceImpl.IID);
 }
-)", projection_name, type.TypeName()); // TODO: use `CreateObjectFlags.None` whenever possible
+)", projection_name, type.TypeName()); // TODO: use `CreateComInterfaceFlags.None` whenever possible
 
         if (!is_type_blittable(type))
         {
@@ -3796,7 +3796,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateObjectFlags.TrackerObject);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3812,7 +3812,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     }
 }
 
-)", name, name, is_type_blittable(type) ? projection_name : abi_name, name); // TODO: use `CreateObjectFlags.None` whenever possible
+)", name, name, is_type_blittable(type) ? projection_name : abi_name, name); // TODO: use `CreateComInterfaceFlags.None` whenever possible
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
