@@ -583,6 +583,219 @@ namespace cswinrt
         }
     }
 
+    void write_guid_signature(writer& w, type_semantics const& semantics)
+    {
+        call(semantics,
+            [&](guid_type)
+            {
+                w.write("g16");
+            },
+            [&](object_type)
+            {
+                w.write("cinterface(IInspectable)");
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
+                {
+                case category::enum_type:
+                {
+                    w.write("enum(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        is_flags_enum(type) ? "u4" : "i4");
+                    break;
+                }
+                case category::struct_type:
+                {
+                    w.write("struct(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        bind_list([](writer& w, Field const& field)
+                            {
+                                write_guid_signature(w, get_type_semantics(field.Signature().Type()));
+                            }, ";", type.FieldList())
+                    );
+                    break;
+                }
+                case category::delegate_type:
+                {
+                    w.write("delegate({%})", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::interface_type:
+                {
+                    w.write("{%}", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::class_type:
+                {
+                    if (auto default_interface = get_default_interface(type))
+                    {
+                        w.write("rc(%;%)",
+                            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                            bind<write_guid_signature>(get_type_semantics(default_interface)));
+                    }
+                    else
+                    {
+                        w.write("{%}", bind<write_guid>(type, true));
+                    }
+                    break;
+                }
+                }
+            },
+            [&](generic_type_instance const& type)
+            {
+                w.write("pinterface({%};%)",
+                    bind<write_guid>(type.generic_type, true),
+                    bind_list([](writer& w, type_semantics const& genericType)
+                        {
+                            write_guid_signature(w, genericType);
+                        }, ";", type.generic_args)
+                );
+            },
+            [&](fundamental_type const& type)
+            {
+                w.write("%", get_fundamental_type_guid_signature(type));
+            },
+            [&](auto const&) {});
+    }
+
+    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(
+            lowerCase ?
+            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
+            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
+            get<uint32_t>(get_arg(0)),
+            get<uint16_t>(get_arg(1)),
+            get<uint16_t>(get_arg(2)),
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    void write_guid_attribute(writer& w, TypeDef const& type)
+    {
+        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
+
+        w.write(R"([%("%")])",
+            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
+            bind<write_guid>(type, false));
+    }
+
+    void write_guid_bytes(writer& w, TypeDef const& type)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
+            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    static void write_iid_guid_property_name(writer& w, TypeDef const& type)
+    {
+        category category = get_category(type);
+        w.write("IID_%%", type.TypeName(), category == category::enum_type || category == category::struct_type ? "Reference" : "");
+    }
+
+    static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
+    {
+        w.write(
+            R"(public static ref readonly Guid %
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get
+    {
+        ReadOnlySpan<byte> data =
+        [
+            %
+        ];
+        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+    }
+}
+
+)", bind<write_iid_guid_property_name>(type), bind<write_guid_bytes>(type));
+    }
+
+    static void write_iid_guid_property_from_signature(writer& w, TypeDef const& type)
+    {
+        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
+        std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
+        GUID guid_value = generate_guid(ireference_guid_sig);
+
+        w.write(
+            R"(public static ref readonly Guid %
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get
+    {
+        ReadOnlySpan<byte> data =
+        [
+            )", bind<write_iid_guid_property_name>(type));
+
+        w.write_printf(
+            "0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X\n",
+            (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
+            (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
+            (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
+            guid_value.Data4[0],
+            guid_value.Data4[1],
+            guid_value.Data4[2],
+            guid_value.Data4[3],
+            guid_value.Data4[4],
+            guid_value.Data4[5],
+            guid_value.Data4[6],
+            guid_value.Data4[7]);
+
+        w.write(R"(        ];
+        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+    }
+}
+
+)");
+    }
+
+
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
         w.write("%Source", bind<write_type_name>(eventTypeSemantics, typedef_name_type::ABI, false));
@@ -2192,7 +2405,7 @@ private WindowsRuntimeObjectReference %
         {
             _ = global::System.Threading.Interlocked.CompareExchange(
                 location1: ref field,
-                value: NativeObjectReference.As(%Impl.IID),
+                value: NativeObjectReference.As(ABI.%.InterfaceIIDs.%),
                 comparand: null);
 
             return field;
@@ -2203,7 +2416,8 @@ private WindowsRuntimeObjectReference %
 }
 )",
                         objrefname,
-                        bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                        classType.TypeNamespace(),
+                        bind<write_iid_guid_property_name>(ifaceType));
 
                         /*
                         TODO handle fast ABI
@@ -3244,218 +3458,6 @@ return %.AsValue();
                 setter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(setter_prop.value().first)) : setter_target,
                 access_spec, method_spec, getter_platform, setter_platform, getter_prop, setter_prop);
         }
-    }
-
-    void write_guid_signature(writer& w, type_semantics const& semantics)
-    {
-        call(semantics,
-            [&](guid_type)
-            {
-                w.write("g16");
-            },
-            [&](object_type)
-            {
-                w.write("cinterface(IInspectable)");
-            },
-            [&](type_definition const& type)
-            {
-                switch (get_category(type))
-                {
-                case category::enum_type:
-                {
-                    w.write("enum(%;%)",
-                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                        is_flags_enum(type) ? "u4" : "i4");
-                    break;
-                }
-                case category::struct_type:
-                {
-                    w.write("struct(%;%)",
-                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                        bind_list([](writer& w, Field const& field)
-                        {
-                            write_guid_signature(w, get_type_semantics(field.Signature().Type()));
-                        }, ";", type.FieldList())
-                    );
-                    break;
-                }
-                case category::delegate_type:
-                {
-                    w.write("delegate({%})", bind<write_guid>(type, true));
-                    break;
-                }
-                case category::interface_type:
-                {
-                    w.write("{%}", bind<write_guid>(type, true));
-                    break;
-                }
-                case category::class_type:
-                {
-                    if (auto default_interface = get_default_interface(type))
-                    {
-                        w.write("rc(%;%)",
-                            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                            bind<write_guid_signature>(get_type_semantics(default_interface)));
-                    }
-                    else
-                    {
-                        w.write("{%}", bind<write_guid>(type, true));
-                    }
-                    break;
-                }
-                }
-            },
-            [&](generic_type_instance const& type)
-            {
-                w.write("pinterface({%};%)",
-                    bind<write_guid>(type.generic_type, true),
-                    bind_list([](writer& w, type_semantics const& genericType)
-                    {
-                        write_guid_signature(w, genericType);
-                    }, ";", type.generic_args)
-                );
-            },
-            [&](fundamental_type const& type)
-            {
-                w.write("%", get_fundamental_type_guid_signature(type));
-            },
-            [&](auto const&) {});
-    }
-
-    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
-    {
-        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
-        if (!attribute)
-        {
-            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
-        }
-
-        auto args = attribute.Value().FixedArgs();
-
-        using std::get;
-
-        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
-
-        w.write_printf(
-            lowerCase ?
-            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
-            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
-            get<uint32_t>(get_arg(0)),
-            get<uint16_t>(get_arg(1)),
-            get<uint16_t>(get_arg(2)),
-            get<uint8_t>(get_arg(3)),
-            get<uint8_t>(get_arg(4)),
-            get<uint8_t>(get_arg(5)),
-            get<uint8_t>(get_arg(6)),
-            get<uint8_t>(get_arg(7)),
-            get<uint8_t>(get_arg(8)),
-            get<uint8_t>(get_arg(9)),
-            get<uint8_t>(get_arg(10)));
-    }
-
-    void write_guid_attribute(writer& w, TypeDef const& type)
-    {
-        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
-
-        w.write(R"([%("%")])",
-            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
-            bind<write_guid>(type, false));
-    }
-
-    void write_guid_bytes(writer& w, TypeDef const& type)
-    {
-        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
-        if (!attribute)
-        {
-            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
-        }
-
-        auto args = attribute.Value().FixedArgs();
-
-        using std::get;
-
-        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
-
-        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
-            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
-            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
-            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
-            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
-            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
-            get<uint8_t>(get_arg(3)),
-            get<uint8_t>(get_arg(4)),
-            get<uint8_t>(get_arg(5)),
-            get<uint8_t>(get_arg(6)),
-            get<uint8_t>(get_arg(7)),
-            get<uint8_t>(get_arg(8)),
-            get<uint8_t>(get_arg(9)),
-            get<uint8_t>(get_arg(10)));
-    }
-
-    static void write_iid_guid_property_name(writer& w, TypeDef const& type)
-    {
-        category category = get_category(type);
-        w.write("IID_%%", type.TypeName(), category == category::enum_type || category == category::struct_type ? "Reference" : "");
-    }
-
-    static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
-    {
-        w.write(
-            R"(public static ref readonly Guid %
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get
-    {
-        ReadOnlySpan<byte> data =
-        [
-            %
-        ];
-        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-    }
-}
-
-)", bind<write_iid_guid_property_name>(type), bind<write_guid_bytes>(type));
-    }
-
-    static void write_iid_guid_property_from_signature(writer& w, TypeDef const& type)
-    {
-        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
-        std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
-        GUID guid_value = generate_guid(ireference_guid_sig);
-
-        w.write(
-R"(public static ref readonly Guid %
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get
-    {
-        ReadOnlySpan<byte> data =
-        [
-            )", bind<write_iid_guid_property_name>(type));
-
-    w.write_printf(
-        "0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X\n",
-        (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
-        (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
-        (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
-        guid_value.Data4[0],
-        guid_value.Data4[1],
-        guid_value.Data4[2],
-        guid_value.Data4[3],
-        guid_value.Data4[4],
-        guid_value.Data4[5],
-        guid_value.Data4[6],
-        guid_value.Data4[7]);
-
-    w.write(R"(        ];
-        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-    }
-}
-
-)");
     }
 
     void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
@@ -7302,12 +7304,12 @@ static %Impl()
 
 public static ref readonly global::System.Guid IID
 {
-[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-get
-{
-global::System.ReadOnlySpan<byte> data = new byte[] { % };
-return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
-}
+    [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    get
+    {
+        global::System.ReadOnlySpan<byte> data = new byte[] { % };
+        return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+    }
 }
 
 public static nint Vtable
@@ -7332,7 +7334,6 @@ public static nint Vtable
                 vmethod_name,
                 vmethod_name);
         }, type.MethodList()),
-        // IID
         bind<write_guid_bytes>(type),
         // Vtable functions
         bind_each<write_method_abi_invoke>(type.MethodList()),
