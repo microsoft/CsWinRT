@@ -83,7 +83,17 @@ namespace ABI.WinRT.Interop
             _objectReference = objectReference;
             _index = index;
             _state = EventSourceCache.GetState(objectReference, index);
-            _vtableOffsetForHandler = (byte*)(void*)addHandler - (byte*)(void*)objectReference.ThisPtr;
+
+            int vtableOffsetForHandler = 0;
+            while (true)
+            {
+                if ((*(void***)objectReference.ThisPtr)[vtableOffsetForHandler] == addHandler)
+                {
+                    break;
+                }
+                vtableOffsetForHandler++;
+            }
+            _vtableOffsetForHandler = vtableOffsetForHandler;
         }
 
         /// <summary>
