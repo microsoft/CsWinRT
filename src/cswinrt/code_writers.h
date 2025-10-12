@@ -2762,20 +2762,27 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerable<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IEnumerableMethods<%>", element);
+        auto interop_method_name_prefix = w.write_temp("IEnumerableMethods_%_", escape_type_name_for_identifier(element, true));
 
         w.write(R"(
-%IEnumerator<%> %GetEnumerator() => %.GetEnumerator(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "GetEnumerator")]
+static extern IEnumerator<%> %GetEnumerator([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerableMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 )",
-visibility, element, self, abiClass, objref_name);
+element, interop_method_name_prefix
+);
+
+        w.write(R"(
+%IEnumerator<%> %GetEnumerator() => %GetEnumerator(null, %);
+)",
+visibility, element, self, interop_method_name_prefix, objref_name);
 
         if (!include_nongeneric) return;
 
         if (emit_explicit)
         {
             w.write(R"(
-IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator(%);
-)", abiClass, objref_name);
+IEnumerator IEnumerable.GetEnumerator() => %GetEnumerator(null, %);
+)", interop_method_name_prefix, objref_name);
         }
         else
         {
@@ -2800,7 +2807,7 @@ IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.Generic.
 )", element);
     }
 
-    void write_enumerator_members(writer& w)
+    void write_enumerator_members_using_idic(writer& w)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
 
@@ -2822,19 +2829,39 @@ object IEnumerator.Current => Current;
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerator<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IEnumeratorMethods<%>", element);
+        auto interop_method_name_prefix = w.write_temp("IEnumeratorMethods_%_", escape_type_name_for_identifier(element, true));
 
         w.write(R"(
-%bool %MoveNext() => %.MoveNext(%);
-%void %Reset() => %.Reset(%);
-%void %Dispose() => %.Dispose(%);
-%% %Current => %.get_Current(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "MoveNext")]
+static extern bool %MoveNext([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Reset")]
+static extern void %Reset([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+static extern void %Dispose([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Current")]
+static extern % %Current([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+)",
+interop_method_name_prefix,
+interop_method_name_prefix,
+interop_method_name_prefix,
+element,
+interop_method_name_prefix
+);
+
+        w.write(R"(
+%bool %MoveNext() => %MoveNext(null, %);
+%void %Reset() => %Reset(null, %);
+%void %Dispose() => %Dispose(null, %);
+%% %Current => %Current(null, %);
 object IEnumerator.Current => Current;
 )",
-visibility, self, abiClass, objref_name,
-visibility, self, abiClass, objref_name,
-visibility, self, abiClass, objref_name,
-visibility, element, self, abiClass, objref_name);
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, element, self, interop_method_name_prefix, objref_name);
     }
 
     void write_readonlydictionary_members_using_static_abi_methods(writer& w, bool emit_explicit, std::string const& objref_name)
@@ -2844,23 +2871,50 @@ visibility, element, self, abiClass, objref_name);
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
         auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<%, %>", key, value);
         auto enumerableObjRefName = std::regex_replace(objref_name, std::regex("IDictionary"), "IEnumerable_global__System_Collections_Generic_KeyValuePair") + "_";
+        auto interop_method_name_prefix = w.write_temp("IReadOnlyDictionaryMethods_%_%_", escape_type_name_for_identifier(key, true), escape_type_name_for_identifier(value, true));
 
         w.write(R"(
-%IEnumerable<%> %Keys => %.get_Keys(%);
-%IEnumerable<%> %Values => %.get_Values(%);
-%int %Count => %.get_Count(%);
-%% %this[% key] => %.Indexer_Get(%, key);
-%bool %ContainsKey(% key) => %.ContainsKey(%, key);
-%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, key, out value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
+static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
 )",
-visibility, key, self, abiClass, objref_name,
-visibility, value, self, abiClass, objref_name,
-visibility, ireadonlycollection, abiClass, objref_name,
-visibility, value, self, key, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, value, abiClass, objref_name);
+key, interop_method_name_prefix, key, value, // Keys
+value, interop_method_name_prefix, key, value, // Values
+interop_method_name_prefix, key, value, // Count
+value, interop_method_name_prefix, key, value, key, // Indexer_Get
+interop_method_name_prefix, key, value, key, // ContainsKey
+interop_method_name_prefix, key, value, key, value // TryGetValue
+);
+
+        w.write(R"(
+%IEnumerable<%> %Keys => %Keys(null, %);
+%IEnumerable<%> %Values => %Values(null, %);
+%int %Count => %Count(null, %);
+%% %this[% key] => %Indexer_Get(null, %, key);
+%bool %ContainsKey(% key) => %ContainsKey(null, %, key);
+%bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
+)",
+visibility, key, self, interop_method_name_prefix, objref_name,
+visibility, value, self, interop_method_name_prefix, objref_name,
+visibility, ireadonlycollection, interop_method_name_prefix, objref_name,
+visibility, value, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, value, interop_method_name_prefix, objref_name);
     }
 
     void write_readonlydictionary_members_using_idic(writer& w, bool include_enumerable)
@@ -2901,43 +2955,102 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IDictionary<%, %>.", key, value) : "";
         auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IDictionaryMethods<%, %>", key, value);
         auto enumerableObjRefName = std::regex_replace(objref_name, std::regex("IDictionary"), "IEnumerable_global__System_Collections_Generic_KeyValuePair") + "_";
+        auto interop_method_name_prefix = w.write_temp("IDictionaryMethods_%_%_", escape_type_name_for_identifier(key, true), escape_type_name_for_identifier(value, true));
 
         w.write(R"(
-%ICollection<%> %Keys => %.get_Keys(%);
-%ICollection<%> %Values => %.get_Values(%);
-%int %Count => %.get_Count(%);
-%bool %IsReadOnly => %.get_IsReadOnly(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
+static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Set")]
+static extern void %Indexer_Set([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, WindowsRuntimeObjectReference enumObjRef, KeyValuePair<%, %>[] array, int arrayIndex);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+)",
+key, interop_method_name_prefix, key, value, // Keys
+value, interop_method_name_prefix, key, value, // Values
+interop_method_name_prefix, key, value, // Count
+value, interop_method_name_prefix, key, value, key, // Indexer_Get
+interop_method_name_prefix, key, value, key, value, // Indexer_Set
+interop_method_name_prefix, key, value, key, value, // Add
+interop_method_name_prefix, key, value, key, // ContainsKey
+interop_method_name_prefix, key, value, key, // Remove
+interop_method_name_prefix, key, value, key, value, // TryGetValue
+interop_method_name_prefix, key, value, key, value, // Add
+interop_method_name_prefix, key, value, // Clear
+interop_method_name_prefix, key, value, key, value, // Contains
+interop_method_name_prefix, key, value, key, value, // CopyTo
+interop_method_name_prefix, key, value, key, value // Remove
+);
+
+        w.write(R"(
+%ICollection<%> %Keys => %Keys(null, %);
+%ICollection<%> %Values => %Values(null, %);
+%int %Count => %Count(null, %);
+%bool %IsReadOnly => false;
 %% %this[% key] 
 {
-get => %.Indexer_Get(%, null, key);
-set => %.Indexer_Set(%, key, value);
+get => %Indexer_Get(null, %, key);
+set => %Indexer_Set(null, %, key, value);
 }
-%void %Add(% key, % value) => %.Add(%, key, value);
-%bool %ContainsKey(% key) => %.ContainsKey(%, key);
-%bool %Remove(% key) => %.Remove(%, key);
-%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, null, key, out value);
-%void %Add(KeyValuePair<%, %> item) => %.Add(%, item);
-%void %Clear() => %.Clear(%);
-%bool %Contains(KeyValuePair<%, %> item) => %.Contains(%, null, item);
-%void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(%, %, array, arrayIndex);
-bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove(%, item);
+%void %Add(% key, % value) => %Add(null, %, key, value);
+%bool %ContainsKey(% key) => %ContainsKey(null, %, key);
+%bool %Remove(% key) => %Remove(null, %, key);
+%bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
+%void %Add(KeyValuePair<%, %> item) => %Add(null, %, item);
+%void %Clear() => %Clear(null, %);
+%bool %Contains(KeyValuePair<%, %> item) => %Contains(null, %, item);
+%void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %CopyTo(null, %, %, array, arrayIndex);
+bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %Remove(null, %, item);
 )",
-visibility, key, self, abiClass, objref_name, //Keys
-visibility, value, self, abiClass, objref_name, // Values
-visibility, icollection, abiClass, objref_name, // Count
-visibility, icollection, abiClass, objref_name, // IsReadOnly
-visibility, value, self, key, abiClass, objref_name, abiClass, objref_name, // Indexer
-visibility, self, key, value, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, value, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name,
-visibility, icollection, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name, enumerableObjRefName,
-key, value, key, value, abiClass, objref_name);
+visibility, key, self, interop_method_name_prefix, objref_name, //Keys
+visibility, value, self, interop_method_name_prefix, objref_name, // Values
+visibility, icollection, interop_method_name_prefix, objref_name, // Count
+visibility, icollection, // IsReadOnly
+visibility, value, self, key, interop_method_name_prefix, objref_name, interop_method_name_prefix, objref_name, // Indexer
+visibility, self, key, value, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name, enumerableObjRefName,
+key, value, key, value, interop_method_name_prefix, objref_name);
     }
 
     void write_dictionary_members_using_idic(writer& w, bool include_enumerable)
@@ -2997,17 +3110,28 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyList<%>.", element) : "";
         auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IReadOnlyListMethods<%>", element);
         auto objRefName = w.write_temp("%", objref_name);
+        auto interop_method_name_prefix = w.write_temp("IReadOnlyListMethods_%_", escape_type_name_for_identifier(element, true));
 
         w.write(R"(
-%int %Count => %.get_Count(%);
-%
-%% %this[int index] => %.Indexer_Get(%, index);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
+static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 )",
-visibility, ireadonlycollection, abiClass, objRefName,
+interop_method_name_prefix, element, // Count
+element, interop_method_name_prefix, element // Indexer_Get
+);
+
+        w.write(R"(
+%int %Count => %Count(null, %);
+%
+%% %this[int index] => %Indexer_Get(null, %, index);
+)",
+visibility, ireadonlycollection, interop_method_name_prefix, objRefName,
 !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")])" : "",
-visibility, element, self, abiClass, objRefName);
+visibility, element, self, interop_method_name_prefix, objRefName);
 
     }
 
@@ -3080,7 +3204,7 @@ visibility, self, target, objref_name,
 visibility, self, target, objref_name);
     }
 
-    void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
+    void write_nongeneric_list_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto self = emit_explicit ? "global::System.Collections.IList." : "";
         auto icollection = emit_explicit ? "global::System.Collections.ICollection." : "";
@@ -3182,38 +3306,86 @@ element, enumerable_type, target);
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IList<%>.", element) : "";
         auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IListMethods<%>", element);
         auto objRefName = w.write_temp("%", objref_name);
+        auto interop_method_name_prefix = w.write_temp("IListMethods_%_", escape_type_name_for_identifier(element, true));
+
         w.write(R"(
-%int %Count => %.get_Count(%);
-%bool %IsReadOnly => %.get_IsReadOnly(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
+static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Set")]
+static extern void %Indexer_Set([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "IndexOf")]
+static extern int %IndexOf([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Insert")]
+static extern void %Insert([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "RemoveAt")]
+static extern void %RemoveAt([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, %[] array, int arrayIndex);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+)",
+interop_method_name_prefix, element, // Count
+element, interop_method_name_prefix, element, // Indexer_Get
+interop_method_name_prefix, element, element,  // Indexer_Set
+interop_method_name_prefix, element, element, // IndexOf
+interop_method_name_prefix, element, element, // Insert
+interop_method_name_prefix, element, // RemoveAt
+interop_method_name_prefix, element, element, // Add
+interop_method_name_prefix, element, // Clear
+interop_method_name_prefix, element, element, // Contains
+interop_method_name_prefix, element, element, // CopyTo
+interop_method_name_prefix, element, element // Remove
+);
+
+        w.write(R"(
+%int %Count => %Count(null, %);
+%bool %IsReadOnly => false;
 %
 %% %this[int index] 
 {
-get => %.Indexer_Get(%, index);
-set => %.Indexer_Set(%, index, value);
+get => %Indexer_Get(null, %, index);
+set => %Indexer_Set(null, %, index, value);
 }
-%int %IndexOf(% item) => %.IndexOf(%, item);
-%void %Insert(int index, % item) => %.Insert(%, index, item);
-%void %RemoveAt(int index) => %.RemoveAt(%, index);
-%void %Add(% item) => %.Add(%, item);
-%void %Clear() => %.Clear(%);
-%bool %Contains(% item) => %.Contains(%, item);
-%void %CopyTo(%[] array, int arrayIndex) => %.CopyTo(%, array, arrayIndex);
-%bool %Remove(% item) => %.Remove(%, item);
+%int %IndexOf(% item) => %IndexOf(null, %, item);
+%void %Insert(int index, % item) => %Insert(null, %, index, item);
+%void %RemoveAt(int index) => %RemoveAt(null, %, index);
+%void %Add(% item) => %Add(null, %, item);
+%void %Clear() => %Clear(null, %);
+%bool %Contains(% item) => %Contains(null, %, item);
+%void %CopyTo(%[] array, int arrayIndex) => %CopyTo(null, %, array, arrayIndex);
+%bool %Remove(% item) => %Remove(null, %, item);
 )", 
-            visibility, icollection, abiClass, objref_name, //Count
-            visibility, icollection, abiClass, objref_name, //IsReadOnly
+            visibility, icollection, interop_method_name_prefix, objref_name, //Count
+            visibility, icollection, //IsReadOnly
             !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "", //Indexer
-            visibility, element, self, abiClass, objref_name, abiClass, objref_name, //Indexer
-            visibility, self, element, abiClass, objref_name, //IndexOf
-            visibility, self, element, abiClass, objref_name, //Insert
-            visibility, self, abiClass, objref_name, //RemoveAt
-            visibility, icollection, element, abiClass, objref_name, //Add
-            visibility, icollection, abiClass, objref_name, //Clear
-            visibility, icollection, element, abiClass, objref_name, //Contains
-            visibility, icollection, element, abiClass, objref_name, //CopyTo
-            visibility, icollection, element, abiClass, objref_name); //Remove
+            visibility, element, self, interop_method_name_prefix, objref_name, interop_method_name_prefix, objref_name, //Indexer
+            visibility, self, element, interop_method_name_prefix, objref_name, //IndexOf
+            visibility, self, element, interop_method_name_prefix, objref_name, //Insert
+            visibility, self, interop_method_name_prefix, objref_name, //RemoveAt
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //Add
+            visibility, icollection, interop_method_name_prefix, objref_name, //Clear
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //Contains
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //CopyTo
+            visibility, icollection, element, interop_method_name_prefix, objref_name); //Remove
     }
 
     void write_idisposable_members(writer& w)
@@ -3416,9 +3588,9 @@ visibility, self, objref_name);
             auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type);
             auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
-            // Write IWindowsRuntimeInterface implementation for non-default interface
+            // Write IWindowsRuntimeInterface implementation for non-default interface and for the default interface if it isn't exclusive.
             // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_default_interface)
+            if (!is_exclusive_to(interface_type))
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
@@ -3429,7 +3601,7 @@ return %.AsValue();
                 interface_name,
                 bind<write_objref_type_name>(interface_type));
             }
-            else if (!type.Flags().Sealed())
+            else if (is_default_interface && !type.Flags().Sealed())
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
 
@@ -5734,7 +5906,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerator_members>()),
+                        w.write_temp("%", bind<write_enumerator_members_using_idic>()),
                     };
                 }
                 else if (mapping->abi_name == "IMapView`2") // IReadOnlyDictionary`2
@@ -5786,7 +5958,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_nongeneric_list_members>(
+                        w.write_temp("%", bind<write_nongeneric_list_members_using_idic>(
                             "((global::System.Collections.IList)(WindowsRuntimeObject)this)",
                             true,
                             true))
@@ -5848,8 +6020,81 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             });
         }
     }
+    
+    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
 
-    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi, bool include_exclusive_interface, bool includeWindowsRuntimeObject)
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(
+            lowerCase ?
+            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
+            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
+            get<uint32_t>(get_arg(0)),
+            get<uint16_t>(get_arg(1)),
+            get<uint16_t>(get_arg(2)),
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    void write_guid_attribute(writer& w, TypeDef const& type)
+    {
+        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
+
+        w.write(R"([%("%")])",
+            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
+            bind<write_guid>(type, false));
+    }
+
+    void write_guid_bytes(writer& w, TypeDef const& type)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
+            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool include_exclusive_interface, bool includeWindowsRuntimeObject)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -5885,12 +6130,6 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                     }
                 }
             });
-        }
-
-        if (add_custom_qi)
-        {
-            write_delimiter();
-            w.write("global::System.Runtime.InteropServices.ICustomQueryInterface");
         }
     }
    
@@ -7245,7 +7484,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_type_custom_attributes>(type, false),
             (is_exclusive_to(type) && !settings.public_exclusiveto) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type, object_type{}, false, false, false),
+            bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -7658,7 +7897,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_class_modifiers>(type),
             // class name
             type_name,
-            bind<write_type_inheritance>(type, base_semantics, false, false, true),
+            bind<write_type_inheritance>(type, base_semantics, false, true),
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             // ObjectReference constructor
