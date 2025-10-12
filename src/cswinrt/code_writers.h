@@ -2741,6 +2741,14 @@ protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFact
         write_static_members(w, type);
     }
 
+    void write_nongeneric_enumerable_members_using_static_abi_methods(writer& w, std::string const& objref_name)
+    {
+        w.write(R"(
+IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator(%);
+)",
+objref_name);
+    }
+
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
     {
         w.write(R"(
@@ -3025,6 +3033,53 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             element, enumerable_type, target);
     }
 
+    void write_nongeneric_list_members_using_static_abi_methods(writer& w, bool emit_explicit, std::string objref_name)
+    {
+        auto self = emit_explicit ? "global::System.Collections.IList." : "";
+        auto icollection = emit_explicit ? "global::System.Collections.ICollection." : "";
+        auto visibility = emit_explicit ? "" : "public ";
+        auto target = "global::ABI.System.Collections.IListMethods";
+
+        w.write(R"(
+%int %Count => %.get_Count(%);
+%bool %IsSynchronized => false;
+%object %SyncRoot => this;
+%void %CopyTo(Array array, int index) => %.CopyTo(%, array, index);
+%
+%object %this[int index]
+{
+get => %.Indexer_Get(%, index);
+set => %.Indexer_Set(%, index, value);
+}
+%bool %IsFixedSize => false;
+%bool %IsReadOnly => false;
+%int %Add(object value) => %.Add(%, value);
+%void %Clear() => %.Clear(%);
+%bool %Contains(object value) => %.Contains(%, value);
+%int %IndexOf(object value) => %.IndexOf(%, value);
+%void %Insert(int index, object value) => %.Insert(%, index, value);
+%void %Remove(object value) => %.Remove(%, value);
+%void %RemoveAt(int index) => %.RemoveAt(%, index);
+)",
+visibility, icollection, target, objref_name,
+visibility, icollection,
+visibility, icollection,
+visibility, icollection, target, objref_name,
+!emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")])" : "",
+visibility, self,
+target, objref_name,
+target, objref_name,
+visibility, self,
+visibility, self,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name);
+    }
+
     void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto self = emit_explicit ? "global::System.Collections.IList." : "";
@@ -3218,7 +3273,7 @@ visibility, self, objref_name, objref_name,
 visibility, self, objref_name);
     }
 
-    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private, std::string objref_name)
+    void write_custom_mapped_type_members(writer& w, mapped_type const& mapping, bool is_private, std::string objref_name)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
@@ -3246,11 +3301,11 @@ visibility, self, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
-            write_nongeneric_enumerable_members(w, target);
+            write_nongeneric_enumerable_members_using_static_abi_methods(w, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {
-            write_nongeneric_list_members(w, target, false, is_private);
+            write_nongeneric_list_members_using_static_abi_methods(w, is_private, objref_name);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
@@ -3392,7 +3447,7 @@ return %.AsValue();
             {
                 bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
                 auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
-                write_custom_mapped_type_members(w, target, *mapping, is_private, objref_name);
+                write_custom_mapped_type_members(w, *mapping, is_private, objref_name);
                 return;
             }
 
