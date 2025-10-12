@@ -632,9 +632,9 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeObjectReferenceValue => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeObjectReferenceValue"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMarshal"u8);
+    public TypeReference WindowsRuntimeComWrappersMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshal"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
@@ -1285,9 +1285,9 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.ToValueTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject</c>.
     /// </summary>
-    public MemberReference WindowsRuntimeMarshalGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeMarshal
+    public MemberReference WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeComWrappersMarshal
         .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Void.MakePointerType(),
             parameterTypes: [
@@ -1295,9 +1295,9 @@ internal sealed class InteropReferences
                 CreateComInterfaceFlags.ToValueTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.CreateObjectReference</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReference</c>.
     /// </summary>
-    public MemberReference WindowsRuntimeMarshalCreateObjectReference => field ??= WindowsRuntimeMarshal
+    public MemberReference WindowsRuntimeComWrappersMarshalCreateObjectReference => field ??= WindowsRuntimeComWrappersMarshal
         .CreateMemberReference("CreateObjectReference"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
@@ -1306,9 +1306,9 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMarshal.CreateObjectReferenceUnsafe</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe</c>.
     /// </summary>
-    public MemberReference WindowsRuntimeMarshalCreateObjectReferenceUnsafe => field ??= WindowsRuntimeMarshal
+    public MemberReference WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe => field ??= WindowsRuntimeComWrappersMarshal
         .CreateMemberReference("CreateObjectReferenceUnsafe"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
