@@ -29,7 +29,7 @@ internal unsafe struct IBindableIteratorVftbl
 
     // 'GetMany' is not implemented by 'IBindableIterator', but it is here for compat purposes
     // with WinUI, as there are scenarios where it does 'reinterpret_cast' from 'IBindableIterator'
-    // to 'IIterable<IInspectable>'. It is the last function in the vftable and shouldn't be called
+    // to 'IIterator<IInspectable>'. It is the last function in the vftable and shouldn't be called
     // by anyone. If called, it will return 'E_NOTIMPL'.
     public delegate* unmanaged[MemberFunction]<void*, uint, void**, uint*, HRESULT> GetMany;
 }
