@@ -3781,9 +3781,9 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in InterfaceIIDs.%);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %);
 }
-)", projection_name, bind<write_iid_guid_property_name>(type));
+)", projection_name, bind<write_iid_guid_reference>(type));
 
         if (!is_type_blittable(type))
         {
@@ -3891,11 +3891,11 @@ R"(
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref InterfaceIIDs.%;
+        get => ref %;
     }
 }
 
-)", bind<write_iid_guid_property_name>(type));
+)", bind<write_iid_guid_reference>(type));
     }
 
     void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
@@ -3903,13 +3903,13 @@ R"(
         auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        auto iid_property_name = w.write_temp("%", bind<write_iid_guid_property_name>(type));
+        auto iid_property_name = w.write_temp("%", bind<write_iid_guid_reference>(type));
         w.write(
 R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in InterfaceIIDs.%).DetachThisPtrUnsafe();
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %).DetachThisPtrUnsafe();
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3921,7 +3921,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in InterfaceIIDs.%);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %);
     }
 }
 
@@ -7832,7 +7832,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in InterfaceIIDs.%,
+            iid: in %,
             wrapperFlags: out wrapperFlags);
 
         return new %(valueReference.%Invoke);
@@ -7840,7 +7840,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
 }
 )",
             type.TypeName(),
-            bind<write_iid_guid_property_name>(type),
+            bind<write_iid_guid_reference>(type),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             type.TypeName()
         );
@@ -7885,7 +7885,7 @@ public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in InterfaceIIDs.%);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in %);
     }
     #nullable enable
     public static %? ConvertToManaged(void* value)
@@ -7897,7 +7897,7 @@ public static unsafe class %Marshaller
 )",
             type.TypeName(),
             projected_type,
-            bind<write_iid_guid_property_name>(type),
+            bind<write_iid_guid_reference>(type),
             projected_type,
             projected_type,
             type.TypeName()
