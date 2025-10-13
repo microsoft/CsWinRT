@@ -18,7 +18,7 @@ namespace ABI.System.Collections;
 /// <summary>
 /// Marshaller for <see cref="IEnumerator"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorMarshaller
 {
@@ -38,7 +38,7 @@ public static unsafe class IEnumeratorMarshaller
 /// <summary>
 /// Interop methods for <see cref="IEnumerator"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorMethods
 {
@@ -62,7 +62,7 @@ public static unsafe class IEnumeratorMethods
 /// <summary>
 /// The <see cref="IEnumerator"/> implementation.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorImpl
 {
