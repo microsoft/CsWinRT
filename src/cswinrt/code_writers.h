@@ -734,13 +734,24 @@ namespace cswinrt
 
     static void write_iid_guid_property_name(writer& w, TypeDef const& type)
     {
-        category category = get_category(type);
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
         name = escape_type_name_for_identifier(name);
-        w.write("IID_%%", name, category == category::enum_type || category == category::struct_type ? "Reference" : "");
+        w.write("IID_%", name);
     }
 
-    static void write_iid_guid_reference(writer& w, TypeDef const& type)
+    static void write_iid_reference_guid_property_name(writer& w, TypeDef const& type)
+    {
+        std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        name = escape_type_name_for_identifier(name);
+        w.write("IID_%Reference", name);
+    }
+
+    static void write_iid_reference_guid(writer& w, TypeDef const& type)
+    {
+        w.write("ABI.%.InterfaceIIDs.%", type.TypeNamespace(), bind<write_iid_reference_guid_property_name>(type));
+    }
+
+    static void write_iid_guid(writer& w, TypeDef const& type)
     {
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
@@ -751,6 +762,7 @@ namespace cswinrt
             w.write("ABI.%.InterfaceIIDs.%", type.TypeNamespace(), bind<write_iid_guid_property_name>(type));
         }
     }
+
 
     static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
     {
@@ -785,7 +797,7 @@ namespace cswinrt
     {
         ReadOnlySpan<byte> data =
         [
-            )", bind<write_iid_guid_property_name>(type));
+            )", bind<write_iid_reference_guid_property_name>(type));
 
         w.write_printf(
             "0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X\n",
@@ -2430,7 +2442,7 @@ private WindowsRuntimeObjectReference %
 }
 )",
                         objrefname,
-                        bind<write_iid_guid_reference>(ifaceType));
+                        bind<write_iid_guid>(ifaceType));
 
                         /*
                         TODO handle fast ABI
@@ -3783,7 +3795,7 @@ R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
     return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %);
 }
-)", projection_name, bind<write_iid_guid_reference>(type));
+)", projection_name, bind<write_iid_reference_guid>(type));
 
         if (!is_type_blittable(type))
         {
@@ -3895,7 +3907,7 @@ R"(
     }
 }
 
-)", bind<write_iid_guid_reference>(type));
+)", bind<write_iid_reference_guid>(type));
     }
 
     void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
@@ -3903,7 +3915,7 @@ R"(
         auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        auto iid_property_name = w.write_temp("%", bind<write_iid_guid_reference>(type));
+        auto iid_property_name = w.write_temp("%", bind<write_iid_reference_guid>(type));
         w.write(
 R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
@@ -7795,14 +7807,10 @@ internal static unsafe class %Impl
         %
     }
 
-    public static ref readonly global::System.Guid IID
+    public static ref readonly Guid IID
     {
-        [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            global::System.ReadOnlySpan<byte> data = new byte[] { % };
-            return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref %;
     }
 }
 )",
@@ -7817,8 +7825,7 @@ internal static unsafe class %Impl
                     method.Name(),
                     "(%)"),
                 false),
-            // IID
-            bind<write_guid_bytes>(type)
+            bind<write_iid_guid>(type)
         );
 
     }
@@ -7840,7 +7847,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
 }
 )",
             type.TypeName(),
-            bind<write_iid_guid_reference>(type),
+            bind<write_iid_reference_guid>(type),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             type.TypeName()
         );
@@ -7897,7 +7904,7 @@ public static unsafe class %Marshaller
 )",
             type.TypeName(),
             projected_type,
-            bind<write_iid_guid_reference>(type),
+            bind<write_iid_reference_guid>(type),
             projected_type,
             projected_type,
             type.TypeName()

@@ -329,6 +329,7 @@ Where <spec> is one or more of:
                                 {
                                 case category::delegate_type:
                                     write_iid_guid_property_from_signature(w, type);
+                                    write_iid_guid_property_from_type(w, type);
                                     break;
                                 case category::enum_type:
                                     write_iid_guid_property_from_signature(w, type);
