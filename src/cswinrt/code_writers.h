@@ -735,7 +735,21 @@ namespace cswinrt
     static void write_iid_guid_property_name(writer& w, TypeDef const& type)
     {
         category category = get_category(type);
-        w.write("IID_%%", type.TypeName(), category == category::enum_type || category == category::struct_type ? "Reference" : "");
+        std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        name = escape_type_name_for_identifier(name);
+        w.write("IID_%%", name, category == category::enum_type || category == category::struct_type ? "Reference" : "");
+    }
+
+    static void write_iid_guid_reference(writer& w, TypeDef const& type)
+    {
+        if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
+        {
+            w.write("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
+        else
+        {
+            w.write("ABI.%.InterfaceIIDs.%", type.TypeNamespace(), bind<write_iid_guid_property_name>(type));
+        }
     }
 
     static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
@@ -2405,7 +2419,7 @@ private WindowsRuntimeObjectReference %
         {
             _ = global::System.Threading.Interlocked.CompareExchange(
                 location1: ref field,
-                value: NativeObjectReference.As(ABI.%.InterfaceIIDs.%),
+                value: NativeObjectReference.As(%),
                 comparand: null);
 
             return field;
@@ -2416,8 +2430,7 @@ private WindowsRuntimeObjectReference %
 }
 )",
                         objrefname,
-                        classType.TypeNamespace(),
-                        bind<write_iid_guid_property_name>(ifaceType));
+                        bind<write_iid_guid_reference>(ifaceType));
 
                         /*
                         TODO handle fast ABI
