@@ -41,7 +41,7 @@ namespace WindowsRuntime.InteropServices;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attribute
 {

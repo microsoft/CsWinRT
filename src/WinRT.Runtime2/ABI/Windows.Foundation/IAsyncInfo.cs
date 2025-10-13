@@ -19,7 +19,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="IAsyncInfo"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoMarshaller
 {
@@ -39,7 +39,7 @@ public static unsafe class IAsyncInfoMarshaller
 /// <summary>
 /// Interop methods for <see cref="IAsyncInfo"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoMethods
 {
@@ -140,7 +140,7 @@ internal unsafe struct IAsyncInfoVftbl
 /// <summary>
 /// The <see cref="IAsyncInfo"/> implementation.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoImpl
 {

@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// Represents a reference to a <see cref="System.Type"/> value, for fast marshalling to native.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public unsafe ref struct TypeReference
 {

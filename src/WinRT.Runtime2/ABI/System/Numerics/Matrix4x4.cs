@@ -36,7 +36,7 @@ file static class Matrix4x4;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Matrix4x4"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Matrix4x4Marshaller
 {

@@ -25,7 +25,7 @@ namespace ABI.WindowsRuntime.InteropServices;
 /// <summary>
 /// Marshaller for <see cref="EventRegistrationToken"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class EventRegistrationTokenMarshaller
 {

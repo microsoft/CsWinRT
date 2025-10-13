@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropServices;
 /// one native interface type. Implementations can perform <c>QueryInterface</c> calls to determine the right implementation.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class DynamicInterfaceCastableImplementationForwarderAttribute : Attribute
 {

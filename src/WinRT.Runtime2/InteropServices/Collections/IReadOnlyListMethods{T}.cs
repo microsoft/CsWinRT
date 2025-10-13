@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This type should only be used by generated code.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListMethods<T>
 {

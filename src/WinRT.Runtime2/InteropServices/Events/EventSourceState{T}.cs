@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="T">The type of delegate being managed from the associated event.</typeparam>
 [WindowsRuntimeManagedOnlyType]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class EventSourceState<T> : IDisposable
     where T : MulticastDelegate

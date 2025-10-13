@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// A managed wrapper for an event to expose to a native Windows Runtime consumer.
 /// </summary>
 /// <typeparam name="T">The type of delegate being managed.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class EventSource<T>
     where T : MulticastDelegate

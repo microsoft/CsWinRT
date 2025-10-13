@@ -29,12 +29,12 @@ internal sealed class WindowsRuntimeInspectable : WindowsRuntimeObject
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected override bool IsOverridableInterface(in Guid iid)
     {

@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// sourcing Windows Runtime style events from managed code. This only supports events for CCW objects.
 /// </summary>
 /// <typeparam name="T">The event handler type to use in the table.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class EventRegistrationTokenTable<T>
     where T : MulticastDelegate

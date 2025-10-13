@@ -33,7 +33,7 @@ file static class DataErrorsChangedEventArgs;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class DataErrorsChangedEventArgsMarshaller
 {

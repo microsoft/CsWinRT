@@ -50,7 +50,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
@@ -94,7 +94,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected override bool IsOverridableInterface(in Guid iid)
     {

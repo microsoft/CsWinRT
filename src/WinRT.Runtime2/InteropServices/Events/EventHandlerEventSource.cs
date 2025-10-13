@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="EventHandler"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
 {

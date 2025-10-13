@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IReference`1</c> implementation for managed types that can share an implementation.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe partial class IReferenceImpl
 {

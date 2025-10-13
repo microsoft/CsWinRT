@@ -17,7 +17,7 @@ namespace WindowsRuntime;
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventArgsMethods> : WindowsRuntimeObject,
     IMapChangedEventArgs<TKey>,
@@ -35,7 +35,7 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
@@ -52,7 +52,7 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {

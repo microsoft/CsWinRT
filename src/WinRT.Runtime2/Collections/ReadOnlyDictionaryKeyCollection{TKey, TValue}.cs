@@ -16,7 +16,7 @@ namespace WindowsRuntime;
 /// <remarks>
 /// This type should only be used by generated code.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class ReadOnlyDictionaryKeyCollection<TKey, TValue> : IEnumerable<TKey>
 {

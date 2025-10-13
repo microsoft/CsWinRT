@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A marshaller with some utility methods that directly wrap <see cref="ComWrappers"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeComWrappersMarshal
 {

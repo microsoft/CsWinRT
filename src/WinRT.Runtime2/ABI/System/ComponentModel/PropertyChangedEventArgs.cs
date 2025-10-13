@@ -39,7 +39,7 @@ file static class PropertyChangedEventArgs;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PropertyChangedEventArgsMarshaller
 {

@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This interface is only meant to be used to support marshalling code for generic instantiations.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IWindowsRuntimeInterface
 {
