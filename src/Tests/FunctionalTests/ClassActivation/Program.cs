@@ -3,6 +3,8 @@ using TestComponent;
 using TestComponentCSharp;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable CSWINRT3001 // TODO: remove this once the attributes below are removed
+
 // TODO: This shouldn't be needed if transitive references are detected correctly.
 [assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
 
