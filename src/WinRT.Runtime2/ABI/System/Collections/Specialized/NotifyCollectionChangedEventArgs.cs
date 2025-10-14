@@ -36,7 +36,6 @@ namespace ABI.System.Collections.Specialized;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.notifycollectionchangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.notifycollectionchangedeventargs"/>
-[WindowsRuntimeClassName("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")]
 [NotifyCollectionChangedEventArgsComWrappersMarshaller]
 file static class NotifyCollectionChangedEventArgs;
 
