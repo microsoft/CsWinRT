@@ -54,9 +54,10 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable 0169 // warning CS0169: The field '...' is never used
-#pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
+#pragma warning disable CS0169 // "The field '...' is never used"
+#pragma warning disable CS0649 // "Field '...' is never assigned to"
 #pragma warning disable CA2207, CA1063, CA1033, CA1001, CA2213
+#pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
 
 )", VERSION_STRING);
         }
