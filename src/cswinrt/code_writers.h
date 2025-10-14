@@ -2334,7 +2334,6 @@ private static class _%
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
-        auto default_interface_name = get_default_interface_name(w, class_type);
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
         if (factory_type)

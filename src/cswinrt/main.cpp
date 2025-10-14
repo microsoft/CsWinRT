@@ -234,7 +234,7 @@ Where <spec> is one or more of:
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &guidWriter]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -242,7 +242,6 @@ Where <spec> is one or more of:
                     {
                         writer w(ns);
                         writer helperWriter("WinRT");
-
                         w.write_begin();
                         for (auto&& [name, type] : members.types)
                         {
@@ -411,7 +410,6 @@ Where <spec> is one or more of:
                 });
             }
             
-
             if(settings.component)
             {
                 group.add([&componentActivatableClasses, &projectionFileWritten]
