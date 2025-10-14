@@ -92,6 +92,20 @@ internal static class InterfaceIIDs
             _in_abi_impl_namespace = false;
         }
 
+        void write_begin_interface_iids_namespace()
+        {
+            write(R"(
+namespace ABI
+{
+)");
+        }
+
+        void write_end_interface_iids_namespace()
+        {
+            write("}\n\n");
+            _in_abi_impl_namespace = false;
+        }
+
         void write_begin_abi()
         {
             if (!settings.netstandard_compat)

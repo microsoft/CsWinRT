@@ -193,14 +193,49 @@ Where <spec> is one or more of:
 
             w.flush_to_console();
 
-            task_group group;
+            // Write GUID properties out to InterfaceIIDs static class 
+            writer guidWriter("Test");
+            guidWriter.write_begin();
+            guidWriter.write_begin_interface_iids();
+            for (auto&& ns_members : c.namespaces())
+            {
+                auto&& [ns, members] = ns_members;
+                for (auto&& [name, type] : members.types)
+                {
+                    if (!settings.filter.includes(type)) { continue; }
+                    if (get_mapped_type(ns, name))
+                    {
+                        continue;
+                    }
+                    switch (get_category(type))
+                    {
+                    case category::delegate_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        write_iid_guid_property_from_type(guidWriter, type);
+                        break;
+                    case category::enum_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    case category::interface_type:
+                        write_iid_guid_property_from_type(guidWriter, type);
+                        break;
+                    case category::struct_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    }
+                }
+            }
+            guidWriter.write_end_interface_iids_namespace();
+            auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
+            guidWriter.flush_to_file(settings.output_folder / filename);
 
+            task_group group;
             concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &guidWriter]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -208,6 +243,7 @@ Where <spec> is one or more of:
                     {
                         writer w(ns);
                         writer helperWriter("WinRT");
+
                         w.write_begin();
                         for (auto&& [name, type] : members.types)
                         {
@@ -405,6 +441,7 @@ Where <spec> is one or more of:
                 });
             }
             
+
             if(settings.component)
             {
                 group.add([&componentActivatableClasses, &projectionFileWritten]
