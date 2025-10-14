@@ -12,7 +12,9 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// A marshaller for Windows Runtime interfaces.
 /// </summary>
 /// <typeparam name="T">The type of the interface being marshalled.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
     where T : class
