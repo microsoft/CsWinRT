@@ -4969,7 +4969,7 @@ param_type);
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
-                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     if (distance(type.GenericParam()) > 0)
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
@@ -6277,7 +6277,7 @@ param_type);
                 case category::interface_type:
                     m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
                     m.local_type = m.param_type;
-                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
                     if (distance(type.GenericParam()) > 0)
                     {
@@ -7465,8 +7465,8 @@ protected override bool IsOverridableInterface(in Guid iid) => %%;
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
                 {
                     s();
-                    w.write("%Impl.IID == iid",
-                        bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
+                    w.write("% == iid",
+                        bind<write_iid_guid_with_type_semantics>(get_type_semantics(iface.Interface())));
                 }
             }, type.InterfaceImpl()),
             bind([&](writer& w)
