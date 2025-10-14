@@ -763,6 +763,14 @@ namespace cswinrt
         }
     }
 
+    static void write_iid_guid_with_type_semantics(writer& w, type_semantics const& semantics)
+    {
+        for_typedef(w, semantics, [&](auto type)
+        {
+            write_iid_guid(w, type);
+        });
+    }
+
 
     static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
     {
@@ -2289,7 +2297,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %Impl.IID);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %);
     }
 }
 )",
@@ -2299,7 +2307,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             bind<write_type_name>(classType, typedef_name_type::ABI, true),
-            bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
+            bind<write_iid_guid>(staticsType));
     }
 
     template<auto method_writer>
@@ -2328,6 +2336,7 @@ private static class _%
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
         auto default_interface_name = get_default_interface_name(w, class_type);
+        auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
         if (factory_type)
         {
@@ -2338,11 +2347,10 @@ private static class _%
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
-                auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%, %Impl.IID, [%])
+  :base(%, %, [%])
 {
 %}
 )",
@@ -2352,7 +2360,7 @@ private static class _%
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 // base
                 method.Name(),
-                bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
                 {
@@ -2367,17 +2375,16 @@ private static class _%
         {
             write_activation_factory_objref_definition(w, class_type);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
-            auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
             w.write(R"(
 public %()
-  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %Impl.IID)
+  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %)
 {
 %}
 )",
                 class_type.TypeName(),
                 objrefname,
-                bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
@@ -2502,15 +2509,15 @@ private WindowsRuntimeObjectReference %
                 {
                     if (params_without_objects.empty())
                     {
-                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %Impl.IID",
+                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %",
                             cache_object,
-                            bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true));
+                            bind<write_iid_guid_with_type_semantics>(default_type_semantics));
                     }
                     else
                     {
-                        w.write("%, %Impl.IID, [%]",
+                        w.write("%, %, [%]",
                             method.Name(),
-                            bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             bind_list<write_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
@@ -7327,14 +7334,10 @@ static %Impl()
     %
 }
 
-public static ref readonly global::System.Guid IID
+public static ref readonly Guid IID
 {
-    [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    get
-    {
-        global::System.ReadOnlySpan<byte> data = new byte[] { % };
-        return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => ref %;
 }
 
 public static nint Vtable
@@ -7359,7 +7362,7 @@ public static nint Vtable
                 vmethod_name,
                 vmethod_name);
         }, type.MethodList()),
-        bind<write_guid_bytes>(type),
+        bind<write_iid_guid>(type),
         // Vtable functions
         bind_each<write_method_abi_invoke>(type.MethodList()),
         bind_each<write_property_abi_invoke>(type.PropertyList()),
@@ -7414,7 +7417,7 @@ public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %Impl.IID);
+        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %);
     }
 
     public static %? ConvertToManaged(void* value)
@@ -7427,7 +7430,7 @@ public static unsafe class %Marshaller
     type.TypeName(),
     projected_type,
     projected_type,
-    bind<write_type_name>(type, typedef_name_type::ABI, false),
+    bind<write_iid_guid>(type),
     projected_type,
     projected_type
 );
@@ -7667,6 +7670,8 @@ return value.GetDefaultInterface();
 
     void write_class_comwrappers_marshaller_attribute(writer& w, TypeDef const& type)
     {
+        auto default_type_semantics = get_type_semantics(get_default_interface(type));
+
         w.write(R"(
 file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
@@ -7674,7 +7679,7 @@ public override object CreateObject(void* value, out CreatedWrapperFlags wrapper
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReference(
     externalComObject: value,
-    iid: I%Impl.IID,
+    iid: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -7682,12 +7687,14 @@ return new %(valueReference);
 }
 )",
             type.TypeName(),
-            type.TypeName(),
+            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
             bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_class_comwrappers_callback(writer& w, TypeDef const& type)
     {
+        auto default_type_semantics = get_type_semantics(get_default_interface(type));
+
         // For sealed, we know the runtime class name is this class, while for unsealed, we check.
         if (type.Flags().Sealed())
         {
@@ -7698,7 +7705,7 @@ public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFl
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
-    iid: I%Impl.IID,
+    iid: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -7706,7 +7713,7 @@ return new %(valueReference);
 }
 )",
                 type.TypeName(),
-                type.TypeName(),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
         else
@@ -7724,7 +7731,7 @@ if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordina
 {
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
-        iid: I%Impl.IID,
+        iid: %,
         wrapperFlags: out wrapperFlags);
 
     wrapperObject = new %(valueReference);
@@ -7739,7 +7746,7 @@ return false;
 )",
                 type.TypeName(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
-                type.TypeName(),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
     }
