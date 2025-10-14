@@ -80,29 +80,17 @@ namespace %%
         void write_begin_interface_iids()
         {
             write(R"(
-internal static class InterfaceIIDs
+namespace ABI
 {
+    internal static class InterfaceIIDs
+    {
 )"          
             );
         }
 
         void write_end_interface_iids()
         {
-            write("}\n\n");
-            _in_abi_impl_namespace = false;
-        }
-
-        void write_begin_interface_iids_namespace()
-        {
-            write(R"(
-namespace ABI
-{
-)");
-        }
-
-        void write_end_interface_iids_namespace()
-        {
-            write("}\n\n");
+            write("}\n}\n\n");
             _in_abi_impl_namespace = false;
         }
 

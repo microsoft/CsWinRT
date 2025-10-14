@@ -748,7 +748,7 @@ namespace cswinrt
 
     static void write_iid_reference_guid(writer& w, TypeDef const& type)
     {
-        w.write("ABI.%.InterfaceIIDs.%", type.TypeNamespace(), bind<write_iid_reference_guid_property_name>(type));
+        w.write("ABI.InterfaceIIDs.%", bind<write_iid_reference_guid_property_name>(type));
     }
 
     static void write_iid_guid(writer& w, TypeDef const& type)
@@ -759,7 +759,7 @@ namespace cswinrt
         }
         else
         {
-            w.write("ABI.%.InterfaceIIDs.%", type.TypeNamespace(), bind<write_iid_guid_property_name>(type));
+            w.write("ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
         }
     }
 
@@ -770,7 +770,6 @@ namespace cswinrt
             write_iid_guid(w, type);
         });
     }
-
 
     static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
     {

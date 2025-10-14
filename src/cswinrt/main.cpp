@@ -194,7 +194,7 @@ Where <spec> is one or more of:
             w.flush_to_console();
 
             // Write GUID properties out to InterfaceIIDs static class 
-            writer guidWriter("Test");
+            writer guidWriter("ABI");
             guidWriter.write_begin();
             guidWriter.write_begin_interface_iids();
             for (auto&& ns_members : c.namespaces())
@@ -225,7 +225,7 @@ Where <spec> is one or more of:
                     }
                 }
             }
-            guidWriter.write_end_interface_iids_namespace();
+            guidWriter.write_end_interface_iids();
             auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
             guidWriter.flush_to_file(settings.output_folder / filename);
 
@@ -350,35 +350,6 @@ Where <spec> is one or more of:
                         {
                             w.write_end_projected();
                             w.write_begin_abi();
-
-                            // Write GUID properties out to InterfaceIIDs static class 
-                            w.write_begin_interface_iids();
-                            for (auto&& [name, type] : members.types)
-                            {
-                                currentType = name;
-                                if (!settings.filter.includes(type)) { continue; }
-                                if (get_mapped_type(ns, name)) continue;
-                                if (is_api_contract_type(type)) { continue; }
-                                if (is_attribute_type(type)) { continue; }
-
-                                switch (get_category(type))
-                                {
-                                case category::delegate_type:
-                                    write_iid_guid_property_from_signature(w, type);
-                                    write_iid_guid_property_from_type(w, type);
-                                    break;
-                                case category::enum_type:
-                                    write_iid_guid_property_from_signature(w, type);
-                                    break;
-                                case category::struct_type:
-                                    write_iid_guid_property_from_signature(w, type);
-                                    break;
-                                case category::interface_type:
-                                    write_iid_guid_property_from_type(w, type);
-                                    break;
-                                }
-                            }
-                            w.write_end_interface_iids();
 
                             for (auto&& [name, type] : members.types)
                             {
