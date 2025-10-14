@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -13,36 +14,121 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.UI.Xaml.Interop.IBindableIterator",
+    target: typeof(ABI.System.Collections.IEnumerator),
+    trimTarget: typeof(IEnumerator))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Microsoft.UI.Xaml.Interop.IBindableIterator",
+    target: typeof(ABI.System.Collections.IEnumerator),
+    trimTarget: typeof(IEnumerator))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    typeof(IEnumerator),
+    typeof(ABI.System.Collections.IEnumeratorInterfaceImpl))]
+
 namespace ABI.System.Collections;
 
 /// <summary>
-/// Marshaller for <see cref="IEnumerator"/>.
+/// ABI type for <see cref="global::System.Collections.IEnumerator"/>.
+/// </summary>
+/// <remarks>
+/// This interface is equivalent to <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.ibindableiterator"/>.
+/// </remarks>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
+[IEnumeratorComWrappersMarshaller]
+file static class IEnumerator;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.Collections.IEnumerator"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IEnumerator? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IEnumerator? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IEnumerator>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IBindableIterator);
+        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IBindableIterator);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static IEnumerator? ConvertToManaged(void* value)
+    public static global::System.Collections.IEnumerator? ConvertToManaged(void* value)
     {
-        return (IEnumerator?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::System.Collections.IEnumerator?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IEnumeratorComWrappersCallback>(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="IEnumerator"/>.
+/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="global::System.Collections.IEnumerator"/>.
+/// </summary>
+file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
+{
+    /// <summary>
+    /// Gets the runtime class name for <see cref="global::System.Collections.IEnumerator"/>.
+    /// </summary>
+    private static string RuntimeClassName
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? "Windows.UI.Xaml.Interop.IBindableIterator"
+            : "Microsoft.UI.Xaml.Interop.IBindableIterator";
+    }
+
+    /// <inheritdoc/>
+	public static unsafe bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        if (runtimeClassName.SequenceEqual(RuntimeClassName))
+        {
+            WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+                wrapperFlags: out wrapperFlags);
+
+            wrapperObject = new WindowsRuntimeBindableIterator(valueReference);
+
+            return true;
+        }
+
+        wrapperFlags = CreatedWrapperFlags.None;
+        wrapperObject = null;
+
+        return false;
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Collections.IEnumerator"/>.
+/// </summary>
+file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
+            externalComObject: value,
+            iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeBindableIterator(valueReference);
+    }
+}
+
+/// <summary>
+/// Interop methods for <see cref="global::System.Collections.IEnumerator"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorMethods
 {
-    /// <inheritdoc cref="IEnumerator.Current"/>
+    /// <inheritdoc cref="global::System.Collections.IEnumerator.Current"/>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator.current"/>
     public static object? Current(WindowsRuntimeObjectReference thisReference)
@@ -50,7 +136,7 @@ public static unsafe class IEnumeratorMethods
         return IBindableIteratorMethods.Current(thisReference);
     }
 
-    /// <inheritdoc cref="IEnumerator.MoveNext"/>
+    /// <inheritdoc cref="global::System.Collections.IEnumerator.MoveNext"/>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool MoveNext(WindowsRuntimeObjectReference thisReference)
@@ -60,14 +146,14 @@ public static unsafe class IEnumeratorMethods
 }
 
 /// <summary>
-/// The <see cref="IEnumerator"/> implementation.
+/// The <see cref="global::System.Collections.IEnumerator"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IEnumeratorImpl
 {
     /// <summary>
-    /// The <see cref="IBindableIteratorVftbl"/> value for the managed <see cref="IEnumerator"/> implementation.
+    /// The <see cref="IBindableIteratorVftbl"/> value for the managed <see cref="global::System.Collections.IEnumerator"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBindableIteratorVftbl Vftbl;
@@ -86,7 +172,7 @@ public static unsafe class IEnumeratorImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="IEnumerator"/>.
+    /// Gets the IID for <see cref="global::System.Collections.IEnumerator"/>.
     /// </summary>
     public static ref readonly Guid IID
     {
@@ -95,7 +181,7 @@ public static unsafe class IEnumeratorImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="IEnumerator"/> implementation.
+    /// Gets a pointer to the managed <see cref="global::System.Collections.IEnumerator"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -114,7 +200,7 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
             object? current = IBindableIteratorAdapter.GetInstance(unboxedValue).Current;
 
@@ -139,7 +225,7 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
             *result = IBindableIteratorAdapter.GetInstance(unboxedValue).HasCurrent;
 
@@ -162,7 +248,7 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
             *result = IBindableIteratorAdapter.GetInstance(unboxedValue).MoveNext();
 
@@ -183,32 +269,32 @@ public static unsafe class IEnumeratorImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IEnumerator"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IEnumerator"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface IEnumeratorInterfaceImpl : IEnumerator
+file interface IEnumeratorInterfaceImpl : global::System.Collections.IEnumerator
 {
     /// <inheritdoc/>
-    object? IEnumerator.Current
+    object? global::System.Collections.IEnumerator.Current
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IEnumerable).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IEnumerator).TypeHandle);
 
             return IEnumeratorMethods.Current(thisReference);
         }
     }
 
     /// <inheritdoc/>
-    bool IEnumerator.MoveNext()
+    bool global::System.Collections.IEnumerator.MoveNext()
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IEnumerable).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IEnumerator).TypeHandle);
 
         return IEnumeratorMethods.MoveNext(thisReference);
     }
 
     /// <inheritdoc/>
-    void IEnumerator.Reset()
+    void global::System.Collections.IEnumerator.Reset()
     {
         throw new NotSupportedException();
     }
