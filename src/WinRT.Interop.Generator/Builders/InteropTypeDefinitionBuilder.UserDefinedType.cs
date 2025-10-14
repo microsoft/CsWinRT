@@ -196,7 +196,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { Ldc_I4_2 },
-                    { Call, interopReferences.WindowsRuntimeMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
                     { Ret }
                 }
             };

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ComponentModel;
 using ABI.System.ComponentModel;
 
@@ -9,6 +10,8 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

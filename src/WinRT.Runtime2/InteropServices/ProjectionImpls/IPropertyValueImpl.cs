@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0060, IDE1006
@@ -16,6 +17,8 @@ namespace WindowsRuntime.InteropServices;
 /// This type provides shared paths for some implementations, and then some specific full implementations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static partial class IPropertyValueImpl
 {
     /// <summary>

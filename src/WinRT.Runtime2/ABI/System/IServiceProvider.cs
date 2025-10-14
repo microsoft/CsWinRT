@@ -18,6 +18,7 @@ namespace ABI.System;
 /// <summary>
 /// Marshaller for <see cref="IServiceProvider"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMarshaller
 {
@@ -37,6 +38,7 @@ public static unsafe class IServiceProviderMarshaller
 /// <summary>
 /// Interop methods for <see cref="IServiceProvider"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMethods
 {
@@ -85,6 +87,7 @@ internal unsafe struct IServiceProviderVftbl
 /// <summary>
 /// The <see cref="IServiceProvider"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderImpl
 {
@@ -107,7 +110,11 @@ public static unsafe class IServiceProviderImpl
     /// <summary>
     /// Gets the IID for <see cref="IServiceProvider"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IServiceProvider;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IServiceProvider;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IServiceProvider"/> implementation.

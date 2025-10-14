@@ -44,6 +44,7 @@ file static class NotifyCollectionChangedEventHandler;
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
 {
@@ -107,7 +108,7 @@ file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallbac
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in NotifyCollectionChangedEventHandlerImpl.IID,
             wrapperFlags: out wrapperFlags);
@@ -177,7 +178,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>
@@ -233,9 +234,13 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     /// <summary>
     /// Gets the IID for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
@@ -306,9 +311,13 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
     /// <summary>
     /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <c>IReference`1</c> implementation.

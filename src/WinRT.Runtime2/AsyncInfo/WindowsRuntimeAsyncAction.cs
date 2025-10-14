@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using ABI.Windows.Foundation;
@@ -49,6 +50,8 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
     }
 
     /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     public AsyncActionCompletedHandler? Completed
@@ -91,6 +94,8 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
     }
 
     /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;

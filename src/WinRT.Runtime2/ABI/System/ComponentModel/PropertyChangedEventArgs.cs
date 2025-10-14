@@ -39,6 +39,7 @@ file static class PropertyChangedEventArgs;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PropertyChangedEventArgsMarshaller
 {
@@ -121,9 +122,13 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// Gets the IID for <see cref="PropertyChangedEventArgsRuntimeClassFactory"/>.
     /// </summary>
-    private static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
-        : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory;
+    private static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
+            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory;
+    }
 
     /// <summary>
     /// Gets the runtime class name for <see cref="PropertyChangedEventArgsRuntimeClassFactory"/>.

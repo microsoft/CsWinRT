@@ -353,7 +353,7 @@ internal partial class InteropTypeDefinitionBuilder
                         { Ldarg_0 },
                         { Call, get_IidMethod },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReferenceUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
                         { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
                         { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
                         { Ret }

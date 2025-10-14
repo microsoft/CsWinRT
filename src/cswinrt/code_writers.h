@@ -3798,7 +3798,7 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in %);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.TrackerSupport, in %);
 }
 )", projection_name, bind<write_iid_reference_guid>(type));
 
@@ -3926,8 +3926,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<%>((%) value, in %).DetachThisPtrUnsafe();
-    }
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);    }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
@@ -3942,7 +3941,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     }
 }
 
-)", name, projection_name, projection_name, iid_property_name, name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name);
+)", name, name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name); // TODO: use `CreateComInterfaceFlags.None` whenever possible
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -7456,6 +7455,8 @@ public static unsafe class %Marshaller
         bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
         separator s{ w, " || " };
         w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool IsOverridableInterface(in Guid iid) => %%;
 )",
             bind_each([&](writer& w, InterfaceImpl const& iface)
@@ -7590,12 +7591,16 @@ GC.RemoveMemoryPressure(%);
                 if (!type.Flags().Sealed())
                 {
                     w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => GetType() == typeof(%);)",
                         type.TypeName());
                 }
                 else
                 {
                     w.write(R"(
+[Obsolete]
+[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => true;)");
                 }
             },
@@ -7675,7 +7680,7 @@ file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrap
 {
 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
-WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReference(
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
     externalComObject: value,
     iid: %,
     wrapperFlags: out wrapperFlags);
@@ -7701,7 +7706,7 @@ file sealed unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappers
 {
 public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
-WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: %,
     wrapperFlags: out wrapperFlags);
@@ -7727,7 +7732,7 @@ public static unsafe bool TryCreateObject(
 {
 if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordinal))
 {
-    WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+    WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
         iid: %,
         wrapperFlags: out wrapperFlags);
@@ -7842,7 +7847,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in %,
             wrapperFlags: out wrapperFlags);
@@ -7868,7 +7873,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>

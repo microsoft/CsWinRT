@@ -19,6 +19,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="IAsyncInfo"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoMarshaller
 {
@@ -38,6 +39,7 @@ public static unsafe class IAsyncInfoMarshaller
 /// <summary>
 /// Interop methods for <see cref="IAsyncInfo"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoMethods
 {
@@ -138,6 +140,7 @@ internal unsafe struct IAsyncInfoVftbl
 /// <summary>
 /// The <see cref="IAsyncInfo"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncInfoImpl
 {
@@ -164,7 +167,11 @@ public static unsafe class IAsyncInfoImpl
     /// <summary>
     /// Gets the IID for <see cref="IAsyncInfo"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IAsyncInfo"/> implementation.

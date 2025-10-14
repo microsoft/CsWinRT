@@ -167,7 +167,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ldarg_0 },
                 { Call, get_IidMethod },
                 { Ldarg_3 },
-                { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReferenceUnsafe.Import(module) },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
                 { Stloc_0 },
 
                 // Create and assign the 'NativeObject' instance to return
@@ -244,7 +244,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ldarg_1 },
                 { Call, get_IidMethod },
                 { Ldarg_2 },
-                { Call, interopReferences.WindowsRuntimeMarshalCreateObjectReference.Import(module) },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReference.Import(module) },
                 { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                 { Ret },
             }

@@ -21,6 +21,7 @@ namespace ABI.System.ComponentModel;
 /// <summary>
 /// Marshaller for <see cref="INotifyDataErrorInfo"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoMarshaller
 {
@@ -42,6 +43,7 @@ public static unsafe class INotifyDataErrorInfoMarshaller
 /// <summary>
 /// Interop methods for <see cref="INotifyDataErrorInfo"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoMethods
 {
@@ -145,6 +147,7 @@ internal unsafe struct INotifyDataErrorInfoVftbl
 /// <summary>
 /// The <see cref="INotifyDataErrorInfo"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoImpl
 {
@@ -170,7 +173,11 @@ public static unsafe class INotifyDataErrorInfoImpl
     /// <summary>
     /// Gets the IID for <see cref="INotifyDataErrorInfo"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="INotifyDataErrorInfo"/> implementation.
