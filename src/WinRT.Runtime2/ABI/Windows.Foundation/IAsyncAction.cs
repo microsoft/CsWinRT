@@ -24,6 +24,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="IAsyncAction"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionMarshaller
 {
@@ -90,6 +91,7 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
 /// <summary>
 /// Interop methods for <see cref="IAsyncAction"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionMethods
 {
@@ -164,6 +166,7 @@ internal unsafe struct IAsyncActionVftbl
 /// <summary>
 /// The <see cref="IAsyncAction"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionImpl
 {
@@ -188,7 +191,11 @@ public static unsafe class IAsyncActionImpl
     /// <summary>
     /// Gets the IID for <see cref="IAsyncAction"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IAsyncAction;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IAsyncAction;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IAsyncAction"/> implementation.

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -15,7 +14,6 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="object"/>.
 /// </summary>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Object")]
 [ObjectComWrappersMarshaller]
 file static class Object;

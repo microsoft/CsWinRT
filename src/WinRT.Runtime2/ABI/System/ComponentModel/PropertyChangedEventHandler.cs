@@ -43,6 +43,7 @@ file static class PropertyChangedEventHandler;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PropertyChangedEventHandlerMarshaller
 {
@@ -106,7 +107,7 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in PropertyChangedEventHandlerImpl.IID,
             wrapperFlags: out wrapperFlags);
@@ -176,7 +177,7 @@ file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribu
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>
@@ -232,9 +233,13 @@ file static unsafe class PropertyChangedEventHandlerImpl
     /// <summary>
     /// Gets the IID for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
@@ -305,9 +310,13 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     /// <summary>
     /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
-        : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
+            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <c>IReference`1</c> implementation.

@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
+#pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
+
 [assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
 
 namespace WindowsRuntime.InteropServices;

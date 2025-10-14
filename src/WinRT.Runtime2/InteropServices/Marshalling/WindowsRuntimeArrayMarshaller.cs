@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime arrays.
 /// </summary>
-[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeArrayMarshaller
 {

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml.Interop;
 
@@ -9,6 +11,8 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// Represents a reference to a <see cref="System.Type"/> value, for fast marshalling to native.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public unsafe ref struct TypeReference
 {
     /// <inheritdoc cref="ABI.System.Type.Name"/>

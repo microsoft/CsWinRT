@@ -19,6 +19,7 @@ namespace ABI.System.ComponentModel;
 /// <summary>
 /// Marshaller for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsMarshaller
 {
@@ -40,6 +41,7 @@ public static unsafe class IVectorChangedEventArgsMarshaller
 /// <summary>
 /// Interop methods for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsMethods
 {
@@ -91,6 +93,7 @@ internal unsafe struct IVectorChangedEventArgsVftbl
 /// <summary>
 /// The <see cref="IVectorChangedEventArgs"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IVectorChangedEventArgsImpl
 {
@@ -114,7 +117,11 @@ public static unsafe class IVectorChangedEventArgsImpl
     /// <summary>
     /// Gets the IID for <see cref="IVectorChangedEventArgs"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IVectorChangedEventArgs"/> implementation.

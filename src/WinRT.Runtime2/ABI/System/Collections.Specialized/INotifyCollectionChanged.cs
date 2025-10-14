@@ -20,6 +20,7 @@ namespace ABI.System.Collections.Specialized;
 /// <summary>
 /// Marshaller for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMarshaller
 {
@@ -43,6 +44,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
 /// <summary>
 /// Interop methods for <see cref="INotifyCollectionChanged"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedMethods
 {
@@ -95,6 +97,7 @@ internal unsafe struct INotifyCollectionChangedVftbl
 /// <summary>
 /// The <see cref="INotifyCollectionChanged"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyCollectionChangedImpl
 {
@@ -118,9 +121,13 @@ public static unsafe class INotifyCollectionChangedImpl
     /// <summary>
     /// Gets the IID for <see cref="INotifyCollectionChanged"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-        : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
+            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="INotifyCollectionChanged"/> implementation.

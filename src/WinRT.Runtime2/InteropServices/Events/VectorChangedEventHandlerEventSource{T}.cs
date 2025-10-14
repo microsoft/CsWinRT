@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
 using Windows.Foundation.Collections;
 
 namespace WindowsRuntime.InteropServices;
@@ -9,6 +11,8 @@ namespace WindowsRuntime.InteropServices;
 /// An <see cref="EventSource{T}"/> implementation for <see cref="VectorChangedEventHandler{T}"/>.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class VectorChangedEventHandlerEventSource<T> : EventSource<VectorChangedEventHandler<T>>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

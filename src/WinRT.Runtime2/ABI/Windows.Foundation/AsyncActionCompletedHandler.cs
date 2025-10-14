@@ -25,6 +25,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// Marshaller for <see cref="AsyncActionCompletedHandler"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class AsyncActionCompletedHandlerMarshaller
 {
@@ -87,7 +88,7 @@ file abstract unsafe class AsyncActionCompletedHandlerComWrappersCallback : IWin
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference valueReference = WindowsRuntimeMarshal.CreateObjectReferenceUnsafe(
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
             iid: in WellKnownInterfaceIds.IID_AsyncActionCompletedHandler,
             wrapperFlags: out wrapperFlags);
@@ -128,9 +129,9 @@ file static class AsyncActionCompletedHandlerInterfaceEntriesImpl
     /// </summary>
     static AsyncActionCompletedHandlerInterfaceEntriesImpl()
     {
-        Entries.AsyncActionCompletedHandler.IID = AsyncActionCompletedHandlerImpl.IID;
+        Entries.AsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_AsyncActionCompletedHandler;
         Entries.AsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerImpl.Vtable;
-        Entries.IReferenceOfAsyncActionCompletedHandler.IID = AsyncActionCompletedHandlerReferenceImpl.IID;
+        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler;
         Entries.IReferenceOfAsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -157,7 +158,7 @@ internal sealed unsafe class AsyncActionCompletedHandlerComWrappersMarshallerAtt
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
     }
 
     /// <inheritdoc/>

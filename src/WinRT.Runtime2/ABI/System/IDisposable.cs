@@ -18,6 +18,7 @@ namespace ABI.System;
 /// <summary>
 /// Marshaller for <see cref="IDisposable"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableMarshaller
 {
@@ -37,6 +38,7 @@ public static unsafe class IDisposableMarshaller
 /// <summary>
 /// Interop methods for <see cref="IDisposable"/>.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableMethods
 {
@@ -70,6 +72,7 @@ internal unsafe struct IDisposableVftbl
 /// <summary>
 /// The <see cref="IDisposable"/> implementation.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableImpl
 {
@@ -92,7 +95,11 @@ public static unsafe class IDisposableImpl
     /// <summary>
     /// Gets the IID for <see cref="IDisposable"/>.
     /// </summary>
-    public static ref readonly Guid IID => ref WellKnownInterfaceIds.IID_IDisposable;
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IDisposable;
+    }
 
     /// <summary>
     /// Gets a pointer to the managed <see cref="IDisposable"/> implementation.

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.CompilerServices;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -10,6 +10,8 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime value types.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeValueTypeMarshaller
 {
     /// <summary>
@@ -17,10 +19,11 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
     /// </summary>
     /// <typeparam name="T">The value type to marshal.</typeparam>
     /// <param name="value">The input value to marshal.</param>
+    /// <param name="flags">Flags used to configure the generated interface.</param>
     /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime value type.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(T? value, scoped in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(T? value, CreateComInterfaceFlags flags, scoped in Guid iid)
         where T : struct
     {
         if (value is null)
@@ -28,13 +31,37 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
             return default;
         }
 
-        // Optimize the flags: the 'T' value might contain managed values, but we only want to enable
-        // tracker support if that's actually the case. We can check that and pick the best flags.
-        CreateComInterfaceFlags flags = RuntimeHelpers.IsReferenceOrContainsReferences<T>()
-            ? CreateComInterfaceFlags.TrackerSupport
-            : CreateComInterfaceFlags.None;
-
         // Box the value type and return the right interface pointer for it
+        return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags, in iid));
+    }
+
+    /// <summary>
+    /// Marshals a Windows Runtime value type value to a native COM object interface pointer for a boxed value.
+    /// </summary>
+    /// <typeparam name="T">The value type to marshal.</typeparam>
+    /// <param name="value">The input value to marshal.</param>
+    /// <param name="flags">Flags used to configure the generated interface.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime value type.</param>
+    /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
+    /// <exception cref="InvalidCastException">Thrown if <paramref name="value"/> is not of type <typeparamref name="T"/>.</exception>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    /// <remarks>
+    /// This overload can be used when <paramref name="value"/> is already boxed, to avoid an additional allocation. In all other
+    /// cases, <see cref="BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/> should be preferred, as it avoids a type check.
+    /// </remarks>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(object? value, CreateComInterfaceFlags flags, scoped in Guid iid)
+        where T : struct
+    {
+        if (value is null)
+        {
+            return default;
+        }
+
+        // Validate that the input type is actually of the expected type.
+        // We do this separately so we can reuse the boxed object safely.
+        _ = (T)value;
+
+        // Create a CCW for the boxed value and return the right interface pointer for it
         return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags, in iid));
     }
 
