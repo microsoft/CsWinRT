@@ -30,7 +30,9 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
 [TimeSpanComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public struct TimeSpan
 {
@@ -44,7 +46,9 @@ public struct TimeSpan
 /// <summary>
 /// Marshaller for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class TimeSpanMarshaller
 {

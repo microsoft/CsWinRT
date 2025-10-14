@@ -17,7 +17,9 @@ namespace WindowsRuntime;
 /// </remarks>
 /// <seealso cref="System.Runtime.CompilerServices.ReferenceAssemblyAttribute"/>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class WindowsRuntimeReferenceAssemblyAttribute : Attribute
 {

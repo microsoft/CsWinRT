@@ -21,4 +21,12 @@ internal static class WindowsRuntimeConstants
     /// The diagnostic id for private implementation detail types.
     /// </summary>
     public const string PrivateImplementationDetailObsoleteDiagnosticId = "CSWINRT3001";
+
+    /// <summary>
+    /// The URL format for all custom diagnostics for CsWinRT.
+    /// </summary>
+    /// <remarks>
+    /// This URL format assumes it will receive the diagnostic id as a parameter.
+    /// </remarks>
+    public const string CsWinRTDiagnosticsUrlFormat = "https://aka.ms/cswinrt/errors/{0}";
 }
