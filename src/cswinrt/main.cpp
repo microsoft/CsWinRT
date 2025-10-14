@@ -195,7 +195,6 @@ Where <spec> is one or more of:
 
             // Write GUID properties out to InterfaceIIDs static class 
             writer guidWriter("ABI");
-            guidWriter.write_begin();
             guidWriter.write_begin_interface_iids();
             for (auto&& ns_members : c.namespaces())
             {
