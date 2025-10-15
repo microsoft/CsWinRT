@@ -507,7 +507,7 @@ namespace TestComponentCSharp
     }
 
     [threading(sta), marshaling_behavior(standard)]
-    runtimeclass NonAgileClass
+    runtimeclass NonAgileClass : Microsoft.UI.Xaml.Input.ICommand
     {
         NonAgileClass();
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);

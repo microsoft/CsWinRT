@@ -3824,21 +3824,16 @@ Vtable = %.AbiToProjectionVftablePtr
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics);
 
-    void write_event_source_ctor(writer& w, Event const& evt, int index, uint32_t const& abi_methods_start_index = 6)
+    void write_event_source_ctor(writer& w, Event const& evt, uint32_t const& abi_methods_start_index = 6)
     {
         if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
                 if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     auto [add, remove] = get_event_methods(evt);
-                    w.write(R"( new global::ABI.WinRT.Interop.EventHandlerEventSource%(_obj,
-%,
-%,
-%))",
+                    w.write(R"( new global::ABI.WinRT.Interop.EventHandlerEventSource%(_obj, %))",
 bind<write_type_params>(eventType),
-get_invoke_info(w, add, abi_methods_start_index).first,
-get_invoke_info(w, remove, abi_methods_start_index).first,
-index);
+get_vmethod_index(add.Parent(), add) + abi_methods_start_index);
                     return true;
                 }
                 return false;
@@ -3849,15 +3844,10 @@ index);
 
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
-new %%(_obj,
-%,
-%,
-%))",
+new %%(_obj, %))",
             bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
             bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
-            get_invoke_info(w, add, abi_methods_start_index).first,
-            get_invoke_info(w, remove, abi_methods_start_index).first,
-            index);
+            get_vmethod_index(add.Parent(), add) + abi_methods_start_index);
     }
 
     void write_event_sources(writer& w, TypeDef const& type)
@@ -5524,7 +5514,6 @@ ThrowNotInitialized();
             return;
         }
 
-        int index = 0;
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
@@ -5556,11 +5545,17 @@ return (eventSource.Subscribe, eventSource.Unsubscribe);
                         evt.Name(),
                         settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
                         generic_type ? "_genericObj" : "_obj",
+                        // return
                         evt.Name(),
-                        bind(init_call_variables),
-                        bind<write_event_source_ctor>(evt, index, abi_methods_start_index)
+                        bind([&](writer& w)
+                        {
+                            if(generic_type)
+                            {
+                                init_call_variables(w);
+                            }
+						}),
+                        bind<write_event_source_ctor>(evt, abi_methods_start_index)
                     );
-            index++;
         }
     }
 
@@ -7459,10 +7454,9 @@ public static readonly Guid PIID = Vftbl.PIID;
             type.TypeName(),
             [&](writer& w) 
             {
-                int index = 0;
                 for (auto&& evt : type.EventList())
                 {
-                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++, INSPECTABLE_METHOD_COUNT));
+                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, INSPECTABLE_METHOD_COUNT));
                 }
             },
             [&](writer& w) {
@@ -10315,9 +10309,7 @@ internal sealed unsafe class %% : global::ABI.WinRT.Interop.EventSource<%>
 {
 %
 
-internal %(IObjectReference obj,
-delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, %WinRT.EventRegistrationToken%, int> addHandler,
-delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
+internal %(IObjectReference obj, int vtableIndexForAddHandler) : base(obj, vtableIndexForAddHandler)
 {
 %
 }
@@ -10356,8 +10348,6 @@ bind<write_event_source_generic_args>(eventTypeSemantics),
 eventTypeCode, // EventSource<%>
 genericInstantiationInitialization,
 bind<write_event_source_type_name>(eventTypeSemantics),
-settings.netstandard_compat ? "out " : "",
-settings.netstandard_compat ? "" : "*",
 genericInstantiationInitialization == "" ? "" : "_ = initialized;",
 eventTypeCode, // % handler
 abiTypeName,

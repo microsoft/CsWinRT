@@ -11,4 +11,7 @@ TypesMustExist : Type 'WinRT.DynamicWindowsRuntimeCastAttribute' does not exist 
 MembersMustExist : Member 'public System.Guid WinRT.Interop.IID.IID_IWeakReferenceSource.get()' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.MarshalGenericHelper<T>' does not exist in the reference but it does exist in the implementation.
-Total Issues: 12
+MembersMustExist : Member 'protected void ABI.WinRT.Interop.EventSource<TDelegate>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource<T>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 15

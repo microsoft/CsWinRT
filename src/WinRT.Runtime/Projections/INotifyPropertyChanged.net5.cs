@@ -33,11 +33,7 @@ namespace ABI.System.ComponentModel
         {
             return PropertyChanged.GetValue(thisObj, (key) =>
             {
-                var ThisPtr = obj.ThisPtr;
-
-                return new PropertyChangedEventSource(obj,
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+                return new PropertyChangedEventSource(obj, 6);
             });
         }
     }

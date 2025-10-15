@@ -110,11 +110,7 @@ namespace ABI.System.Collections.Specialized
         internal INotifyCollectionChanged(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
-
-            _CollectionChanged =
-                new NotifyCollectionChangedEventHandlerEventSource(_obj,
-                _obj.Vftbl.add_CollectionChanged_0,
-                _obj.Vftbl.remove_CollectionChanged_1);
+            _CollectionChanged = new NotifyCollectionChangedEventHandlerEventSource(_obj, 6);
         }
 
         public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged

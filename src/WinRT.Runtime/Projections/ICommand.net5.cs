@@ -67,11 +67,7 @@ namespace ABI.System.Windows.Input
         {
             return CanExecuteChanged.GetValue(thisObj, (key) =>
             {
-                var ThisPtr = obj.ThisPtr;
-
-                return new EventHandlerEventSource(obj,
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+                return new EventHandlerEventSource(obj, 6);
             });
         }
     }
