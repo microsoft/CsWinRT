@@ -95,18 +95,17 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ABI
+namespace ABI;
+
+internal static class InterfaceIIDs
 {
-    internal static class InterfaceIIDs
-    {
 )"          
             );
         }
 
         void write_end_interface_iids()
         {
-            write("}\n}\n\n");
-            _in_abi_impl_namespace = false;
+            write("}\n\n");
         }
 
         void write_begin_abi()
