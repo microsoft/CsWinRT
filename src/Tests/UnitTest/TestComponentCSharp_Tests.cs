@@ -3000,6 +3000,9 @@ namespace UnitTest
             public void AcquireObject()
             {
                 Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
+                nonAgileClass = new NonAgileClass();
+                nonAgileClass.CanExecuteChanged += NonAgileClass_Event;
+
                 nonAgileObject = new Windows.UI.Popups.PopupMenu();
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
@@ -3011,6 +3014,7 @@ namespace UnitTest
 
                 // Object gets proxied to the apartment.
                 Assert.Equal(2, proxyObject.Commands.Count);
+
                 agileReference.Dispose();
             }
 
@@ -3020,6 +3024,10 @@ namespace UnitTest
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
+
+                // Remove the event handler from a different context from what it was initially added in
+                // to make sure we can unsubscribe from the event via the proxy in non agile scenarios.
+                nonAgileClass.CanExecuteChanged -= NonAgileClass_Event;
 
                 valueAcquired.Set();
             }
@@ -3031,11 +3039,21 @@ namespace UnitTest
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
             }
 
+            public void NonAgileClass_Event(object sender, object e)
+            {
+            }
+
+            public void NonAgileClass_Event2(object sender, int e)
+            {
+                Assert.True(false, "Unexpected call");
+            }
+
             private Windows.UI.Popups.PopupMenu nonAgileObject;
             private Windows.UI.Popups.PopupMenu proxyObject;
-            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference, agileReference2;
+            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
             private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
             private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
+            private NonAgileClass nonAgileClass;
         }
 
 
