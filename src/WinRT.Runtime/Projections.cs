@@ -78,6 +78,9 @@ namespace WinRT
             
             RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
 
+            // We only use IReferenceArray on AOT for runtime class name to projected type lookup, so avoiding the ABI type to not root that.
+            CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.IReferenceArray`1", typeof(Windows.Foundation.IReferenceArray<>));
+
             RegisterCustomAbiTypeMappingNoLock(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset), "Windows.Foundation.DateTime");
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
