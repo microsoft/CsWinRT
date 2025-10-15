@@ -63,7 +63,7 @@ steps:
       failOnStderr: true
       script: |          
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;          
-        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "10.0.100-rc.1.25451.107" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
+        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "10.0.100-rc.2.25502.107" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
 
   - task: UseDotNet@2
     displayName: Use .NET Core SDK 10.0
@@ -255,3 +255,4 @@ steps:
           Microsoft.CodeAnalysis.CSharp.dll
           Microsoft.CodeAnalysis.dll
         TargetFolder: $(StagingFolder)\net10.0\CsWinMD
+
