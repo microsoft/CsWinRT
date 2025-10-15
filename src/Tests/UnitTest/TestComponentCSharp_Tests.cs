@@ -3043,11 +3043,6 @@ namespace UnitTest
             {
             }
 
-            public void NonAgileClass_Event2(object sender, int e)
-            {
-                Assert.True(false, "Unexpected call");
-            }
-
             private Windows.UI.Popups.PopupMenu nonAgileObject;
             private Windows.UI.Popups.PopupMenu proxyObject;
             private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
