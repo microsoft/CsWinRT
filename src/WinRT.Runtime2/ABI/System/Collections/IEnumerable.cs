@@ -137,7 +137,7 @@ public static unsafe class IEnumerableMethods
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable.first"/>
     public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
-        throw null; // TODO
+        return IBindableIterableMethods.First(thisReference);
     }
 }
 
