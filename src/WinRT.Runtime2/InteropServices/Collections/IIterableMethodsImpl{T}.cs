@@ -27,6 +27,5 @@ public interface IIterableMethodsImpl<T>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The iterator.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1.first"/>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     static abstract IEnumerator<T> First(WindowsRuntimeObjectReference thisReference);
 }
