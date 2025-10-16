@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 #pragma warning disable IDE0060 // TODO
@@ -30,8 +31,137 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
-        // TODO
-        return null;
+        Exception ex;
+        string errorMessage = string.Empty;
+        switch (errorCode)
+        {
+            case ExceptionHelpers.E_CHANGED_STATE:
+            case ExceptionHelpers.E_ILLEGAL_STATE_CHANGE:
+            case ExceptionHelpers.E_ILLEGAL_METHOD_CALL:
+            case ExceptionHelpers.E_ILLEGAL_DELEGATE_ASSIGNMENT:
+            case ExceptionHelpers.APPMODEL_ERROR_NO_PACKAGE:
+            case ExceptionHelpers.COR_E_INVALIDOPERATION:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
+                break;
+            case ExceptionHelpers.E_XAMLPARSEFAILED:
+#if NET
+                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException();
+                }
+                else
+#endif
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException();
+                }
+                break;
+            case ExceptionHelpers.E_LAYOUTCYCLE:
+#if NET
+                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException();
+                }
+                else
+#endif
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
+                }
+                break;
+            case ExceptionHelpers.E_ELEMENTNOTAVAILABLE:
+#if NET
+                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException();
+                }
+                else
+#endif
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException();
+                }
+                break;
+            case ExceptionHelpers.E_ELEMENTNOTENABLED:
+#if NET
+                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException();
+                }
+                else
+#endif
+                {
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException();
+                }
+                break;
+            case ExceptionHelpers.ERROR_INVALID_WINDOW_HANDLE:
+                ex = new COMException(
+@"Invalid window handle. (0x80070578)
+Consider WindowNative, InitializeWithWindow
+See https://aka.ms/cswinrt/interop#windows-sdk",
+                    ExceptionHelpers.ERROR_INVALID_WINDOW_HANDLE);
+                break;
+            case ExceptionHelpers.RO_E_CLOSED:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty);
+                break;
+            case ExceptionHelpers.E_POINTER:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException();
+                break;
+            case ExceptionHelpers.E_NOTIMPL:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException();
+                break;
+            case ExceptionHelpers.E_ACCESSDENIED:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new UnauthorizedAccessException(errorMessage) : new UnauthorizedAccessException();
+                break;
+            case ExceptionHelpers.E_INVALIDARG:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentException(errorMessage) : new ArgumentException();
+                break;
+            case ExceptionHelpers.E_NOINTERFACE:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidCastException(errorMessage) : new InvalidCastException();
+                break;
+            case ExceptionHelpers.E_OUTOFMEMORY:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new OutOfMemoryException(errorMessage) : new OutOfMemoryException();
+                break;
+            case ExceptionHelpers.E_BOUNDS:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException();
+                break;
+            case ExceptionHelpers.E_NOTSUPPORTED:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException();
+                break;
+            case ExceptionHelpers.ERROR_ARITHMETIC_OVERFLOW:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException();
+                break;
+            case ExceptionHelpers.ERROR_FILENAME_EXCED_RANGE:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new PathTooLongException(errorMessage) : new PathTooLongException();
+                break;
+            case ExceptionHelpers.ERROR_FILE_NOT_FOUND:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new FileNotFoundException(errorMessage) : new FileNotFoundException();
+                break;
+            case ExceptionHelpers.ERROR_HANDLE_EOF:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new EndOfStreamException(errorMessage) : new EndOfStreamException();
+                break;
+            case ExceptionHelpers.ERROR_PATH_NOT_FOUND:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new DirectoryNotFoundException(errorMessage) : new DirectoryNotFoundException();
+                break;
+            case ExceptionHelpers.ERROR_STACK_OVERFLOW:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new StackOverflowException(errorMessage) : new StackOverflowException();
+                break;
+            case ExceptionHelpers.ERROR_BAD_FORMAT:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException();
+                break;
+            case ExceptionHelpers.ERROR_CANCELLED:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException();
+                break;
+            case ExceptionHelpers.ERROR_TIMEOUT:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException();
+                break;
+
+            default:
+                ex = !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, errorCode) : new COMException($"0x{errorCode:X8}", errorCode);
+                break;
+        }
+
+        // Ensure HResult matches.
+        ex.SetHResult(errorCode);
+
+        return ex;
     }
 
     /// <summary>
