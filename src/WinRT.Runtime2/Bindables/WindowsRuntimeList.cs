@@ -15,17 +15,17 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IList"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector"/>
-internal sealed class WindowsRuntimeBindableVector : WindowsRuntimeObject,
+internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
     IList,
     IWindowsRuntimeInterface<IList>,
     IWindowsRuntimeInterface<IEnumerable>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeBindableVector"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeList"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeBindableVector(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeList(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }

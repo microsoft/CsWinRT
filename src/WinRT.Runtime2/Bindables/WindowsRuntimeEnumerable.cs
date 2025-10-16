@@ -13,14 +13,14 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IEnumerable"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
-internal sealed class WindowsRuntimeBindableIterable : WindowsRuntimeObject, IEnumerable, IWindowsRuntimeInterface<IEnumerable>
+internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerable, IWindowsRuntimeInterface<IEnumerable>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeBindableIterable"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeEnumerable"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeBindableIterable(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeEnumerable(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }

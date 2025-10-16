@@ -15,7 +15,7 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IEnumerator"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
-internal sealed unsafe class WindowsRuntimeBindableIterator : WindowsRuntimeObject, IEnumerator, IWindowsRuntimeInterface<IEnumerator>
+internal sealed unsafe class WindowsRuntimeIterator : WindowsRuntimeObject, IEnumerator, IWindowsRuntimeInterface<IEnumerator>
 {
     /// <summary>
     /// Indicates whether the underlying enumerator has been initialized.
@@ -28,11 +28,11 @@ internal sealed unsafe class WindowsRuntimeBindableIterator : WindowsRuntimeObje
     private bool _hadCurrent = true;
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeBindableIterator"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeIterator"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeBindableIterator(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeIterator(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
