@@ -45,7 +45,7 @@ internal static unsafe class IBindableVectorMethods
     /// <returns><see langword="true"/> if the item is found; otherwise, <see langword="false"/>.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.indexof"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static bool IndexOf(WindowsRuntimeObjectReference thisReference, object value, out uint index)
+    public static bool IndexOf(WindowsRuntimeObjectReference thisReference, object? value, out uint index)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
         using WindowsRuntimeObjectReferenceValue valueValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
@@ -73,7 +73,7 @@ internal static unsafe class IBindableVectorMethods
     /// <param name="value">The item to set.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.setat"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, object value)
+    public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, object? value)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
         using WindowsRuntimeObjectReferenceValue valueValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
@@ -94,7 +94,7 @@ internal static unsafe class IBindableVectorMethods
     /// <param name="value">The item to insert.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.insertat"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, object value)
+    public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, object? value)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
         using WindowsRuntimeObjectReferenceValue valueValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
@@ -130,7 +130,7 @@ internal static unsafe class IBindableVectorMethods
     /// <param name="value">The item to append to the vector.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.append"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Append(WindowsRuntimeObjectReference thisReference, object value)
+    public static void Append(WindowsRuntimeObjectReference thisReference, object? value)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
         using WindowsRuntimeObjectReferenceValue valueValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
