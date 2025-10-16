@@ -13,27 +13,27 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE0008, IDE0046, IDE1006
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(WindowsRuntimeBindableVectorViewProxy),
-    typeof(ABI.WindowsRuntime.WindowsRuntimeBindableVectorViewProxy))]
+    typeof(IBindableVectorViewAdapter),
+    typeof(ABI.WindowsRuntime.IBindableVectorViewAdapter))]
 
 namespace ABI.WindowsRuntime;
 
 /// <summary>
-/// ABI type for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+/// ABI type for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
 [WindowsRuntimeClassName("Windows.UI.Xaml.Interop.IBindableVectorView")] // TODO: handle WinUI 3 as well
-[WindowsRuntimeBindableVectorViewProxyComWrappersMarshaller]
-file static class WindowsRuntimeBindableVectorViewProxy;
+[IBindableVectorViewAdapterComWrappersMarshaller]
+file static class IBindableVectorViewAdapter;
 
 /// <summary>
-/// Marshaller for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+/// Marshaller for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
 /// </summary>
-internal static unsafe class WindowsRuntimeBindableVectorViewProxyMarshaller
+internal static unsafe class IBindableVectorViewAdapterMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter? value)
     {
         if (value is null)
         {
@@ -48,9 +48,9 @@ internal static unsafe class WindowsRuntimeBindableVectorViewProxyMarshaller
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
 /// </summary>
-file struct WindowsRuntimeBindableVectorViewProxyInterfaceEntries
+file struct IBindableVectorViewAdapterInterfaceEntries
 {
     public ComInterfaceEntry IBindableVectorView;
     public ComInterfaceEntry IBindableEnumerable;
@@ -63,23 +63,23 @@ file struct WindowsRuntimeBindableVectorViewProxyInterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="WindowsRuntimeBindableVectorViewProxyInterfaceEntries"/>.
+/// The implementation of <see cref="IBindableVectorViewAdapterInterfaceEntries"/>.
 /// </summary>
-file static class WindowsRuntimeBindableVectorViewProxyInterfaceEntriesImpl
+file static class IBindableVectorViewAdapterInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="WindowsRuntimeBindableVectorViewProxyInterfaceEntries"/> value for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+    /// The <see cref="IBindableVectorViewAdapterInterfaceEntries"/> value for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly WindowsRuntimeBindableVectorViewProxyInterfaceEntries Entries;
+    public static readonly IBindableVectorViewAdapterInterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static WindowsRuntimeBindableVectorViewProxyInterfaceEntriesImpl()
+    static IBindableVectorViewAdapterInterfaceEntriesImpl()
     {
-        Entries.IBindableVectorView.IID = WindowsRuntimeBindableVectorViewProxyImpl.IID;
-        Entries.IBindableVectorView.Vtable = WindowsRuntimeBindableVectorViewProxyImpl.Vtable;
+        Entries.IBindableVectorView.IID = IBindableVectorViewAdapterImpl.IID;
+        Entries.IBindableVectorView.Vtable = IBindableVectorViewAdapterImpl.Vtable;
         Entries.IBindableEnumerable.IID = IEnumerableImpl.IID;
         Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
@@ -98,9 +98,9 @@ file static class WindowsRuntimeBindableVectorViewProxyInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
 /// </summary>
-file sealed unsafe class WindowsRuntimeBindableVectorViewProxyComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+file sealed unsafe class IBindableVectorViewAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -111,19 +111,19 @@ file sealed unsafe class WindowsRuntimeBindableVectorViewProxyComWrappersMarshal
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(WindowsRuntimeBindableVectorViewProxyInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(IBindableVectorViewAdapterInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(in WindowsRuntimeBindableVectorViewProxyInterfaceEntriesImpl.Entries);
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in IBindableVectorViewAdapterInterfaceEntriesImpl.Entries);
     }
 }
 
 /// <summary>
-/// The native implementation for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+/// The native implementation for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
 /// </summary>
-file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
+file static unsafe class IBindableVectorViewAdapterImpl
 {
     /// <summary>
-    /// The <see cref="IBindableVectorViewVftbl"/> value for the <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/> implementation.
+    /// The <see cref="IBindableVectorViewVftbl"/> value for the <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBindableVectorViewVftbl Vftbl;
@@ -131,7 +131,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static WindowsRuntimeBindableVectorViewProxyImpl()
+    static IBindableVectorViewAdapterImpl()
     {
         *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
@@ -141,7 +141,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/>.
+    /// Gets the IID for <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/>.
     /// </summary>
     public static ref readonly Guid IID
     {
@@ -150,7 +150,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the <see cref="global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy"/> implementation.
+    /// Gets a pointer to the <see cref="global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -169,7 +169,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter>((ComInterfaceDispatch*)thisPtr);
 
             object? item = unboxedValue.GetAt(index);
 
@@ -194,7 +194,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter>((ComInterfaceDispatch*)thisPtr);
 
             *size = unboxedValue.Size;
 
@@ -217,7 +217,7 @@ file static unsafe class WindowsRuntimeBindableVectorViewProxyImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.WindowsRuntimeBindableVectorViewProxy>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.IBindableVectorViewAdapter>((ComInterfaceDispatch*)thisPtr);
 
             object? target = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 

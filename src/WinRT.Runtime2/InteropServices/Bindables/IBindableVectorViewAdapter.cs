@@ -6,16 +6,15 @@ using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.getview"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview"/>
 [WindowsRuntimeManagedOnlyType]
-internal sealed class WindowsRuntimeBindableVectorViewProxy : IEnumerable
+internal sealed class IBindableVectorViewAdapter : IEnumerable
 {
     /// <summary>
     /// The wrapped <see cref="IList"/> instance that contains the items in the list.
@@ -23,11 +22,11 @@ internal sealed class WindowsRuntimeBindableVectorViewProxy : IEnumerable
     private readonly IList _list;
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeBindableVectorViewProxy"/> instance with the specified parameters.
+    /// Creates a <see cref="IBindableVectorViewAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="list">The <see cref="IList"/> instance to wrap.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="list"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeBindableVectorViewProxy(IList list)
+    public IBindableVectorViewAdapter(IList list)
     {
         ArgumentNullException.ThrowIfNull(list);
 
