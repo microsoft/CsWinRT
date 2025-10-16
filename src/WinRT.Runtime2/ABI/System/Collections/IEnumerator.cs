@@ -133,15 +133,12 @@ file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRunt
 public static unsafe class IEnumeratorMethods
 {
     /// <inheritdoc cref="global::System.Collections.IEnumerator.Current"/>
-    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator.current"/>
     public static object? Current(WindowsRuntimeObjectReference thisReference)
     {
         return IBindableIteratorMethods.Current(thisReference);
     }
 
     /// <inheritdoc cref="global::System.Collections.IEnumerator.MoveNext"/>
-    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool MoveNext(WindowsRuntimeObjectReference thisReference)
     {

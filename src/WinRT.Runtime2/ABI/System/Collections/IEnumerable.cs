@@ -133,8 +133,6 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 public static unsafe class IEnumerableMethods
 {
     /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
-    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable.first"/>
     public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
         return IBindableIterableMethods.First(thisReference);
