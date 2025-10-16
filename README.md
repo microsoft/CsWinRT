@@ -29,12 +29,6 @@ Generated C# source can be compiled into interop assemblies, similar to how [C++
 
 For additional documentation and walkthroughs, visit http://aka.ms/cswinrt.
 
-## Usage
-
-Install package from [NuGet](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT).
-
-Or you can build from the source code. See our [Contributor's Guide](CONTRIBUTING.md) for more information on build instructions.
-
 ## Contributing
 
 We welcome feedback and contributions! We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md).

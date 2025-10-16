@@ -15,14 +15,15 @@ Check both open and closed issues before filing a new one. If none matches your 
 ### When to File an Issue
 
 * Unsure if it’s a bug or feature request
-    * [File an Issue](https://github.com/microsoft/CsWinRT/issues/new/choose)
+    * → [File an Issue](https://github.com/microsoft/CsWinRT/issues/new/choose)
 * Have a question not answered in the docs
-    * → Use our [GitHub Discussions](https://github.com/microsoft/CsWinRT/discussions)
+    * → [Post a Discussion](https://github.com/microsoft/CsWinRT/discussions)
 * Want to propose or confirm a planned feature
+    * → [Post a Discussion](https://github.com/microsoft/CsWinRT/discussions)
 
 ### What to Describe
 
-* Versions of .NET, C#/WinRT, and SDK Projections
+* Versions of .NET, C#/WinRT, and SDK projections
 * Tools and IDEs used (e.g., VS 2022, VS Code)
 * Build version of Windows used
 * **Detailed reproduction steps** (most important)
@@ -31,7 +32,7 @@ Check both open and closed issues before filing a new one. If none matches your 
 
 > [!IMPORTANT]
 > **DO NOT** post "+1", "me too", or similar comments ー they just add noise to an issue.
-> If you don't have any additional info/context to add but would like to indicate that you're affected by the issue, upvote the original issue by clicking its 😊 button and hitting 👍 (+1) icon and post your context if necessary. This way we can actually measure how impactful an issue is.
+> If you don't have any additional info/context to add but would like to indicate that you're affected by the issue, upvote the original issue by reacting with 😊 or 👍 (+1) emoji and post your context if necessary. This way we can actually measure how impactful an issue is.
 
 ## Working on a Fix or Feature After Approvals
 
@@ -43,7 +44,7 @@ After your proposal is discussed and approved:
 2. Clone your fork
 3. Create and push a feature branch
 4. Implement your changes
-5. Validate your changes on your local
+5. Test your changes on your local
 6. Submit a Pull Request (PR)
 
 ### 2. Agree with CLA
@@ -55,7 +56,7 @@ Follow the bot’s instructions if prompted. You only need to complete this proc
 
 ### 3. Code Review
 
-Mark your PR as "Ready for Review" when it’s ready for feedback from the team and the community. It make take several review cycles to ensure correctness and stability.
+Mark your PR as "Ready for Review" when it’s ready for feedback from the team and the community. It may take several review cycles to ensure correctness and stability.
 
 ### 4. Merge
 
