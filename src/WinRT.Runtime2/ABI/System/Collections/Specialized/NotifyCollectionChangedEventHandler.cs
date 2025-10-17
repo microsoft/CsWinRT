@@ -53,7 +53,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in NotifyCollectionChangedEventHandlerImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -67,7 +67,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in NotifyCollectionChangedEventHandlerReferenceImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
@@ -112,7 +112,7 @@ file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallbac
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in NotifyCollectionChangedEventHandlerImpl.IID,
+            iid: in WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler,
             wrapperFlags: out wrapperFlags);
 
         return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(valueReference.Invoke);
@@ -151,9 +151,9 @@ file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
     /// </summary>
     static NotifyCollectionChangedEventHandlerInterfaceEntriesImpl()
     {
-        Entries.NotifyCollectionChangedEventHandler.IID = NotifyCollectionChangedEventHandlerImpl.IID;
+        Entries.NotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler;
         Entries.NotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerImpl.Vtable;
-        Entries.IReferenceOfNotifyCollectionChangedEventHandler.IID = NotifyCollectionChangedEventHandlerReferenceImpl.IID;
+        Entries.IReferenceOfNotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler;
         Entries.IReferenceOfNotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -196,7 +196,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value, in NotifyCollectionChangedEventHandlerReferenceImpl.IID)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler)!;
     }
 }
 
