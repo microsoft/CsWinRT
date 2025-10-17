@@ -21,7 +21,7 @@ var entries = new (string Name, string WUX, string MUX)[]
     ("IBindableVector", "Windows.UI.Xaml.Interop.IBindableVector", "Microsoft.UI.Xaml.Interop.IBindableVector"),
     ("IBindableVectorView", "Windows.UI.Xaml.Interop.IBindableVectorView", "Microsoft.UI.Xaml.Interop.IBindableVectorView"),
     ("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"),
-    ("PropertyChangedEventArgs", "Windows.UI.Xaml.Data.PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"),
+    ("PropertyChangedEventArgs", "Windows.UI.Xaml.Data.PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
 };
 
 for (int i = 0; i < entries.Length; i++)

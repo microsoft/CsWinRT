@@ -1,0 +1,104 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
+
+namespace ABI;
+
+/// <summary>
+/// IIDs for common WinRT interfaces.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class InterfaceIIDs
+{
+    /// <summary>The IID for <see cref="global::System.Collections.IEnumerable"/>.</summary>
+    public static ref readonly Guid IID_IEnumerable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IBindableIterable;
+    }
+
+    /// <summary>The IID for <see cref="global::System.Collections.IEnumerator"/>.</summary>
+    public static ref readonly Guid IID_IEnumerator
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IBindableIterator;
+    }
+
+    /// <summary>The IID for <see cref="global::System.Collections.IList"/>.</summary>
+    public static ref readonly Guid IID_IList
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IBindableVector;
+    }
+
+    /// <summary>The IID for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.</summary>
+    public static ref readonly Guid IID_INotifyCollectionChanged
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownXamlInterfaceIds.IID_INotifyCollectionChanged;
+    }
+
+    /// <summary>The IID for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.</summary>
+    public static ref readonly Guid IID_INotifyDataErrorInfo
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
+    }
+
+    /// <summary>The IID for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.</summary>
+    public static ref readonly Guid IID_INotifyPropertyChanged
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownXamlInterfaceIds.IID_INotifyPropertyChanged;
+    }
+
+    /// <summary>The IID for <see cref="global::System.IDisposable"/>.</summary>
+    public static ref readonly Guid IID_IDisposable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IDisposable;
+    }
+
+    /// <summary>The IID for <see cref="global::System.IServiceProvider"/>.</summary>
+    public static ref readonly Guid IID_IServiceProvider
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IServiceProvider;
+    }
+
+    /// <summary>The IID for <see cref="global::System.Windows.Input.ICommand"/>.</summary>
+    public static ref readonly Guid IID_ICommand
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_ICommand;
+    }
+
+    /// <summary>The IID for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.</summary>
+    public static ref readonly Guid IID_IVectorChangedEventArgs
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+    }
+
+    /// <summary>The IID for <see cref="global::Windows.Foundation.IAsyncAction"/>.</summary>
+    public static ref readonly Guid IID_IAsyncAction
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IAsyncAction;
+    }
+
+    /// <summary>The IID for <see cref="global::Windows.Foundation.IAsyncInfo"/>.</summary>
+    public static ref readonly Guid IID_IAsyncInfo
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+    }
+}

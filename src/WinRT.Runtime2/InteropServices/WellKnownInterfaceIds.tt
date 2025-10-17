@@ -137,7 +137,7 @@ var entries = new (string Name, string IID)[]
     ("MUX_IReferenceOfPropertyChangedEventHandler", "1EEAE0CB-8F57-5C37-A087-A55d46E2FE3F"),
     ("WUX_IReferenceOfPropertyChangedEventHandler", "B1A920A9-C2F2-5453-A53E-66B1294A8BFE"),
     ("MUX_IReferenceOfNotifyCollectionChangedEventHandler", "779D5A21-0E7d-5476-BB90-27FA3B4B8DE5"),
-    ("WUX_IReferenceOfNotifyCollectionChangedEventHandler", "A4FD5C6E-6549-59A9-86EF-5A490A1875D9"),
+    ("WUX_IReferenceOfNotifyCollectionChangedEventHandler", "A4FD5C6E-6549-59A9-86EF-5A490A1875D9")
 };
 
 for (int i = 0; i < entries.Length; i++)
