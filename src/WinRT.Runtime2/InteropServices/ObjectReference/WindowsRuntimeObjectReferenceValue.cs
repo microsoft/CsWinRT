@@ -137,7 +137,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     /// Similarly, using any other methods after <see cref="Dispose"/> is called <b>is also undefined behavior</b>.
     /// </para>
     /// <para>
-    /// This type is meant to primarily be used by generated marshalling code, or in very advanced scenarios.
+    /// This method is meant to primarily be used by generated marshalling code, or in very advanced scenarios.
     /// </para>
     /// </remarks>
     public void Dispose()
