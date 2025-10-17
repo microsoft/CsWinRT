@@ -290,10 +290,34 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// the <c>IRestrictedErrorInfo</c> infrastructure to better retrieve the resulting <c>HRESULT</c> value.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static HRESULT GetHRForException(Exception? exception)
+    public static HRESULT GetHRForException(Exception exception)
     {
-        // TODO
-        return 0;
+        int hr = exception.HResult;
+        try
+        {
+            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool _))
+            {
+                if (restrictedErrorObject != null)
+                {
+                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtr(), out hr);
+                    GC.KeepAlive(restrictedErrorObject);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // If we fail to get the hresult from the error info, we fallback to the exception hresult.
+            Debug.Assert(false, e.Message, e.StackTrace);
+        }
+
+        return hr switch
+        {
+            ExceptionHelpers.COR_E_OBJECTDISPOSED => ExceptionHelpers.RO_E_CLOSED,
+            ExceptionHelpers.COR_E_OPERATIONCANCELED => ExceptionHelpers.ERROR_CANCELLED,
+            ExceptionHelpers.COR_E_ARGUMENTOUTOFRANGE or ExceptionHelpers.COR_E_INDEXOUTOFRANGE => ExceptionHelpers.E_BOUNDS,
+            ExceptionHelpers.COR_E_TIMEOUT => ExceptionHelpers.ERROR_TIMEOUT,
+            _ => hr,
+        };
     }
 
     /// <summary>

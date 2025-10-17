@@ -269,9 +269,9 @@ internal static unsafe class ExceptionHelpers
 internal static class ExceptionExtensions
 {
     public static bool TryGetRestrictedLanguageErrorInfo(
-    this Exception ex,
-    out WindowsRuntimeObjectReference? restrictedErrorObject,
-    out bool isLanguageException)
+        this Exception ex,
+        out WindowsRuntimeObjectReference? restrictedErrorObject,
+        out bool isLanguageException)
     {
         restrictedErrorObject = null;
         isLanguageException = false;
