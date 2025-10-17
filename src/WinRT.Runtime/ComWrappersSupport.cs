@@ -413,16 +413,36 @@ namespace WinRT
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
-            // There are two scenarios where we want to support 'ICustomPropertyProvider':
+            // For AOT, there are two scenarios where we want to support 'ICustomPropertyProvider':
             //   - The user is explicitly implementing the interface on their type
             //   - The user is using '[GeneratedBindableCustomProperty]', which uses our internal CCW
+            // Otherwise, we keep the previous behavior and unconditionally include it.
             if (FeatureSwitches.EnableICustomPropertyProviderSupport && !hasUserImplementedICustomPropertyProviderInterface)
             {
-                entries.Add(new ComInterfaceEntry
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    IID = IID.IID_ICustomPropertyProvider,
-                    Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
-                });
+                    if (type.IsDefined(typeof(GeneratedBindableCustomPropertyAttribute), false))
+                    {
+                        entries.Add(new ComInterfaceEntry
+                        {
+                            IID = IID.IID_ICustomPropertyProvider,
+                            Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
+                        });
+                    }
+                }
+#endif
+
+#if NET
+                if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
+                {
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = IID.IID_ICustomPropertyProvider,
+                        Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
+                    });
+                }
             }
 
             entries.Add(new ComInterfaceEntry
