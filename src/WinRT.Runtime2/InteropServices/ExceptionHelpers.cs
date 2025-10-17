@@ -116,7 +116,7 @@ internal static unsafe class ExceptionHelpers
 
     // This is a helper method specifically to be used by exception propagation scenarios where we carefully
     // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
-    private static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, int hr)
+    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, int hr)
     {
         // Check the error info first for the language exception.
         Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hr);
@@ -218,7 +218,7 @@ internal static unsafe class ExceptionHelpers
             string restrictedError,
             string restrictedErrorReference,
             string restrictedCapabilitySid,
-            WindowsRuntimeObject restrictedErrorObject,
+            WindowsRuntimeObjectReference restrictedErrorObject,
             bool hasRestrictedLanguageErrorObject = false,
             Exception? internalGetGlobalErrorStateException = null)
     {
@@ -248,7 +248,7 @@ internal static unsafe class ExceptionHelpers
 
     internal static void AddExceptionDataForRestrictedErrorInfo(
         this Exception ex,
-        WindowsRuntimeObject restrictedErrorObject,
+        WindowsRuntimeObjectReference restrictedErrorObject,
         bool hasRestrictedLanguageErrorObject)
     {
         IDictionary dict = ex.Data;
@@ -263,37 +263,6 @@ internal static unsafe class ExceptionHelpers
 #endif
             dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
         }
-    }
-
-    internal static bool TryGetRestrictedLanguageErrorInfo(
-        this Exception ex,
-        out WindowsRuntimeObject? restrictedErrorObject,
-        out bool isLanguageException)
-    {
-        restrictedErrorObject = null;
-        isLanguageException = false;
-
-        IDictionary dict = ex.Data;
-        if (dict != null)
-        {
-            if (dict.Contains("__RestrictedErrorObjectReference"))
-            {
-#if NET
-                restrictedErrorObject = dict["__RestrictedErrorObjectReference"] as WindowsRuntimeObject;
-#else
-                    restrictedErrorObject = ((__RestrictedErrorObject)dict["__RestrictedErrorObjectReference"])?.RealErrorObject;
-#endif
-            }
-
-            if (dict.Contains("__HasRestrictedLanguageErrorObject"))
-            {
-                isLanguageException = (bool)dict["__HasRestrictedLanguageErrorObject"]!;
-            }
-
-            return restrictedErrorObject is not null;
-        }
-
-        return false;
     }
 }
 

@@ -32,7 +32,7 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
-        Exception ex;
+        Exception? ex;
         string description = string.Empty;
         string restrictedError = string.Empty;
         string restrictedErrorReference = string.Empty;
@@ -41,9 +41,10 @@ public static unsafe class RestrictedErrorInfo
         Exception internalGetGlobalErrorStateException;
 
         WindowsRuntimeObjectReference? restrictedErrorInfoToSave = default;
+        WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+
         try
         {
-            WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
             void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
             if (restrictedErrorInfoValuePtr != default)
             {
@@ -51,13 +52,13 @@ public static unsafe class RestrictedErrorInfo
                 {
                     try
                     {
-                        ex = GetLanguageException(languageErrorInfoPtr, hr);
+                        ex = ExceptionHelpers.GetLanguageException((void*)languageErrorInfoPtr, errorCode);
                         if (ex is not null)
                         {
-                            restoredExceptionFromGlobalState = true;
-                            if (associateErrorInfo)
+                            WindowsRuntimeObjectReference? errRef = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                            if (errRef != null)
                             {
-                                ex.AddExceptionDataForRestrictedErrorInfo(ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo), true);
+                                ex.AddExceptionDataForRestrictedErrorInfo(errRef, true);
                             }
                             return ex;
                         }
@@ -68,10 +69,10 @@ public static unsafe class RestrictedErrorInfo
                     }
                 }
 
-                restrictedErrorInfoToSave = ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo);
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
                 ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
                 restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
-                if (hr == hrLocal)
+                if (errorCode == hrLocal)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
                     // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
