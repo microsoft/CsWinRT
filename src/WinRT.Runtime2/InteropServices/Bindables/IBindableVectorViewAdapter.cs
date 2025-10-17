@@ -3,9 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -39,7 +36,8 @@ internal sealed class IBindableVectorViewAdapter : IEnumerable
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview.getat"/>
     public object? GetAt(uint index)
     {
-        ValidateIndex(index);
+        // The validation logic is the same as for 'IReadOnlyList<T>'
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, _list.Count);
 
         return _list[(int)index];
     }
@@ -65,24 +63,5 @@ internal sealed class IBindableVectorViewAdapter : IEnumerable
     public IEnumerator GetEnumerator()
     {
         return _list.GetEnumerator();
-    }
-
-    /// <summary>
-    /// Validates an input index value.
-    /// </summary>
-    /// <param name="index">The index value to validate.</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is out of range for <see cref="_list"/>.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ValidateIndex(uint index)
-    {
-        if (index >= (uint)_list.Count)
-        {
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowArgumentOutOfRangeException()
-                => throw new ArgumentOutOfRangeException(nameof(index), "ArgumentOutOfRange_IndexLargerThanMaxValue") { HResult = WellKnownErrorCodes.E_BOUNDS };
-
-            ThrowArgumentOutOfRangeException();
-        }
     }
 }
