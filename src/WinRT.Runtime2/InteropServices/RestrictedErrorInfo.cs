@@ -430,8 +430,18 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>
     /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
-    public static void ReportUnhandledError(Exception exception)
+    public static unsafe void ReportUnhandledError(Exception exception)
     {
-        // TODO
+        SetErrorInfo(exception);
+        if (ExceptionHelpers.roReportUnhandledError != null)
+        {
+            WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+            void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
+            if (restrictedErrorInfoValuePtr != default)
+            {
+                _ = ExceptionHelpers.roReportUnhandledError(restrictedErrorInfoValuePtr);
+                restrictedErrorInfoValue.Dispose();
+            }
+        }
     }
 }
