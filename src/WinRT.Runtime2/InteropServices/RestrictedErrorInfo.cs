@@ -292,6 +292,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception exception)
     {
+        if (exception == null)
+        {
+            throw new ArgumentNullException("exception");
+        }
         int hr = exception.HResult;
         try
         {
