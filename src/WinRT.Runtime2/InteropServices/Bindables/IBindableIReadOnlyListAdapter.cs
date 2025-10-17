@@ -10,8 +10,12 @@ namespace WindowsRuntime.InteropServices;
 /// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.getview"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview"/>
+/// <remarks>
+/// There is no non-generic <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type in .NET, however this type
+/// still uses "IReadOnlyList" in its name to match the naming convention of adapter types matching .NET type names.
+/// </remarks>
 [WindowsRuntimeManagedOnlyType]
-internal sealed class IBindableVectorViewAdapter : IEnumerable
+internal sealed class IBindableIReadOnlyListAdapter : IEnumerable
 {
     /// <summary>
     /// The wrapped <see cref="IList"/> instance that contains the items in the list.
@@ -19,11 +23,11 @@ internal sealed class IBindableVectorViewAdapter : IEnumerable
     private readonly IList _list;
 
     /// <summary>
-    /// Creates a <see cref="IBindableVectorViewAdapter"/> instance with the specified parameters.
+    /// Creates a <see cref="IBindableIReadOnlyListAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="list">The <see cref="IList"/> instance to wrap.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="list"/> is <see langword="null"/>.</exception>
-    public IBindableVectorViewAdapter(IList list)
+    public IBindableIReadOnlyListAdapter(IList list)
     {
         ArgumentNullException.ThrowIfNull(list);
 
