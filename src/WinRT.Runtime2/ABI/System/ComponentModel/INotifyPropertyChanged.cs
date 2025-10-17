@@ -122,15 +122,6 @@ public static unsafe class INotifyPropertyChangedImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="INotifyPropertyChanged"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_INotifyPropertyChanged;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="INotifyPropertyChanged"/> implementation.
     /// </summary>
     public static nint Vtable

@@ -154,15 +154,6 @@ public static unsafe class IEnumerableImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.Collections.IEnumerable"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableIterable;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="global::System.Collections.IEnumerable"/> implementation.
     /// </summary>
     public static nint Vtable

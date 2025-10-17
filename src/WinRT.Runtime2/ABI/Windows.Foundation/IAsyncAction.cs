@@ -195,15 +195,6 @@ public static unsafe class IAsyncActionImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="IAsyncAction"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAsyncAction;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="IAsyncAction"/> implementation.
     /// </summary>
     public static nint Vtable

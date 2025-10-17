@@ -234,15 +234,6 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler;
-    }
-
-    /// <summary>
     /// Gets a pointer to the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
     /// </summary>
     public static nint Vtable
@@ -306,15 +297,6 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Value = &get_Value;
-    }
-
-    /// <summary>
-    /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler;
     }
 
     /// <summary>

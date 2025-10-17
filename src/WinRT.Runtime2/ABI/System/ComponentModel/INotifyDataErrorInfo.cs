@@ -177,15 +177,6 @@ public static unsafe class INotifyDataErrorInfoImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="INotifyDataErrorInfo"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="INotifyDataErrorInfo"/> implementation.
     /// </summary>
     public static nint Vtable

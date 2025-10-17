@@ -78,9 +78,9 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
     /// </summary>
     static BindableIReadOnlyListAdapterInterfaceEntriesImpl()
     {
-        Entries.IBindableVectorView.IID = BindableIReadOnlyListAdapterImpl.IID;
+        Entries.IBindableVectorView.IID = WellKnownInterfaceIds.IID_IBindableVectorView;
         Entries.IBindableVectorView.Vtable = BindableIReadOnlyListAdapterImpl.Vtable;
-        Entries.IBindableEnumerable.IID = IEnumerableImpl.IID;
+        Entries.IBindableEnumerable.IID = WellKnownInterfaceIds.IID_IBindableIterable;
         Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
@@ -138,15 +138,6 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
         Vftbl.GetAt = &GetAt;
         Vftbl.get_Size = &get_Size;
         Vftbl.IndexOf = &IndexOf;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableVectorView;
     }
 
     /// <summary>

@@ -123,15 +123,6 @@ public static unsafe class INotifyCollectionChangedImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="INotifyCollectionChanged"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_INotifyCollectionChanged;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="INotifyCollectionChanged"/> implementation.
     /// </summary>
     public static nint Vtable

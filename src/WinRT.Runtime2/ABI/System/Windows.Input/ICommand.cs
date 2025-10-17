@@ -154,15 +154,6 @@ public static unsafe class ICommandImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="ICommand"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_ICommand;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="ICommand"/> implementation.
     /// </summary>
     public static nint Vtable

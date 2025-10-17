@@ -214,15 +214,6 @@ file static unsafe class AsyncActionCompletedHandlerImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="AsyncActionCompletedHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_AsyncActionCompletedHandler;
-    }
-
-    /// <summary>
     /// Gets a pointer to the <see cref="AsyncActionCompletedHandler"/> implementation.
     /// </summary>
     public static nint Vtable
@@ -289,15 +280,6 @@ file static unsafe class AsyncActionCompletedHandlerReferenceImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Value = &get_Value;
-    }
-
-    /// <summary>
-    /// Gets the IID for <c>IReference`1</c> of <see cref="AsyncActionCompletedHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler;
     }
 
     /// <summary>

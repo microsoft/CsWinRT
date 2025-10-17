@@ -233,15 +233,6 @@ file static unsafe class PropertyChangedEventHandlerImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_PropertyChangedEventHandler;
-    }
-
-    /// <summary>
     /// Gets a pointer to the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
     /// </summary>
     public static nint Vtable
@@ -305,15 +296,6 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Value = &get_Value;
-    }
-
-    /// <summary>
-    /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownXamlInterfaceIds.IID_IReferenceOfPropertyChangedEventHandler;
     }
 
     /// <summary>
