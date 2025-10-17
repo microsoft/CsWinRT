@@ -290,7 +290,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// the <c>IRestrictedErrorInfo</c> infrastructure to better retrieve the resulting <c>HRESULT</c> value.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static HRESULT GetHRForException(Exception exception)
+    public static HRESULT GetHRForException(Exception? exception)
     {
         if (exception == null)
         {
