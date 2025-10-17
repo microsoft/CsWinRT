@@ -7,11 +7,10 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <summary>IIDs for XAML interfaces that differ between UWP XAML and WinUI 3..</summary>
+/// <summary>IIDs for XAML interfaces that differ between UWP XAML and WinUI 3.</summary>
 internal static class WellKnownXamlInterfaceIds
 {
 <#
