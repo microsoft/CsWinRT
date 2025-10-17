@@ -70,17 +70,6 @@ public static unsafe class IListMarshaller
 /// </summary>
 file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
-    /// <summary>
-    /// Gets the runtime class name for <see cref="global::System.Collections.IList"/>.
-    /// </summary>
-    private static string RuntimeClassName
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? "Windows.UI.Xaml.Interop.IBindableVector"
-            : "Microsoft.UI.Xaml.Interop.IBindableVector";
-    }
-
     /// <inheritdoc/>
 	public static unsafe bool TryCreateObject(
         void* value,
@@ -88,7 +77,7 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags)
     {
-        if (runtimeClassName.SequenceEqual(RuntimeClassName))
+        if (runtimeClassName.SequenceEqual(WellKnownXamlRuntimeClassNames.IBindableVector))
         {
             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                 externalComObject: value,

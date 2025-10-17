@@ -216,15 +216,8 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// The singleton instance for the activation factory.
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
-        runtimeClassName: RuntimeClassName,
+        runtimeClassName: WellKnownXamlRuntimeClassNames.NotifyCollectionChangedEventArgs,
         iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChangedEventArgsFactory);
-
-    /// <summary>
-    /// Gets the runtime class name for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static string RuntimeClassName => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"
-        : "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs";
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.

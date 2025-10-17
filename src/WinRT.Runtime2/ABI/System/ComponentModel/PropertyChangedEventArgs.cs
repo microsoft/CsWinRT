@@ -118,15 +118,8 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
     /// The singleton instance for the activation factory.
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
-        runtimeClassName: RuntimeClassName,
+        runtimeClassName: WellKnownXamlRuntimeClassNames.PropertyChangedEventArgs,
         iid: in WellKnownXamlInterfaceIds.IID_PropertyChangedEventArgsRuntimeClassFactory);
-
-    /// <summary>
-    /// Gets the runtime class name for <see cref="PropertyChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static string RuntimeClassName => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? "Windows.UI.Xaml.Data.PropertyChangedEventArgs"
-        : "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs";
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.

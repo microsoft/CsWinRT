@@ -69,17 +69,6 @@ public static unsafe class IEnumeratorMarshaller
 /// </summary>
 file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
-    /// <summary>
-    /// Gets the runtime class name for <see cref="global::System.Collections.IEnumerator"/>.
-    /// </summary>
-    private static string RuntimeClassName
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? "Windows.UI.Xaml.Interop.IBindableIterator"
-            : "Microsoft.UI.Xaml.Interop.IBindableIterator";
-    }
-
     /// <inheritdoc/>
 	public static unsafe bool TryCreateObject(
         void* value,
@@ -87,7 +76,7 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags)
     {
-        if (runtimeClassName.SequenceEqual(RuntimeClassName))
+        if (runtimeClassName.SequenceEqual(WellKnownXamlRuntimeClassNames.IBindableIterator))
         {
             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                 externalComObject: value,
