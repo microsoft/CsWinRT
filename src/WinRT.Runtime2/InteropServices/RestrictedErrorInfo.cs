@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0060 // TODO
 
@@ -328,9 +329,100 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// Stores info on the input exception through the <c>IRestrictedErrorInfo</c> infrastructure, to retrieve it later.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
-    public static void SetErrorInfo(Exception exception)
+    public static unsafe void SetErrorInfo(Exception exception)
     {
-        // TODO
+        try
+        {
+            if (ExceptionHelpers.getRestrictedErrorInfo != null && ExceptionHelpers.setRestrictedErrorInfo != null && ExceptionHelpers.roOriginateLanguageException != null)
+            {
+                // If the exception has an IRestrictedErrorInfo, use that as our error info
+                // to allow to propagate the original error through WinRT with the end to end information
+                // rather than losing that context.
+                if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
+                {
+                    // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
+                    // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
+                    if (!isLanguageException && restrictedErrorObject != null &&
+                        Marshal.QueryInterface((nint)restrictedErrorObject.GetThisPtrUnsafe(), WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2, out nint languageErrorInfo2Ptr) >= 0)
+                    {
+                        try
+                        {
+                            global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.CapturePropagationContext((void*)languageErrorInfo2Ptr, exception);
+                        }
+                        finally
+                        {
+                            Marshal.Release(languageErrorInfo2Ptr);
+                        }
+                    }
+                    else if (isLanguageException)
+                    {
+                        // Remove object reference to avoid cycles between error info holding exception
+                        // and exception holding error info.  We currently can't avoid this cycle
+                        // when the C# exception is caught on the C# side.
+                        exception.Data.Remove("__RestrictedErrorObjectReference");
+                        exception.Data.Remove("__HasRestrictedLanguageErrorObject");
+                    }
+                    if (restrictedErrorObject != null)
+                    {
+                        ExceptionHelpers.setRestrictedErrorInfo(restrictedErrorObject.GetThisPtrUnsafe());
+                        GC.KeepAlive(restrictedErrorObject);
+                    }
+                }
+                else
+                {
+                    string message = exception.Message;
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        Type exceptionType = exception.GetType();
+                        if (exceptionType != null)
+                        {
+                            message = exceptionType.Name;
+                        }
+                    }
+
+                    HSTRING_HEADER* header = default;
+                    HSTRING* hstring = default;
+
+                    fixed (char* lpMessage = message)
+                    {
+                        if (WindowsRuntimeImports.WindowsCreateStringReference(
+                            sourceString: lpMessage,
+                            length: (uint)message.Length,
+                            hstringHeader: header,
+                            @string: hstring) != 0)
+                        {
+                            hstring = null;
+                        }
+
+#if NET
+                        WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                        try
+                        {
+                            ExceptionHelpers.roOriginateLanguageException(GetHRForException(exception), hstring, managedExceptionWrapper.GetThisPtrUnsafe());
+                        }
+                        finally
+                        {
+                            Marshal.Release((nint)managedExceptionWrapper.DetachThisPtrUnsafe());
+                        }
+#else
+                            using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
+                            roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
+#endif
+                    }
+                }
+            }
+            else
+            {
+                ManagedExceptionErrorInfo iErrorInfo = new(exception);
+                WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedExceptionErrorInfo(exception));
+                WindowsRuntimeImports.SetErrorInfo(0, managedExceptionWrapper.GetThisPtrUnsafe());
+            }
+        }
+        catch (Exception e)
+        {
+            // If we fail to set the error info, we continue on reporting the original exception.
+            Debug.Assert(false, e.Message, e.StackTrace);
+        }
     }
 
     /// <summary>
