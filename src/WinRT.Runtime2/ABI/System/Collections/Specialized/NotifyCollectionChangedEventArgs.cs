@@ -191,11 +191,10 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;
-
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr: value,
+            iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChangedEventArgs,
+            pvObject: out void* result).Assert();
 
         try
         {
@@ -216,18 +215,9 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(RuntimeClassName, in IID);
-
-    /// <summary>
-    /// Gets the IID for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
-    }
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+        runtimeClassName: RuntimeClassName,
+        iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChangedEventArgsFactory);
 
     /// <summary>
     /// Gets the runtime class name for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.

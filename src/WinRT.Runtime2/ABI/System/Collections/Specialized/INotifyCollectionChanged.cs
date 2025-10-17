@@ -31,9 +31,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyCollectionChanged>.ConvertToUnmanaged(
             value: value,
-            iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-                : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged);
+            iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChanged);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -130,9 +128,7 @@ public static unsafe class INotifyCollectionChangedImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+        get => ref WellKnownXamlInterfaceIds.IID_INotifyCollectionChanged;
     }
 
     /// <summary>

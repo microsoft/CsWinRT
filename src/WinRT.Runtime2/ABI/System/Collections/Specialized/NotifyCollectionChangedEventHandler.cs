@@ -239,9 +239,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+        get => ref WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler;
     }
 
     /// <summary>
@@ -316,9 +314,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+        get => ref WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler;
     }
 
     /// <summary>

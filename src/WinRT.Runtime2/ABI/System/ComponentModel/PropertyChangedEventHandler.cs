@@ -238,9 +238,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+        get => ref WellKnownXamlInterfaceIds.IID_PropertyChangedEventHandler;
     }
 
     /// <summary>
@@ -315,9 +313,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+        get => ref WellKnownXamlInterfaceIds.IID_IReferenceOfPropertyChangedEventHandler;
     }
 
     /// <summary>
