@@ -7,9 +7,8 @@ using System.Collections;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.getview"/>.
+/// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector"/>.
 /// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview"/>
 /// <remarks>
 /// There is no non-generic <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type in .NET, however this type
 /// still uses "IReadOnlyList" in its name to match the naming convention of adapter types matching .NET type names.
@@ -35,32 +34,18 @@ internal sealed class BindableIReadOnlyListAdapter : IEnumerable
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview.size"/>
-    public uint Size => (uint)_list.Count;
+    public uint Size => BindableIListAdapter.Size(_list);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview.getat"/>
     public object? GetAt(uint index)
     {
-        // The validation logic is the same as for 'IReadOnlyList<T>'
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, _list.Count);
-
-        return _list[(int)index];
+        return BindableIListAdapter.GetAt(_list, index);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview.indexof"/>
     public bool IndexOf(object? value, out uint index)
     {
-        int result = _list.IndexOf(value);
-
-        if (result == -1)
-        {
-            index = 0;
-
-            return false;
-        }
-
-        index = (uint)result;
-
-        return true;
+        return BindableIListAdapter.IndexOf(_list, value, out index);
     }
 
     /// <inheritdoc/>
