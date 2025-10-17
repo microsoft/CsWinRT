@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
 #pragma warning disable IDE0060 // TODO
@@ -20,6 +22,7 @@ public static unsafe class RestrictedErrorInfo
     /// Converts an <c>HRESULT</c> error code to a corresponding <see cref="Exception"/> object.
     /// </summary>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
+    /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
     /// <returns>
     /// An <see cref="Exception"/> instance that represents the converted <c>HRESULT</c>,
     /// or <see langword="null"/> if the HRESULT value doesn't represent an error code.
@@ -30,8 +33,9 @@ public static unsafe class RestrictedErrorInfo
     /// calls (both in managed and native code). This improves the debugging experience.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static Exception? GetExceptionForHR(HRESULT errorCode)
+    public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
+        restoredExceptionFromGlobalState = false;
         Exception? ex;
         string description = string.Empty;
         string restrictedError = string.Empty;
@@ -55,6 +59,7 @@ public static unsafe class RestrictedErrorInfo
                         ex = ExceptionHelpers.GetLanguageException((void*)languageErrorInfoPtr, errorCode);
                         if (ex is not null)
                         {
+                            restoredExceptionFromGlobalState = true;
                             WindowsRuntimeObjectReference? errRef = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
                             if (errRef != null)
                             {
@@ -253,26 +258,26 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// <seealso cref="Marshal.ThrowExceptionForHR(int)"/>
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
-        //        if (errorCode < 0)
-        //        {
-        //            Throw(errorCode);
-        //        }
+        if (errorCode < 0)
+        {
+            Throw(errorCode);
+        }
 
-        //        [MethodImpl(MethodImplOptions.NoInlining)]
-        //        static void Throw(int errorCode)
-        //        {
-        //#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-        //            Exception ex = GetExceptionForHR(errorCode);
-        //#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-        //            if (restoredExceptionFromGlobalState)
-        //            {
-        //                ExceptionDispatchInfo.Capture(ex).Throw();
-        //            }
-        //            else
-        //            {
-        //                throw ex;
-        //            }
-        //        }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Throw(int errorCode)
+        {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+            Exception? ex = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            if (restoredExceptionFromGlobalState)
+            {
+                ExceptionDispatchInfo.Capture(ex).Throw();
+            }
+            else
+            {
+                throw ex;
+            }
+        }
     }
 
     /// <summary>
