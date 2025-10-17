@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -32,7 +33,81 @@ public static unsafe class RestrictedErrorInfo
     public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
         Exception ex;
+        string description = string.Empty;
+        string restrictedError = string.Empty;
+        string restrictedErrorReference = string.Empty;
+        string restrictedCapabilitySid = string.Empty;
         string errorMessage = string.Empty;
+        Exception internalGetGlobalErrorStateException;
+
+        WindowsRuntimeObjectReference? restrictedErrorInfoToSave = default;
+        try
+        {
+            WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+            void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
+            if (restrictedErrorInfoValuePtr != default)
+            {
+                if (Marshal.QueryInterface((IntPtr)restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo, out nint languageErrorInfoPtr) >= 0)
+                {
+                    try
+                    {
+                        ex = GetLanguageException(languageErrorInfoPtr, hr);
+                        if (ex is not null)
+                        {
+                            restoredExceptionFromGlobalState = true;
+                            if (associateErrorInfo)
+                            {
+                                ex.AddExceptionDataForRestrictedErrorInfo(ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo), true);
+                            }
+                            return ex;
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.Release(languageErrorInfoPtr);
+                    }
+                }
+
+                restrictedErrorInfoToSave = ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo);
+                ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
+                restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                if (hr == hrLocal)
+                {
+                    // For cross language WinRT exceptions, general information will be available in the description,
+                    // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
+                    // in the restrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
+
+                    // need to concatinate them to produce the final exception message.
+                    if (!string.IsNullOrEmpty(description))
+                    {
+                        errorMessage += description;
+
+                        if (!string.IsNullOrEmpty(restrictedError))
+                        {
+                            errorMessage += Environment.NewLine;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(restrictedError))
+                    {
+                        errorMessage += restrictedError;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // If we fail to get the error info or the exception from it,
+            // we fallback to using the hresult to create the exception.
+            // But we do store it in the exception data for debugging purposes.
+            Debug.Assert(false, e.Message, e.StackTrace);
+            internalGetGlobalErrorStateException = e;
+        }
+        finally
+        {
+            restrictedErrorInfoValue.Dispose();
+        }
+
         switch (errorCode)
         {
             case ExceptionHelpers.E_CHANGED_STATE:
@@ -177,7 +252,26 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     /// <seealso cref="Marshal.ThrowExceptionForHR(int)"/>
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
-        // TODO
+        //        if (errorCode < 0)
+        //        {
+        //            Throw(errorCode);
+        //        }
+
+        //        [MethodImpl(MethodImplOptions.NoInlining)]
+        //        static void Throw(int errorCode)
+        //        {
+        //#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+        //            Exception ex = GetExceptionForHR(errorCode);
+        //#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+        //            if (restoredExceptionFromGlobalState)
+        //            {
+        //                ExceptionDispatchInfo.Capture(ex).Throw();
+        //            }
+        //            else
+        //            {
+        //                throw ex;
+        //            }
+        //        }
     }
 
     /// <summary>

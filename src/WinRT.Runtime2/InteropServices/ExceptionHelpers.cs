@@ -3,13 +3,16 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0051 // TODO
 
-internal class ExceptionHelpers
+internal static unsafe class ExceptionHelpers
 {
     internal const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
     internal const int COR_E_OPERATIONCANCELED = unchecked((int)0x8013153b);
@@ -54,8 +57,8 @@ internal class ExceptionHelpers
 
     private static unsafe bool Initialize()
     {
-        IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-        if (winRTErrorModule != IntPtr.Zero)
+        void* winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", null, (uint)DllImportSearchPath.System32);
+        if (winRTErrorModule != null)
         {
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
             ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
@@ -70,10 +73,10 @@ internal class ExceptionHelpers
         }
         else
         {
-            winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
+            winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", null, (uint)DllImportSearchPath.System32);
         }
 
-        if (winRTErrorModule != IntPtr.Zero)
+        if (winRTErrorModule != null)
         {
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
             ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
@@ -110,33 +113,103 @@ internal class ExceptionHelpers
 
         return new WindowsRuntimeObjectReferenceValue(restrictedErrorInfoPtr);
     }
-}
 
-internal static class ExceptionExtensions
-{
-    public static void SetHResult(this Exception ex, int value)
+    // This is a helper method specifically to be used by exception propagation scenarios where we carefully
+    // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
+    private static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, int hr)
     {
-#if !NET
-            ex.GetType().GetProperty("HResult").SetValue(ex, value);
-#else
-        ex.HResult = value;
-#endif
+        // Check the error info first for the language exception.
+        Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hr);
+        if (exception is not null)
+        {
+            return exception;
+        }
+
+        // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
+        if (Marshal.QueryInterface((nint)languageErrorInfoPtr, WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2, out nint languageErrorInfo2Ptr) >= 0)
+        {
+            void* currentLanguageExceptionErrorInfo2Ptr = default;
+            try
+            {
+                currentLanguageExceptionErrorInfo2Ptr
+                    = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead((void*)languageErrorInfo2Ptr);
+                while (currentLanguageExceptionErrorInfo2Ptr != default)
+                {
+                    Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
+                    if (propagatedException is not null)
+                    {
+                        return propagatedException;
+                    }
+
+                    void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
+                    currentLanguageExceptionErrorInfo2Ptr = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2Ptr);
+                    _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
+                }
+            }
+            finally
+            {
+                MarshalExtensions.ReleaseIfNotNull(currentLanguageExceptionErrorInfo2Ptr);
+                _ = Marshal.Release(languageErrorInfo2Ptr);
+            }
+        }
+
+        return null;
     }
 
-    public static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
+    private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
     {
-        Exception e;
-        if (innerException != null)
+        void* languageExceptionPtr = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr);
+        if (languageExceptionPtr != default)
         {
-            string message = innerException.Message ?? messageResource;
-            e = new Exception(message, innerException);
+            try
+            {
+                if (WindowsRuntimeMarshal.IsReferenceToManagedObject(languageExceptionPtr))
+                {
+                    Exception ex = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
+                    //var ex = ComWrappersSupport.FindObject<Exception>(languageExceptionPtr);
+                    if (GetHRForException(ex) == hr)
+                    {
+                        return ex;
+                    }
+                }
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)languageExceptionPtr);
+            }
         }
-        else
+
+        return null;
+    }
+
+    public static unsafe int GetHRForException(Exception ex)
+    {
+        int hr = ex.HResult;
+        try
         {
-            e = new Exception(messageResource);
+            if (ex.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool _))
+            {
+                if (restrictedErrorObject != null)
+                {
+                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtrUnsafe(), out hr);
+                    GC.KeepAlive(restrictedErrorObject);
+                }
+            }
         }
-        e.SetHResult(hresult);
-        return e;
+        catch (Exception e)
+        {
+            // If we fail to get the hresult from the error info, we fallback to the exception hresult.
+            Debug.Assert(false, e.Message, e.StackTrace);
+        }
+
+        return hr switch
+        {
+            COR_E_OBJECTDISPOSED => RO_E_CLOSED,
+            COR_E_OPERATIONCANCELED => ERROR_CANCELLED,
+            COR_E_ARGUMENTOUTOFRANGE or COR_E_INDEXOUTOFRANGE => E_BOUNDS,
+            COR_E_TIMEOUT => ERROR_TIMEOUT,
+            _ => hr,
+        };
     }
 
     public static void AddExceptionDataForRestrictedErrorInfo(
@@ -224,75 +297,105 @@ internal static class ExceptionExtensions
     }
 }
 
-internal static partial class Platform
+internal static class ExceptionExtensions
 {
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
+    public static bool TryGetRestrictedLanguageErrorInfo(
+    this Exception ex,
+    out WindowsRuntimeObjectReference? restrictedErrorObject,
+    out bool isLanguageException)
+    {
+        restrictedErrorObject = null;
+        isLanguageException = false;
 
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern int CoDecrementMTAUsage(IntPtr cookie);
+        IDictionary dict = ex.Data;
+        if (dict != null)
+        {
+            if (dict.Contains("__RestrictedErrorObjectReference"))
+            {
+#if NET
+                restrictedErrorObject = dict["__RestrictedErrorObjectReference"] as WindowsRuntimeObjectReference;
+#else
+                restrictedErrorObject = ((__RestrictedErrorObject)dict["__RestrictedErrorObjectReference"])?.RealErrorObject;
+#endif
+            }
 
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
+            if (dict.Contains("__HasRestrictedLanguageErrorObject"))
+            {
+                isLanguageException = (bool)dict["__HasRestrictedLanguageErrorObject"]!;
+            }
 
-    [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
-    public static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
+            return restrictedErrorObject is not null;
+        }
 
-    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-    public static extern unsafe int WindowsCreateString(ushort* sourceString, int length, IntPtr* hstring);
+        return false;
+    }
 
-    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-    public static extern unsafe int WindowsCreateStringReference(
-        ushort* sourceString,
-        int length,
-        IntPtr* hstring_header,
-        IntPtr* hstring);
+    public static void SetHResult(this Exception ex, int value)
+    {
+#if !NET
+            ex.GetType().GetProperty("HResult").SetValue(ex, value);
+#else
+        ex.HResult = value;
+#endif
+    }
 
-    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-    public static extern int WindowsDeleteString(IntPtr hstring);
+    public static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
+    {
+        Exception e;
+        if (innerException != null)
+        {
+            string message = innerException.Message ?? messageResource;
+            e = new Exception(message, innerException);
+        }
+        else
+        {
+            e = new Exception(messageResource);
+        }
+        e.SetHResult(hresult);
+        return e;
+    }
+}
 
-    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-    public static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+internal static class MarshalExtensions
+{
+    /// <summary>
+    /// Releases a COM object, if not <see langword="null"/>.
+    /// </summary>
+    /// <param name="pUnk">The input COM object to release.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void ReleaseIfNotNull(void* pUnk)
+    {
+        if (pUnk == null)
+        {
+            return;
+        }
 
-    [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
-    public static extern unsafe int RoGetAgileReference(uint options, Guid* iid, IntPtr unknown, IntPtr* agileReference);
+        _ = ((delegate* unmanaged[Stdcall]<void*, int>)(*(*(void***)pUnk + 2 /* IUnknown.Release slot */)))(pUnk);
+    }
 
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+    public static void Dispose(this GCHandle handle)
+    {
+        if (handle.IsAllocated)
+        {
+            handle.Free();
+        }
+    }
 
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
-
-    [DllImport("oleaut32.dll")]
-    public static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
-
-    [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static extern unsafe int CoCreateFreeThreadedMarshaler(IntPtr outer, IntPtr* marshalerPtr);
-
-    [DllImport("kernel32.dll")]
-    public static extern unsafe uint FormatMessageW(uint dwFlags, void* lpSource, uint dwMessageId, uint dwLanguageId, char** lpBuffer, uint nSize, void* pArguments);
-
-    [DllImport("kernel32.dll")]
-    public static extern unsafe void* LocalFree(void* hMem);
+#if !NET
+        public static unsafe ref readonly char GetPinnableReference(this string str)
+        {
+            fixed (char* p = str)
+            {
+                return ref *p;
+            }
+        }
+#endif
 }
 
 // Handcrafted P/Invoke with TFM-specific handling, or thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
 internal partial class Platform
 {
-    public static bool FreeLibrary(IntPtr moduleHandle)
-    {
-#if NET8_0_OR_GREATER
-        return LibraryImportStubs.FreeLibrary(moduleHandle);
-#else
-            return FreeLibrary(moduleHandle);
-
-            [DllImport("kernel32.dll", SetLastError = true)]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool FreeLibrary(IntPtr moduleHandle);
-#endif
-    }
-
-    public static unsafe IntPtr TryGetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
+    public static unsafe void* TryGetProcAddress(void* moduleHandle, ReadOnlySpan<byte> functionName)
     {
         fixed (byte* lpFunctionName = functionName)
         {
@@ -302,24 +405,24 @@ internal partial class Platform
                 return GetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
 
                 [DllImport("kernel32.dll", SetLastError = true)]
-                static extern unsafe IntPtr GetProcAddress(IntPtr nativeModuleHandle, sbyte* nativeFunctionName);
+                static extern unsafe void* GetProcAddress(void* nativeModuleHandle, sbyte* nativeFunctionName);
 #endif
         }
     }
 
-    public static IntPtr GetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
+    public static unsafe void* GetProcAddress(void* moduleHandle, ReadOnlySpan<byte> functionName)
     {
-        IntPtr functionPtr = TryGetProcAddress(moduleHandle, functionName);
+        void* functionPtr = TryGetProcAddress(moduleHandle, functionName);
 
-        if (functionPtr == IntPtr.Zero)
+        if (functionPtr == null)
         {
-            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
         }
 
         return functionPtr;
     }
 
-    public static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
+    public static unsafe void* LoadLibraryExW(string fileName, void* fileHandle, uint flags)
     {
         fixed (char* lpFileName = fileName)
         {
@@ -329,7 +432,7 @@ internal partial class Platform
                 return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
 
                 [DllImport("kernel32.dll", SetLastError = true)]
-                static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
+                static unsafe extern void* LoadLibraryExW(ushort* fileName, void* fileHandle, uint flags);
 #endif
         }
     }
@@ -340,31 +443,10 @@ internal partial class Platform
 // the last P/Invoke errors, etc.) on .NET 6 as well ([LibraryImport] was only introduced in .NET 7).
 internal static class LibraryImportStubs
 {
-    public static bool FreeLibrary(IntPtr moduleHandle)
+    public static unsafe void* GetProcAddress(void* moduleHandle, sbyte* functionName)
     {
         int lastError;
-        bool returnValue;
-        int nativeReturnValue;
-        {
-            Marshal.SetLastSystemError(0);
-            nativeReturnValue = PInvoke(moduleHandle);
-            lastError = Marshal.GetLastSystemError();
-        }
-
-        // Unmarshal - Convert native data to managed data.
-        returnValue = nativeReturnValue != 0;
-        Marshal.SetLastPInvokeError(lastError);
-        return returnValue;
-
-        // Local P/Invoke
-        [DllImport("kernel32.dll", EntryPoint = "FreeLibrary", ExactSpelling = true)]
-        static extern unsafe int PInvoke(IntPtr nativeModuleHandle);
-    }
-
-    public static unsafe IntPtr GetProcAddress(IntPtr moduleHandle, sbyte* functionName)
-    {
-        int lastError;
-        IntPtr returnValue;
+        void* returnValue;
         {
             Marshal.SetLastSystemError(0);
             returnValue = PInvoke(moduleHandle, functionName);
@@ -376,13 +458,13 @@ internal static class LibraryImportStubs
 
         // Local P/Invoke
         [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", ExactSpelling = true)]
-        static extern unsafe IntPtr PInvoke(IntPtr nativeModuleHandle, sbyte* nativeFunctionName);
+        static extern unsafe void* PInvoke(void* nativeModuleHandle, sbyte* nativeFunctionName);
     }
 
-    public static unsafe IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags)
+    public static unsafe void* LoadLibraryExW(ushort* fileName, void* fileHandle, uint flags)
     {
         int lastError;
-        IntPtr returnValue;
+        void* returnValue;
         {
             Marshal.SetLastSystemError(0);
             returnValue = PInvoke(fileName, fileHandle, flags);
@@ -394,7 +476,7 @@ internal static class LibraryImportStubs
 
         // Local P/Invoke
         [DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true)]
-        static extern unsafe IntPtr PInvoke(ushort* nativeFileName, IntPtr nativeFileHandle, uint nativeFlags);
+        static extern unsafe void* PInvoke(ushort* nativeFileName, void* nativeFileHandle, uint nativeFlags);
     }
 }
 #endif

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Runtime.InteropServices;
 
 namespace ABI.WinRT.Interop;
@@ -9,22 +8,22 @@ namespace ABI.WinRT.Interop;
 internal static class IRestrictedErrorInfoMethods
 {
     public static unsafe void GetErrorDetails(
-        IntPtr thisPtr,
+        void* thisPtr,
         out string description,
         out int error,
         out string restrictedDescription,
         out string capabilitySid)
     {
-        IntPtr _description = IntPtr.Zero;
-        IntPtr _restrictedDescription = IntPtr.Zero;
-        IntPtr _capabilitySid = IntPtr.Zero;
+        void* _description = null;
+        void* _restrictedDescription = null;
+        void* _capabilitySid = null;
 
         try
         {
             fixed (int* pError = &error)
             {
                 // GetErrorDetails
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[3])(
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int*, void**, void**, int>)(*(void***)thisPtr)[3])(
                     thisPtr,
                     &_description,
                     pError,
@@ -32,32 +31,32 @@ internal static class IRestrictedErrorInfoMethods
                     &_capabilitySid));
             }
 
-            description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
-            restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
-            capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
+            description = _description != null ? Marshal.PtrToStringBSTR((nint)_description) : string.Empty;
+            restrictedDescription = _restrictedDescription != null ? Marshal.PtrToStringBSTR((nint)_restrictedDescription) : string.Empty;
+            capabilitySid = _capabilitySid != null ? Marshal.PtrToStringBSTR((nint)_capabilitySid) : string.Empty;
         }
         finally
         {
-            Marshal.FreeBSTR(_description);
-            Marshal.FreeBSTR(_restrictedDescription);
-            Marshal.FreeBSTR(_capabilitySid);
+            Marshal.FreeBSTR((nint)_description);
+            Marshal.FreeBSTR((nint)_restrictedDescription);
+            Marshal.FreeBSTR((nint)_capabilitySid);
         }
     }
 
     public static unsafe void GetErrorDetails(
-        IntPtr thisPtr,
+        void* thisPtr,
         out int error)
     {
-        IntPtr _description = IntPtr.Zero;
-        IntPtr _restrictedDescription = IntPtr.Zero;
-        IntPtr _capabilitySid = IntPtr.Zero;
+        void* _description = null;
+        void* _restrictedDescription = null;
+        void* _capabilitySid = null;
 
         try
         {
             fixed (int* pError = &error)
             {
                 // GetErrorDetails
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[3])(
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int*, void**, void**, int>)(*(void***)thisPtr)[3])(
                     thisPtr,
                     &_description,
                     pError,
@@ -67,62 +66,62 @@ internal static class IRestrictedErrorInfoMethods
         }
         finally
         {
-            Marshal.FreeBSTR(_description);
-            Marshal.FreeBSTR(_restrictedDescription);
-            Marshal.FreeBSTR(_capabilitySid);
+            Marshal.FreeBSTR((nint)_description);
+            Marshal.FreeBSTR((nint)_restrictedDescription);
+            Marshal.FreeBSTR((nint)_capabilitySid);
         }
     }
 
-    public static unsafe string GetReference(IntPtr thisPtr)
+    public static unsafe string GetReference(void* thisPtr)
     {
-        IntPtr __retval = default;
+        void* __retval = default;
 
         try
         {
             // GetReference
-            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[4])(
                 thisPtr,
                 &__retval));
-            return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
+            return __retval != null ? Marshal.PtrToStringBSTR((nint)__retval) : string.Empty;
         }
         finally
         {
-            Marshal.FreeBSTR(__retval);
+            Marshal.FreeBSTR((nint)__retval);
         }
     }
 }
 
 internal static class ILanguageExceptionErrorInfoMethods
 {
-    public static unsafe IntPtr GetLanguageException(IntPtr thisPtr)
+    public static unsafe void* GetLanguageException(void* thisPtr)
     {
-        IntPtr __return_value__ = IntPtr.Zero;
+        void* __return_value__ = null;
 
         // GetLanguageException
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
         return __return_value__;
     }
 }
 
 internal static class ILanguageExceptionErrorInfo2Methods
 {
-    public static unsafe IntPtr GetPreviousLanguageExceptionErrorInfo(IntPtr thisPtr)
+    public static unsafe void* GetPreviousLanguageExceptionErrorInfo(void* thisPtr)
     {
-        IntPtr __retval = default;
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(
+        void* __retval = default;
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[4])(
             thisPtr,
             &__retval));
         return __retval;
     }
 
-    //    //    public static unsafe void CapturePropagationContext(IntPtr thisPtr, Exception ex)
+    //    //    public static unsafe void CapturePropagationContext(void* thisPtr, Exception ex)
     //    //    {
     //if NET
-    //    //        IntPtr managedExceptionWrapper = ComWrappers.GetOrCreateComInterfaceForObject(ex, CreateComInterfaceFlags.TrackerSupport);
+    //    //        void* managedExceptionWrapper = ComWrappers.GetOrCreateComInterfaceForObject(ex, CreateComInterfaceFlags.TrackerSupport);
 
     //    //        try
     //    //        {
-    //    //            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[5])(
+    //    //            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void*, int>)(*(void***)thisPtr)[5])(
     //    //                thisPtr,
     //    //                managedExceptionWrapper));
     //    //        }
@@ -132,16 +131,16 @@ internal static class ILanguageExceptionErrorInfo2Methods
     //    //        }
     //else
     ////        using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
-    ////        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[5])(
+    ////        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void*, int>)(*(void***)thisPtr)[5])(
     ////            thisPtr,
     ////            managedExceptionWrapper.ThisPtr));
     //endif
     //    //    }
 
-    public static unsafe IntPtr GetPropagationContextHead(IntPtr thisPtr)
+    public static unsafe void* GetPropagationContextHead(void* thisPtr)
     {
-        IntPtr __retval = default;
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[6])(
+        void* __retval = default;
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[6])(
             thisPtr,
             &__retval));
         return __retval;
