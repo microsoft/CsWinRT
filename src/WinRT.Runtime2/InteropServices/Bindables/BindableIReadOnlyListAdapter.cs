@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// still uses "IReadOnlyList" in its name to match the naming convention of adapter types matching .NET type names.
 /// </remarks>
 [WindowsRuntimeManagedOnlyType]
-internal sealed class IBindableIReadOnlyListAdapter : IEnumerable
+internal sealed class BindableIReadOnlyListAdapter : IEnumerable
 {
     /// <summary>
     /// The wrapped <see cref="IList"/> instance that contains the items in the list.
@@ -23,11 +23,11 @@ internal sealed class IBindableIReadOnlyListAdapter : IEnumerable
     private readonly IList _list;
 
     /// <summary>
-    /// Creates a <see cref="IBindableIReadOnlyListAdapter"/> instance with the specified parameters.
+    /// Creates a <see cref="BindableIReadOnlyListAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="list">The <see cref="IList"/> instance to wrap.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="list"/> is <see langword="null"/>.</exception>
-    public IBindableIReadOnlyListAdapter(IList list)
+    public BindableIReadOnlyListAdapter(IList list)
     {
         ArgumentNullException.ThrowIfNull(list);
 
