@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0060 // TODO
@@ -414,8 +415,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             else
             {
                 ManagedExceptionErrorInfo iErrorInfo = new(exception);
-                WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedExceptionErrorInfo(exception));
-                WindowsRuntimeImports.SetErrorInfo(0, managedExceptionWrapper.GetThisPtrUnsafe());
+                void* errorInfo = ComInterfaceMarshaller<IErrorInfo>.ConvertToUnmanaged(iErrorInfo);
+                WindowsRuntimeImports.SetErrorInfo(0, errorInfo);
             }
         }
         catch (Exception e)

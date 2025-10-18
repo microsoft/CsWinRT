@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
-internal sealed class ManagedExceptionErrorInfo
+[GeneratedComClass]
+
+internal sealed partial class ManagedExceptionErrorInfo : IErrorInfo
 {
     private readonly Exception _exception;
 
