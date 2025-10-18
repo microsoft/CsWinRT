@@ -504,28 +504,25 @@ namespace ABI.Microsoft.UI.Xaml.Data
         [UnmanagedCallersOnly]
         private static unsafe int Do_Abi_GetStringRepresentation_2(IntPtr thisPtr, IntPtr* result)
         {
-            string __result = default;
             try
             {
-                __result = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).ToString();
-                *result = MarshalString.FromManaged(__result);
+                object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+                throw new NotSupportedException($"ICustomProperty support Do_Abi_GetStringRepresentation_2 for type '{target.GetType()}'");
             }
             catch (Exception __exception__)
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
-            return 0;
         }
 
         [UnmanagedCallersOnly]
         private static unsafe int Do_Abi_get_Type_3(IntPtr thisPtr, global::ABI.System.Type* value)
         {
-            global::System.Type __value = default;
             try
             {
-                __value = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).GetType();
-                *value = global::ABI.System.Type.FromManaged(__value);
+                object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+                throw new NotSupportedException($"ICustomProperty support Do_Abi_get_Type_3 for type '{target.GetType()}'");
 
             }
             catch (Exception __exception__)
@@ -533,7 +530,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
-            return 0;
         }
     }
 }
