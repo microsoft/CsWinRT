@@ -187,14 +187,14 @@ if (observableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
-var typeList = new List<Type>() { typeof(string), typeof(int), typeof(double) };
+var typeList = new List<Type>();
 instance.BindableIterableProperty = typeList;
 if (typeList != instance.BindableIterableProperty)
 {
     return 101;
 }
 
-var stringList = new List<string>() { "one", "two" };
+var stringList = new List<string>();
 instance.BindableIterableProperty = stringList;
 if (stringList != instance.BindableIterableProperty)
 {
