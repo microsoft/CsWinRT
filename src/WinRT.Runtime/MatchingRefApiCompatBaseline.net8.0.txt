@@ -14,4 +14,5 @@ TypesMustExist : Type 'WinRT.MarshalGenericHelper<T>' does not exist in the refe
 MembersMustExist : Member 'protected void ABI.WinRT.Interop.EventSource<TDelegate>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource<T>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 15
+MembersMustExist : Member 'public void ABI.System.Type.CopyManagedArray(System.Type[], System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 16
