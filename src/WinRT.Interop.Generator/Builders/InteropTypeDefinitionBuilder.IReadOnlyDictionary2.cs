@@ -38,7 +38,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,

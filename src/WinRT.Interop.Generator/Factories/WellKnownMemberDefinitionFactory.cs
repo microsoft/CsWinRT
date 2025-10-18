@@ -52,7 +52,9 @@ internal static class WellKnownMemberDefinitionFactory
         TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
 
         // Select the property and accessor name based on 'propertyName'
-        propertyName ??= "IID"u8;
+        propertyName = propertyName is null
+            ? "IID"u8
+            : $"IID_{propertyName}";
 
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(

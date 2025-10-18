@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // 'IDelegate' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(delegateType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -50,7 +50,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // 'IReference<T>' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
