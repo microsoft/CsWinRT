@@ -7,7 +7,7 @@ using System.Collections;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector"/>.
+/// A proxy type for <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview"/>.
 /// </summary>
 /// <remarks>
 /// There is no non-generic <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type in .NET, however this type
