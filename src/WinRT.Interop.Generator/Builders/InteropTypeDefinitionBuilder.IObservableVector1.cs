@@ -447,7 +447,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for some <c>IObservableVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="vectorType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -455,7 +454,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature vectorType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -502,7 +500,6 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "Impl"),
                 vftblType: interopDefinitions.IObservableVectorVftbl,
-                get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
