@@ -193,8 +193,42 @@ Where <spec> is one or more of:
 
             w.flush_to_console();
 
-            task_group group;
+            // Write GUID properties out to InterfaceIIDs static class 
+            writer guidWriter("ABI");
+            guidWriter.write_begin_interface_iids();
+            for (auto&& ns_members : c.namespaces())
+            {
+                auto&& [ns, members] = ns_members;
+                for (auto&& [name, type] : members.types)
+                {
+                    if (!settings.filter.includes(type)) { continue; }
+                    if (get_mapped_type(ns, name))
+                    {
+                        continue;
+                    }
+                    switch (get_category(type))
+                    {
+                    case category::delegate_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        write_iid_guid_property_from_type(guidWriter, type);
+                        break;
+                    case category::enum_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    case category::interface_type:
+                        write_iid_guid_property_from_type(guidWriter, type);
+                        break;
+                    case category::struct_type:
+                        write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    }
+                }
+            }
+            guidWriter.write_end_interface_iids();
+            auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
+            guidWriter.flush_to_file(settings.output_folder / filename);
 
+            task_group group;
             concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
@@ -313,8 +347,8 @@ Where <spec> is one or more of:
                         if (written)
                         {
                             w.write_end_projected();
-             
                             w.write_begin_abi();
+
                             for (auto&& [name, type] : members.types)
                             {
                                 currentType = name;

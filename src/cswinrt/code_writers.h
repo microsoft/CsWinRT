@@ -583,6 +583,252 @@ namespace cswinrt
         }
     }
 
+    void write_guid_signature(writer& w, type_semantics const& semantics)
+    {
+        call(semantics,
+            [&](guid_type)
+            {
+                w.write("g16");
+            },
+            [&](object_type)
+            {
+                w.write("cinterface(IInspectable)");
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
+                {
+                case category::enum_type:
+                {
+                    w.write("enum(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        is_flags_enum(type) ? "u4" : "i4");
+                    break;
+                }
+                case category::struct_type:
+                {
+                    w.write("struct(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        bind_list([](writer& w, Field const& field)
+                            {
+                                write_guid_signature(w, get_type_semantics(field.Signature().Type()));
+                            }, ";", type.FieldList())
+                    );
+                    break;
+                }
+                case category::delegate_type:
+                {
+                    w.write("delegate({%})", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::interface_type:
+                {
+                    w.write("{%}", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::class_type:
+                {
+                    if (auto default_interface = get_default_interface(type))
+                    {
+                        w.write("rc(%;%)",
+                            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                            bind<write_guid_signature>(get_type_semantics(default_interface)));
+                    }
+                    else
+                    {
+                        w.write("{%}", bind<write_guid>(type, true));
+                    }
+                    break;
+                }
+                }
+            },
+            [&](generic_type_instance const& type)
+            {
+                w.write("pinterface({%};%)",
+                    bind<write_guid>(type.generic_type, true),
+                    bind_list([](writer& w, type_semantics const& genericType)
+                        {
+                            write_guid_signature(w, genericType);
+                        }, ";", type.generic_args)
+                );
+            },
+            [&](fundamental_type const& type)
+            {
+                w.write("%", get_fundamental_type_guid_signature(type));
+            },
+            [&](auto const&) {});
+    }
+
+    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(
+            lowerCase ?
+            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
+            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
+            get<uint32_t>(get_arg(0)),
+            get<uint16_t>(get_arg(1)),
+            get<uint16_t>(get_arg(2)),
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    void write_guid_attribute(writer& w, TypeDef const& type)
+    {
+        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
+
+        w.write(R"([%("%")])",
+            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
+            bind<write_guid>(type, false));
+    }
+
+    void write_guid_bytes(writer& w, TypeDef const& type)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
+            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    static void write_iid_guid_property_name(writer& w, TypeDef const& type)
+    {
+        std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        name = escape_type_name_for_identifier(name);
+        w.write("IID_%", name);
+    }
+
+    static void write_iid_reference_guid_property_name(writer& w, TypeDef const& type)
+    {
+        std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        name = escape_type_name_for_identifier(name);
+        w.write("IID_%Reference", name);
+    }
+
+    static void write_iid_reference_guid(writer& w, TypeDef const& type)
+    {
+        w.write("ABI.InterfaceIIDs.%", bind<write_iid_reference_guid_property_name>(type));
+    }
+
+    static void write_iid_guid(writer& w, TypeDef const& type)
+    {
+        if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
+        {
+            w.write("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
+        else
+        {
+            w.write("ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
+        }
+    }
+
+    static void write_iid_guid_with_type_semantics(writer& w, type_semantics const& semantics)
+    {
+        for_typedef(w, semantics, [&](auto type)
+        {
+            write_iid_guid(w, type);
+        });
+    }
+
+    static void write_iid_guid_property_from_type(writer& w, TypeDef const& type)
+    {
+        w.write(
+            R"(public static ref readonly Guid %
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get
+    {
+        ReadOnlySpan<byte> data =
+        [
+            %
+        ];
+        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+    }
+}
+
+)", bind<write_iid_guid_property_name>(type), bind<write_guid_bytes>(type));
+    }
+
+    static void write_iid_guid_property_from_signature(writer& w, TypeDef const& type)
+    {
+        std::string guid_sig = w.write_temp("%", bind<write_guid_signature>(type));
+        std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
+        GUID guid_value = generate_guid(ireference_guid_sig);
+
+        w.write(
+            R"(public static ref readonly Guid %
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get
+    {
+        ReadOnlySpan<byte> data =
+        [
+            )", bind<write_iid_reference_guid_property_name>(type));
+
+        w.write_printf(
+            "0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X\n",
+            (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
+            (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
+            (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
+            guid_value.Data4[0],
+            guid_value.Data4[1],
+            guid_value.Data4[2],
+            guid_value.Data4[3],
+            guid_value.Data4[4],
+            guid_value.Data4[5],
+            guid_value.Data4[6],
+            guid_value.Data4[7]);
+
+        w.write(R"(        ];
+        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+    }
+}
+
+)");
+    }
+
+
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
         w.write("%Source", bind<write_type_name>(eventTypeSemantics, typedef_name_type::ABI, false));
@@ -2050,7 +2296,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %Impl.IID);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %);
     }
 }
 )",
@@ -2060,7 +2306,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             bind<write_type_name>(classType, typedef_name_type::ABI, true),
-            bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
+            bind<write_iid_guid>(staticsType));
     }
 
     template<auto method_writer>
@@ -2088,7 +2334,7 @@ private static class _%
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
-        auto default_interface_name = get_default_interface_name(w, class_type);
+        auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
         if (factory_type)
         {
@@ -2099,11 +2345,10 @@ private static class _%
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
-                auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%, %Impl.IID, [%])
+  :base(%, %, [%])
 {
 %}
 )",
@@ -2113,7 +2358,7 @@ private static class _%
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 // base
                 method.Name(),
-                bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
                 {
@@ -2128,17 +2373,16 @@ private static class _%
         {
             write_activation_factory_objref_definition(w, class_type);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
-            auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
             w.write(R"(
 public %()
-  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %Impl.IID)
+  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %)
 {
 %}
 )",
                 class_type.TypeName(),
                 objrefname,
-                bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
@@ -2192,7 +2436,7 @@ private WindowsRuntimeObjectReference %
         {
             _ = global::System.Threading.Interlocked.CompareExchange(
                 location1: ref field,
-                value: NativeObjectReference.As(%Impl.IID),
+                value: NativeObjectReference.As(%),
                 comparand: null);
 
             return field;
@@ -2203,7 +2447,7 @@ private WindowsRuntimeObjectReference %
 }
 )",
                         objrefname,
-                        bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                        bind<write_iid_guid>(ifaceType));
 
                         /*
                         TODO handle fast ABI
@@ -2263,15 +2507,15 @@ private WindowsRuntimeObjectReference %
                 {
                     if (params_without_objects.empty())
                     {
-                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %Impl.IID",
+                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %",
                             cache_object,
-                            bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true));
+                            bind<write_iid_guid_with_type_semantics>(default_type_semantics));
                     }
                     else
                     {
-                        w.write("%, %Impl.IID, [%]",
+                        w.write("%, %, [%]",
                             method.Name(),
-                            bind<write_type_name>(default_type_semantics, typedef_name_type::ABI, true),
+                            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             bind_list<write_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
@@ -3246,125 +3490,6 @@ return %.AsValue();
         }
     }
 
-    void write_guid_signature(writer& w, type_semantics const& semantics)
-    {
-        call(semantics,
-            [&](guid_type)
-            {
-                w.write("g16");
-            },
-            [&](object_type)
-            {
-                w.write("cinterface(IInspectable)");
-            },
-            [&](type_definition const& type)
-            {
-                switch (get_category(type))
-                {
-                case category::enum_type:
-                {
-                    w.write("enum(%;%)",
-                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                        is_flags_enum(type) ? "u4" : "i4");
-                    break;
-                }
-                case category::struct_type:
-                {
-                    w.write("struct(%;%)",
-                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                        bind_list([](writer& w, Field const& field)
-                        {
-                            write_guid_signature(w, get_type_semantics(field.Signature().Type()));
-                        }, ";", type.FieldList())
-                    );
-                    break;
-                }
-                case category::delegate_type:
-                {
-                    w.write("delegate({%})", bind<write_guid>(type, true));
-                    break;
-                }
-                case category::interface_type:
-                {
-                    w.write("{%}", bind<write_guid>(type, true));
-                    break;
-                }
-                case category::class_type:
-                {
-                    if (auto default_interface = get_default_interface(type))
-                    {
-                        w.write("rc(%;%)",
-                            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
-                            bind<write_guid_signature>(get_type_semantics(default_interface)));
-                    }
-                    else
-                    {
-                        w.write("{%}", bind<write_guid>(type, true));
-                    }
-                    break;
-                }
-                }
-            },
-            [&](generic_type_instance const& type)
-            {
-                w.write("pinterface({%};%)",
-                    bind<write_guid>(type.generic_type, true),
-                    bind_list([](writer& w, type_semantics const& genericType)
-                    {
-                        write_guid_signature(w, genericType);
-                    }, ";", type.generic_args)
-                );
-            },
-            [&](fundamental_type const& type)
-            {
-                w.write("%", get_fundamental_type_guid_signature(type));
-            },
-            [&](auto const&) {});
-    }
-
-    static void write_guid_property_from_signature(writer& w, std::string const& signature)
-    {
-        GUID guid_value = generate_guid(signature);
-
-        w.write(R"(public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                )");
-
-        w.write_printf(
-            "0x%X, 0x%X, 0x%X, 0x%X,\n                "
-            "0x%X, 0x%X,\n                "
-            "0x%X, 0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X,\n                "
-            "0x%X\n",
-            (guid_value.Data1 >> 0) & 0xFF, (guid_value.Data1 >> 8) & 0xFF, (guid_value.Data1 >> 16) & 0xFF, (guid_value.Data1 >> 24) & 0xFF,
-            (guid_value.Data2 >> 0) & 0xFF, (guid_value.Data2 >> 8) & 0xFF,
-            (guid_value.Data3 >> 0) & 0xFF, (guid_value.Data3 >> 8) & 0xFF,
-            guid_value.Data4[0],
-            guid_value.Data4[1],
-            guid_value.Data4[2],
-            guid_value.Data4[3],
-            guid_value.Data4[4],
-            guid_value.Data4[5],
-            guid_value.Data4[6],
-            guid_value.Data4[7]);
-
-        w.write(R"(            ];
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    })");
-    }
-
     void write_convert_to_unmanaged_method_struct(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
@@ -3673,9 +3798,9 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.TrackerSupport, in %ReferenceImpl.IID);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.TrackerSupport, in %);
 }
-)", projection_name, type.TypeName()); // TODO: use `CreateComInterfaceFlags.None` whenever possible
+)", projection_name, bind<write_iid_reference_guid>(type));
 
         if (!is_type_blittable(type))
         {
@@ -3780,10 +3905,14 @@ R"(
         }
     }
 
-    %
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref %;
+    }
 }
 
-)", bind<write_guid_property_from_signature>(ireference_guid_sig));
+)", bind<write_iid_reference_guid>(type));
     }
 
     void write_struct_and_enum_com_wrappers_marshaller_attribute_impl(writer& w, TypeDef const& type)
@@ -3791,12 +3920,13 @@ R"(
         auto name = type.TypeName();
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
+        auto iid_property_name = w.write_temp("%", bind<write_iid_reference_guid>(type));
         w.write(
 R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);    
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3808,11 +3938,11 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %ReferenceImpl.IID);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %);
     }
 }
 
-)", name, name, is_type_blittable(type) ? projection_name : abi_name, name); // TODO: use `CreateComInterfaceFlags.None` whenever possible
+)", name, name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name); // TODO: use `CreateComInterfaceFlags.None` whenever possible
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -4837,7 +4967,7 @@ param_type);
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
-                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     if (distance(type.GenericParam()) > 0)
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
@@ -5623,79 +5753,6 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         }
     }
 
-    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
-    {
-        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
-        if (!attribute)
-        {
-            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
-        }
-
-        auto args = attribute.Value().FixedArgs();
-
-        using std::get;
-
-        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
-
-        w.write_printf(
-            lowerCase ?
-            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
-            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
-            get<uint32_t>(get_arg(0)),
-            get<uint16_t>(get_arg(1)),
-            get<uint16_t>(get_arg(2)),
-            get<uint8_t>(get_arg(3)),
-            get<uint8_t>(get_arg(4)),
-            get<uint8_t>(get_arg(5)),
-            get<uint8_t>(get_arg(6)),
-            get<uint8_t>(get_arg(7)),
-            get<uint8_t>(get_arg(8)),
-            get<uint8_t>(get_arg(9)),
-            get<uint8_t>(get_arg(10)));
-    }
-
-    void write_guid_attribute(writer& w, TypeDef const& type)
-    {
-        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
-
-        w.write(R"([%("%")])",
-            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
-            bind<write_guid>(type, false));
-    }
-
-    void write_guid_bytes(writer& w, TypeDef const& type)
-    {
-        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
-        if (!attribute)
-        {
-            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
-        }
-
-        auto args = attribute.Value().FixedArgs();
-
-        using std::get;
-
-        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
-
-        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
-            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
-            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
-            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
-            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
-            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
-            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
-            get<uint8_t>(get_arg(3)),
-            get<uint8_t>(get_arg(4)),
-            get<uint8_t>(get_arg(5)),
-            get<uint8_t>(get_arg(6)),
-            get<uint8_t>(get_arg(7)),
-            get<uint8_t>(get_arg(8)),
-            get<uint8_t>(get_arg(9)),
-            get<uint8_t>(get_arg(10)));
-    }
-
     void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi, bool include_exclusive_interface, bool includeWindowsRuntimeObject)
     {
         auto delimiter{ " : " };
@@ -5740,7 +5797,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
             w.write("global::System.Runtime.InteropServices.ICustomQueryInterface");
         }
     }
-    
+   
     std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string)
     {
         method_signature signature{ method };
@@ -6218,7 +6275,7 @@ param_type);
                 case category::interface_type:
                     m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
                     m.local_type = m.param_type;
-                    m.interface_guid = w.write_temp("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
                     if (distance(type.GenericParam()) > 0)
                     {
@@ -7275,14 +7332,10 @@ static %Impl()
     %
 }
 
-public static ref readonly global::System.Guid IID
+public static ref readonly Guid IID
 {
-[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-get
-{
-global::System.ReadOnlySpan<byte> data = new byte[] { % };
-return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
-}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => ref %;
 }
 
 public static nint Vtable
@@ -7307,8 +7360,7 @@ public static nint Vtable
                 vmethod_name,
                 vmethod_name);
         }, type.MethodList()),
-        // IID
-        bind<write_guid_bytes>(type),
+        bind<write_iid_guid>(type),
         // Vtable functions
         bind_each<write_method_abi_invoke>(type.MethodList()),
         bind_each<write_property_abi_invoke>(type.PropertyList()),
@@ -7363,7 +7415,7 @@ public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %Impl.IID);
+        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %);
     }
 
     public static %? ConvertToManaged(void* value)
@@ -7376,7 +7428,7 @@ public static unsafe class %Marshaller
     type.TypeName(),
     projected_type,
     projected_type,
-    bind<write_type_name>(type, typedef_name_type::ABI, false),
+    bind<write_iid_guid>(type),
     projected_type,
     projected_type
 );
@@ -7413,8 +7465,8 @@ protected override bool IsOverridableInterface(in Guid iid) => %%;
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
                 {
                     s();
-                    w.write("%Impl.IID == iid",
-                        bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
+                    w.write("% == iid",
+                        bind<write_iid_guid_with_type_semantics>(get_type_semantics(iface.Interface())));
                 }
             }, type.InterfaceImpl()),
             bind([&](writer& w)
@@ -7622,6 +7674,8 @@ return value.GetDefaultInterface();
 
     void write_class_comwrappers_marshaller_attribute(writer& w, TypeDef const& type)
     {
+        auto default_type_semantics = get_type_semantics(get_default_interface(type));
+
         w.write(R"(
 file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
@@ -7629,7 +7683,7 @@ public override object CreateObject(void* value, out CreatedWrapperFlags wrapper
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
     externalComObject: value,
-    iid: I%Impl.IID,
+    iid: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -7637,12 +7691,14 @@ return new %(valueReference);
 }
 )",
             type.TypeName(),
-            type.TypeName(),
+            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
             bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_class_comwrappers_callback(writer& w, TypeDef const& type)
     {
+        auto default_type_semantics = get_type_semantics(get_default_interface(type));
+
         // For sealed, we know the runtime class name is this class, while for unsealed, we check.
         if (type.Flags().Sealed())
         {
@@ -7653,7 +7709,7 @@ public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFl
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
-    iid: I%Impl.IID,
+    iid: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -7661,7 +7717,7 @@ return new %(valueReference);
 }
 )",
                 type.TypeName(),
-                type.TypeName(),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
         else
@@ -7679,7 +7735,7 @@ if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordina
 {
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
-        iid: I%Impl.IID,
+        iid: %,
         wrapperFlags: out wrapperFlags);
 
     wrapperObject = new %(valueReference);
@@ -7694,7 +7750,7 @@ return false;
 )",
                 type.TypeName(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
-                type.TypeName(),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
     }
@@ -7762,14 +7818,10 @@ internal static unsafe class %Impl
         %
     }
 
-    public static ref readonly global::System.Guid IID
+    public static ref readonly Guid IID
     {
-        [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            global::System.ReadOnlySpan<byte> data = new byte[] { % };
-            return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref %;
     }
 }
 )",
@@ -7784,8 +7836,7 @@ internal static unsafe class %Impl
                     method.Name(),
                     "(%)"),
                 false),
-            // IID
-            bind<write_guid_bytes>(type)
+            bind<write_iid_guid>(type)
         );
 
     }
@@ -7799,7 +7850,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in %ReferenceImpl.IID,
+            iid: in %,
             wrapperFlags: out wrapperFlags);
 
         return new %(valueReference.%Invoke);
@@ -7807,7 +7858,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
 }
 )",
             type.TypeName(),
-            type.TypeName(),
+            bind<write_iid_reference_guid>(type),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             type.TypeName()
         );
@@ -7852,7 +7903,7 @@ public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in %ReferenceImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in %);
     }
     #nullable enable
     public static %? ConvertToManaged(void* value)
@@ -7864,7 +7915,7 @@ public static unsafe class %Marshaller
 )",
             type.TypeName(),
             projected_type,
-            type.TypeName(),
+            bind<write_iid_reference_guid>(type),
             projected_type,
             projected_type,
             type.TypeName()
