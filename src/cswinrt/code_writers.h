@@ -565,8 +565,10 @@ namespace cswinrt
             w.write("out %", bind<write_projection_type>(semantics));
             break;
         case param_category::pass_array:
+            w.write("ReadOnlySpan<%>", bind<write_projection_type>(semantics));
+            break;
         case param_category::fill_array:
-            w.write("%[]", bind<write_projection_type>(semantics));
+            w.write("Span<%>", bind<write_projection_type>(semantics));
             break;
         case param_category::receive_array:
             w.write("out %[]", bind<write_projection_type>(semantics));
@@ -1004,10 +1006,10 @@ namespace cswinrt
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int __%Size, IntPtr %", param_name, param_name);
+            w.write(", uint __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(settings.netstandard_compat ? ", out int __%Size, out IntPtr %" : ", int* __%Size, IntPtr* %", param_name, param_name);
+            w.write(settings.netstandard_compat ? ", out uint __%Size, out IntPtr %" : ", uint* __%Size, IntPtr* %", param_name, param_name);
             break;
         }
     }
@@ -1028,10 +1030,10 @@ namespace cswinrt
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int, IntPtr");
+            w.write(", uint, IntPtr");
             break;
         case param_category::receive_array:
-            w.write(", out int, out IntPtr");
+            w.write(", out uint, out IntPtr");
             break;
         }
     } 
@@ -1052,10 +1054,10 @@ namespace cswinrt
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int, IntPtr");
+            w.write(", uint, void*");
             break;
         case param_category::receive_array:
-            w.write(", int*, IntPtr*");
+            w.write(", uint*, void**");
             break;
         }
     }
@@ -1069,13 +1071,13 @@ namespace cswinrt
             if (settings.netstandard_compat)
             {
                 return_sig.Type().is_szarray() ?
-                    w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
+                    w.write(", out uint __%Size, out IntPtr %", signature.return_param_name(), return_param) :
                     w.write(", out % %", bind<write_abi_type>(semantics), return_param);
             }
             else
             {
                 return_sig.Type().is_szarray() ?
-                    w.write(", int* __%Size, IntPtr* %", signature.return_param_name(), return_param) :
+                    w.write(", uint* __%Size, IntPtr* %", signature.return_param_name(), return_param) :
                     w.write(", %* %", bind<write_abi_type>(semantics), return_param);
             }
         }
@@ -1087,7 +1089,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", out int, out IntPtr") :
+                w.write(", out uint, out IntPtr") :
                 w.write(", out %", bind<write_abi_type>(semantics));
         }
     }
@@ -1098,7 +1100,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", int*, IntPtr*") :
+                w.write(", uint*, void**") :
                 w.write(", %*", bind<write_abi_type>(semantics));
         }
     }
@@ -4773,6 +4775,11 @@ event % %;)",
                 marshaler_type.empty() && local_type == "void*";
         }
 
+        bool is_pinnable_array_data() const
+        {
+            return is_array() && !is_out();
+        }
+
         // We pass using in for .NET Standard.  Outside of .NET Standard,
         // we want our function pointers to be blittable and be able to disable
         // runtime marshaling, so we use ptrs with the managed function calling the
@@ -4797,7 +4804,7 @@ event % %;)",
             if (!is_generic())
             {
                 return is_array() ?
-                    w.write_temp("(__%_length, __%_data)",
+                    w.write_temp("__%_length, &__%_data",
                         param_name, param_name) :
                     get_marshaler_local(w);
             }
@@ -4811,12 +4818,54 @@ event % %;)",
         {
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+static extern %[] ConvertToManaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
+param_type,
+param_name,
+interop_dll_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
 static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
 param_type,
+param_name,
+interop_dll_type);
+                }
+            }
+        }
+
+        void write_interop_dispose_function(writer& w) const
+        {
+            if (interop_dll_type != "" && is_array())
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+static extern void Dispose_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
+param_name,
+interop_dll_type);
+            }
+        }
+
+        void write_interop_free_function(writer& w) const
+        {
+            if (interop_dll_type != "" && is_array())
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+static extern void Free_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
 param_name,
 interop_dll_type);
             }
@@ -4826,7 +4875,20 @@ interop_dll_type);
         {
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
@@ -4834,6 +4896,52 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAcc
 param_name,
 interop_dll_type,
 param_type);
+                }
+            }
+        }
+
+        void write_copy_to_unmanaged_function(writer& w) const
+        {
+            if (is_array() && marshaler_type == "HStringMarshaller")
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanagedUnsafe")]
+static extern void CopyToUnmanagedUnsafe_%([UnsafeAccessorType("string_ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<string> value, uint destinationSize, void* destination, uint headersSize, void* headers);
+
+)",
+param_name);
+            }
+            else if (interop_dll_type != "")
+            {
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, uint length, void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+            }
+        }
+
+        void write_copy_to_managed_function(writer& w) const
+        {
+            if (interop_dll_type != "")
+            {
+                if (is_ref())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+static extern void CopyToManaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, uint length, void** data, Span<%> span);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
             }
         }
 
@@ -4847,8 +4955,52 @@ param_type);
 
             if (is_array())
             {
-                w.write("int __%_length = default;\n", param_name);
-                w.write("IntPtr __%_data = default;\n", param_name);
+                if (is_out())
+                {
+                    w.write("uint __%_length = default;\n", param_name);
+                    w.write("void* __%_data = default;\n", param_name);
+                }
+                else
+                {
+                    w.write(R"(
+Unsafe.SkipInit(out InlineArray16<%> __%_inlineArray);
+%[] __%_arrayFromPool = null;
+Span<%> __%_span = %.Length <= 16
+    ? __%_inlineArray[..%.Length]
+    : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent(%.Length));
+)",
+                        local_type,
+                        param_name,
+                        local_type,
+						param_name,
+                        local_type,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        local_type,
+                        param_name);
+
+                    if (!is_ref() && marshaler_type == "HStringMarshaller")
+                    {
+                        w.write(R"(
+Unsafe.SkipInit(out InlineArray16<HStringReference> __%_inlineReferenceArray);
+HStringReference[] __%_referenceArrayFromPool = null;
+Span<HStringReference> __%_referenceSpan = %.Length <= 16
+    ? __%_inlineReferenceArray[..%.Length]
+    : (__%_referenceArrayFromPool = global::System.Buffers.ArrayPool<HStringReference>.Shared.Rent(%.Length));
+)",
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+							param_name);
+                    }
+                }
                 return;
             }
 
@@ -4889,7 +5041,7 @@ param_type);
 
         void write_assignments(writer& w) const
         {
-            if (is_pinnable || is_object_in() || is_out() || local_type.empty())
+            if (is_pinnable || is_pinnable_array_data() || is_object_in() || is_out() || local_type.empty())
                 return;
 
             // TODO: Arrays
@@ -4914,28 +5066,77 @@ param_type);
 
         void write_fixed_expression(writer& w, bool& write_delimiter) const
         {
-            if (!is_pinnable)
+            if (!is_pinnable && !is_pinnable_array_data())
                 return;
             if (write_delimiter)
             {
                 w.write(", ");
             }
-            w.write("_% = %",
-                param_name,
-                marshaler_type == "global::ABI.System.TypeMarshaller" 
+
+            if (!is_pinnable && is_pinnable_array_data())
+            {
+                w.write("_% = __%_span",
+                    param_name,
+                    param_name);
+                
+                if (!is_ref() && marshaler_type == "HStringMarshaller")
+                {
+                    w.write(", _%_reference = __%_referenceSpan",
+                        param_name,
+                        param_name);
+				}
+            }
+            else
+            {
+                w.write("_% = %",
+                    param_name,
+                    marshaler_type == "global::ABI.System.TypeMarshaller"
                     ? "__" + param_name : get_escaped_param_name(w));
+            }
             write_delimiter = true;
         }
 
         void write_fixed_marshaler(writer& w) const
         {
-            if (!is_pinnable)
+            if (!is_pinnable && !is_pinnable_array_data())
                 return;
 
             if (marshaler_type == "HStringMarshaller")
             {
-                w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
-                    param_name, get_escaped_param_name(w), param_name);
+                if (is_pinnable_array_data())
+                {
+                    if (is_ref())
+                    {
+                        return;
+                    }
+
+                    write_copy_to_unmanaged_function(w);
+                    w.write(R"(
+CopyToUnmanagedUnsafe_%(
+    null,
+    value: %,
+    destinationSize: (uint)__%_span.Length,
+    destination: _%,
+    headersSize: (uint)__%_referenceSpan.Length,
+    headers: _%_reference);
+)",
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name);
+                }
+                else
+                {
+                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
+                        param_name, get_escaped_param_name(w), param_name);
+                }
+            }
+            else if (!is_pinnable && is_pinnable_array_data() && !is_ref())
+            {
+                write_copy_to_unmanaged_function(w);
+                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, &_%);\n", param_name, param_name, param_name, param_name);
             }
         }
 
@@ -4945,9 +5146,16 @@ param_type);
             {
                 if (is_array())
                 {
-                    w.write("%__%_length, %__%_data",
-                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name,
-                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name);
+                    if (is_pinnable || is_pinnable_array_data())
+                    {
+                        w.write("(uint) %.Length, _%", param_name, param_name);
+                    }
+                    else
+                    {
+                        w.write("%__%_length, %__%_data",
+                            is_out() ? "&" : "", param_name,
+                            is_out() ? "&" : "", param_name);
+                    }
                     return;
                 }
 
@@ -5102,13 +5310,14 @@ param_type);
                 return;
             if (is_ref())
             {
-                if (!starts_with(marshaler_type, "MarshalBlittable"))
+                if (!is_pinnable)
                 {
-                    w.write("%.CopyAbiArray(%, (__%_length, __%_data));\n",
-                        marshaler_type,
-                        bind<write_escaped_identifier>(param_name),
+                    write_copy_to_managed_function(w);
+                    w.write("CopyToManaged_%(null, (uint)__%_span.Length, &_%, %);\n",
                         param_name,
-                        param_name);
+                        param_name,
+                        param_name,
+                        bind<write_escaped_identifier>(param_name));
                 }
                 return;
             }
@@ -5140,9 +5349,10 @@ param_type);
             {
                 if (is_array())
                 {
-                    w.write("%.DisposeAbi%(%);\n",
-                        marshaler_type,
-                        is_array() ? "Array" : "",
+                    write_interop_free_function(w);
+
+                    w.write("Free_%(null, %);\n",
+                        param_name,
                         get_param_local(w));
                 }
                 else if (is_marshal_by_object_reference_value())
@@ -5165,10 +5375,42 @@ param_type);
             }
             else
             {
-                // TODO arrays
-                w.write("%.Dispose(%);\n",
-                    marshaler_type,
-                    get_param_local(w));
+                if (is_array())
+                {
+                    // HStringReference doesn't need to be freed.
+                    if (is_ref() || marshaler_type != "HStringMarshaller")
+                    {
+                        write_interop_dispose_function(w);
+
+                        w.write(R"(
+fixed(void* _% = __%_span)
+{
+Dispose_%(null, (uint) __%_span.Length, &_%);
+}
+)",
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name);
+                    }
+
+                    w.write(R"(
+if (__%_arrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
+}
+)",
+                        param_name,
+						local_type,
+                        param_name);
+                }
+                else
+                {
+                    w.write("%.Dispose(%);\n",
+                        marshaler_type,
+                        get_param_local(w));
+                }
             }
         }
     };
@@ -5193,9 +5435,10 @@ param_type);
         {
             if (m.is_array())
             {
-                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
                 m.marshaler_type += "<" + m.param_type + ">";
-                m.local_type = m.marshaler_type + ".MarshalerArray";
+                m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
             else if (!is_type_blittable(type))
             {
@@ -5229,7 +5472,12 @@ param_type);
                 m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
+                    m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+                    if (m.local_type == "void*")
+                    {
+                        m.local_type = "nint";
+					}
                 }
                 else
                 {
@@ -5247,7 +5495,8 @@ param_type);
                 m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
+                    m.local_type = "nint";
                 }
                 else
                 {
@@ -5259,7 +5508,8 @@ param_type);
                 m.marshaler_type = get_abi_type();
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
+                    m.local_type = "nint";
                 }
                 else
                 {
@@ -5282,7 +5532,8 @@ param_type);
                     m.marshaler_type = "WindowsRuntimeObjectMarshaller";
                     if (m.is_array())
                     {
-                        m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
+                        m.local_type = "nint";
                     }
                     else
                     {
@@ -5321,8 +5572,10 @@ param_type);
                     {
                         if (m.is_array())
                         {
-                            m.marshaler_type = "MarshalString";
-                            m.local_type = "MarshalString.MarshalerArray";
+                            m.marshaler_type = "HStringMarshaller";
+                            m.local_type = "nint";
+                            m.interop_dll_type = "string";
+                            // m.is_pinnable = !m.is_out();
                         }
                         else
                         {
@@ -5350,9 +5603,11 @@ param_type);
             }
             else
             {
+                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
                 m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
-                m.local_type = m.marshaler_type + ".MarshalerArray";
+                m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
         }
     }
@@ -5407,7 +5662,7 @@ param_type);
             bool have_pinnables{};
             for (auto&& m : marshalers)
             {
-                have_pinnables |= m.is_pinnable;
+                have_pinnables |= m.is_pinnable || m.is_pinnable_array_data();
                 m.write_pinnable(w);
             }
 
