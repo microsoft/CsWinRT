@@ -97,15 +97,17 @@ using System.Runtime.InteropServices;
 
 namespace ABI;
 
-internal static class InterfaceIIDs
+internal static class InterfaceIIDsExtensions
 {
+    extension(InterfaceIIDs)
+    {
 )"          
             );
         }
 
         void write_end_interface_iids()
         {
-            write("}\n\n");
+            write("}}\n\n");
         }
 
         void write_begin_abi()

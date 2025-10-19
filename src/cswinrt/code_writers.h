@@ -753,14 +753,7 @@ namespace cswinrt
 
     static void write_iid_guid(writer& w, TypeDef const& type)
     {
-        if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
-        {
-            w.write("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        }
-        else
-        {
-            w.write("ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
-        }
+        w.write("ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
     }
 
     static void write_iid_guid_with_type_semantics(writer& w, type_semantics const& semantics)
