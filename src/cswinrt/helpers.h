@@ -797,6 +797,7 @@ namespace cswinrt
                     { "Rect", "Windows.Foundation", "Rect" },
                     { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
+                    { "TypedEventHandler`2", "System", "EventHandler", false },
                     { "Uri", "System", "Uri", true }
                 }
             },

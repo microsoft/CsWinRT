@@ -5505,7 +5505,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 }
                 break;
             case category::delegate_type:
-                m.marshaler_type = get_abi_type();
+                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
                     m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
@@ -6696,15 +6696,15 @@ interop_dll_type);
 
         void write_convert_to_unmanaged_function(writer& w) const
         {
+            if (!is_out())
+            {
+                return;
+            }
+
             if (interop_dll_type != "")
             {
                 if (is_array())
                 {
-                    if (!is_out())
-                    {
-                        return;
-                    }
-
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
@@ -6923,7 +6923,7 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                     }
                     break;
                 case category::interface_type:
-                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
@@ -6933,12 +6933,12 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                     }
                     break;
                 case category::class_type:
-                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.marshal_by_object_reference_value = true;
                     break;
                 case category::delegate_type:
-                    m.marshaler_type = get_abi_type();
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.marshal_by_object_reference_value = true;
                     if (distance(type.GenericParam()) > 0)
