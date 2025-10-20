@@ -95,6 +95,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
+
 namespace ABI;
 
 internal static class InterfaceIIDsExtensions
