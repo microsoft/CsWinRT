@@ -12,7 +12,9 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="K">The type of keys in the observable map.</typeparam>
 /// <typeparam name="V">The type of values in the observable map.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class MapChangedEventHandlerEventSource<K, V> : EventSource<MapChangedEventHandler<K, V>>
 {

@@ -17,7 +17,9 @@ namespace WindowsRuntime.InteropServices;
 /// This type provides shared paths for some implementations, and then some specific full implementations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage, DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static partial class IPropertyValueImpl
 {
