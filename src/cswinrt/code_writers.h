@@ -3428,10 +3428,10 @@ bool %HasErrors {get => %.HasErrors; }
 
 %event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
 {
-add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Subscribe(value);
-remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Unsubscribe(value);
+add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, %).Subscribe(value);
+remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, %).Unsubscribe(value);
 }
-%bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.get_HasErrors(%); }
+%bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors(%); }
 )",
 visibility, self, objref_name,
 visibility, self, objref_name, objref_name,
@@ -4649,13 +4649,13 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private static ConditionalWeakTable<WindowsRuntimeObject, %> _%
+private static ConditionalWeakTable<object, %> _%
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static ConditionalWeakTable<WindowsRuntimeObject, %> MakeTable()
+        static ConditionalWeakTable<object, %> MakeTable()
         {
             _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);
 
@@ -6092,7 +6092,7 @@ public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value
             w.write(R"(
 %
 
-public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+public static % %(object thisObject, WindowsRuntimeObjectReference thisReference)
 {
     %
     return _%.GetOrAdd(
