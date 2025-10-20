@@ -7136,10 +7136,11 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
                 setter_sig,
-                w.write_temp("ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr).% = %",
+                w.write_temp("ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr).% = %%",
                     type_name,
                     prop.Name(),
-                    "%"),
+                    "%",
+                    prop.Type().Type().is_szarray() ? ".ToArray()" : ""),
                 false));
         }
 
