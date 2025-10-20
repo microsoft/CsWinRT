@@ -4982,18 +4982,21 @@ Span<%> __%_span = %.Length <= 16
     ? __%_inlineArray[..%.Length]
     : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent(%.Length));
 )",
+                        // SkipInit
                         local_type,
                         param_name,
+                        // array
                         local_type,
-						param_name,
+                        param_name,
+                        // span
                         local_type,
                         param_name,
+                        get_escaped_param_name(w),
                         param_name,
-                        param_name,
-                        param_name,
+                        get_escaped_param_name(w),
                         param_name,
                         local_type,
-                        param_name);
+                        get_escaped_param_name(w));
 
                     if (!is_ref() && marshaler_type == "HStringMarshaller")
                     {
@@ -5004,14 +5007,17 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
     ? __%_inlineReferenceArray[..%.Length]
     : (__%_referenceArrayFromPool = global::System.Buffers.ArrayPool<HStringReference>.Shared.Rent(%.Length));
 )",
+                            // SkipInit
                             param_name,
+                            // array
                             param_name,
+                            // span
                             param_name,
+                            get_escaped_param_name(w),
                             param_name,
+                            get_escaped_param_name(w),
                             param_name,
-                            param_name,
-                            param_name,
-							param_name);
+                            get_escaped_param_name(w));
                     }
                 }
                 return;
@@ -5025,7 +5031,7 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                     local_type,
                     get_marshaler_local(w),
                     marshaler_type,
-                    param_name);
+                    get_escaped_param_name(w));
                 return;
             }
 
@@ -5044,7 +5050,7 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                 interop_dll_type != "" ? "" : marshaler_type + ".",
                 interop_dll_type != "" ? "_" + param_name : "",
                 interop_dll_type != "" ? "null, " : "",
-                param_name);
+                get_escaped_param_name(w));
         }
 
         auto get_escaped_param_name(writer& w) const
@@ -5064,7 +5070,7 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                 w.write("% = %.ConvertToUnmanaged(%);\n",
                     get_marshaler_local(w),
                     marshaler_type,
-                    param_name);
+                    get_escaped_param_name(w));
             }
         }
 
@@ -5134,7 +5140,7 @@ CopyToUnmanagedUnsafe_%(
     headers: _%_reference);
 )",
                         param_name,
-                        param_name,
+                        get_escaped_param_name(w),
                         param_name,
                         param_name,
                         param_name,
@@ -5149,7 +5155,7 @@ CopyToUnmanagedUnsafe_%(
             else if (!is_pinnable && is_pinnable_array_data() && !is_ref())
             {
                 write_copy_to_unmanaged_function(w);
-                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, &_%);\n", param_name, param_name, param_name, param_name);
+                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, &_%);\n", param_name, get_escaped_param_name(w), get_escaped_param_name(w), param_name);
             }
         }
 
@@ -5161,7 +5167,7 @@ CopyToUnmanagedUnsafe_%(
                 {
                     if (is_pinnable || is_pinnable_array_data())
                     {
-                        w.write("(uint) %.Length, _%", param_name, param_name);
+                        w.write("(uint) %.Length, _%", get_escaped_param_name(w), param_name);
                     }
                     else
                     {
@@ -6569,10 +6575,13 @@ Span<%> __% = __%Size <= 16
     ? __%_inlineArray[..(int)__%Size]
     : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent((int)__%Size));
 )",
+                        // SkipInit
                         param_type,
                         param_name,
+                        // Array
                         param_type,
                         param_name,
+                        // Span
                         param_type,
                         param_name,
                         param_name,
