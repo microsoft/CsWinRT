@@ -19,7 +19,7 @@ internal static class WellKnownMemberDefinitionFactory
     /// <summary>
     /// Creates an 'IID' property with the specified parameters (and optionally a specific name).
     /// </summary>
-    /// <param name="propertyName">The name to use for <paramref name="iidProperty"/> (will default to 'IID' if <see langword="null"/>).</param>
+    /// <param name="propertyName">The name to use for <paramref name="iidProperty"/>.</param>
     /// <param name="iidRvaFieldName">The name to use for <paramref name="iidRvaField"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -29,7 +29,7 @@ internal static class WellKnownMemberDefinitionFactory
     /// <param name="get_IidMethod">The resulting 'IID' getter method.</param>
     /// <param name="iidProperty">The resulting 'IID' property.</param>
     public static void IID(
-        Utf8String? propertyName,
+        Utf8String propertyName,
         Utf8String iidRvaFieldName,
         TypeDefinition iidRvaDataType,
         InteropReferences interopReferences,
@@ -52,13 +52,11 @@ internal static class WellKnownMemberDefinitionFactory
         TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
 
         // Select the property and accessor name based on 'propertyName'
-        propertyName = propertyName is null
-            ? "IID"u8
-            : $"IID_{propertyName}";
+        Utf8String effectivePropertyName = $"IID_{propertyName}";
 
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(
-            name: "get_"u8 + propertyName,
+            name: "get_"u8 + effectivePropertyName,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(iidPropertyType))
         {
@@ -72,7 +70,7 @@ internal static class WellKnownMemberDefinitionFactory
 
         // Create the 'IID' property
         iidProperty = new PropertyDefinition(
-            name: propertyName,
+            name: effectivePropertyName,
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
