@@ -52,6 +52,7 @@ using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using static ABI.InterfaceIIDsExtensions;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0169 // "The field '...' is never used"
