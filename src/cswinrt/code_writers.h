@@ -3950,7 +3950,7 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceValue.IID = ABI.InterfaceIIDs.IID_%Reference;
+        Entries.IReferenceValue.IID = %;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -3969,7 +3969,7 @@ R"(file static class %InterfaceEntriesImpl
     }
 }
 
-)", name, name, name, name);
+)", name, name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_delegates_interface_entries_impl(writer& w, TypeDef const& type)
@@ -3984,9 +3984,9 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.Delegate.IID = ABI.InterfaceIIDs.IID_%;
+        Entries.Delegate.IID = %;
         Entries.Delegate.Vtable = %Impl.Vtable;
-        Entries.DelegateReference.IID = ABI.InterfaceIIDs.IID_%Reference;
+        Entries.DelegateReference.IID = %;
         Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -4005,7 +4005,7 @@ R"(file static class %InterfaceEntriesImpl
     }
 }
 
-)", name, name, name, name, name, name);
+)", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
