@@ -999,17 +999,17 @@ namespace cswinrt
             w.write(", % %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::ref:
-            w.write(settings.netstandard_compat ? ", in % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
+            w.write(", %* %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::out:
-            w.write(settings.netstandard_compat ? ", out % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
+            w.write(", %* %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", uint __%Size, IntPtr %", param_name, param_name);
+            w.write(", uint __%Size, void* %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(settings.netstandard_compat ? ", out uint __%Size, out IntPtr %" : ", uint* __%Size, IntPtr* %", param_name, param_name);
+            w.write(", uint* __%Size, void** %", param_name, param_name);
             break;
         }
     }
@@ -6530,26 +6530,12 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 
                 if (param_cat == param_category::ref)
                 {
-                    if (settings.netstandard_compat)
-                    {
-                        param_prefix = "in ";
-                    }
-                    else
-                    {
-                        param_suffix = "*";
-                    }
+                    param_suffix = "*";
                 }
 
                 if (param_cat == param_category::out)
                 {
-                    if (settings.netstandard_compat)
-                    {
-                        param_prefix = "out ";
-                    }
-                    else
-                    {
-                        param_suffix = "*";
-                    }
+                    param_suffix = "*";
                 }
 
                 w.write(", %%% %",
@@ -6591,6 +6577,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         bool use_pointers;
         std::string interop_dll_type;
         bool marshal_by_object_reference_value;
+        bool is_blittable;
 
         bool is_out() const
         {
@@ -6620,27 +6607,45 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
 
         void write_local(writer& w) const
         {
-            if ((category == param_category::in) || (category == param_category::pass_array))
+            if (category == param_category::in || category == param_category::ref)
                 return;
-            if (category == param_category::fill_array)
+
+            if (category == param_category::pass_array || category == param_category::fill_array)
             {
-                w.write("% __% = %.FromAbiArray((__%Size, %));\n",
-                    local_type,
-                    param_name,
-                    marshaler_type,
-                    param_name, bind<write_escaped_identifier>(param_name));
-                return;
-            }
-            if (category == param_category::ref)
-            {
-                if (!use_pointers)
+                if (is_blittable)
                 {
-                    w.write("var __% = %;\n",
+                    w.write("%<%> __% = new(%, (int)__%Size);\n",
+                        category == param_category::pass_array ? "ReadOnlySpan" : "Span",
+                        param_type,
                         param_name,
-                        bind<write_escaped_identifier>(param_name));
+                        bind<write_escaped_identifier>(param_name),
+                        param_name);
+                }
+                else
+                {
+                    w.write(R"(
+Unsafe.SkipInit(out InlineArray16<%> __%_inlineArray);
+%[] __%_arrayFromPool = null;
+Span<%> __% = __%Size <= 16
+    ? __%_inlineArray[..(int)__%Size]
+    : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent((int)__%Size));
+)",
+                        param_type,
+                        param_name,
+                        param_type,
+                        param_name,
+                        param_type,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_type,
+                        param_name);
                 }
                 return;
             }
+
             std::string_view out_local_type;
             if (param_type == "bool")
             {
@@ -6662,26 +6667,20 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         void write_out_initialize(writer& w) const
         {
             XLANG_ASSERT(is_out());
-            if (!use_pointers)
+            w.write("*% = default;\n", bind<write_escaped_identifier>(param_name));
+            if (is_array())
             {
-                w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
-                if (is_array())
-                {
-                    w.write("__%Size = default;\n", param_name);
-                }
-            }
-            else
-            {
-                w.write("*% = default;\n", bind<write_escaped_identifier>(param_name));
-                if (is_array())
-                {
-                    w.write("*__%Size = default;\n", param_name);
-                }
+                w.write("*__%Size = default;\n", param_name);
             }
         }
 
         void write_convert_to_managed_function(writer& w) const
         {
+            if (is_array())
+            {
+                return;
+            }
+
             if (interop_dll_type != "")
             {
                 w.write(R"(
@@ -6699,7 +6698,25 @@ interop_dll_type);
         {
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    if (!is_out())
+                    {
+                        return;
+                    }
+
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
@@ -6707,6 +6724,28 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAcc
 param_name,
 interop_dll_type,
 param_type);
+                }
+            }
+        }
+
+        void write_copy_to_managed(writer& w) const
+        {
+            if (!is_blittable && category == param_category::pass_array)
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+static extern void CopyToManaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, uint length, void** data, Span<%> span);
+
+)",
+                    param_name,
+                    interop_dll_type,
+                    param_type);
+
+                w.write("CopyToManaged_%(null, __%Size, &%, __%);",
+                    param_name,
+                    param_name,
+					bind<write_escaped_identifier>(param_name),
+                    param_name);
             }
         }
 
@@ -6729,14 +6768,7 @@ param_type);
                 }
                 else if (category == param_category::ref)
                 {
-                    if (!use_pointers)
-                    {
-                        format_string = "in __%";
-                    }
-                    else
-                    {
-                        format_string = "*%";
-                    }
+                    format_string = "*%";
                 }
                 else
                 {
@@ -6746,9 +6778,7 @@ param_type);
             }
             else if (is_array())
             {
-                w.write("%.FromAbiArray((__%Size, %))",
-                    marshaler_type,
-                    param_name, bind<write_escaped_identifier>(param_name));
+                w.write("__%", param_name);
             }
             else if (interop_dll_type != "")
             {
@@ -6773,61 +6803,91 @@ param_type);
             auto param_local = get_param_local(w);
             if (is_ref())
             {
-                w.write("%.CopyManagedArray(%, %);\n",
-                    marshaler_type,
-                    param_local,
+                if (is_blittable)
+                {
+                    return;
+                }
+
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, uint length, void** data);
+
+CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
+
+)",
+                    // CopyToUnmanaged function
+                    param_name,
+                    interop_dll_type,
+                    param_type,
+                    // function call
+                    param_name,
+                    param_name,
+                    param_name,
                     bind<write_escaped_identifier>(param_name));
+
                 return;
             }
-            if (!use_pointers)
+
+            if (is_array())
             {
-                is_array() ?
-                    w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
-                    w.write("% = ", bind<write_escaped_identifier>(param_name));
+                w.write("ConvertToUnmanaged_%(null, __%, out *__%Size, out *(void***)%);\n", param_name, param_name, param_name, bind<write_escaped_identifier>(param_name));
             }
             else
             {
-                is_array() ?
-                    w.write("(*__%Size, *%) = ", param_name, bind<write_escaped_identifier>(param_name)) :
-                    w.write("*% = ", bind<write_escaped_identifier>(param_name));
-            }
-            if (marshaler_type.empty())
-            {
-                if (local_type == "void*")
+                w.write("*% = ", bind<write_escaped_identifier>(param_name));
+
+                if (marshaler_type.empty())
                 {
-                    w.write("%.ConvertToUnmanaged(%);",
-                        param_type,
-                        param_local);
-                }
-                else
-                {
-                    if (param_type == "bool")
+                    if (local_type == "void*")
                     {
-                        w.write("(byte)(% ? 1 : 0);", param_local);
-                    }
-                    else if (param_type == "char")
-                    {
-                        w.write("(ushort)%;", param_local);
+                        w.write("%.ConvertToUnmanaged(%);",
+                            param_type,
+                            param_local);
                     }
                     else
                     {
-                        w.write("%;", param_local);
+                        if (param_type == "bool")
+                        {
+                            w.write("(byte)(% ? 1 : 0);", param_local);
+                        }
+                        else if (param_type == "char")
+                        {
+                            w.write("(ushort)%;", param_local);
+                        }
+                        else
+                        {
+                            w.write("%;", param_local);
+                        }
                     }
                 }
+                else
+                {
+                    w.write("%%ConvertToUnmanaged%(%%)%;",
+                        abi_boxed ? w.write_temp("(%)", param_type) : "",
+                        interop_dll_type != "" ? "" : marshaler_type + ".",
+                        interop_dll_type != "" ? "_" + param_name : "",
+                        interop_dll_type != "" ? "null, " : "",
+                        param_local,
+                        is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
+                }
             }
-            else
-            {
-                w.write("%%ConvertToUnmanaged%%(%%)%;",
-                    abi_boxed && !is_array() ?
-                        w.write_temp("(%)", param_type) : "",
-                    interop_dll_type != "" ? "" : marshaler_type + ".",
-                    is_array() ? "Array" : "",
-                    interop_dll_type != "" ? "_" + param_name : "",
-                    interop_dll_type != "" ? "null, " : "",
-                    param_local,
-                    is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
-            }
+
             w.write("\n");
+        }
+
+        bool need_dispose() const
+        {
+            return is_array() && !is_blittable && (category == param_category::pass_array || category == param_category::fill_array);
+        }
+
+        void write_dispose(writer& w) const
+        {
+            if (!need_dispose())
+            {
+                return;
+            }
+
+            w.write("global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);\n", param_type, param_name);
         }
     };
 
@@ -6937,12 +6997,14 @@ param_type);
             {
                 if (m.marshaler_type.empty())
                 {
+                    m.is_blittable = is_type_blittable(semantics, true);
                     m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                     m.marshaler_type += "<" + m.param_type + ">";
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
             }
-            m.use_pointers = !settings.netstandard_compat;
+            m.use_pointers = true;
         };
 
         for (auto&& param : signature.params())
@@ -6987,18 +7049,20 @@ R"(
 try
 {
 %
+%
 %%
 return 0;
 }
 catch (Exception __exception__)
 {
 return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
-}
+}%
 )",
             [&](writer& w) {
                 w.write(bind_each([](writer& w, managed_marshaler const& m)
                 {
                     m.write_convert_to_managed_function(w);
+                    m.write_convert_to_unmanaged_function(w);
                 }, marshalers));
 
                 if (return_sig)
@@ -7029,6 +7093,13 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
             },
             [&](writer& w)
             {
+                w.write(bind_each([](writer& w, managed_marshaler const& m)
+                {
+                    m.write_copy_to_managed(w);
+                }, marshalers));
+            },
+            [&](writer& w)
+            {
                 if (return_sig)
                 {
                     w.write("__% = ", return_marshaler.param_name);
@@ -7051,6 +7122,28 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
             [&](writer& w) {
                 if (!return_sig) return;
                 return_marshaler.write_marshal_from_managed(w);
+            },
+            [&](writer& w) {
+				bool write_dispose = false;
+                w.write(bind_each([&](writer&, managed_marshaler const& m)
+                {
+                    write_dispose |= m.need_dispose();
+                }, marshalers));
+
+                if (write_dispose)
+                {
+                    w.write(R"(
+finally
+{
+%
+}
+)",
+                        bind_each([](writer& w, managed_marshaler const& m)
+                        {
+                            m.write_dispose(w);
+                        }, marshalers)
+);
+                }
             });
     }
 
