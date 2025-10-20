@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -26,6 +25,5 @@ public interface IIteratorMethodsImpl<T>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The current element.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.current"/>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     static abstract T Current(WindowsRuntimeObjectReference thisReference);
 }

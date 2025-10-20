@@ -18,7 +18,6 @@ namespace Windows.Foundation;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IAsyncAction")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [IAsyncActionComWrappersMarshaller]
 public interface IAsyncAction : IAsyncInfo

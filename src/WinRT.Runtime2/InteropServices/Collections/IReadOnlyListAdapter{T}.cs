@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -32,7 +30,7 @@ public static class IReadOnlyListAdapter<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getat"/>
     public static T GetAt(IReadOnlyList<T> list, uint index)
     {
-        IReadOnlyListAdapter.EnsureIndexInt32(index, list.Count);
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
 
         try
         {
@@ -89,13 +87,13 @@ public static class IReadOnlyListAdapter<T>
 
         // The spec says:
         //   "Calling 'GetMany' with 'startIndex' equal to the length of the vector (last valid index + 1)
-        //   and any specified capacity will succeed and return zero actual elements".
+        //   and any specified capacity will succeed and return zero actual elements."
         if (startIndex == count)
         {
             return 0;
         }
 
-        IReadOnlyListAdapter.EnsureIndexInt32(startIndex, count);
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
 
         // Empty spans are supported, we just stop immediately
         if (items.IsEmpty)
@@ -112,35 +110,5 @@ public static class IReadOnlyListAdapter<T>
         }
 
         return itemCount;
-    }
-}
-
-/// <summary>
-/// Non-generic helpers for <see cref="IReadOnlyListAdapter{T}"/>.
-/// </summary>
-file static class IReadOnlyListAdapter
-{
-    /// <summary>
-    /// Ensures that the specified index is within the valid range for a collection of the specified count.
-    /// </summary>
-    /// <param name="index">The input index.</param>
-    /// <param name="count">The size of the collection.</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is out of range.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureIndexInt32(uint index, int count)
-    {
-        if (index >= (uint)count)
-        {
-            [DoesNotReturn]
-            static void ThrowArgumentOutOfRangeException()
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "ArgumentOutOfRange_IndexLargerThanMaxValue")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowArgumentOutOfRangeException();
-        }
     }
 }

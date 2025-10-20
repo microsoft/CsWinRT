@@ -84,7 +84,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : Wi
     [MemberNotNullWhen(true, nameof(Current))]
     public bool MoveNext()
     {
-        // If we've passed the end of the iteration, 'IEnumerable<T>' should return 'false',
+        // If we've passed the end of the iteration, 'IEnumerator<T>' should return 'false',
         // while 'IIterable<T>' will fail the interface call. So we need to check for that.
         if (!_hadCurrent)
         {
