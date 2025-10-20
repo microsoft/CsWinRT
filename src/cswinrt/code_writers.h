@@ -2899,8 +2899,8 @@ static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
-static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
 static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
@@ -2911,7 +2911,7 @@ static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Gene
 key, interop_method_name_prefix, key, value, // Keys
 value, interop_method_name_prefix, key, value, // Values
 interop_method_name_prefix, key, value, // Count
-value, interop_method_name_prefix, key, value, key, // Indexer_Get
+value, interop_method_name_prefix, key, value, key, // Item
 interop_method_name_prefix, key, value, key, // ContainsKey
 interop_method_name_prefix, key, value, key, value // TryGetValue
 );
@@ -2920,7 +2920,7 @@ interop_method_name_prefix, key, value, key, value // TryGetValue
 %IEnumerable<%> %Keys => %Keys(null, %);
 %IEnumerable<%> %Values => %Values(null, %);
 %int %Count => %Count(null, %);
-%% %this[% key] => %Indexer_Get(null, %, key);
+%% %this[% key] => %Item(null, %, key);
 %bool %ContainsKey(% key) => %ContainsKey(null, %, key);
 %bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
 )",
@@ -2983,11 +2983,11 @@ static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
-static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Set")]
-static extern void %Indexer_Set([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
 static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
@@ -3019,8 +3019,8 @@ static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<
 key, interop_method_name_prefix, key, value, // Keys
 value, interop_method_name_prefix, key, value, // Values
 interop_method_name_prefix, key, value, // Count
-value, interop_method_name_prefix, key, value, key, // Indexer_Get
-interop_method_name_prefix, key, value, key, value, // Indexer_Set
+value, interop_method_name_prefix, key, value, key, // Item get
+interop_method_name_prefix, key, value, key, value, // Item set
 interop_method_name_prefix, key, value, key, value, // Add
 interop_method_name_prefix, key, value, key, // ContainsKey
 interop_method_name_prefix, key, value, key, // Remove
@@ -3039,8 +3039,8 @@ interop_method_name_prefix, key, value, key, value // Remove
 %bool %IsReadOnly => false;
 %% %this[% key] 
 {
-get => %Indexer_Get(null, %, key);
-set => %Indexer_Set(null, %, key, value);
+get => %Item(null, %, key);
+set => %Item(null, %, key, value);
 }
 %void %Add(% key, % value) => %Add(null, %, key, value);
 %bool %ContainsKey(% key) => %ContainsKey(null, %, key);
@@ -3132,17 +3132,17 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
-static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 )",
 interop_method_name_prefix, element, // Count
-element, interop_method_name_prefix, element // Indexer_Get
+element, interop_method_name_prefix, element // Item
 );
 
         w.write(R"(
 %int %Count => %Count(null, %);
 %
-%% %this[int index] => %Indexer_Get(null, %, index);
+%% %this[int index] => %Item(null, %, index);
 )",
 visibility, ireadonlycollection, interop_method_name_prefix, objRefName,
 !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")])" : "",
@@ -3180,15 +3180,15 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto target = "global::ABI.System.Collections.IListMethods";
 
         w.write(R"(
-%int %Count => %.get_Count(%);
+%int %Count => %.Count(%);
 %bool %IsSynchronized => false;
 %object %SyncRoot => this;
 %void %CopyTo(Array array, int index) => %.CopyTo(%, array, index);
 %
 %object %this[int index]
 {
-get => %.Indexer_Get(%, index);
-set => %.Indexer_Set(%, index, value);
+get => %.Item(%, index);
+set => %.Item(%, index, value);
 }
 %bool %IsFixedSize => false;
 %bool %IsReadOnly => false;
@@ -3328,11 +3328,11 @@ element, enumerable_type, target);
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Get")]
-static extern % %Indexer_Get([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Indexer_Set")]
-static extern void %Indexer_Set([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "IndexOf")]
 static extern int %IndexOf([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
@@ -3359,8 +3359,8 @@ static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<
 static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
 )",
 interop_method_name_prefix, element, // Count
-element, interop_method_name_prefix, element, // Indexer_Get
-interop_method_name_prefix, element, element,  // Indexer_Set
+element, interop_method_name_prefix, element, // Item get
+interop_method_name_prefix, element, element,  // Item set
 interop_method_name_prefix, element, element, // IndexOf
 interop_method_name_prefix, element, element, // Insert
 interop_method_name_prefix, element, // RemoveAt
@@ -3377,8 +3377,8 @@ interop_method_name_prefix, element, element // Remove
 %
 %% %this[int index] 
 {
-get => %Indexer_Get(null, %, index);
-set => %Indexer_Set(null, %, index, value);
+get => %Item(null, %, index);
+set => %Item(null, %, index, value);
 }
 %int %IndexOf(% item) => %IndexOf(null, %, item);
 %void %Insert(int index, % item) => %Insert(null, %, index, item);
@@ -3605,7 +3605,7 @@ visibility, self, objref_name);
 
             // Write IWindowsRuntimeInterface implementation for non-default interface and for the default interface if it isn't exclusive.
             // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_exclusive_to(interface_type))
+            if (!is_exclusive_to(interface_type) || is_overridable_interface || is_protected_interface)
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
