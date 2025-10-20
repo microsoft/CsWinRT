@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.InteropServices;
+namespace ABI.System.Collections.Specialized;
 
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
@@ -14,10 +16,10 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed unsafe class NotifyCollectionChangedEventSource : EventSource<NotifyCollectionChangedEventHandler>
+public sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : EventSource<NotifyCollectionChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
-    public NotifyCollectionChangedEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+    public NotifyCollectionChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
         : base(nativeObjectReference, index)
     {
     }
@@ -35,7 +37,7 @@ public sealed unsafe class NotifyCollectionChangedEventSource : EventSource<Noti
     }
 
     /// <summary>
-    /// The <see cref="EventSourceState{T}"/> implementation for <see cref="PropertyChangedEventSource"/>.
+    /// The <see cref="EventSourceState{T}"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     private sealed class EventState : EventSourceState<NotifyCollectionChangedEventHandler>
     {
