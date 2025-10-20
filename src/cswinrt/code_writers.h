@@ -794,6 +794,12 @@ namespace cswinrt
 
     static void write_iid_guid(writer& w, TypeDef const& type)
     {
+        if (distance(type.GenericParam()) != 0)
+        {
+            write_iid_guid_property_name(w, type);
+            return;
+        }
+
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
             std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
@@ -2464,13 +2470,13 @@ public %()
 private WindowsRuntimeObjectReference %
 {
     get
-    {
+    {%
         [MethodImpl(MethodImplOptions.NoInlining)]
         WindowsRuntimeObjectReference MakeObjectReference()
         {
             _ = global::System.Threading.Interlocked.CompareExchange(
                 location1: ref field,
-                value: NativeObjectReference.As(%),
+                value: NativeObjectReference.As(%%),
                 comparand: null);
 
             return field;
@@ -2481,7 +2487,23 @@ private WindowsRuntimeObjectReference %
 }
 )",
                         objrefname,
-                        bind<write_iid_guid>(ifaceType));
+                        [&](writer& w) {
+                            if (distance(ifaceType.GenericParam()) != 0)
+                            {
+                                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+static extern Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop.dll")] object _);
+)",
+                                    bind<write_iid_guid>(ifaceType));
+                            }
+                        },
+                        bind<write_iid_guid>(ifaceType),
+                        [&](writer& w){
+                            if (distance(ifaceType.GenericParam()) != 0)
+                            {
+                                w.write("(null)");
+                            }
+                        });
 
                         /*
                         TODO handle fast ABI
