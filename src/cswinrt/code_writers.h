@@ -5103,7 +5103,7 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                     w.write(", _%_reference = __%_referenceSpan",
                         param_name,
                         param_name);
-				}
+                }
             }
             else
             {
@@ -5421,7 +5421,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
 }
 )",
                         param_name,
-						local_type,
+                        local_type,
                         param_name);
                 }
                 else
@@ -5496,7 +5496,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                     if (m.local_type == "void*")
                     {
                         m.local_type = "nint";
-					}
+                    }
                 }
                 else
                 {
@@ -6692,7 +6692,7 @@ static extern void CopyToManaged_%([UnsafeAccessorType("%ArrayMarshaller, WinRT.
                 w.write("CopyToManaged_%(null, __%Size, &%, __%);",
                     param_name,
                     param_name,
-					bind<write_escaped_identifier>(param_name),
+                    bind<write_escaped_identifier>(param_name),
                     param_name);
             }
         }
@@ -7071,7 +7071,7 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
                 return_marshaler.write_marshal_from_managed(w);
             },
             [&](writer& w) {
-				bool write_dispose = false;
+                bool write_dispose = false;
                 w.write(bind_each([&](writer&, managed_marshaler const& m)
                 {
                     write_dispose |= m.need_dispose();
