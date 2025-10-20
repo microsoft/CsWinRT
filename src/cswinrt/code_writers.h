@@ -616,10 +616,10 @@ namespace cswinrt
                 break;
             case param_category::pass_array:
             case param_category::fill_array:
-                w.write("%[]", bind<write_parameter_name>(param));
+                w.write("%", bind<write_parameter_name>(param));
                 break;
             case param_category::receive_array:
-                w.write("out %[]", bind<write_parameter_name>(param));
+                w.write("out %", bind<write_parameter_name>(param));
                 break;
         }
     }
@@ -1068,18 +1068,9 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
-            if (settings.netstandard_compat)
-            {
-                return_sig.Type().is_szarray() ?
-                    w.write(", out uint __%Size, out IntPtr %", signature.return_param_name(), return_param) :
-                    w.write(", out % %", bind<write_abi_type>(semantics), return_param);
-            }
-            else
-            {
-                return_sig.Type().is_szarray() ?
-                    w.write(", uint* __%Size, IntPtr* %", signature.return_param_name(), return_param) :
-                    w.write(", %* %", bind<write_abi_type>(semantics), return_param);
-            }
+            return_sig.Type().is_szarray() ?
+                w.write(", uint* __%Size, void** %", signature.return_param_name(), return_param) :
+                w.write(", %* %", bind<write_abi_type>(semantics), return_param);
         }
     }
 
@@ -6574,7 +6565,6 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         std::string marshaler_type;
         std::string interface_guid;
         bool abi_boxed;
-        bool use_pointers;
         std::string interop_dll_type;
         bool marshal_by_object_reference_value;
         bool is_blittable;
@@ -6676,7 +6666,7 @@ Span<%> __% = __%Size <= 16
 
         void write_convert_to_managed_function(writer& w) const
         {
-            if (is_array())
+            if (is_array() || is_out())
             {
                 return;
             }
@@ -7004,7 +6994,6 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics));
             }
-            m.use_pointers = true;
         };
 
         for (auto&& param : signature.params())
