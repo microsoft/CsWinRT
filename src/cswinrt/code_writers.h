@@ -3950,7 +3950,7 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceValue.IID = %ReferenceImpl.IID;
+        Entries.IReferenceValue.IID = ABI.InterfaceIIDs.IID_%Reference;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -3984,9 +3984,9 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.Delegate.IID = %Impl.IID;
+        Entries.Delegate.IID = ABI.InterfaceIIDs.IID_%;
         Entries.Delegate.Vtable = %Impl.Vtable;
-        Entries.DelegateReference.IID = %ReferenceImpl.IID;
+        Entries.DelegateReference.IID = ABI.InterfaceIIDs.IID_%Reference;
         Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
