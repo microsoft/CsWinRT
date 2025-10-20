@@ -192,6 +192,12 @@ public static unsafe class IListMethods
     {
         BindableIListMethods.RemoveAt(thisReference, index);
     }
+
+    /// <inheritdoc cref="global::System.Collections.IList.Clear"/>
+    public static void Clear(WindowsRuntimeObjectReference thisReference)
+    {
+        BindableIListMethods.Clear(thisReference);
+    }
 }
 
 /// <summary>
