@@ -187,6 +187,20 @@ if (observableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
+var typeList = new List<Type>();
+instance.BindableIterableProperty = typeList;
+if (typeList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var stringList = new List<string>();
+instance.BindableIterableProperty = stringList;
+if (stringList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
 var names = profile?.GetNetworkNames();
 
