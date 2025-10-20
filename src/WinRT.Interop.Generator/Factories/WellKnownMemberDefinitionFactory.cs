@@ -74,7 +74,7 @@ internal static class WellKnownMemberDefinitionFactory
         iidProperty = new PropertyDefinition(
             name: propertyName,
             attributes: PropertyAttributes.None,
-            signature: PropertySignature.CreateStatic(iidPropertyType))
+            signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
@@ -117,7 +117,7 @@ internal static class WellKnownMemberDefinitionFactory
         iidProperty = new PropertyDefinition(
             name: "IID"u8,
             attributes: PropertyAttributes.None,
-            signature: PropertySignature.CreateStatic(iidPropertyType))
+            signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
