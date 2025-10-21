@@ -1285,56 +1285,6 @@ internal static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IEnumerable</c> (036D2C08-DF29-41AF-8AA2-D774BE62BA6F).</summary>
-    public static ref readonly Guid IID_IEnumerable
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                0x08, 0x2C, 0x6D, 0x03,
-                0x29, 0xDF,
-                0xAF, 0x41,
-                0x8A,
-                0xA2,
-                0xD7,
-                0x74,
-                0xBE,
-                0x62,
-                0xBA,
-                0x6F
-            ];
-
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    }
-
-    /// <summary>The IID for <c>IList</c> (393DE7DE-6FD0-4C0D-BB71-47244A113E93).</summary>
-    public static ref readonly Guid IID_IList
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                0xDE, 0xE7, 0x3D, 0x39,
-                0xD0, 0x6F,
-                0x0D, 0x4C,
-                0xBB,
-                0x71,
-                0x47,
-                0x24,
-                0x4A,
-                0x11,
-                0x3E,
-                0x93
-            ];
-
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    }
-
     /// <summary>The IID for <c>ICustomProperty</c> (30DA92C0-23E8-42A0-AE7C-734A0E5D2782).</summary>
     public static ref readonly Guid IID_ICustomProperty
     {
@@ -1410,8 +1360,8 @@ internal static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IDisposable</c> (30D5A829-7FA4-4026-83BB-D75BAE4EA99E).</summary>
-    public static ref readonly Guid IID_IDisposable
+    /// <summary>The IID for <c>IClosable</c> (30D5A829-7FA4-4026-83BB-D75BAE4EA99E).</summary>
+    public static ref readonly Guid IID_IClosable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1460,8 +1410,8 @@ internal static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IServiceProvider</c> (68B3A2DF-8173-539F-B524-C8A2348F5AFB).</summary>
-    public static ref readonly Guid IID_IServiceProvider
+    /// <summary>The IID for <c>IXamlServiceProvider</c> (68B3A2DF-8173-539F-B524-C8A2348F5AFB).</summary>
+    public static ref readonly Guid IID_IXamlServiceProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
