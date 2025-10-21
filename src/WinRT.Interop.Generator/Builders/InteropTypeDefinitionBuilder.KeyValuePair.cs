@@ -49,14 +49,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature keyValuePairType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -220,17 +218,6 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
-
-            // Create the public 'IID' property
-            WellKnownMemberDefinitionFactory.IID(
-                forwardedIidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out MethodDefinition get_IidMethod2,
-                out PropertyDefinition iidProperty);
-
-            implType.Methods.Add(get_IidMethod2);
-            implType.Properties.Add(iidProperty);
 
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(

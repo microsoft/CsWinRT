@@ -1114,7 +1114,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
