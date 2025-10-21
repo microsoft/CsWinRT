@@ -202,7 +202,7 @@ Where <spec> is one or more of:
                 for (auto&& [name, type] : members.types)
                 {
                     if (!settings.filter.includes(type)) { continue; }
-                    if (get_mapped_type(ns, name))
+                    if (get_mapped_type(ns, name) || distance(type.GenericParam()) != 0)
                     {
                         continue;
                     }
@@ -247,7 +247,7 @@ Where <spec> is one or more of:
                         {
                             currentType = name;
                             if (!settings.filter.includes(type)) { continue; }
-                            if (get_mapped_type(ns, name))
+                            if (get_mapped_type(ns, name) || distance(type.GenericParam()) != 0)
                             {
                                 continue;
                             }
@@ -290,7 +290,7 @@ Where <spec> is one or more of:
                         {
                             currentType = name;
                             if (!settings.filter.includes(type)) { continue; }
-                            if (get_mapped_type(ns, name))
+                            if (get_mapped_type(ns, name) || distance(type.GenericParam()) != 0)
                             {
                                 written = true;
                                 continue;
@@ -353,7 +353,7 @@ Where <spec> is one or more of:
                             {
                                 currentType = name;
                                 if (!settings.filter.includes(type)) { continue; }
-                                if (get_mapped_type(ns, name)) continue;
+                                if (get_mapped_type(ns, name) || distance(type.GenericParam()) != 0) continue;
                                 if (is_api_contract_type(type)) { continue; }
                                 if (is_attribute_type(type)) { continue; }
                                 auto guard{ w.push_generic_params(type.GenericParam()) };
@@ -389,7 +389,7 @@ Where <spec> is one or more of:
                             // Custom additions to namespaces
                             for (auto addition : strings::additions)
                             {
-                                if (ns == addition.name && settings.addition_filter.includes(ns))
+                                if (ns == addition.name && ns == "Windows.UI" && settings.addition_filter.includes(ns))
                                 {
                                     w.write(addition.value);
                                 }

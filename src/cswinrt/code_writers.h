@@ -2198,6 +2198,11 @@ remove => %;
         write_custom_attributes(w, type.CustomAttribute(), enable_platform_attrib);
     }
 
+    void write_constructor_callback_method_name(writer& w, MethodDef const& method)
+    {
+        w.write("%_%", method.Name(), size(method.Signature().Params()));
+    }
+
     struct attributed_type
     {
         TypeDef type;
@@ -2397,7 +2402,7 @@ private static class _%
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 // base
-                method.Name(),
+                bind<write_constructor_callback_method_name>(method),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
@@ -2570,7 +2575,7 @@ static extern Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop.dll")
                     else
                     {
                         w.write("%, %, [%]",
-                            method.Name(),
+                            bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             bind_list<write_parameter_name_with_modifier>(", ", params_without_objects));
                     }
@@ -5827,7 +5832,7 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 }
 )",
-            method.Name(),
+            bind<write_constructor_callback_method_name>(method),
             cache_object,
             bind(write_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
@@ -5891,7 +5896,7 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 }
 )",
-            method.Name(),
+            bind<write_constructor_callback_method_name>(method),
             cache_object,
             bind(write_composable_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
@@ -7245,16 +7250,18 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
 static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
-var __handler = ConvertToManaged(null, handler);
+var __handler = ConvertToManaged(null, %);
 )",
-bind<write_type_name>(semantics, typedef_name_type::Projected, false),
-bind<write_interop_dll_type_name>(semantics)
+                        bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+                        bind<write_interop_dll_type_name>(semantics),
+                        handler_parameter_name
 );
                 }
                 else
                 {
-                    w.write("var __handler = %Marshaller.ConvertToManaged(handler);",
-                        bind<write_type_name>(semantics, typedef_name_type::ABI, false));
+                    w.write("var __handler = %Marshaller.ConvertToManaged(%);",
+                        bind<write_type_name>(semantics, typedef_name_type::ABI, false),
+                        handler_parameter_name);
                 }
             },
             add_handler_event_token_name,
@@ -8409,7 +8416,7 @@ return false;
 %%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_type_custom_attributes>(type, true),
+            bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
