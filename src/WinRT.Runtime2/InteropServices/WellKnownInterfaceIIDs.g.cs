@@ -8,13 +8,13 @@ using System.Runtime.CompilerServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// IIDs for projected WinRT interfaces.
+/// IIDs for well known projected WinRT interfaces.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class WellKnownProjectedInterfaceIIDs
+public static class WellKnownInterfaceIIDs
 {
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.IBindableIterable</c> (mapped to <see cref="global::System.Collections.IEnumerable"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableIterable

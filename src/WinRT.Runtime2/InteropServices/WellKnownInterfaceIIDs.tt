@@ -12,13 +12,13 @@ using System.Runtime.CompilerServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// IIDs for projected WinRT interfaces.
+/// IIDs for well known projected WinRT interfaces.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class WellKnownProjectedInterfaceIIDs
+public static class WellKnownInterfaceIIDs
 {
 <#
 var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFullyQualifiedName, bool Xaml)[]
