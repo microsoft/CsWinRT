@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class InterfaceIIDs
+public static class WellKnownProjectedInterfaceIIDs
 {
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.IBindableIterable</c> (mapped to <see cref="global::System.Collections.IEnumerable"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableIterable

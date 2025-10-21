@@ -18,7 +18,7 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class InterfaceIIDs
+public static class WellKnownProjectedInterfaceIIDs
 {
 <#
 var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFullyQualifiedName, bool Xaml)[]
