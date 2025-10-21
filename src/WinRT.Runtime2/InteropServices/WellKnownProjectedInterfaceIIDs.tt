@@ -59,7 +59,7 @@ for (int i = 0; i < entries.Length; i++)
     public static ref readonly Guid IID_<#=windowsRuntimeFullyQualifiedName.Replace(".", "_")#>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.<#=iidPropertyName#>;
+        get => ref WellKnownInterfaceIIDs.<#=iidPropertyName#>;
     }
 <#
 }

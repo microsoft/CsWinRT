@@ -53,7 +53,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -67,7 +67,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
@@ -112,7 +112,7 @@ file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallbac
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler,
+            iid: in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventHandler,
             wrapperFlags: out wrapperFlags);
 
         return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(valueReference.Invoke);
@@ -151,23 +151,23 @@ file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
     /// </summary>
     static NotifyCollectionChangedEventHandlerInterfaceEntriesImpl()
     {
-        Entries.NotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_NotifyCollectionChangedEventHandler;
+        Entries.NotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventHandler;
         Entries.NotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerImpl.Vtable;
-        Entries.IReferenceOfNotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler;
+        Entries.IReferenceOfNotifyCollectionChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedEventHandler;
         Entries.IReferenceOfNotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
+        Entries.IAgileObject.IID = WellKnownInterfaceIIDs.IID_IAgileObject;
         Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IInspectable.IID = WellKnownInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -196,7 +196,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfNotifyCollectionChangedEventHandler)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedEventHandler)!;
     }
 }
 

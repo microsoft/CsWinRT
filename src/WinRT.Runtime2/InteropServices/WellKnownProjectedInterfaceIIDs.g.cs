@@ -20,125 +20,125 @@ public static class WellKnownProjectedInterfaceIIDs
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableIterable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableIterable;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableIterable;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Interop.IBindableIterable</c> (mapped to <see cref="global::System.Collections.IEnumerable"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Interop_IBindableIterable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableIterable;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableIterable;
     }
 
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.IBindableIterator</c> (mapped to <see cref="global::System.Collections.IEnumerator"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableIterator
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableIterator;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableIterator;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Interop.IBindableIterator</c> (mapped to <see cref="global::System.Collections.IEnumerator"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Interop_IBindableIterator
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableIterator;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableIterator;
     }
 
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.IBindableVector</c> (mapped to <see cref="global::System.Collections.IList"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableVector
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableVector;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableVector;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Interop.IBindableVector</c> (mapped to <see cref="global::System.Collections.IList"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Interop_IBindableVector
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IBindableVector;
+        get => ref WellKnownInterfaceIIDs.IID_IBindableVector;
     }
 
     /// <summary>The IID for <c>Windows.UI.Xaml.Data.INotifyPropertyChanged</c> (mapped to <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Data_INotifyPropertyChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged;
+        get => ref WellKnownInterfaceIIDs.IID_WUX_INotifyPropertyChanged;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Data.INotifyPropertyChanged</c> (mapped to <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Data_INotifyPropertyChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged;
+        get => ref WellKnownInterfaceIIDs.IID_MUX_INotifyPropertyChanged;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Data.INotifyDataErrorInfo</c> (mapped to <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Data_INotifyDataErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
+        get => ref WellKnownInterfaceIIDs.IID_INotifyDataErrorInfo;
     }
 
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.INotifyCollectionChanged</c> (mapped to <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_INotifyCollectionChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged;
+        get => ref WellKnownInterfaceIIDs.IID_WUX_INotifyCollectionChanged;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Interop.INotifyCollectionChanged</c> (mapped to <see cref="global::System.Collections.Specialized.INotifyCollectionChanged"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Interop_INotifyCollectionChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+        get => ref WellKnownInterfaceIIDs.IID_MUX_INotifyCollectionChanged;
     }
 
     /// <summary>The IID for <c>Windows.Foundation.IClosable</c> (mapped to <see cref="global::System.IDisposable"/>.</summary>
     public static ref readonly Guid IID_Windows_Foundation_IClosable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IClosable;
+        get => ref WellKnownInterfaceIIDs.IID_IClosable;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.IXamlServiceProvider</c> (mapped to <see cref="global::System.IServiceProvider"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_IXamlServiceProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IXamlServiceProvider;
+        get => ref WellKnownInterfaceIIDs.IID_IXamlServiceProvider;
     }
 
     /// <summary>The IID for <c>Windows.UI.Xaml.Input.ICommand</c> (mapped to <see cref="global::System.Windows.Input.ICommand"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Input_ICommand
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_ICommand;
+        get => ref WellKnownInterfaceIIDs.IID_ICommand;
     }
 
     /// <summary>The IID for <c>Microsoft.UI.Xaml.Input.ICommand</c> (mapped to <see cref="global::System.Windows.Input.ICommand"/>.</summary>
     public static ref readonly Guid IID_Microsoft_UI_Xaml_Input_ICommand
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_ICommand;
+        get => ref WellKnownInterfaceIIDs.IID_ICommand;
     }
 
     /// <summary>The IID for <c>Windows.Foundation.Collections.IVectorChangedEventArgs</c> (mapped to <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.</summary>
     public static ref readonly Guid IID_Windows_Foundation_Collections_IVectorChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
+        get => ref WellKnownInterfaceIIDs.IID_IVectorChangedEventArgs;
     }
 
     /// <summary>The IID for <c>Windows.Foundation.IAsyncAction</c> (mapped to <see cref="global::Windows.Foundation.IAsyncAction"/>.</summary>
     public static ref readonly Guid IID_Windows_Foundation_IAsyncAction
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IAsyncAction;
+        get => ref WellKnownInterfaceIIDs.IID_IAsyncAction;
     }
 
     /// <summary>The IID for <c>Windows.Foundation.IAsyncInfo</c> (mapped to <see cref="global::Windows.Foundation.IAsyncInfo"/>.</summary>
     public static ref readonly Guid IID_Windows_Foundation_IAsyncInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
+        get => ref WellKnownInterfaceIIDs.IID_IAsyncInfo;
     }
 }

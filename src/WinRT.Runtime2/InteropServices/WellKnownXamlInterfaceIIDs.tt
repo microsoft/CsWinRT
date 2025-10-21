@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>IIDs for XAML interfaces that differ between UWP XAML and WinUI 3.</summary>
-internal static class WellKnownXamlInterfaceIds
+internal static class WellKnownXamlInterfaceIIDs
 {
 <#
 var entries = new string[]
@@ -39,8 +39,8 @@ for (int i = 0; i < entries.Length; i++)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_<#=entries[i]#>
-            : ref WellKnownInterfaceIds.IID_MUX_<#=entries[i]#>;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_<#=entries[i]#>
+            : ref WellKnownInterfaceIIDs.IID_MUX_<#=entries[i]#>;
     }
 <#
 }

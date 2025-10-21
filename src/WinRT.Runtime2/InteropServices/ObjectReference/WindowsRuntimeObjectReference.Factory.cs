@@ -47,7 +47,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
 
         // Otherwise, use a context aware object reference to track it, with the specialized instance
-        return iid == WellKnownInterfaceIds.IID_IInspectable
+        return iid == WellKnownInterfaceIIDs.IID_IInspectable
             ? new ContextAwareInspectableObjectReference(thisPtr, referenceTrackerPtr: null)
             : new ContextAwareInterfaceObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
     }
@@ -89,7 +89,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
 
         // Same optimization as above for context aware object references
-        return iid == WellKnownInterfaceIds.IID_IInspectable
+        return iid == WellKnownInterfaceIIDs.IID_IInspectable
             ? new ContextAwareInspectableObjectReference(interfacePtr, referenceTrackerPtr: null)
             : new ContextAwareInterfaceObjectReference(interfacePtr, referenceTrackerPtr: null, iid: in iid);
     }
@@ -142,7 +142,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
 
         // Once again, same optimization as above for context aware object references
-        return iid == WellKnownInterfaceIds.IID_IInspectable
+        return iid == WellKnownInterfaceIIDs.IID_IInspectable
             ? new ContextAwareInspectableObjectReference(acquiredThisPtr, referenceTrackerPtr: null)
             : new ContextAwareInterfaceObjectReference(acquiredThisPtr, referenceTrackerPtr: null, iid: in iid);
     }

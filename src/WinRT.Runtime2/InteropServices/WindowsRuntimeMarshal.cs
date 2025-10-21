@@ -58,8 +58,8 @@ public static unsafe class WindowsRuntimeMarshal
         if (TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
             TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
         {
-            using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
-            using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
+            using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownInterfaceIIDs.IID_IUnknown);
+            using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownInterfaceIIDs.IID_IUnknown);
 
             return leftUnknown.GetThisPtrUnsafe() == rightUnknown.GetThisPtrUnsafe();
         }

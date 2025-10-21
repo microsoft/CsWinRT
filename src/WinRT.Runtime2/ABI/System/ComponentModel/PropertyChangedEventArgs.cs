@@ -95,7 +95,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
 
         IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: value,
-            iid: in WellKnownXamlInterfaceIds.IID_PropertyChangedEventArgs,
+            iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgs,
             pvObject: out void* result).Assert();
 
         try
@@ -119,7 +119,7 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
         runtimeClassName: WellKnownXamlRuntimeClassNames.PropertyChangedEventArgs,
-        iid: in WellKnownXamlInterfaceIds.IID_PropertyChangedEventArgsRuntimeClassFactory);
+        iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.

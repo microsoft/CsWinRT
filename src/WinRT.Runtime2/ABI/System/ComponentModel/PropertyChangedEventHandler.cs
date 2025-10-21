@@ -52,7 +52,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_PropertyChangedEventHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -66,7 +66,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfPropertyChangedEventHandler);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
@@ -111,7 +111,7 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownXamlInterfaceIds.IID_PropertyChangedEventHandler,
+            iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler,
             wrapperFlags: out wrapperFlags);
 
         return new global::System.ComponentModel.PropertyChangedEventHandler(valueReference.Invoke);
@@ -150,23 +150,23 @@ file static class PropertyChangedEventHandlerInterfaceEntriesImpl
     /// </summary>
     static PropertyChangedEventHandlerInterfaceEntriesImpl()
     {
-        Entries.PropertyChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_PropertyChangedEventHandler;
+        Entries.PropertyChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler;
         Entries.PropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerImpl.Vtable;
-        Entries.IReferenceOfPropertyChangedEventHandler.IID = WellKnownXamlInterfaceIds.IID_IReferenceOfPropertyChangedEventHandler;
+        Entries.IReferenceOfPropertyChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler;
         Entries.IReferenceOfPropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
+        Entries.IAgileObject.IID = WellKnownInterfaceIIDs.IID_IAgileObject;
         Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IInspectable.IID = WellKnownInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -195,7 +195,7 @@ file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribu
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIds.IID_IReferenceOfPropertyChangedEventHandler)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler)!;
     }
 }
 

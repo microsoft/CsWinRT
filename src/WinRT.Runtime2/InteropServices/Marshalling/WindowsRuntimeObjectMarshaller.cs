@@ -42,7 +42,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {
             // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
-            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr))
+            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIIDs.IID_IInspectable, out void* inspectablePtr))
             {
                 [DoesNotReturn]
                 [StackTraceHidden]
@@ -60,7 +60,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // Marshal 'value' as an 'IInspectable' (this method will take care of correctly marshalling objects with the right vtables)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownInterfaceIds.IID_IInspectable);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownInterfaceIIDs.IID_IInspectable);
 
         return new(thisPtr);
     }

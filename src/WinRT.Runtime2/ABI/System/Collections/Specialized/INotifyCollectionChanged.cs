@@ -31,7 +31,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyCollectionChanged>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChanged);
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChanged);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

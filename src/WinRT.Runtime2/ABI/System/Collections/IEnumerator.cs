@@ -54,7 +54,7 @@ public static unsafe class IEnumeratorMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IEnumerator? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IBindableIterator);
+        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.ConvertToUnmanaged(value, in WellKnownInterfaceIIDs.IID_IBindableIterator);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -80,7 +80,7 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
         {
             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                 externalComObject: value,
-                iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+                iid: in WellKnownInterfaceIIDs.IID_IBindableIterator,
                 wrapperFlags: out wrapperFlags);
 
             wrapperObject = new WindowsRuntimeIterator(valueReference);
@@ -105,7 +105,7 @@ file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRunt
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
             externalComObject: value,
-            iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+            iid: in WellKnownInterfaceIIDs.IID_IBindableIterator,
             wrapperFlags: out wrapperFlags);
 
         return new WindowsRuntimeIterator(valueReference);

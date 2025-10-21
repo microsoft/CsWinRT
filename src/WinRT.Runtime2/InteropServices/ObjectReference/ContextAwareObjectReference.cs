@@ -54,7 +54,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
-        _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownInterfaceIds.IID_IContextCallback);
+        _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownInterfaceIIDs.IID_IContextCallback);
         _contextToken = WindowsRuntimeImports.CoGetContextToken();
     }
 
@@ -233,7 +233,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
                 NativeAddRefFromTrackerSourceUnsafe();
 
                 // Create the specialized object reference if the target interface is 'IInspectable'
-                objectReference = iid == WellKnownInterfaceIds.IID_IInspectable
+                objectReference = iid == WellKnownInterfaceIIDs.IID_IInspectable
                     ? new ContextAwareInspectableObjectReference(
                         thisPtr: targetObject,
                         referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
@@ -290,7 +290,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
                 // be hardcoded to 'Inspectable'. Otherwise, we must have a 'ContextAwareInterfaceObjectReference'
                 // instance, which means it is safe to do a fast cast to it to retrieve the interface id to use.
                 ref readonly Guid iid = ref state.GetType() == typeof(ContextAwareInspectableObjectReference)
-                    ? ref WellKnownInterfaceIds.IID_IInspectable
+                    ? ref WellKnownInterfaceIIDs.IID_IInspectable
                     : ref Unsafe.As<ContextAwareInterfaceObjectReference>(state).Iid;
 
                 return agileReference.FromAgileUnsafe(in iid);

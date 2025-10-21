@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>IIDs for XAML interfaces that differ between UWP XAML and WinUI 3.</summary>
-internal static class WellKnownXamlInterfaceIds
+internal static class WellKnownXamlInterfaceIIDs
 {
     /// <summary>
     /// Gets the IID for <c>INotifyPropertyChanged</c>.
@@ -16,8 +16,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_INotifyPropertyChanged
+            : ref WellKnownInterfaceIIDs.IID_MUX_INotifyPropertyChanged;
     }
 
     /// <summary>
@@ -27,8 +27,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_INotifyCollectionChanged
+            : ref WellKnownInterfaceIIDs.IID_MUX_INotifyCollectionChanged;
     }
 
     /// <summary>
@@ -38,8 +38,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_INotifyCollectionChangedEventArgs
+            : ref WellKnownInterfaceIIDs.IID_MUX_INotifyCollectionChangedEventArgs;
     }
 
     /// <summary>
@@ -49,8 +49,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_INotifyCollectionChangedEventArgsFactory
+            : ref WellKnownInterfaceIIDs.IID_MUX_INotifyCollectionChangedEventArgsFactory;
     }
 
     /// <summary>
@@ -60,8 +60,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_NotifyCollectionChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_NotifyCollectionChangedEventHandler;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_NotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIIDs.IID_MUX_NotifyCollectionChangedEventHandler;
     }
 
     /// <summary>
@@ -71,8 +71,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgs;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_PropertyChangedEventArgs
+            : ref WellKnownInterfaceIIDs.IID_MUX_PropertyChangedEventArgs;
     }
 
     /// <summary>
@@ -82,8 +82,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
+            : ref WellKnownInterfaceIIDs.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory;
     }
 
     /// <summary>
@@ -93,8 +93,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_PropertyChangedEventHandler
+            : ref WellKnownInterfaceIIDs.IID_MUX_PropertyChangedEventHandler;
     }
 
     /// <summary>
@@ -104,8 +104,8 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_IReferenceOfPropertyChangedEventHandler
+            : ref WellKnownInterfaceIIDs.IID_MUX_IReferenceOfPropertyChangedEventHandler;
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ internal static class WellKnownXamlInterfaceIds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
+            ? ref WellKnownInterfaceIIDs.IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
+            : ref WellKnownInterfaceIIDs.IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler;
     }
 }

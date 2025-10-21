@@ -23,7 +23,7 @@ public static unsafe class IAgileObjectImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAgileObject;
+        get => ref WellKnownInterfaceIIDs.IID_IAgileObject;
     }
 
     /// <summary>

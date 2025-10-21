@@ -101,6 +101,12 @@
     <Compile Update="InteropServices\WellKnownErrorCodes.cs">
       <DependentUpon>InteropServices\WellKnownErrorCodes.tt</DependentUpon>
     </Compile>
+    <Compile Update="InteropServices\WellKnownInterfaceIIDs.g.cs">
+      <DependentUpon>WellKnownInterfaceIIDs.tt</DependentUpon>
+    </Compile>
+    <Compile Update="InteropServices\WellKnownXamlInterfaceIIDs.g.cs">
+      <DependentUpon>WellKnownXamlInterfaceIIDs.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   
   <!-- T4 template generation service (the .tt/.g.cs files are resolved in the .targets file) -->

@@ -87,7 +87,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgs, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIIDs.IID_DataErrorsChangedEventArgs, out void* result).Assert();
 
         try
         {
@@ -110,7 +110,7 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
         "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
-        in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
+        in WellKnownInterfaceIIDs.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.

@@ -193,7 +193,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
 
         IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: value,
-            iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChangedEventArgs,
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgs,
             pvObject: out void* result).Assert();
 
         try
@@ -217,7 +217,7 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
         runtimeClassName: WellKnownXamlRuntimeClassNames.NotifyCollectionChangedEventArgs,
-        iid: in WellKnownXamlInterfaceIds.IID_INotifyCollectionChangedEventArgsFactory);
+        iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.

@@ -33,7 +33,7 @@ public static unsafe class IAsyncActionMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncAction? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncAction);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged(value, in WellKnownInterfaceIIDs.IID_IAsyncAction);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -57,7 +57,7 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
     {
         if (runtimeClassName.SequenceEqual("Windows.Foundation.IAsyncAction"))
         {
-            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIIDs.IID_IAsyncAction)!;
 
             wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
@@ -82,7 +82,7 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
     /// <inheritdoc/>
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in WellKnownInterfaceIIDs.IID_IAsyncAction)!;
 
         wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
