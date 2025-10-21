@@ -22,7 +22,8 @@ var entries = new (string Name, uint Value, string Description)[]
     ("TYPE_E_TYPEMISMATCH", 0x80028CA0, "Type mismatch."),
     ("DISP_E_OVERFLOW", 0x8002000A, "Numeric overflow."),
     ("E_CHANGED_STATE", 0x8000000C, "A concurrent or interleaved operation changed the state of the object, invalidating this operation."),
-    ("E_BOUNDS", 0x8000000B, "The operation attempted to access data outside the valid range.")
+    ("E_BOUNDS", 0x8000000B, "The operation attempted to access data outside the valid range."),
+    ("E_NOTIMPL", 0x80004001, "Not implemented.")
 };
 
 for (int i = 0; i < entries.Length; i++)

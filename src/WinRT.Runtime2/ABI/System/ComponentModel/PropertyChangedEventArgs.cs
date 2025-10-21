@@ -32,7 +32,6 @@ namespace ABI.System.ComponentModel;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventargs"/>
-[WindowsRuntimeClassName("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")]
 [PropertyChangedEventArgsComWrappersMarshaller]
 file static class PropertyChangedEventArgs;
 

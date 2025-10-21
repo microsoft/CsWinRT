@@ -1185,6 +1185,81 @@ internal static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>IBindableIterable</c> (036D2C08-DF29-41AF-8AA2-D774BE62BA6F).</summary>
+    public static ref readonly Guid IID_IBindableIterable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x08, 0x2C, 0x6D, 0x03,
+                0x29, 0xDF,
+                0xAF, 0x41,
+                0x8A,
+                0xA2,
+                0xD7,
+                0x74,
+                0xBE,
+                0x62,
+                0xBA,
+                0x6F
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IBindableIterator</c> (6A1D6C07-076D-49F2-8314-F52C9C9A8331).</summary>
+    public static ref readonly Guid IID_IBindableIterator
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x07, 0x6C, 0x1D, 0x6A,
+                0x6D, 0x07,
+                0xF2, 0x49,
+                0x83,
+                0x14,
+                0xF5,
+                0x2C,
+                0x9C,
+                0x9A,
+                0x83,
+                0x31
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IBindableVector</c> (393DE7DE-6FD0-4C0D-BB71-47244A113E93).</summary>
+    public static ref readonly Guid IID_IBindableVector
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xDE, 0xE7, 0x3D, 0x39,
+                0xD0, 0x6F,
+                0x0D, 0x4C,
+                0xBB,
+                0x71,
+                0x47,
+                0x24,
+                0x4A,
+                0x11,
+                0x3E,
+                0x93
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IBindableVectorView</c> (346DD6E7-976E-4BC3-815D-ECE243BC0F33).</summary>
     public static ref readonly Guid IID_IBindableVectorView
     {

@@ -11,7 +11,6 @@ namespace Windows.Foundation;
 /// Provides support for asynchronous operations.
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IAsyncInfo")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncInfo
 {

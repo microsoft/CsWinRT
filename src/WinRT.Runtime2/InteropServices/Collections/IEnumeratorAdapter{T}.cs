@@ -42,7 +42,7 @@ public sealed class IEnumeratorAdapter<T>
     /// </summary>
     /// <param name="enumerator">The wrapped <see cref="IEnumerator{T}"/> instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerator"/> is <see langword="null"/>.</exception>
-    public IEnumeratorAdapter(IEnumerator<T> enumerator)
+    private IEnumeratorAdapter(IEnumerator<T> enumerator)
     {
         ArgumentNullException.ThrowIfNull(enumerator);
 

@@ -193,7 +193,6 @@ public static unsafe class ICommandImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT add_CanExecuteChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
@@ -218,7 +217,6 @@ public static unsafe class ICommandImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT remove_CanExecuteChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
@@ -246,7 +244,6 @@ public static unsafe class ICommandImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT CanExecute(void* thisPtr, void* parameter, bool* result)
     {
         *result = false;
@@ -267,7 +264,6 @@ public static unsafe class ICommandImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.execute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT Execute(void* thisPtr, void* parameter)
     {
         try

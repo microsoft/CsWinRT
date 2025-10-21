@@ -168,6 +168,45 @@ namespace cswinrt
             });
     }
 
+    bool use_tracker_object_support(type_semantics const& semantics)
+    {
+        return call(semantics,
+            [&](generic_type_instance const& type)
+            {
+                if (type.generic_type.TypeName() == "IReference`1")
+                {
+                    return true;
+                }
+                return false;
+            },
+            [&](type_definition const& type)
+            {
+                if (type.TypeName() == "HResult")
+                {
+                    return true;
+                }
+                
+                switch (get_category(type))
+                {
+                case category::struct_type:
+                    for (auto&& field : type.FieldList())
+                    {
+                        if (use_tracker_object_support(get_type_semantics(field.Signature().Type())))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                default:
+                    return false;
+                }
+            },
+            [&](auto&&)
+            {
+                return false;
+            });
+    }
+
     // This checks for interfaces that have derived generic interfaces
     // to handle the scenario where the class implementing that interface
     // can be trimmed and we need to handle potential calls to the
@@ -3798,9 +3837,9 @@ public static unsafe class %Marshaller
         w.write(
 R"(public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(%? value)
 {
-    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.TrackerSupport, in %);
+    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, %, in %);
 }
-)", projection_name, bind<write_iid_reference_guid>(type));
+)", projection_name, use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None", bind<write_iid_reference_guid>(type));
 
         if (!is_type_blittable(type))
         {
@@ -3926,7 +3965,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 {
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);    
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, %);    
     }
 
     public override ComInterfaceEntry* ComputeVtables(out int count)
@@ -3942,7 +3981,7 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     }
 }
 
-)", name, name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name); // TODO: use `CreateComInterfaceFlags.None` whenever possible
+)", name, use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None", name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name);
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)

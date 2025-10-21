@@ -35,4 +35,7 @@ internal partial class WellKnownErrorCodes
 
     /// <summary>The operation attempted to access data outside the valid range.</summary>
     public const HRESULT E_BOUNDS = unchecked((int)0x8000000B);
+
+    /// <summary>Not implemented.</summary>
+    public const HRESULT E_NOTIMPL = unchecked((int)0x80004001);
 }
