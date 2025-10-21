@@ -75,7 +75,7 @@ public static unsafe class TimeSpanMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.TimeSpan? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfTimeSpan);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -118,7 +118,7 @@ file static class TimeSpanInterfaceEntriesImpl
     /// </summary>
     static TimeSpanInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfTimeSpan.IID = WellKnownInterfaceIIDs.IID_IReferenceOfTimeSpan;
+        Entries.IReferenceOfTimeSpan.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan;
         Entries.IReferenceOfTimeSpan.Vtable = TimeSpanReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = TimeSpanPropertyValueImpl.Vtable;
@@ -161,7 +161,7 @@ internal sealed unsafe class TimeSpanComWrappersMarshallerAttribute : WindowsRun
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfTimeSpan);
+        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
 
         return TimeSpanMarshaller.ConvertToManaged(abi);
     }

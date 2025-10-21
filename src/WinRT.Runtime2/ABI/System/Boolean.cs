@@ -43,7 +43,7 @@ public static unsafe class BooleanMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(bool? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfBool);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class BooleanInterfaceEntriesImpl
     /// </summary>
     static BooleanInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfBoolean.IID = WellKnownInterfaceIIDs.IID_IReferenceOfBool;
+        Entries.IReferenceOfBoolean.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool;
         Entries.IReferenceOfBoolean.Vtable = BooleanReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = BooleanPropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class BooleanComWrappersMarshallerAttribute : WindowsRunt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfBool);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
     }
 }
 

@@ -105,7 +105,7 @@ file static class ExceptionInterfaceEntriesImpl
     /// </summary>
     static ExceptionInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfException.IID = WellKnownInterfaceIIDs.IID_IReferenceOfException;
+        Entries.IReferenceOfException.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException;
         Entries.IReferenceOfException.Vtable = ExceptionReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -148,7 +148,7 @@ file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntim
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfException);
+        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException);
 
         // Exceptions are marshalled as 'null' if the 'HRESULT' does not represent an error. However, 'ComWrappers' does not allow 'null'
         // to be returned. So in that case, we use a 'NullPlaceholder' instance, and then check that after marshalling is done, so that

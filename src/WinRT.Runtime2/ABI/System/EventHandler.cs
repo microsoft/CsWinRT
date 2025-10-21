@@ -54,7 +54,7 @@ public static unsafe class EventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.EventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIIDs.IID_EventHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_EventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -99,7 +99,7 @@ file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeObje
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownInterfaceIIDs.IID_EventHandler,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_EventHandler,
             wrapperFlags: out wrapperFlags);
 
         return new global::System.EventHandler(valueReference.Invoke);
@@ -138,9 +138,9 @@ file static class EventHandlerInterfaceEntriesImpl
     /// </summary>
     static EventHandlerInterfaceEntriesImpl()
     {
-        Entries.EventHandler.IID = WellKnownInterfaceIIDs.IID_EventHandler;
+        Entries.EventHandler.IID = WellKnownWindowsInterfaceIIDs.IID_EventHandler;
         Entries.EventHandler.Vtable = EventHandlerImpl.Vtable;
-        Entries.IReferenceOfEventHandler.IID = WellKnownInterfaceIIDs.IID_IReferenceOfEventHandler;
+        Entries.IReferenceOfEventHandler.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventHandler;
         Entries.IReferenceOfEventHandler.Vtable = EventHandlerReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;

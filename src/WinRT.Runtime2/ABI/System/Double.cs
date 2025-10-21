@@ -43,7 +43,7 @@ public static unsafe class DoubleMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(double? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfDouble);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDouble);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class DoubleInterfaceEntriesImpl
     /// </summary>
     static DoubleInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfDouble.IID = WellKnownInterfaceIIDs.IID_IReferenceOfDouble;
+        Entries.IReferenceOfDouble.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDouble;
         Entries.IReferenceOfDouble.Vtable = DoubleReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = DoublePropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class DoubleComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<double>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfDouble);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<double>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDouble);
     }
 }
 

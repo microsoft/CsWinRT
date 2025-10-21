@@ -43,7 +43,7 @@ public static unsafe class UInt64Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(ulong? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfULong);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfULong);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class UInt64InterfaceEntriesImpl
     /// </summary>
     static UInt64InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfUInt64.IID = WellKnownInterfaceIIDs.IID_IReferenceOfULong;
+        Entries.IReferenceOfUInt64.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfULong;
         Entries.IReferenceOfUInt64.Vtable = UInt64ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = UInt64PropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class UInt64ComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<ulong>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfULong);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<ulong>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfULong);
     }
 }
 

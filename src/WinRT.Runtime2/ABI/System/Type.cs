@@ -140,7 +140,7 @@ public static unsafe class TypeMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Type? value)
     {
-        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfType));
+        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType));
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -213,7 +213,7 @@ file static class TypeInterfaceEntriesImpl
     /// </summary>
     static TypeInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfType.IID = WellKnownInterfaceIIDs.IID_IReferenceOfType;
+        Entries.IReferenceOfType.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType;
         Entries.IReferenceOfType.Vtable = TypeReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -256,7 +256,7 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfType);
+        Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType);
 
         // Try to marshal the resulting type (it might not actually succeed)
         global::System.Type? type = TypeMarshaller.ConvertToManaged(abi);

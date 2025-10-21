@@ -46,7 +46,7 @@ public static unsafe class StringMarshaller
     {
         return value is null
             ? default
-            : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfString));
+            : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString));
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -105,7 +105,7 @@ file static class StringInterfaceEntriesImpl
     /// </summary>
     static StringInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfString.IID = WellKnownInterfaceIIDs.IID_IReferenceOfString;
+        Entries.IReferenceOfString.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString;
         Entries.IReferenceOfString.Vtable = StringReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = StringPropertyValueImpl.Vtable;
@@ -148,7 +148,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIIDs.IID_IReferenceOfString, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString, out void* result).Assert();
 
         try
         {

@@ -31,7 +31,7 @@ public static unsafe class ICommandMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<ICommand>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIIDs.IID_ICommand);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_ICommand);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

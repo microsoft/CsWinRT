@@ -42,7 +42,7 @@ public static unsafe class IWeakReferenceSourceImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
     }
 
     /// <summary>

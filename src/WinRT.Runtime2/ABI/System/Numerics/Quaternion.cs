@@ -45,7 +45,7 @@ public static unsafe class QuaternionMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Quaternion? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfQuaternion);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfQuaternion);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -86,7 +86,7 @@ file static class QuaternionInterfaceEntriesImpl
     /// </summary>
     static QuaternionInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfQuaternion.IID = WellKnownInterfaceIIDs.IID_IReferenceOfQuaternion;
+        Entries.IReferenceOfQuaternion.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfQuaternion;
         Entries.IReferenceOfQuaternion.Vtable = QuaternionReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -129,7 +129,7 @@ internal sealed unsafe class QuaternionComWrappersMarshallerAttribute : WindowsR
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfQuaternion);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfQuaternion);
     }
 }
 

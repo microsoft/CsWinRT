@@ -43,7 +43,7 @@ public static unsafe class SingleMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(float? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfFloat);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class SingleInterfaceEntriesImpl
     /// </summary>
     static SingleInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfSingle.IID = WellKnownInterfaceIIDs.IID_IReferenceOfFloat;
+        Entries.IReferenceOfSingle.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat;
         Entries.IReferenceOfSingle.Vtable = SingleReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = SinglePropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class SingleComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<float>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfFloat);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<float>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
     }
 }
 

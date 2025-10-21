@@ -39,8 +39,8 @@ for (int i = 0; i < entries.Length; i++)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIIDs.IID_WUX_<#=entries[i]#>
-            : ref WellKnownInterfaceIIDs.IID_MUX_<#=entries[i]#>;
+            ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_<#=entries[i]#>
+            : ref WellKnownWindowsInterfaceIIDs.IID_MUX_<#=entries[i]#>;
     }
 <#
 }

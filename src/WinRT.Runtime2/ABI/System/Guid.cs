@@ -43,7 +43,7 @@ public static unsafe class GuidMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in global::System.Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Guid? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfGuid);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfGuid);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class GuidInterfaceEntriesImpl
     /// </summary>
     static GuidInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfGuid.IID = WellKnownInterfaceIIDs.IID_IReferenceOfGuid;
+        Entries.IReferenceOfGuid.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfGuid;
         Entries.IReferenceOfGuid.Vtable = GuidReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = GuidPropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class GuidComWrappersMarshallerAttribute : WindowsRuntime
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Guid>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfGuid);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Guid>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfGuid);
     }
 }
 

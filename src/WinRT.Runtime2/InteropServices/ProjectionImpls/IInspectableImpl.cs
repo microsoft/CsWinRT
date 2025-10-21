@@ -45,7 +45,7 @@ public static unsafe class IInspectableImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIIDs.IID_IInspectable;
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IInspectable;
     }
 
     /// <summary>

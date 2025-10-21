@@ -43,7 +43,7 @@ internal static unsafe class BindableIReadOnlyListAdapterMarshaller
         return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(
             instance: value,
             flags: CreateComInterfaceFlags.TrackerSupport,
-            iid: in WellKnownInterfaceIIDs.IID_IBindableVectorView));
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView));
     }
 }
 
@@ -78,9 +78,9 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
     /// </summary>
     static BindableIReadOnlyListAdapterInterfaceEntriesImpl()
     {
-        Entries.IBindableVectorView.IID = WellKnownInterfaceIIDs.IID_IBindableVectorView;
+        Entries.IBindableVectorView.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView;
         Entries.IBindableVectorView.Vtable = BindableIReadOnlyListAdapterImpl.Vtable;
-        Entries.IBindableEnumerable.IID = WellKnownInterfaceIIDs.IID_IBindableIterable;
+        Entries.IBindableEnumerable.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableIterable;
         Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
         Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;

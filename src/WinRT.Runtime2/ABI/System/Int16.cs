@@ -43,7 +43,7 @@ public static unsafe class Int16Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(short? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfShort);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfShort);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class Int16InterfaceEntriesImpl
     /// </summary>
     static Int16InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfInt16.IID = WellKnownInterfaceIIDs.IID_IReferenceOfShort;
+        Entries.IReferenceOfInt16.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfShort;
         Entries.IReferenceOfInt16.Vtable = Int16ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = Int16PropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class Int16ComWrappersMarshallerAttribute : WindowsRuntim
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<short>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfShort);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<short>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfShort);
     }
 }
 

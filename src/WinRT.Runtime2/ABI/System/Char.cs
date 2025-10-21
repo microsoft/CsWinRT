@@ -43,7 +43,7 @@ public static unsafe class CharMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(char? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfChar);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfChar);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,7 +84,7 @@ file static class CharInterfaceEntriesImpl
     /// </summary>
     static CharInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfChar.IID = WellKnownInterfaceIIDs.IID_IReferenceOfChar;
+        Entries.IReferenceOfChar.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfChar;
         Entries.IReferenceOfChar.Vtable = CharReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = CharPropertyValueImpl.Vtable;
@@ -127,7 +127,7 @@ internal sealed unsafe class CharComWrappersMarshallerAttribute : WindowsRuntime
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<char>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfChar);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<char>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfChar);
     }
 }
 

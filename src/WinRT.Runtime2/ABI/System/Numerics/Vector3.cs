@@ -45,7 +45,7 @@ public static unsafe class Vector3Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Vector3? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfVector3);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector3);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -86,7 +86,7 @@ file static class Vector3InterfaceEntriesImpl
     /// </summary>
     static Vector3InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfVector3.IID = WellKnownInterfaceIIDs.IID_IReferenceOfVector3;
+        Entries.IReferenceOfVector3.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector3;
         Entries.IReferenceOfVector3.Vtable = Vector3ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -129,7 +129,7 @@ internal sealed unsafe class Vector3ComWrappersMarshallerAttribute : WindowsRunt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector3>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfVector3);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector3>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector3);
     }
 }
 

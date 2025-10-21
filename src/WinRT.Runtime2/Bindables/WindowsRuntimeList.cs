@@ -42,7 +42,7 @@ internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIIDs.IID_IBindableIterable),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable),
                     comparand: null);
 
                 return field;

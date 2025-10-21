@@ -34,7 +34,7 @@ public static unsafe class SizeMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Size? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfSize);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfSize);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -75,7 +75,7 @@ file static class SizeInterfaceEntriesImpl
     /// </summary>
     static SizeInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfSize.IID = WellKnownInterfaceIIDs.IID_IReferenceOfSize;
+        Entries.IReferenceOfSize.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfSize;
         Entries.IReferenceOfSize.Vtable = SizeReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = SizePropertyValueImpl.Vtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class SizeComWrappersMarshallerAttribute : WindowsRuntime
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Size>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfSize);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Size>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfSize);
     }
 }
 

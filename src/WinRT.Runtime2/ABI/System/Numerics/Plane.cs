@@ -45,7 +45,7 @@ public static unsafe class PlaneMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Plane? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfPlane);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPlane);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -86,7 +86,7 @@ file static class PlaneInterfaceEntriesImpl
     /// </summary>
     static PlaneInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfPlane.IID = WellKnownInterfaceIIDs.IID_IReferenceOfPlane;
+        Entries.IReferenceOfPlane.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPlane;
         Entries.IReferenceOfPlane.Vtable = PlaneReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -129,7 +129,7 @@ internal sealed unsafe class PlaneComWrappersMarshallerAttribute : WindowsRuntim
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Plane>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfPlane);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Plane>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPlane);
     }
 }
 

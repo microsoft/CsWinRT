@@ -34,7 +34,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(AsyncActionCompletedHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIIDs.IID_AsyncActionCompletedHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -48,7 +48,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(AsyncActionCompletedHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
@@ -92,7 +92,7 @@ file abstract unsafe class AsyncActionCompletedHandlerComWrappersCallback : IWin
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownInterfaceIIDs.IID_AsyncActionCompletedHandler,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler,
             wrapperFlags: out wrapperFlags);
 
         return new AsyncActionCompletedHandler(valueReference.Invoke);
@@ -131,9 +131,9 @@ file static class AsyncActionCompletedHandlerInterfaceEntriesImpl
     /// </summary>
     static AsyncActionCompletedHandlerInterfaceEntriesImpl()
     {
-        Entries.AsyncActionCompletedHandler.IID = WellKnownInterfaceIIDs.IID_AsyncActionCompletedHandler;
+        Entries.AsyncActionCompletedHandler.IID = WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler;
         Entries.AsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerImpl.Vtable;
-        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler;
+        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler;
         Entries.IReferenceOfAsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -176,7 +176,7 @@ internal sealed unsafe class AsyncActionCompletedHandlerComWrappersMarshallerAtt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler)!;
     }
 }
 

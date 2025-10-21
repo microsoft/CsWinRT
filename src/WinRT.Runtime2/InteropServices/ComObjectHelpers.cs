@@ -33,7 +33,7 @@ internal unsafe partial class ComObjectHelpers
     public static HRESULT IsFreeThreadedUnsafe(void* thisPtr)
     {
         // Check whether the object is free-threaded by querying for 'IAgileObject'
-        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIIDs.IID_IAgileObject, out void* pAgileObject) >= WellKnownErrorCodes.S_OK)
+        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownWindowsInterfaceIIDs.IID_IAgileObject, out void* pAgileObject) >= WellKnownErrorCodes.S_OK)
         {
             _ = IUnknownVftbl.ReleaseUnsafe(pAgileObject);
 
@@ -41,13 +41,13 @@ internal unsafe partial class ComObjectHelpers
         }
 
         // Also check for 'IMarshal'
-        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIIDs.IID_IMarshal, out void* pMarshal) >= WellKnownErrorCodes.S_OK)
+        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownWindowsInterfaceIIDs.IID_IMarshal, out void* pMarshal) >= WellKnownErrorCodes.S_OK)
         {
             Guid unmarshalClass;
             HRESULT hresult;
 
             // Get the class IID of the unmarshalling code for the current object
-            fixed (Guid* riid = &WellKnownInterfaceIIDs.IID_IUnknown)
+            fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_IUnknown)
             {
                 hresult = IMarshalVftbl.GetUnmarshalClassUnsafe(
                     thisPtr: pMarshal,

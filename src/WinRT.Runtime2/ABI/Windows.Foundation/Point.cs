@@ -34,7 +34,7 @@ public static unsafe class PointMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Point? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfPoint);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPoint);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -75,7 +75,7 @@ file static class PointInterfaceEntriesImpl
     /// </summary>
     static PointInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfPoint.IID = WellKnownInterfaceIIDs.IID_IReferenceOfPoint;
+        Entries.IReferenceOfPoint.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPoint;
         Entries.IReferenceOfPoint.Vtable = PointReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = PointPropertyValueImpl.Vtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntim
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfPoint);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPoint);
     }
 }
 

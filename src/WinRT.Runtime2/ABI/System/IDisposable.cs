@@ -27,7 +27,7 @@ public static unsafe class IDisposableMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IDisposable? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IDisposable>.ConvertToUnmanaged(value, in WellKnownInterfaceIIDs.IID_IClosable);
+        return WindowsRuntimeInterfaceMarshaller<IDisposable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IClosable);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

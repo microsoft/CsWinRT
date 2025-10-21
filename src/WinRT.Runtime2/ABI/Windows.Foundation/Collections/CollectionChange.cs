@@ -34,7 +34,7 @@ public static unsafe class CollectionChangeMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in global::System.Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(CollectionChange? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfCollectionChange);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -75,7 +75,7 @@ file static class CollectionChangeInterfaceEntriesImpl
     /// </summary>
     static CollectionChangeInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfCollectionChange.IID = WellKnownInterfaceIIDs.IID_IReferenceOfCollectionChange;
+        Entries.IReferenceOfCollectionChange.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange;
         Entries.IReferenceOfCollectionChange.Vtable = IReferenceImpl.Int32Enum;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -118,6 +118,6 @@ internal sealed unsafe class CollectionChangeComWrappersMarshallerAttribute : Wi
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<CollectionChange>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfCollectionChange);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<CollectionChange>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange);
     }
 }

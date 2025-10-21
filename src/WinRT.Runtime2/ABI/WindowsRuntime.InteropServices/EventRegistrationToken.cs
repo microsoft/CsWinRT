@@ -34,7 +34,7 @@ public static unsafe class EventRegistrationTokenMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(EventRegistrationToken? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -75,7 +75,7 @@ file static class EventRegistrationTokenInterfaceEntriesImpl
     /// </summary>
     static EventRegistrationTokenInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfEventRegistrationToken.IID = WellKnownInterfaceIIDs.IID_IReferenceOfEventRegistrationToken;
+        Entries.IReferenceOfEventRegistrationToken.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventRegistrationToken;
         Entries.IReferenceOfEventRegistrationToken.Vtable = EventRegistrationTokenReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class EventRegistrationTokenComWrappersMarshallerAttribut
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<EventRegistrationToken>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<EventRegistrationToken>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
     }
 }
 

@@ -32,7 +32,7 @@ public static unsafe class INotifyDataErrorInfoMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyDataErrorInfo>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIIDs.IID_INotifyDataErrorInfo);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_INotifyDataErrorInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

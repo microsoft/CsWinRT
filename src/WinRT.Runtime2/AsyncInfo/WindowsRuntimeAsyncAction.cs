@@ -39,7 +39,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIIDs.IID_IAsyncInfo),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo),
                     comparand: null);
 
                 return field;

@@ -84,7 +84,7 @@ public static unsafe class DateTimeOffsetMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.DateTimeOffset? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -127,7 +127,7 @@ file static class DateTimeOffsetInterfaceEntriesImpl
     /// </summary>
     static DateTimeOffsetInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfDateTimeOffset.IID = WellKnownInterfaceIIDs.IID_IReferenceOfDateTimeOffset;
+        Entries.IReferenceOfDateTimeOffset.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDateTimeOffset;
         Entries.IReferenceOfDateTimeOffset.Vtable = DateTimeOffsetReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = DateTimeOffsetPropertyValueImpl.Vtable;
@@ -170,7 +170,7 @@ file sealed unsafe class DateTimeOffsetComWrappersMarshallerAttribute : WindowsR
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
+        DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
 
         return DateTimeOffsetMarshaller.ConvertToManaged(abi);
     }
