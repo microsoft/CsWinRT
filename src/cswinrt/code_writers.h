@@ -755,7 +755,7 @@ namespace cswinrt
     {
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
-            std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));\
+            std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
             name = escape_type_name_for_identifier(name, true, true);
             w.write("WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_%", name);
         }
