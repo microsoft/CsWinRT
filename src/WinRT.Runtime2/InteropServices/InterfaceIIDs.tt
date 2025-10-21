@@ -8,13 +8,11 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using WindowsRuntime;
-using WindowsRuntime.InteropServices;
 
-namespace ABI;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// IIDs for common WinRT interfaces.
+/// IIDs for projected WinRT interfaces.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
