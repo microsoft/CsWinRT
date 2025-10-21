@@ -1563,10 +1563,19 @@ namespace cswinrt
         }
     };
 
-    std::string escape_type_name_for_identifier(std::string typeName)
+    std::string escape_type_name_for_identifier(std::string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
         std::regex re(R"-((\ |:|<|>|`|,|\.))-");
-        return std::regex_replace(typeName, re, "_");
+        auto result = std::regex_replace(typeName, re, "_");
+        if (stripGlobalABI && typeName.rfind("global::ABI.", 0) != std::string::npos)
+        {
+            result.erase(0, 12); // Remove "global::"
+        } 
+        else if (stripGlobal && typeName.rfind("global::", 0) != std::string::npos)
+        {
+            result.erase(0, 8); // Remove "global::"
+        }
+        return result;
     }
 
     std::string get_fundamental_type_guid_signature(fundamental_type type)

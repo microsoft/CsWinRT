@@ -735,14 +735,14 @@ namespace cswinrt
     static void write_iid_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%", name);
     }
 
     static void write_iid_reference_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%Reference", name);
     }
 
@@ -756,7 +756,7 @@ namespace cswinrt
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
             std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-            name = escape_type_name_for_identifier(name);
+            name = escape_type_name_for_identifier(name, true, true);
             w.write("ABI.InterfaceIIDs.IID_%", name);
         }
         else

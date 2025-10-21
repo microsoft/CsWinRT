@@ -46,7 +46,7 @@ for (int i = 0; i < entries.Length; i++)
     string iidTypeName = entries[i].Xaml ? "WellKnownXamlInterfaceIds" : "WellKnownInterfaceIds";
 #>
     /// <summary>The IID for <see cref="global::<#=entries[i].Namespace#>.<#=entries[i].Name#>"/>.</summary>
-    public static ref readonly Guid IID_global__ABI_<#=entries[i].Namespace.Replace(".", "_")#>_<#=entries[i].Interface#>
+    public static ref readonly Guid IID_<#=entries[i].Namespace.Replace(".", "_")#>_<#=entries[i].Interface#>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get => ref <#=iidTypeName#>.IID_<#=entries[i].Interface#>;
