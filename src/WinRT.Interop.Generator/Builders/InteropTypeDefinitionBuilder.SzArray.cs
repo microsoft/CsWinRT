@@ -336,6 +336,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="implType">The <see cref="TypeDefinition"/> instance returned by <see cref="Impl"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -343,6 +344,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceEntriesImpl(
             SzArrayTypeSignature arrayType,
             TypeDefinition implType,
+            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -356,7 +358,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out interfaceEntriesImplType,
                 implTypes: [
-                    (implType.GetMethod("get_IID"u8), implType.GetMethod("get_Vtable"u8)),
+                    (get_IidMethod, implType.GetMethod("get_Vtable"u8)),
                     (interopReferences.IPropertyValueImplget_IID, interopReferences.IPropertyValueImplget_OtherTypeVtable), // TODO
                     (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
@@ -372,7 +374,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>

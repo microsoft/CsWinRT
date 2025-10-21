@@ -274,6 +274,8 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
+                    get_IidMethod: get_IidMethod,
+                    get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1122,6 +1124,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.KeyValuePair.InterfaceEntriesImplType(
                     keyValuePairType: typeSignature,
                     keyValuePairTypeImplType: keyValuePairTypeImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1521,6 +1524,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
                     implType: arrayImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
