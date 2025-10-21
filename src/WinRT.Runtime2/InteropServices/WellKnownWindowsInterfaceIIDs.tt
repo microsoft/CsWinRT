@@ -11,8 +11,8 @@ using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <summary>IIDs for common COM/WinRT interfaces.</summary>
-internal static class WellKnownInterfaceIIDs
+/// <summary>IIDs for common COM/WinRT interfaces from the Windows SDK.</summary>
+internal static class WellKnownWindowsInterfaceIIDs
 {
 <#
 var entries = new (string Name, string IID)[]
