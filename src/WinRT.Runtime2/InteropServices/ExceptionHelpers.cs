@@ -132,7 +132,7 @@ internal static unsafe class ExceptionHelpers
             try
             {
                 currentLanguageExceptionErrorInfo2Ptr
-                    = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead((void*)languageErrorInfo2Ptr);
+                    = ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead((void*)languageErrorInfo2Ptr);
                 while (currentLanguageExceptionErrorInfo2Ptr != default)
                 {
                     Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
@@ -142,7 +142,7 @@ internal static unsafe class ExceptionHelpers
                     }
 
                     void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
-                    currentLanguageExceptionErrorInfo2Ptr = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2Ptr);
+                    currentLanguageExceptionErrorInfo2Ptr = ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2Ptr);
                     _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
                 }
             }
@@ -158,7 +158,7 @@ internal static unsafe class ExceptionHelpers
 
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
     {
-        void* languageExceptionPtr = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr);
+        void* languageExceptionPtr = ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr);
         if (languageExceptionPtr != default)
         {
             try
@@ -191,7 +191,7 @@ internal static unsafe class ExceptionHelpers
             {
                 if (restrictedErrorObject != null)
                 {
-                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtrUnsafe(), out hr);
+                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtrUnsafe(), out hr);
                     GC.KeepAlive(restrictedErrorObject);
                 }
             }

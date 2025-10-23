@@ -3,10 +3,9 @@
 
 using System;
 using System.Runtime.InteropServices;
-using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-namespace ABI.WinRT.Interop;
+namespace WindowsRuntime.InteropServices;
 
 internal static class IRestrictedErrorInfoMethods
 {
@@ -25,8 +24,7 @@ internal static class IRestrictedErrorInfoMethods
         {
             fixed (int* pError = &error)
             {
-                // GetErrorDetails
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int*, void**, void**, int>)(*(void***)thisPtr)[3])(
+                Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
                     thisPtr,
                     &_description,
                     pError,
@@ -58,8 +56,7 @@ internal static class IRestrictedErrorInfoMethods
         {
             fixed (int* pError = &error)
             {
-                // GetErrorDetails
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int*, void**, void**, int>)(*(void***)thisPtr)[3])(
+                Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
                     thisPtr,
                     &_description,
                     pError,
@@ -81,8 +78,7 @@ internal static class IRestrictedErrorInfoMethods
 
         try
         {
-            // GetReference
-            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[4])(
+            Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetReference(
                 thisPtr,
                 &__retval));
             return __retval != null ? Marshal.PtrToStringBSTR((nint)__retval) : string.Empty;
@@ -99,9 +95,9 @@ internal static class ILanguageExceptionErrorInfoMethods
     public static unsafe void* GetLanguageException(void* thisPtr)
     {
         void* __return_value__ = null;
-
-        // GetLanguageException
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
+        Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfoVftbl*)*(void***)thisPtr)->GetLanguageException(
+            thisPtr,
+            &__return_value__));
         return __return_value__;
     }
 }
@@ -111,7 +107,7 @@ internal static class ILanguageExceptionErrorInfo2Methods
     public static unsafe void* GetPreviousLanguageExceptionErrorInfo(void* thisPtr)
     {
         void* __retval = default;
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[4])(
+        Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfo2*)*(void***)thisPtr)->GetPreviousLanguageExceptionErrorInfo(
             thisPtr,
             &__retval));
         return __retval;
@@ -123,7 +119,7 @@ internal static class ILanguageExceptionErrorInfo2Methods
         WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(ex);
         try
         {
-            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void*, int>)(*(void***)thisPtr)[5])(
+            Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfo2*)*(void***)thisPtr)->CapturePropagationContext(
                 thisPtr,
                 managedExceptionWrapper.GetThisPtrUnsafe()));
         }
@@ -142,7 +138,7 @@ internal static class ILanguageExceptionErrorInfo2Methods
     public static unsafe void* GetPropagationContextHead(void* thisPtr)
     {
         void* __retval = default;
-        Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<void*, void**, int>)(*(void***)thisPtr)[6])(
+        Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfo2*)*(void***)thisPtr)->GetPropagationContextHead(
             thisPtr,
             &__retval));
         return __retval;

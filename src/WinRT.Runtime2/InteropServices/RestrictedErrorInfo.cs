@@ -77,8 +77,8 @@ public static unsafe class RestrictedErrorInfo
                 }
 
                 restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
-                ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
+                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
                 if (errorCode == hrLocal)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
@@ -305,7 +305,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (restrictedErrorObject != null)
                 {
-                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtr(), out hr);
+                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtr(), out hr);
                     GC.KeepAlive(restrictedErrorObject);
                 }
             }
@@ -348,7 +348,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     {
                         try
                         {
-                            global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.CapturePropagationContext((void*)languageErrorInfo2Ptr, exception);
+                            ILanguageExceptionErrorInfo2Methods.CapturePropagationContext((void*)languageErrorInfo2Ptr, exception);
                         }
                         finally
                         {
