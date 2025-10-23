@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using ABI.Windows.Foundation.Collections;
 
 namespace WindowsRuntime.InteropServices;
 

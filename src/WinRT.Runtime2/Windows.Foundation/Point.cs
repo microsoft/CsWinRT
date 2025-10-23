@@ -4,7 +4,6 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
@@ -81,7 +80,7 @@ public struct Point : IEquatable<Point>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
-        char separator = GetNumericListSeparator(null);
+        char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}";
     }
@@ -96,7 +95,7 @@ public struct Point : IEquatable<Point>, IFormattable
         }
 
         // We need the separator as a 'string', so we can pass it as a literal
-        string separator = GetNumericListSeparator(formatProvider) is ',' ? "," : ";";
+        string separator = TokenizerHelper.GetNumericListSeparator(formatProvider) is ',' ? "," : ";";
 
         DefaultInterpolatedStringHandler handler = new(
             literalLength: 1,
@@ -109,26 +108,6 @@ public struct Point : IEquatable<Point>, IFormattable
         handler.AppendFormatted(Y, format);
 
         return handler.ToStringAndClear();
-    }
-
-    /// <summary>
-    /// Gets the numeric list separator for a given provider.
-    /// </summary>
-    /// <param name="provider">The input provider to use for formatting.</param>
-    /// <returns>The numeric list separator to use.</returns>
-    internal static char GetNumericListSeparator(IFormatProvider? provider)
-    {
-        const char CommaSeparator = ',';
-        const char SemicolonSeparator = ';';
-
-        NumberFormatInfo numberFormat = NumberFormatInfo.GetInstance(provider);
-
-        // If the decimal separator is ',', use ';', otherwise use ','
-        return
-            (numberFormat.NumberDecimalSeparator.Length > 0) &&
-            (numberFormat.NumberDecimalSeparator[0] == CommaSeparator)
-            ? SemicolonSeparator
-            : CommaSeparator;
     }
 
     /// <summary>

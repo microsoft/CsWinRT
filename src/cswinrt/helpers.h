@@ -837,11 +837,6 @@ namespace cswinrt
                     { "Vector4", "System.Numerics", "Vector4" },
                 }
             },
-            { "Windows.UI",
-                {
-                    { "Color", "Windows.UI", "Color" },
-                }
-            },
             { "Windows.UI.Xaml",
                 {
                     { "CornerRadius", "Windows.UI.Xaml", "CornerRadius" },
@@ -1195,6 +1190,43 @@ namespace cswinrt
         }
 
         return versionItr->platform_version;
+    }
+
+    bool has_addition_to_type(TypeDef const& type)
+    {
+        static const struct
+        {
+            std::string_view name_space;
+            std::vector<std::string_view> types;
+        } addition_types[] =
+        {
+            { "Windows.UI",
+                {
+                    "Color",
+                }
+            },
+        };
+
+        auto nsItr = std::lower_bound(std::begin(addition_types), std::end(addition_types), type.TypeNamespace(), [](auto&& v, std::string_view ns)
+        {
+            return v.name_space < ns;
+        });
+
+        if ((nsItr == std::end(addition_types)) || (nsItr->name_space != type.TypeNamespace()))
+        {
+            return false;
+        }
+
+        auto nameItr = std::lower_bound(nsItr->types.begin(), nsItr->types.end(), type.TypeName(), [](auto&& v, std::string_view name)
+        {
+            return v < name;
+        });
+        if ((nameItr == nsItr->types.end()) || (*nameItr != type.TypeName()))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     enum class typedef_name_type
