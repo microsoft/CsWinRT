@@ -43,7 +43,7 @@ public static unsafe class BooleanMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(bool? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfBool);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,21 +84,21 @@ file static class BooleanInterfaceEntriesImpl
     /// </summary>
     static BooleanInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfBoolean.IID = WellKnownInterfaceIds.IID_IReferenceOfBool;
+        Entries.IReferenceOfBoolean.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool;
         Entries.IReferenceOfBoolean.Vtable = BooleanReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = BooleanPropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -127,7 +127,7 @@ internal sealed unsafe class BooleanComWrappersMarshallerAttribute : WindowsRunt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownInterfaceIds.IID_IReferenceOfBool);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
     }
 }
 

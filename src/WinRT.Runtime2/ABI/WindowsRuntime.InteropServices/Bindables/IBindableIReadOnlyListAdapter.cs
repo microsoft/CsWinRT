@@ -43,7 +43,7 @@ internal static unsafe class BindableIReadOnlyListAdapterMarshaller
         return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(
             instance: value,
             flags: CreateComInterfaceFlags.TrackerSupport,
-            iid: in WellKnownInterfaceIds.IID_IBindableVectorView));
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView));
     }
 }
 
@@ -78,21 +78,21 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
     /// </summary>
     static BindableIReadOnlyListAdapterInterfaceEntriesImpl()
     {
-        Entries.IBindableVectorView.IID = BindableIReadOnlyListAdapterImpl.IID;
+        Entries.IBindableVectorView.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView;
         Entries.IBindableVectorView.Vtable = BindableIReadOnlyListAdapterImpl.Vtable;
-        Entries.IBindableEnumerable.IID = IEnumerableImpl.IID;
+        Entries.IBindableEnumerable.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableIterable;
         Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -138,15 +138,6 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
         Vftbl.GetAt = &GetAt;
         Vftbl.get_Size = &get_Size;
         Vftbl.IndexOf = &IndexOf;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableVectorView;
     }
 
     /// <summary>

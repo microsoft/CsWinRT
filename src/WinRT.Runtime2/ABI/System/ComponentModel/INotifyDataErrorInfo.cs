@@ -32,7 +32,7 @@ public static unsafe class INotifyDataErrorInfoMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyDataErrorInfo>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIds.IID_INotifyDataErrorInfo);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_INotifyDataErrorInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -174,15 +174,6 @@ public static unsafe class INotifyDataErrorInfoImpl
         Vftbl.add_ErrorsChanged = &add_ErrorsChanged;
         Vftbl.remove_ErrorsChanged = &remove_ErrorsChanged;
         Vftbl.GetErrors = &GetErrors;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="INotifyDataErrorInfo"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_INotifyDataErrorInfo;
     }
 
     /// <summary>

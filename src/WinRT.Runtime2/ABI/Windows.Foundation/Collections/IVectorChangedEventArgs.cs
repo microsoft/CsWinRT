@@ -30,7 +30,7 @@ public static unsafe class IVectorChangedEventArgsMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<IVectorChangedEventArgs>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IVectorChangedEventArgs);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -118,15 +118,6 @@ public static unsafe class IVectorChangedEventArgsImpl
 
         Vftbl.get_CollectionChange = &get_CollectionChange;
         Vftbl.get_Index = &get_Index;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="IVectorChangedEventArgs"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IVectorChangedEventArgs;
     }
 
     /// <summary>

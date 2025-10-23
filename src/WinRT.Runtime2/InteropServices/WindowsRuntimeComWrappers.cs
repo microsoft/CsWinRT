@@ -315,7 +315,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
                 externalComObject: interfacePointer,
-                iid: in WellKnownInterfaceIds.IID_IInspectable,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
                 wrapperFlags: out wrapperFlags);
 
             // Because we created object reference for exactly 'IInspectable', we can optimize things here by pre-initializing that

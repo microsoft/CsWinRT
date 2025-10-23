@@ -34,7 +34,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(AsyncActionCompletedHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_AsyncActionCompletedHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -48,7 +48,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(AsyncActionCompletedHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
@@ -92,7 +92,7 @@ file abstract unsafe class AsyncActionCompletedHandlerComWrappersCallback : IWin
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownInterfaceIds.IID_AsyncActionCompletedHandler,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler,
             wrapperFlags: out wrapperFlags);
 
         return new AsyncActionCompletedHandler(valueReference.Invoke);
@@ -131,23 +131,23 @@ file static class AsyncActionCompletedHandlerInterfaceEntriesImpl
     /// </summary>
     static AsyncActionCompletedHandlerInterfaceEntriesImpl()
     {
-        Entries.AsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_AsyncActionCompletedHandler;
+        Entries.AsyncActionCompletedHandler.IID = WellKnownWindowsInterfaceIIDs.IID_AsyncActionCompletedHandler;
         Entries.AsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerImpl.Vtable;
-        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler;
+        Entries.IReferenceOfAsyncActionCompletedHandler.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler;
         Entries.IReferenceOfAsyncActionCompletedHandler.Vtable = AsyncActionCompletedHandlerReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -176,7 +176,7 @@ internal sealed unsafe class AsyncActionCompletedHandlerComWrappersMarshallerAtt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value, in WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncActionCompletedHandler)!;
     }
 }
 
@@ -211,15 +211,6 @@ file static unsafe class AsyncActionCompletedHandlerImpl
         *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.Invoke = &Invoke;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="AsyncActionCompletedHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_AsyncActionCompletedHandler;
     }
 
     /// <summary>
@@ -289,15 +280,6 @@ file static unsafe class AsyncActionCompletedHandlerReferenceImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Value = &get_Value;
-    }
-
-    /// <summary>
-    /// Gets the IID for <c>IReference`1</c> of <see cref="AsyncActionCompletedHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IReferenceOfAsyncActionCompletedHandler;
     }
 
     /// <summary>

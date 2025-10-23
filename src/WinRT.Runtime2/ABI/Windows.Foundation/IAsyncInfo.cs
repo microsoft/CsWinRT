@@ -28,7 +28,7 @@ public static unsafe class IAsyncInfoMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncInfo? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncInfo);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -168,15 +168,6 @@ public static unsafe class IAsyncInfoImpl
         Vftbl.get_Status = &get_Status;
         Vftbl.Cancel = &Cancel;
         Vftbl.Close = &Close;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="IAsyncInfo"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
     }
 
     /// <summary>

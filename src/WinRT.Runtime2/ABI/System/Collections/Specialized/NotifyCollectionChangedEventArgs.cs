@@ -191,11 +191,10 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;
-
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr: value,
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgs,
+            pvObject: out void* result).Assert();
 
         try
         {
@@ -216,25 +215,9 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(RuntimeClassName, in IID);
-
-    /// <summary>
-    /// Gets the IID for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
-    }
-
-    /// <summary>
-    /// Gets the runtime class name for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static string RuntimeClassName => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"
-        : "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs";
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+        runtimeClassName: WellKnownXamlRuntimeClassNames.NotifyCollectionChangedEventArgs,
+        iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.

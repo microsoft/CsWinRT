@@ -344,7 +344,6 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="vftblType">The vtable type to use for the CCW vtable.</param>
-    /// <param name="get_IidMethod">The 'IID' get method for the interface being constructed.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
@@ -355,7 +354,6 @@ internal static partial class InteropTypeDefinitionBuilder
         Utf8String ns,
         Utf8String name,
         TypeDefinition vftblType,
-        MethodDefinition get_IidMethod,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -433,17 +431,6 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Don't forget the 'ret' at the end of the static constructor
         _ = cctor.CilMethodBody.Instructions.Add(Ret);
-
-        // Create the public 'IID' property
-        WellKnownMemberDefinitionFactory.IID(
-            forwardedIidMethod: get_IidMethod,
-            interopReferences: interopReferences,
-            module: module,
-            out MethodDefinition get_IidMethod2,
-            out PropertyDefinition iidProperty);
-
-        implType.Methods.Add(get_IidMethod2);
-        implType.Properties.Add(iidProperty);
 
         // Create the 'Vtable' property
         WellKnownMemberDefinitionFactory.Vtable(

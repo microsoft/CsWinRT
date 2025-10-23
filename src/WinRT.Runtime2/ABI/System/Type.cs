@@ -140,7 +140,7 @@ public static unsafe class TypeMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Type? value)
     {
-        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfType));
+        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType));
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -213,21 +213,21 @@ file static class TypeInterfaceEntriesImpl
     /// </summary>
     static TypeInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfType.IID = WellKnownInterfaceIds.IID_IReferenceOfType;
+        Entries.IReferenceOfType.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType;
         Entries.IReferenceOfType.Vtable = TypeReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -256,7 +256,7 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownInterfaceIds.IID_IReferenceOfType);
+        Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType);
 
         // Try to marshal the resulting type (it might not actually succeed)
         global::System.Type? type = TypeMarshaller.ConvertToManaged(abi);

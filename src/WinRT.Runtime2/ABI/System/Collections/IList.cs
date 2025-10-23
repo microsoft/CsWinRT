@@ -55,7 +55,7 @@ public static unsafe class IListMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IList? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IList>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IBindableVector);
+        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IList>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableVector);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -70,17 +70,6 @@ public static unsafe class IListMarshaller
 /// </summary>
 file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
-    /// <summary>
-    /// Gets the runtime class name for <see cref="global::System.Collections.IList"/>.
-    /// </summary>
-    private static string RuntimeClassName
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? "Windows.UI.Xaml.Interop.IBindableVector"
-            : "Microsoft.UI.Xaml.Interop.IBindableVector";
-    }
-
     /// <inheritdoc/>
 	public static unsafe bool TryCreateObject(
         void* value,
@@ -88,11 +77,11 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags)
     {
-        if (runtimeClassName.SequenceEqual(RuntimeClassName))
+        if (runtimeClassName.SequenceEqual(WellKnownXamlRuntimeClassNames.IBindableVector))
         {
             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                 externalComObject: value,
-                iid: in WellKnownInterfaceIds.IID_IBindableVector,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
                 wrapperFlags: out wrapperFlags);
 
             wrapperObject = new WindowsRuntimeEnumerable(valueReference);
@@ -117,7 +106,7 @@ file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeCom
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
             externalComObject: value,
-            iid: in WellKnownInterfaceIds.IID_IBindableVector,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
             wrapperFlags: out wrapperFlags);
 
         return new WindowsRuntimeEnumerable(valueReference);
@@ -232,15 +221,6 @@ public static unsafe class IListImpl
         Vftbl.Append = &Append;
         Vftbl.RemoveAtEnd = &RemoveAtEnd;
         Vftbl.Clear = &Clear;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="global::System.Collections.IList"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableVector;
     }
 
     /// <summary>

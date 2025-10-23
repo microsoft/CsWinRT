@@ -774,14 +774,14 @@ namespace cswinrt
     static void write_iid_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%", name);
     }
 
     static void write_iid_reference_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%Reference", name);
     }
 
@@ -794,7 +794,9 @@ namespace cswinrt
     {
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
-            w.write("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+            std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+            name = escape_type_name_for_identifier(name, true, true);
+            w.write("WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_%", name);
         }
         else
         {
@@ -3996,7 +3998,7 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceValue.IID = %ReferenceImpl.IID;
+        Entries.IReferenceValue.IID = %;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -4015,7 +4017,7 @@ R"(file static class %InterfaceEntriesImpl
     }
 }
 
-)", name, name, name, name);
+)", name, name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_delegates_interface_entries_impl(writer& w, TypeDef const& type)
@@ -4030,9 +4032,9 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.Delegate.IID = %Impl.IID;
+        Entries.Delegate.IID = %;
         Entries.Delegate.Vtable = %Impl.Vtable;
-        Entries.DelegateReference.IID = %ReferenceImpl.IID;
+        Entries.DelegateReference.IID = %;
         Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
@@ -4051,7 +4053,7 @@ R"(file static class %InterfaceEntriesImpl
     }
 }
 
-)", name, name, name, name, name, name);
+)", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)

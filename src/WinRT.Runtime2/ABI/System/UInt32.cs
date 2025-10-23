@@ -43,7 +43,7 @@ public static unsafe class UInt32Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(uint? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfUInt);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUInt);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,21 +84,21 @@ file static class UInt32InterfaceEntriesImpl
     /// </summary>
     static UInt32InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfUInt32.IID = WellKnownInterfaceIds.IID_IReferenceOfUInt;
+        Entries.IReferenceOfUInt32.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUInt;
         Entries.IReferenceOfUInt32.Vtable = UInt32ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
         Entries.IPropertyValue.Vtable = UInt32PropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = IStringableImpl.IID;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = IMarshalImpl.IID;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = IInspectableImpl.IID;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = IUnknownImpl.IID;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -127,7 +127,7 @@ internal sealed unsafe class UInt32ComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<uint>(value, in WellKnownInterfaceIds.IID_IReferenceOfUInt);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<uint>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUInt);
     }
 }
 

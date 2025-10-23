@@ -37,7 +37,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -49,14 +49,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature keyValuePairType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -221,17 +219,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the public 'IID' property
-            WellKnownMemberDefinitionFactory.IID(
-                forwardedIidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out MethodDefinition get_IidMethod2,
-                out PropertyDefinition iidProperty);
-
-            implType.Methods.Add(get_IidMethod2);
-            implType.Properties.Add(iidProperty);
-
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(
                 vftblField: vftblField,
@@ -248,6 +235,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="keyValuePairTypeImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -255,6 +243,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceEntriesImplType(
             GenericInstanceTypeSignature keyValuePairType,
             TypeDefinition keyValuePairTypeImplType,
+            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -268,7 +257,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 implTypes: [
-                    (keyValuePairTypeImplType.GetMethod("get_IID"u8), keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
+                    (get_IidMethod, keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
                     (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
                     (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
