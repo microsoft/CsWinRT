@@ -7,18 +7,15 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Binding type for the <c>IBindableVectorView</c> interface vtable.
+/// Represents the details of an error, including restricted error information.
 /// </summary>
-/// <remarks>
-/// This interface is equivalent to <see href="https://learn.microsoft.com/en-us/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
-/// </remarks>
-/// <see href="https://learn.microsoft.com/en-us/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>
+/// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IRestrictedErrorInfoVftbl
 {
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int*, void**, void**, int> GetErrorDetails;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int> GetReference;
+    public delegate* unmanaged[MemberFunction]<void*, void**, int*, void**, void**, HRESULT> GetErrorDetails;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetReference;
 }
