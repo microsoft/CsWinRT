@@ -334,7 +334,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     {
         try
         {
-            if (ExceptionHelpers.getRestrictedErrorInfo != null && ExceptionHelpers.setRestrictedErrorInfo != null && ExceptionHelpers.roOriginateLanguageException != null)
+            if (WindowsRuntimeImports.GetRestrictedErrorInfo != null && WindowsRuntimeImports.SetRestrictedErrorInfo != null && WindowsRuntimeImports.RoOriginateLanguageException != null)
             {
                 // If the exception has an IRestrictedErrorInfo, use that as our error info
                 // to allow to propagate the original error through WinRT with the end to end information
@@ -365,7 +365,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     }
                     if (restrictedErrorObject != null)
                     {
-                        ExceptionHelpers.setRestrictedErrorInfo(restrictedErrorObject.GetThisPtrUnsafe());
+                        WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObject.GetThisPtrUnsafe());
                         GC.KeepAlive(restrictedErrorObject);
                     }
                 }
@@ -399,7 +399,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
                         try
                         {
-                            ExceptionHelpers.roOriginateLanguageException(GetHRForException(exception), hstring, managedExceptionWrapper.GetThisPtrUnsafe());
+                            WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring, managedExceptionWrapper.GetThisPtrUnsafe());
                         }
                         finally
                         {
@@ -434,13 +434,13 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     public static unsafe void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
-        if (ExceptionHelpers.roReportUnhandledError != null)
+        if (WindowsRuntimeImports.RoReportUnhandledError != null)
         {
             WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
             void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
             if (restrictedErrorInfoValuePtr != default)
             {
-                _ = ExceptionHelpers.roReportUnhandledError(restrictedErrorInfoValuePtr);
+                _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
                 restrictedErrorInfoValue.Dispose();
             }
         }

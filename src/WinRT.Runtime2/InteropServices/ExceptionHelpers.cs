@@ -14,34 +14,23 @@ namespace WindowsRuntime.InteropServices;
 
 internal static unsafe class ExceptionHelpers
 {
-    private static readonly void* winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", null, (uint)DllImportSearchPath.System32);
-    private static ReadOnlySpan<byte> LangExceptionString => "RoOriginateLanguageException"u8;
-    private static ReadOnlySpan<byte> ReportUnhandledErrorString => "RoReportUnhandledError"u8;
-    private static ReadOnlySpan<byte> GetRestrictedErrorInfo => "GetRestrictedErrorInfo"u8;
-    private static ReadOnlySpan<byte> SetRestrictedErrorInfo => "SetRestrictedErrorInfo"u8;
-
-    public static unsafe delegate* unmanaged[Stdcall]<void**, int> getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void**, int>)Platform.TryGetProcAddress(winRTErrorModule, GetRestrictedErrorInfo);
-    public static unsafe delegate* unmanaged[Stdcall]<void*, int> setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void*, int>)Platform.TryGetProcAddress(winRTErrorModule, SetRestrictedErrorInfo);
-    public static unsafe delegate* unmanaged[Stdcall]<int, void*, void*, int> roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, void*, void*, int>)Platform.TryGetProcAddress(winRTErrorModule, LangExceptionString);
-    public static unsafe delegate* unmanaged[Stdcall]<void*, int> roReportUnhandledError = (delegate* unmanaged[Stdcall]<void*, int>)Platform.TryGetProcAddress(winRTErrorModule, ReportUnhandledErrorString);
-
     public static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
-        if (getRestrictedErrorInfo == null)
+        if (WindowsRuntimeImports.GetRestrictedErrorInfo == null)
         {
             return default;
         }
 
         void* restrictedErrorInfoPtr;
-        Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(&restrictedErrorInfoPtr));
+        Marshal.ThrowExceptionForHR(WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr));
         if (restrictedErrorInfoPtr == null)
         {
             return default;
         }
 
-        if (setRestrictedErrorInfo != null)
+        if (WindowsRuntimeImports.SetRestrictedErrorInfo != null)
         {
-            Marshal.ThrowExceptionForHR(setRestrictedErrorInfo(restrictedErrorInfoPtr));
+            Marshal.ThrowExceptionForHR(WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorInfoPtr));
         }
 
         return new WindowsRuntimeObjectReferenceValue(restrictedErrorInfoPtr);

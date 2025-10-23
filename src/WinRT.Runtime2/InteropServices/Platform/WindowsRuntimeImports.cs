@@ -81,4 +81,21 @@ internal static unsafe partial class WindowsRuntimeImports
     /// <see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary"/>
     [LibraryImport("kernel32", SetLastError = true)]
     public static partial int FreeLibrary(HMODULE hLibModule);
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
+    [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
+    public static partial HRESULT RoReportUnhandledError(void* pRestrictedErrorInfo);
+
+    /// https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-rooriginatelanguageexception
+    [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
+    public static partial int RoOriginateLanguageException(HRESULT error, HSTRING message, void* languageException);
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-getrestrictederrorinfo"/>
+    [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
+    public static partial HRESULT GetRestrictedErrorInfo(void** ppRestrictedErrorInfo);
+
+    /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/roerrorapi/nf-roerrorapi-setrestrictederrorinfo"/>
+    [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
+    public static partial HRESULT SetRestrictedErrorInfo(void* pRestrictedErrorInfo);
+
 }
