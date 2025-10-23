@@ -5,9 +5,20 @@
 #include "CustomBindableVectorTest.g.cpp"
 #include "CustomBindableObservableVectorTest.g.cpp"
 #include "CustomIteratorTest.g.cpp"
+#include "ThrowingManagedProperties.g.cpp"
 
 namespace winrt::TestComponentCSharp::implementation
 {
+    ThrowingManagedProperties::ThrowingManagedProperties()
+    {
+
+    }
+
+    void ThrowingManagedProperties::ThrowWithIProperty1(IProperties1 prop)
+    {
+        prop.ReadWriteProperty();
+    }
+
 	CustomBindableIteratorTest::CustomBindableIteratorTest()
 	{
 		
@@ -39,6 +50,7 @@ namespace winrt::TestComponentCSharp::implementation
     CustomBindableVectorTest::CustomBindableVectorTest()
     {
     }
+
     void CustomBindableVectorTest::Clear()
     {
     }

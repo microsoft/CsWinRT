@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using TestComponent;
 using TestComponentCSharp;
 using WindowsRuntime.InteropServices;
@@ -12,35 +13,61 @@ using WindowsRuntime.InteropServices;
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
 
-CustomDisposableTest customDisposableTest = new();
-customDisposableTest.Dispose();
+//CustomDisposableTest customDisposableTest = new();
+//customDisposableTest.Dispose();
 
-Composable composable = new();
-_ = composable.Value;
-composable.Value = 5;
-_ = composable.Value;
 
-_ = Composable.ExpectComposable(composable);
-_ = Composable.ExpectRequiredOne(composable);
+ThrowingManagedProperties throwingManagedProperties = new();
+throwingManagedProperties.ThrowWithIProperty1(new ThrowingManagedProperty(new NullReferenceException()));
 
-Composable composable2 = new(42);
-_ = composable2.Value;
+//Composable composable = new();
+//_ = composable.Value;
+//composable.Value = 5;
+//_ = composable.Value;
 
-_ = Composable.ExpectComposable(composable2);
-_ = Composable.ExpectRequiredOne(composable2);
+//_ = Composable.ExpectComposable(composable);
+//_ = Composable.ExpectRequiredOne(composable);
 
-_ = ComImports.NumObjects;
-_ = ComImports.MakeObject();
+//Composable composable2 = new(42);
+//_ = composable2.Value;
 
-TestComposable testComposable = new();
+//_ = Composable.ExpectComposable(composable2);
+//_ = Composable.ExpectRequiredOne(composable2);
 
-_ = testComposable.Value;
+//_ = ComImports.NumObjects;
+//_ = ComImports.MakeObject();
 
-_ = Composable.ExpectComposable(testComposable);
-_ = Composable.ExpectRequiredOne(testComposable);
+//TestComposable testComposable = new();
 
-sealed class TestComposable : Composable
+//_ = testComposable.Value;
+
+//_ = Composable.ExpectComposable(testComposable);
+//_ = Composable.ExpectRequiredOne(testComposable);
+
+//sealed class TestComposable : Composable
+//{
+//}
+
+//sealed class TestComposable2 : Composable
+//{
+//}
+
+sealed class ThrowingManagedProperty : IProperties1
 {
+    public ThrowingManagedProperty(Exception exceptionToThrow)
+    {
+        ExceptionToThrow = exceptionToThrow;
+    }
+
+    public Exception ExceptionToThrow { get; }
+
+    public int ReadWriteProperty
+    {
+        get
+        {
+            throw ExceptionToThrow;
+        }
+    }
 }
 
 /*

@@ -1,6 +1,7 @@
 #pragma once
 #include "CustomBindableIteratorTest.g.h"
 #include "CustomDisposableTest.g.h"
+#include "ThrowingManagedProperties.g.h"
 #include "CustomBindableVectorTest.g.h"
 #include "CustomBindableObservableVectorTest.g.h"
 #include "CustomIteratorTest.g.h"
@@ -19,6 +20,12 @@ namespace winrt::TestComponentCSharp::implementation
 	{
 		CustomDisposableTest();
 		void Close();
+	};
+
+	struct ThrowingManagedProperties : ThrowingManagedPropertiesT<ThrowingManagedProperties>
+	{
+		ThrowingManagedProperties();
+		void ThrowWithIProperty1(IProperties1 prop);
 	};
 
 	struct CustomBindableVectorTest : CustomBindableVectorTestT<CustomBindableVectorTest>
@@ -78,6 +85,11 @@ namespace winrt::TestComponentCSharp::factory_implementation
 	};
 
 	struct CustomDisposableTest : CustomDisposableTestT<CustomDisposableTest, implementation::CustomDisposableTest>
+	{
+
+	};
+
+	struct ThrowingManagedProperties : ThrowingManagedPropertiesT<ThrowingManagedProperties, implementation::ThrowingManagedProperties>
 	{
 
 	};

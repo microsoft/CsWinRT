@@ -524,6 +524,13 @@ namespace TestComponentCSharp
     {
         CustomDisposableTest();
     }
+
+    [default_interface]
+    runtimeclass ThrowingManagedProperties
+    {
+        ThrowingManagedProperties();
+        void ThrowWithIProperty1(IProperties1 prop);
+    }
     
     [default_interface]
     runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector

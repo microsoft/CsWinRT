@@ -50,6 +50,9 @@
       TestComponentCSharp.IComImports;
       TestComponentCSharp.ISingleton;
       TestComponentCSharp.Singleton;
+      TestComponentCSharp.IProperties1;
+      TestComponentCSharp.ThrowingManagedProperties;
+      TestComponentCSharp.IThrowingManagedProperties;
       TestComponent.Param1Handler;
       TestComponent.Param2Handler;
       TestComponent.Param3Handler;
