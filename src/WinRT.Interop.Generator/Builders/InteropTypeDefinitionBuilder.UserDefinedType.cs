@@ -88,7 +88,8 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // For custom mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
                     string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
-                    MemberReference get_IIDMethod = interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+                    TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
+                    MemberReference get_IIDMethod = interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
                     // Add the entry from the ABI type in 'WinRT.Runtime.dll'
                     entriesList.Add((get_IIDMethod, get_VtableMethod));
@@ -100,8 +101,9 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the containing assembly
                     string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
+                    TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
                     TypeReference interfaceIIDsTypeReference = typeSignature.Resolve()!.Module!.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
-                    MemberReference get_IIDMethod = interfaceIIDsTypeReference.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+                    MemberReference get_IIDMethod = interfaceIIDsTypeReference.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
                     // Add the entry from the ABI type in the same declaring assembly
                     entriesList.Add((get_IIDMethod, get_VtableMethod));
