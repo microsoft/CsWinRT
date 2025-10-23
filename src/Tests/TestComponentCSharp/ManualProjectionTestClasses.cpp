@@ -34,6 +34,7 @@ namespace winrt::TestComponentCSharp::implementation
 
 	void CustomDisposableTest::Close()
 	{
+        throw winrt::hresult_access_denied();
 	}
 
     CustomBindableVectorTest::CustomBindableVectorTest()

@@ -53,8 +53,7 @@ internal static unsafe class ExceptionHelpers
             void* currentLanguageExceptionErrorInfo2Ptr = default;
             try
             {
-                currentLanguageExceptionErrorInfo2Ptr
-                    = ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr);
+                _ = ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr);
                 while (currentLanguageExceptionErrorInfo2Ptr != default)
                 {
                     Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
@@ -64,7 +63,7 @@ internal static unsafe class ExceptionHelpers
                     }
 
                     void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
-                    currentLanguageExceptionErrorInfo2Ptr = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr);
+                    _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr);
                     _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
                 }
             }
@@ -80,7 +79,8 @@ internal static unsafe class ExceptionHelpers
 
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
     {
-        void* languageExceptionPtr = ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr);
+        void* languageExceptionPtr = default;
+        _ = ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr);
         if (languageExceptionPtr != default)
         {
             try

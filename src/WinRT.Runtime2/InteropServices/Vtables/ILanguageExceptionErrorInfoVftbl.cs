@@ -20,17 +20,16 @@ internal unsafe struct ILanguageExceptionErrorInfoVftbl
     public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetLanguageException;
 
     /// <summary>
-    /// Enables retrieving the IUnknown pointer stored in the error info with the call to RoOriginateLanguageException.
+    /// Gets the stored IUnknown object from the error object.
     /// </summary>
     /// <param name="thisPtr">The target COM object.</param>
+    /// <param name="languageException">The stored IUnknown object from the error object.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void* GetLanguageExceptionUnsafe(void* thisPtr)
+    public static HRESULT GetLanguageExceptionUnsafe(void* thisPtr, void** languageException)
     {
-        void* __return_value__ = null;
-        Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfoVftbl*)*(void***)thisPtr)->GetLanguageException(
+        return ((ILanguageExceptionErrorInfoVftbl*)*(void***)thisPtr)->GetLanguageException(
             thisPtr,
-            &__return_value__));
-        return __return_value__;
+            languageException);
     }
 }
