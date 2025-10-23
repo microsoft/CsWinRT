@@ -14,42 +14,6 @@ namespace WindowsRuntime.InteropServices;
 
 internal static unsafe class ExceptionHelpers
 {
-    internal const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
-    internal const int COR_E_OPERATIONCANCELED = unchecked((int)0x8013153b);
-    internal const int COR_E_ARGUMENTOUTOFRANGE = unchecked((int)0x80131502);
-    internal const int COR_E_INDEXOUTOFRANGE = unchecked((int)0x80131508);
-    internal const int COR_E_TIMEOUT = unchecked((int)0x80131505);
-    internal const int COR_E_INVALIDOPERATION = unchecked((int)0x80131509);
-    internal const int RO_E_CLOSED = unchecked((int)0x80000013);
-    internal const int E_BOUNDS = unchecked((int)0x8000000b);
-    internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
-    internal const int E_ILLEGAL_STATE_CHANGE = unchecked((int)0x8000000d);
-    internal const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000e);
-    internal const int E_ILLEGAL_DELEGATE_ASSIGNMENT = unchecked((int)0x80000018);
-    internal const int APPMODEL_ERROR_NO_PACKAGE = unchecked((int)0x80073D54);
-    internal const int E_XAMLPARSEFAILED = unchecked((int)0x802B000A);
-    internal const int E_LAYOUTCYCLE = unchecked((int)0x802B0014);
-    internal const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
-    internal const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
-    internal const int ERROR_INVALID_WINDOW_HANDLE = unchecked((int)0x80070578);
-    internal const int E_POINTER = unchecked((int)0x80004003);
-    internal const int E_NOTIMPL = unchecked((int)0x80004001);
-    internal const int E_ACCESSDENIED = unchecked((int)0x80070005);
-    internal const int E_INVALIDARG = unchecked((int)0x80070057);
-    internal const int E_NOINTERFACE = unchecked((int)0x80004002);
-    internal const int E_OUTOFMEMORY = unchecked((int)0x8007000e);
-    internal const int E_NOTSUPPORTED = unchecked((int)0x80070032);
-    internal const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
-    internal const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
-    internal const int ERROR_FILE_NOT_FOUND = unchecked((int)0x80070002);
-    internal const int ERROR_HANDLE_EOF = unchecked((int)0x80070026);
-    internal const int ERROR_PATH_NOT_FOUND = unchecked((int)0x80070003);
-    internal const int ERROR_STACK_OVERFLOW = unchecked((int)0x800703e9);
-    internal const int ERROR_BAD_FORMAT = unchecked((int)0x8007000b);
-    internal const int ERROR_CANCELLED = unchecked((int)0x800704c7);
-    internal const int ERROR_TIMEOUT = unchecked((int)0x800705b4);
-    internal const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
-
     public static unsafe delegate* unmanaged[Stdcall]<void**, int> getRestrictedErrorInfo;
     public static unsafe delegate* unmanaged[Stdcall]<void*, int> setRestrictedErrorInfo;
     public static unsafe delegate* unmanaged[Stdcall]<int, void*, void*, int> roOriginateLanguageException;
@@ -204,10 +168,10 @@ internal static unsafe class ExceptionHelpers
 
         return hr switch
         {
-            COR_E_OBJECTDISPOSED => RO_E_CLOSED,
-            COR_E_OPERATIONCANCELED => ERROR_CANCELLED,
-            COR_E_ARGUMENTOUTOFRANGE or COR_E_INDEXOUTOFRANGE => E_BOUNDS,
-            COR_E_TIMEOUT => ERROR_TIMEOUT,
+            WellKnownErrorCodes.COR_E_OBJECTDISPOSED => WellKnownErrorCodes.RO_E_CLOSED,
+            WellKnownErrorCodes.COR_E_OPERATIONCANCELED => WellKnownErrorCodes.ERROR_CANCELLED,
+            WellKnownErrorCodes.COR_E_ARGUMENTOUTOFRANGE or WellKnownErrorCodes.COR_E_INDEXOUTOFRANGE => WellKnownErrorCodes.E_BOUNDS,
+            WellKnownErrorCodes.COR_E_TIMEOUT => WellKnownErrorCodes.ERROR_TIMEOUT,
             _ => hr,
         };
     }
