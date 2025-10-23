@@ -29,7 +29,7 @@ internal unsafe struct ILanguageExceptionErrorInfo2Vftbl
         return __retval;
     }
 
-    public static unsafe void* GetPropagationContextHeadUnsafe(void* thisPtr)
+    public static void* GetPropagationContextHeadUnsafe(void* thisPtr)
     {
         void* __retval = default;
         Marshal.ThrowExceptionForHR(((ILanguageExceptionErrorInfo2Vftbl*)*(void***)thisPtr)->GetPropagationContextHead(
