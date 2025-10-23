@@ -14,36 +14,16 @@ namespace WindowsRuntime.InteropServices;
 
 internal static unsafe class ExceptionHelpers
 {
-    public static unsafe delegate* unmanaged[Stdcall]<void**, int> getRestrictedErrorInfo;
-    public static unsafe delegate* unmanaged[Stdcall]<void*, int> setRestrictedErrorInfo;
-    public static unsafe delegate* unmanaged[Stdcall]<int, void*, void*, int> roOriginateLanguageException;
-    public static unsafe delegate* unmanaged[Stdcall]<void*, int> roReportUnhandledError;
+    private static readonly void* winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", null, (uint)DllImportSearchPath.System32);
+    private static ReadOnlySpan<byte> LangExceptionString => "RoOriginateLanguageException"u8;
+    private static ReadOnlySpan<byte> ReportUnhandledErrorString => "RoReportUnhandledError"u8;
+    private static ReadOnlySpan<byte> GetRestrictedErrorInfo => "GetRestrictedErrorInfo"u8;
+    private static ReadOnlySpan<byte> SetRestrictedErrorInfo => "SetRestrictedErrorInfo"u8;
 
-    private static unsafe bool Initialize()
-    {
-        void* winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", null, (uint)DllImportSearchPath.System32);
-        if (winRTErrorModule != null)
-        {
-            ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
-            ReadOnlySpan<byte> reportUnhandledErrorString = "RoReportUnhandledError"u8;
-            roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, void*, void*, int>)Platform.GetProcAddress(winRTErrorModule, langExceptionString);
-            roReportUnhandledError = (delegate* unmanaged[Stdcall]<void*, int>)Platform.GetProcAddress(winRTErrorModule, reportUnhandledErrorString);
-        }
-        else
-        {
-            winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", null, (uint)DllImportSearchPath.System32);
-        }
-
-        if (winRTErrorModule != null)
-        {
-            ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
-            ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo"u8;
-            getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void**, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfoFuncName);
-            setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void*, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
-        }
-
-        return true;
-    }
+    public static unsafe delegate* unmanaged[Stdcall]<void**, int> getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void**, int>)Platform.TryGetProcAddress(winRTErrorModule, GetRestrictedErrorInfo);
+    public static unsafe delegate* unmanaged[Stdcall]<void*, int> setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void*, int>)Platform.TryGetProcAddress(winRTErrorModule, SetRestrictedErrorInfo);
+    public static unsafe delegate* unmanaged[Stdcall]<int, void*, void*, int> roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, void*, void*, int>)Platform.TryGetProcAddress(winRTErrorModule, LangExceptionString);
+    public static unsafe delegate* unmanaged[Stdcall]<void*, int> roReportUnhandledError = (delegate* unmanaged[Stdcall]<void*, int>)Platform.TryGetProcAddress(winRTErrorModule, ReportUnhandledErrorString);
 
     public static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
