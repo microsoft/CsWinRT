@@ -392,6 +392,11 @@ internal sealed class InteropReferences
     public TypeReference DynamicInterfaceCastableImplementationTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableImplementationTypeMapGroup"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs</c>.
+    /// </summary>
+    public TypeReference WellKnownInterfaceIIDs => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WellKnownInterfaceIIDs"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl</c>.
     /// </summary>
     public TypeReference IUnknownImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IUnknownImpl"u8);

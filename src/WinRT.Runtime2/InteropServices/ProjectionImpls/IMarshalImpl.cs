@@ -45,7 +45,7 @@ public static unsafe class IMarshalImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IMarshal;
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IMarshal;
     }
 
     /// <summary>

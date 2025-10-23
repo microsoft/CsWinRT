@@ -115,11 +115,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an implementation detail type.
+    /// Failed to generate marshalling code for a default implementation detail type.
     /// </summary>
-    public static Exception ImplementationDetailTypeCodeGenerationError(Exception exception)
+    public static Exception DefaultImplementationDetailTypeCodeGenerationError(Exception exception)
     {
-        return Exception(13, $"Failed to generate marshalling code for some implementation detail type.", exception);
+        return Exception(13, $"Failed to generate marshalling code for some default implementation detail type.", exception);
     }
 
     /// <summary>
@@ -376,6 +376,14 @@ internal static class WellKnownInteropExceptions
     public static Exception IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
         return Exception(42, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a dynamic implementation detail type.
+    /// </summary>
+    public static Exception DynamicImplementationDetailTypeCodeGenerationError(Exception exception)
+    {
+        return Exception(43, $"Failed to generate marshalling code for some dynamic implementation detail type.", exception);
     }
 
     /// <summary>

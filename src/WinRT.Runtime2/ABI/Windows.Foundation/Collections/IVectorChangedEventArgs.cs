@@ -30,7 +30,7 @@ public static unsafe class IVectorChangedEventArgsMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<IVectorChangedEventArgs>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIds.IID_IVectorChangedEventArgs);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IVectorChangedEventArgs);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

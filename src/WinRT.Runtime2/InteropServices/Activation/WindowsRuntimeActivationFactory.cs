@@ -74,7 +74,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
         void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName);
 
-        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in WellKnownInterfaceIds.IID_IActivationFactory)!;
+        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)!;
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
@@ -125,7 +125,7 @@ public static unsafe class WindowsRuntimeActivationFactory
             return false;
         }
 
-        activationFactory = WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownInterfaceIds.IID_IActivationFactory)!;
+        activationFactory = WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)!;
 
         return true;
     }
@@ -172,7 +172,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // returned by each attempted API is. For the activation handler and 'RoGetActivationFactory', we
         // still need to pass an IID in all cases. Unless specified, this should be 'IID_IActivationFactory'.
         ref readonly Guid defaultIid = ref Unsafe.IsNullRef(in iid)
-            ? ref WellKnownInterfaceIds.IID_IActivationFactory
+            ? ref WellKnownWindowsInterfaceIIDs.IID_IActivationFactory
             : ref iid;
 
         // Attempt activation with the activation handler, if any (1)

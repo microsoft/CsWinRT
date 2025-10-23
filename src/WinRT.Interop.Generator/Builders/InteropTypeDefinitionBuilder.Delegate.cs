@@ -264,6 +264,8 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
         /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="get_ReferenceIidMethod">The 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -272,6 +274,8 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateImplType,
             TypeDefinition delegateReferenceImplType,
+            MethodDefinition get_IidMethod,
+            MethodDefinition get_ReferenceIidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -285,8 +289,8 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out interfaceEntriesImplType,
                 implTypes: [
-                    (delegateImplType.GetMethod("get_IID"u8), delegateImplType.GetMethod("get_Vtable"u8)),
-                    (delegateReferenceImplType.GetMethod("get_IID"u8), delegateReferenceImplType.GetMethod("get_Vtable"u8)),
+                    (get_IidMethod, delegateImplType.GetMethod("get_Vtable"u8)),
+                    (get_ReferenceIidMethod, delegateReferenceImplType.GetMethod("get_Vtable"u8)),
                     (interopReferences.IPropertyValueImplget_IID, interopReferences.IPropertyValueImplget_OtherTypeVtable),
                     (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),

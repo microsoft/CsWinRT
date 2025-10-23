@@ -28,7 +28,7 @@ public static unsafe class IAsyncInfoMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncInfo? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncInfo);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>

@@ -52,7 +52,6 @@ using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
-using static ABI.InterfaceIIDsExtensions;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0169 // "The field '...' is never used"
@@ -96,21 +95,17 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
-
 namespace ABI;
 
-internal static class InterfaceIIDsExtensions
+internal static class InterfaceIIDs
 {
-    extension(InterfaceIIDs)
-    {
 )"          
             );
         }
 
         void write_end_interface_iids()
         {
-            write("}}\n\n");
+            write("}\n\n");
         }
 
         void write_begin_abi()

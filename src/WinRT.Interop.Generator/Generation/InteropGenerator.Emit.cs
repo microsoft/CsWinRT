@@ -56,6 +56,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Add all default top level internal types to the interop module
+        DefineDefaultImplementationDetailTypes(interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for generic delegates
         DefineGenericDelegateTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
@@ -121,8 +126,8 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add all top level internal types to the interop module
-        DefineImplementationDetailTypes(interopDefinitions, module);
+        // Add all dynamic top level internal types to the interop module
+        DefineDynamicImplementationDetailTypes(interopDefinitions, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -274,6 +279,8 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
+                    get_IidMethod: get_IidMethod,
+                    get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1114,7 +1121,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1123,6 +1129,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.KeyValuePair.InterfaceEntriesImplType(
                     keyValuePairType: typeSignature,
                     keyValuePairTypeImplType: keyValuePairTypeImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1522,6 +1529,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
                     implType: arrayImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1646,14 +1654,17 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the implementation detail types.
+    /// Defines the default implementation detail types.
     /// </summary>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
-    private static void DefineImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    private static void DefineDefaultImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
     {
         try
         {
+            // These types are emitted before all other types, so that members in them can more easily
+            // be referenced (and imported) without causing issues. The reason is that adding these
+            // earlier on ensures that they're already part of the output module.
             module.TopLevelTypes.Add(interopDefinitions.RvaFields);
             module.TopLevelTypes.Add(interopDefinitions.InterfaceIIDs);
             module.TopLevelTypes.Add(interopDefinitions.IUnknownVftbl);
@@ -1674,7 +1685,22 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DefaultImplementationDetailTypeCodeGenerationError(e);
+        }
+    }
 
+    /// <summary>
+    /// Defines the dynamic implementation detail types.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineDynamicImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    {
+        try
+        {
             // Also emit all shared COM interface entries types that are programmatically generated
             foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
             {
@@ -1683,7 +1709,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
+            throw WellKnownInteropExceptions.DynamicImplementationDetailTypeCodeGenerationError(e);
         }
     }
 

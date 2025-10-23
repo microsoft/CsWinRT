@@ -29,7 +29,7 @@ internal static unsafe class AgileObjectReferenceExtensions
         try
         {
             // Get the agile reference on the current object reference
-            fixed (Guid* riid = &WellKnownInterfaceIds.IID_IUnknown)
+            fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_IUnknown)
             {
                 hresult = WindowsRuntimeImports.RoGetAgileReference(
                     options: AgileReferenceOptions.AGILEREFERENCE_DEFAULT,
