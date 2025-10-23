@@ -75,7 +75,7 @@ internal partial class InteropTypeDefinitionBuilder
                     MethodDefinition get_VtableMethod = implTypeDefinition.GetMethod("get_Vtable"u8);
 
                     // The IID will be in the generated '<InterfaceIIDs>' type in 'WinRT.Interop.dll'
-                    Utf8String get_IIDMethodName = $"get_{InteropUtf8NameFactory.TypeName(typeSignature)}";
+                    Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(typeSignature)}";
                     MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
 
                     // Add the entry from the ABI type in 'WinRT.Interop.dll'
