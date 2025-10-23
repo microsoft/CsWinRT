@@ -2555,7 +2555,7 @@ private WindowsRuntimeObjectReference %
         {
             _ = global::System.Threading.Interlocked.CompareExchange(
                 location1: ref field,
-                value: NativeObjectReference.As(%%),
+                value: NativeObjectReference.As(%),
                 comparand: null);
 
             return field;
@@ -2572,14 +2572,7 @@ private WindowsRuntimeObjectReference %
                                 write_unsafe_accessor_for_iid(w, ifaceType);
                             }
                         },
-                        bind<write_iid_guid>(ifaceType),
-                        [&](writer&){
-                            // Unsafe accessor call
-                            //if (distance(ifaceType.GenericParam()) != 0)
-                            //{
-                                // w.write("(null)");
-                            //}
-                        });
+                        bind<write_iid_guid>(ifaceType));
 
                         /*
                         TODO handle fast ABI
@@ -2605,7 +2598,12 @@ private WindowsRuntimeObjectReference %
 
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
-        write_static_objref_definition(w, composable_type, class_type);
+        // Write the factory objref if there are constructors on this type.
+        if (size(composable_type.MethodList()) != 0)
+        {
+            write_static_objref_definition(w, composable_type, class_type);
+        }
+
         auto cache_object = bind<write_objref_type_name>(composable_type);
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
         auto gc_pressure = w.write_temp("%",
@@ -2617,8 +2615,6 @@ private WindowsRuntimeObjectReference %
 
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
-        bool has_constructor_without_parameters = false;
-        bool has_constructor_with_parameters = false;
         for (auto&& method : composable_type.MethodList())
         {
             method_signature signature{ method };
@@ -2665,14 +2661,9 @@ private WindowsRuntimeObjectReference %
             {
                 write_static_composing_factory_method(w, composable_type, method);
             }
-
-            has_constructor_without_parameters |= params_without_objects.empty();
-            has_constructor_with_parameters |= !params_without_objects.empty();
         }
 
-        if (has_constructor_without_parameters)
-        {
-            w.write(R"(
+        w.write(R"(
 protected %(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
   :base(_, activationFactoryObjectReference, in iid)
 {
@@ -2682,16 +2673,7 @@ protected %(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectR
   :base(_, activationFactoryObjectReference, in iid)
 {
 %}
-)",
-                class_type.TypeName(),
-                gc_pressure,
-                class_type.TypeName(),
-                gc_pressure);
-        }
 
-        if (has_constructor_with_parameters)
-        {
-            w.write(R"(
 protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, params ReadOnlySpan<object> additionalParameters)
   :base(activationFactoryCallback, in iid, additionalParameters)
 {
@@ -2702,11 +2684,18 @@ protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFact
 {
 %}
 )",
-                class_type.TypeName(),
-                gc_pressure,
-                class_type.TypeName(),
-                gc_pressure);
-        }
+            // WindowsRuntimeActivationTypes.DerivedComposed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationTypes.DerivedSealed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationFactoryCallback.DerivedComposed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationFactoryCallback.DerivedSealed
+            class_type.TypeName(),
+            gc_pressure);
     }
 
     void write_static_factory_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view platform_attribute = ""sv)
