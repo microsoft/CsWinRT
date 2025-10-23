@@ -24,14 +24,8 @@ internal static unsafe class ExceptionHelpers
         void* winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", null, (uint)DllImportSearchPath.System32);
         if (winRTErrorModule != null)
         {
-#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
             ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
             ReadOnlySpan<byte> reportUnhandledErrorString = "RoReportUnhandledError"u8;
-#else
-                ReadOnlySpan<byte> langExceptionString = Encoding.ASCII.GetBytes("RoOriginateLanguageException");
-                ReadOnlySpan<byte> reportUnhandledErrorString = Encoding.ASCII.GetBytes("RoReportUnhandledError");
-#endif
-
             roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, void*, void*, int>)Platform.GetProcAddress(winRTErrorModule, langExceptionString);
             roReportUnhandledError = (delegate* unmanaged[Stdcall]<void*, int>)Platform.GetProcAddress(winRTErrorModule, reportUnhandledErrorString);
         }
@@ -42,13 +36,8 @@ internal static unsafe class ExceptionHelpers
 
         if (winRTErrorModule != null)
         {
-#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
             ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
             ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo"u8;
-#else
-                ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = Encoding.ASCII.GetBytes("GetRestrictedErrorInfo");
-                ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = Encoding.ASCII.GetBytes("SetRestrictedErrorInfo");
-#endif
             getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void**, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfoFuncName);
             setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<void*, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
         }
@@ -196,11 +185,7 @@ internal static unsafe class ExceptionHelpers
 
             // Keep the error object alive so that user could retrieve error information
             // using Data["RestrictedErrorReference"]
-#if NET
             dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
-#else
-                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
-#endif
             dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
 
             if (internalGetGlobalErrorStateException != null)
@@ -220,11 +205,7 @@ internal static unsafe class ExceptionHelpers
         {
             // Keep the error object alive so that user could retrieve error information
             // using Data["RestrictedErrorReference"]
-#if NET
             dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
-#else
-                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
-#endif
             dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
         }
     }
@@ -245,11 +226,7 @@ internal static class ExceptionExtensions
         {
             if (dict.Contains("__RestrictedErrorObjectReference"))
             {
-#if NET
                 restrictedErrorObject = dict["__RestrictedErrorObjectReference"] as WindowsRuntimeObjectReference;
-#else
-                restrictedErrorObject = ((__RestrictedErrorObject)dict["__RestrictedErrorObjectReference"])?.RealErrorObject;
-#endif
             }
 
             if (dict.Contains("__HasRestrictedLanguageErrorObject"))
@@ -265,11 +242,7 @@ internal static class ExceptionExtensions
 
     public static void SetHResult(this Exception ex, int value)
     {
-#if !NET
-            ex.GetType().GetProperty("HResult").SetValue(ex, value);
-#else
         ex.HResult = value;
-#endif
     }
 
     public static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
@@ -313,16 +286,6 @@ internal static class MarshalExtensions
             handle.Free();
         }
     }
-
-#if !NET
-        public static unsafe ref readonly char GetPinnableReference(this string str)
-        {
-            fixed (char* p = str)
-            {
-                return ref *p;
-            }
-        }
-#endif
 }
 
 // Handcrafted P/Invoke with TFM-specific handling, or thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
@@ -332,14 +295,7 @@ internal partial class Platform
     {
         fixed (byte* lpFunctionName = functionName)
         {
-#if NET8_0_OR_GREATER
             return LibraryImportStubs.GetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
-#else
-                return GetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
-
-                [DllImport("kernel32.dll", SetLastError = true)]
-                static extern unsafe void* GetProcAddress(void* nativeModuleHandle, sbyte* nativeFunctionName);
-#endif
         }
     }
 
@@ -359,19 +315,11 @@ internal partial class Platform
     {
         fixed (char* lpFileName = fileName)
         {
-#if NET8_0_OR_GREATER
             return LibraryImportStubs.LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
-#else
-                return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
-
-                [DllImport("kernel32.dll", SetLastError = true)]
-                static unsafe extern void* LoadLibraryExW(ushort* fileName, void* fileHandle, uint flags);
-#endif
         }
     }
 }
 
-#if NET8_0_OR_GREATER
 // Marshalling stubs from [LibraryImport], which are used to get the same semantics (eg. for setting
 // the last P/Invoke errors, etc.) on .NET 6 as well ([LibraryImport] was only introduced in .NET 7).
 internal static class LibraryImportStubs
@@ -412,4 +360,3 @@ internal static class LibraryImportStubs
         static extern unsafe void* PInvoke(ushort* nativeFileName, void* nativeFileHandle, uint nativeFlags);
     }
 }
-#endif
