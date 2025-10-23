@@ -33,10 +33,7 @@ internal sealed partial class ManagedExceptionErrorInfo : IErrorInfo
         if (string.IsNullOrEmpty(message))
         {
             Type exceptionType = _exception.GetType();
-            if (exceptionType != null)
-            {
-                message = exceptionType.Name;
-            }
+            message = exceptionType.Name;
         }
         return message;
     }
