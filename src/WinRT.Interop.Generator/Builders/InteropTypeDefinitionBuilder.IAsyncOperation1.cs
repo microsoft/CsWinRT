@@ -81,7 +81,7 @@ internal partial class InteropTypeDefinitionBuilder
                 key: "Marshaller").GetMethod("ConvertToManaged"u8);
 
             // Define the 'Completed' get method:
-            MethodDefinition completedMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.get_Handler(
+            MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.get_Handler(
                 methodName: "Completed"u8,
                 handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("get_Completed"u8),
@@ -91,7 +91,25 @@ internal partial class InteropTypeDefinitionBuilder
 
             operationyMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType).Import(module),
-                method: completedMethod);
+                method: get_CompletedMethod);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
+            MethodDefinition convertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            // Define the 'Completed' set method:
+            MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.set_Handler(
+                methodName: "Completed"u8,
+                handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("set_Completed"u8),
+                convertToUnmanagedMethod: convertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            operationyMethodsType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType).Import(module),
+                method: set_CompletedMethod);
         }
 
         /// <summary>
