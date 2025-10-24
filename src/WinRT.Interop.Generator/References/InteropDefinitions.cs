@@ -154,6 +154,11 @@ internal sealed class InteropDefinitions
     public TypeDefinition IAsyncOperationVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationVftbl(_interopReferences, _interopModule);
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IAsyncOperationWithProgressVftbl</c> type.
+    /// </summary>
+    public TypeDefinition IAsyncOperationWithProgressVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationWithProgressVftbl(_interopReferences, _interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
     /// </summary>
     public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
