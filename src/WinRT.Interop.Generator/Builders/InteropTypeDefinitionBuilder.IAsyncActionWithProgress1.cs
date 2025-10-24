@@ -8,6 +8,7 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -145,6 +146,28 @@ internal partial class InteropTypeDefinitionBuilder
             actionMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1set_Completed(progressType).Import(module),
                 method: set_CompletedMethod);
+
+            // Define the 'GetResults' method as follows:
+            //
+            // public static void GetResults(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition getResultsMethod = new(
+                name: "GetResults"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IAsyncActionWithProgressGetResults.Import(module) },
+                    { Ret }
+                }
+            };
+
+            actionMethodsType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1GetResults(progressType).Import(module),
+                method: getResultsMethod);
         }
     }
 }
