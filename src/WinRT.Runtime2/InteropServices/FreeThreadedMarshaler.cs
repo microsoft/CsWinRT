@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
@@ -128,24 +129,27 @@ internal sealed unsafe class FreeThreadedMarshaler
         uint mshlflags,
         Guid* pCid)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
 
         try
         {
-            IMarshalVftbl.GetUnmarshalClassUnsafe(
+            hresult = IMarshalVftbl.GetUnmarshalClassUnsafe(
                 _marshalObjectReference.GetThisPtrUnsafe(),
                 riid,
                 pv,
                 dwDestContext,
                 pvDestContext,
                 mshlflags,
-                pCid).Assert();
+                pCid);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
 
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.GetMarshalSizeMaxUnsafe"/> call fails.</exception>
@@ -158,23 +162,27 @@ internal sealed unsafe class FreeThreadedMarshaler
         uint mshlflags,
         uint* pSize)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
 
         try
         {
-            IMarshalVftbl.GetMarshalSizeMaxUnsafe(
+            hresult = IMarshalVftbl.GetMarshalSizeMaxUnsafe(
                 _marshalObjectReference.GetThisPtrUnsafe(),
                 riid,
                 pv,
                 dwDestContext,
                 pvDestContext,
                 mshlflags,
-                pSize).Assert();
+                pSize);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.MarshalInterfaceUnsafe"/> call fails.</exception>
@@ -187,22 +195,27 @@ internal sealed unsafe class FreeThreadedMarshaler
         void* pvDestContext,
         uint mshlflags)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
+
         try
         {
-            IMarshalVftbl.MarshalInterfaceUnsafe(
+            hresult = IMarshalVftbl.MarshalInterfaceUnsafe(
                 _marshalObjectReference.GetThisPtrUnsafe(),
                 pStm,
                 riid,
                 pv,
                 dwDestContext,
                 pvDestContext,
-                mshlflags).Assert();
+                mshlflags);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.UnmarshalInterfaceUnsafe"/> call fails.</exception>
@@ -212,48 +225,63 @@ internal sealed unsafe class FreeThreadedMarshaler
         Guid* riid,
         void** ppv)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
+
         try
         {
-            IMarshalVftbl.UnmarshalInterfaceUnsafe(
+            hresult = IMarshalVftbl.UnmarshalInterfaceUnsafe(
                 _marshalObjectReference.GetThisPtrUnsafe(),
                 pStm,
                 riid,
-                ppv).Assert();
+                ppv);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.ReleaseMarshalDataUnsafe"/> call fails.</exception>
     /// <inheritdoc cref="IMarshalVftbl.ReleaseMarshalDataUnsafe"/>
     public void ReleaseMarshalData(void* pStm)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
+
         try
         {
-            IMarshalVftbl.ReleaseMarshalDataUnsafe(_marshalObjectReference.GetThisPtrUnsafe(), pStm).Assert();
+            hresult = IMarshalVftbl.ReleaseMarshalDataUnsafe(_marshalObjectReference.GetThisPtrUnsafe(), pStm);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.DisconnectObjectUnsafe"/> call fails.</exception>
     /// <inheritdoc cref="IMarshalVftbl.DisconnectObjectUnsafe"/>
     public void DisconnectObject(uint dwReserved)
     {
+        HRESULT hresult;
+
         _marshalObjectReference.AddRefUnsafe();
+
         try
         {
-            IMarshalVftbl.DisconnectObjectUnsafe(_marshalObjectReference.GetThisPtrUnsafe(), dwReserved).Assert();
+            hresult = IMarshalVftbl.DisconnectObjectUnsafe(_marshalObjectReference.GetThisPtrUnsafe(), dwReserved);
         }
         finally
         {
             _marshalObjectReference.ReleaseUnsafe();
         }
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 }
