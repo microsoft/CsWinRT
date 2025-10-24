@@ -250,5 +250,31 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="actionType">The <see cref="GenericInstanceTypeSignature"/> for the async action type.</param>
+        /// <param name="operationComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="actionType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature actionType,
+            TypeDefinition operationComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            InteropTypeDefinitionBuilder.Marshaller(
+                typeSignature: actionType,
+                interfaceComWrappersCallbackType: operationComWrappersCallbackType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
+        }
     }
 }

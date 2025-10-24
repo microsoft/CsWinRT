@@ -1545,7 +1545,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition operationComWrappersCallbackType);
+                    out TypeDefinition actionComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ComWrappersMarshallerAttribute(
                     actionType: typeSignature,
@@ -1553,7 +1553,15 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition operationComWrappersMarshallerType);
+                    out TypeDefinition actionComWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Marshaller(
+                    actionType: typeSignature,
+                    operationComWrappersCallbackType: actionComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
