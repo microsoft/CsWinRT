@@ -87,6 +87,10 @@ internal static unsafe class ExceptionHelpers
 
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
     {
+        if (languageErrorInfoPtr == null)
+        {
+            return null;
+        }
         void* languageExceptionPtr = null;
         try
         {
@@ -94,19 +98,21 @@ internal static unsafe class ExceptionHelpers
             {
                 if (WindowsRuntimeMarshal.IsReferenceToManagedObject(languageExceptionPtr))
                 {
-                    Exception ex = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
-                    if (GetHRForException(ex) == hr)
+                    Exception exception = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
+                    if (GetHRForException(exception) == hr)
                     {
-                        return ex;
+                        return exception;
                     }
                 }
             }
         }
         finally
         {
-            _ = Marshal.Release((nint)languageExceptionPtr);
+            if (languageExceptionPtr != null)
+            {
+                _ = Marshal.Release((nint)languageExceptionPtr);
+            }
         }
-
         return null;
     }
 
