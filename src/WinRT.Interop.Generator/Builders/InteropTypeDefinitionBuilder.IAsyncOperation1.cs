@@ -363,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
             MethodDefinition convertToUnmanagedMethod = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                typeSignature: asyncOperationCompletedHandlerType,
                 key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
 
             MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
@@ -377,7 +377,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                typeSignature: asyncOperationCompletedHandlerType,
                 key: "Marshaller").GetMethod("ConvertToManaged"u8);
 
             MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(

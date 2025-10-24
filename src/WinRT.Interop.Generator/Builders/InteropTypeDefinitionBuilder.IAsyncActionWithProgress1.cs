@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -439,6 +440,108 @@ internal partial class InteropTypeDefinitionBuilder
                 forwardedMethod: actionMethodsType.GetMethod("GetResults"u8),
                 interopReferences: interopReferences,
                 module: module);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="actionType">The <see cref="GenericInstanceTypeSignature"/> for the async action type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature actionType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            TypeSignature progressType = actionType.TypeArguments[0];
+
+            // Prepare the 'AsyncActionProgressHandler<<PROGRESS_TYPE>>' signature
+            TypeSignature asyncActionProgressHandlerType = interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType(progressType);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncActionProgressHandler<T>' instance to native
+            MethodDefinition progressConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncActionProgressHandlerType,
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            MethodDefinition get_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
+                methodName: "get_Progress"u8,
+                asyncInfoType: actionType,
+                handlerType: asyncActionProgressHandlerType,
+                get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Progress(progressType),
+                convertToUnmanagedMethod: progressConvertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationProgressHandler<T>' instance to managed
+            MethodDefinition progressConvertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncActionProgressHandlerType,
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
+
+            MethodDefinition set_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
+                methodName: "set_Progress"u8,
+                asyncInfoType: actionType,
+                handlerType: asyncActionProgressHandlerType,
+                set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Progress(progressType),
+                convertToManagedMethod: progressConvertToManagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Prepare the 'AsyncActionWithProgressCompletedHandler<<PROGRESS_TYPE>>' signature
+            TypeSignature asyncActionWithProgressCompletedHandlerType = interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncActionProgressHandler<T>' instance to native
+            MethodDefinition completedConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncActionWithProgressCompletedHandlerType,
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
+                methodName: "get_Completed"u8,
+                asyncInfoType: actionType,
+                handlerType: asyncActionWithProgressCompletedHandlerType,
+                get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Completed(progressType),
+                convertToUnmanagedMethod: completedConvertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Get the generated 'ConvertToManaged' method to marshal the 'AsyncActionWithProgressCompletedHandler<T>' instance to managed
+            MethodDefinition completedConvertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncActionWithProgressCompletedHandlerType,
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
+
+            MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
+                methodName: "set_Completed"u8,
+                asyncInfoType: actionType,
+                handlerType: asyncActionWithProgressCompletedHandlerType,
+                set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Completed(progressType),
+                convertToManagedMethod: completedConvertToManagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // TODO
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(actionType),
+                name: InteropUtf8NameFactory.TypeName(actionType, "Impl"),
+                vftblType: interopDefinitions.IAsyncOperationVftbl,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: [
+                    get_ProgressMethod,
+                    set_ProgressMethod,
+                    get_CompletedMethod,
+                    set_CompletedMethod]);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, actionType, "Impl");
         }
 
         /// <summary>
