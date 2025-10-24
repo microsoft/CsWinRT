@@ -15,7 +15,10 @@ namespace WindowsRuntime.AsyncInfo;
 /// The implementation of a native object for <see cref="IAsyncAction"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.iasyncaction"/>
-internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAction, IWindowsRuntimeInterface<IAsyncAction>
+internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
+    IAsyncAction,
+    IWindowsRuntimeInterface<IAsyncAction>,
+    IWindowsRuntimeInterface<IAsyncInfo>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeAsyncAction"/> instance with the specified parameters.
@@ -93,6 +96,12 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
     WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncAction>.GetInterface()
     {
         return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncInfo>.GetInterface()
+    {
+        return IAsyncInfoObjectReference.AsValue();
     }
 
     /// <inheritdoc/>

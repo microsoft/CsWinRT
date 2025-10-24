@@ -19,7 +19,8 @@ namespace WindowsRuntime.AsyncInfo;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
 public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMethods> : WindowsRuntimeObject,
     IAsyncOperation<TResult>,
-    IWindowsRuntimeInterface<IAsyncOperation<TResult>>
+    IWindowsRuntimeInterface<IAsyncOperation<TResult>>,
+    IWindowsRuntimeInterface<IAsyncInfo>
     where TIAsyncOperationMethods : IAsyncOperationMethodsImpl<TResult>
 {
     /// <summary>
@@ -97,6 +98,12 @@ public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMeth
     WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncOperation<TResult>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncInfo>.GetInterface()
+    {
+        return IAsyncInfoObjectReference.AsValue();
     }
 
     /// <inheritdoc/>

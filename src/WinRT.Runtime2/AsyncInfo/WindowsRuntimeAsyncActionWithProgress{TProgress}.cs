@@ -19,7 +19,8 @@ namespace WindowsRuntime.AsyncInfo;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
 public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncActionWithProgressMethods> : WindowsRuntimeObject,
     IAsyncActionWithProgress<TProgress>,
-    IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>
+    IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>,
+    IWindowsRuntimeInterface<IAsyncInfo>
     where TIAsyncActionWithProgressMethods : IAsyncActionWithProgressMethodsImpl<TProgress>
 {
     /// <summary>
@@ -104,6 +105,12 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncInfo>.GetInterface()
+    {
+        return IAsyncInfoObjectReference.AsValue();
     }
 
     /// <inheritdoc/>
