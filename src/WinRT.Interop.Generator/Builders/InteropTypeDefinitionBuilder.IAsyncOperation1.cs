@@ -177,5 +177,33 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition operationMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncOperation<<TYPE_ARGUMENT>, <IASYNC_OPERATION_METHODS>>'
+            TypeSignature windowsRuntimeAsyncOperation1Type = interopReferences.WindowsRuntimeAsyncOperation2.MakeGenericReferenceType(
+                operationType.TypeArguments[0],
+                operationMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: operationType,
+                nativeObjectBaseType: windowsRuntimeAsyncOperation1Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
     }
 }
