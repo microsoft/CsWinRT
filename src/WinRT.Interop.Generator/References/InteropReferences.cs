@@ -432,6 +432,11 @@ internal sealed class InteropReferences
     public TypeReference IAgileObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAgileObjectImpl"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;</c>.
+    /// </summary>
+    public TypeReference IAsyncOperationMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationMethodsImpl`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
     /// </summary>
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIteratorMethods"u8);
@@ -755,6 +760,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperation1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperation`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationCompletedHandler&lt;TResult&gt;</c>.
+    /// </summary>
+    public TypeReference AsyncOperationCompletedHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationCompletedHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
@@ -1720,6 +1730,36 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     Guid.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;.Completed</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    public MemberReference IAsyncOperationMethodsImpl1get_Completed(TypeSignature resultType)
+    {
+        return IAsyncOperationMethodsImpl1
+            .MakeGenericReferenceType(resultType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+                returnType: AsyncOperationCompletedHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;.Completed</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    public MemberReference IAsyncOperationMethodsImpl1set_Completed(TypeSignature resultType)
+    {
+        return IAsyncOperationMethodsImpl1
+            .MakeGenericReferenceType(resultType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    AsyncOperationCompletedHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>

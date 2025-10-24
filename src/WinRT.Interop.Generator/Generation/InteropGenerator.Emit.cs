@@ -359,6 +359,11 @@ internal partial class InteropGenerator
                         module: module,
                         eventSourceType: out _);
                 }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1))
+                {
+                    // We need these marshaller types for the various async type implementations
+                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
+                }
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -1511,6 +1516,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.Methods(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    operationyMethodsType: out TypeDefinition operationMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
