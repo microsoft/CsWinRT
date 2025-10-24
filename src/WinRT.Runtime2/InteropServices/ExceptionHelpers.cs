@@ -50,12 +50,12 @@ internal static unsafe class ExceptionHelpers
         // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
         if (Marshal.QueryInterface((nint)languageErrorInfoPtr, WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2, out nint languageErrorInfo2Ptr) >= 0)
         {
-            void* currentLanguageExceptionErrorInfo2Ptr = default;
+            void* currentLanguageExceptionErrorInfo2Ptr = null;
             try
             {
                 if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
                 {
-                    while (currentLanguageExceptionErrorInfo2Ptr != default)
+                    while (currentLanguageExceptionErrorInfo2Ptr != null)
                     {
                         Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
                         if (propagatedException is not null)
@@ -87,26 +87,24 @@ internal static unsafe class ExceptionHelpers
 
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
     {
-        void* languageExceptionPtr = default;
-        _ = ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr);
-        if (languageExceptionPtr != default)
+        void* languageExceptionPtr = null;
+        try
         {
-            try
+            if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr)) && languageExceptionPtr != null)
             {
                 if (WindowsRuntimeMarshal.IsReferenceToManagedObject(languageExceptionPtr))
                 {
                     Exception ex = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
-                    //var ex = ComWrappersSupport.FindObject<Exception>(languageExceptionPtr);
                     if (GetHRForException(ex) == hr)
                     {
                         return ex;
                     }
                 }
             }
-            finally
-            {
-                _ = Marshal.Release((nint)languageExceptionPtr);
-            }
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)languageExceptionPtr);
         }
 
         return null;
