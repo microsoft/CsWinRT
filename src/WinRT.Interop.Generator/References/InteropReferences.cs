@@ -552,6 +552,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeObject => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObject"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncActionWithProgress&lt;T, ...&gt;</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeAsyncActionWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncActionWithProgress`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperation&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeAsyncOperation2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncOperation`2"u8);

@@ -1530,7 +1530,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    actionMethodsType: out TypeDefinition operationMethodsType);
+                    actionMethodsType: out TypeDefinition actionMethodsType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.NativeObject(
+                    actionType: typeSignature,
+                    actionMethodsType: actionMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

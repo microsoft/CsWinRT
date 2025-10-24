@@ -169,5 +169,33 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1GetResults(progressType).Import(module),
                 method: getResultsMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for some <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="actionType">The <see cref="GenericInstanceTypeSignature"/> for the async action type.</param>
+        /// <param name="actionMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature actionType,
+            TypeDefinition actionMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncActionWithProgress<<TYPE_ARGUMENT>, <IASYNC_ACTION_WITH_PROGRESS_METHODS>>'
+            TypeSignature windowsRuntimeAsyncActionWithProgress1Type = interopReferences.WindowsRuntimeAsyncActionWithProgress2.MakeGenericReferenceType(
+                actionType.TypeArguments[0],
+                actionMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: actionType,
+                nativeObjectBaseType: windowsRuntimeAsyncActionWithProgress1Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
     }
 }
