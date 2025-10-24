@@ -284,5 +284,114 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition operationMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature resultType = operationType.TypeArguments[0];
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(operationType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IAsyncInfo.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Get the getter and setter accessor methods for 'Completed'
+            MethodDefinition[] completedMethods = operationMethodsType.GetMethods("Completed"u8);
+
+            // Create the 'get_Completed' getter method
+            MethodDefinition get_CompletedMethod = new(
+                name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.get_Completed",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType).Import(module)));
+
+            // Add and implement the 'get_Item' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperation1get_Completed(resultType).Import(module),
+                method: get_CompletedMethod);
+
+            // Create a body for the 'get_Completed' method
+            get_CompletedMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: get_CompletedMethod,
+                forwardedMethod: completedMethods[0],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'set_Completed' getter method
+            MethodDefinition set_CompletedMethod = new(
+                name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.set_Completed",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType).Import(module)]));
+
+            // Add and implement the 'set_Completed' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperation1set_Completed(resultType).Import(module),
+                method: set_CompletedMethod);
+
+            // Create a body for the 'set_Completed' method
+            set_CompletedMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: set_CompletedMethod,
+                forwardedMethod: completedMethods[1],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'Completed' property
+            PropertyDefinition completedProperty = new(
+                name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.Completed",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.FromGetMethod(get_CompletedMethod))
+            {
+                GetMethod = get_CompletedMethod,
+                SetMethod = set_CompletedMethod
+            };
+
+            interfaceImplType.Properties.Add(completedProperty);
+
+            // Create the 'GetResults' method
+            MethodDefinition getResultsMethod = new(
+                name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.GetResults",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                signature: MethodSignature.CreateInstance(resultType.Import(module)));
+
+            // Add and implement the 'GetResults' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperation1GetResults(resultType).Import(module),
+                method: getResultsMethod);
+
+            // Create a body for the 'GetResults' method
+            getResultsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: getResultsMethod,
+                forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }
