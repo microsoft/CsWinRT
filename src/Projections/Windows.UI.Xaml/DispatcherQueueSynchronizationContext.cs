@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using WinRT;
+using WindowsRuntime.InteropServices;
 
 #nullable enable
 
@@ -13,9 +13,9 @@ namespace Windows.System;
 public sealed partial class DispatcherQueueSynchronizationContext : SynchronizationContext
 {
     /// <summary>
-    /// The <see cref="IObjectReference"/> instance for the target dispatcher queue.
+    /// The <see cref="WindowsRuntimeObjectReference"/> instance for the target dispatcher queue.
     /// </summary>
-    private readonly IObjectReference _objectReference;
+    private readonly WindowsRuntimeObjectReference _objectReference;
 
     /// <summary>
     /// Creates a new <see cref="DispatcherQueueSynchronizationContext"/> instance with the specified parameters.
@@ -26,15 +26,18 @@ public sealed partial class DispatcherQueueSynchronizationContext : Synchronizat
     {
         ArgumentNullException.ThrowIfNull(dispatcherQueue);
 
-        _objectReference = ((IWinRTObject)dispatcherQueue).NativeObject;
+        if (!WindowsRuntimeMarshal.TryUnwrapObjectReference(dispatcherQueue, out _objectReference!))
+        {
+            throw new ArgumentException(null, nameof(dispatcherQueue));
+        }
     }
 
     /// <summary>
     /// Creates a new <see cref="DispatcherQueueSynchronizationContext"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="objectReference">The <see cref="IObjectReference"/> instance for the target dispatcher queue.</param>
+    /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> instance for the target dispatcher queue.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="objectReference"/> is <see langword="null"/>.</exception>
-    private DispatcherQueueSynchronizationContext(IObjectReference objectReference)
+    private DispatcherQueueSynchronizationContext(WindowsRuntimeObjectReference objectReference)
     {
         ArgumentNullException.ThrowIfNull(objectReference);
 
@@ -51,21 +54,23 @@ public sealed partial class DispatcherQueueSynchronizationContext : Synchronizat
 
         try
         {
-            void* thisPtr = (void*)_objectReference.ThisPtr;
+            _objectReference.AddRefUnsafe();
+
+            void* thisPtr = _objectReference.GetThisPtrUnsafe();
             bool success;
 
             // Note: we're intentionally ignoring the retval for 'DispatcherQueue::TryEnqueue'.
             // This matches the behavior for the equivalent type on WinUI 3 as well.
             hresult = ((delegate* unmanaged<void*, void*, byte*, int>)(*(void***)thisPtr)[7])(thisPtr, dispatcherQueueProxyHandler, (byte*)&success);
-
-            GC.KeepAlive(_objectReference);
         }
         finally
         {
             dispatcherQueueProxyHandler->Release();
+            _objectReference.ReleaseUnsafe();
         }
 
-        ExceptionHelpers.ThrowExceptionForHR(hresult);
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
     }
 
     /// <inheritdoc/>

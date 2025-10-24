@@ -3,21 +3,12 @@ namespace Windows.UI.Xaml.Media.Animation
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Animation.KeyTime))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<KeyTime, KeyTime>))]
-#endif
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.KeyTime>")]
+    [ABI.Windows.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct KeyTime
+    public struct KeyTime : IEquatable<KeyTime>
     {
-        private TimeSpan _timeSpan;
-
         public static KeyTime FromTimeSpan(TimeSpan timeSpan)
         {
             if (timeSpan < TimeSpan.Zero)
@@ -25,16 +16,12 @@ namespace Windows.UI.Xaml.Media.Animation
                 throw new ArgumentOutOfRangeException(nameof(timeSpan));
             }
 
-            KeyTime keyTime = default;
-
-            keyTime._timeSpan = timeSpan;
-
-            return keyTime;
+            return new KeyTime() { TimeSpan = timeSpan };
         }
 
         public static bool Equals(KeyTime keyTime1, KeyTime keyTime2)
         {
-            return (keyTime1._timeSpan == keyTime2._timeSpan);
+            return (keyTime1.TimeSpan == keyTime2.TimeSpan);
         }
 
         public static bool operator ==(KeyTime keyTime1, KeyTime keyTime2)
@@ -59,12 +46,12 @@ namespace Windows.UI.Xaml.Media.Animation
 
         public override int GetHashCode()
         {
-            return _timeSpan.GetHashCode();
+            return TimeSpan.GetHashCode();
         }
 
         public override string ToString()
         {
-            return _timeSpan.ToString();
+            return TimeSpan.ToString();
         }
 
         public static implicit operator KeyTime(TimeSpan timeSpan)
@@ -74,46 +61,16 @@ namespace Windows.UI.Xaml.Media.Animation
 
         public TimeSpan TimeSpan
         {
-            get
-            {
-                return _timeSpan;
-            }
+            readonly get; private init;
         }
     }
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<RepeatBehaviorType>))]
-#endif
-#if EMBED
-    internal
-#else
-    public
-#endif
-    enum RepeatBehaviorType
-    {
-        Count,
-        Duration,
-        Forever
-    }
-
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Animation.RepeatBehavior))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<RepeatBehavior, RepeatBehavior>))]
-#endif
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.RepeatBehavior>")]
+    [ABI.Windows.UI.Xaml.Media.Animation.RepeatBehaviorComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct RepeatBehavior : IFormattable
+    public struct RepeatBehavior : IFormattable, IEquatable<RepeatBehavior>
     {
-        private double _Count;
-        private TimeSpan _Duration;
-        private RepeatBehaviorType _Type;
-
         internal static bool IsFinite(double value)
         {
             return !(double.IsNaN(value) || double.IsInfinity(value));
@@ -126,9 +83,9 @@ namespace Windows.UI.Xaml.Media.Animation
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
 
-            _Duration = new TimeSpan(0);
-            _Count = count;
-            _Type = RepeatBehaviorType.Count;
+            Duration = new TimeSpan(0);
+            Count = count;
+            Type = RepeatBehaviorType.Count;
         }
 
         public RepeatBehavior(TimeSpan duration)
@@ -138,9 +95,9 @@ namespace Windows.UI.Xaml.Media.Animation
                 throw new ArgumentOutOfRangeException(nameof(duration));
             }
 
-            _Duration = duration;
-            _Count = 0.0;
-            _Type = RepeatBehaviorType.Duration;
+            Duration = duration;
+            Count = 0.0;
+            Type = RepeatBehaviorType.Duration;
         }
 
         public static RepeatBehavior Forever
@@ -172,20 +129,17 @@ namespace Windows.UI.Xaml.Media.Animation
 
         public double Count
         {
-            get { return _Count; }
-            set { _Count = value; }
+            readonly get; set;
         }
 
         public TimeSpan Duration
         {
-            get { return _Duration; }
-            set { _Duration = value; }
+            readonly get; set;
         }
 
         public RepeatBehaviorType Type
         {
-            get { return _Type; }
-            set { _Type = value; }
+            readonly get; set;
         }
 
         public override string ToString()
@@ -205,7 +159,7 @@ namespace Windows.UI.Xaml.Media.Animation
 
         internal string InternalToString(string format, IFormatProvider formatProvider)
         {
-            switch (_Type)
+            switch (Type)
             {
                 case RepeatBehaviorType.Forever:
 
@@ -218,13 +172,13 @@ namespace Windows.UI.Xaml.Media.Animation
                     sb.AppendFormat(
                         formatProvider,
                         "{0:" + format + "}x",
-                        _Count);
+                        Count);
 
                     return sb.ToString();
 
                 case RepeatBehaviorType.Duration:
 
-                    return _Duration.ToString();
+                    return Duration.ToString();
 
                 default:
                     return string.Empty;
@@ -245,13 +199,13 @@ namespace Windows.UI.Xaml.Media.Animation
 
         public bool Equals(RepeatBehavior repeatBehavior)
         {
-            if (_Type == repeatBehavior._Type)
+            if (Type == repeatBehavior.Type)
             {
-                return _Type switch
+                return Type switch
                 {
                     RepeatBehaviorType.Forever => true,
-                    RepeatBehaviorType.Count => _Count == repeatBehavior._Count,
-                    RepeatBehaviorType.Duration => _Duration == repeatBehavior._Duration,
+                    RepeatBehaviorType.Count => Count == repeatBehavior.Count,
+                    RepeatBehaviorType.Duration => Duration == repeatBehavior.Duration,
                     _ => false,
                 };
             }
@@ -268,10 +222,10 @@ namespace Windows.UI.Xaml.Media.Animation
 
         public override int GetHashCode()
         {
-            return _Type switch
+            return Type switch
             {
-                RepeatBehaviorType.Count => _Count.GetHashCode(),
-                RepeatBehaviorType.Duration => _Duration.GetHashCode(),
+                RepeatBehaviorType.Count => Count.GetHashCode(),
+                RepeatBehaviorType.Duration => Duration.GetHashCode(),
 
                 // We try to choose an unlikely hash code value for Forever.
                 // All Forevers need to return the same hash code value.
@@ -290,46 +244,5 @@ namespace Windows.UI.Xaml.Media.Animation
         {
             return !repeatBehavior1.Equals(repeatBehavior2);
         }
-    }
-}
-
-namespace ABI.Windows.UI.Xaml.Media.Animation
-{
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class KeyTime
-    {
-        public static string GetGuidSignature()
-        {
-            string timeSpanSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan));
-            return $"struct(Windows.UI.Xaml.Media.Animation.KeyTime;{timeSpanSignature})";
-        }
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class RepeatBehavior
-    {
-        public static string GetGuidSignature()
-        {
-            string timeSpanSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan));
-            return $"struct(Windows.UI.Xaml.Media.Animation.RepeatBehavior;f8;{timeSpanSignature};{RepeatBehaviorType.GetGuidSignature()})";
-        }
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class RepeatBehaviorType
-    {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.Media.Animation.RepeatBehaviorType;i4)";
     }
 }

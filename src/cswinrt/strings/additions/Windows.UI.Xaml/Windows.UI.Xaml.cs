@@ -3,18 +3,11 @@ namespace Windows.UI.Xaml
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.CornerRadius))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<CornerRadius, CornerRadius>))]
-#endif
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.CornerRadius>")]
+    [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct CornerRadius
+    public struct CornerRadius : IEquatable<CornerRadius>
     {
         private double _TopLeft;
         private double _TopRight;
@@ -59,7 +52,7 @@ namespace Windows.UI.Xaml
 
         internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
-            char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
+            char listSeparator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
             // Initial capacity [64] is an estimate based on a sum of:
             // 48 = 4x double (twelve digits is generous for the range of values likely)
@@ -154,34 +147,12 @@ namespace Windows.UI.Xaml
         }
     }
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<GridUnitType>))]
-#endif
-#if EMBED
-    internal
-#else
-    public
-#endif
-    enum GridUnitType
-    {
-        Auto = 0,
-        Pixel,
-        Star,
-    }
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.GridLength))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<GridLength, GridLength>))]
-#endif
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.GridLength>")]
+    [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct GridLength
+    public struct GridLength : IEquatable<GridLength>
     {
         private readonly double _unitValue;
         private readonly GridUnitType _unitType;
@@ -269,8 +240,6 @@ namespace Windows.UI.Xaml
 
         internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
-            char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
-
             // Initial capacity [64] is an estimate based on a sum of:
             // 12 = 1x double (twelve digits is generous for the range of values likely)
             //  8 = 4x Unit Type string (approx two characters)
@@ -291,59 +260,11 @@ namespace Windows.UI.Xaml
         }
     }
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Thickness))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Thickness, Thickness>))]
-#endif
-    [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct Thickness
+    partial struct Thickness
     {
-        private double _Left;
-        private double _Top;
-        private double _Right;
-        private double _Bottom;
-
         public Thickness(double uniformLength)
         {
-            _Left = _Top = _Right = _Bottom = uniformLength;
-        }
-
-        public Thickness(double left, double top, double right, double bottom)
-        {
-            _Left = left;
-            _Top = top;
-            _Right = right;
-            _Bottom = bottom;
-        }
-
-        public double Left
-        {
-            get { return _Left; }
-            set { _Left = value; }
-        }
-
-        public double Top
-        {
-            get { return _Top; }
-            set { _Top = value; }
-        }
-
-        public double Right
-        {
-            get { return _Right; }
-            set { _Right = value; }
-        }
-
-        public double Bottom
-        {
-            get { return _Bottom; }
-            set { _Bottom = value; }
+            Left = Top = Right = Bottom = uniformLength;
         }
 
         public override string ToString()
@@ -353,7 +274,7 @@ namespace Windows.UI.Xaml
 
         internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
-            char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
+            char listSeparator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
             // Initial capacity [64] is an estimate based on a sum of:
             // 48 = 4x double (twelve digits is generous for the range of values likely)
@@ -361,13 +282,13 @@ namespace Windows.UI.Xaml
             //  4 = 4x separator characters
             global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder(64);
 
-            sb.Append(InternalToString(_Left, cultureInfo));
+            sb.Append(InternalToString(Left, cultureInfo));
             sb.Append(listSeparator);
-            sb.Append(InternalToString(_Top, cultureInfo));
+            sb.Append(InternalToString(Top, cultureInfo));
             sb.Append(listSeparator);
-            sb.Append(InternalToString(_Right, cultureInfo));
+            sb.Append(InternalToString(Right, cultureInfo));
             sb.Append(listSeparator);
-            sb.Append(InternalToString(_Bottom, cultureInfo));
+            sb.Append(InternalToString(Bottom, cultureInfo));
             return sb.ToString();
         }
 
@@ -376,66 +297,13 @@ namespace Windows.UI.Xaml
             if (double.IsNaN(l)) return "Auto";
             return Convert.ToString(l, cultureInfo);
         }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Thickness)
-            {
-                Thickness otherObj = (Thickness)obj;
-                return (this == otherObj);
-            }
-            return (false);
-        }
-
-        public bool Equals(Thickness thickness)
-        {
-            return (this == thickness);
-        }
-
-        public override int GetHashCode()
-        {
-            return _Left.GetHashCode() ^ _Top.GetHashCode() ^ _Right.GetHashCode() ^ _Bottom.GetHashCode();
-        }
-
-        public static bool operator ==(Thickness t1, Thickness t2)
-        {
-            return t1._Left == t2._Left && t1._Top == t2._Top && t1._Right == t2._Right && t1._Bottom == t2._Bottom;
-        }
-
-        public static bool operator !=(Thickness t1, Thickness t2)
-        {
-            return (!(t1 == t2));
-        }
     }
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<DurationType>))]
-#endif
-#if EMBED
-    internal
-#else
-    public
-#endif
-    enum DurationType
-    {
-        Automatic,
-        TimeSpan,
-        Forever
-    }
-
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Duration))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Duration, Duration>))]
-#endif
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
+    [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct Duration
+    public struct Duration
     {
         private readonly TimeSpan _timeSpan;
         private DurationType _durationType;
@@ -716,77 +584,5 @@ namespace Windows.UI.Xaml
                 return "Automatic";
             }
         }
-    }
-}
-
-namespace ABI.Windows.UI.Xaml
-{
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class CornerRadius
-    {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.CornerRadius;f8;f8;f8;f8)";
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class Duration
-    {
-        public static string GetGuidSignature()
-        {
-            string timeSpanSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan));
-            string durationTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.DurationType));
-            return $"struct(Windows.UI.Xaml.Duration;{timeSpanSignature};{durationTypeSignature})";
-        }
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class DurationType
-    {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.DurationType;i4)";
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class GridLength
-    {
-        public static string GetGuidSignature()
-        {
-            string unitTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.GridUnitType));
-            return $"struct(Windows.UI.Xaml.GridLength;f8;{unitTypeSignature})";
-        }
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class GridUnitType
-    {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.GridUnitType;i4)";
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class Thickness
-    {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.Thickness;f8;f8;f8;f8)";
     }
 }

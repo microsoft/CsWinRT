@@ -1395,6 +1395,16 @@ namespace cswinrt
             bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
     }
 
+    void write_unsafe_accessor_static_method_call(writer& w, std::string const& unsafeAccessorMethod, MethodDef const& method, std::string const& targetObjRef)
+    {
+        method_signature signature{ method };
+        w.write("%(null, %%%)",
+            unsafeAccessorMethod,
+            targetObjRef,
+            signature.has_params() ? ", " : "",
+            bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+    }
+
     void write_abi_get_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
         w.write("%.%(%)",
@@ -1409,6 +1419,14 @@ namespace cswinrt
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
             targetObjRef);
+    }
+
+    void write_unsafe_accessor_property_static_method_call(writer& w, std::string const& unsafeAccessorMethod, std::string const& targetObjRef, bool get)
+    {
+        w.write("%(null, %%)",
+            unsafeAccessorMethod,
+            targetObjRef,
+            get ? "" : ", value");
     }
 
     void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
@@ -1455,6 +1473,27 @@ namespace cswinrt
         std::string_view platform_attribute = ""sv,
         std::optional<std::pair<type_semantics, MethodDef>> paramsForStaticMethodCall = {})
     {
+        std::optional<std::string> unsafe_accessor;
+        if (paramsForStaticMethodCall.has_value())
+        {
+            auto parent = paramsForStaticMethodCall.value().second.Parent();
+            if (size(parent.GenericParam()) != 0)
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent, typedef_name_type::Projected, true));
+                unsafe_accessor = w.write_temp("%_%", escape_type_name_for_identifier(parent_type_name, true), method_name);
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern % %([UnsafeAccessorType("%Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference%%);
+)",
+                    method_name,
+                    return_type,
+                    unsafe_accessor.value(),
+                    bind<write_interop_dll_type_name>(parent),
+                    signature.params().size() != 0 ? ", " : "",
+                    bind_list<write_projection_parameter>(", ", signature.params()));
+            }
+        }
+
         w.write(R"(
 %%%% %(%) => %;
 )",
@@ -1465,18 +1504,30 @@ namespace cswinrt
             method_name,
             bind_list<write_projection_parameter>(", ", signature.params()),
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                if (paramsForStaticMethodCall.has_value())
+                {
+                    if (unsafe_accessor.has_value())
                     {
-                        w.write("%", bind<write_abi_static_method_call>(paramsForStaticMethodCall.value().first, paramsForStaticMethodCall.value().second,
+                        w.write("%", bind<write_unsafe_accessor_static_method_call>(
+                            unsafe_accessor.value(),
+                            paramsForStaticMethodCall.value().second,
                             w.write_temp("%", method_target)));
                     }
                     else
                     {
-                        w.write("%.%(%)", method_target,
-                            method_name,
-                            bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                        w.write("%", bind<write_abi_static_method_call>(
+                            paramsForStaticMethodCall.value().first,
+                            paramsForStaticMethodCall.value().second,
+                            w.write_temp("%", method_target)));
                     }
-                }));
+                }
+                else
+                {
+                    w.write("%.%(%)", method_target,
+                        method_name,
+                        bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                }
+            }));
     }
 
     void write_explicitly_implemented_method_for_abi(writer& w, MethodDef const& method,
@@ -1712,6 +1763,34 @@ namespace cswinrt
             setter_platform = ""sv;
         }
 
+        std::optional<std::string> unsafe_accessor;
+        if (params_for_static_getter.has_value())
+        {
+            auto parent = params_for_static_getter.value().second.Parent();
+            if (size(parent.GenericParam()) != 0)
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(params_for_static_getter.value().first, typedef_name_type::Projected, true));
+                unsafe_accessor = w.write_temp("%_%", escape_type_name_for_identifier(parent_type_name, true), external_prop_name);
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern % %([UnsafeAccessorType("%Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern void %([UnsafeAccessorType("%Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference, % value);
+)",
+                // get
+                external_prop_name,
+                prop_type,
+                unsafe_accessor.value(),
+                bind<write_interop_dll_type_name>(params_for_static_getter.value().first),
+                // set
+                external_prop_name,
+                unsafe_accessor.value(),
+                bind<write_interop_dll_type_name>(params_for_static_getter.value().first),
+                prop_type);
+            }
+        }
+
         w.write(R"(
 %%%% %
 {
@@ -1728,8 +1807,20 @@ namespace cswinrt
             bind([&](writer& w) {
                 if (params_for_static_getter.has_value())
                 {
-                    w.write("%", bind<write_abi_get_property_static_method_call>(params_for_static_getter.value().first, params_for_static_getter.value().second,
-                        w.write_temp("%", getter_target)));
+                    if (unsafe_accessor.has_value())
+                    {
+                        w.write("%", bind<write_unsafe_accessor_property_static_method_call>(
+                            unsafe_accessor.value(),
+                            w.write_temp("%", getter_target),
+                            true));
+                    }
+                    else
+                    {
+                        w.write("%", bind<write_abi_get_property_static_method_call>(
+                            params_for_static_getter.value().first,
+                            params_for_static_getter.value().second,
+                            w.write_temp("%", getter_target)));
+                    }
                 }
                 else
                 {
@@ -1740,8 +1831,20 @@ namespace cswinrt
             bind([&](writer& w) {
                 if (params_for_static_setter.has_value())
                 {
-                    w.write("%", bind<write_abi_set_property_static_method_call>(params_for_static_setter.value().first, params_for_static_setter.value().second,
-                        w.write_temp("%", setter_target)));
+                    if (unsafe_accessor.has_value())
+                    {
+                        w.write("%", bind<write_unsafe_accessor_property_static_method_call>(
+                            unsafe_accessor.value(),
+                            w.write_temp("%", setter_target),
+                            false));
+                    }
+                    else
+                    {
+                        w.write("%", bind<write_abi_set_property_static_method_call>(
+                            params_for_static_setter.value().first,
+                            params_for_static_setter.value().second,
+                            w.write_temp("%", setter_target)));
+                    }
                 }
                 else
                 {
@@ -1753,69 +1856,6 @@ namespace cswinrt
     std::string write_as_cast(writer& w, TypeDef const& iface)
     {
         return w.write_temp("((%)(WindowsRuntimeObject)this)", bind<write_type_name>(iface, typedef_name_type::Projected, false));
-    }
-
-    void write_lazy_interface_type_name(writer& w, type_semantics const& ifaceTypeSemantics)
-    {
-        auto interfaceTypeCode = w.write_temp("%", bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::Projected, true));
-        std::string interfaceTypeName = "_lazy_" + interfaceTypeCode;
-        w.write("%", escape_type_name_for_identifier(interfaceTypeName));
-    }
-
-    void write_lazy_interface_initialization(writer& w, TypeDef const& type)
-    {
-        int numLazyInterfaces = 0;
-        auto lazyInterfaces = w.write_temp("%", [&](writer& w) 
-        {
-            for (auto&& ii : type.InterfaceImpl())
-            {
-                if (has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute"))
-                {
-                    continue;
-                }
-
-                for_typedef(w, get_type_semantics(ii.Interface()), [&](auto interface_type)
-                {
-                    if (!is_manually_generated_iface(interface_type) && !settings.netstandard_compat)
-                    {
-                        return;
-                    }
-
-                    numLazyInterfaces++;
-                    auto lazy_interface_name = w.write_temp("%", bind<write_lazy_interface_type_name>(interface_type)); 
-                    auto interface_name = write_type_name_temp(w, interface_type);
-                    auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
-
-                    auto interface_init_code = settings.netstandard_compat
-                        ? w.write_temp(R"(new %(GetReferenceForQI()))",
-                            interface_abi_name)
-                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))",
-                            interface_name,
-                            interface_name);
-
-                    w.write(R"(
-private volatile % %;
-private % Make_%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref %, %, null);
-    return %;
-}
-)",
-                        interface_name,
-                        lazy_interface_name,
-                        interface_name,
-                        lazy_interface_name,
-                        lazy_interface_name,
-                        interface_init_code,
-                        lazy_interface_name);
-                });
-            }
-        });
-
-        if (numLazyInterfaces != 0)
-        {
-            w.write(R"(%)", lazyInterfaces);
-        }
     }
 
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
@@ -3674,9 +3714,9 @@ visibility, self, objref_name);
             auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type);
             auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
-            // Write IWindowsRuntimeInterface implementation for non-default interface and for the default interface if it isn't exclusive.
+            // Write IWindowsRuntimeInterface implementation for non-default interfaces and for the default interface if it isn't exclusive.
             // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_exclusive_to(interface_type) || is_overridable_interface || is_protected_interface)
+            if (!is_exclusive_to(interface_type) || is_overridable_interface)
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
