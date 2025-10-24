@@ -356,6 +356,25 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature resultType = operationType.TypeArguments[0];
+
+            // Prepare the 'AsyncOperationCompletedHandler<<RESULT_TYPE>>' signature
+            TypeSignature asyncOperationCompletedHandlerType = interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
+            MethodDefinition convertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
+                methodName: "get_Completed"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationCompletedHandlerType,
+                get_HandlerMethod: interopReferences.IAsyncOperation1get_Completed(resultType),
+                convertToUnmanagedMethod: convertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
             // TODO
 
             Impl(
@@ -367,7 +386,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    get_CompletedMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, operationType, "Impl");
