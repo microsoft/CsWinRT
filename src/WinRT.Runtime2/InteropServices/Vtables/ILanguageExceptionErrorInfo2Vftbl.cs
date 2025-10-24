@@ -31,7 +31,6 @@ internal unsafe struct ILanguageExceptionErrorInfo2Vftbl
     /// </param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
     public static HRESULT GetPreviousLanguageExceptionErrorInfoUnsafe(void* thisPtr, void** previousLanguageExceptionErrorInfo)
     {
         return ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)thisPtr)->GetPreviousLanguageExceptionErrorInfo(
@@ -48,7 +47,6 @@ internal unsafe struct ILanguageExceptionErrorInfo2Vftbl
     /// </param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
     public static HRESULT GetPropagationContextHeadUnsafe(void* thisPtr, void** propagatedLanguageExceptionErrorInfoHead)
     {
         return ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)thisPtr)->GetPropagationContextHead(
