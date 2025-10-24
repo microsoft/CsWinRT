@@ -1576,6 +1576,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.TypeMapAttributes(
+                    actionType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
