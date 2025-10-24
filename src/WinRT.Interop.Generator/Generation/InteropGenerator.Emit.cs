@@ -1620,6 +1620,12 @@ internal partial class InteropGenerator
 
             try
             {
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.IID(
+                    actionType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
