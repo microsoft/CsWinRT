@@ -33,7 +33,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(operationType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(operationType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
