@@ -3,9 +3,8 @@
 
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.ComWrappers;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -21,7 +20,7 @@ internal static unsafe class ExceptionHelpers
         }
 
         void* restrictedErrorInfoPtr;
-        Marshal.ThrowExceptionForHR(WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr));
+        WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr).Assert();
         if (restrictedErrorInfoPtr == null)
         {
             return default;
@@ -29,7 +28,7 @@ internal static unsafe class ExceptionHelpers
 
         if (WindowsRuntimeImports.SetRestrictedErrorInfo != null)
         {
-            Marshal.ThrowExceptionForHR(WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorInfoPtr));
+            WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorInfoPtr).Assert();
         }
 
         return new WindowsRuntimeObjectReferenceValue(restrictedErrorInfoPtr);
@@ -69,14 +68,14 @@ internal static unsafe class ExceptionHelpers
                         }
                         finally
                         {
-                            _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
+                            WindowsRuntimeObjectMarshaller.Free(previousLanguageExceptionErrorInfo2Ptr);
                         }
                     }
                 }
             }
             finally
             {
-                _ = Marshal.Release((nint)currentLanguageExceptionErrorInfo2Ptr);
+                WindowsRuntimeObjectMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
                 _ = Marshal.Release(languageErrorInfo2Ptr);
             }
         }
@@ -93,14 +92,13 @@ internal static unsafe class ExceptionHelpers
         void* languageExceptionPtr = null;
         try
         {
-            if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr)) && languageExceptionPtr != null)
+            if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr)))
             {
-                if (WindowsRuntimeMarshal.IsReferenceToManagedObject(languageExceptionPtr))
+                if (WindowsRuntimeMarshal.TryGetManagedObject(languageExceptionPtr, out object? exception))
                 {
-                    Exception exception = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
-                    if (RestrictedErrorInfo.GetHRForException(exception) == hr)
+                    if (RestrictedErrorInfo.GetHRForException((Exception)exception) == hr)
                     {
-                        return exception;
+                        return (Exception)exception;
                     }
                 }
             }
@@ -109,7 +107,7 @@ internal static unsafe class ExceptionHelpers
         {
             if (languageExceptionPtr != null)
             {
-                _ = Marshal.Release((nint)languageExceptionPtr);
+                WindowsRuntimeObjectMarshaller.Free(languageExceptionPtr);
             }
         }
         return null;

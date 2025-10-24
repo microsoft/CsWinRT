@@ -294,15 +294,15 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     public static HRESULT GetHRForException(Exception? exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        int hr = exception.HResult;
+        int hresult = exception.HResult;
         try
         {
-            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool _))
+            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
                 if (restrictedErrorObject != null)
                 {
                     using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
-                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hr);
+                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
                 }
             }
         }
@@ -312,13 +312,13 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             Debug.Assert(false, e.Message, e.StackTrace);
         }
 
-        return hr switch
+        return hresult switch
         {
             WellKnownErrorCodes.COR_E_OBJECTDISPOSED => WellKnownErrorCodes.RO_E_CLOSED,
             WellKnownErrorCodes.COR_E_OPERATIONCANCELED => WellKnownErrorCodes.ERROR_CANCELLED,
             WellKnownErrorCodes.COR_E_ARGUMENTOUTOFRANGE or WellKnownErrorCodes.COR_E_INDEXOUTOFRANGE => WellKnownErrorCodes.E_BOUNDS,
             WellKnownErrorCodes.COR_E_TIMEOUT => WellKnownErrorCodes.ERROR_TIMEOUT,
-            _ => hr,
+            _ => hresult,
         };
     }
 
@@ -375,25 +375,13 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     }
                 }
 
-                HSTRING_HEADER* header = default;
-                HSTRING* hstring = default;
-
                 fixed (char* lpMessage = message)
                 {
-                    if (WindowsRuntimeImports.WindowsCreateStringReference(
-                        sourceString: lpMessage,
-                        length: (uint)message.Length,
-                        hstringHeader: header,
-                        @string: hstring) != 0)
-                    {
-                        hstring = null;
-                    }
-
-
+                    HStringMarshaller.ConvertToUnmanagedUnsafe(lpMessage, message.Length, out HStringReference hstring);
                     WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
                     try
                     {
-                        _ = WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring, managedExceptionWrapper.GetThisPtrUnsafe());
+                        _ = WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring.HString, managedExceptionWrapper.GetThisPtrUnsafe());
                     }
                     finally
                     {
