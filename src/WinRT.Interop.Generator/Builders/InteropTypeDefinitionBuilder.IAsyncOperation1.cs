@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -392,6 +393,40 @@ internal partial class InteropTypeDefinitionBuilder
                 forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
                 interopReferences: interopReferences,
                 module: module);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature operationType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            // TODO
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType, "Impl"),
+                vftblType: interopDefinitions.IAsyncOperationVftbl,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: []);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, operationType, "Impl");
         }
 
         /// <summary>
