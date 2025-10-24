@@ -364,7 +364,9 @@ internal partial class InteropGenerator
                         module: module,
                         eventSourceType: out _);
                 }
-                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1))
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionProgressHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1))
                 {
                     // We need these marshaller types for the various async type implementations
                     emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
