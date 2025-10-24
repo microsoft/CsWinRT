@@ -22,12 +22,12 @@ internal static class IRestrictedErrorInfoMethods
         {
             fixed (int* pError = &error)
             {
-                Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
+                ((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
                     thisPtr,
                     &_description,
                     pError,
                     &_restrictedDescription,
-                    &_capabilitySid));
+                    &_capabilitySid).Assert();
             }
 
             description = _description != null ? Marshal.PtrToStringBSTR((nint)_description) : string.Empty;
@@ -54,12 +54,12 @@ internal static class IRestrictedErrorInfoMethods
         {
             fixed (int* pError = &error)
             {
-                Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
+                ((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetErrorDetails(
                     thisPtr,
                     &_description,
                     pError,
                     &_restrictedDescription,
-                    &_capabilitySid));
+                    &_capabilitySid).Assert();
             }
         }
         finally
@@ -76,9 +76,9 @@ internal static class IRestrictedErrorInfoMethods
 
         try
         {
-            Marshal.ThrowExceptionForHR(((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetReference(
+            ((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetReference(
                 thisPtr,
-                &__retval));
+                &__retval).Assert();
             return __retval != null ? Marshal.PtrToStringBSTR((nint)__retval) : string.Empty;
         }
         finally

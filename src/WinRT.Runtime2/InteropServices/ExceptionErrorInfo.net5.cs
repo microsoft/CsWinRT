@@ -7,7 +7,6 @@ using System.Runtime.InteropServices.Marshalling;
 namespace WindowsRuntime.InteropServices;
 
 [GeneratedComClass]
-
 internal sealed partial class ManagedExceptionErrorInfo : IErrorInfo
 {
     private readonly Exception _exception;
