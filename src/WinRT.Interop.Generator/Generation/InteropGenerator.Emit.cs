@@ -1724,6 +1724,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.IObservableVectorVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IObservableMapVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IAsyncActionWithProgressVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IAsyncOperationVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
