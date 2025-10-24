@@ -48,11 +48,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="IMapChangedEventArgs1Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _imapChangedEventArgs1Types = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="IAsyncOperation1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperation1Types = new(SignatureComparer.IgnoreVersion);
-
     /// <summary>Backing field for <see cref="IAsyncActionWithProgress1Types"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncActionWithProgress1Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IAsyncOperation1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperation1Types = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="GenericDelegateTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(SignatureComparer.IgnoreVersion);
@@ -140,14 +140,14 @@ internal sealed class InteropGeneratorDiscoveryState
     public IReadOnlyCollection<GenericInstanceTypeSignature> IMapChangedEventArgs1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_imapChangedEventArgs1Types.Keys;
 
     /// <summary>
-    /// Gets all <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> types.
-    /// </summary>
-    public IReadOnlyCollection<GenericInstanceTypeSignature> IAsyncOperation1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iasyncOperation1Types.Keys;
-
-    /// <summary>
     /// Gets all <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> types.
     /// </summary>
     public IReadOnlyCollection<GenericInstanceTypeSignature> IAsyncActionWithProgress1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iasyncActionWithProgress1Types.Keys;
+
+    /// <summary>
+    /// Gets all <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IAsyncOperation1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_iasyncOperation1Types.Keys;
 
     /// <summary>
     /// Gets all generic delegate types.
@@ -308,17 +308,6 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
-    /// Tracks a <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
-    /// </summary>
-    /// <param name="argsType">The <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.</param>
-    public void TrackIAsyncOperation1Type(GenericInstanceTypeSignature argsType)
-    {
-        ThrowIfReadOnly();
-
-        _ = _iasyncOperation1Types.TryAdd(argsType, 0);
-    }
-
-    /// <summary>
     /// Tracks a <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
     /// </summary>
     /// <param name="argsType">The <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.</param>
@@ -327,6 +316,17 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _iasyncActionWithProgress1Types.TryAdd(argsType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
+    /// </summary>
+    /// <param name="argsType">The <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.</param>
+    public void TrackIAsyncOperation1Type(GenericInstanceTypeSignature argsType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _iasyncOperation1Types.TryAdd(argsType, 0);
     }
 
     /// <summary>

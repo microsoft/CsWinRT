@@ -52,19 +52,19 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="operationyMethodsType">The resulting methods type.</param>
+        /// <param name="operationMethodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature operationType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
-            out TypeDefinition operationyMethodsType)
+            out TypeDefinition operationMethodsType)
         {
             TypeSignature resultType = operationType.TypeArguments[0];
 
             // We're declaring an 'internal static class' type
-            operationyMethodsType = new TypeDefinition(
+            operationMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
@@ -73,7 +73,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).Import(module).ToTypeDefOrRef()) }
             };
 
-            module.TopLevelTypes.Add(operationyMethodsType);
+            module.TopLevelTypes.Add(operationMethodsType);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
@@ -89,7 +89,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            operationyMethodsType.AddMethodImplementation(
+            operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType).Import(module),
                 method: get_CompletedMethod);
 
@@ -107,7 +107,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            operationyMethodsType.AddMethodImplementation(
+            operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType).Import(module),
                 method: set_CompletedMethod);
 
@@ -118,7 +118,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            operationyMethodsType.AddMethodImplementation(
+            operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType).Import(module),
                 method: getResultsMethod);
         }
