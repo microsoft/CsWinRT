@@ -76,7 +76,7 @@ internal static unsafe class ExceptionHelpers
             }
             finally
             {
-                MarshalExtensions.ReleaseIfNotNull(currentLanguageExceptionErrorInfo2Ptr);
+                _ = Marshal.Release((nint)currentLanguageExceptionErrorInfo2Ptr);
                 _ = Marshal.Release(languageErrorInfo2Ptr);
             }
         }
@@ -113,36 +113,6 @@ internal static unsafe class ExceptionHelpers
             }
         }
         return null;
-    }
-
-    public static void AddExceptionDataForRestrictedErrorInfo(
-            this Exception ex,
-            string description,
-            string restrictedError,
-            string restrictedErrorReference,
-            string restrictedCapabilitySid,
-            WindowsRuntimeObjectReference restrictedErrorObject,
-            bool hasRestrictedLanguageErrorObject = false,
-            Exception? internalGetGlobalErrorStateException = null)
-    {
-        IDictionary dict = ex.Data;
-        if (dict != null)
-        {
-            dict["Description"] = description;
-            dict["RestrictedDescription"] = restrictedError;
-            dict["RestrictedErrorReference"] = restrictedErrorReference;
-            dict["RestrictedCapabilitySid"] = restrictedCapabilitySid;
-
-            // Keep the error object alive so that user could retrieve error information
-            // using Data["RestrictedErrorReference"]
-            dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
-            dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
-
-            if (internalGetGlobalErrorStateException != null)
-            {
-                dict["_InternalCsWinRTException"] = internalGetGlobalErrorStateException;
-            }
-        }
     }
 
     internal static void AddExceptionDataForRestrictedErrorInfo(
@@ -193,47 +163,5 @@ internal static class ExceptionExtensions
     public static void SetHResult(this Exception ex, int value)
     {
         ex.HResult = value;
-    }
-
-    public static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
-    {
-        Exception e;
-        if (innerException != null)
-        {
-            string message = innerException.Message ?? messageResource;
-            e = new Exception(message, innerException);
-        }
-        else
-        {
-            e = new Exception(messageResource);
-        }
-        e.SetHResult(hresult);
-        return e;
-    }
-}
-
-internal static class MarshalExtensions
-{
-    /// <summary>
-    /// Releases a COM object, if not <see langword="null"/>.
-    /// </summary>
-    /// <param name="pUnk">The input COM object to release.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void ReleaseIfNotNull(void* pUnk)
-    {
-        if (pUnk == null)
-        {
-            return;
-        }
-
-        _ = ((delegate* unmanaged[Stdcall]<void*, int>)(*(*(void***)pUnk + 2 /* IUnknown.Release slot */)))(pUnk);
-    }
-
-    public static void Dispose(this GCHandle handle)
-    {
-        if (handle.IsAllocated)
-        {
-            handle.Free();
-        }
     }
 }
