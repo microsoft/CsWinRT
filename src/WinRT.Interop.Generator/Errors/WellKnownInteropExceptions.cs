@@ -389,9 +389,17 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature resultType, Exception exception)
     {
-        return Exception(44, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{elementType}'.", exception);
+        return Exception(44, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{resultType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature progressType, Exception exception)
+    {
+        return Exception(45, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{progressType}'.", exception);
     }
 
     /// <summary>

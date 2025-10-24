@@ -79,5 +79,9 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         {
             discoveryState.TrackIAsyncOperation1Type(typeSignature);
         }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncActionWithProgress1))
+        {
+            discoveryState.TrackIAsyncActionWithProgress1Type(typeSignature);
+        }
     }
 }

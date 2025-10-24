@@ -121,6 +121,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IAsyncActionWithProgress<TProgress>' types
+        DefineIAsyncActionWithProgressTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
@@ -1588,6 +1593,37 @@ internal partial class InteropGenerator
             catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.IAsyncOperationTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIAsyncActionWithProgressTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IAsyncActionWithProgressTypeCodeGenerationError(typeSignature, e);
             }
         }
     }
