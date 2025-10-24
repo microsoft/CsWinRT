@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
@@ -99,7 +98,7 @@ internal static unsafe class ExceptionHelpers
                 if (WindowsRuntimeMarshal.IsReferenceToManagedObject(languageExceptionPtr))
                 {
                     Exception exception = ComInterfaceDispatch.GetInstance<Exception>((ComInterfaceDispatch*)languageExceptionPtr);
-                    if (GetHRForException(exception) == hr)
+                    if (RestrictedErrorInfo.GetHRForException(exception) == hr)
                     {
                         return exception;
                     }
@@ -114,36 +113,6 @@ internal static unsafe class ExceptionHelpers
             }
         }
         return null;
-    }
-
-    public static unsafe int GetHRForException(Exception ex)
-    {
-        int hr = ex.HResult;
-        try
-        {
-            if (ex.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool _))
-            {
-                if (restrictedErrorObject != null)
-                {
-                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.GetThisPtrUnsafe(), out hr);
-                    GC.KeepAlive(restrictedErrorObject);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            // If we fail to get the hresult from the error info, we fallback to the exception hresult.
-            Debug.Assert(false, e.Message, e.StackTrace);
-        }
-
-        return hr switch
-        {
-            WellKnownErrorCodes.COR_E_OBJECTDISPOSED => WellKnownErrorCodes.RO_E_CLOSED,
-            WellKnownErrorCodes.COR_E_OPERATIONCANCELED => WellKnownErrorCodes.ERROR_CANCELLED,
-            WellKnownErrorCodes.COR_E_ARGUMENTOUTOFRANGE or WellKnownErrorCodes.COR_E_INDEXOUTOFRANGE => WellKnownErrorCodes.E_BOUNDS,
-            WellKnownErrorCodes.COR_E_TIMEOUT => WellKnownErrorCodes.ERROR_TIMEOUT,
-            _ => hr,
-        };
     }
 
     public static void AddExceptionDataForRestrictedErrorInfo(
