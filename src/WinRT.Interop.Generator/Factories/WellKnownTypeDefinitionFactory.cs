@@ -989,38 +989,12 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT>'
-        MethodSignature get_CompletedType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+        // Get the 'Completed' signatures
+        MethodSignature get_CompletedType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_CompletedType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
-        MethodSignature set_CompletedType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
-        MethodSignature getResultsType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
+        // Get the 'GetResults' signature
+        MethodSignature getResultsType = WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences);
 
         // The vtable layout for 'IAsyncOperation`1<TResult>' looks like this:
         //
