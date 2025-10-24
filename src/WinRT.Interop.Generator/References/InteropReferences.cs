@@ -1843,7 +1843,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgress1
             .MakeGenericReferenceType(progressType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(progressType));
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
     }
 
     /// <summary>

@@ -426,7 +426,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getResultsMethod = new(
                 name: $"Windows.Foundation.IAsyncActionWithProgress<{progressType.FullName}>.GetResults",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(progressType.Import(module)));
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
             // Add and implement the 'GetResults' method
             interfaceImplType.AddMethodImplementation(
@@ -523,13 +523,16 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // TODO
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncActionWithProgress1Impl.GetResults(
+                actionType: actionType,
+                interopReferences: interopReferences,
+                module: module);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
                 name: InteropUtf8NameFactory.TypeName(actionType, "Impl"),
-                vftblType: interopDefinitions.IAsyncOperationVftbl,
+                vftblType: interopDefinitions.IAsyncActionWithProgressVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -538,7 +541,8 @@ internal partial class InteropTypeDefinitionBuilder
                     get_ProgressMethod,
                     set_ProgressMethod,
                     get_CompletedMethod,
-                    set_CompletedMethod]);
+                    set_CompletedMethod,
+                    getResultsMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, actionType, "Impl");
