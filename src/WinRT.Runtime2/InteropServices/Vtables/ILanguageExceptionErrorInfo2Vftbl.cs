@@ -17,6 +17,7 @@ internal unsafe struct ILanguageExceptionErrorInfo2Vftbl
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetLanguageException;
     public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetPreviousLanguageExceptionErrorInfo;
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> CapturePropagationContext;
     public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetPropagationContextHead;
