@@ -1812,6 +1812,20 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;.GetResults</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    public MemberReference IAsyncOperationMethodsImpl1GetResults(TypeSignature resultType)
+    {
+        return IAsyncOperationMethodsImpl1
+            .MakeGenericReferenceType(resultType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.GetInstance</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>

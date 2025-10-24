@@ -98,7 +98,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Endfinally },
                     { nop_finallyEnd },
 
-                    // '.try/.finally' code to marshal the enumerator
+                    // '.try/.finally' code to marshal the handler
                     { ldloc_2_tryStart },
                     { Call, convertToManagedMethod },
                     { Stloc_3 },
@@ -243,6 +243,42 @@ internal partial class InteropMethodDefinitionFactory
             };
 
             return handlerMethod;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>GetResults</c> method of some async operation type.
+        /// </summary>
+        /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition GetResults(
+            TypeSignature resultType,
+            FieldDefinition vftblField,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            // Define the 'GetResults' get method as follows:
+            //
+            // public static <RESULT_TYPE> GetResults(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition getResultsMethod = new(
+                name: "GetResults"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: resultType.Import(module),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+            { NoInlining = true };
+
+            // Create a method body for the 'GetResults' method
+            getResultsMethod.CilMethodBody = new CilMethodBody()
+            {
+                Instructions =
+                {
+                    { Ldnull }, // TODO
+                    { Throw }
+                },
+            };
+
+            return getResultsMethod;
         }
     }
 }

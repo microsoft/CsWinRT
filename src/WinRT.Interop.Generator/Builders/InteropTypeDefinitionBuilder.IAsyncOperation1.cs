@@ -110,6 +110,17 @@ internal partial class InteropTypeDefinitionBuilder
             operationyMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType).Import(module),
                 method: set_CompletedMethod);
+
+            // Define the 'GetResults' set method:
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.GetResults(
+                resultType: resultType,
+                vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("GetResults"u8),
+                interopReferences: interopReferences,
+                module: module);
+
+            operationyMethodsType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType).Import(module),
+                method: getResultsMethod);
         }
 
         /// <summary>
