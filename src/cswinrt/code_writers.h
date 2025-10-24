@@ -906,6 +906,40 @@ namespace cswinrt
 )");
     }
 
+    static void write_iid_guid_property_for_class_interfaces(writer& w, TypeDef const& type, std::set<TypeDef>& interfacesEmitted)
+    {
+        for (auto& iface : type.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(iface.Interface());
+            for_typedef(w, semantics, [&](TypeDef ifaceType)
+            {
+                // IIDs for custom mapped interfaces and generic interfaces are handled differently.
+                if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()))
+                {
+                    return;
+                }
+
+                if (size(ifaceType.GenericParam()) != 0)
+                {
+                    return;
+                }
+
+                if (interfacesEmitted.find(ifaceType) != interfacesEmitted.end())
+                {
+                    return;
+                }
+
+                // If the IID for the interface is not already going to be written due to
+                // being projected in this projection, then write it so that we can use it
+                // for our objref.
+                if (!settings.filter.includes(ifaceType))
+                {
+                    write_iid_guid_property_from_type(w, ifaceType);
+                    interfacesEmitted.insert(ifaceType);
+                }
+            });
+        }
+    }
 
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
@@ -2585,11 +2619,11 @@ static extern Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop.dll")
 
                     if (!useInner)
                     {
-                        w.write(R"(
+                        w.write(R"(%
 private WindowsRuntimeObjectReference %
 {
     get
-    {%
+    {
         [MethodImpl(MethodImplOptions.NoInlining)]
         WindowsRuntimeObjectReference MakeObjectReference()
         {
@@ -2605,13 +2639,13 @@ private WindowsRuntimeObjectReference %
     }
 }
 )",
-                        objrefname,
                         [&](writer& w) {
                             if (distance(ifaceType.GenericParam()) != 0)
                             {
                                 write_unsafe_accessor_for_iid(w, ifaceType);
                             }
                         },
+                        objrefname,
                         bind<write_iid_guid>(ifaceType));
 
                         /*
@@ -8493,7 +8527,7 @@ return new %(valueReference);
         {
             w.write(R"(
 file sealed unsafe class %ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
-{
+{%
 public static unsafe bool TryCreateObject(
     void* value,
     ReadOnlySpan<char> runtimeClassName,
@@ -8518,6 +8552,15 @@ return false;
 }
 )",
                 type.TypeName(),
+                bind([&](writer& w) {
+                    for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
+                    {
+                        if (size(interface_type.GenericParam()) != 0)
+                        {
+                            write_unsafe_accessor_for_iid(w, interface_type, true);
+                        }
+                    });
+                }),
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));

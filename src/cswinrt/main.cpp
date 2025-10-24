@@ -194,6 +194,7 @@ Where <spec> is one or more of:
             w.flush_to_console();
 
             // Write GUID properties out to InterfaceIIDs static class 
+            std::set<TypeDef> interfacesFromClassesEmitted;
             writer guidWriter("ABI");
             guidWriter.write_begin_interface_iids();
             for (auto&& ns_members : c.namespaces())
@@ -224,6 +225,9 @@ Where <spec> is one or more of:
                         break;
                     case category::struct_type:
                         write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    case category::class_type:
+                        write_iid_guid_property_for_class_interfaces(guidWriter, type, interfacesFromClassesEmitted);
                         break;
                     }
                 }
