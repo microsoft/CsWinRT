@@ -1539,6 +1539,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition operationComWrappersCallbackType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.ComWrappersMarshallerAttribute(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersMarshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
