@@ -182,7 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the native object for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
-        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
@@ -204,6 +204,33 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="TypeSignature"/> for the async operation type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="operationType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature operationType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            ComWrappersCallback(
+                runtimeClassName: operationType.FullName, // TODO
+                typeSignature: operationType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out callbackType);
         }
     }
 }
