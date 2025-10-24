@@ -123,5 +123,101 @@ internal partial class InteropMethodDefinitionFactory
 
             return handlerMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for a set method for a handler delegate of a specified type.
+        /// </summary>
+        /// <param name="methodName">The name of the get method.</param>
+        /// <param name="asyncInfoType">The type of async info interface.</param>
+        /// <param name="handlerType">The type of the handler delegate.</param>
+        /// <param name="set_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
+        /// <param name="convertToManagedMethod">The method to use to convert the handler to a managed object.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition set_Handler(
+            Utf8String methodName,
+            TypeSignature asyncInfoType,
+            TypeSignature handlerType,
+            MemberReference set_HandlerMethod,
+            MethodDefinition convertToManagedMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            // Define the 'set_Handler' get method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int <METHOD_NAME>(void* thisPtr, void* handler)
+            MethodDefinition handlerMethod = new(
+                name: methodName,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.Void.MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Labels for jumps
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
+            // Declare the local variables:
+            //   [0]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Create a method body for the 'get_Current' method
+            handlerMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_hresult },
+                Instructions =
+                {
+                    // Return 'E_POINTER' if the argument is 'null'
+                    { Ldarg_1 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType).Import(module) },
+                    { Ldarg_1 },
+                    { Call, convertToManagedMethod.Import(module) },
+                    { Callvirt, set_HandlerMethod.Import(module) },
+                    { Ldc_I4_0 },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [0]
+                    { ldloc_0_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            return handlerMethod;
+        }
     }
 }

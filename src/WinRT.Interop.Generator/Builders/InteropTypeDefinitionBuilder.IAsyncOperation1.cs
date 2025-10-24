@@ -375,6 +375,20 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
+            MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
+
+            MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
+                methodName: "set_Completed"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationCompletedHandlerType,
+                set_HandlerMethod: interopReferences.IAsyncOperation1set_Completed(resultType),
+                convertToManagedMethod: convertToManagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
             // TODO
 
             Impl(
@@ -387,7 +401,8 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 vtableMethods: [
-                    get_CompletedMethod]);
+                    get_CompletedMethod,
+                    set_CompletedMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, operationType, "Impl");
