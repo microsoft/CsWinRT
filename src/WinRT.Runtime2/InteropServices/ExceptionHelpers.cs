@@ -66,7 +66,7 @@ internal static unsafe class ExceptionHelpers
                         void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
                         try
                         {
-                            _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr);
+                            _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr);
                         }
                         finally
                         {
