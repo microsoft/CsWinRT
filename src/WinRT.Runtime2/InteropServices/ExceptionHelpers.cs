@@ -53,18 +53,26 @@ internal static unsafe class ExceptionHelpers
             void* currentLanguageExceptionErrorInfo2Ptr = default;
             try
             {
-                _ = ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr);
-                while (currentLanguageExceptionErrorInfo2Ptr != default)
+                if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
                 {
-                    Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
-                    if (propagatedException is not null)
+                    while (currentLanguageExceptionErrorInfo2Ptr != default)
                     {
-                        return propagatedException;
-                    }
+                        Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
+                        if (propagatedException is not null)
+                        {
+                            return propagatedException;
+                        }
 
-                    void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
-                    _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr);
-                    _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
+                        void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
+                        try
+                        {
+                            _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr);
+                        }
+                        finally
+                        {
+                            _ = Marshal.Release((nint)previousLanguageExceptionErrorInfo2Ptr);
+                        }
+                    }
                 }
             }
             finally
