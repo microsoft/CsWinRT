@@ -16,12 +16,12 @@ namespace WindowsRuntime.InteropGenerator.Builders;
 internal partial class InteropTypeDefinitionBuilder
 {
     /// <summary>
-    /// Helpers for <c>Windows.Foundation.IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> types.
+    /// Helpers for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> types.
     /// </summary>
     public static class IAsyncOperationWithProgress2
     {
         /// <summary>
-        /// Creates the 'IID' property for some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates the 'IID' property for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the methods for some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates a new type definition for the methods for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -175,7 +175,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the native object for some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates a new type definition for the native object for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
@@ -204,7 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="TypeSignature"/> for the async operation type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
@@ -231,7 +231,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the marshaller attribute of some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates a new type definition for the marshaller attribute of some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
@@ -257,7 +257,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// Creates a new type definition for the marshaller of some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="operationComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
@@ -283,7 +283,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the interface implementation of some <c>IAsyncOperationWithProgress&lt;TProgress&gt;</c> interface.
+        /// Creates a new type definition for the interface implementation of some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
@@ -452,7 +452,7 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IAsyncOperationWithProgress&lt;TProgress&gt;</c> interface.
+        /// Creates a new type definition for the proxy type of some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="operationComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
@@ -479,6 +479,36 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out proxyType);
+        }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            TypeSignature resultType = operationType.TypeArguments[0];
+            TypeSignature progressType = operationType.TypeArguments[1];
+
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: $"Windows.Foundation.IAsyncOperationWithProgress`2<{resultType},{progressType}>", // TODO
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: operationType,
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
+                interfaceTypeMapSourceType: operationType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
         }
     }
 }
