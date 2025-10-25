@@ -387,19 +387,27 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature resultType, Exception exception)
+    public static Exception IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
     {
-        return Exception(44, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{resultType}'.", exception);
+        return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature progressType, Exception exception)
+    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(45, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{progressType}'.", exception);
+        return Exception(45, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    {
+        return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
     }
 
     /// <summary>

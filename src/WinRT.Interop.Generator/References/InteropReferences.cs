@@ -807,6 +807,21 @@ internal sealed class InteropReferences
     public TypeReference AsyncOperationCompletedHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationCompletedHandler`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c>.
+    /// </summary>
+    public TypeReference IAsyncOperationWithProgress2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperationWithProgress`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
+    /// </summary>
+    public TypeReference AsyncOperationProgressHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationProgressHandler`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationWithProgressCompletedHandler&lt;TResult&gt;</c>.
+    /// </summary>
+    public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
     /// </summary>
     public MemberReference Attribute_ctor => field ??= Attribute.CreateConstructorReference(_corLibTypeFactory);
