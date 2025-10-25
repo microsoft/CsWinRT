@@ -17,9 +17,6 @@ namespace WindowsRuntime;
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <typeparam name="TIIteratorMethods">The <see cref="IIteratorMethodsImpl{T}"/> implementation type.</typeparam>
-/// <remarks>
-/// This type should only be used as a base type by generated generic instantiations.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

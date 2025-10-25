@@ -10,10 +10,9 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Methods for <see cref="Windows.Foundation.IAsyncActionWithProgress{TProgress}"/> types.
 /// </summary>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
-[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionWithProgressMethods
 {

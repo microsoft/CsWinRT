@@ -12,9 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Methods for <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> types.
 /// </summary>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
