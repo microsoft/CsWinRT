@@ -17,6 +17,10 @@ namespace WindowsRuntime.AsyncInfo;
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TIAsyncOperationMethods">The <see cref="IAsyncOperationMethodsImpl{TResult}"/> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMethods> : WindowsRuntimeObject,
     IAsyncOperation<TResult>,
     IWindowsRuntimeInterface<IAsyncOperation<TResult>>,

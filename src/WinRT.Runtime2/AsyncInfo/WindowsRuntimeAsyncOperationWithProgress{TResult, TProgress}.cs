@@ -18,6 +18,10 @@ namespace WindowsRuntime.AsyncInfo;
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 /// <typeparam name="TIAsyncOperationWithProgressMethods">The <see cref="IAsyncOperationWithProgressMethodsImpl{TResult, TProgress}"/> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgress, TIAsyncOperationWithProgressMethods> : WindowsRuntimeObject,
     IAsyncOperationWithProgress<TResult, TProgress>,
     IWindowsRuntimeInterface<IAsyncOperationWithProgress<TResult, TProgress>>,
