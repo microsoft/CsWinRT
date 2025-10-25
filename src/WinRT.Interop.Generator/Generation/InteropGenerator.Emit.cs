@@ -1746,6 +1746,13 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     operationMethodsType: out TypeDefinition operationMethodsType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.NativeObject(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

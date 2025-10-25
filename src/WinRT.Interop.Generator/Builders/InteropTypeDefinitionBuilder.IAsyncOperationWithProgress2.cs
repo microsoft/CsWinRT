@@ -173,5 +173,34 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2GetResults(resultType, progressType).Import(module),
                 method: getResultsMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for some <c>IAsyncOperationWithProgress2&lt;TResult, TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition operationMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncOperationWithProgress<<RESULT_TYPE>, <PROGRESS_TYPE>, <IASYNC_OPERATION_WITH_PROGRESS_METHODS>>'
+            TypeSignature windowsRuntimeAsyncOperationWithProgress2Type = interopReferences.WindowsRuntimeAsyncOperationWithProgress3.MakeGenericReferenceType(
+                operationType.TypeArguments[0],
+                operationType.TypeArguments[1],
+                operationMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: operationType,
+                nativeObjectBaseType: windowsRuntimeAsyncOperationWithProgress2Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
     }
 }
