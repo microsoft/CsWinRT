@@ -371,7 +371,9 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionProgressHandler1) ||
                          SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1))
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationProgressHandler2) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationWithProgressCompletedHandler2))
                 {
                     // We need these marshaller types for the various async type implementations
                     emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
