@@ -1753,6 +1753,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ComWrappersCallbackType(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersCallbackType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
