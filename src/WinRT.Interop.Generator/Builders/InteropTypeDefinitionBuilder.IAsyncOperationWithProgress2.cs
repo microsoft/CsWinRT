@@ -450,5 +450,35 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IAsyncOperationWithProgress&lt;TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="operationComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition operationComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            TypeSignature resultType = operationType.TypeArguments[0];
+            TypeSignature progressType = operationType.TypeArguments[1];
+
+            string runtimeClassName = $"Windows.Foundation.IAsyncOperationWithProgress`2<{resultType},{progressType}>"; // TODO
+
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: operationComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
     }
 }
