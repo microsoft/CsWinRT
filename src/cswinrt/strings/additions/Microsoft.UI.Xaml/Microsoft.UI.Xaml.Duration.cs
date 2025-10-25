@@ -1,11 +1,11 @@
 
-namespace Windows.UI.Xaml
+namespace Microsoft.UI.Xaml
 {
     using global::Windows.Foundation;
 
-    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
-    [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
+    [WindowsRuntimeMetadata("Microsoft.UI")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Duration>")]
+    [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
     public struct Duration
     {

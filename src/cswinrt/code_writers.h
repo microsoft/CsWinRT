@@ -8443,12 +8443,27 @@ return objectReference.AsValue();
             }
             else
             {
-                w.write(R"(
+                auto default_type_semantics = get_type_semantics(get_default_interface(type));
+                auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
+                if (!is_exclusive_to(default_interface_typedef))
+                {
+                    w.write(R"(
+if (value is IWindowsRuntimeInterface<%> windowsRuntimeInterface)
+{
+return windowsRuntimeInterface.GetInterface();
+}
+)",
+                        bind<write_type_name>(default_type_semantics, typedef_name_type::Projected, false));
+                }
+                else
+                {
+                    w.write(R"(
 if (value is not null)
 {
 return value.GetDefaultInterface();
 }
 )");
+                }
             }
         }),
         projected_type_name,

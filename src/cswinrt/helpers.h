@@ -697,12 +697,10 @@ namespace cswinrt
                 {
                     { "CornerRadius", "Microsoft.UI.Xaml", "CornerRadius", false, false, true },
                     { "CornerRadiusHelper" },
-                    { "Duration", "Microsoft.UI.Xaml", "Duration" },
+                    { "Duration", "Microsoft.UI.Xaml", "Duration", false, false, true },
                     { "DurationHelper" },
-                    { "DurationType", "Microsoft.UI.Xaml", "DurationType" },
-                    { "GridLength", "Microsoft.UI.Xaml", "GridLength" },
+                    { "GridLength", "Microsoft.UI.Xaml", "GridLength", false, false, true },
                     { "GridLengthHelper" },
-                    { "GridUnitType", "Microsoft.UI.Xaml", "GridUnitType" },
                     { "ICornerRadiusHelper" },
                     { "ICornerRadiusHelperStatics" },
                     { "IDurationHelper" },
@@ -711,14 +709,12 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "Thickness", "Microsoft.UI.Xaml", "Thickness" },
                     { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
                 {
-                    { "GeneratorPosition", "Microsoft.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
                     { "GeneratorPositionHelper" },
                     { "IGeneratorPositionHelper" },
                     { "IGeneratorPositionHelperStatics" },
@@ -752,7 +748,6 @@ namespace cswinrt
                 {
                     { "IMatrixHelper" },
                     { "IMatrixHelperStatics" },
-                    { "Matrix", "Microsoft.UI.Xaml.Media", "Matrix" },
                     { "MatrixHelper" },
                 }
             },
@@ -762,18 +757,17 @@ namespace cswinrt
                     { "IKeyTimeHelperStatics" },
                     { "IRepeatBehaviorHelper" },
                     { "IRepeatBehaviorHelperStatics" },
-                    { "KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime", false, false, true },
                     { "KeyTimeHelper" },
-                    { "RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior", false, false, true },
                     { "RepeatBehaviorHelper" },
-                    { "RepeatBehaviorType", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
                 }
             },
             { "Microsoft.UI.Xaml.Media.Media3D",
                 {
                     { "IMatrix3DHelper" },
                     { "IMatrix3DHelperStatics" },
-                    { "Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D", false, false, true },
                     { "Matrix3DHelper" },
                 }
             },
@@ -1195,6 +1189,26 @@ namespace cswinrt
             std::vector<std::string_view> types;
         } addition_types[] =
         {
+            { "Microsoft.UI.Xaml",
+                {
+                    "Thickness"
+                }
+            },
+            { "Microsoft.UI.Xaml.Controls.Primitives",
+                {
+                    "GeneratorPosition"
+                }
+            },
+            { "Microsoft.UI.Xaml.Media",
+                {
+                    "Matrix"
+                }
+            },
+            { "Microsoft.UI.Xaml.Media.Animation",
+                {
+                    "KeyTime"
+                }
+            },
             { "Windows.UI",
                 {
                     "Color",

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <PackageReference Include="Microsoft.WinUI" GeneratePathProperty="true">
@@ -22,22 +22,8 @@
     <CsWinRTFilters>
 -exclude Windows
 -include Microsoft
-# The current WinUI nuget incorrectly references several Windows.* types that should be
-# Microsoft.* types instead.  Temporarily include these to enable the build
--include Windows.UI.Xaml.Interop.Type
--include Windows.UI.Xaml.Interop.NotifyCollectionChangedAction
 -include Windows.UI.Xaml.Markup.ContentPropertyAttribute
--include Windows.UI.Xaml.StyleTypedPropertyAttribute
--include Windows.UI.Xaml.TemplatePartAttribute
--include Windows.UI.Xaml.TemplateVisualStateAttribute
 -include Windows.UI.Xaml.Data.BindableAttribute
--include Windows.UI.Xaml.Markup.ContentPropertyAttribute
--include Windows.UI.Xaml.Markup.FullXamlMetadataProviderAttribute
--include Windows.UI.Xaml.Markup.MarkupExtensionReturnTypeAttribute
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
--include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
--addition_exclude Windows.UI.Xaml.Media.Animation
     </CsWinRTFilters>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
