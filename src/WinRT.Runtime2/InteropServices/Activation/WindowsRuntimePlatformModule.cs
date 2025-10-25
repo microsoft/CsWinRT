@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -30,7 +31,16 @@ internal sealed unsafe class WindowsRuntimePlatformModule
     {
         CO_MTA_USAGE_COOKIE mtaCookie;
 
-        WindowsRuntimeImports.CoIncrementMTAUsage(&mtaCookie).Assert();
+        HRESULT hresult = WindowsRuntimeImports.CoIncrementMTAUsage(&mtaCookie);
+
+        // If we failed to increment the MTA usage, we want to suppress the finalizer.
+        // We only need to run that if we actually have a cookie to use to decrement.
+        if (!WellKnownErrorCodes.Succeeded(hresult))
+        {
+            GC.SuppressFinalize(this);
+
+            Marshal.ThrowExceptionForHR(hresult);
+        }
 
         _mtaCookie = mtaCookie;
     }
