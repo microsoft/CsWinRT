@@ -7,7 +7,7 @@ namespace Microsoft.UI.Xaml.Media.Media3D
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Matrix3D>")]
     [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Matrix3D : IFormattable
+    public struct Matrix3D : IFormattable, IEquatable<Matrix3D>
     {
         // Assuming this matrix has fourth column of 0,0,0,1 and isn't identity this function:
         // Returns false if HasInverse is false, otherwise inverts the matrix.

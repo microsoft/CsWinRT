@@ -108,7 +108,7 @@ namespace Windows.UI.Xaml
 
         public double TopLeft
         {
-            get { return _TopLeft; }
+            readonly get { return _TopLeft; }
             set
             {
                 Validate(value, 0, 0, 0);
@@ -118,7 +118,7 @@ namespace Windows.UI.Xaml
 
         public double TopRight
         {
-            get { return _TopRight; }
+            readonly get { return _TopRight; }
             set
             {
                 Validate(0, value, 0, 0);
@@ -128,7 +128,7 @@ namespace Windows.UI.Xaml
 
         public double BottomRight
         {
-            get { return _BottomRight; }
+            readonly get { return _BottomRight; }
             set
             {
                 Validate(0, 0, value, 0);
@@ -138,7 +138,7 @@ namespace Windows.UI.Xaml
 
         public double BottomLeft
         {
-            get { return _BottomLeft; }
+            readonly get { return _BottomLeft; }
             set
             {
                 Validate(0, 0, 0, value);

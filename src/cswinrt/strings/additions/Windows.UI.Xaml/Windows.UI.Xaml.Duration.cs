@@ -7,7 +7,7 @@ namespace Windows.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
     [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Duration
+    public struct Duration : IEquatable<Duration>
     {
         private readonly TimeSpan _timeSpan;
         private DurationType _durationType;
