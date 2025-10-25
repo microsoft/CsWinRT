@@ -81,7 +81,7 @@ namespace System.Threading.Tasks
             InvalidOperationException ex = (cause == null)
                             ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
                             : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, cause);
-            ex.SetHResult(E_ILLEGAL_METHOD_CALL);
+            ex.HResult = E_ILLEGAL_METHOD_CALL;
             return ex;
         }
 
@@ -394,7 +394,7 @@ namespace System.Threading.Tasks
                 return;
 
             ObjectDisposedException ex = new ObjectDisposedException(SR.ObjectDisposed_AsyncInfoIsClosed);
-            ex.SetHResult(E_ILLEGAL_METHOD_CALL);
+            ex.HResult = E_ILLEGAL_METHOD_CALL;
             throw ex;
         }
 
@@ -851,7 +851,7 @@ namespace System.Threading.Tasks
                 if (handlerBefore != null)
                 {
                     InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce);
-                    ex.SetHResult(E_ILLEGAL_DELEGATE_ASSIGNMENT);
+                    ex.HResult = E_ILLEGAL_DELEGATE_ASSIGNMENT;
                     throw ex;
                 }
 
@@ -934,7 +934,7 @@ namespace System.Threading.Tasks
                 if (0 != (_state & STATEMASK_SELECT_ANY_ASYNC_STATE))
                 {
                     InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_IllegalStateChange);
-                    ex.SetHResult(E_ILLEGAL_STATE_CHANGE);
+                    ex.HResult = E_ILLEGAL_STATE_CHANGE;
                     throw ex;
                 }
             }
@@ -975,7 +975,7 @@ namespace System.Threading.Tasks
                 if (aggregateException == null)
                 {
                     error = new Exception(SR.WinRtCOM_Error);
-                    error.SetHResult(E_FAIL);
+                    error.HResult = E_FAIL;
                 }
                 else
                 {

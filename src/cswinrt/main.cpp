@@ -409,7 +409,7 @@ Where <spec> is one or more of:
                             // Custom additions to namespaces
                             for (auto addition : strings::additions)
                             {
-                                if (ns == addition.name && (ns != "Windows.Storage" && ns != "Windows.Storage.Streams" && ns != "Windows.Foundation") && settings.addition_filter.includes(ns))
+                                if (ns == addition.name && (ns != "Windows.Storage" && ns != "Windows.Storage.Streams") && settings.addition_filter.includes(ns))
                                 {
                                     w.write(addition.value);
                                 }
