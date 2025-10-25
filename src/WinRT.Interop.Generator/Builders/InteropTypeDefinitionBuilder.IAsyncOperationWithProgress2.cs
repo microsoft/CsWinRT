@@ -281,5 +281,174 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IAsyncOperationWithProgress&lt;TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature operationType,
+            TypeDefinition operationMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature resultType = operationType.TypeArguments[0];
+            TypeSignature progressType = operationType.TypeArguments[1];
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(operationType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IAsyncInfo.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Prepare the handler types
+            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType(resultType, progressType);
+            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(resultType, progressType);
+
+            // Get the getter and setter accessor methods for 'Progress'
+            MethodDefinition[] progressMethods = operationMethodsType.GetMethods("Progress"u8);
+
+            // Create the 'get_Progress' getter method
+            MethodDefinition get_ProgressMethod = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.get_Progress",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(asyncOperationProgressHandlerType.Import(module)));
+
+            // Add and implement the 'get_Progress' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationWithProgress2get_Progress(resultType, progressType).Import(module),
+                method: get_ProgressMethod);
+
+            // Create a body for the 'get_Progress' method
+            get_ProgressMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: get_ProgressMethod,
+                forwardedMethod: progressMethods[0],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'set_Progress' getter method
+            MethodDefinition set_ProgressMethod = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.set_Progress",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [asyncOperationProgressHandlerType.Import(module)]));
+
+            // Add and implement the 'set_Progress' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationWithProgress2set_Progress(resultType, progressType).Import(module),
+                method: set_ProgressMethod);
+
+            // Create a body for the 'set_Progress' method
+            set_ProgressMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: set_ProgressMethod,
+                forwardedMethod: progressMethods[1],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'Progress' property
+            PropertyDefinition progressProperty = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.Progress",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.FromGetMethod(get_ProgressMethod))
+            {
+                GetMethod = get_ProgressMethod,
+                SetMethod = set_ProgressMethod
+            };
+
+            interfaceImplType.Properties.Add(progressProperty);
+
+            // Get the getter and setter accessor methods for 'Completed'
+            MethodDefinition[] completedMethods = operationMethodsType.GetMethods("Completed"u8);
+
+            // Create the 'get_Completed' getter method
+            MethodDefinition get_CompletedMethod = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.get_Completed",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(asyncOperationWithProgressCompletedHandlerType.Import(module)));
+
+            // Add and implement the 'get_Completed' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationWithProgress2get_Completed(resultType, progressType).Import(module),
+                method: get_CompletedMethod);
+
+            // Create a body for the 'get_Completed' method
+            get_CompletedMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: get_CompletedMethod,
+                forwardedMethod: completedMethods[0],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'set_Completed' getter method
+            MethodDefinition set_CompletedMethod = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.set_Completed",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [asyncOperationWithProgressCompletedHandlerType.Import(module)]));
+
+            // Add and implement the 'set_Completed' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationWithProgress2set_Completed(resultType, progressType).Import(module),
+                method: set_CompletedMethod);
+
+            // Create a body for the 'set_Completed' method
+            set_CompletedMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: set_CompletedMethod,
+                forwardedMethod: completedMethods[1],
+                interopReferences: interopReferences,
+                module: module);
+
+            // Create the 'Completed' property
+            PropertyDefinition completedProperty = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.Completed",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.FromGetMethod(get_CompletedMethod))
+            {
+                GetMethod = get_CompletedMethod,
+                SetMethod = set_CompletedMethod
+            };
+
+            interfaceImplType.Properties.Add(completedProperty);
+
+            // Create the 'GetResults' method
+            MethodDefinition getResultsMethod = new(
+                name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.GetResults",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                signature: MethodSignature.CreateInstance(resultType.Import(module));
+
+            // Add and implement the 'GetResults' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IAsyncOperationWithProgress2GetResults(resultType, progressType).Import(module),
+                method: getResultsMethod);
+
+            // Create a body for the 'GetResults' method
+            getResultsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: operationType,
+                implementationMethod: getResultsMethod,
+                forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }

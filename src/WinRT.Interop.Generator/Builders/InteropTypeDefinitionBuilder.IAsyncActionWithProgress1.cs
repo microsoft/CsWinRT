@@ -321,7 +321,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType(progressType).Import(module)));
 
-            // Add and implement the 'get_Item' method
+            // Add and implement the 'get_Progress' method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgress1get_Progress(progressType).Import(module),
                 method: get_ProgressMethod);
@@ -376,7 +376,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType).Import(module)));
 
-            // Add and implement the 'get_Item' method
+            // Add and implement the 'get_Completed' method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgress1get_Completed(progressType).Import(module),
                 method: get_CompletedMethod);

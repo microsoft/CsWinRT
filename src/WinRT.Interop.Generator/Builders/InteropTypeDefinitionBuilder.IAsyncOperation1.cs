@@ -273,7 +273,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType).Import(module)));
 
-            // Add and implement the 'get_Item' method
+            // Add and implement the 'get_Completed' method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperation1get_Completed(resultType).Import(module),
                 method: get_CompletedMethod);

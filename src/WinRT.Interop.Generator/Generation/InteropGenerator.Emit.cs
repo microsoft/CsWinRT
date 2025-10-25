@@ -1777,6 +1777,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.InterfaceImpl(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
