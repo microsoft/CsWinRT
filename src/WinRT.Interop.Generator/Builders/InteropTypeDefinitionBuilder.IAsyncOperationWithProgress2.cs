@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -435,7 +436,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getResultsMethod = new(
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.GetResults",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(resultType.Import(module));
+                signature: MethodSignature.CreateInstance(resultType.Import(module)));
 
             // Add and implement the 'GetResults' method
             interfaceImplType.AddMethodImplementation(
@@ -449,6 +450,109 @@ internal partial class InteropTypeDefinitionBuilder
                 forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
                 interopReferences: interopReferences,
                 module: module);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
+        /// </summary>
+        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature operationType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            TypeSignature resultType = operationType.TypeArguments[0];
+            TypeSignature progressType = operationType.TypeArguments[1];
+
+            // Prepare the 'AsyncOperationProgressHandler<<RESULT_TYPE>, <PROGRESS_TYPE>>' signature
+            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType(resultType, progressType);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationProgressHandler<TResult, TProgress>' instance to native
+            MethodDefinition progressConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncOperationProgressHandlerType,
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            MethodDefinition get_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
+                methodName: "get_Progress"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationProgressHandlerType,
+                get_HandlerMethod: interopReferences.IAsyncOperationWithProgress2get_Progress(resultType, progressType),
+                convertToUnmanagedMethod: progressConvertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationProgressHandler<TResult, TProgress>' instance to managed
+            MethodDefinition progressConvertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncOperationProgressHandlerType,
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
+
+            MethodDefinition set_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
+                methodName: "set_Progress"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationProgressHandlerType,
+                set_HandlerMethod: interopReferences.IAsyncOperationWithProgress2set_Progress(resultType, progressType),
+                convertToManagedMethod: progressConvertToManagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Prepare the 'AsyncOperationWithProgressCompletedHandler<<RESULT_TYPE>, <PROGRESS_TYPE>>' signature
+            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(resultType, progressType);
+
+            // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>' instance to native
+            MethodDefinition completedConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncOperationWithProgressCompletedHandlerType,
+                key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
+
+            MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
+                methodName: "get_Completed"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationWithProgressCompletedHandlerType,
+                get_HandlerMethod: interopReferences.IAsyncOperationWithProgress2get_Completed(resultType, progressType),
+                convertToUnmanagedMethod: completedConvertToUnmanagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>' instance to managed
+            MethodDefinition completedConvertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: asyncOperationWithProgressCompletedHandlerType,
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
+
+            MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
+                methodName: "set_Completed"u8,
+                asyncInfoType: operationType,
+                handlerType: asyncOperationWithProgressCompletedHandlerType,
+                set_HandlerMethod: interopReferences.IAsyncOperationWithProgress2set_Completed(resultType, progressType),
+                convertToManagedMethod: completedConvertToManagedMethod,
+                interopReferences: interopReferences,
+                module: module);
+
+            // TODO
+
+            Impl(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType, "Impl"),
+                vftblType: interopDefinitions.IAsyncOperationWithProgressVftbl,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: [
+                    get_ProgressMethod,
+                    set_ProgressMethod,
+                    get_CompletedMethod,
+                    set_CompletedMethod]);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, operationType, "Impl");
         }
 
         /// <summary>

@@ -1739,6 +1739,14 @@ internal partial class InteropGenerator
                     module: module,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ImplType(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Methods(
                     operationType: typeSignature,
                     interopDefinitions: interopDefinitions,
