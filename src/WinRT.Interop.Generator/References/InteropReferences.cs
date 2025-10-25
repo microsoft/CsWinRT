@@ -447,6 +447,11 @@ internal sealed class InteropReferences
     public TypeReference IAsyncOperationMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationMethodsImpl`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;</c>.
+    /// </summary>
+    public TypeReference IAsyncOperationWithProgressMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationWithProgressMethodsImpl`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
     /// </summary>
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIteratorMethods"u8);
@@ -2012,6 +2017,93 @@ internal sealed class InteropReferences
     {
         return IAsyncOperationMethodsImpl1
             .MakeGenericReferenceType(resultType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;.Progress</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    /// <param name="progressType">The input progress type.</param>
+    public MemberReference IAsyncOperationWithProgressMethodsImpl2get_Progress(TypeSignature resultType, TypeSignature progressType)
+    {
+        return IAsyncOperationWithProgressMethodsImpl2
+            .MakeGenericReferenceType(resultType, progressType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Progress"u8, MethodSignature.CreateInstance(
+                returnType: AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;.Progress</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    /// <param name="progressType">The input progress type.</param>
+    public MemberReference IAsyncOperationWithProgressMethodsImpl2set_Progress(TypeSignature resultType, TypeSignature progressType)
+    {
+        return IAsyncOperationWithProgressMethodsImpl2
+            .MakeGenericReferenceType(resultType, progressType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Progress"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;.Completed</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    /// <param name="progressType">The input progress type.</param>
+    public MemberReference IAsyncOperationWithProgressMethodsImpl2get_Completed(TypeSignature resultType, TypeSignature progressType)
+    {
+        return IAsyncOperationWithProgressMethodsImpl2
+            .MakeGenericReferenceType(resultType, progressType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+                returnType: AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;.Completed</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    /// <param name="progressType">The input progress type.</param>
+    public MemberReference IAsyncOperationWithProgressMethodsImpl2set_Completed(TypeSignature resultType, TypeSignature progressType)
+    {
+        return IAsyncOperationWithProgressMethodsImpl2
+            .MakeGenericReferenceType(resultType, progressType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;.GetResults()</c>.
+    /// </summary>
+    /// <param name="resultType">The input result type.</param>
+    /// <param name="progressType">The input progress type.</param>
+    public MemberReference IAsyncOperationWithProgressMethodsImpl2GetResults(TypeSignature resultType, TypeSignature progressType)
+    {
+        return IAsyncOperationWithProgressMethodsImpl2
+            .MakeGenericReferenceType(resultType, progressType)
             .ToTypeDefOrRef()
             .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
