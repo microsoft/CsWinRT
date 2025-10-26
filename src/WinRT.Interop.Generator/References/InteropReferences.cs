@@ -257,6 +257,11 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyCollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyCollection`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IList"/>.
+    /// </summary>
+    public TypeReference IList => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections"u8, "IList"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IList{T}"/>.
     /// </summary>
     public TypeReference IList1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IList`1"u8);
@@ -280,6 +285,16 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
     /// </summary>
     public TypeReference KeyValuePair => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+    /// </summary>
+    public TypeReference NotifyCollectionChangedEventArgs => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
+    /// </summary>
+    public TypeReference PropertyChangedEventArgs => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.MemoryExtensions"/>.

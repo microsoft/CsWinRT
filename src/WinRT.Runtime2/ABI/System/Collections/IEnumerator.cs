@@ -40,7 +40,11 @@ namespace ABI.System.Collections;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
 [IEnumeratorComWrappersMarshaller]
-file static class IEnumerator;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IEnumerator;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.IEnumerator"/>.

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -12,18 +11,6 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0008, IDE0055
-
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
-    trimTarget: typeof(NotifyCollectionChangedEventArgs))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
-    trimTarget: typeof(NotifyCollectionChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(NotifyCollectionChangedEventArgs),
@@ -37,7 +24,11 @@ namespace ABI.System.Collections.Specialized;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.notifycollectionchangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.notifycollectionchangedeventargs"/>
 [NotifyCollectionChangedEventArgsComWrappersMarshaller]
-file static class NotifyCollectionChangedEventArgs;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class NotifyCollectionChangedEventArgs;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
@@ -231,8 +222,8 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* CreateInstance(
         NotifyCollectionChangedAction action,
-        IList? newItems,
-        IList? oldItems,
+        global::System.Collections.IList? newItems,
+        global::System.Collections.IList? oldItems,
         int newIndex,
         int oldIndex)
     {
