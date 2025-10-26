@@ -245,6 +245,8 @@ internal partial class InteropMethodDefinitionFactory
             return handlerMethod;
         }
 
+#pragma warning disable CS1573, IDE0017 // TODO
+
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetResults</c> method of some async operation type.
         /// </summary>
