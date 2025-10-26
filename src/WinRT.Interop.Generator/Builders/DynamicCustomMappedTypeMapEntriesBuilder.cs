@@ -151,7 +151,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: (Utf8String)$"{trimTarget.Name}ComWrappersMarshallerAttribute");
 
         // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Resolve() is not TypeDefinition comWrappersMarshallerType)
+        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
         {
             throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
         }

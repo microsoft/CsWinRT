@@ -594,7 +594,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 value: runtimeClassName))));
 
         // Add the generated marshaller attribute
-        marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!));
+        marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
     }
 
     /// <summary>
