@@ -12,16 +12,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
-    using WinRT;
+
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>
-#if EMBED
-    internal
-#else
-    public 
-#endif 
-    static class WindowsRuntimeBufferExtensions
+    public static class WindowsRuntimeBufferExtensions
     {
 #region (Byte []).AsBuffer extensions
 
@@ -314,7 +309,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="otherBuffer">An <code>IBuffer</code> instance or <code>null</code>.</param>
         /// <returns><code>true</code> if the underlying <code>Buffer</code> memory pointer is the same for both specified
         /// <code>IBuffer</code> instances (i.e. if they are backed by the same memory); <code>false</code> otherwise.</returns>
-        public static bool IsSameData(this IBuffer buffer, IBuffer otherBuffer)
+        public static unsafe bool IsSameData(this IBuffer buffer, IBuffer otherBuffer)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -337,8 +332,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (thisIsManaged)
                 return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
 
-            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr thisBuff) ||
-                !WindowsRuntimeMarshal.TryGetDataUnsafe(otherBuffer, out IntPtr otherBuff))
+            if (!WindowsRuntimeBufferMarshal.TryGetDataUnsafe(buffer, out byte* thisBuff) ||
+                !WindowsRuntimeBufferMarshal.TryGetDataUnsafe(otherBuffer, out byte* otherBuff))
             {
                 return false;
             }
@@ -425,7 +420,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        public static Stream AsStream(this IBuffer source)
+        public static unsafe Stream AsStream(this IBuffer source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -438,7 +433,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
             }
 
-            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(source, out IntPtr sourceBuff))
+            if (!WindowsRuntimeBufferMarshal.TryGetDataUnsafe(source, out byte* sourceBuff))
             {
                 throw new InvalidCastException();
             }
@@ -476,26 +471,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Private plumbing
 
-#if NET
-        private sealed class StreamWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
-        {
-            public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
-            {
-                return new ComWrappers.ComInterfaceEntry[]
-                {
-                    new ComWrappers.ComInterfaceEntry
-                    {
-                        IID = global::ABI.System.IDisposableMethods.IID,
-                        Vtable = global::ABI.System.IDisposableMethods.AbiToProjectionVftablePtr
-                    },
-                };
-            }
-        }
-#endif
-
-#if NET
-        [global::WinRT.WinRTExposedType(typeof(StreamWinRTTypeDetails))]
-#endif
         private sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
         {
             private readonly IBuffer _sourceBuffer;
@@ -526,7 +501,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
 
-#if NET
             public override void Write(ReadOnlySpan<byte> buffer)
             {
                 base.Write(buffer);
@@ -535,7 +509,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 // Therefore this cast is safe.
                 _sourceBuffer.Length = (uint)Length;
             }
-#endif
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
@@ -545,7 +518,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
 
-#if NET
             public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             {
                 await base.WriteAsync(buffer, cancellationToken);
@@ -554,7 +526,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 // Therefore this cast is safe.
                 _sourceBuffer.Length = (uint)Length;
             }
-#endif
 
             public override void WriteByte(byte value)
             {
@@ -566,9 +537,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferMemoryStream
 
-#if NET
-        [global::WinRT.WinRTExposedType(typeof(StreamWinRTTypeDetails))]
-#endif
         private sealed class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
         {
             // We need this class because if we construct an UnmanagedMemoryStream on an IBuffer backed by native memory,
@@ -577,9 +545,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             private readonly IBuffer _sourceBuffer;
 
-            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, IntPtr dataPtr)
+            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, byte* dataPtr)
 
-                : base((byte*)dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
+                : base(dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
             {
                 _sourceBuffer = sourceBuffer;
             }
@@ -602,7 +570,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
 
-#if NET
             public override void Write(ReadOnlySpan<byte> buffer)
             {
                 base.Write(buffer);
@@ -611,7 +578,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 // Therefore this cast is safe.
                 _sourceBuffer.Length = (uint)Length;
             }
-#endif
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
@@ -621,7 +587,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
 
-#if NET
             public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             {
                 await base.WriteAsync(buffer, cancellationToken);
@@ -630,7 +595,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 // Therefore this cast is safe.
                 _sourceBuffer.Length = (uint)Length;
             }
-#endif
 
             public override void WriteByte(byte value)
             {
@@ -647,12 +611,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
 
-            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr buffPtr))
+            if (!WindowsRuntimeBufferMarshal.TryGetDataUnsafe(buffer, out byte* buffPtr))
             {
                 throw new InvalidCastException();
             }
 
-            var span = new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
+            var span = new Span<byte>(buffPtr + offset, (int)(buffer.Capacity - offset));
             GC.KeepAlive(buffer);
             return span;
         }

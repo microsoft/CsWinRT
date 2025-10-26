@@ -88,14 +88,15 @@
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\WellKnownStreamInterfaceIIDs.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs" />

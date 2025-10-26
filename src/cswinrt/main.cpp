@@ -294,6 +294,17 @@ Where <spec> is one or more of:
                                 break;
                             }
                         }
+
+                        // Attributes need to be written at the start, so handling this addition separately.
+                        if (ns == "Windows.Storage.Streams" && settings.addition_filter.includes(ns))
+                        {
+                            w.write(R"(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
+    typeof(global::System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer),
+    typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer))]
+)");
+                        }
+
                         currentType = "";
 
                         w.write_begin_projected();
@@ -409,7 +420,7 @@ Where <spec> is one or more of:
                             // Custom additions to namespaces
                             for (auto addition : strings::additions)
                             {
-                                if (ns == addition.name && (ns != "Windows.Storage" && ns != "Windows.Storage.Streams") && settings.addition_filter.includes(ns))
+                                if (ns == addition.name && settings.addition_filter.includes(ns))
                                 {
                                     w.write(addition.value);
                                 }

@@ -174,7 +174,7 @@
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.CornerRadius.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
-    </None>	  
+    </None>
     <None Include="strings\additions\Microsoft.UI.Xaml.Controls.Primitives\Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Controls.Primitives</Filter>
     </None>
@@ -190,10 +190,7 @@
     <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
     <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
@@ -236,10 +233,10 @@
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.GridLength.cs">
-        <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.Thickness.cs">
-        <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml.Media.Animation\Microsoft.UI.Xaml.Media.Animation.RepeatBehavior.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Media.Animation</Filter>
