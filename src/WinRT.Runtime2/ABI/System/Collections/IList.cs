@@ -286,7 +286,7 @@ public static unsafe class IListImpl
 
             BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(unboxedValue);
 
-            *view = WindowsRuntime.BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
+            *view = WindowsRuntime.InteropServices.BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

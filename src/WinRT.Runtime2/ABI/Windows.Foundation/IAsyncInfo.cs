@@ -80,7 +80,7 @@ public static unsafe class IAsyncInfoMethods
 
     /// <see cref="IAsyncInfo.ErrorCode"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static global::System.Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
+    public static Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
 
@@ -195,7 +195,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -218,7 +218,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -241,7 +241,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -259,7 +259,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -277,7 +277,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -313,7 +313,7 @@ file interface IAsyncInfoInterfaceImpl : IAsyncInfo
     }
 
     /// <inheritdoc/>
-    global::System.Exception? IAsyncInfo.ErrorCode
+    Exception? IAsyncInfo.ErrorCode
     {
         get
         {
