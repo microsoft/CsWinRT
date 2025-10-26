@@ -85,7 +85,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
 file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 {
     /// <inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>
-    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, NotifyCollectionChangedEventArgs e)
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);

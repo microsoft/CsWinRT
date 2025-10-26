@@ -114,7 +114,7 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 public static unsafe class IEnumerableMethods
 {
     /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
-    public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
+    public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
         return IBindableIterableMethods.First(thisReference);
     }
@@ -167,7 +167,7 @@ public static unsafe class IEnumerableImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerable>((ComInterfaceDispatch*)thisPtr);
 
-            IEnumerator enumerator = unboxedValue.GetEnumerator();
+            global::System.Collections.IEnumerator enumerator = unboxedValue.GetEnumerator();
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(enumerator).DetachThisPtrUnsafe();
 
@@ -186,7 +186,7 @@ public static unsafe class IEnumerableImpl
 [DynamicInterfaceCastableImplementation]
 file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
 {
-    IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
+    global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
     {
         var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IEnumerable).TypeHandle);
 
