@@ -14,18 +14,6 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Interop.IBindableIterator",
-    target: typeof(ABI.System.Collections.IEnumerator),
-    trimTarget: typeof(IEnumerator))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Interop.IBindableIterator",
-    target: typeof(ABI.System.Collections.IEnumerator),
-    trimTarget: typeof(IEnumerator))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     typeof(IEnumerator),
     typeof(ABI.System.Collections.IEnumeratorInterfaceImpl))]
