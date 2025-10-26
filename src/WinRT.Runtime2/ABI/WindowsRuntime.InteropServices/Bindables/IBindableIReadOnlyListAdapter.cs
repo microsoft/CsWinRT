@@ -82,17 +82,17 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
         Entries.IBindableVectorView.Vtable = BindableIReadOnlyListAdapterImpl.Vtable;
         Entries.IBindableEnumerable.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableIterable;
         Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
-        Entries.IStringable.IID = IStringableImpl.IID;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = IMarshalImpl.IID;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
         Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-        Entries.IInspectable.IID = IInspectableImpl.IID;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = IUnknownImpl.IID;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
