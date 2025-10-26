@@ -106,7 +106,10 @@
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
+	<None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs">
+		<Filter>strings\additions\Windows.Storage.Streams</Filter>
+	</None>
+	<None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>
     <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs">
