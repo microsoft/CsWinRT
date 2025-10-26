@@ -2,30 +2,15 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE0046, IDE1006
 
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(BindableIReadOnlyListAdapter),
-    typeof(ABI.WindowsRuntime.BindableIReadOnlyListAdapter))]
-
-namespace ABI.WindowsRuntime;
-
-/// <summary>
-/// ABI type for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
-[WindowsRuntimeClassName("Windows.UI.Xaml.Interop.IBindableVectorView")] // TODO: handle WinUI 3 as well
-[BindableIReadOnlyListAdapterComWrappersMarshaller]
-file static class BindableIReadOnlyListAdapter;
+namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Marshaller for <see cref="BindableIReadOnlyListAdapter"/>.
@@ -100,7 +85,7 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
 /// <summary>
 /// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
-file sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+public sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)

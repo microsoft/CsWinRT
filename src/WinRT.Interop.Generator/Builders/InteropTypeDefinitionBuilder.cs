@@ -561,7 +561,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting proxy type.</param>
-    private static void Proxy(
+    public static void Proxy(
         Utf8String ns,
         Utf8String name,
         string runtimeClassName,
