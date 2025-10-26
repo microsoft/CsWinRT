@@ -67,6 +67,11 @@ internal sealed class InteropReferences
     public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference("System.Runtime.InteropServices"u8, new Version(10, 0, 0, 0));
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
+    /// </summary>
+    public AssemblyReference SystemObjectModel => field ??= new AssemblyReference("System.ObjectModel"u8, new Version(10, 0, 0, 0));
+
+    /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
     public AssemblyReference SystemMemory => field ??= new AssemblyReference("System.Memory"u8, new Version(10, 0, 0, 0));
@@ -214,17 +219,17 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.
     /// </summary>
-    public TypeReference INotifyCollectionChanged => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Specialized"u8, "INotifyCollectionChanged"u8);
+    public TypeReference INotifyCollectionChanged => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "INotifyCollectionChanged"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyDataErrorInfo"/>.
     /// </summary>
-    public TypeReference INotifyDataErrorInfo => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
+    public TypeReference INotifyDataErrorInfo => field ??= PropertyChangedEventHandler.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged"/>.
     /// </summary>
-    public TypeReference INotifyPropertyChanged => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "INotifyPropertyChanged"u8);
+    public TypeReference INotifyPropertyChanged => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "INotifyPropertyChanged"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerator"/>.
@@ -289,22 +294,22 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
-    public TypeReference NotifyCollectionChangedEventHandler => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventHandler"u8);
+    public TypeReference NotifyCollectionChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventHandler"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
     /// </summary>
-    public TypeReference NotifyCollectionChangedEventArgs => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8);
+    public TypeReference NotifyCollectionChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
-    public TypeReference PropertyChangedEventHandler => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventHandler"u8);
+    public TypeReference PropertyChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventHandler"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
     /// </summary>
-    public TypeReference PropertyChangedEventArgs => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
+    public TypeReference PropertyChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.MemoryExtensions"/>.
