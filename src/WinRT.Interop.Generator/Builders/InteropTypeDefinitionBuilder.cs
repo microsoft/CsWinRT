@@ -62,7 +62,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="nativeObjectType">The resulting native object type.</param>
-    public static void NativeObject(
+    private static void NativeObject(
         TypeSignature typeSignature,
         TypeSignature nativeObjectBaseType,
         InteropReferences interopReferences,
@@ -98,7 +98,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="callbackType">The resulting callback type.</param>
-    public static void ComWrappersCallback(
+    private static void ComWrappersCallback(
         string runtimeClassName,
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
@@ -200,7 +200,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    public static void ComWrappersMarshallerAttribute(
+    private static void ComWrappersMarshallerAttribute(
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
         MethodDefinition get_IidMethod,
@@ -265,7 +265,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    public static void Marshaller(
+    private static void Marshaller(
         TypeSignature typeSignature,
         TypeDefinition interfaceComWrappersCallbackType,
         MethodDefinition get_IidMethod,
@@ -349,7 +349,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="module">The interop module being built.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="vtableMethods">The set of implementation methods for the implementation type.</param>
-    public static void Impl(
+    private static void Impl(
         [ConstantExpected] ComInterfaceType interfaceType,
         Utf8String ns,
         Utf8String name,
@@ -561,7 +561,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting proxy type.</param>
-    public static void Proxy(
+    private static void Proxy(
         Utf8String ns,
         Utf8String name,
         string runtimeClassName,
@@ -609,7 +609,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    public static void TypeMapAttributes(
+    private static void TypeMapAttributes(
         string? runtimeClassName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
