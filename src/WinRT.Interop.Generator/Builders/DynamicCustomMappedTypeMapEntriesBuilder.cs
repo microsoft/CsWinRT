@@ -63,15 +63,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             interopReferences: interopReferences,
             module: module);
 
-        TypeMapAttribute(
-            args: args,
-            windowsUIXamlTypeName: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-            microsoftUIXamlTypeName: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-            target: interopReferences.WindowsRuntimeModule.CreateTypeReference("ABI.System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8).ToReferenceTypeSignature(),
-            trimTarget: interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
-            interopReferences: interopReferences,
-            module: module);
-
         // NotifyCollectionChangedEventHandler // TODO
 
         TypeMapAttribute(

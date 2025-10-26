@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ABI.WindowsRuntime;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -287,7 +286,7 @@ public static unsafe class IListImpl
 
             BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(unboxedValue);
 
-            *view = BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
+            *view = WindowsRuntime.BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

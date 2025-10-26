@@ -5,7 +5,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ABI.System;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -92,7 +91,7 @@ public static unsafe class IAsyncInfoMethods
 
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-        return ExceptionMarshaller.ConvertToManaged(result);
+        return System.ExceptionMarshaller.ConvertToManaged(result);
     }
 
     /// <see cref="IAsyncInfo.Cancel"/>
@@ -192,7 +191,7 @@ public static unsafe class IAsyncInfoImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *errorCode = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }

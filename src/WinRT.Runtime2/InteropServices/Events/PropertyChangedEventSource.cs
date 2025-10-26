@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using ABI.System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -25,7 +24,7 @@ public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChan
     /// <inheritdoc/>
     protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventHandler value)
     {
-        return PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
+        return ABI.System.ComponentModel.PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>
