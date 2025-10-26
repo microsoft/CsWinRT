@@ -146,6 +146,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Add all dynamic type map entries for custom-mapped types
+        DefineDynamicCustomMappedTypeMapEntries(interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Add all '[IgnoreAccessChecksTo]' attributes
         DefineIgnoreAccessChecksToAttributes(discoveryState, interopDefinitions, module);
 
@@ -2052,6 +2057,22 @@ internal partial class InteropGenerator
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.DynamicImplementationDetailTypeCodeGenerationError(e);
+        }
+    }
+
+    /// <summary>
+    /// Defines the dynamic type map entries for custom-mapped types.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineDynamicCustomMappedTypeMapEntries(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    {
+        try
+        {
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e);
         }
     }
 

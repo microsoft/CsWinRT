@@ -411,6 +411,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for a dynamic implementation detail type.
+    /// </summary>
+    public static Exception DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
+    {
+        return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
