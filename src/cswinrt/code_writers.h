@@ -4000,19 +4000,19 @@ R"(file static class %InterfaceEntriesImpl
     {
         Entries.IReferenceValue.IID = %;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
+        Entries.IPropertyValue.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = IStringableImpl.IID;
+        Entries.IStringable.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
+        Entries.IWeakReferenceSource.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = IMarshalImpl.IID;
+        Entries.IMarshal.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
         Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-        Entries.IInspectable.IID = IInspectableImpl.IID;
+        Entries.IInspectable.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = IUnknownImpl.IID;
+        Entries.IUnknown.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -4036,19 +4036,19 @@ R"(file static class %InterfaceEntriesImpl
         Entries.Delegate.Vtable = %Impl.Vtable;
         Entries.DelegateReference.IID = %;
         Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
+        Entries.IPropertyValue.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = IStringableImpl.IID;
+        Entries.IStringable.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
+        Entries.IWeakReferenceSource.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = IMarshalImpl.IID;
+        Entries.IMarshal.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
+        Entries.IAgileObject.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
         Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-        Entries.IInspectable.IID = IInspectableImpl.IID;
+        Entries.IInspectable.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = IUnknownImpl.IID;
+        Entries.IUnknown.IID = WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
