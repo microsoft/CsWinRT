@@ -147,7 +147,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Add all dynamic type map entries for custom-mapped types
-        DefineDynamicCustomMappedTypeMapEntries(interopDefinitions, module);
+        DefineDynamicCustomMappedTypeMapEntries(args, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2063,12 +2063,20 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the dynamic type map entries for custom-mapped types.
     /// </summary>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
-    private static void DefineDynamicCustomMappedTypeMapEntries(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    private static void DefineDynamicCustomMappedTypeMapEntries(
+        InteropGeneratorArgs args,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
     {
         try
         {
+            DynamicCustomMappedTypeMapEntriesBuilder.AssemblyAttributes(
+                args: args,
+                interopReferences: interopReferences,
+                module: module);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
