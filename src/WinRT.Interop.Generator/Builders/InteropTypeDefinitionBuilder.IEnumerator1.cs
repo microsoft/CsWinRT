@@ -427,6 +427,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Callvirt, interopReferences.IEnumerator1get_Current(elementType).Import(module) },
+                    { Box, elementType.Import(module).ToTypeDefOrRef() },
                     { Ret }
                 }
             };
