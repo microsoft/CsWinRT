@@ -99,15 +99,20 @@ internal sealed unsafe class FreeThreadedMarshaler
             static FreeThreadedMarshaler InitializeInstanceForCurrentThread()
             {
                 // Create the free-threaded marshaler
-                void* marshalerPtr;
-
-                WindowsRuntimeImports.CoCreateFreeThreadedMarshaler(punkOuter: null, ppunkMarshal: &marshalerPtr).Assert();
-
-                // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
-                // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
-                FreeThreadedObjectReference objectReference = new(marshalerPtr, referenceTrackerPtr: null);
-
-                return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
+                void* marshalUnknownPtr;
+                WindowsRuntimeImports.CoCreateFreeThreadedMarshaler(punkOuter: null, ppunkMarshal: &marshalUnknownPtr).Assert();
+                try
+                {
+                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownInterfaceIds.IID_IMarshal, out void* marshalPtr).Assert();
+                    // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
+                    // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
+                    FreeThreadedObjectReference objectReference = new(marshalPtr, referenceTrackerPtr: null);
+                    return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
+                }
+                finally
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(marshalUnknownPtr);
+                }
             }
 
             return instanceForCurrentThread ?? InitializeInstanceForCurrentThread();

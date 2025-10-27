@@ -34,11 +34,6 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
 
     /// <summary>
-    /// The configuration property name for <see cref="EnableDefaultCustomTypeMappings"/>.
-    /// </summary>
-    private const string EnableDefaultCustomTypeMappingsPropertyName = "CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS";
-
-    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -55,11 +50,6 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(UseWindowsUIXamlProjectionsPropertyName)]
     public static bool UseWindowsUIXamlProjections { get; } = GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, defaultValue: false);
-
-    /// <summary>
-    /// Gets a value indicating whether or not should initialize all default type mappings automatically (defaults to <see langword="true"/>).
-    /// </summary>
-    public static bool EnableDefaultCustomTypeMappings { get; } = GetConfigurationValue(EnableDefaultCustomTypeMappingsPropertyName, defaultValue: false);
 
     /// <summary>
     /// Gets a configuration value for a specified property.
