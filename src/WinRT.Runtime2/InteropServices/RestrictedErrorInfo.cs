@@ -38,14 +38,9 @@ public static unsafe class RestrictedErrorInfo
     {
         restoredExceptionFromGlobalState = false;
         Exception? ex;
-        string description = string.Empty;
-        string restrictedError = string.Empty;
-        string restrictedErrorReference = string.Empty;
-        string restrictedCapabilitySid = string.Empty;
         string errorMessage = string.Empty;
         Exception internalGetGlobalErrorStateException;
 
-        WindowsRuntimeObjectReference? restrictedErrorInfoToSave = default;
         WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
 
         try
@@ -71,13 +66,13 @@ public static unsafe class RestrictedErrorInfo
                     }
                     finally
                     {
-                        Marshal.Release(languageErrorInfoPtr);
+                        _ = Marshal.Release(languageErrorInfoPtr);
                     }
                 }
 
-                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                WindowsRuntimeObjectReference? restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string description, out int hrLocal, out string restrictedError, out string restrictedCapabilitySid);
+                string restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
                 if (errorCode == hrLocal)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
@@ -115,130 +110,46 @@ public static unsafe class RestrictedErrorInfo
             restrictedErrorInfoValue.Dispose();
         }
 
-        switch (errorCode)
+        ex = errorCode switch
         {
-            case WellKnownErrorCodes.E_CHANGED_STATE:
-            case WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE:
-            case WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL:
-            case WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT:
-            case WellKnownErrorCodes.APPMODEL_ERROR_NO_PACKAGE:
-            case WellKnownErrorCodes.COR_E_INVALIDOPERATION:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
-                break;
-            case WellKnownErrorCodes.E_XAMLPARSEFAILED:
-#if NET
-                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException();
-                }
-                else
-#endif
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException();
-                }
-                break;
-            case WellKnownErrorCodes.E_LAYOUTCYCLE:
-#if NET
-                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException();
-                }
-                else
-#endif
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
-                }
-                break;
-            case WellKnownErrorCodes.E_ELEMENTNOTAVAILABLE:
-#if NET
-                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException();
-                }
-                else
-#endif
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException();
-                }
-                break;
-            case WellKnownErrorCodes.E_ELEMENTNOTENABLED:
-#if NET
-                if (WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections)
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException();
-                }
-                else
-#endif
-                {
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException();
-                }
-                break;
-            case WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE:
-                ex = new COMException(
-@"Invalid window handle. (0x80070578)
+            WellKnownErrorCodes.E_CHANGED_STATE or WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE or WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL or WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT or WellKnownErrorCodes.APPMODEL_ERROR_NO_PACKAGE or WellKnownErrorCodes.COR_E_INVALIDOPERATION => !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException(),
+            WellKnownErrorCodes.E_XAMLPARSEFAILED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException()
+                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException(),
+            WellKnownErrorCodes.E_LAYOUTCYCLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException()
+                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException(),
+            WellKnownErrorCodes.E_ELEMENTNOTAVAILABLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException()
+                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException(),
+            WellKnownErrorCodes.E_ELEMENTNOTENABLED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException()
+                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException(),
+            WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE => new COMException(
+            @"Invalid window handle. (0x80070578)
 Consider WindowNative, InitializeWithWindow
 See https://aka.ms/cswinrt/interop#windows-sdk",
-                    WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE);
-                break;
-            case WellKnownErrorCodes.RO_E_CLOSED:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty);
-                break;
-            case WellKnownErrorCodes.E_POINTER:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException();
-                break;
-            case WellKnownErrorCodes.E_NOTIMPL:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException();
-                break;
-            case WellKnownErrorCodes.E_ACCESSDENIED:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new UnauthorizedAccessException(errorMessage) : new UnauthorizedAccessException();
-                break;
-            case WellKnownErrorCodes.E_INVALIDARG:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentException(errorMessage) : new ArgumentException();
-                break;
-            case WellKnownErrorCodes.E_NOINTERFACE:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidCastException(errorMessage) : new InvalidCastException();
-                break;
-            case WellKnownErrorCodes.E_OUTOFMEMORY:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new OutOfMemoryException(errorMessage) : new OutOfMemoryException();
-                break;
-            case WellKnownErrorCodes.E_BOUNDS:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException();
-                break;
-            case WellKnownErrorCodes.E_NOTSUPPORTED:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException();
-                break;
-            case WellKnownErrorCodes.ERROR_ARITHMETIC_OVERFLOW:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException();
-                break;
-            case WellKnownErrorCodes.ERROR_FILENAME_EXCED_RANGE:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new PathTooLongException(errorMessage) : new PathTooLongException();
-                break;
-            case WellKnownErrorCodes.ERROR_FILE_NOT_FOUND:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new FileNotFoundException(errorMessage) : new FileNotFoundException();
-                break;
-            case WellKnownErrorCodes.ERROR_HANDLE_EOF:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new EndOfStreamException(errorMessage) : new EndOfStreamException();
-                break;
-            case WellKnownErrorCodes.ERROR_PATH_NOT_FOUND:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new DirectoryNotFoundException(errorMessage) : new DirectoryNotFoundException();
-                break;
-            case WellKnownErrorCodes.ERROR_STACK_OVERFLOW:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new StackOverflowException(errorMessage) : new StackOverflowException();
-                break;
-            case WellKnownErrorCodes.ERROR_BAD_FORMAT:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException();
-                break;
-            case WellKnownErrorCodes.ERROR_CANCELLED:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException();
-                break;
-            case WellKnownErrorCodes.ERROR_TIMEOUT:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException();
-                break;
-
-            default:
-                ex = !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, errorCode) : new COMException($"0x{errorCode:X8}", errorCode);
-                break;
-        }
+                                WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE),
+            WellKnownErrorCodes.RO_E_CLOSED => !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty),
+            WellKnownErrorCodes.E_POINTER => !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException(),
+            WellKnownErrorCodes.E_NOTIMPL => !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException(),
+            WellKnownErrorCodes.E_ACCESSDENIED => !string.IsNullOrEmpty(errorMessage) ? new UnauthorizedAccessException(errorMessage) : new UnauthorizedAccessException(),
+            WellKnownErrorCodes.E_INVALIDARG => !string.IsNullOrEmpty(errorMessage) ? new ArgumentException(errorMessage) : new ArgumentException(),
+            WellKnownErrorCodes.E_NOINTERFACE => !string.IsNullOrEmpty(errorMessage) ? new InvalidCastException(errorMessage) : new InvalidCastException(),
+            WellKnownErrorCodes.E_OUTOFMEMORY => !string.IsNullOrEmpty(errorMessage) ? new OutOfMemoryException(errorMessage) : new OutOfMemoryException(),
+            WellKnownErrorCodes.E_BOUNDS => !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException(),
+            WellKnownErrorCodes.E_NOTSUPPORTED => !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException(),
+            WellKnownErrorCodes.ERROR_ARITHMETIC_OVERFLOW => !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException(),
+            WellKnownErrorCodes.ERROR_FILENAME_EXCED_RANGE => !string.IsNullOrEmpty(errorMessage) ? new PathTooLongException(errorMessage) : new PathTooLongException(),
+            WellKnownErrorCodes.ERROR_FILE_NOT_FOUND => !string.IsNullOrEmpty(errorMessage) ? new FileNotFoundException(errorMessage) : new FileNotFoundException(),
+            WellKnownErrorCodes.ERROR_HANDLE_EOF => !string.IsNullOrEmpty(errorMessage) ? new EndOfStreamException(errorMessage) : new EndOfStreamException(),
+            WellKnownErrorCodes.ERROR_PATH_NOT_FOUND => !string.IsNullOrEmpty(errorMessage) ? new DirectoryNotFoundException(errorMessage) : new DirectoryNotFoundException(),
+            WellKnownErrorCodes.ERROR_STACK_OVERFLOW => !string.IsNullOrEmpty(errorMessage) ? new StackOverflowException(errorMessage) : new StackOverflowException(),
+            WellKnownErrorCodes.ERROR_BAD_FORMAT => !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException(),
+            WellKnownErrorCodes.ERROR_CANCELLED => !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException(),
+            WellKnownErrorCodes.ERROR_TIMEOUT => !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException(),
+            _ => !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, errorCode) : new COMException($"0x{errorCode:X8}", errorCode),
+        };
 
         // Ensure HResult matches.
         ex.SetHResult(errorCode);
