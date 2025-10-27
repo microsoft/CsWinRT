@@ -538,7 +538,7 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
             {
                 for (auto&& string : strings::base)
                 {
-                    if (std::string(string.name) == "ComInteropHelpers" /* && !settings.filter.includes("Windows") */)
+                    if (std::string(string.name) == "ComInteropHelpers"&& !settings.filter.includes("Windows"))
                     {
                         continue;
                     }
