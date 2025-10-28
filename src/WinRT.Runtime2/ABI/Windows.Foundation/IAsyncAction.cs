@@ -82,9 +82,10 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
     /// <inheritdoc/>
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction)!;
-
-        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+            wrapperFlags: out wrapperFlags);
 
         return new WindowsRuntimeAsyncAction(objectReference);
     }
