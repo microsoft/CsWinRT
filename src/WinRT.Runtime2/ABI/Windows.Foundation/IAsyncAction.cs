@@ -57,9 +57,10 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
     {
         if (runtimeClassName.SequenceEqual("Windows.Foundation.IAsyncAction"))
         {
-            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction)!;
-
-            wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+                wrapperFlags: out wrapperFlags);
 
             wrapperObject = new WindowsRuntimeAsyncAction(objectReference);
 
