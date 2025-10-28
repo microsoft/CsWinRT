@@ -427,10 +427,17 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Callvirt, interopReferences.IEnumerator1get_Current(elementType).Import(module) },
-                    { Box, elementType.Import(module).ToTypeDefOrRef() },
-                    { Ret }
                 }
             };
+
+            // If the element type is a value type, we need to box it
+            if (elementType.IsValueType)
+            {
+                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, elementType.Import(module).ToTypeDefOrRef());
+            }
+
+            // Add the return
+            _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Ret);
 
             // Create the 'IEnumerator.Current' property
             PropertyDefinition enumeratorCurrentProperty = new(
