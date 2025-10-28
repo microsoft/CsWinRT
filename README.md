@@ -11,9 +11,9 @@ C#/WinRT includes tools that:
 - Generate C# source for consuming WinRT APIs from `*.winmd` files
 - Generate `*.winmd` files for authoring WinRT components
 
-Generated C# source can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) produces headers for C++. This design removes the need for the C# compiler or .NET runtime to have built-in WinRT knowledge.
+Generated C# source can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) produces headers for C++. This design removes the need for the C# compiler or .NET runtime to have built-in WinRT support.
 
-## Getting started with C#/WinRT
+## Getting started
 
 - [Usage guide](docs/usage.md)
 - [Customizing C#/WinRT](nuget/readme.md)
@@ -32,22 +32,6 @@ For additional documentation and walkthroughs, visit http://aka.ms/cswinrt.
 ## Contributing
 
 We welcome feedback and contributions! We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md).
-
-## Motivation
-
-Earlier versions of .NET Framework and Core included built-in WinRT projection support within the compiler and runtime, but this was a Windows-specific feature and conflicted with its cross-platform goals. To decouple WinRT support and keep .NET platform-agnostic, that functionality was removed and reimplemented as a standalone project in this repo.
-
-[WinUI 3](https://github.com/Microsoft/microsoft-ui-xaml) separates Microsoft's native UI controls from the OS so developers can use the latest modern UI features across supported Windows versions as soon as an update is available.
-C#/WinRT enables this by providing the necessary projection for `Windows.UI.Xaml` and `Microsoft.UI.Xaml` APIs.
-
-However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime. While our focus is on supporting .NET 10 and later, we aspire to generate projections that are compatible down to .NET Standard 2.0. Please refer to our issues backlog for more information.
-
-## Architecture Overview
-
-All C#/WinRT assemblies depend on `WinRT.Runtime.dll`, which provides:
-- A runtime abstraction layer for .NET 10 and later
-- Support for all projected C#/WinRT types (e.g., WinRT activation and marshaling)
-- Lifetime management of [COM wrappers](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers)
 
 ## Code of Conduct
 
