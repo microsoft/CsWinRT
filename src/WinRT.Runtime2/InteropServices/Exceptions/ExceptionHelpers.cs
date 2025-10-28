@@ -54,14 +54,14 @@ internal static unsafe class ExceptionHelpers
     /// manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
     /// </summary>
     /// <param name="languageErrorInfoPtr">Pointer to the language error info COM object.</param>
-    /// <param name="hr">The HRESULT associated with the error.</param>
+    /// <param name="hresult">The HRESULT associated with the error.</param>
     /// <returns>
     /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
     /// </returns>
-    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hr)
+    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hresult)
     {
         // Check the error info first for the language exception.
-        Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hr);
+        Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hresult);
         if (exception is not null)
         {
             return exception;
@@ -80,7 +80,7 @@ internal static unsafe class ExceptionHelpers
                 {
                     while (currentLanguageExceptionErrorInfo2Ptr != null)
                     {
-                        Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
+                        Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hresult);
                         if (propagatedException is not null)
                         {
                             return propagatedException;
@@ -113,11 +113,11 @@ internal static unsafe class ExceptionHelpers
     /// Internal helper to retrieve a managed language exception from a COM pointer.
     /// </summary>
     /// <param name="languageErrorInfoPtr">Pointer to the language error info COM object.</param>
-    /// <param name="hr">The HRESULT associated with the error.</param>
+    /// <param name="hresult">The HRESULT associated with the error.</param>
     /// <returns>
     /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
     /// </returns>
-    internal static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hr)
+    internal static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hresult)
     {
         if (languageErrorInfoPtr == null)
         {
@@ -131,7 +131,7 @@ internal static unsafe class ExceptionHelpers
             {
                 if (WindowsRuntimeMarshal.TryGetManagedObject(languageExceptionPtr, out object? exception))
                 {
-                    if (RestrictedErrorInfo.GetHRForException((Exception)exception) == hr)
+                    if (RestrictedErrorInfo.GetHRForException((Exception)exception) == hresult)
                     {
                         return (Exception)exception;
                     }
