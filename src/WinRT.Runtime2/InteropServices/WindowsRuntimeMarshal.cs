@@ -108,4 +108,89 @@ public static unsafe class WindowsRuntimeMarshal
 
         return false;
     }
+
+    /// <summary>
+    /// Marshals a managed object to a native object, unwrapping it or creating a CCW for it as needed.
+    /// </summary>
+    /// <param name="managedObject">The managed object to marshal.</param>
+    /// <remarks>
+    /// <para>
+    /// The returned native object will own an additional reference for the marshalled <paramref name="managedObject"/>
+    /// instance (either its underlying native object, or a runtime-provided CCW for the managed object instance). It is
+    /// responsibility of the caller to always make sure that the returned native object is disposed.
+    /// </para>
+    /// <para>
+    /// Additionally, it is responsibility of the caller to perform proper reference tracking or to handle different
+    /// COM contexts, in case the returned pointer is stored on a class field or passed across different threads.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToUnmanaged"/>
+    public static void* ConvertToUnmanaged(object? managedObject)
+    {
+        if (managedObject is null)
+        {
+            return null;
+        }
+
+        // If 'value' is a 'WindowsRuntimeObject', return the wrapped native object reference
+        if (managedObject is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
+        {
+            return windowsRuntimeObject.NativeObjectReference.GetThisPtr();
+        }
+
+        // If 'value' is a managed wrapper for a native delegate, unwrap it directly
+        if (managedObject is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
+        {
+            return windowsRuntimeDelegate.GetThisPtr();
+        }
+
+        // Marshal 'value' as an 'IUnknown' (this method will take care of correctly marshalling objects with the right vtables)
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(managedObject);
+    }
+
+    /// <summary>
+    /// Converts an unmanaged pointer to a Windows Runtime object to a managed object, either by unwrapping the
+    /// original managed object that was previously marshalled, or retrieving or creating an RCW for it.
+    /// </summary>
+    /// <param name="value">The input object to convert to managed.</param>
+    /// <returns>The resulting managed managed object.</returns>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
+    public static object? ConvertToManaged(void* value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // If the value is a CCW we recognize, just unwrap it directly
+        if (IsReferenceToManagedObject(value))
+        {
+            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+        }
+
+        // Marshal the object as an opaque object, as we have no static type information available
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: null,
+            unsealedObjectComWrappersCallback: null);
+    }
+
+    /// <summary>
+    /// Release a given native object.
+    /// </summary>
+    /// <param name="value">The input object to free.</param>
+    /// <remarks>
+    /// Unlike <see cref="Marshal.Release"/>, this method will not throw <see cref="ArgumentNullException"/>
+    /// if <paramref name="value"/> is <see langword="null"/>. This method can be used with any object type.
+    /// </remarks>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.Free"/>
+    public static void Free(void* value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        _ = IUnknownVftbl.ReleaseUnsafe(value);
+    }
 }
