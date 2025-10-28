@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <c>Assert()</c> helper on the returned status code. Any BSTRs returned by the COM methods
 /// are converted to <see cref="string"/> and then released with <see cref="Marshal.FreeBSTR(System.IntPtr)"/>.
 /// </remarks>
-internal static class RestrictedErrorInfoMethods
+internal static class IRestrictedErrorInfoMethods
 {
     /// <summary>
     /// Retrieves error details from an <c>IRestrictedErrorInfo</c> instance.
