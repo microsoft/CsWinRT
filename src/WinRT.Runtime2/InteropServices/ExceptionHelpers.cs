@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 
 internal static unsafe class ExceptionHelpers
 {
-    public static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
+    internal static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
         if (WindowsRuntimeImports.GetRestrictedErrorInfo == null)
         {
@@ -31,12 +30,12 @@ internal static unsafe class ExceptionHelpers
             WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorInfoPtr).Assert();
         }
 
-        return new WindowsRuntimeObjectReferenceValue(restrictedErrorInfoPtr);
+        return new(restrictedErrorInfoPtr);
     }
 
     // This is a helper method specifically to be used by exception propagation scenarios where we carefully
     // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
-    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, int hr)
+    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hr)
     {
         // Check the error info first for the language exception.
         Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hr);
@@ -46,12 +45,15 @@ internal static unsafe class ExceptionHelpers
         }
 
         // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
-        if (Marshal.QueryInterface((nint)languageErrorInfoPtr, WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2, out nint languageErrorInfo2Ptr) >= 0)
+        if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
+                            languageErrorInfoPtr,
+                            in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
+                            out void* languageErrorInfo2Ptr)))
         {
             void* currentLanguageExceptionErrorInfo2Ptr = null;
             try
             {
-                if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe((void*)languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
+                if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
                 {
                     while (currentLanguageExceptionErrorInfo2Ptr != null)
                     {
@@ -76,14 +78,14 @@ internal static unsafe class ExceptionHelpers
             finally
             {
                 WindowsRuntimeObjectMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
-                _ = Marshal.Release(languageErrorInfo2Ptr);
+                WindowsRuntimeObjectMarshaller.Free(languageErrorInfo2Ptr);
             }
         }
 
         return null;
     }
 
-    private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, int hr)
+    internal static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hr)
     {
         if (languageErrorInfoPtr == null)
         {
@@ -127,39 +129,31 @@ internal static unsafe class ExceptionHelpers
             dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
         }
     }
-}
 
-internal static class ExceptionExtensions
-{
-    public static bool TryGetRestrictedLanguageErrorInfo(
-        this Exception ex,
+    internal static bool TryGetRestrictedLanguageErrorInfo(
+        this Exception exception,
         out WindowsRuntimeObjectReference? restrictedErrorObject,
         out bool isLanguageException)
     {
         restrictedErrorObject = null;
         isLanguageException = false;
 
-        IDictionary dict = ex.Data;
-        if (dict != null)
+        IDictionary dictionary = exception.Data;
+        if (dictionary != null)
         {
-            if (dict.Contains("__RestrictedErrorObjectReference"))
+            if (dictionary.Contains("__RestrictedErrorObjectReference"))
             {
-                restrictedErrorObject = dict["__RestrictedErrorObjectReference"] as WindowsRuntimeObjectReference;
+                restrictedErrorObject = dictionary["__RestrictedErrorObjectReference"] as WindowsRuntimeObjectReference;
             }
 
-            if (dict.Contains("__HasRestrictedLanguageErrorObject"))
+            if (dictionary.Contains("__HasRestrictedLanguageErrorObject"))
             {
-                isLanguageException = (bool)dict["__HasRestrictedLanguageErrorObject"]!;
+                isLanguageException = (bool)dictionary["__HasRestrictedLanguageErrorObject"]!;
             }
 
             return restrictedErrorObject is not null;
         }
 
         return false;
-    }
-
-    public static void SetHResult(this Exception ex, int value)
-    {
-        ex.HResult = value;
     }
 }

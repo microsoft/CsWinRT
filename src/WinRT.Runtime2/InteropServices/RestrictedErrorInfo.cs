@@ -176,7 +176,7 @@ public static unsafe class RestrictedErrorInfo
         };
 
         // Ensure HResult matches.
-        exception.SetHResult(errorCode);
+        exception.HResult = errorCode;
 
         return exception;
     }
