@@ -55,8 +55,8 @@ public static unsafe class WindowsRuntimeMarshal
 
         // Unwrap both objects and check whether the underlying object is the same. To do this we also need
         // to query for the 'IUnknown' interface pointer, to ensure we get the actual identity of the objects.
-        if (TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
-            TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
+        if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
+            WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
         {
             using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownWindowsInterfaceIIDs.IID_IUnknown);
             using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownWindowsInterfaceIIDs.IID_IUnknown);
@@ -86,45 +86,5 @@ public static unsafe class WindowsRuntimeMarshal
         result = null;
 
         return false;
-    }
-
-    /// <summary>
-    /// Attempts to extract a <see cref="WindowsRuntimeObjectReference"/> from the specified object.
-    /// </summary>
-    /// <param name="value">The object to attempt to unwrap.</param>
-    /// <param name="objectReference">The unwrapped <see cref="WindowsRuntimeObjectReference"/> object, if successfully retrieved.</param>
-    /// <returns>Whether <paramref name="objectReference"/> was successfully unwrapped.</returns>
-    /// <remarks>
-    /// This method supports unwrapping objects that are either:
-    /// <list type="bullet">
-    ///   <item>A <see cref="WindowsRuntimeObject"/> with a native object reference that can be unwrapped.</item>
-    ///   <item>
-    ///     A <see cref="Delegate"/> whose target is a <see cref="WindowsRuntimeObjectReference"/>. Such instances
-    ///     are created by the generated projections, for all projected Windows runtime delegate types.
-    ///   </item>
-    /// </list>
-    /// If the object does not meet these criteria, this method will just return <see langword="null"/>.
-    /// </remarks>
-    public static bool TryUnwrapObjectReference(
-        [NotNullWhen(true)] object? value,
-        [NotNullWhen(true)] out WindowsRuntimeObjectReference? objectReference)
-    {
-        switch (value)
-        {
-            // If 'value' is a 'WindowsRuntimeObject' that can be unwrapped, return the wrapped object reference
-            case WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject:
-                objectReference = windowsRuntimeObject.NativeObjectReference;
-                return true;
-
-            // If 'value' is a marshalled delegate, return the target object reference directly
-            case Delegate { Target: WindowsRuntimeObjectReference targetObjectReference }:
-                objectReference = targetObjectReference;
-                return true;
-
-            // Otherwise, we can't unwrap the value at all
-            default:
-                objectReference = null;
-                return false;
-        }
     }
 }
