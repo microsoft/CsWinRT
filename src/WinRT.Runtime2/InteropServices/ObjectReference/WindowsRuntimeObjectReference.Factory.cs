@@ -24,7 +24,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// The resulting <see cref="WindowsRuntimeObjectReference"/> is <see langword="null"/> if <paramref name="thisPtr"/> is <see langword="null"/>.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReference? Create(void* thisPtr, in Guid iid)
+    internal static WindowsRuntimeObjectReference? Create(void* thisPtr, in Guid iid)
     {
         if (thisPtr is null)
         {
@@ -67,7 +67,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </para>
     /// </remarks>
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> operation fails.</exception>
-    public static WindowsRuntimeObjectReference? CreateUnsafe(void* thisPtr, in Guid iid)
+    internal static WindowsRuntimeObjectReference? CreateUnsafe(void* thisPtr, in Guid iid)
     {
         if (thisPtr is null)
         {
