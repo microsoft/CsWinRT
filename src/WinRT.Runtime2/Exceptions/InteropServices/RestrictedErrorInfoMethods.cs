@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
-internal static class IRestrictedErrorInfoMethods
+internal static class RestrictedErrorInfoMethods
 {
     public static unsafe void GetErrorDetails(
         void* thisPtr,

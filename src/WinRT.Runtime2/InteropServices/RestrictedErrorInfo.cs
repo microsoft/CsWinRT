@@ -71,8 +71,8 @@ public static unsafe class RestrictedErrorInfo
                 }
 
                 WindowsRuntimeObjectReference? restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string description, out int hrLocal, out string restrictedError, out string restrictedCapabilitySid);
-                string restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                RestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string description, out int hrLocal, out string restrictedError, out string restrictedCapabilitySid);
+                string restrictedErrorReference = RestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
                 if (errorCode == hrLocal)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
@@ -213,7 +213,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 if (restrictedErrorObject != null)
                 {
                     using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
-                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
+                    RestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
                 }
             }
         }
