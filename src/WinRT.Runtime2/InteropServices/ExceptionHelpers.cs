@@ -123,6 +123,7 @@ internal static unsafe class ExceptionHelpers
         {
             return null;
         }
+
         void* languageExceptionPtr = null;
         try
         {
@@ -144,6 +145,7 @@ internal static unsafe class ExceptionHelpers
                 WindowsRuntimeObjectMarshaller.Free(languageExceptionPtr);
             }
         }
+
         return null;
     }
 
@@ -183,8 +185,8 @@ internal static unsafe class ExceptionHelpers
     {
         restrictedErrorObject = null;
         isLanguageException = false;
-
         IDictionary dictionary = exception.Data;
+
         if (dictionary != null)
         {
             if (dictionary.Contains("__RestrictedErrorObjectReference"))
