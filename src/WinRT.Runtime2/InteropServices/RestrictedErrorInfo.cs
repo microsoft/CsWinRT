@@ -61,11 +61,11 @@ public static unsafe class RestrictedErrorInfo
                         if (exception is not null)
                         {
                             restoredExceptionFromGlobalState = true;
-                            WindowsRuntimeObjectReference? errRef = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
 
-                            if (errRef != null)
+                            if (restrictedErrorInfo != null)
                             {
-                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, errRef, true);
+                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, restrictedErrorInfo, true);
                             }
 
                             return exception;
@@ -79,7 +79,7 @@ public static unsafe class RestrictedErrorInfo
 
                 WindowsRuntimeObjectReference? restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
 
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string description, out HRESULT hrLocal, out string restrictedError, out string restrictedCapabilitySid);
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string? description, out HRESULT hrLocal, out string? restrictedError, out string? restrictedCapabilitySid);
 
                 string restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
 

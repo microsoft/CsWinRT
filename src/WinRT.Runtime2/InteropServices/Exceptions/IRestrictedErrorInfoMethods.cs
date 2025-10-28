@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -31,14 +32,14 @@ internal static class IRestrictedErrorInfoMethods
     /// </remarks>
     public static unsafe void GetErrorDetails(
         void* thisPtr,
-        out string description,
+        out string? description,
         out int error,
-        out string restrictedDescription,
-        out string capabilitySid)
+        out string? restrictedDescription,
+        out string? capabilitySid)
     {
-        void* _description = null;
-        void* _restrictedDescription = null;
-        void* _capabilitySid = null;
+        char* _description = null;
+        char* _restrictedDescription = null;
+        char* _capabilitySid = null;
 
         try
         {
@@ -52,15 +53,15 @@ internal static class IRestrictedErrorInfoMethods
                     &_capabilitySid).Assert();
             }
 
-            description = _description != null ? Marshal.PtrToStringBSTR((nint)_description) : string.Empty;
-            restrictedDescription = _restrictedDescription != null ? Marshal.PtrToStringBSTR((nint)_restrictedDescription) : string.Empty;
-            capabilitySid = _capabilitySid != null ? Marshal.PtrToStringBSTR((nint)_capabilitySid) : string.Empty;
+            description = BStrStringMarshaller.ConvertToManaged((ushort*)_description);
+            restrictedDescription = BStrStringMarshaller.ConvertToManaged((ushort*)_restrictedDescription);
+            capabilitySid = BStrStringMarshaller.ConvertToManaged((ushort*)_capabilitySid);
         }
         finally
         {
-            Marshal.FreeBSTR((nint)_description);
-            Marshal.FreeBSTR((nint)_restrictedDescription);
-            Marshal.FreeBSTR((nint)_capabilitySid);
+            BStrStringMarshaller.Free((ushort*)_description);
+            BStrStringMarshaller.Free((ushort*)_restrictedDescription);
+            BStrStringMarshaller.Free((ushort*)_capabilitySid);
         }
     }
 
@@ -77,9 +78,9 @@ internal static class IRestrictedErrorInfoMethods
         void* thisPtr,
         out int error)
     {
-        void* _description = null;
-        void* _restrictedDescription = null;
-        void* _capabilitySid = null;
+        char* _description = null;
+        char* _restrictedDescription = null;
+        char* _capabilitySid = null;
 
         try
         {
@@ -95,9 +96,9 @@ internal static class IRestrictedErrorInfoMethods
         }
         finally
         {
-            Marshal.FreeBSTR((nint)_description);
-            Marshal.FreeBSTR((nint)_restrictedDescription);
-            Marshal.FreeBSTR((nint)_capabilitySid);
+            BStrStringMarshaller.Free((ushort*)_description);
+            BStrStringMarshaller.Free((ushort*)_restrictedDescription);
+            BStrStringMarshaller.Free((ushort*)_capabilitySid);
         }
     }
 
@@ -113,18 +114,21 @@ internal static class IRestrictedErrorInfoMethods
     /// </remarks>
     public static unsafe string GetReference(void* thisPtr)
     {
-        void* __retval = null;
+        char* _retval = null;
 
         try
         {
             ((IRestrictedErrorInfoVftbl*)*(void***)thisPtr)->GetReference(
                 thisPtr,
-                &__retval).Assert();
-            return __retval != null ? Marshal.PtrToStringBSTR((nint)__retval) : string.Empty;
+                &_retval).Assert();
+
+            string? description = BStrStringMarshaller.ConvertToManaged((ushort*)_retval);
+
+            return description ?? string.Empty;
         }
         finally
         {
-            Marshal.FreeBSTR((nint)__retval);
+            BStrStringMarshaller.Free((ushort*)_retval);
         }
     }
 }
