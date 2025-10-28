@@ -157,7 +157,7 @@ internal static unsafe class ExceptionHelpers
     /// <param name="restrictedErrorObject">The restricted error info object reference.</param>
     /// <param name="hasRestrictedLanguageErrorObject">Indicates whether a language-specific error object exists.</param>
     internal static void AddExceptionDataForRestrictedErrorInfo(
-        this Exception ex,
+        Exception ex,
         WindowsRuntimeObjectReference restrictedErrorObject,
         bool hasRestrictedLanguageErrorObject)
     {
@@ -179,7 +179,7 @@ internal static unsafe class ExceptionHelpers
     /// <param name="isLanguageException">On return, indicates whether the error originated from a language exception.</param>
     /// <returns><c>true</c> if restricted error info was found; otherwise, <c>false</c>.</returns>
     internal static bool TryGetRestrictedLanguageErrorInfo(
-        this Exception exception,
+        Exception exception,
         out WindowsRuntimeObjectReference? restrictedErrorObject,
         out bool isLanguageException)
     {

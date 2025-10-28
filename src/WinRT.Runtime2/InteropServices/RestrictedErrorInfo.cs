@@ -65,7 +65,7 @@ public static unsafe class RestrictedErrorInfo
 
                             if (errRef != null)
                             {
-                                exception.AddExceptionDataForRestrictedErrorInfo(errRef, true);
+                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, errRef, true);
                             }
 
                             return exception;
@@ -233,7 +233,7 @@ public static unsafe class RestrictedErrorInfo
 
         try
         {
-            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
+            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
                 if (restrictedErrorObject != null)
                 {
@@ -269,7 +269,7 @@ public static unsafe class RestrictedErrorInfo
             // If the exception has an IRestrictedErrorInfo, use that as our error info
             // to allow to propagate the original error through WinRT with the end to end information
             // rather than losing that context.
-            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
+            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
             {
                 // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                 // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
