@@ -90,7 +90,8 @@ internal static unsafe class AgileObjectReferenceExtensions
 
         Marshal.ThrowExceptionForHR(hresult);
 
-        // If 'Resolve' succeeded, the resulting object is guaranteed to be not 'null'
-        return WindowsRuntimeObjectReference.Create(pObjectReference, in iid)!;
+        // If 'Resolve' succeeded, the resulting object is guaranteed to be not 'null'.
+        // We don't need to do another 'QueryInterface', as 'Resolve' guarantees things.
+        return WindowsRuntimeObjectReference.CreateUnsafe(pObjectReference, in iid)!;
     }
 }
