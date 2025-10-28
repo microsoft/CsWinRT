@@ -87,4 +87,25 @@ public static unsafe class WindowsRuntimeMarshal
 
         return false;
     }
+
+    /// <summary>
+    /// Tries to retrieve a native object from a managed object, if it is actually a wrapper of some native object.
+    /// </summary>
+    /// <param name="managedObject">The managed object to try to get a native object from.</param>
+    /// <param name="result">The resulting native object, if successfully retrieved.</param>
+    /// <returns>Whether <paramref name="managedObject"/> was a reference to a native object, and <paramref name="result"/> could be retrieved.</returns>
+    public static bool TryGetNativeObject(object? managedObject, out void* result)
+    {
+        // If the input object is wrapping a native object, we can unwrap it and return it after incrementing its reference count
+        if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(managedObject, out WindowsRuntimeObjectReference? objectReference))
+        {
+            result = objectReference.GetThisPtr();
+
+            return true;
+        }
+
+        result = null;
+
+        return false;
+    }
 }
