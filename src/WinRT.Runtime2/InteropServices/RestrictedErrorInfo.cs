@@ -253,7 +253,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 {
                     try
                     {
-                        ILanguageExceptionErrorInfo2Methods.CapturePropagationContext((void*)languageErrorInfo2Ptr, exception);
+                        using WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                        ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
+                            (void*)languageErrorInfo2Ptr,
+                            managedExceptionWrapper.GetThisPtrUnsafe()).Assert();
                     }
                     finally
                     {
