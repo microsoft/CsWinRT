@@ -7691,7 +7691,7 @@ return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
             if (sealed)
             {
                 w.write(R"(
-if (WindowsRuntimeMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))
+if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))
 {
 return objectReference.AsValue();
 }
