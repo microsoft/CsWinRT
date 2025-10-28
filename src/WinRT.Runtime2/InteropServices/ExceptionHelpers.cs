@@ -9,8 +9,23 @@ namespace WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0051 // TODO
 
+/// <summary>
+/// Provides helper methods for working with restricted error information and language-specific exceptions
+/// in Windows Runtime interop scenarios.
+/// </summary>
+/// <remarks>
+/// These methods manage COM pointers, propagate language exceptions, and attach restricted error info
+/// to managed exceptions for diagnostic and interop purposes.
+/// </remarks>
 internal static unsafe class ExceptionHelpers
 {
+    /// <summary>
+    /// Retrieves the current restricted error info object and sets it for propagation if available.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="WindowsRuntimeObjectReferenceValue"/> representing the restricted error info object,
+    /// or <c>default</c> if none is available.
+    /// </returns>
     internal static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
         if (WindowsRuntimeImports.GetRestrictedErrorInfo == null)
@@ -33,8 +48,16 @@ internal static unsafe class ExceptionHelpers
         return new(restrictedErrorInfoPtr);
     }
 
-    // This is a helper method specifically to be used by exception propagation scenarios where we carefully
-    // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
+    /// <summary>
+    /// Attempts to retrieve a managed language exception from a restricted error info pointer.
+    /// This is a helper method specifically to be used by exception propagation scenarios where we carefully
+    /// manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
+    /// </summary>
+    /// <param name="languageErrorInfoPtr">Pointer to the language error info COM object.</param>
+    /// <param name="hr">The HRESULT associated with the error.</param>
+    /// <returns>
+    /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
+    /// </returns>
     internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hr)
     {
         // Check the error info first for the language exception.
@@ -85,6 +108,15 @@ internal static unsafe class ExceptionHelpers
         return null;
     }
 
+
+    /// <summary>
+    /// Internal helper to retrieve a managed language exception from a COM pointer.
+    /// </summary>
+    /// <param name="languageErrorInfoPtr">Pointer to the language error info COM object.</param>
+    /// <param name="hr">The HRESULT associated with the error.</param>
+    /// <returns>
+    /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
+    /// </returns>
     internal static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hr)
     {
         if (languageErrorInfoPtr == null)
@@ -115,6 +147,13 @@ internal static unsafe class ExceptionHelpers
         return null;
     }
 
+
+    /// <summary>
+    /// Adds restricted error info metadata to the <see cref="Exception.Data"/> dictionary.
+    /// </summary>
+    /// <param name="ex">The exception to augment.</param>
+    /// <param name="restrictedErrorObject">The restricted error info object reference.</param>
+    /// <param name="hasRestrictedLanguageErrorObject">Indicates whether a language-specific error object exists.</param>
     internal static void AddExceptionDataForRestrictedErrorInfo(
         this Exception ex,
         WindowsRuntimeObjectReference restrictedErrorObject,
@@ -130,6 +169,13 @@ internal static unsafe class ExceptionHelpers
         }
     }
 
+    /// <summary>
+    /// Attempts to retrieve restricted error info metadata from an exception.
+    /// </summary>
+    /// <param name="exception">The exception to inspect.</param>
+    /// <param name="restrictedErrorObject">On return, the restricted error info object reference if present.</param>
+    /// <param name="isLanguageException">On return, indicates whether the error originated from a language exception.</param>
+    /// <returns><c>true</c> if restricted error info was found; otherwise, <c>false</c>.</returns>
     internal static bool TryGetRestrictedLanguageErrorInfo(
         this Exception exception,
         out WindowsRuntimeObjectReference? restrictedErrorObject,
