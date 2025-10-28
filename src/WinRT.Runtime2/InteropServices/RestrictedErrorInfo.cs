@@ -202,15 +202,15 @@ public static unsafe class RestrictedErrorInfo
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Throw(int errorCode)
         {
-            Exception? ex = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
+            Exception? exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
 
             if (restoredExceptionFromGlobalState)
             {
-                ExceptionDispatchInfo.Capture(ex).Throw();
+                ExceptionDispatchInfo.Capture(exception).Throw();
             }
             else
             {
-                throw ex;
+                throw exception;
             }
         }
     }
