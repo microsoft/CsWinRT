@@ -16,26 +16,6 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class WindowsRuntimeMarshal
 {
     /// <summary>
-    /// Checks whether a pointer to a COM object is actually a reference to a CCW produced for a managed object that was marshalled to native code.
-    /// </summary>
-    /// <param name="externalComObject">The external COM object to check.</param>
-    /// <returns>Whether <paramref name="externalComObject"/> refers to a CCW for a managed object, rather than a native COM object.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsReferenceToManagedObject(void* externalComObject)
-    {
-        ArgumentNullException.ThrowIfNull(externalComObject);
-
-        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
-
-        return
-            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
-            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
-            unknownVftbl->Release == runtimeVftbl->Release;
-    }
-
-    /// <summary>
     /// Checks whether two objects are the same, or represent the same underlying native object.
     /// </summary>
     /// <param name="left">The first object to compare.</param>
@@ -65,6 +45,26 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Checks whether a pointer to a COM object is actually a reference to a CCW produced for a managed object that was marshalled to native code.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to check.</param>
+    /// <returns>Whether <paramref name="externalComObject"/> refers to a CCW for a managed object, rather than a native COM object.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsReferenceToManagedObject(void* externalComObject)
+    {
+        ArgumentNullException.ThrowIfNull(externalComObject);
+
+        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
+        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
+
+        return
+            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
+            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
+            unknownVftbl->Release == runtimeVftbl->Release;
     }
 
     /// <summary>
