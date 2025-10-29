@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Callback types to activate a Windows Runtime object with custom logic.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static class WindowsRuntimeActivationFactoryCallback
 {
     /// <summary>
@@ -18,6 +23,10 @@ public static class WindowsRuntimeActivationFactoryCallback
     /// <param name="innerInterface">The resulting non-delegating <c>IInspectable</c> object.</param>
     /// <param name="defaultInterface">The resulting default interface pointer.</param>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public unsafe delegate void DerivedComposed(
         ReadOnlySpan<object?> additionalParameters,
         WindowsRuntimeObject? baseInterface,
@@ -30,5 +39,9 @@ public static class WindowsRuntimeActivationFactoryCallback
     /// <param name="additionalParameters">The additional parameters to provide to the activation callback.</param>
     /// <param name="defaultInterface">The resulting default interface pointer.</param>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#activation"/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public unsafe delegate void DerivedSealed(ReadOnlySpan<object?> additionalParameters, out void* defaultInterface);
 }
