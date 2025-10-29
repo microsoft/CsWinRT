@@ -162,6 +162,48 @@ internal static unsafe class ExceptionHelpers
         }
     }
 
+    internal static void AddExceptionDataForRestrictedErrorInfo(
+        Exception exception,
+        string? description,
+        string? restrictedError,
+        string? restrictedErrorReference,
+        string? restrictedCapabilitySid,
+        WindowsRuntimeObjectReference? restrictedErrorObject,
+        bool hasRestrictedLanguageErrorObject = false,
+        Exception? internalGetGlobalErrorStateException = null)
+    {
+        IDictionary dict = exception.Data;
+        if (dict != null)
+        {
+            if (description != null)
+            {
+                dict["Description"] = description;
+            }
+            if (restrictedError != null)
+            {
+                dict["RestrictedDescription"] = restrictedError;
+            }
+            if (restrictedErrorReference != null)
+            {
+                dict["RestrictedErrorReference"] = restrictedErrorReference;
+            }
+            if (restrictedCapabilitySid != null)
+            {
+                dict["RestrictedCapabilitySid"] = restrictedCapabilitySid;
+            }
+
+            // Keep the error object alive so that user could retrieve error information
+            // using Data["RestrictedErrorReference"]
+            dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
+            dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
+
+            if (internalGetGlobalErrorStateException != null)
+            {
+                dict["_InternalCsWinRTException"] = internalGetGlobalErrorStateException;
+            }
+        }
+    }
+
     /// <summary>
     /// Attempts to retrieve restricted error info metadata from an exception.
     /// </summary>

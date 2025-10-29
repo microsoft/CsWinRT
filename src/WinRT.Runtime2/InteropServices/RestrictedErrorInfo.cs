@@ -37,9 +37,15 @@ public static unsafe class RestrictedErrorInfo
     public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         restoredExceptionFromGlobalState = false;
+        string? description = null;
+        string? restrictedError = null;
+        string? restrictedErrorReference = null;
+        string? restrictedCapabilitySid = null;
+        string? errorMessage = null;
         Exception? exception;
-        string errorMessage = string.Empty;
-        Exception internalGetGlobalErrorStateException;
+        Exception? internalGetGlobalErrorStateException = null;
+        WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
+
 
         using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
 
@@ -77,11 +83,11 @@ public static unsafe class RestrictedErrorInfo
                     }
                 }
 
-                WindowsRuntimeObjectReference? restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
 
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string? description, out HRESULT hrLocal, out string? restrictedError, out string? restrictedCapabilitySid);
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedError, out restrictedCapabilitySid);
 
-                string restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
 
                 if (errorCode == hrLocal)
                 {
@@ -177,6 +183,16 @@ public static unsafe class RestrictedErrorInfo
 
         // Ensure HResult matches.
         exception.HResult = errorCode;
+
+        ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(
+            exception,
+            description,
+            restrictedError,
+            restrictedErrorReference,
+            restrictedCapabilitySid,
+            restrictedErrorInfoToSave,
+            false,
+            internalGetGlobalErrorStateException);
 
         return exception;
     }
