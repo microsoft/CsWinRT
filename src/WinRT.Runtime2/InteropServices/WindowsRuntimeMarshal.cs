@@ -132,16 +132,10 @@ public static unsafe class WindowsRuntimeMarshal
             return null;
         }
 
-        // If 'value' is a 'WindowsRuntimeObject', return the wrapped native object reference
-        if (managedObject is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
+        // If 'value' is some RCW type we recognize, return the wrapped native object reference
+        if (TryGetNativeObject(managedObject, out void* nativeObject))
         {
-            return windowsRuntimeObject.NativeObjectReference.GetThisPtr();
-        }
-
-        // If 'value' is a managed wrapper for a native delegate, unwrap it directly
-        if (managedObject is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
-        {
-            return windowsRuntimeDelegate.GetThisPtr();
+            return nativeObject;
         }
 
         // Marshal 'value' as an 'IUnknown' (this method will take care of correctly marshalling objects with the right vtables)
@@ -162,10 +156,10 @@ public static unsafe class WindowsRuntimeMarshal
             return null;
         }
 
-        // If the value is a CCW we recognize, just unwrap it directly
-        if (IsReferenceToManagedObject(value))
+        // If the value is a CCW we recognize, retrieve the original managed object
+        if (TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the object as an opaque object, as we have no static type information available
