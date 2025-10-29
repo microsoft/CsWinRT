@@ -176,34 +176,37 @@ internal static unsafe class ExceptionHelpers
         bool hasRestrictedLanguageErrorObject = false,
         Exception? internalGetGlobalErrorStateException = null)
     {
-        IDictionary dict = exception.Data;
-        if (dict != null)
+        IDictionary? exceptionData = exception.Data;
+
+        if (exceptionData is not null)
         {
             if (description != null)
             {
-                dict["Description"] = description;
-            }
-            if (restrictedError != null)
-            {
-                dict["RestrictedDescription"] = restrictedError;
-            }
-            if (restrictedErrorReference != null)
-            {
-                dict["RestrictedErrorReference"] = restrictedErrorReference;
-            }
-            if (restrictedCapabilitySid != null)
-            {
-                dict["RestrictedCapabilitySid"] = restrictedCapabilitySid;
+                exceptionData[WellKnownExceptionDataKeys.Description] = description;
             }
 
-            // Keep the error object alive so that user could retrieve error information
-            // using Data["RestrictedErrorReference"]
-            dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
-            dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
+            if (restrictedError != null)
+            {
+                exceptionData[WellKnownExceptionDataKeys.RestrictedDescription] = restrictedError;
+            }
+
+            if (restrictedErrorReference != null)
+            {
+                exceptionData[WellKnownExceptionDataKeys.RestrictedErrorReference] = restrictedErrorReference;
+            }
+
+            if (restrictedCapabilitySid != null)
+            {
+                exceptionData[WellKnownExceptionDataKeys.RestrictedCapabilitySid] = restrictedCapabilitySid;
+            }
+
+            // Propagate the 'IRestrictedErrorInfo' object reference, so we can restore it later to forward the exception info
+            exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
+            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
 
             if (internalGetGlobalErrorStateException != null)
             {
-                dict["_InternalCsWinRTException"] = internalGetGlobalErrorStateException;
+                exceptionData[WellKnownExceptionDataKeys.InternalCsWinRTException] = internalGetGlobalErrorStateException;
             }
         }
     }
