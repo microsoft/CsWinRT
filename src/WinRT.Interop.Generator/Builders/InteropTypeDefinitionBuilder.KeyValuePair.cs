@@ -89,6 +89,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 int typeArgumentIndex = name == "get_Key" ? 0 : 1;
                 TypeSignature typeArgument = keyValuePairType.TypeArguments[typeArgumentIndex];
+                TypeSignature typeArgumentAbiType = typeArgument.IsValueType ? typeArgument.Import(module).MakePointerType() : module.CorLibTypeFactory.Void.MakePointerType();
 
                 // Define the method as follows:
                 //
@@ -101,7 +102,7 @@ internal partial class InteropTypeDefinitionBuilder
                         returnType: module.CorLibTypeFactory.Int32,
                         parameterTypes: [
                             module.CorLibTypeFactory.Void.MakePointerType(),
-                            typeArgument.Import(module).MakePointerType()]))
+                            typeArgumentAbiType]))
                 {
                     CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
                 };
@@ -172,7 +173,8 @@ internal partial class InteropTypeDefinitionBuilder
                 _ = instructions.Add(Ldarg_1);
                 _ = instructions.Add(Ldloca_S, loc_1_keyValuePair);
                 _ = instructions.Add(Call, get_MethodRef);
-                _ = instructions.Add(Stind_I);
+                // TODO call marshaler
+                // _ = instructions.Add(Stind_I);
                 _ = instructions.Add(Ldc_I4_0);
                 _ = instructions.Add(Stloc_0);
                 _ = instructions.Add(Leave_S, ldloc_0_returnHResult.CreateLabel());
