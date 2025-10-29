@@ -334,10 +334,10 @@ public static unsafe class RestrictedErrorInfo
                 else if (isLanguageException)
                 {
                     // Remove object reference to avoid cycles between error info holding exception
-                    // and exception holding error info.  We currently can't avoid this cycle
+                    // and exception holding error info. We currently can't avoid this cycle
                     // when the C# exception is caught on the C# side.
-                    exception.Data.Remove("__RestrictedErrorObjectReference");
-                    exception.Data.Remove("__HasRestrictedLanguageErrorObject");
+                    exception.Data.Remove(WellKnownExceptionDataKeys.RestrictedErrorObjectReference);
+                    exception.Data.Remove(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject);
                 }
                 if (restrictedErrorObject != null)
                 {

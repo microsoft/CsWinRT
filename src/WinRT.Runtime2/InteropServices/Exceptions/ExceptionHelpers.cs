@@ -160,8 +160,8 @@ internal static unsafe class ExceptionHelpers
         {
             // Keep the error object alive so that user could retrieve error information
             // using Data["RestrictedErrorReference"]
-            dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
-            dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
+            dict[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
+            dict[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
         }
     }
 
@@ -221,18 +221,19 @@ internal static unsafe class ExceptionHelpers
     {
         restrictedErrorObject = null;
         isLanguageException = false;
-        IDictionary dictionary = exception.Data;
 
-        if (dictionary != null)
+        IDictionary? exceptionData = exception.Data;
+
+        if (exceptionData is not null)
         {
-            if (dictionary.Contains("__RestrictedErrorObjectReference"))
+            if (exceptionData.Contains(WellKnownExceptionDataKeys.RestrictedErrorObjectReference))
             {
-                restrictedErrorObject = dictionary["__RestrictedErrorObjectReference"] as WindowsRuntimeObjectReference;
+                restrictedErrorObject = exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] as WindowsRuntimeObjectReference;
             }
 
-            if (dictionary.Contains("__HasRestrictedLanguageErrorObject"))
+            if (exceptionData.Contains(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject))
             {
-                isLanguageException = (bool)dictionary["__HasRestrictedLanguageErrorObject"]!;
+                isLanguageException = (bool)exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject]!;
             }
 
             return restrictedErrorObject is not null;
