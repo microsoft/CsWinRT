@@ -56,9 +56,9 @@ public static unsafe class RestrictedErrorInfo
             if (restrictedErrorInfoValuePtr != null)
             {
                 if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                        restrictedErrorInfoValuePtr,
-                        in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
-                        out void* languageErrorInfoPtr)))
+                    restrictedErrorInfoValuePtr,
+                    in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
+                    out void* languageErrorInfoPtr)))
                 {
                     try
                     {

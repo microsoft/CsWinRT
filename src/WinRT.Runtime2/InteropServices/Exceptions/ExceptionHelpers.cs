@@ -26,7 +26,7 @@ internal static unsafe class ExceptionHelpers
     /// A <see cref="WindowsRuntimeObjectReferenceValue"/> representing the restricted error info object,
     /// or <c>default</c> if none is available.
     /// </returns>
-    internal static unsafe WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
+    public static WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
         void* restrictedErrorInfoPtr;
         WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr).Assert();
@@ -51,7 +51,7 @@ internal static unsafe class ExceptionHelpers
     /// <returns>
     /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
     /// </returns>
-    internal static unsafe Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hresult)
+    public static Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hresult)
     {
         // Check the error info first for the language exception.
         Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hresult);
@@ -113,7 +113,7 @@ internal static unsafe class ExceptionHelpers
     /// <returns>
     /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
     /// </returns>
-    internal static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hresult)
+    private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hresult)
     {
         if (languageErrorInfoPtr == null)
         {
@@ -150,18 +150,19 @@ internal static unsafe class ExceptionHelpers
     /// <param name="exception">The exception to augment.</param>
     /// <param name="restrictedErrorObject">The restricted error info object reference.</param>
     /// <param name="hasRestrictedLanguageErrorObject">Indicates whether a language-specific error object exists.</param>
-    internal static void AddExceptionDataForRestrictedErrorInfo(
+    public static void AddExceptionDataForRestrictedErrorInfo(
         Exception exception,
         WindowsRuntimeObjectReference restrictedErrorObject,
         bool hasRestrictedLanguageErrorObject)
     {
-        IDictionary dict = exception.Data;
-        if (dict != null)
+        IDictionary exceptionData = exception.Data;
+
+        if (exceptionData != null)
         {
             // Keep the error object alive so that user could retrieve error information
             // using Data["RestrictedErrorReference"]
-            dict[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
-            dict[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
+            exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
+            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
         }
     }
 
@@ -214,7 +215,7 @@ internal static unsafe class ExceptionHelpers
     /// <param name="restrictedErrorObject">On return, the restricted error info object reference if present.</param>
     /// <param name="isLanguageException">On return, indicates whether the error originated from a language exception.</param>
     /// <returns><c>true</c> if restricted error info was found; otherwise, <c>false</c>.</returns>
-    internal static bool TryGetRestrictedLanguageErrorInfo(
+    public static bool TryGetRestrictedLanguageErrorInfo(
         Exception exception,
         out WindowsRuntimeObjectReference? restrictedErrorObject,
         out bool isLanguageException)
