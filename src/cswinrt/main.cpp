@@ -225,6 +225,16 @@ Where <spec> is one or more of:
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
                             bool type_requires_abi = true;
+
+                            for (auto&& attribute : type.CustomAttribute())
+                            {
+                                auto attribute_name = attribute.TypeNamespaceAndName();
+                                if (attribute_name.first == "Windows.Foundation.Metadata" && attribute_name.second == "DeprecatedAttribute")
+                                {
+                                    write_deprecated_attribute(w, attribute);
+                                    break;
+                                }
+                            }
                             switch (get_category(type))
                             {
                             case category::class_type:
@@ -300,35 +310,68 @@ Where <spec> is one or more of:
                                     if (is_attribute_type(type)) { continue; }
                                     auto guard{ w.push_generic_params(type.GenericParam()) };
 
+                                    bool is_deprecated = false;
+                                    CustomAttribute deprecatedAttribute;
+
+                                    for (auto&& attribute : type.CustomAttribute())
+                                    {
+                                        auto attribute_name = attribute.TypeNamespaceAndName();
+                                        if (attribute_name.first == "Windows.Foundation.Metadata" && attribute_name.second == "DeprecatedAttribute")
+                                        {
+                                            is_deprecated = true;
+                                            deprecatedAttribute = attribute;
+                                            break;
+                                        }
+                                    }
                                     switch (get_category(type))
                                     {
                                     case category::class_type:
+                                        if (is_deprecated)
+                                            write_deprecated_attribute(w, deprecatedAttribute);
                                         write_abi_class(w, type);
                                         if (settings.component && componentActivatableClasses.count(type) == 1)
                                         {
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_winrt_exposed_type_class(w, type, true);
                                         }
+                                        if (is_deprecated)
+                                            write_deprecated_attribute(w, deprecatedAttribute);
                                         write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
                                         break;
                                     case category::delegate_type:
+                                        if (is_deprecated)
+                                            write_deprecated_attribute(w, deprecatedAttribute);
                                         write_abi_delegate(w, type);
+                                        if (is_deprecated)
+                                            write_deprecated_attribute(w, deprecatedAttribute);
                                         write_winrt_exposed_type_class(w, type, false);
                                         break;
                                     case category::interface_type:
                                         if (settings.netstandard_compat)
                                         {
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_static_abi_classes(w, type);
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_abi_interface_netstandard(w, type);
                                         }
                                         else
                                         {
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_static_abi_classes(w, type);
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_abi_interface(w, type);
                                         }
                                         break;
                                     case category::struct_type:
                                         if (!is_type_blittable(type))
                                         {
+                                            if (is_deprecated)
+                                                write_deprecated_attribute(w, deprecatedAttribute);
                                             write_abi_struct(w, type);
                                         }
                                         break;
