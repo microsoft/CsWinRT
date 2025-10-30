@@ -105,14 +105,10 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
                 case RepeatBehaviorType.Count:
 
-                    global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder();
-
-                    sb.AppendFormat(
-                        formatProvider,
-                        "{0:" + format + "}x",
-                        Count);
-
-                    return sb.ToString();
+                    DefaultInterpolatedStringHandler handler = new(1, 1, formatProvider, stackalloc char[64]);
+                    handler.AppendFormatted(Count, format);
+                    handler.AppendLiteral("x");
+                    return handler.ToStringAndClear();
 
                 case RepeatBehaviorType.Duration:
 

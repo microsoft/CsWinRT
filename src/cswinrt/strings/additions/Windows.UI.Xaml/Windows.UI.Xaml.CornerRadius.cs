@@ -52,7 +52,7 @@ namespace Windows.UI.Xaml
 
         internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
-            char listSeparator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(cultureInfo);
+            char listSeparator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
             // Initial capacity [64] is an estimate based on a sum of:
             // 48 = 4x double (twelve digits is generous for the range of values likely)

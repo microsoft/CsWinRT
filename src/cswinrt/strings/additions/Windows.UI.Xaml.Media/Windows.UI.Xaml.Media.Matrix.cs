@@ -50,16 +50,20 @@ namespace Windows.UI.Xaml.Media
             }
 
             // Helper to get the numeric list separator for a given culture.
-            char separator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(provider);
-            return string.Format(provider,
-                                 "{1:" + format + "}{0}{2:" + format + "}{0}{3:" + format + "}{0}{4:" + format + "}{0}{5:" + format + "}{0}{6:" + format + "}",
-                                 separator,
-                                 M11,
-                                 M12,
-                                 M21,
-                                 M22,
-                                 OffsetX,
-                                 OffsetY);
+            char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
+            DefaultInterpolatedStringHandler handler = new(0, 11, provider, stackalloc char[64]);
+            handler.AppendFormatted(M11, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(M12, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(M21, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(M22, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(OffsetX, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(OffsetY, format);
+            return handler.ToStringAndClear();
         }
 
         public Point Transform(Point point)

@@ -90,7 +90,6 @@
     <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WellKnownStreamInterfaceIIDs.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />

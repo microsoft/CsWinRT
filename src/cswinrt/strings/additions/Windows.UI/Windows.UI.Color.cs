@@ -38,26 +38,35 @@ namespace Windows.UI
 
         internal string ConvertToString(string format, IFormatProvider provider)
         {
-            global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder();
-
             if (format == null)
             {
-                sb.AppendFormat(provider, "#{0:X2}", A);
-                sb.AppendFormat(provider, "{0:X2}", R);
-                sb.AppendFormat(provider, "{0:X2}", G);
-                sb.AppendFormat(provider, "{0:X2}", B);
+                DefaultInterpolatedStringHandler handler = new(1, 4, provider, stackalloc char[32]);
+                handler.AppendLiteral("#");
+                handler.AppendFormatted(A, "X2");
+                handler.AppendFormatted(R, "X2");
+                handler.AppendFormatted(G, "X2");
+                handler.AppendFormatted(B, "X2");
+                return handler.ToStringAndClear();
             }
             else
             {
                 // Helper to get the numeric list separator for a given culture.
-                char separator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(provider);
+                char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
 
-                sb.AppendFormat(provider,
-                    "sc#{1:" + format + "}{0} {2:" + format + "}{0} {3:" + format + "}{0} {4:" + format + "}",
-                    separator, A, R, G, B);
+                DefaultInterpolatedStringHandler handler = new(6, 7, provider, stackalloc char[32]);
+                handler.AppendLiteral("sc#");
+                handler.AppendFormatted(A, format);
+                handler.AppendFormatted(separator);
+                handler.AppendLiteral(" ");
+                handler.AppendFormatted(R, format);
+                handler.AppendFormatted(separator);
+                handler.AppendLiteral(" ");
+                handler.AppendFormatted(G, format);
+                handler.AppendFormatted(separator);
+                handler.AppendLiteral(" ");
+                handler.AppendFormatted(B, format);
+                return handler.ToStringAndClear();
             }
-
-            return sb.ToString();
         }
     }
 }

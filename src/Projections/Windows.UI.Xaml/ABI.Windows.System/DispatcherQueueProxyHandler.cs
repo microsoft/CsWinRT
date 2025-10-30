@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable CSWINRT3001
+
 #nullable enable
 
 namespace ABI.Windows.System;
@@ -143,64 +145,14 @@ internal unsafe struct DispatcherQueueProxyHandler
             }
         }
 
-        /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
-        private static ref readonly Guid IID_IUnknown
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00,
-                    0x00, 0x00,
-                    0xC0,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x46
-                ];
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
-        /// <summary>The IID for <c>IAgileObject</c> (94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90).</summary>
-        private static ref readonly Guid IID_IAgileObject
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0x94, 0x2B, 0xEA, 0x94,
-                    0xCC, 0xE9,
-                    0xE0, 0x49,
-                    0xC0,
-                    0xFF,
-                    0xEE,
-                    0x64,
-                    0xCA,
-                    0x8F,
-                    0x5B,
-                    0x90
-                ];
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
         /// <summary>
         /// Implements <c>IUnknown.QueryInterface(REFIID, void**)</c>.
         /// </summary>
         [UnmanagedCallersOnly]
         public static int QueryInterface(DispatcherQueueProxyHandler* @this, Guid* riid, void** ppvObject)
         {
-            if (riid->Equals(IID_IUnknown) ||
-                riid->Equals(IID_IAgileObject) ||
+            if (riid->Equals(WellKnownInterfaceIIDs.IID_IUnknown) ||
+                riid->Equals(WellKnownInterfaceIIDs.IID_IAgileObject) ||
                 riid->Equals(IID_IDispatcherQueueHandler))
             {
                 Interlocked.Increment(ref @this->referenceCount);

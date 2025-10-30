@@ -246,13 +246,13 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
         {
             Entries.IBuffer.IID = ABI.InterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
             Entries.IBuffer.Vtable = ABI.Windows.Storage.Streams.IBufferImpl.Vtable;
-            Entries.IBufferByteAccess.IID = ABI.Windows.Storage.Streams.WellKnownStreamInterfaceIIDs.IID_IBufferByteAccess;
+            Entries.IBufferByteAccess.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IBufferByteAccess;
             Entries.IBufferByteAccess.Vtable = ABI.Windows.Storage.Streams.IBufferByteAccessImpl.Vtable;
             Entries.IStringable.IID = IStringableImpl.IID;
             Entries.IStringable.Vtable = IStringableImpl.Vtable;
             Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
             Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-            Entries.IMarshal.IID = ABI.Windows.Storage.Streams.WellKnownStreamInterfaceIIDs.IID_IMarshal;
+            Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
             Entries.IMarshal.Vtable = ABI.Windows.Storage.Streams.IBufferMarshalImpl.Vtable;
             Entries.IAgileObject.IID = IAgileObjectImpl.IID;
             Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;

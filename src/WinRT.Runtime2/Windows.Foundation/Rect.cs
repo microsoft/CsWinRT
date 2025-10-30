@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0046
 

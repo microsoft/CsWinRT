@@ -411,16 +411,40 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
 
             // Helper to get the numeric list separator for a given culture.
-            char separator = global::ABI.Windows.Foundation.TokenizerHelper.GetNumericListSeparator(provider);
-            return string.Format(provider,
-                                 "{1:" + format + "}{0}{2:" + format + "}{0}{3:" + format + "}{0}{4:" + format + "}{0}{5:" + format +
-                                 "}{0}{6:" + format + "}{0}{7:" + format + "}{0}{8:" + format + "}{0}{9:" + format + "}{0}{10:" + format +
-                                 "}{0}{11:" + format + "}{0}{12:" + format + "}{0}{13:" + format + "}{0}{14:" + format + "}{0}{15:" + format + "}{0}{16:" + format + "}",
-                                 separator,
-                                 _m11, _m12, _m13, _m14,
-                                 _m21, _m22, _m23, _m24,
-                                 _m31, _m32, _m33, _m34,
-                                 _offsetX, _offsetY, _offsetZ, _m44);
+            char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
+            DefaultInterpolatedStringHandler handler = new(0, 31, provider, stackalloc char[64]);
+            handler.AppendFormatted(_m11, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m12, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m13, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m14, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m21, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m22, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m23, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m24, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m31, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m32, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m33, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m34, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetX, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetY, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetZ, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m44, format);
+            return handler.ToStringAndClear();
         }
 
         public override int GetHashCode()

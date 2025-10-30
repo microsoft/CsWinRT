@@ -4,9 +4,8 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using WindowsRuntime;
 
-namespace ABI.Windows.Foundation;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Helper class for tokenizing used by generated projections.
@@ -31,8 +30,8 @@ public static class TokenizerHelper
 
         // If the decimal separator is ',', use ';', otherwise use ','
         return
-            (numberFormat.NumberDecimalSeparator.Length > 0) &&
-            (numberFormat.NumberDecimalSeparator[0] == CommaSeparator)
+            numberFormat.NumberDecimalSeparator.Length > 0 &&
+            numberFormat.NumberDecimalSeparator[0] == CommaSeparator
             ? SemicolonSeparator
             : CommaSeparator;
     }
