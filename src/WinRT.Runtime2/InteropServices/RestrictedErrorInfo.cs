@@ -37,42 +37,58 @@ public static unsafe class RestrictedErrorInfo
     public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         restoredExceptionFromGlobalState = false;
-        Exception? ex;
-        string errorMessage = string.Empty;
-        Exception internalGetGlobalErrorStateException;
+        string? description = null;
+        string? restrictedError = null;
+        string? restrictedErrorReference = null;
+        string? restrictedCapabilitySid = null;
+        string? errorMessage = null;
+        Exception? exception;
+        Exception? internalGetGlobalErrorStateException = null;
+        WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
 
-        WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+
+        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
 
         try
         {
             void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
-            if (restrictedErrorInfoValuePtr != default)
+
+            if (restrictedErrorInfoValuePtr != null)
             {
-                if (Marshal.QueryInterface((IntPtr)restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo, out nint languageErrorInfoPtr) >= 0)
+                if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
+                        restrictedErrorInfoValuePtr,
+                        in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo,
+                        out void* languageErrorInfoPtr)))
                 {
                     try
                     {
-                        ex = ExceptionHelpers.GetLanguageException((void*)languageErrorInfoPtr, errorCode);
-                        if (ex is not null)
+                        exception = ExceptionHelpers.GetLanguageException(languageErrorInfoPtr, errorCode);
+
+                        if (exception is not null)
                         {
                             restoredExceptionFromGlobalState = true;
-                            WindowsRuntimeObjectReference? errRef = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
-                            if (errRef != null)
+                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+
+                            if (restrictedErrorInfo != null)
                             {
-                                ex.AddExceptionDataForRestrictedErrorInfo(errRef, true);
+                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, restrictedErrorInfo, true);
                             }
-                            return ex;
+
+                            return exception;
                         }
                     }
                     finally
                     {
-                        _ = Marshal.Release(languageErrorInfoPtr);
+                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfoPtr);
                     }
                 }
 
-                WindowsRuntimeObjectReference? restrictedErrorInfoToSave = WindowsRuntimeObjectReference.Create(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out string description, out int hrLocal, out string restrictedError, out string restrictedCapabilitySid);
-                string restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedError, out restrictedCapabilitySid);
+
+                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+
                 if (errorCode == hrLocal)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
@@ -105,31 +121,66 @@ public static unsafe class RestrictedErrorInfo
             Debug.Assert(false, e.Message, e.StackTrace);
             internalGetGlobalErrorStateException = e;
         }
-        finally
+
+        if (string.IsNullOrWhiteSpace(errorMessage))
         {
-            restrictedErrorInfoValue.Dispose();
+            char* message = null;
+
+            if (WindowsRuntimeImports.FormatMessageW(0x13FF /* FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK */,
+                                        null,
+                                        (uint)errorCode,
+                                        0,
+                                        &message,
+                                        0,
+                                        null) > 0)
+            {
+                errorMessage = $"{new string(message)}(0x{errorCode:X8})";
+
+                // LocalHandle isn't needed since FormatMessage uses LMEM_FIXED,
+                // and while we can use Marshal.FreeHGlobal since it uses LocalFree internally,
+                // it's not guranteed that this behavior stays the same in the future,
+                // especially considering the method's name, so it's safer to use LocalFree directly.
+                _ = WindowsRuntimeImports.LocalFree(message);
+            }
         }
 
-        ex = errorCode switch
+
+        exception = errorCode switch
         {
-            WellKnownErrorCodes.E_CHANGED_STATE or WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE or WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL or WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT or WellKnownErrorCodes.APPMODEL_ERROR_NO_PACKAGE or WellKnownErrorCodes.COR_E_INVALIDOPERATION => !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException(),
+            // InvalidOperationException 
+            WellKnownErrorCodes.E_CHANGED_STATE or
+            WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE or
+            WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL or
+            WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT or
+            WellKnownErrorCodes.APPMODEL_ERROR_NO_PACKAGE or
+            WellKnownErrorCodes.COR_E_INVALIDOPERATION => !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException(),
+
+            // XamlParseException
             WellKnownErrorCodes.E_XAMLPARSEFAILED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException()
-                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException(),
+                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException()
+                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException(),
+
+            // LayoutCycleException
             WellKnownErrorCodes.E_LAYOUTCYCLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException()
-                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException(),
+                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException()
+                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException(),
+
+            // ElementNotAvailableException
             WellKnownErrorCodes.E_ELEMENTNOTAVAILABLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException()
-                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException(),
+                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException()
+                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException(),
+
+            // ElementNotEnabledException
             WellKnownErrorCodes.E_ELEMENTNOTENABLED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException()
-                                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException(),
+                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException()
+                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException(),
+
+            // COMException for invalid window handle with guidance
             WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE => new COMException(
-            @"Invalid window handle. (0x80070578)
-Consider WindowNative, InitializeWithWindow
-See https://aka.ms/cswinrt/interop#windows-sdk",
-                                WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE),
+                "Invalid window handle (0x80070578). Consider WindowNative, InitializeWithWindow. See https://aka.ms/cswinrt/interop#windows-sdk.",
+                WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE),
+
+            // Other common exceptions
             WellKnownErrorCodes.RO_E_CLOSED => !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty),
             WellKnownErrorCodes.E_POINTER => !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException(),
             WellKnownErrorCodes.E_NOTIMPL => !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException(),
@@ -148,13 +199,25 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             WellKnownErrorCodes.ERROR_BAD_FORMAT => !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException(),
             WellKnownErrorCodes.ERROR_CANCELLED => !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException(),
             WellKnownErrorCodes.ERROR_TIMEOUT => !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException(),
+
+            // Fallback to COMException
             _ => !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, errorCode) : new COMException($"0x{errorCode:X8}", errorCode),
         };
 
         // Ensure HResult matches.
-        ex.SetHResult(errorCode);
+        exception.HResult = errorCode;
 
-        return ex;
+        ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(
+            exception,
+            description,
+            restrictedError,
+            restrictedErrorReference,
+            restrictedCapabilitySid,
+            restrictedErrorInfoToSave,
+            false,
+            internalGetGlobalErrorStateException);
+
+        return exception;
     }
 
     /// <summary>
@@ -178,16 +241,15 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Throw(int errorCode)
         {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            Exception? ex = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            Exception? exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
+
             if (restoredExceptionFromGlobalState)
             {
-                ExceptionDispatchInfo.Capture(ex).Throw();
+                ExceptionDispatchInfo.Capture(exception).Throw();
             }
             else
             {
-                throw ex;
+                throw exception;
             }
         }
     }
@@ -205,10 +267,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     public static HRESULT GetHRForException(Exception? exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        int hresult = exception.HResult;
+
+        HRESULT hresult = exception.HResult;
+
         try
         {
-            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
+            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
                 if (restrictedErrorObject != null)
                 {
@@ -244,20 +308,27 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             // If the exception has an IRestrictedErrorInfo, use that as our error info
             // to allow to propagate the original error through WinRT with the end to end information
             // rather than losing that context.
-            if (exception.TryGetRestrictedLanguageErrorInfo(out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
+            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
             {
                 // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                 // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
                 if (!isLanguageException && restrictedErrorObject != null &&
-                    Marshal.QueryInterface((nint)restrictedErrorObject.GetThisPtrUnsafe(), WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2, out nint languageErrorInfo2Ptr) >= 0)
+                    WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
+                            restrictedErrorObject.GetThisPtrUnsafe(),
+                            in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
+                            out void* languageErrorInfo2Ptr)))
                 {
                     try
                     {
-                        ILanguageExceptionErrorInfo2Methods.CapturePropagationContext((void*)languageErrorInfo2Ptr, exception);
+                        using WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+
+                        ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
+                            languageErrorInfo2Ptr,
+                            managedExceptionWrapper.GetThisPtrUnsafe()).Assert();
                     }
                     finally
                     {
-                        _ = Marshal.Release(languageErrorInfo2Ptr);
+                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfo2Ptr);
                     }
                 }
                 else if (isLanguageException)
@@ -271,15 +342,18 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 if (restrictedErrorObject != null)
                 {
                     using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
+
                     _ = WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObjectValue.GetThisPtrUnsafe());
                 }
             }
             else
             {
                 string message = exception.Message;
+
                 if (string.IsNullOrEmpty(message))
                 {
                     Type exceptionType = exception.GetType();
+
                     if (exceptionType != null)
                     {
                         message = exceptionType.Name;
@@ -289,7 +363,9 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 fixed (char* lpMessage = message)
                 {
                     HStringMarshaller.ConvertToUnmanagedUnsafe(lpMessage, message.Length, out HStringReference hstring);
+
                     WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+
                     try
                     {
                         _ = WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring.HString, managedExceptionWrapper.GetThisPtrUnsafe());
@@ -317,12 +393,14 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     public static unsafe void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
-        WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+
+        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+
         void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
-        if (restrictedErrorInfoValuePtr != default)
+
+        if (restrictedErrorInfoValuePtr != null)
         {
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
-            restrictedErrorInfoValue.Dispose();
         }
     }
 }

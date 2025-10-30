@@ -16,6 +16,6 @@ internal unsafe struct IRestrictedErrorInfoVftbl
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, void**, int*, void**, void**, HRESULT> GetErrorDetails;
-    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetReference;
+    public delegate* unmanaged[MemberFunction]<void*, char**, HRESULT*, char**, char**, HRESULT> GetErrorDetails;
+    public delegate* unmanaged[MemberFunction]<void*, char**, HRESULT> GetReference;
 }

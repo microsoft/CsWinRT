@@ -94,8 +94,15 @@ internal static unsafe partial class WindowsRuntimeImports
     [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
     public static partial HRESULT GetRestrictedErrorInfo(void** ppRestrictedErrorInfo);
 
-    /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/roerrorapi/nf-roerrorapi-setrestrictederrorinfo"/>
+    /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-setrestrictederrorinfo"/>
     [LibraryImport("api-ms-win-core-winrt-error-l1-1-1.dll")]
     public static partial HRESULT SetRestrictedErrorInfo(void* pRestrictedErrorInfo);
 
+    /// <see href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-formatmessagew"/>
+    [LibraryImport("kernel32.dll")]
+    public static partial uint FormatMessageW(uint dwFlags, void* lpSource, uint dwMessageId, uint dwLanguageId, char** lpBuffer, uint nSize, void* pArguments);
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-localfree"/>
+    [LibraryImport("kernel32.dll")]
+    public static partial void* LocalFree(void* hMem);
 }
