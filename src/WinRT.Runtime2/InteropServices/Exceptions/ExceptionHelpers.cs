@@ -67,10 +67,13 @@ internal static unsafe class ExceptionHelpers
                             out void* languageErrorInfo2Ptr)))
         {
             void* currentLanguageExceptionErrorInfo2Ptr = null;
+
+            // TODO: Potential double free currentLanguageExceptionErrorInfo2Ptr if GetPreviousLanguageExceptionErrorInfoUnsafe fails on. Find a better way to handle this.
             try
             {
                 if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
                 {
+
                     while (currentLanguageExceptionErrorInfo2Ptr != null)
                     {
                         Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hresult);
