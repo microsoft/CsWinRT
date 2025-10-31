@@ -7,15 +7,20 @@ namespace Microsoft.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Duration>")]
     [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Duration : IEquatable<Duration>
+    public readonly struct Duration : IEquatable<Duration>
     {
         private readonly TimeSpan _timeSpan;
-        private DurationType _durationType;
+        private readonly DurationType _durationType;
 
         public Duration(TimeSpan timeSpan)
         {
             _durationType = DurationType.TimeSpan;
             _timeSpan = timeSpan;
+        }
+
+        private Duration(DurationType durationType)
+        {
+            _durationType = durationType;
         }
 
         public static implicit operator Duration(TimeSpan timeSpan)
@@ -177,7 +182,7 @@ namespace Microsoft.UI.Xaml
             return duration;
         }
 
-        public bool HasTimeSpan
+        public readonly bool HasTimeSpan
         {
             get
             {
@@ -189,10 +194,7 @@ namespace Microsoft.UI.Xaml
         {
             get
             {
-                Duration duration = default;
-                duration._durationType = DurationType.Automatic;
-
-                return duration;
+                return new Duration(DurationType.Automatic);
             }
         }
 
@@ -200,14 +202,11 @@ namespace Microsoft.UI.Xaml
         {
             get
             {
-                Duration duration = default;
-                duration._durationType = DurationType.Forever;
-
-                return duration;
+                return new Duration(DurationType.Forever);
             }
         }
 
-        public TimeSpan TimeSpan
+        public readonly TimeSpan TimeSpan
         {
             get
             {
@@ -222,17 +221,17 @@ namespace Microsoft.UI.Xaml
             }
         }
 
-        public Duration Add(Duration duration)
+        public readonly Duration Add(Duration duration)
         {
             return this + duration;
         }
 
-        public override bool Equals(object value)
+        public readonly override bool Equals(object value)
         {
-            return value is Duration && Equals((Duration)value);
+            return value is Duration duration && Equals(duration);
         }
 
-        public bool Equals(Duration duration)
+        public readonly bool Equals(Duration duration)
         {
             if (HasTimeSpan)
             {
@@ -256,7 +255,7 @@ namespace Microsoft.UI.Xaml
             return t1.Equals(t2);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             if (HasTimeSpan)
             {
@@ -268,12 +267,12 @@ namespace Microsoft.UI.Xaml
             }
         }
 
-        public Duration Subtract(Duration duration)
+        public readonly Duration Subtract(Duration duration)
         {
             return this - duration;
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             if (HasTimeSpan)
             {

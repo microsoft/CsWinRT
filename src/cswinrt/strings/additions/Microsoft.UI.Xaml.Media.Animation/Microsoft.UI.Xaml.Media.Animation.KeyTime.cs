@@ -7,14 +7,11 @@ namespace Microsoft.UI.Xaml.Media.Animation
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Animation.KeyTime>")]
     [ABI.Microsoft.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-    public struct KeyTime : IEquatable<KeyTime>
+    public readonly struct KeyTime : IEquatable<KeyTime>
     {
         public static KeyTime FromTimeSpan(TimeSpan timeSpan)
         {
-            if (timeSpan < TimeSpan.Zero)
-            {
-                throw new ArgumentOutOfRangeException(nameof(timeSpan));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(timeSpan, TimeSpan.Zero, nameof(timeSpan));
 
             return new KeyTime() { TimeSpan = timeSpan };
         }
@@ -34,22 +31,22 @@ namespace Microsoft.UI.Xaml.Media.Animation
             return !KeyTime.Equals(keyTime1, keyTime2);
         }
 
-        public bool Equals(KeyTime value)
+        public readonly bool Equals(KeyTime value)
         {
             return KeyTime.Equals(this, value);
         }
 
-        public override bool Equals(object value)
+        public readonly override bool Equals(object value)
         {
-            return value is KeyTime && this == (KeyTime)value;
+            return value is KeyTime keyTime && this == keyTime;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return TimeSpan.GetHashCode();
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return TimeSpan.ToString();
         }

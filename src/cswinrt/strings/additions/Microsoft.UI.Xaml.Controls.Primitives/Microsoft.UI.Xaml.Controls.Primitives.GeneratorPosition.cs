@@ -5,9 +5,15 @@ namespace Microsoft.UI.Xaml.Controls.Primitives
 
     partial struct GeneratorPosition
     {
-        public override string ToString()
+        public readonly override string ToString()
         {
-            return string.Concat("GeneratorPosition (", Index.ToString(global::System.Globalization.CultureInfo.InvariantCulture), ",", Offset.ToString(global::System.Globalization.CultureInfo.InvariantCulture), ")");
+            DefaultInterpolatedStringHandler handler = new(21, 2, global::System.Globalization.CultureInfo.InvariantCulture, stackalloc char[64]);
+            handler.AppendLiteral("GeneratorPosition (");
+            handler.AppendFormatted(Index);
+            handler.AppendLiteral(",");
+            handler.AppendFormatted(Offset);
+            handler.AppendLiteral(")");
+            return handler.ToStringAndClear();
         }
     }
 }

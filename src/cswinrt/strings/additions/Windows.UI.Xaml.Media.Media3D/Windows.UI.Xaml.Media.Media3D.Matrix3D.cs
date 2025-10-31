@@ -374,36 +374,36 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
         }
 
-        public bool IsIdentity
+        public readonly bool IsIdentity
         {
             get
             {
-                return (_m11 == 1 && _m12 == 0 && _m13 == 0 && _m14 == 0 &&
+                return _m11 == 1 && _m12 == 0 && _m13 == 0 && _m14 == 0 &&
                          _m21 == 0 && _m22 == 1 && _m23 == 0 && _m24 == 0 &&
                          _m31 == 0 && _m32 == 0 && _m33 == 1 && _m34 == 0 &&
-                         _offsetX == 0 && _offsetY == 0 && _offsetZ == 0 && _m44 == 1);
+                         _offsetX == 0 && _offsetY == 0 && _offsetZ == 0 && _m44 == 1;
             }
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, null /* format provider */);
         }
 
-        public string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, provider);
         }
 
-        string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string format, IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string format, IFormatProvider provider)
         {
             if (IsIdentity)
             {
@@ -412,7 +412,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
             // Helper to get the numeric list separator for a given culture.
             char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
-            DefaultInterpolatedStringHandler handler = new(0, 31, provider, stackalloc char[64]);
+            DefaultInterpolatedStringHandler handler = new(0, 31, provider, stackalloc char[256]);
             handler.AppendFormatted(_m11, format);
             handler.AppendFormatted(separator);
             handler.AppendFormatted(_m12, format);
@@ -447,7 +447,7 @@ namespace Windows.UI.Xaml.Media.Media3D
             return handler.ToStringAndClear();
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             // Perform field-by-field XOR of HashCodes
             return M11.GetHashCode() ^
@@ -468,12 +468,12 @@ namespace Windows.UI.Xaml.Media.Media3D
                    M44.GetHashCode();
         }
 
-        public override bool Equals(object o)
+        public readonly override bool Equals(object o)
         {
-            return o is Matrix3D && Matrix3D.Equals(this, (Matrix3D)o);
+            return o is Matrix3D matrix && Equals(this, matrix);
         }
 
-        public bool Equals(Matrix3D value)
+        public readonly bool Equals(Matrix3D value)
         {
             return Matrix3D.Equals(this, value);
         }
@@ -577,7 +577,7 @@ namespace Windows.UI.Xaml.Media.Media3D
             return matrix3D;
         }
 
-        public bool HasInverse
+        public readonly bool HasInverse
         {
             get
             {
@@ -646,7 +646,7 @@ namespace Windows.UI.Xaml.Media.Media3D
                    matrix1.M44.Equals(matrix2.M44);
         }
 
-        private double GetNormalizedAffineDeterminant()
+        private readonly double GetNormalizedAffineDeterminant()
         {
             double z20 = _m12 * _m23 - _m22 * _m13;
             double z10 = _m32 * _m13 - _m12 * _m33;
@@ -655,15 +655,15 @@ namespace Windows.UI.Xaml.Media.Media3D
             return _m31 * z20 + _m21 * z10 + _m11 * z00;
         }
 
-        private bool IsAffine
+        private readonly bool IsAffine
         {
             get
             {
-                return (_m14 == 0.0 && _m24 == 0.0 && _m34 == 0.0 && _m44 == 1.0);
+                return _m14 == 0.0 && _m24 == 0.0 && _m34 == 0.0 && _m44 == 1.0;
             }
         }
 
-        private double Determinant
+        private readonly double Determinant
         {
             get
             {

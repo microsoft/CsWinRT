@@ -7,13 +7,13 @@ namespace Windows.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.GridLength>")]
     [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-    public struct GridLength : IEquatable<GridLength>
+    public readonly struct GridLength : IEquatable<GridLength>
     {
         private readonly double _unitValue;
         private readonly GridUnitType _unitType;
 
         private const double Default = 1.0;
-        private static readonly GridLength s_auto = new GridLength(Default, GridUnitType.Auto);
+        private static readonly GridLength s_auto = new(Default, GridUnitType.Auto);
 
         public GridLength(double pixels)
             : this(pixels, GridUnitType.Pixel)
@@ -41,77 +41,66 @@ namespace Windows.UI.Xaml
         }
 
 
-        public double Value { get { return ((_unitType == GridUnitType.Auto) ? s_auto._unitValue : _unitValue); } }
-        public GridUnitType GridUnitType { get { return (_unitType); } }
+        public readonly double Value { get { return (_unitType == GridUnitType.Auto) ? s_auto._unitValue : _unitValue; } }
+        public readonly GridUnitType GridUnitType { get { return _unitType; } }
 
 
-        public bool IsAbsolute { get { return (_unitType == GridUnitType.Pixel); } }
-        public bool IsAuto { get { return (_unitType == GridUnitType.Auto); } }
-        public bool IsStar { get { return (_unitType == GridUnitType.Star); } }
+        public readonly bool IsAbsolute { get { return _unitType == GridUnitType.Pixel; } }
+        public readonly bool IsAuto { get { return _unitType == GridUnitType.Auto; } }
+        public readonly bool IsStar { get { return _unitType == GridUnitType.Star; } }
 
         public static GridLength Auto
         {
-            get { return (s_auto); }
+            get { return s_auto; }
         }
-
 
         public static bool operator ==(GridLength gl1, GridLength gl2)
         {
-            return (gl1.GridUnitType == gl2.GridUnitType
-                    && gl1.Value == gl2.Value);
+            return gl1.GridUnitType == gl2.GridUnitType
+                    && gl1.Value == gl2.Value;
         }
 
         public static bool operator !=(GridLength gl1, GridLength gl2)
         {
-            return (gl1.GridUnitType != gl2.GridUnitType
-                    || gl1.Value != gl2.Value);
+            return gl1.GridUnitType != gl2.GridUnitType
+                    || gl1.Value != gl2.Value;
         }
 
-        public override bool Equals(object oCompare)
+        public readonly override bool Equals(object oCompare)
         {
-            if (oCompare is GridLength)
+            if (oCompare is GridLength gridLength)
             {
-                GridLength l = (GridLength)oCompare;
-                return (this == l);
+                return this == gridLength;
             }
-            else
-                return false;
+
+            return false;
         }
 
-        public bool Equals(GridLength gridLength)
+        public readonly bool Equals(GridLength gridLength)
         {
-            return (this == gridLength);
+            return this == gridLength;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
-            return ((int)_unitValue + (int)_unitType);
+            return (int)_unitValue + (int)_unitType;
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
-            return this.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
-        {
-            // Initial capacity [64] is an estimate based on a sum of:
-            // 12 = 1x double (twelve digits is generous for the range of values likely)
-            //  8 = 4x Unit Type string (approx two characters)
-            //  2 = 2x separator characters
-
             if (_unitType == GridUnitType.Auto)
             {
                 return "Auto";
             }
-            else if (_unitType == GridUnitType.Pixel)
+
+            bool isStar = (_unitType == GridUnitType.Star);
+            DefaultInterpolatedStringHandler handler = new(isStar ? 1 : 0, 1, global::System.Globalization.CultureInfo.InvariantCulture, stackalloc char[32]);
+            handler.AppendFormatted(_unitValue);
+            if (isStar)
             {
-                return Convert.ToString(_unitValue, cultureInfo);
+                handler.AppendLiteral("*");
             }
-            else
-            {
-                return Convert.ToString(_unitValue, cultureInfo) + "*";
-            }
+            return handler.ToStringAndClear();
         }
     }
 }

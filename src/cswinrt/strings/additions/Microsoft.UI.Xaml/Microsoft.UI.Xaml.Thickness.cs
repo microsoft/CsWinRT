@@ -10,35 +10,39 @@ namespace Microsoft.UI.Xaml
             Left = Top = Right = Bottom = uniformLength;
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return ToString(global::System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
+        private readonly string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
             char listSeparator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
             // Initial capacity [64] is an estimate based on a sum of:
             // 48 = 4x double (twelve digits is generous for the range of values likely)
-            //  8 = 4x Unit Type string (approx two characters)
             //  4 = 4x separator characters
-            global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder(64);
-
-            sb.Append(InternalToString(Left, cultureInfo));
-            sb.Append(listSeparator);
-            sb.Append(InternalToString(Top, cultureInfo));
-            sb.Append(listSeparator);
-            sb.Append(InternalToString(Right, cultureInfo));
-            sb.Append(listSeparator);
-            sb.Append(InternalToString(Bottom, cultureInfo));
-            return sb.ToString();
+            DefaultInterpolatedStringHandler handler = new(0, 7, cultureInfo, stackalloc char[64]);
+            InternalAddToHandler(Left, ref handler);
+            handler.AppendFormatted(listSeparator);
+            InternalAddToHandler(Top, ref handler);
+            handler.AppendFormatted(listSeparator);
+            InternalAddToHandler(Right, ref handler);
+            handler.AppendFormatted(listSeparator);
+            InternalAddToHandler(Bottom, ref handler);
+            return handler.ToStringAndClear();
         }
 
-        internal string InternalToString(double l, global::System.Globalization.CultureInfo cultureInfo)
+        private static void InternalAddToHandler(double l, ref DefaultInterpolatedStringHandler handler)
         {
-            if (double.IsNaN(l)) return "Auto";
-            return Convert.ToString(l, cultureInfo);
+            if (double.IsNaN(l))
+            {
+                handler.AppendFormatted("Auto");
+            }
+            else
+            {
+                handler.AppendFormatted(l);
+            }
         }
     }
 }

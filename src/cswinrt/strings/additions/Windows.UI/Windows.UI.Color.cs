@@ -8,35 +8,28 @@ namespace Windows.UI
     {
         public static Color FromArgb(byte a, byte r, byte g, byte b)
         {
-            Color c1 = default;
-
-            c1.A = a;
-            c1.R = r;
-            c1.G = g;
-            c1.B = b;
-
-            return c1;
+            return new Color(a, r, g, b);
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null, null);
         }
 
-        public string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null, provider);
         }
 
-        string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string format, IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        internal string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string format, IFormatProvider provider)
         {
             if (format == null)
             {

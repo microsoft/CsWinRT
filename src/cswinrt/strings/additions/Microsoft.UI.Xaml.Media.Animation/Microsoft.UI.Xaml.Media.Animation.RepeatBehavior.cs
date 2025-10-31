@@ -28,10 +28,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
         public RepeatBehavior(TimeSpan duration)
         {
-            if (duration < new TimeSpan(0))
-            {
-                throw new ArgumentOutOfRangeException(nameof(duration));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(duration, new TimeSpan(0), nameof(duration));
 
             Duration = duration;
             Count = 0.0;
@@ -49,7 +46,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
             }
         }
 
-        public bool HasCount
+        public readonly bool HasCount
         {
             get
             {
@@ -57,7 +54,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
             }
         }
 
-        public bool HasDuration
+        public readonly bool HasDuration
         {
             get
             {
@@ -80,22 +77,22 @@ namespace Microsoft.UI.Xaml.Media.Animation
             readonly get; set;
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return InternalToString(null, null);
         }
 
-        public string ToString(IFormatProvider formatProvider)
+        public readonly string ToString(IFormatProvider formatProvider)
         {
             return InternalToString(null, formatProvider);
         }
 
-        string IFormattable.ToString(string format, IFormatProvider formatProvider)
+        readonly string IFormattable.ToString(string format, IFormatProvider formatProvider)
         {
             return InternalToString(format, formatProvider);
         }
 
-        internal string InternalToString(string format, IFormatProvider formatProvider)
+        internal readonly string InternalToString(string format, IFormatProvider formatProvider)
         {
             switch (Type)
             {
@@ -119,11 +116,11 @@ namespace Microsoft.UI.Xaml.Media.Animation
             }
         }
 
-        public override bool Equals(object value)
+        public readonly override bool Equals(object value)
         {
-            if (value is RepeatBehavior)
+            if (value is RepeatBehavior behavior)
             {
-                return this.Equals((RepeatBehavior)value);
+                return Equals(behavior);
             }
             else
             {
@@ -131,7 +128,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
             }
         }
 
-        public bool Equals(RepeatBehavior repeatBehavior)
+        public readonly bool Equals(RepeatBehavior repeatBehavior)
         {
             if (Type == repeatBehavior.Type)
             {
@@ -154,7 +151,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
             return repeatBehavior1.Equals(repeatBehavior2);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return Type switch
             {

@@ -16,33 +16,33 @@ namespace Windows.UI.Xaml.Media
             }
         }
 
-        public bool IsIdentity
+        public readonly bool IsIdentity
         {
             get
             {
-                return (M11 == 1 && M12 == 0 && M21 == 0 && M22 == 1 && OffsetX == 0 && OffsetY == 0);
+                return M11 == 1 && M12 == 0 && M21 == 0 && M22 == 1 && OffsetX == 0 && OffsetY == 0;
             }
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, null /* format provider */);
         }
 
-        public string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, provider);
         }
 
-        string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string format, IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string format, IFormatProvider provider)
         {
             if (IsIdentity)
             {
@@ -66,7 +66,7 @@ namespace Windows.UI.Xaml.Media
             return handler.ToStringAndClear();
         }
 
-        public Point Transform(Point point)
+        public readonly Point Transform(Point point)
         {
             float x = (float)point.X;
             float y = (float)point.Y;
@@ -77,26 +77,12 @@ namespace Windows.UI.Xaml.Media
 
         private static Matrix CreateIdentity()
         {
-            Matrix matrix = default;
-            matrix.SetMatrix(1, 0,
-                             0, 1,
-                             0, 0);
-            return matrix;
+            return new Matrix(1, 0,
+                              0, 1,
+                              0, 0);
         }
 
-        private void SetMatrix(double m11, double m12,
-                               double m21, double m22,
-                               double offsetX, double offsetY)
-        {
-            M11 = m11;
-            M12 = m12;
-            M21 = m21;
-            M22 = m22;
-            OffsetX = offsetX;
-            OffsetY = offsetY;
-        }
-
-        private void MultiplyPoint(ref float x, ref float y)
+        private readonly void MultiplyPoint(ref float x, ref float y)
         {
             double num = (y * M21) + OffsetX;
             double num2 = (x * M12) + OffsetY;
