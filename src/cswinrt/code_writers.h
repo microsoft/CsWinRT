@@ -2926,7 +2926,7 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "GetEnumerator")]
-static extern IEnumerator<%> %GetEnumerator([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerableMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern IEnumerator<%> %GetEnumerator([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerableMethods'1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 )",
 element, interop_method_name_prefix
 );
@@ -2993,16 +2993,16 @@ object IEnumerator.Current => Current;
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "MoveNext")]
-static extern bool %MoveNext([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern bool %MoveNext([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods'1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Reset")]
-static extern void %Reset([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern void %Reset([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods'1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-static extern void %Dispose([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern void %Dispose([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods'1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Current")]
-static extern % %Current([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern % %Current([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumeratorMethods'1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 )",
 interop_method_name_prefix,
 interop_method_name_prefix,
@@ -3036,22 +3036,22 @@ visibility, element, self, interop_method_name_prefix, objref_name);
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
-static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
-static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
-static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
-static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
-static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
 )",
 key, interop_method_name_prefix, key, value, // Keys
 value, interop_method_name_prefix, key, value, // Values
@@ -3120,46 +3120,46 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
-static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
-static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`1<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
-static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
-static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
-static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
-static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
-static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
-static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
-static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
-static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
-static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, WindowsRuntimeObjectReference enumObjRef, KeyValuePair<%, %>[] array, int arrayIndex);
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, WindowsRuntimeObjectReference enumObjRef, KeyValuePair<%, %>[] array, int arrayIndex);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
-static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods`2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionaryMethods'2<%, %>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
 )",
 key, interop_method_name_prefix, key, value, // Keys
 value, interop_method_name_prefix, key, value, // Values
@@ -3275,10 +3275,10 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
-static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 )",
 interop_method_name_prefix, element, // Count
 element, interop_method_name_prefix, element // Item
@@ -3471,37 +3471,37 @@ element, enumerable_type, target);
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
-static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
-static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "IndexOf")]
-static extern int %IndexOf([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+static extern int %IndexOf([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Insert")]
-static extern void %Insert([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % item);
+static extern void %Insert([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "RemoveAt")]
-static extern void %RemoveAt([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+static extern void %RemoveAt([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
-static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
-static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
-static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
-static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, %[] array, int arrayIndex);
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, %[] array, int arrayIndex);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
-static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods`1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IListMethods'1<%>, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
 )",
 interop_method_name_prefix, element, // Count
 element, interop_method_name_prefix, element, // Item get
