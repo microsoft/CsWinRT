@@ -550,15 +550,16 @@ namespace cswinrt
     }
 
     // This is used to handle scenarios where we do boxing with parameters passed to the constructor.
-    // This means for pass_array which we project as a ReadOnlySpan<T>, we need to convert it to an array
-    // to be able to box it.
+    // This means for pass_array which we project as a ReadOnlySpan<T>, we need to box the address of it.
     void write_constructor_parameter_name_with_modifier(writer& w, method_signature::param_t const& param)
     {
-        write_parameter_name_with_modifier(w, param);
-
         if (get_param_category(param) == param_category::pass_array)
         {
-            w.write(".ToArray()");
+            w.write("(nint)(&%)", bind<write_parameter_name_with_modifier>(param));
+        }
+        else
+        {
+            write_parameter_name_with_modifier(w, param);
         }
     }
 
@@ -590,16 +591,16 @@ namespace cswinrt
     }
 
     // This is similar to write_constructor_parameter_name_with_modifier but used in the callback.
-    void write_constructor_parameter_type(writer& w, method_signature::param_t const& param)
+    void write_constructor_parameter_cast(writer& w, method_signature::param_t const& param)
     {
         if (get_param_category(param) == param_category::pass_array)
         {
             auto semantics = get_type_semantics(param.second->Type());
-            w.write("%[]", bind<write_projection_type>(semantics));
+            w.write("*(ReadOnlySpan<%>*)(nint)", bind<write_projection_type>(semantics));
         }
         else
         {
-            write_projection_parameter_type(w, param);
+            w.write("(%)", bind<write_projection_parameter_type>(param));
         }
     }
 
@@ -2615,7 +2616,8 @@ static extern Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop.dll")
                     }
     
                     auto objrefname = bind<write_objref_type_name>(semantics);
-                    bool useInner = replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
+                    bool isDefaultInterface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
+                    bool useInner = replaceDefaultByInner && isDefaultInterface;
 
                     if (!useInner)
                     {
@@ -2636,7 +2638,7 @@ private WindowsRuntimeObjectReference %
         }
 
         return field ?? MakeObjectReference();
-    }
+    }%
 }
 )",
                         [&](writer& w) {
@@ -2646,7 +2648,13 @@ private WindowsRuntimeObjectReference %
                             }
                         },
                         objrefname,
-                        bind<write_iid_guid>(ifaceType));
+                        bind<write_iid_guid>(ifaceType),
+                        [&](writer& w) {
+                            if(isDefaultInterface)
+                            {
+                                w.write("\n    init;");
+                            }
+                        });
 
                         /*
                         TODO handle fast ABI
@@ -2702,6 +2710,7 @@ private WindowsRuntimeObjectReference %
 %% %%(%)
   :base(%)
 {
+% = NativeObjectReference;
 %}
 )",
                 platform_attribute, 
@@ -2727,6 +2736,7 @@ private WindowsRuntimeObjectReference %
                             bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
+                bind<write_objref_type_name>(default_type_semantics),
                 gc_pressure);
 
             // Write activation callback method if the constructor has parameters.
@@ -5950,10 +5960,10 @@ finally
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size(); i++)
             {
-                w.write("% % = (%)additionalParameters[%];\n",
-                    bind<write_constructor_parameter_type>(params[i]),
+                w.write("% % = %additionalParameters[%];\n",
+                    bind<write_projection_parameter_type>(params[i]),
                     bind<write_parameter_name>(params[i]),
-                    bind<write_constructor_parameter_type>(params[i]),
+                    bind<write_constructor_parameter_cast>(params[i]),
                     i);
             }
         };
@@ -5999,10 +6009,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size() - 2; i++)
             {
-                w.write("% % = (%)additionalParameters[%];\n",
-                    bind<write_constructor_parameter_type>(params[i]),
+                w.write("% % = %additionalParameters[%];\n",
+                    bind<write_projection_parameter_type>(params[i]),
                     bind<write_parameter_name>(params[i]),
-                    bind<write_constructor_parameter_type>(params[i]),
+                    bind<write_constructor_parameter_cast>(params[i]),
                     i);
             }
         };
