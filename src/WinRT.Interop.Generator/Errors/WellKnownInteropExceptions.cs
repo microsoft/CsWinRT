@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -408,6 +409,22 @@ internal static class WellKnownInteropExceptions
     public static Exception IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
         return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a dynamic implementation detail type.
+    /// </summary>
+    public static Exception DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
+    {
+        return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
+    }
+
+    /// <summary>
+    /// Failed to resolve the associated <c>ComWrappersMarshallerAttribute</c> type for a custom-mapped type.
+    /// </summary>
+    public static Exception CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
+    {
+        return Exception(45, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
 
     /// <summary>

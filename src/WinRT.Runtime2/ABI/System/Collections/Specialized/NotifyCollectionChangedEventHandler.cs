@@ -14,35 +14,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
-    trimTarget: typeof(NotifyCollectionChangedEventHandler))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
-    trimTarget: typeof(NotifyCollectionChangedEventHandler))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(NotifyCollectionChangedEventHandler),
-    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler))]
-
 namespace ABI.System.Collections.Specialized;
 
 /// <summary>
-/// ABI type for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.NotifyCollectionChangedEventHandler"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.NotifyCollectionChangedEventHandler"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>")]
-[NotifyCollectionChangedEventHandlerComWrappersMarshaller]
-file static class NotifyCollectionChangedEventHandler;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// Marshaller for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -51,41 +26,41 @@ file static class NotifyCollectionChangedEventHandler;
 public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventHandler? value)
     {
         return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? ConvertToManaged(void* value)
+    public static NotifyCollectionChangedEventHandler? ConvertToManaged(void* value)
     {
         object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
 
-        return Unsafe.As<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler?>(result);
+        return Unsafe.As<NotifyCollectionChangedEventHandler?>(result);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(NotifyCollectionChangedEventHandler? value)
     {
         return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
-    public static global::System.Collections.Specialized.NotifyCollectionChangedEventHandler? UnboxToManaged(void* value)
+    public static NotifyCollectionChangedEventHandler? UnboxToManaged(void* value)
     {
         object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
 
-        return Unsafe.As<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler?>(result);
+        return Unsafe.As<NotifyCollectionChangedEventHandler?>(result);
     }
 }
 
 /// <summary>
-/// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 {
-    /// <inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>
-    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, NotifyCollectionChangedEventArgs e)
+    /// <inheritdoc cref="NotifyCollectionChangedEventHandler"/>
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
@@ -103,7 +78,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
 {
@@ -115,7 +90,7 @@ file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallbac
             iid: in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventHandler,
             wrapperFlags: out wrapperFlags);
 
-        return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(valueReference.Invoke);
+        return new NotifyCollectionChangedEventHandler(valueReference.Invoke);
     }
 }
 
@@ -141,7 +116,7 @@ file struct NotifyCollectionChangedEventHandlerInterfaceEntries
 file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="NotifyCollectionChangedEventHandlerInterfaceEntries"/> value for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+    /// The <see cref="NotifyCollectionChangedEventHandlerInterfaceEntries"/> value for <see cref="NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     [FixedAddressValueType]
     public static readonly NotifyCollectionChangedEventHandlerInterfaceEntries Entries;
@@ -173,9 +148,13 @@ file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
-file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -201,7 +180,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
 }
 
 /// <summary>
-/// Binding type for the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
+/// Binding type for the <see cref="NotifyCollectionChangedEventHandler"/> implementation.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 file unsafe struct NotifyCollectionChangedEventHandlerVftbl
@@ -213,12 +192,12 @@ file unsafe struct NotifyCollectionChangedEventHandlerVftbl
 }
 
 /// <summary>
-/// The native implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// The native implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 file static unsafe class NotifyCollectionChangedEventHandlerImpl
 {
     /// <summary>
-    /// The <see cref="NotifyCollectionChangedEventHandlerVftbl"/> value for the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
+    /// The <see cref="NotifyCollectionChangedEventHandlerVftbl"/> value for the <see cref="NotifyCollectionChangedEventHandler"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly NotifyCollectionChangedEventHandlerVftbl Vftbl;
@@ -234,7 +213,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
+    /// Gets a pointer to the <see cref="NotifyCollectionChangedEventHandler"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -242,13 +221,13 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
         get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
-    /// <inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>
+    /// <inheritdoc cref="NotifyCollectionChangedEventHandler"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT Invoke(void* thisPtr, void* sender, void* e)
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
@@ -264,7 +243,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
 }
 
 /// <summary>
-/// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 file unsafe struct NotifyCollectionChangedEventHandlerReferenceVftbl
@@ -279,7 +258,7 @@ file unsafe struct NotifyCollectionChangedEventHandlerReferenceVftbl
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// The <c>IReference`1</c> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
 file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
 {
@@ -319,7 +298,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
             *result = NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
 

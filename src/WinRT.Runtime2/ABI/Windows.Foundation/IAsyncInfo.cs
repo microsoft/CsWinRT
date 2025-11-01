@@ -5,7 +5,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ABI.System;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -81,7 +80,7 @@ public static unsafe class IAsyncInfoMethods
 
     /// <see cref="IAsyncInfo.ErrorCode"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static global::System.Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
+    public static Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
 
@@ -92,7 +91,7 @@ public static unsafe class IAsyncInfoMethods
 
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-        return ExceptionMarshaller.ConvertToManaged(result);
+        return System.ExceptionMarshaller.ConvertToManaged(result);
     }
 
     /// <see cref="IAsyncInfo.Cancel"/>
@@ -192,11 +191,11 @@ public static unsafe class IAsyncInfoImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *errorCode = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -219,7 +218,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -242,7 +241,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -260,7 +259,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -278,7 +277,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -314,7 +313,7 @@ file interface IAsyncInfoInterfaceImpl : IAsyncInfo
     }
 
     /// <inheritdoc/>
-    global::System.Exception? IAsyncInfo.ErrorCode
+    Exception? IAsyncInfo.ErrorCode
     {
         get
         {

@@ -9,18 +9,6 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventArgs))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(PropertyChangedEventArgs),
     typeof(ABI.System.ComponentModel.PropertyChangedEventArgs))]
@@ -33,7 +21,11 @@ namespace ABI.System.ComponentModel;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventargs"/>
 [PropertyChangedEventArgsComWrappersMarshaller]
-file static class PropertyChangedEventArgs;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class PropertyChangedEventArgs;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.

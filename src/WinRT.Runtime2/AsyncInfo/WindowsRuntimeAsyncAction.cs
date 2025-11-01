@@ -5,7 +5,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using ABI.Windows.Foundation;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
@@ -61,35 +60,35 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
 
     public AsyncActionCompletedHandler? Completed
     {
-        get => IAsyncActionMethods.Completed(NativeObjectReference);
-        set => IAsyncActionMethods.Completed(NativeObjectReference, value);
+        get => ABI.Windows.Foundation.IAsyncActionMethods.Completed(NativeObjectReference);
+        set => ABI.Windows.Foundation.IAsyncActionMethods.Completed(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
-    public uint Id => IAsyncInfoMethods.Id(IAsyncInfoObjectReference);
+    public uint Id => ABI.Windows.Foundation.IAsyncInfoMethods.Id(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public AsyncStatus Status => IAsyncInfoMethods.Status(IAsyncInfoObjectReference);
+    public AsyncStatus Status => ABI.Windows.Foundation.IAsyncInfoMethods.Status(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public Exception? ErrorCode => IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
+    public Exception? ErrorCode => ABI.Windows.Foundation.IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
     public void GetResults()
     {
-        IAsyncActionMethods.GetResults(NativeObjectReference);
+        ABI.Windows.Foundation.IAsyncActionMethods.GetResults(NativeObjectReference);
     }
 
     /// <inheritdoc/>
     public void Cancel()
     {
-        IAsyncInfoMethods.Cancel(IAsyncInfoObjectReference);
+        ABI.Windows.Foundation.IAsyncInfoMethods.Cancel(IAsyncInfoObjectReference);
     }
 
     /// <inheritdoc/>
     public void Close()
     {
-        IAsyncInfoMethods.Close(IAsyncInfoObjectReference);
+        ABI.Windows.Foundation.IAsyncInfoMethods.Close(IAsyncInfoObjectReference);
     }
 
     /// <inheritdoc/>

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using ABI.System.Collections.Specialized;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -26,7 +25,7 @@ public sealed unsafe class NotifyCollectionChangedEventSource : EventSource<Noti
     /// <inheritdoc/>
     protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventHandler value)
     {
-        return NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
+        return ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

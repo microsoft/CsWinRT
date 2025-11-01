@@ -14,18 +14,6 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Interop.IBindableIterable",
-    target: typeof(ABI.System.Collections.IEnumerable),
-    trimTarget: typeof(IEnumerable))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Interop.IBindableIterable",
-    target: typeof(ABI.System.Collections.IEnumerable),
-    trimTarget: typeof(IEnumerable))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     typeof(IEnumerable),
     typeof(ABI.System.Collections.IEnumerableInterfaceImpl))]
@@ -40,7 +28,11 @@ namespace ABI.System.Collections;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
 [IEnumerableComWrappersMarshaller]
-file static class IEnumerable;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IEnumerable;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.IEnumerable"/>.
@@ -122,7 +114,7 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 public static unsafe class IEnumerableMethods
 {
     /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
-    public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
+    public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
         return IBindableIterableMethods.First(thisReference);
     }
@@ -175,7 +167,7 @@ public static unsafe class IEnumerableImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerable>((ComInterfaceDispatch*)thisPtr);
 
-            IEnumerator enumerator = unboxedValue.GetEnumerator();
+            global::System.Collections.IEnumerator enumerator = unboxedValue.GetEnumerator();
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(enumerator).DetachThisPtrUnsafe();
 
@@ -194,7 +186,7 @@ public static unsafe class IEnumerableImpl
 [DynamicInterfaceCastableImplementation]
 file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
 {
-    IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
+    global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
     {
         var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IEnumerable).TypeHandle);
 
