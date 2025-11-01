@@ -112,12 +112,12 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add the default entries at the end
             entriesList.AddRange(
-                (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
-                (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
-                (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
-                (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
-                (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable));
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable));
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,

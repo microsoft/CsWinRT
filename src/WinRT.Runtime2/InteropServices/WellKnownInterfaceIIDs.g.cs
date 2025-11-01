@@ -16,6 +16,55 @@ namespace WindowsRuntime.InteropServices;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class WellKnownInterfaceIIDs
 {
+    /// <summary>The IID for <c>IUnknown</c>.</summary>
+    public static ref readonly Guid IID_IUnknown
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IUnknown;
+    }
+
+    /// <summary>The IID for <c>IAgileObject</c>.</summary>
+    public static ref readonly Guid IID_IAgileObject
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+    }
+
+    /// <summary>The IID for <c>IMarshal</c>.</summary>
+    public static ref readonly Guid IID_IMarshal
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IMarshal;
+    }
+
+    /// <summary>The IID for <c>IInspectable</c>.</summary>
+    public static ref readonly Guid IID_IInspectable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IInspectable;
+    }
+
+    /// <summary>The IID for <c>IStringable</c>.</summary>
+    public static ref readonly Guid IID_IStringable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IStringable;
+    }
+
+    /// <summary>The IID for <c>IPropertyValue</c>.</summary>
+    public static ref readonly Guid IID_IPropertyValue
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
+    }
+
+    /// <summary>The IID for <c>IWeakReferenceSource</c>.</summary>
+    public static ref readonly Guid IID_IWeakReferenceSource
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
+    }
+
     /// <summary>The IID for <c>Windows.UI.Xaml.Interop.IBindableIterable</c> (mapped to <see cref="global::System.Collections.IEnumerable"/>.</summary>
     public static ref readonly Guid IID_Windows_UI_Xaml_Interop_IBindableIterable
     {

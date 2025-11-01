@@ -961,10 +961,52 @@ internal sealed class InteropReferences
     public MemberReference ComInterfaceEntryVtable => field ??= ComInterfaceEntry.CreateMemberReference("Vtable"u8, new FieldSignature(_corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl.get_IID()</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IUnknown()</c>.
     /// </summary>
-    public MemberReference IUnknownImplget_IID => field ??= IUnknownImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+    public MemberReference WellKnownInterfaceIIDsget_IID_IUnknown => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IUnknown"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IInspectable()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IInspectable => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IInspectable"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IPropertyValue()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IPropertyValue => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IPropertyValue"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IStringable()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IStringable => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IStringable"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IMarshal()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IMarshal => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IMarshal"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IWeakReferenceSource()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IWeakReferenceSource => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IWeakReferenceSource"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IAgileObject()</c>.
+    /// </summary>
+    public MemberReference WellKnownInterfaceIIDsget_IID_IAgileObject => field ??= WellKnownInterfaceIIDs
+        .CreateMemberReference("get_IID_IAgileObject"u8, MethodSignature.CreateStatic(
             returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
@@ -975,25 +1017,11 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IInspectableImplget_IID => field ??= IInspectableImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IInspectableImplget_Vtable => field ??= IInspectableImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IPropertyValueImplget_IID => field ??= IPropertyValueImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_OtherTypeVtable()</c>.
@@ -1017,25 +1045,11 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IStringableImplget_IID => field ??= IStringableImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IMarshalImplget_IID => field ??= IMarshalImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl.get_Vtable()</c>.
@@ -1045,25 +1059,11 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IWeakReferenceSourceImplget_IID => field ??= IWeakReferenceSourceImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IWeakReferenceSourceImplget_Vtable => field ??= IWeakReferenceSourceImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl.get_IID()</c>.
-    /// </summary>
-    public MemberReference IAgileObjectImplget_IID => field ??= IAgileObjectImpl
-        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl.get_Vtable()</c>.

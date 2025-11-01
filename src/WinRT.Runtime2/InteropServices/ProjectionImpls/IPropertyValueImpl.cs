@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0060, IDE1006
 
@@ -21,14 +20,4 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static partial class IPropertyValueImpl
-{
-    /// <summary>
-    /// Gets the IID for the <c>IPropertyValue</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
-    }
-}
+public static partial class IPropertyValueImpl;

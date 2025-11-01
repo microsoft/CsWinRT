@@ -37,15 +37,6 @@ public static unsafe class IWeakReferenceSourceImpl
     }
 
     /// <summary>
-    /// Gets the IID for the <c>IWeakReferenceSource</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IWeakReferenceSource</c> implementation.
     /// </summary>
     public static nint Vtable

@@ -40,15 +40,6 @@ public static unsafe class IInspectableImpl
     }
 
     /// <summary>
-    /// Gets the IID for the <c>IInspectable</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownWindowsInterfaceIIDs.IID_IInspectable;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IInspectable</c> implementation.
     /// </summary>
     public static nint Vtable

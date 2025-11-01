@@ -291,13 +291,13 @@ internal partial class InteropTypeDefinitionBuilder
                 implTypes: [
                     (get_IidMethod, delegateImplType.GetMethod("get_Vtable"u8)),
                     (get_ReferenceIidMethod, delegateReferenceImplType.GetMethod("get_Vtable"u8)),
-                    (interopReferences.IPropertyValueImplget_IID, interopReferences.IPropertyValueImplget_OtherTypeVtable),
-                    (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
-                    (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                    (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
-                    (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
-                    (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
-                    (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable)]);
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue, interopReferences.IPropertyValueImplget_OtherTypeVtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
         }
 
         /// <summary>
