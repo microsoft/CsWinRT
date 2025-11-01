@@ -389,7 +389,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // Create the 'set_Completed' getter method
+            // Create the 'set_Completed' setter method
             MethodDefinition set_CompletedMethod = new(
                 name: $"Windows.Foundation.IAsyncActionWithProgress<{progressType.FullName}>.set_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
