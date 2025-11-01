@@ -1006,7 +1006,7 @@ internal static partial class WellKnownTypeDefinitionFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
 
-        // The vtable layout for 'IAsyncOperation`1<TResult>' looks like this:
+        // The vtable layout for 'IAsyncActionWithProgress`1<TProgress>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
