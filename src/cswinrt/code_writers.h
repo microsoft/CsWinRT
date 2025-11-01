@@ -8340,7 +8340,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 % %(WindowsRuntimeObjectReference nativeObjectReference)
 : base(nativeObjectReference)
 {
-%}
+%%}
 
 %
 %
@@ -8363,6 +8363,13 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             // ObjectReference constructor
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
+            [&](writer& w)
+            {
+                if (!type.Flags().Sealed())
+                {
+                    w.write("% = NativeObjectReference;\n", bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
+                }
+            },
             [&](writer& w)
             {
                 if (!gc_pressure_amount) return;
