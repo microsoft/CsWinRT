@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -20,7 +21,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <summary>
     /// The registered hook into activation to hook/mock activation of Windows Runtime types.
     /// </summary>
-    private static WindowsRuntimeActivationHandler? activationHandler;
+    private static volatile WindowsRuntimeActivationHandler? activationHandler;
 
     /// <summary>
     /// Set the <see cref="WindowsRuntimeActivationHandler"/> callback for activating Windows Runtime types.
@@ -70,6 +71,10 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// </remarks>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="runtimeClassName"/> is not registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
     /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static WindowsRuntimeObjectReference GetActivationFactory(string runtimeClassName)
     {
         void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName);
@@ -79,6 +84,10 @@ public static unsafe class WindowsRuntimeActivationFactory
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
     /// <inheritdoc cref="GetActivationFactory(string)"/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static WindowsRuntimeObjectReference GetActivationFactory(string runtimeClassName, in Guid iid)
     {
         void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName, in iid);
@@ -116,6 +125,10 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <param name="activationFactory">A <see cref="WindowsRuntimeObjectReference"/> instance wrapping an instance of the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
     /// <returns>Whether <paramref name="activationFactory"/> was successfully retrieved.</returns>
     /// <remarks><inheritdoc cref="GetActivationFactory(string)" path="/remarks/node()"/></remarks>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static bool TryGetActivationFactory(string runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeObjectReference? activationFactory)
     {
         if (!TryGetActivationFactoryUnsafe(runtimeClassName, out void* activationFactoryPtr))
@@ -132,6 +145,10 @@ public static unsafe class WindowsRuntimeActivationFactory
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static bool TryGetActivationFactory(string runtimeClassName, in Guid iid, [NotNullWhen(true)] out WindowsRuntimeObjectReference? activationFactory)
     {
         if (!TryGetActivationFactoryUnsafe(runtimeClassName, in iid, out void* activationFactoryPtr))
