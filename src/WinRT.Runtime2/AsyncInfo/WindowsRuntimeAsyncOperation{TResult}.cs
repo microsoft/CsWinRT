@@ -12,27 +12,32 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime.AsyncInfo;
 
 /// <summary>
-/// The implementation of a native object for <see cref="IAsyncAction"/>.
+/// The implementation of a native object for <see cref="IAsyncOperation{TResult}"/>.
 /// </summary>
-/// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.iasyncaction"/>
-internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
-    IAsyncAction,
-    IWindowsRuntimeInterface<IAsyncAction>,
+/// <typeparam name="TResult">The result type.</typeparam>
+/// <typeparam name="TIAsyncOperationMethods">The <see cref="IAsyncOperationMethodsImpl{TResult}"/> implementation type.</typeparam>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMethods> : WindowsRuntimeObject,
+    IAsyncOperation<TResult>,
+    IWindowsRuntimeInterface<IAsyncOperation<TResult>>,
     IWindowsRuntimeInterface<IAsyncInfo>
+    where TIAsyncOperationMethods : IAsyncOperationMethodsImpl<TResult>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeAsyncAction"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeAsyncAction(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeAsyncOperation(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
-    /// <summary>
-    /// Gets the lazy-loaded, cached object reference for <see cref="IAsyncInfo"/> for the current object.
-    /// </summary>
+    /// <inheritdoc cref="WindowsRuntimeAsyncAction.IAsyncInfoObjectReference"/>
     private WindowsRuntimeObjectReference IAsyncInfoObjectReference
     {
         get
@@ -59,10 +64,11 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
-    public AsyncActionCompletedHandler? Completed
+    /// <inheritdoc/>
+    public AsyncOperationCompletedHandler<TResult>? Completed
     {
-        get => IAsyncActionMethods.Completed(NativeObjectReference);
-        set => IAsyncActionMethods.Completed(NativeObjectReference, value);
+        get => TIAsyncOperationMethods.Completed(NativeObjectReference);
+        set => TIAsyncOperationMethods.Completed(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
@@ -75,9 +81,9 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     public Exception? ErrorCode => IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public void GetResults()
+    public TResult GetResults()
     {
-        IAsyncActionMethods.GetResults(NativeObjectReference);
+        return TIAsyncOperationMethods.GetResults(NativeObjectReference);
     }
 
     /// <inheritdoc/>
@@ -93,7 +99,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncAction>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncOperation<TResult>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }

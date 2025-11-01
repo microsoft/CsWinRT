@@ -26,7 +26,7 @@ public interface IAsyncOperationWithProgress<TResult, TProgress> : IAsyncInfo
     /// <summary>
     /// Gets or sets the method that handles progress notifications.
     /// </summary>
-    AsyncOperationProgressHandler<TResult, TProgress> Progress { get; set; }
+    AsyncOperationProgressHandler<TResult, TProgress>? Progress { get; set; }
 
     /// <summary>
     /// Gets or sets the delegate that is called when the operation completes.
@@ -41,7 +41,7 @@ public interface IAsyncOperationWithProgress<TResult, TProgress> : IAsyncInfo
     /// before the <see cref="Completed"/> property setter has returned; possibly even from the same thread.
     /// </para>
     /// </remarks>
-    AsyncOperationWithProgressCompletedHandler<TResult, TProgress> Completed { get; set; }
+    AsyncOperationWithProgressCompletedHandler<TResult, TProgress>? Completed { get; set; }
 
     /// <summary>
     /// Returns the results of the operation.

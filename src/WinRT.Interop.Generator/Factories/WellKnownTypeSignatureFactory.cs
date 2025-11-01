@@ -75,7 +75,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature GetIidsImpl(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -95,7 +95,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature GetRuntimeClassNameImpl(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -114,7 +114,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature GetTrustLevelImpl(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -133,7 +133,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature add_EventHandler(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -153,7 +153,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature remove_EventHandler(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -166,13 +166,70 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the get accessor for some delegate handler.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature get_Handler(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the set accessor for some delegate handler.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature set_Handler(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the get accessor for some property returning an untyped value (any type).
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature get_UntypedRetVal(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+    }
+
+    /// <summary>
     /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate, taking objects for both parameters.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature InvokeImpl(InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(

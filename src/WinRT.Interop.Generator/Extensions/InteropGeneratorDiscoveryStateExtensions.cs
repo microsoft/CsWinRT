@@ -35,7 +35,7 @@ internal static class InteropGeneratorDiscoveryStateExtensions
             // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
             // from other generated code, or projections. This special handling is needed because unlike with the other
             // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
-            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType(typeSignature.TypeArguments[0]));
+            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
         {
@@ -68,12 +68,34 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         {
             discoveryState.TrackIObservableMap2Type(typeSignature);
 
-            // Same handling as below for 'MapChangedEventHandler<K,V>' types
+            // Same handling as above for 'MapChangedEventHandler<K,V>' types
             discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
             discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncActionWithProgress1))
+        {
+            discoveryState.TrackIAsyncActionWithProgress1Type(typeSignature);
+
+            // Ensure that the delegate types for this instantiation of 'IAsyncActionWithProgress<TProgress>' are also tracked.
+            // Same rationale as above for the other special cased types. Same below as well for the other async info types.
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperation1))
+        {
+            discoveryState.TrackIAsyncOperation1Type(typeSignature);
+
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperationWithProgress2))
+        {
+            discoveryState.TrackIAsyncOperationWithProgress2Type(typeSignature);
+
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
     }
 }

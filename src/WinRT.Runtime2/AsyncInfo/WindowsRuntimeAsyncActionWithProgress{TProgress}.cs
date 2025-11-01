@@ -12,27 +12,32 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime.AsyncInfo;
 
 /// <summary>
-/// The implementation of a native object for <see cref="IAsyncAction"/>.
+/// The implementation of a native object for <see cref="IAsyncActionWithProgress{TProgress}"/>.
 /// </summary>
-/// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.iasyncaction"/>
-internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
-    IAsyncAction,
-    IWindowsRuntimeInterface<IAsyncAction>,
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
+/// <typeparam name="TIAsyncActionWithProgressMethods">The <see cref="IAsyncActionWithProgress{TProgress}"/> implementation type.</typeparam>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncActionWithProgressMethods> : WindowsRuntimeObject,
+    IAsyncActionWithProgress<TProgress>,
+    IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>,
     IWindowsRuntimeInterface<IAsyncInfo>
+    where TIAsyncActionWithProgressMethods : IAsyncActionWithProgressMethodsImpl<TProgress>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeAsyncAction"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeAsyncAction(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeAsyncActionWithProgress(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
-    /// <summary>
-    /// Gets the lazy-loaded, cached object reference for <see cref="IAsyncInfo"/> for the current object.
-    /// </summary>
+    /// <inheritdoc cref="WindowsRuntimeAsyncAction.IAsyncInfoObjectReference"/>
     private WindowsRuntimeObjectReference IAsyncInfoObjectReference
     {
         get
@@ -59,10 +64,18 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
-    public AsyncActionCompletedHandler? Completed
+    /// <inheritdoc/>
+    public AsyncActionProgressHandler<TProgress>? Progress
     {
-        get => IAsyncActionMethods.Completed(NativeObjectReference);
-        set => IAsyncActionMethods.Completed(NativeObjectReference, value);
+        get => TIAsyncActionWithProgressMethods.Progress(NativeObjectReference);
+        set => TIAsyncActionWithProgressMethods.Progress(NativeObjectReference, value);
+    }
+
+    /// <inheritdoc/>
+    public AsyncActionWithProgressCompletedHandler<TProgress>? Completed
+    {
+        get => TIAsyncActionWithProgressMethods.Completed(NativeObjectReference);
+        set => TIAsyncActionWithProgressMethods.Completed(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
@@ -77,7 +90,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     /// <inheritdoc/>
     public void GetResults()
     {
-        IAsyncActionMethods.GetResults(NativeObjectReference);
+        IAsyncActionWithProgressMethods.GetResults(NativeObjectReference);
     }
 
     /// <inheritdoc/>
@@ -93,7 +106,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncAction>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncActionWithProgress<TProgress>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }

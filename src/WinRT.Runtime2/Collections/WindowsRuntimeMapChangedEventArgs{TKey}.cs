@@ -13,9 +13,6 @@ namespace WindowsRuntime;
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the map.</typeparam>
 /// <typeparam name="TIMapChangedEventArgsMethods">The <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> implementation type.</typeparam>
-/// <remarks>
-/// This type should only be used as a base type by generated generic instantiations.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
