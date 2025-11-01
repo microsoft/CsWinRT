@@ -224,7 +224,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyDataErrorInfo"/>.
     /// </summary>
-    public TypeReference INotifyDataErrorInfo => field ??= PropertyChangedEventHandler.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
+    public TypeReference INotifyDataErrorInfo => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged"/>.
