@@ -2710,7 +2710,10 @@ private WindowsRuntimeObjectReference %
 %% %%(%)
   :base(%)
 {
+if (HasUnwrappableNativeObjectReference)
+{
 % = NativeObjectReference;
+}
 %}
 )",
                 platform_attribute, 
