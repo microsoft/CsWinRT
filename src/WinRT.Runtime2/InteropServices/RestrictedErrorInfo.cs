@@ -126,24 +126,25 @@ public static unsafe class RestrictedErrorInfo
         {
             char* message = null;
 
-            if (WindowsRuntimeImports.FormatMessageW(0x13FF /* FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK */,
-                                        null,
-                                        (uint)errorCode,
-                                        0,
-                                        &message,
-                                        0,
-                                        null) > 0)
+            if (WindowsRuntimeImports.FormatMessageW(
+                dwFlags:
+                    FORMAT.FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                    FORMAT.FORMAT_MESSAGE_FROM_SYSTEM |
+                    FORMAT.FORMAT_MESSAGE_IGNORE_INSERTS |
+                    FORMAT.FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                lpSource: null,
+                dwMessageId: (uint)errorCode,
+                dwLanguageId: 0,
+                lpBuffer: &message,
+                nSize: 0,
+                pArguments: null) != 0)
             {
                 errorMessage = $"{new string(message)}(0x{errorCode:X8})";
 
-                // LocalHandle isn't needed since FormatMessage uses LMEM_FIXED,
-                // and while we can use Marshal.FreeHGlobal since it uses LocalFree internally,
-                // it's not guranteed that this behavior stays the same in the future,
-                // especially considering the method's name, so it's safer to use LocalFree directly.
+                // 'LocalHandle' isn't needed since 'FormatMessage' uses 'LMEM_FIXED'
                 _ = WindowsRuntimeImports.LocalFree(message);
             }
         }
-
 
         exception = errorCode switch
         {
