@@ -69,7 +69,7 @@
     -->
     <NoWarn>$(NoWarn);AD0001</NoWarn>
 
-	<!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
+    <!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
     <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
   </PropertyGroup>
     
@@ -93,16 +93,6 @@
       <DependentUpon>$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)')).tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-    </Compile>
-  </ItemGroup>
-
-  <!-- Group all 'WellKnownErrorCodes' files -->
-  <ItemGroup>
-    <Compile Update="InteropServices\WellKnownErrorCodes.cs">
-      <DependentUpon>InteropServices\WellKnownErrorCodes.tt</DependentUpon>
-    </Compile>
-    <Compile Update="InteropServices\WellKnownInterfaceIIDs.g.cs">
-      <DependentUpon>WellKnownInterfaceIIDs.tt</DependentUpon>
     </Compile>
   </ItemGroup>
   
