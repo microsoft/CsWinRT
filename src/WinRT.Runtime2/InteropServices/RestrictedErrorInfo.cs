@@ -23,20 +23,25 @@ public static unsafe class RestrictedErrorInfo
     /// Converts an <c>HRESULT</c> error code to a corresponding <see cref="Exception"/> object.
     /// </summary>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
-    /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
-    /// <returns>
-    /// An <see cref="Exception"/> instance that represents the converted <c>HRESULT</c>,
-    /// or <see langword="null"/> if the HRESULT value doesn't represent an error code.
-    /// </returns>
+    /// <returns>An <see cref="Exception"/> instance that represents the converted <c>HRESULT</c>.</returns>
     /// <remarks>
     /// This method differs from <see cref="Marshal.GetExceptionForHR(int)"/> in that it leverages
     /// the <c>IRestrictedErrorInfo</c> infrastructure to flow <see cref="Exception"/> objects through
     /// calls (both in managed and native code). This improves the debugging experience.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
+    public static Exception GetExceptionForHR(HRESULT errorCode)
+    {
+        return GetExceptionForHR(errorCode, out _);
+    }
+
+    /// <inheritdoc cref="GetExceptionForHR(int)"/>
+    /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
+    /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
+    private static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         restoredExceptionFromGlobalState = false;
+
         string? description = null;
         string? restrictedError = null;
         string? restrictedErrorReference = null;
@@ -45,7 +50,6 @@ public static unsafe class RestrictedErrorInfo
         Exception? exception;
         Exception? internalGetGlobalErrorStateException = null;
         WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
-
 
         using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
 
@@ -303,7 +307,7 @@ public static unsafe class RestrictedErrorInfo
     /// Stores info on the input exception through the <c>IRestrictedErrorInfo</c> infrastructure, to retrieve it later.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
-    public static unsafe void SetErrorInfo(Exception exception)
+    public static void SetErrorInfo(Exception exception)
     {
         try
         {
@@ -403,7 +407,7 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>
     /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
-    public static unsafe void ReportUnhandledError(Exception exception)
+    public static void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
 

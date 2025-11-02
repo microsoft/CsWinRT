@@ -39,6 +39,6 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// <returns>A managed exception.</returns>
     public static Exception? ConvertToManaged(HRESULT value)
     {
-        return RestrictedErrorInfo.GetExceptionForHR(value, out _);
+        return RestrictedErrorInfo.GetExceptionForHR(value);
     }
 }
