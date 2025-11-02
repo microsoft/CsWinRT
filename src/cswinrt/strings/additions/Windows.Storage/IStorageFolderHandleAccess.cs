@@ -32,7 +32,7 @@ namespace ABI.Windows.Storage
             global::Windows.Storage.HANDLE_OPTIONS options,
             IntPtr oplockBreakingHandler)
         {
-            if (global::WindowsRuntime.InteropServices.WindowsRuntimeMarshal.TryUnwrapObjectReference(storageFolder, out WindowsRuntimeObjectReference unwrapped) &&
+            if (global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(storageFolder, out WindowsRuntimeObjectReference unwrapped) &&
                 unwrapped.TryAsUnsafe(IID_IStorageFolderHandleAccess, out void* thisPtr))
             {
                 SafeFileHandle interopHandle = default;

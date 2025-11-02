@@ -244,22 +244,22 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
         /// </summary>
         static WindowsRuntimeBufferInterfaceEntriesImpl()
         {
-            Entries.IBuffer.IID = ABI.InterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
-            Entries.IBuffer.Vtable = ABI.Windows.Storage.Streams.IBufferImpl.Vtable;
+            Entries.IBuffer.IID = global::ABI.InterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
+            Entries.IBuffer.Vtable = global::ABI.Windows.Storage.Streams.IBufferImpl.Vtable;
             Entries.IBufferByteAccess.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IBufferByteAccess;
-            Entries.IBufferByteAccess.Vtable = ABI.Windows.Storage.Streams.IBufferByteAccessImpl.Vtable;
-            Entries.IStringable.IID = IStringableImpl.IID;
-            Entries.IStringable.Vtable = IStringableImpl.Vtable;
-            Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
-            Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
+            Entries.IBufferByteAccess.Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccessImpl.Vtable;
+            Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+            Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+            Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+            Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
             Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
-            Entries.IMarshal.Vtable = ABI.Windows.Storage.Streams.IBufferMarshalImpl.Vtable;
-            Entries.IAgileObject.IID = IAgileObjectImpl.IID;
-            Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-            Entries.IInspectable.IID = IInspectableImpl.IID;
-            Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-            Entries.IUnknown.IID = IUnknownImpl.IID;
-            Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
+            Entries.IMarshal.Vtable = global::ABI.Windows.Storage.Streams.IBufferMarshalImpl.Vtable;
+            Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+            Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+            Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+            Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+            Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+            Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
         }
     }
 

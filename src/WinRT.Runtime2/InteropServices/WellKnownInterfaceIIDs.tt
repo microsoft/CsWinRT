@@ -79,7 +79,7 @@ for (int i = 0; i < entries.Length; i++)
             ? $"IID_{iidPrefix}_{windowsRuntimeName}"
             : $"IID_{windowsRuntimeName}";
 #>
-    /// <summary>The IID for <c><#=windowsRuntimeFullyQualifiedName#></c><#=mappedTo#>.</summary>
+    /// <summary>The IID for <c><#=windowsRuntimeFullyQualifiedName#></c> (mapped to <see cref="global::<#=entries[i].ProjectedFullyQualifiedName#>"/>.</summary>
     public static ref readonly Guid IID_<#=windowsRuntimeFullyQualifiedName.Replace(".", "_")#>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   

@@ -34,7 +34,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return false;
             }
 
-            if (global::WindowsRuntime.InteropServices.WindowsRuntimeMarshal.TryUnwrapObjectReference(buffer, out WindowsRuntimeObjectReference? unwrapped) &&
+            if (global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(buffer, out WindowsRuntimeObjectReference? unwrapped) &&
                 unwrapped.TryAsUnsafe(global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IBufferByteAccess, out nint thisPtr))
             {
                 try
@@ -82,7 +82,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return false;
             }
 
-            if (global::WindowsRuntime.InteropServices.WindowsRuntimeMarshal.TryUnwrapObjectReference(buffer, out WindowsRuntimeObjectReference? unwrapped) &&
+            if (global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(buffer, out WindowsRuntimeObjectReference? unwrapped) &&
                 unwrapped.TryAsUnsafe(global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMemoryBufferByteAccess, out nint thisPtr))
             {
                 try
