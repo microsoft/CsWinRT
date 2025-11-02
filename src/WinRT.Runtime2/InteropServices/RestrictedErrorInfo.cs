@@ -8,8 +8,6 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IDE0060 // TODO
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -65,7 +63,7 @@ public static unsafe class RestrictedErrorInfo
                 {
                     try
                     {
-                        exception = ExceptionHelpers.GetLanguageException(languageErrorInfoPtr, errorCode);
+                        exception = ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr, errorCode);
 
                         if (exception is not null)
                         {
