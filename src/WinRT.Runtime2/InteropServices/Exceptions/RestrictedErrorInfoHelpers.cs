@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -121,7 +122,7 @@ internal static unsafe class RestrictedErrorInfoHelpers
     /// <returns>Whether the restricted error info was found.</returns>
     public static bool TryGetErrorInfo(
         Exception exception,
-        out WindowsRuntimeObjectReference? restrictedErrorObject,
+        [NotNullWhen(true)] out WindowsRuntimeObjectReference? restrictedErrorObject,
         out bool isLanguageException)
     {
         IDictionary? exceptionData = exception.Data;

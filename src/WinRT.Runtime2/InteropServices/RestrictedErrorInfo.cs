@@ -68,12 +68,12 @@ public static unsafe class RestrictedErrorInfo
                         if (exception is not null)
                         {
                             restoredExceptionFromGlobalState = true;
-                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
-                            if (restrictedErrorInfo is not null)
-                            {
-                                RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfo, true);
-                            }
+                            WindowsRuntimeObjectReference restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(
+                                thisPtr: restrictedErrorInfoValuePtr,
+                                iid: WellKnownInterfaceIds.IID_IRestrictedErrorInfo)!;
+
+                            RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfo, true);
 
                             return exception;
                         }
@@ -86,11 +86,16 @@ public static unsafe class RestrictedErrorInfo
 
                 restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedDescription, out restrictedCapabilitySid);
+                IRestrictedErrorInfoMethods.GetErrorDetails(
+                    thisPtr: restrictedErrorInfoValuePtr,
+                    description: out description,
+                    error: out HRESULT restrictedError,
+                    restrictedDescription: out restrictedDescription,
+                    capabilitySid: out restrictedCapabilitySid);
 
                 restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
 
-                if (errorCode == hrLocal)
+                if (errorCode == restrictedError)
                 {
                     // For cross language WinRT exceptions, general information will be available in the description,
                     // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
@@ -217,16 +222,14 @@ public static unsafe class RestrictedErrorInfo
         {
             if (RestrictedErrorInfoHelpers.TryGetErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
-                if (restrictedErrorObject is not null)
-                {
-                    using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
-                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
-                }
+                using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
+
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
             }
         }
         catch (Exception e)
         {
-            // If we fail to get the hresult from the error info, we fallback to the exception hresult.
+            // If we fail to get the hresult from the error info, we fallback to the exception 'HRESULT' value
             Debug.Assert(false, e.Message, e.StackTrace);
         }
 
@@ -316,7 +319,7 @@ public static unsafe class RestrictedErrorInfo
         }
         catch (Exception e)
         {
-            // If we fail to set the error info, we continue on reporting the original exception.
+            // If we fail to set the error info, we continue on reporting the original exception
             Debug.Assert(false, e.Message, e.StackTrace);
         }
     }
@@ -337,6 +340,12 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>
     /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
+    /// <remarks>
+    /// This method should only be called from custom dispatchers and other top-level delegate invokers that should
+    /// trigger an application-wide crash in case of failures. For better error reporting, especially in XAML scenarios,
+    /// it is recommended to also call <see cref="ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent"/> right before
+    /// calling this method, so that the correct stacktrace will also be captured in crash reports for later inspection.
+    /// </remarks>
     public static void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
