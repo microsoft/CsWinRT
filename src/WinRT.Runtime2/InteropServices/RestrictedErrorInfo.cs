@@ -37,8 +37,6 @@ public static unsafe class RestrictedErrorInfo
     /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
     private static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
-        restoredExceptionFromGlobalState = false;
-
         string? description = null;
         string? restrictedDescription = null;
         string? restrictedErrorReference = null;
@@ -48,32 +46,45 @@ public static unsafe class RestrictedErrorInfo
         Exception? internalGetGlobalErrorStateException = null;
         WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
 
-        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();
-
-        try
+        // First, try to get the current 'IRestrictedErrorInfo' object from the global state.
+        // This can be present if some other failure path before has already set it. Note that
+        // this might be from both some other C# code, or from some native code path as well.
+        using (WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo())
         {
-            void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
+            void* restrictedErrorInfoPtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
-            if (restrictedErrorInfoValuePtr is not null)
+            // If there is no global 'IRestrictedErrorInfo' object, we'll just create a new local exception
+            if (restrictedErrorInfoPtr is null)
             {
+                goto GetLocalExceptionForHR;
+            }
+
+            // We never want to throw if anything goes wrong when recovering the previously stored exception.
+            // So if any exceptions are thrown internally here, we'll continue and just forward those too.
+            try
+            {
+                // Initialize an object reference for the global 'IRestrictedErrorInfo' object we retrieved.
+                // We will always need this, regardless of whether we can restore the global exception or not.
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
+                    thisPtr: restrictedErrorInfoPtr,
+                    iid: WellKnownInterfaceIds.IID_IRestrictedErrorInfo)!;
+
+                // Check if the stored exception is a language exception, which we can return directly
                 if (IUnknownVftbl.QueryInterfaceUnsafe(
-                    thisPtr: restrictedErrorInfoValuePtr,
+                    thisPtr: restrictedErrorInfoPtr,
                     iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
                     pvObject: out void* languageErrorInfoPtr).Succeeded())
                 {
                     try
                     {
-                        exception = ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr, errorCode);
-
-                        if (exception is not null)
+                        // If we can restore the original language exception, we populate its exception data
+                        // with a reference to the global restricted error info object, and return it. We
+                        // only do this if the 'HRESULT' for the recovered exception matches the input one.
+                        if (ILanguageExceptionErrorInfoMethods.TryGetLanguageException(languageErrorInfoPtr, errorCode, out exception))
                         {
                             restoredExceptionFromGlobalState = true;
 
-                            WindowsRuntimeObjectReference restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(
-                                thisPtr: restrictedErrorInfoValuePtr,
-                                iid: WellKnownInterfaceIds.IID_IRestrictedErrorInfo)!;
-
-                            RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfo, true);
+                            RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfoToSave, true);
 
                             return exception;
                         }
@@ -84,57 +95,65 @@ public static unsafe class RestrictedErrorInfo
                     }
                 }
 
-                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
-
+                // We're going to create a new exception, so first we extract all the available info
+                // from the global 'IRestrictedErrorInfo' object, to attach it to the managed exception.
                 IRestrictedErrorInfoMethods.GetErrorDetails(
-                    thisPtr: restrictedErrorInfoValuePtr,
+                    thisPtr: restrictedErrorInfoPtr,
                     description: out description,
                     error: out HRESULT restrictedError,
                     restrictedDescription: out restrictedDescription,
                     capabilitySid: out restrictedCapabilitySid);
 
-                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
+                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
 
+                // For cross language Windows Runtime exceptions, general information will be available in the description,
+                // which is populated from 'IRestrictedErrorInfo.GetErrorDetails', and more specific information will be
+                // available in 'restrictedError', which also comes from 'IRestrictedErrorInfo.GetErrorDetails'. If both are
+                // available, we need to concatinate them to produce the final exception message.
                 if (errorCode == restrictedError)
                 {
-                    // For cross language WinRT exceptions, general information will be available in the description,
-                    // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
-                    // in the restrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
-
-                    // need to concatinate them to produce the final exception message.
+                    // Append the description first
                     if (!string.IsNullOrEmpty(description))
                     {
                         errorMessage += description;
 
                         if (!string.IsNullOrEmpty(restrictedDescription))
                         {
-                            errorMessage += Environment.NewLine;
+                            errorMessage += " ";
                         }
                     }
 
+                    // Next append the restricted description. If we have both, we insert a space to separate
+                    // the two. We're not using a newline, as exception messages should always be a single line.
                     if (!string.IsNullOrEmpty(restrictedDescription))
                     {
                         errorMessage += restrictedDescription;
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            // If we fail to get the error info or the exception from it,
-            // we fallback to using the hresult to create the exception.
-            // But we do store it in the exception data for debugging purposes.
-            Debug.Assert(false, e.Message, e.StackTrace);
-            internalGetGlobalErrorStateException = e;
+            catch (Exception e)
+            {
+                Debug.Assert(false, e.Message, e.StackTrace);
+
+                // If we fail to get the error info or the exception from it, we fallback
+                // to using the 'HRESULT' value to create the exception. In this case we will
+                // also store the caught exception, for debugging purposes (and bug reports).
+                internalGetGlobalErrorStateException = e;
+            }
         }
 
+    GetLocalExceptionForHR:
+
+        // If we still have no available error message, try to get a system-provided one
         if (string.IsNullOrWhiteSpace(errorMessage))
         {
             errorMessage = SystemErrorInfoHelpers.GetSystemErrorMessageForHR(errorCode);
         }
 
+        // Create a new local exception using the 'HRESULT' mapping
         exception = WellKnownExceptionMappings.GetExceptionForHR(errorCode, errorMessage);
 
+        // Append all information we retrieved above to the new exception object
         RestrictedErrorInfoHelpers.AddExceptionData(
             exception,
             description,
@@ -144,6 +163,8 @@ public static unsafe class RestrictedErrorInfo
             restrictedErrorInfoToSave,
             false,
             internalGetGlobalErrorStateException);
+
+        restoredExceptionFromGlobalState = false;
 
         return exception;
     }

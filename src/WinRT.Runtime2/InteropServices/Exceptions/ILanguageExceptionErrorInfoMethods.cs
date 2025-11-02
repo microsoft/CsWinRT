@@ -22,14 +22,15 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
     /// </summary>
     /// <param name="thisPtr">Pointer to the language error info COM object.</param>
     /// <param name="hresult">The HRESULT associated with the error.</param>
-    /// <returns>The managed <see cref="Exception"/> if found, or <see langword="null"/>.</returns>
+    /// <param name="exception">The managed <see cref="Exception"/> if found, or <see langword="null"/>.</param>
+    /// <returns>Whether <paramref name="exception"/> was successfully retrieved.</returns>
     /// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nf-restrictederrorinfo-ilanguageexceptionerrorinfo-getlanguageexception"/>
-    public static Exception? GetLanguageException(void* thisPtr, HRESULT hresult)
+    public static bool TryGetLanguageException(void* thisPtr, HRESULT hresult, [NotNullWhen(true)] out Exception? exception)
     {
         // Check the error info first for the language exception
-        if (TryGetLanguageException(thisPtr, hresult, out Exception? exception))
+        if (TryGetLanguageExceptionWithoutTraversal(thisPtr, hresult, out exception))
         {
-            return exception;
+            return true;
         }
 
         // Check if propagated exceptions are supported, and stop if they're not
@@ -38,7 +39,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
             iid: in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
             pvObject: out void* languageErrorInfo2Ptr).Failed())
         {
-            return null;
+            exception = null;
+
+            return false;
         }
 
         void* currentLanguageExceptionErrorInfo2Ptr;
@@ -46,7 +49,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         // If we can't get the propagation context head, stop immediately
         if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Failed())
         {
-            return null;
+            exception = null;
+
+            return false;
         }
 
         // We can release the exception info, now that we have a reference to the language exception interface
@@ -58,9 +63,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
             while (currentLanguageExceptionErrorInfo2Ptr is not null)
             {
                 // Try to retrieve the propagated exception from the current error info
-                if (TryGetLanguageException(currentLanguageExceptionErrorInfo2Ptr, hresult, out exception))
+                if (TryGetLanguageExceptionWithoutTraversal(currentLanguageExceptionErrorInfo2Ptr, hresult, out exception))
                 {
-                    return exception;
+                    return true;
                 }
 
                 void* previousLanguageExceptionErrorInfo2Ptr;
@@ -70,7 +75,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
                     thisPtr: currentLanguageExceptionErrorInfo2Ptr,
                     previousLanguageExceptionErrorInfo: &previousLanguageExceptionErrorInfo2Ptr).Failed())
                 {
-                    return null;
+                    exception = null;
+
+                    return false;
                 }
 
                 // We are about to start iterating again with the previous exception info.
@@ -87,7 +94,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
             WindowsRuntimeUnknownMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
         }
 
-        return null;
+        exception = null;
+
+        return false;
     }
 
     /// <summary>
@@ -97,7 +106,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
     /// <param name="hresult">The HRESULT associated with the error.</param>
     /// <param name="exception">The managed <see cref="Exception"/> if found, or <see langword="null"/>.</param>
     /// <returns>Whether <paramref name="exception"/> was successfully retrieved.</returns>
-    private static bool TryGetLanguageException(void* thisPtr, HRESULT hresult, [NotNullWhen(true)] out Exception? exception)
+    private static bool TryGetLanguageExceptionWithoutTraversal(void* thisPtr, HRESULT hresult, [NotNullWhen(true)] out Exception? exception)
     {
         void* languageExceptionPtr;
 
