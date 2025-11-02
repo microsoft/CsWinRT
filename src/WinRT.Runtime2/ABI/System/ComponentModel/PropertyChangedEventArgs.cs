@@ -96,7 +96,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -129,7 +129,7 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
             defaultInterface: out void* defaultInterface);
 
         // The value of 'innerInterface' should always be 'null', but let's release it just in case
-        WindowsRuntimeObjectMarshaller.Free(innerInterface);
+        WindowsRuntimeUnknownMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

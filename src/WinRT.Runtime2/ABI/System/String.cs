@@ -156,7 +156,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }

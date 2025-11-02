@@ -80,7 +80,7 @@ public static unsafe class RestrictedErrorInfo
                     }
                     finally
                     {
-                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfoPtr);
+                        WindowsRuntimeUnknownMarshaller.Free(languageErrorInfoPtr);
                     }
                 }
 

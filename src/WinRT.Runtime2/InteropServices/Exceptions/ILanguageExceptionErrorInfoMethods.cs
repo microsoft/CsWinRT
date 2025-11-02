@@ -84,7 +84,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
+            WindowsRuntimeUnknownMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
         }
 
         return null;
@@ -133,7 +133,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(languageExceptionPtr);
+            WindowsRuntimeUnknownMarshaller.Free(languageExceptionPtr);
         }
 
         exception = null;

@@ -56,7 +56,7 @@ public static unsafe class WindowsRuntimeArrayMarshaller
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(referencePtr);
+            WindowsRuntimeUnknownMarshaller.Free(referencePtr);
         }
     }
 }

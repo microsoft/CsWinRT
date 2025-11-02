@@ -124,7 +124,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             }
             finally
             {
-                WindowsRuntimeObjectMarshaller.Free(result);
+                WindowsRuntimeUnknownMarshaller.Free(result);
             }
         }
     }

@@ -1461,7 +1461,7 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.Free(void*)</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerFree => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(

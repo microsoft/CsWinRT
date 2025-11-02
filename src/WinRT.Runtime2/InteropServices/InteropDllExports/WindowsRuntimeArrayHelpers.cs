@@ -99,7 +99,7 @@ public static unsafe class WindowsRuntimeArrayHelpers
 
         for (int i = 0; i < size; i++)
         {
-            WindowsRuntimeObjectMarshaller.Free(array[i]);
+            WindowsRuntimeUnknownMarshaller.Free(array[i]);
         }
 
         Marshal.FreeCoTaskMem((nint)array);
@@ -170,7 +170,7 @@ public static unsafe class WindowsRuntimeArrayHelpers
     {
         for (int i = 0; i < offset; i++)
         {
-            WindowsRuntimeObjectMarshaller.Free(array[i]);
+            WindowsRuntimeUnknownMarshaller.Free(array[i]);
         }
     }
 }
