@@ -121,24 +121,30 @@ internal static unsafe class ExceptionHelpers
     /// </returns>
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hresult)
     {
-        if (languageErrorInfoPtr is null)
+        void* languageExceptionPtr;
+
+        // If we fail to get the original language exception, stop here
+        if (ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr).Failed())
         {
             return null;
         }
 
-        void* languageExceptionPtr = null;
         try
         {
-            if (ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr).Succeeded())
+            // Try to get the managed object for the language exception. This method assumes that the
+            // object should be some CCW to an 'Exception' object we previously stored from somewhere.
+            if (!WindowsRuntimeMarshal.TryGetManagedObject(languageExceptionPtr, out object? exceptionObject))
             {
-                if (WindowsRuntimeMarshal.TryGetManagedObject(languageExceptionPtr, out object? exceptionObject))
-                {
-                    Exception? exception = exceptionObject as Exception;
-                    if (RestrictedErrorInfo.GetHRForException(exception) == hresult)
-                    {
-                        return exception;
-                    }
-                }
+                return null;
+            }
+
+            // The CCW we unwrapped should always be for some 'Exception' object
+            Exception exception = (Exception)exceptionObject;
+
+            // Make sure that the mapped 'HRESULT' value matches and is the one we're looking for
+            if (RestrictedErrorInfo.GetHRForException(exception) == hresult)
+            {
+                return exception;
             }
         }
         finally
