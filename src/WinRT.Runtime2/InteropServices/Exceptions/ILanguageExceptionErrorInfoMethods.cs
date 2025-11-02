@@ -66,7 +66,9 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
                 void* previousLanguageExceptionErrorInfo2Ptr;
 
                 // Try to get the previous language exception in the propagation chain
-                if (ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr).Failed())
+                if (ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(
+                    thisPtr: currentLanguageExceptionErrorInfo2Ptr,
+                    previousLanguageExceptionErrorInfo: &previousLanguageExceptionErrorInfo2Ptr).Failed())
                 {
                     return null;
                 }
