@@ -197,7 +197,7 @@ internal sealed unsafe class EventSourceCache
             _ = _target.Resolve(WellKnownWindowsInterfaceIIDs.IID_IUnknown, out weakReference);
 
             // Update the target and clear the state if the old target is not alive anymore
-            if (weakReference == null)
+            if (weakReference is null)
             {
                 _target = target;
 
@@ -233,7 +233,7 @@ internal sealed unsafe class EventSourceCache
         }
 
         // There's no state to return if the target is not alive anymore
-        if (weakReference == null)
+        if (weakReference is null)
         {
             return null;
         }

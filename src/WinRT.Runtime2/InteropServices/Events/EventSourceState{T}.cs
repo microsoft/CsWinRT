@@ -164,7 +164,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     internal bool HasComReferences()
     {
         // If we have an event invoke pointer, check that first
-        if (_eventInvokePtr != null)
+        if (_eventInvokePtr is not null)
         {
             _ = IUnknownVftbl.AddRefUnsafe(_eventInvokePtr);
 
@@ -178,7 +178,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
 
         // If we have a reference tracker pointer also check it. It's possible for the event invoke
         // to have a reference count of 0, but it's actually kept alive by the reference tracker.
-        if (_referenceTrackerTargetPtr != null)
+        if (_referenceTrackerTargetPtr is not null)
         {
             _ = IReferenceTrackerVftblTargetVftbl.AddRefFromReferenceTrackerUnsafe(_referenceTrackerTargetPtr);
 
@@ -207,7 +207,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
         // We only need to try to remove the cache entry the first time this state is disposed.
         // This will remove the state, and also remove the cache itself if it's now empty. This
         // ensures that no cache object is kept alive unnecessarily when no longer needed.
-        if (thisPtr != null)
+        if (thisPtr is not null)
         {
             EventSourceCache.Remove(_thisPtr, _index, _weakReferenceToSelf);
         }

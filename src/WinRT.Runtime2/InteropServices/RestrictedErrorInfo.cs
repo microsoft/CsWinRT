@@ -56,7 +56,7 @@ public static unsafe class RestrictedErrorInfo
         {
             void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
-            if (restrictedErrorInfoValuePtr != null)
+            if (restrictedErrorInfoValuePtr is not null)
             {
                 if (IUnknownVftbl.QueryInterfaceUnsafe(
                     thisPtr: restrictedErrorInfoValuePtr,
@@ -72,7 +72,7 @@ public static unsafe class RestrictedErrorInfo
                             restoredExceptionFromGlobalState = true;
                             WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
-                            if (restrictedErrorInfo != null)
+                            if (restrictedErrorInfo is not null)
                             {
                                 ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, restrictedErrorInfo, true);
                             }
@@ -219,7 +219,7 @@ public static unsafe class RestrictedErrorInfo
         {
             if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
-                if (restrictedErrorObject != null)
+                if (restrictedErrorObject is not null)
                 {
                     using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
                     IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
@@ -250,7 +250,7 @@ public static unsafe class RestrictedErrorInfo
             {
                 // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                 // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
-                if (!isLanguageException && restrictedErrorObject != null &&
+                if (!isLanguageException && restrictedErrorObject is not null &&
                     IUnknownVftbl.QueryInterfaceUnsafe(
                         thisPtr: restrictedErrorObject.GetThisPtrUnsafe(),
                         iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
@@ -277,7 +277,7 @@ public static unsafe class RestrictedErrorInfo
                     exception.Data.Remove(WellKnownExceptionDataKeys.RestrictedErrorObjectReference);
                     exception.Data.Remove(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject);
                 }
-                if (restrictedErrorObject != null)
+                if (restrictedErrorObject is not null)
                 {
                     using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
 
@@ -292,7 +292,7 @@ public static unsafe class RestrictedErrorInfo
                 {
                     Type exceptionType = exception.GetType();
 
-                    if (exceptionType != null)
+                    if (exceptionType is not null)
                     {
                         message = exceptionType.Name;
                     }
@@ -347,7 +347,7 @@ public static unsafe class RestrictedErrorInfo
 
         void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
-        if (restrictedErrorInfoValuePtr != null)
+        if (restrictedErrorInfoValuePtr is not null)
         {
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }

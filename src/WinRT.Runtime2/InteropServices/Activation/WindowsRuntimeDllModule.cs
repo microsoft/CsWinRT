@@ -83,7 +83,7 @@ internal sealed unsafe class WindowsRuntimeDllModule
     /// <exception cref="Win32Exception"></exception>
     ~WindowsRuntimeDllModule()
     {
-        Debug.Assert(_dllCanUnloadNow == null || _dllCanUnloadNow().Succeeded());
+        Debug.Assert(_dllCanUnloadNow is null || _dllCanUnloadNow().Succeeded());
 
         if ((_moduleHandle != (HANDLE)null) && WindowsRuntimeImports.FreeLibrary(_moduleHandle).Failed())
         {
@@ -193,7 +193,7 @@ internal sealed unsafe class WindowsRuntimeDllModule
         void* dllGetActivationFactory = WindowsRuntimeImports.TryGetProcAddress(moduleHandle, "DllGetActivationFactory"u8);
 
         // If we can't find the 'DllGetActivationFactory' export, the .dll is invalid (this export must be present)
-        if (dllGetActivationFactory == null)
+        if (dllGetActivationFactory is null)
         {
             module = null;
 

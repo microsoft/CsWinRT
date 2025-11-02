@@ -136,7 +136,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     /// </remarks>
     public static void Free(void* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return;
         }

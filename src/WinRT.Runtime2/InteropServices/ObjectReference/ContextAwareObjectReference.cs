@@ -163,7 +163,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
     {
         nuint currentContext = WindowsRuntimeImports.CoGetContextToken();
 
-        return _contextCallbackPtr == null || currentContext == _contextToken
+        return _contextCallbackPtr is null || currentContext == _contextToken
             ? null
             : CachedContexts.GetOrAdd(currentContext, CachedContextsObjectReferenceFactory.Value, this);
     }

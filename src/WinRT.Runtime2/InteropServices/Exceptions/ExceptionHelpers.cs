@@ -31,7 +31,7 @@ internal static unsafe class ExceptionHelpers
         void* restrictedErrorInfoPtr;
         WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr).Assert();
 
-        if (restrictedErrorInfoPtr == null)
+        if (restrictedErrorInfoPtr is null)
         {
             return default;
         }
@@ -74,7 +74,7 @@ internal static unsafe class ExceptionHelpers
                 if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Succeeded())
                 {
 
-                    while (currentLanguageExceptionErrorInfo2Ptr != null)
+                    while (currentLanguageExceptionErrorInfo2Ptr is not null)
                     {
                         Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hresult);
                         if (propagatedException is not null)
@@ -115,7 +115,7 @@ internal static unsafe class ExceptionHelpers
     /// </returns>
     private static unsafe Exception? GetLanguageExceptionInternal(void* languageErrorInfoPtr, HRESULT hresult)
     {
-        if (languageErrorInfoPtr == null)
+        if (languageErrorInfoPtr is null)
         {
             return null;
         }
@@ -157,7 +157,7 @@ internal static unsafe class ExceptionHelpers
     {
         IDictionary exceptionData = exception.Data;
 
-        if (exceptionData != null)
+        if (exceptionData is not null)
         {
             // Keep the error object alive so that user could retrieve error information
             // using Data["RestrictedErrorReference"]
@@ -180,22 +180,22 @@ internal static unsafe class ExceptionHelpers
 
         if (exceptionData is not null)
         {
-            if (description != null)
+            if (description is not null)
             {
                 exceptionData[WellKnownExceptionDataKeys.Description] = description;
             }
 
-            if (restrictedError != null)
+            if (restrictedError is not null)
             {
                 exceptionData[WellKnownExceptionDataKeys.RestrictedDescription] = restrictedError;
             }
 
-            if (restrictedErrorReference != null)
+            if (restrictedErrorReference is not null)
             {
                 exceptionData[WellKnownExceptionDataKeys.RestrictedErrorReference] = restrictedErrorReference;
             }
 
-            if (restrictedCapabilitySid != null)
+            if (restrictedCapabilitySid is not null)
             {
                 exceptionData[WellKnownExceptionDataKeys.RestrictedCapabilitySid] = restrictedCapabilitySid;
             }
@@ -204,7 +204,7 @@ internal static unsafe class ExceptionHelpers
             exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
             exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
 
-            if (internalGetGlobalErrorStateException != null)
+            if (internalGetGlobalErrorStateException is not null)
             {
                 exceptionData[WellKnownExceptionDataKeys.InternalCsWinRTException] = internalGetGlobalErrorStateException;
             }
