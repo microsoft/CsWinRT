@@ -22,13 +22,11 @@ internal static unsafe class ExceptionHelpers
     /// <summary>
     /// Retrieves the current restricted error info object and sets it for propagation if available.
     /// </summary>
-    /// <returns>
-    /// A <see cref="WindowsRuntimeObjectReferenceValue"/> representing the restricted error info object,
-    /// or <c>default</c> if none is available.
-    /// </returns>
+    /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> representing the restricted error info object.</returns>
     public static WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
     {
         void* restrictedErrorInfoPtr;
+
         WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr).Assert();
 
         if (restrictedErrorInfoPtr is null)
@@ -48,62 +46,70 @@ internal static unsafe class ExceptionHelpers
     /// </summary>
     /// <param name="languageErrorInfoPtr">Pointer to the language error info COM object.</param>
     /// <param name="hresult">The HRESULT associated with the error.</param>
-    /// <returns>
-    /// The managed <see cref="Exception"/> if found; otherwise, <c>null</c>.
-    /// </returns>
+    /// <returns>The managed <see cref="Exception"/> if found, or <see langword="null"/>.</returns>
     public static Exception? GetLanguageException(void* languageErrorInfoPtr, HRESULT hresult)
     {
-        // Check the error info first for the language exception.
-        Exception? exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hresult);
-        if (exception is not null)
+        // Check the error info first for the language exception
+        if (GetLanguageExceptionInternal(languageErrorInfoPtr, hresult) is { } exception)
         {
             return exception;
         }
 
-        // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
+        // Check if propagated exceptions are supported, and stop if they're not
         if (IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: languageErrorInfoPtr,
             iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
-            pvObject: out void* languageErrorInfo2Ptr).Succeeded())
+            pvObject: out void* languageErrorInfo2Ptr).Failed())
         {
-            void* currentLanguageExceptionErrorInfo2Ptr = null;
+            return null;
+        }
 
-            // TODO: Potential double free currentLanguageExceptionErrorInfo2Ptr if GetPreviousLanguageExceptionErrorInfoUnsafe fails on. Find a better way to handle this.
-            try
+        void* currentLanguageExceptionErrorInfo2Ptr;
+
+        // If we can't get the propagation context head, stop immediately
+        if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Failed())
+        {
+            return null;
+        }
+
+        // We can release the exception info, now that we have a reference to the language exception interface
+        _ = IUnknownVftbl.ReleaseUnsafe(languageErrorInfo2Ptr);
+
+        try
+        {
+            // Traverse the propagated exceptions and check if any one of those is our exception to reuse
+            while (currentLanguageExceptionErrorInfo2Ptr is not null)
             {
-                if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Succeeded())
+                // Try to retrieve the propagated exception from the current error info
+                if (GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hresult) is { } propagatedException)
                 {
-
-                    while (currentLanguageExceptionErrorInfo2Ptr is not null)
-                    {
-                        Exception? propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hresult);
-                        if (propagatedException is not null)
-                        {
-                            return propagatedException;
-                        }
-
-                        void* previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
-                        try
-                        {
-                            _ = ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr);
-                        }
-                        finally
-                        {
-                            WindowsRuntimeObjectMarshaller.Free(previousLanguageExceptionErrorInfo2Ptr);
-                        }
-                    }
+                    return propagatedException;
                 }
+
+                void* previousLanguageExceptionErrorInfo2Ptr;
+
+                // Try to get the previous language exception in the propagation chain
+                if (ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(currentLanguageExceptionErrorInfo2Ptr, &previousLanguageExceptionErrorInfo2Ptr).Failed())
+                {
+                    return null;
+                }
+
+                // We are about to start iterating again with the previous exception info.
+                // The previous one will become the current one, and the one we had before
+                // can be released. So we first release that (as it's the loop variable).
+                _ = IUnknownVftbl.ReleaseUnsafe(currentLanguageExceptionErrorInfo2Ptr);
+
+                // We can now safely replace it with the newly retrieved error info and loop again
+                currentLanguageExceptionErrorInfo2Ptr = previousLanguageExceptionErrorInfo2Ptr;
             }
-            finally
-            {
-                WindowsRuntimeObjectMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
-                WindowsRuntimeObjectMarshaller.Free(languageErrorInfo2Ptr);
-            }
+        }
+        finally
+        {
+            WindowsRuntimeObjectMarshaller.Free(currentLanguageExceptionErrorInfo2Ptr);
         }
 
         return null;
     }
-
 
     /// <summary>
     /// Internal helper to retrieve a managed language exception from a COM pointer.
