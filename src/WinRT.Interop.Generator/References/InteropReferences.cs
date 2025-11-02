@@ -712,6 +712,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeComWrappersMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshal"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeUnknownMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectMarshaller"u8);
@@ -1445,6 +1450,14 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeUnknownMarshallerFree => field ??= WindowsRuntimeUnknownMarshaller
+        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectMarshaller
@@ -1458,14 +1471,6 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Object,
-            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
-    /// </summary>
-    public MemberReference WindowsRuntimeObjectMarshallerFree => field ??= WindowsRuntimeObjectMarshaller
-        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Void,
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
