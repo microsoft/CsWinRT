@@ -7,20 +7,19 @@ using System.Collections;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Provides helper methods for working with restricted error information and language-specific exceptions
-/// in Windows Runtime interop scenarios.
+/// Provides helper methods for working with restricted error information and language-specific exceptions in Windows Runtime interop scenarios.
 /// </summary>
 /// <remarks>
-/// These methods manage COM pointers, propagate language exceptions, and attach restricted error info
-/// to managed exceptions for diagnostic and interop purposes.
+/// These methods manage COM pointers, propagate language exceptions, and attach
+/// restricted error info to managed exceptions for diagnostic and interop purposes.
 /// </remarks>
-internal static unsafe class ExceptionHelpers
+internal static unsafe class RestrictedErrorInfoHelpers
 {
     /// <summary>
     /// Retrieves the current restricted error info object and sets it for propagation if available.
     /// </summary>
     /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> representing the restricted error info object.</returns>
-    public static WindowsRuntimeObjectReferenceValue BorrowRestrictedErrorInfo()
+    public static WindowsRuntimeObjectReferenceValue BorrowErrorInfo()
     {
         void* restrictedErrorInfoPtr;
 
@@ -39,10 +38,10 @@ internal static unsafe class ExceptionHelpers
     /// <summary>
     /// Adds restricted error info metadata to the <see cref="Exception.Data"/> dictionary.
     /// </summary>
-    /// <param name="exception">The exception to augment.</param>
+    /// <param name="exception">The <see cref="Exception"/> instance to augment.</param>
     /// <param name="restrictedErrorObject">The restricted error info object reference.</param>
     /// <param name="hasRestrictedLanguageErrorObject">Indicates whether a language-specific error object exists.</param>
-    public static void AddExceptionDataForRestrictedErrorInfo(
+    public static void AddExceptionData(
         Exception exception,
         WindowsRuntimeObjectReference restrictedErrorObject,
         bool hasRestrictedLanguageErrorObject)
@@ -57,10 +56,21 @@ internal static unsafe class ExceptionHelpers
         }
     }
 
-    public static void AddExceptionDataForRestrictedErrorInfo(
+    /// <summary>
+    /// Adds restricted error info metadata to the <see cref="Exception.Data"/> dictionary.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> instance to augment.</param>
+    /// <param name="description">The human-readable error description (may be empty).</param>
+    /// <param name="restrictedDescription">The restricted error description (may be empty).</param>
+    /// <param name="restrictedErrorReference">The reference string (source) associated with the error from an <c>IRestrictedErrorInfo</c> instance.</param>
+    /// <param name="restrictedCapabilitySid">The capability SID (may be empty).</param>
+    /// <param name="restrictedErrorObject">The restricted error info object reference.</param>
+    /// <param name="hasRestrictedLanguageErrorObject">Indicates whether a language-specific error object exists.</param>
+    /// <param name="internalGetGlobalErrorStateException">The internal exception (if any) that was thrown while trying to retrieve the global exception.</param>
+    public static void AddExceptionData(
         Exception exception,
         string? description,
-        string? restrictedError,
+        string? restrictedDescription,
         string? restrictedErrorReference,
         string? restrictedCapabilitySid,
         WindowsRuntimeObjectReference? restrictedErrorObject,
@@ -76,9 +86,9 @@ internal static unsafe class ExceptionHelpers
                 exceptionData[WellKnownExceptionDataKeys.Description] = description;
             }
 
-            if (restrictedError is not null)
+            if (restrictedDescription is not null)
             {
-                exceptionData[WellKnownExceptionDataKeys.RestrictedDescription] = restrictedError;
+                exceptionData[WellKnownExceptionDataKeys.RestrictedDescription] = restrictedDescription;
             }
 
             if (restrictedErrorReference is not null)

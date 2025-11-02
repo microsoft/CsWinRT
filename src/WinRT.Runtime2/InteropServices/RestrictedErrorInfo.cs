@@ -40,7 +40,7 @@ public static unsafe class RestrictedErrorInfo
         restoredExceptionFromGlobalState = false;
 
         string? description = null;
-        string? restrictedError = null;
+        string? restrictedDescription = null;
         string? restrictedErrorReference = null;
         string? restrictedCapabilitySid = null;
         string? errorMessage = null;
@@ -48,7 +48,7 @@ public static unsafe class RestrictedErrorInfo
         Exception? internalGetGlobalErrorStateException = null;
         WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
 
-        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();
 
         try
         {
@@ -72,7 +72,7 @@ public static unsafe class RestrictedErrorInfo
 
                             if (restrictedErrorInfo is not null)
                             {
-                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, restrictedErrorInfo, true);
+                                RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfo, true);
                             }
 
                             return exception;
@@ -86,7 +86,7 @@ public static unsafe class RestrictedErrorInfo
 
                 restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedError, out restrictedCapabilitySid);
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedDescription, out restrictedCapabilitySid);
 
                 restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
 
@@ -101,15 +101,15 @@ public static unsafe class RestrictedErrorInfo
                     {
                         errorMessage += description;
 
-                        if (!string.IsNullOrEmpty(restrictedError))
+                        if (!string.IsNullOrEmpty(restrictedDescription))
                         {
                             errorMessage += Environment.NewLine;
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(restrictedError))
+                    if (!string.IsNullOrEmpty(restrictedDescription))
                     {
-                        errorMessage += restrictedError;
+                        errorMessage += restrictedDescription;
                     }
                 }
             }
@@ -149,10 +149,10 @@ public static unsafe class RestrictedErrorInfo
 
         exception = WellKnownExceptionMappings.GetExceptionForHR(errorCode, errorMessage);
 
-        ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(
+        RestrictedErrorInfoHelpers.AddExceptionData(
             exception,
             description,
-            restrictedError,
+            restrictedDescription,
             restrictedErrorReference,
             restrictedCapabilitySid,
             restrictedErrorInfoToSave,
@@ -215,7 +215,7 @@ public static unsafe class RestrictedErrorInfo
 
         try
         {
-            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
+            if (RestrictedErrorInfoHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
                 if (restrictedErrorObject is not null)
                 {
@@ -244,7 +244,7 @@ public static unsafe class RestrictedErrorInfo
             // If the exception has an IRestrictedErrorInfo, use that as our error info
             // to allow to propagate the original error through WinRT with the end to end information
             // rather than losing that context.
-            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
+            if (RestrictedErrorInfoHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
             {
                 // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                 // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
@@ -341,7 +341,7 @@ public static unsafe class RestrictedErrorInfo
     {
         SetErrorInfo(exception);
 
-        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();
 
         void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
