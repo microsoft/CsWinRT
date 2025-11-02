@@ -225,30 +225,33 @@ public static unsafe class RestrictedErrorInfo
     {
         try
         {
-            // If the exception has an IRestrictedErrorInfo, use that as our error info
-            // to allow to propagate the original error through WinRT with the end to end information
-            // rather than losing that context.
+            // If the exception has an 'IRestrictedErrorInfo' value, use that as our error info to allow to propagate
+            // the original error through WinRT with the end to end information rather than losing that context.
             if (RestrictedErrorInfoHelpers.TryGetErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
             {
-                // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
-                // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
-                if (!isLanguageException && restrictedErrorObject is not null &&
-                    IUnknownVftbl.QueryInterfaceUnsafe(
+                // Capture the C# language exception if it hasn't already been captured previously either during the
+                // throw or during a propagation. Given the C# exception itself captures propagation context on rethrow,
+                // we don't do it each time.
+                if (!isLanguageException)
+                {
+                    if (IUnknownVftbl.QueryInterfaceUnsafe(
                         thisPtr: restrictedErrorObject.GetThisPtrUnsafe(),
                         iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
                         pvObject: out void* languageErrorInfo2Ptr).Succeeded())
-                {
-                    try
                     {
-                        using WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                        // If the error object supports 'ILanguageExceptionErrorInfo2', marshal the exception and pass it to 'CapturePropagationContext'
+                        try
+                        {
+                            using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
 
-                        ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
-                            languageErrorInfo2Ptr,
-                            managedExceptionWrapper.GetThisPtrUnsafe()).Assert();
-                    }
-                    finally
-                    {
-                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfo2Ptr);
+                            ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
+                                languageErrorInfo2Ptr,
+                                exceptionValue.GetThisPtrUnsafe()).Assert();
+                        }
+                        finally
+                        {
+                            _ = IUnknownVftbl.ReleaseUnsafe(languageErrorInfo2Ptr);
+                        }
                     }
                 }
                 else if (isLanguageException)
@@ -259,42 +262,33 @@ public static unsafe class RestrictedErrorInfo
                     exception.Data.Remove(WellKnownExceptionDataKeys.RestrictedErrorObjectReference);
                     exception.Data.Remove(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject);
                 }
-                if (restrictedErrorObject is not null)
-                {
-                    using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
 
-                    _ = WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObjectValue.GetThisPtrUnsafe());
-                }
+                using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
+
+                _ = WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObjectValue.GetThisPtrUnsafe());
             }
             else
             {
                 string message = exception.Message;
 
+                // If the exception has no message, we fallback to the exception type name
                 if (string.IsNullOrEmpty(message))
                 {
-                    Type exceptionType = exception.GetType();
-
-                    if (exceptionType is not null)
-                    {
-                        message = exceptionType.Name;
-                    }
+                    message = exception.GetType().Name;
                 }
 
+                // In this case we have no existing 'IRestrictedErrorInfo' value, so we capture a new C# language
+                // exception from this location, for the current exception, to flow the error info from now on.
                 fixed (char* lpMessage = message)
                 {
                     HStringMarshaller.ConvertToUnmanagedUnsafe(lpMessage, message.Length, out HStringReference hstring);
 
-                    WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                    using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
 
-                    try
-                    {
-                        _ = WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring.HString, managedExceptionWrapper.GetThisPtrUnsafe());
-                    }
-                    finally
-                    {
-                        _ = Marshal.Release((nint)managedExceptionWrapper.DetachThisPtrUnsafe());
-                    }
-
+                    _ = WindowsRuntimeImports.RoOriginateLanguageException(
+                        error: GetHRForException(exception),
+                        message: hstring.HString,
+                        languageException: exceptionValue.GetThisPtrUnsafe());
                 }
             }
         }
