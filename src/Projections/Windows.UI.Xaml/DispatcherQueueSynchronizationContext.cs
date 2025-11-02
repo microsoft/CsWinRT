@@ -2,6 +2,8 @@
 using System.Threading;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable CSWINRT3001
+
 #nullable enable
 
 namespace Windows.System;
@@ -26,7 +28,7 @@ public sealed partial class DispatcherQueueSynchronizationContext : Synchronizat
     {
         ArgumentNullException.ThrowIfNull(dispatcherQueue);
 
-        if (!WindowsRuntimeMarshal.TryUnwrapObjectReference(dispatcherQueue, out _objectReference!))
+        if (!WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(dispatcherQueue, out _objectReference!))
         {
             throw new ArgumentException(null, nameof(dispatcherQueue));
         }
