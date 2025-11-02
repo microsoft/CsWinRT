@@ -83,9 +83,9 @@ internal sealed unsafe class WindowsRuntimeDllModule
     /// <exception cref="Win32Exception"></exception>
     ~WindowsRuntimeDllModule()
     {
-        Debug.Assert(_dllCanUnloadNow == null || WellKnownErrorCodes.Succeeded(_dllCanUnloadNow()));
+        Debug.Assert(_dllCanUnloadNow == null || _dllCanUnloadNow().Succeeded());
 
-        if ((_moduleHandle != (HANDLE)null) && !WellKnownErrorCodes.Succeeded(WindowsRuntimeImports.FreeLibrary(_moduleHandle)))
+        if ((_moduleHandle != (HANDLE)null) && WindowsRuntimeImports.FreeLibrary(_moduleHandle).Failed())
         {
             // The 'Win32Exception' constructor will automatically get the last system error
             [DoesNotReturn]
@@ -135,7 +135,7 @@ internal sealed unsafe class WindowsRuntimeDllModule
         HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassName, out void* activationFactoryPtr);
 
         // If the operation succeeded, wrap the activation factory into a managed reference
-        activationFactory = WellKnownErrorCodes.Succeeded(hresult)
+        activationFactory = hresult.Succeeded()
             ? WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)
             : null;
 

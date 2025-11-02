@@ -91,7 +91,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         HRESULT hresult = DerivedTryAsNative(in iid, out objectReference);
 
-        return WellKnownErrorCodes.Succeeded(hresult);
+        return hresult.Succeeded();
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         HRESULT hresult = TryAsNative(in iid, out ppv);
 
-        return WellKnownErrorCodes.Succeeded(hresult);
+        return hresult.Succeeded();
     }
 
     /// <inheritdoc cref="TryAsUnsafe(in Guid, out void*)"/>
@@ -113,7 +113,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         HRESULT hresult = TryAsNative(in iid, out ppv);
 
-        return WellKnownErrorCodes.Succeeded(hresult);
+        return hresult.Succeeded();
     }
 
     /// <summary>

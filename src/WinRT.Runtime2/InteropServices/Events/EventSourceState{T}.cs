@@ -149,7 +149,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
 
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(eventInvokePtr, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTrackerTarget, out _referenceTrackerTargetPtr);
 
-        if (WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Succeeded())
         {
             // We don't want to keep ourselves alive, and as long as this object
             // is alive, the CCW still exists (the CCW is keeping it alive).

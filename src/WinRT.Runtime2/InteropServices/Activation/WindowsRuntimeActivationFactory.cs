@@ -167,9 +167,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
-        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory);
-
-        return WellKnownErrorCodes.Succeeded(hresult);
+        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory).Succeeded();
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
@@ -177,9 +175,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
-        HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory);
-
-        return WellKnownErrorCodes.Succeeded(hresult);
+        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory).Succeeded();
     }
 
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
@@ -195,7 +191,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // Attempt activation with the activation handler, if any (1)
         HRESULT hresult = GetActivationFactoryFromActivationHandlerUnsafe(runtimeClassName, in defaultIid, out activationFactory);
 
-        if (WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Succeeded())
         {
             return hresult;
         }
@@ -203,7 +199,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // Attempt manifest-based activation using 'RoGetActivationFactory' (2)
         hresult = WindowsRuntimePlatformModule.Instance.GetActivationFactoryUnsafe(runtimeClassName, in defaultIid, out activationFactory);
 
-        if (WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Succeeded())
         {
             return hresult;
         }
@@ -270,7 +266,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // This is a fallback mechanism, and it is not as efficient as using 'RoGetActivationFactory'.
         // Consumers should prefer manifest-based Windows Runtime activation whenever possible. The
         // main reason this approach also exists is to provide a way for unpackaged apps to also work.
-        while (!WellKnownErrorCodes.Succeeded(hresult))
+        while (hresult.Failed())
         {
             int lastSegmentIndex = moduleName.LastIndexOf('.');
 
@@ -312,7 +308,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         hresult = GetActivationFactoryFromDllUnsafe(runtimeClassName, hresult, out void* activationFactoryUnknown);
 
         // If the activation failed, we can't do anything else, just return that 'HRESULT'
-        if (!WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Failed())
         {
             return hresult;
         }
@@ -366,7 +362,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         static void ThrowException(string runtimeClassName, HRESULT hresult) => throw GetException(runtimeClassName, hresult);
 
         // If the activation failed, throw the appropriate exception
-        if (!WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Failed())
         {
             ThrowException(runtimeClassName, hresult);
         }

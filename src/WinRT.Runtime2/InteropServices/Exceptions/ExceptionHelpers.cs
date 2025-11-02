@@ -61,17 +61,17 @@ internal static unsafe class ExceptionHelpers
         }
 
         // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
-        if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                            languageErrorInfoPtr,
-                            in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
-                            out void* languageErrorInfo2Ptr)))
+        if (IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr: languageErrorInfoPtr,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
+            pvObject: out void* languageErrorInfo2Ptr).Succeeded())
         {
             void* currentLanguageExceptionErrorInfo2Ptr = null;
 
             // TODO: Potential double free currentLanguageExceptionErrorInfo2Ptr if GetPreviousLanguageExceptionErrorInfoUnsafe fails on. Find a better way to handle this.
             try
             {
-                if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr)))
+                if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Succeeded())
                 {
 
                     while (currentLanguageExceptionErrorInfo2Ptr != null)
@@ -123,7 +123,7 @@ internal static unsafe class ExceptionHelpers
         void* languageExceptionPtr = null;
         try
         {
-            if (WellKnownErrorCodes.Succeeded(ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr)))
+            if (ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(languageErrorInfoPtr, &languageExceptionPtr).Succeeded())
             {
                 if (WindowsRuntimeMarshal.TryGetManagedObject(languageExceptionPtr, out object? exceptionObject))
                 {

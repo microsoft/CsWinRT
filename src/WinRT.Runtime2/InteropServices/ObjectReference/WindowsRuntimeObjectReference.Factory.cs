@@ -127,7 +127,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // way that we can't recover from (that is, if 'GetUnmarshalClass' fails). In that case,
         // we need to release the input pointer before throwing an exception, to avoid leaking it.
         // So we handle this special case here first, before doing anything else.
-        if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
+        if (isFreeThreaded.Failed())
         {
             _ = IUnknownVftbl.ReleaseUnsafe(acquiredThisPtr);
 

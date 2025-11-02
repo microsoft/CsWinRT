@@ -70,7 +70,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // That is, technically speaking we are ultimately going to create a 'WindowsRuntimeObjectReference'
         // object, which could throw 'OutOfMemoryException' in extreme circumstances. However, that is
         // considered an error state that cannot be recovered from, so that is not a concern here.
-        if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
+        if (isFreeThreaded.Failed())
         {
             // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
             // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input

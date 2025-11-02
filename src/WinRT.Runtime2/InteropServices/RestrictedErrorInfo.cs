@@ -55,10 +55,10 @@ public static unsafe class RestrictedErrorInfo
 
             if (restrictedErrorInfoValuePtr != null)
             {
-                if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                    restrictedErrorInfoValuePtr,
-                    in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
-                    out void* languageErrorInfoPtr)))
+                if (IUnknownVftbl.QueryInterfaceUnsafe(
+                    thisPtr: restrictedErrorInfoValuePtr,
+                    iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
+                    pvObject: out void* languageErrorInfoPtr).Succeeded())
                 {
                     try
                     {
@@ -231,9 +231,10 @@ public static unsafe class RestrictedErrorInfo
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="errorCode"/> represents a failure.</exception>
     /// <seealso cref="Marshal.ThrowExceptionForHR(int)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
-        if (errorCode < 0)
+        if (errorCode.Failed())
         {
             Throw(errorCode);
         }
@@ -313,10 +314,10 @@ public static unsafe class RestrictedErrorInfo
                 // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                 // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
                 if (!isLanguageException && restrictedErrorObject != null &&
-                    WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                            restrictedErrorObject.GetThisPtrUnsafe(),
-                            in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
-                            out void* languageErrorInfo2Ptr)))
+                    IUnknownVftbl.QueryInterfaceUnsafe(
+                        thisPtr: restrictedErrorObject.GetThisPtrUnsafe(),
+                        iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
+                        pvObject: out void* languageErrorInfo2Ptr).Succeeded())
                 {
                     try
                     {

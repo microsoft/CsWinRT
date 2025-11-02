@@ -91,7 +91,7 @@ internal sealed unsafe class WindowsRuntimePlatformModule
         HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassName, in iid, out void* activationFactoryPtr);
 
         // If the operation succeeded, wrap the activation factory into a managed reference
-        activationFactory = WellKnownErrorCodes.Succeeded(hresult)
+        activationFactory = hresult.Succeeded()
             ? WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)
             : null;
 
