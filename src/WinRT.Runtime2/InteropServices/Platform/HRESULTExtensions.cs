@@ -32,4 +32,15 @@ internal static class HRESULTExtensions
     {
         return hresult >= WellKnownErrorCodes.S_OK;
     }
+
+    /// <summary>
+    /// Checks whether a given <c>HRESULT</c> represents a failure code.
+    /// </summary>
+    /// <param name="hresult">The <c>HRESULT</c> to check.</param>
+    /// <returns>Whether <paramref name="hresult"/> represents a failure code.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Failed(this HRESULT hresult)
+    {
+        return hresult < WellKnownErrorCodes.S_OK;
+    }
 }
