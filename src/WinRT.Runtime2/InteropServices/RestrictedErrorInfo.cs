@@ -242,7 +242,7 @@ public static unsafe class RestrictedErrorInfo
                         // If the error object supports 'ILanguageExceptionErrorInfo2', marshal the exception and pass it to 'CapturePropagationContext'
                         try
                         {
-                            using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                            using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(exception);
 
                             ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
                                 languageErrorInfo2Ptr,
@@ -283,7 +283,7 @@ public static unsafe class RestrictedErrorInfo
                 {
                     HStringMarshaller.ConvertToUnmanagedUnsafe(lpMessage, message.Length, out HStringReference hstring);
 
-                    using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                    using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(exception);
 
                     _ = WindowsRuntimeImports.RoOriginateLanguageException(
                         error: GetHRForException(exception),
