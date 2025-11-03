@@ -63,7 +63,7 @@ internal static unsafe class ExceptionHelpers
         // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
         if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
                             languageErrorInfoPtr,
-                            in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
+                            in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
                             out void* languageErrorInfo2Ptr)))
         {
             void* currentLanguageExceptionErrorInfo2Ptr = null;

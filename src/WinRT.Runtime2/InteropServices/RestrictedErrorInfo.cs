@@ -57,7 +57,7 @@ public static unsafe class RestrictedErrorInfo
             {
                 if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
                         restrictedErrorInfoValuePtr,
-                        in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo,
+                        in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
                         out void* languageErrorInfoPtr)))
                 {
                     try
@@ -67,7 +67,7 @@ public static unsafe class RestrictedErrorInfo
                         if (exception is not null)
                         {
                             restoredExceptionFromGlobalState = true;
-                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
                             if (restrictedErrorInfo != null)
                             {
@@ -83,7 +83,7 @@ public static unsafe class RestrictedErrorInfo
                     }
                 }
 
-                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo);
 
                 IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedError, out restrictedCapabilitySid);
 
@@ -315,7 +315,7 @@ public static unsafe class RestrictedErrorInfo
                 if (!isLanguageException && restrictedErrorObject != null &&
                     WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
                             restrictedErrorObject.GetThisPtrUnsafe(),
-                            in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
+                            in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
                             out void* languageErrorInfo2Ptr)))
                 {
                     try

@@ -106,7 +106,7 @@ internal sealed unsafe class FreeThreadedMarshaler
                 try
                 {
                     // We need an explicit 'QueryInterface' call to actually get the 'IMarshal' interface pointer to use
-                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownInterfaceIds.IID_IMarshal, out void* marshalPtr).Assert();
+                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownWindowsInterfaceIIDs.IID_IMarshal, out void* marshalPtr).Assert();
 
                     // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
                     // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
