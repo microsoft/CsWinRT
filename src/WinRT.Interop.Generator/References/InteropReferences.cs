@@ -362,6 +362,16 @@ internal sealed class InteropReferences
     public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IUnknownDerivedAttribute{T, TImpl}"/>.
+    /// </summary>
+    public TypeReference IUnknownDerivedAttribute2 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IUnknownDerivedAttribute`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType"/>.
+    /// </summary>
+    public TypeReference IIUnknownInterfaceType => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IIUnknownInterfaceType"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
     /// </summary>
     public TypeReference IsVolatile => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "IsVolatile"u8);
@@ -1074,6 +1084,18 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.Vtable"/>.
     /// </summary>
     public MemberReference ComInterfaceEntryVtable => field ??= ComInterfaceEntry.CreateMemberReference("Vtable"u8, new FieldSignature(_corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType.Iid"/>.
+    /// </summary>
+    public MemberReference IIUnknownInterfaceTypeget_Iid => field ??= IIUnknownInterfaceType.CreateMemberReference("get_Iid"u8, MethodSignature.CreateStatic(Guid.ToValueTypeSignature()));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType.ManagedVirtualMethodTable"/>.
+    /// </summary>
+    public MemberReference IIUnknownInterfaceTypeget_ManagedVirtualMethodTable => field ??= IIUnknownInterfaceType
+        .CreateMemberReference("get_ManagedVirtualMethodTable"u8, MethodSignature.CreateStatic(
+            returnType: CorLibTypeFactory.Void.MakePointerType().MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IUnknown()</c>.
