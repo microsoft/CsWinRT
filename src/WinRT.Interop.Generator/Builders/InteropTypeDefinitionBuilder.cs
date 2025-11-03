@@ -462,6 +462,73 @@ internal static partial class InteropTypeDefinitionBuilder
         out TypeDefinition implType,
         params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
     {
+        InterfaceEntriesImpl(
+            ns: ns,
+            name: name,
+            entriesFieldType: entriesFieldType,
+            interopReferences: interopReferences,
+            module: module,
+            get_IID: static (arg, il, module) => il.Add(Call, arg.get_IID.Import(module)),
+            get_Vtable: static (arg, il, module) => il.Add(Call, arg.get_Vtable.Import(module)),
+            implTypes: implTypes,
+            implType: out implType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
+    /// </summary>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="implType">The resulting implementation type.</param>
+    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
+    private static void InterfaceEntriesImpl(
+        Utf8String ns,
+        Utf8String name,
+        TypeDefinition entriesFieldType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition implType,
+        params ReadOnlySpan<InterfaceEntryInfo> implTypes)
+    {
+        InterfaceEntriesImpl(
+            ns: ns,
+            name: name,
+            entriesFieldType: entriesFieldType,
+            interopReferences: interopReferences,
+            module: module,
+            get_IID: static (arg, il, module) => arg.LoadIID(il, module),
+            get_Vtable: static (arg, il, module) => arg.LoadVtable(il, module),
+            implTypes: implTypes,
+            implType: out implType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
+    /// </summary>
+    /// <typeparam name="TArg">The type of arguments to use to populate the interface entries.</typeparam>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
+    /// <param name="get_IID">The callback to emit code to get the IID.</param>
+    /// <param name="get_Vtable">The callback to emit code to get the vtable.</param>
+    /// <param name="implType">The resulting implementation type.</param>
+    private static void InterfaceEntriesImpl<TArg>(
+        Utf8String ns,
+        Utf8String name,
+        TypeDefinition entriesFieldType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        ReadOnlySpan<TArg> implTypes,
+        Action<TArg, CilInstructionCollection, ModuleDefinition> get_IID,
+        Action<TArg, CilInstructionCollection, ModuleDefinition> get_Vtable,
+        out TypeDefinition implType)
+    {
         // We're declaring an 'internal static class' type
         implType = new TypeDefinition(
             ns: ns,
@@ -509,12 +576,18 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, implTypes[i].get_IID.Import(module));
+
+            // Invoke the callback to emit code to load 'IID' on the evaluation stack
+            get_IID(implTypes[i], cctorInstructions, module);
+
             _ = cctorInstructions.Add(Ldobj, interopReferences.Guid.Import(module));
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, implTypes[i].get_Vtable.Import(module));
+
+            // Same as above, but to get the vtable pointer on the stack
+            get_Vtable(implTypes[i], cctorInstructions, module);
+
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }
 
@@ -653,5 +726,25 @@ internal static partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module));
         }
+    }
+
+    /// <summary>
+    /// A base type to abstract inserting interface entries information into a static constructor.
+    /// </summary>
+    private abstract class InterfaceEntryInfo
+    {
+        /// <summary>
+        /// Loads the IID for the interface onto the evaluation stack.
+        /// </summary>
+        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
+        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
+        public abstract void LoadIID(CilInstructionCollection instructions, ModuleDefinition module);
+
+        /// <summary>
+        /// Loads the vtable for the interface onto the evaluation stack.
+        /// </summary>
+        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
+        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
+        public abstract void LoadVtable(CilInstructionCollection instructions, ModuleDefinition module);
     }
 }
