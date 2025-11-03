@@ -98,16 +98,26 @@ internal sealed unsafe class FreeThreadedMarshaler
             [MethodImpl(MethodImplOptions.NoInlining)]
             static FreeThreadedMarshaler InitializeInstanceForCurrentThread()
             {
-                // Create the free-threaded marshaler
-                void* marshalerPtr;
+                void* marshalUnknownPtr;
 
-                WindowsRuntimeImports.CoCreateFreeThreadedMarshaler(punkOuter: null, ppunkMarshal: &marshalerPtr).Assert();
+                // Create the free-threaded marshaler (the return will only be an 'IUnknown' interface pointer)
+                WindowsRuntimeImports.CoCreateFreeThreadedMarshaler(punkOuter: null, ppunkMarshal: &marshalUnknownPtr).Assert();
 
-                // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
-                // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
-                FreeThreadedObjectReference objectReference = new(marshalerPtr, referenceTrackerPtr: null);
+                try
+                {
+                    // We need an explicit 'QueryInterface' call to actually get the 'IMarshal' interface pointer to use
+                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownWindowsInterfaceIIDs.IID_IMarshal, out void* marshalPtr).Assert();
 
-                return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
+                    // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
+                    // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
+                    FreeThreadedObjectReference objectReference = new(marshalPtr, referenceTrackerPtr: null);
+
+                    return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
+                }
+                finally
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(marshalUnknownPtr);
+                }
             }
 
             return instanceForCurrentThread ?? InitializeInstanceForCurrentThread();
