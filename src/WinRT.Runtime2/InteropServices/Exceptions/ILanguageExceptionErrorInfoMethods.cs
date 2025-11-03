@@ -36,7 +36,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         // Check if propagated exceptions are supported, and stop if they're not
         if (IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: thisPtr,
-            iid: in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
             pvObject: out void* languageErrorInfo2Ptr).Failed())
         {
             exception = null;

@@ -67,7 +67,7 @@ public static unsafe class RestrictedErrorInfo
                 // We will always need this, regardless of whether we can restore the global exception or not.
                 restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
                     thisPtr: restrictedErrorInfoPtr,
-                    iid: WellKnownInterfaceIds.IID_IRestrictedErrorInfo)!;
+                    iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
 
                 // Check if the stored exception is a language exception, which we can return directly
                 if (IUnknownVftbl.QueryInterfaceUnsafe(
