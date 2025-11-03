@@ -424,7 +424,15 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static Exception CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
     {
-        return Exception(45, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
+        return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for a given interface type.
+    /// </summary>
+    public static string GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition type)
+    {
+        return Warning(49, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{type}', so the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -437,6 +445,17 @@ internal static class WellKnownInteropExceptions
     private static Exception Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message, innerException);
+    }
+
+    /// <summary>
+    /// Creates a new warning with the specified id and message.
+    /// </summary>
+    /// <param name="id">The warning id.</param>
+    /// <param name="message">The warning message.</param>
+    /// <returns>The resulting warning.</returns>
+    private static string Warning(int id, string message)
+    {
+        return $"""warning {ErrorPrefix}{id:0000}: {message}""";
     }
 }
 

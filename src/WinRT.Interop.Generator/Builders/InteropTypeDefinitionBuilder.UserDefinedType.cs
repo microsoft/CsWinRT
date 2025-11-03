@@ -111,7 +111,7 @@ internal partial class InteropTypeDefinitionBuilder
                     // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
                     if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
                     {
-                        // TODO: log warning
+                        ConsoleApp.LogError(WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType));
 
                         continue;
                     }
