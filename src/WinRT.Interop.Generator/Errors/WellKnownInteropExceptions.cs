@@ -430,17 +430,17 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve a '[GeneratedComInterface]' type.
     /// </summary>
-    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef type)
+    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef interfaceType, TypeDefinition type)
     {
-        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
     /// Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for a given interface type.
     /// </summary>
-    public static WellKnownInteropWarning GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition type)
+    public static WellKnownInteropWarning GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
     {
-        return Warning(50, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(50, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>

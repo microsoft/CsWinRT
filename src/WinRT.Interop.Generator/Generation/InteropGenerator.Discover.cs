@@ -239,7 +239,7 @@ internal partial class InteropGenerator
                                 // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
                                 if (implementation.Interface.Resolve() is not TypeDefinition interfaceType)
                                 {
-                                    WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface).LogOrThrow(args.TreatWarningsAsErrors);
+                                    WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, currentType).LogOrThrow(args.TreatWarningsAsErrors);
 
                                     continue;
                                 }
@@ -250,7 +250,7 @@ internal partial class InteropGenerator
                                 // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
                                 if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
                                 {
-                                    WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType).LogOrThrow(args.TreatWarningsAsErrors);
+                                    WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType, currentType).LogOrThrow(args.TreatWarningsAsErrors);
 
                                     continue;
                                 }
