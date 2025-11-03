@@ -117,7 +117,7 @@ internal partial class InteropTypeDefinitionBuilder
                     }
 
                     // Add the entry from the 'InterfaceInformation' type, which contains the generated info we need
-                    entriesList.Add(new ComInterfaceEntryInfo(interfaceInformationType, interopReferences));
+                    entriesList.Add(new ComInterfaceEntryInfo(interfaceInformationType));
 
                     continue;
                 }
@@ -305,13 +305,14 @@ internal partial class InteropTypeDefinitionBuilder
         private sealed class WindowsRuntimeInterfaceEntryInfo(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) : InterfaceEntryInfo
         {
             /// <inheritdoc/>
-            public override void LoadIID(CilInstructionCollection instructions, ModuleDefinition module)
+            public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Call, get_IID.Import(module));
+                _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
             }
 
             /// <inheritdoc/>
-            public override void LoadVtable(CilInstructionCollection instructions, ModuleDefinition module)
+            public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Call, get_Vtable.Import(module));
             }
@@ -321,18 +322,17 @@ internal partial class InteropTypeDefinitionBuilder
         /// An <see cref="InterfaceEntryInfo"/> type for COM types.
         /// </summary>
         /// <param name="interfaceInformationType">The <c>InterfaceInformation</c> type for the current interface.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        private sealed class ComInterfaceEntryInfo(TypeSignature interfaceInformationType, InteropReferences interopReferences) : InterfaceEntryInfo
+        private sealed class ComInterfaceEntryInfo(TypeSignature interfaceInformationType) : InterfaceEntryInfo
         {
             /// <inheritdoc/>
-            public override void LoadIID(CilInstructionCollection instructions, ModuleDefinition module)
+            public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
                 _ = instructions.Add(Callvirt, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
             }
 
             /// <inheritdoc/>
-            public override void LoadVtable(CilInstructionCollection instructions, ModuleDefinition module)
+            public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
                 _ = instructions.Add(Callvirt, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
