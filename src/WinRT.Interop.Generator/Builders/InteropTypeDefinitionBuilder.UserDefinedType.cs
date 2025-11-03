@@ -328,14 +328,14 @@ internal partial class InteropTypeDefinitionBuilder
             public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Callvirt, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
+                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
             }
 
             /// <inheritdoc/>
             public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
                 _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Callvirt, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
+                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
             }
         }
     }
