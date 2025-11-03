@@ -105,14 +105,9 @@ internal partial class InteropTypeDefinitionBuilder
                 // For '[GeneratedComInterface]', we need to retrieve and use the generated vtable from the COM generators
                 if (interfaceType.IsGeneratedComInterfaceType)
                 {
-                    // We can only gather this type if we can find the generated 'InterfaceInformation' type.
-                    // If we can't find it, we can't add the interface to the list of interface entries. We
-                    // should warn if that's the (unlikely) case, so users can at least know that something
-                    // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
+                    // Ignore interfaces we can't retrieve information for (this should never happen, interfaces are filtered during discovery)
                     if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
                     {
-                        ConsoleApp.LogError(WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType));
-
                         continue;
                     }
 

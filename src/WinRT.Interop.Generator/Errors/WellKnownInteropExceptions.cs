@@ -428,11 +428,19 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve a '[GeneratedComInterface]' type.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef type)
+    {
+        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
     /// Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for a given interface type.
     /// </summary>
-    public static string GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition type)
+    public static WellKnownInteropWarning GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition type)
     {
-        return Warning(49, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{type}', so the interface will not be included in the set of available COM interface entries.");
+        return Warning(50, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -453,9 +461,9 @@ internal static class WellKnownInteropExceptions
     /// <param name="id">The warning id.</param>
     /// <param name="message">The warning message.</param>
     /// <returns>The resulting warning.</returns>
-    private static string Warning(int id, string message)
+    private static WellKnownInteropWarning Warning(int id, string message)
     {
-        return $"""warning {ErrorPrefix}{id:0000}: {message}""";
+        return new($"{ErrorPrefix}{id:0000}", message);
     }
 }
 
