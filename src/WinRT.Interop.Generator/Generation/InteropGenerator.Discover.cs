@@ -210,6 +210,12 @@ internal partial class InteropGenerator
                     // Since we're reusing the builder for all types, make sure to clear it first
                     interfaces.Clear();
 
+                    // We want to explicitly track whether the type implements any projected Windows Runtime
+                    // interfaces, as we are only interested in such types. We want to also gather all
+                    // implemented '[GeneratedComInterface]' interfaces, but if a type only implements
+                    // those, we will ignore it. Such types should be marshalled via 'ComWrappers' directly.
+                    bool hasAnyProjectedWindowsRuntimeInterfaces = false;
+
                     // Gather all implemented Windows Runtime interfaces for the current type
                     for (TypeDefinition? currentType = type;
                         currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
@@ -217,19 +223,27 @@ internal partial class InteropGenerator
                     {
                         foreach (InterfaceImplementation implementation in currentType.Interfaces)
                         {
+                            // Check for projected Windows Runtime interfaces first
                             if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
                                 implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
                                 (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
                                 genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
                                 genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
                             {
+                                hasAnyProjectedWindowsRuntimeInterfaces = true;
+
+                                interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            }
+                            else if (implementation.Interface?.IsGeneratedComInterfaceType is true)
+                            {
+                                // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
                                 interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
                             }
                         }
                     }
 
                     // If the user-defined type doesn't implement any Windows Runtime interfaces, it's not considered exposed
-                    if (interfaces.IsEmpty)
+                    if (!hasAnyProjectedWindowsRuntimeInterfaces)
                     {
                         continue;
                     }
