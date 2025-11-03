@@ -782,7 +782,7 @@ namespace cswinrt
                     { "AsyncActionCompletedHandler", "Windows.Foundation", "AsyncActionCompletedHandler" },
                     { "AsyncStatus", "Windows.Foundation", "AsyncStatus" },
                     { "DateTime", "System", "DateTimeOffset", true },
-                    { "EventHandler`1", "System", "EventHandler", false },
+                    { "EventHandler`1", "System", "EventHandler`1", false },
                     { "EventRegistrationToken", "WindowsRuntime.InteropServices", "EventRegistrationToken", false },
                     { "FoundationContract", "Windows.Foundation", "FoundationContract"},
                     { "HResult", "System", "Exception", true },
@@ -791,13 +791,13 @@ namespace cswinrt
                     { "IClosable", "System", "IDisposable", true, true },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
-                    { "IReference`1", "System", "Nullable", true },
+                    { "IReference`1", "System", "Nullable`1", true },
                     { "Point", "Windows.Foundation", "Point" },
                     { "PropertyType", "Windows.Foundation", "PropertyType" },
                     { "Rect", "Windows.Foundation", "Rect" },
                     { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
-                    { "TypedEventHandler`2", "System", "EventHandler", false },
+                    { "TypedEventHandler`2", "System", "EventHandler`2", false },
                     { "Uri", "System", "Uri", true }
                 }
             },
@@ -1265,7 +1265,10 @@ namespace cswinrt
         ABI,
         NonProjected,
         StaticAbiClass,
-        EventSource
+        EventSource,
+        // Used only with interop dll name
+        Marshaller,
+        ArrayMarshaller
     };
 
     std::string get_mapped_element_type(ElementType elementType)
