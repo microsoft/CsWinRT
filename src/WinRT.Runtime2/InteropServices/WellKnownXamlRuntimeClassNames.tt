@@ -1,0 +1,44 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".g.cs"#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Runtime.CompilerServices;
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>Runtime class names for XAML interfaces that differ between UWP XAML and WinUI 3.</summary>
+internal static class WellKnownXamlRuntimeClassNames
+{
+<#
+var entries = new (string Name, string WUX, string MUX)[]
+{
+    ("IBindableIterable", "Windows.UI.Xaml.Interop.IBindableIterable", "Microsoft.UI.Xaml.Interop.IBindableIterable"),
+    ("IBindableIterator", "Windows.UI.Xaml.Interop.IBindableIterator", "Microsoft.UI.Xaml.Interop.IBindableIterator"),
+    ("IBindableVector", "Windows.UI.Xaml.Interop.IBindableVector", "Microsoft.UI.Xaml.Interop.IBindableVector"),
+    ("IBindableVectorView", "Windows.UI.Xaml.Interop.IBindableVectorView", "Microsoft.UI.Xaml.Interop.IBindableVectorView"),
+    ("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"),
+    ("PropertyChangedEventArgs", "Windows.UI.Xaml.Data.PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
+};
+
+for (int i = 0; i < entries.Length; i++)
+{
+    if (i > 0) WriteLine("");
+#>
+    /// <summary>
+    /// Gets the runtime class name for <c><#=entries[i].Name#></c>.
+    /// </summary>
+    public static string <#=entries[i].Name#>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? "<#=entries[i].WUX#>"
+            : "<#=entries[i].MUX#>";
+    }
+<#
+}
+#>
+}

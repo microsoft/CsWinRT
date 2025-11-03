@@ -12,9 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// A stateful adapter for <see cref="IEnumerator{T}"/>, to be exposed as <c>Windows.Foundation.Collections.IIterator&lt;T&gt;</c>.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

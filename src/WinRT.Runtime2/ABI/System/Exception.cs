@@ -105,21 +105,21 @@ file static class ExceptionInterfaceEntriesImpl
     /// </summary>
     static ExceptionInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfException.IID = WellKnownInterfaceIds.IID_IReferenceOfException;
+        Entries.IReferenceOfException.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException;
         Entries.IReferenceOfException.Vtable = ExceptionReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -148,7 +148,7 @@ file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntim
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownInterfaceIds.IID_IReferenceOfException);
+        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException);
 
         // Exceptions are marshalled as 'null' if the 'HRESULT' does not represent an error. However, 'ComWrappers' does not allow 'null'
         // to be returned. So in that case, we use a 'NullPlaceholder' instance, and then check that after marshalling is done, so that

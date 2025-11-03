@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -115,11 +116,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to generate marshalling code for an implementation detail type.
+    /// Failed to generate marshalling code for a default implementation detail type.
     /// </summary>
-    public static Exception ImplementationDetailTypeCodeGenerationError(Exception exception)
+    public static Exception DefaultImplementationDetailTypeCodeGenerationError(Exception exception)
     {
-        return Exception(13, $"Failed to generate marshalling code for some implementation detail type.", exception);
+        return Exception(13, $"Failed to generate marshalling code for some default implementation detail type.", exception);
     }
 
     /// <summary>
@@ -376,6 +377,54 @@ internal static class WellKnownInteropExceptions
     public static Exception IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
         return Exception(42, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a dynamic implementation detail type.
+    /// </summary>
+    public static Exception DynamicImplementationDetailTypeCodeGenerationError(Exception exception)
+    {
+        return Exception(43, $"Failed to generate marshalling code for some dynamic implementation detail type.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
+    {
+        return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    {
+        return Exception(45, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> type.
+    /// </summary>
+    public static Exception IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    {
+        return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a dynamic implementation detail type.
+    /// </summary>
+    public static Exception DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
+    {
+        return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
+    }
+
+    /// <summary>
+    /// Failed to resolve the associated <c>ComWrappersMarshallerAttribute</c> type for a custom-mapped type.
+    /// </summary>
+    public static Exception CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
+    {
+        return Exception(45, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
 
     /// <summary>

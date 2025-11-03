@@ -147,7 +147,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     {
         _eventInvokePtr = eventInvokePtr;
 
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(eventInvokePtr, in WellKnownInterfaceIds.IID_IReferenceTrackerTarget, out _referenceTrackerTargetPtr);
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(eventInvokePtr, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTrackerTarget, out _referenceTrackerTargetPtr);
 
         if (WellKnownErrorCodes.Succeeded(hresult))
         {

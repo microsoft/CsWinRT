@@ -1,0 +1,90 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".g.cs"#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// IIDs for well known projected WinRT interfaces.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class WellKnownInterfaceIIDs
+{
+<#
+var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFullyQualifiedName, bool Xaml)[]
+{
+    (null, "IUnknown", false),
+    (null, "IAgileObject", false),
+    (null, "IMarshal", false),
+    (null, "IInspectable", false),
+    (null, "IStringable", false),
+    (null, "IPropertyValue", false),
+    (null, "IWeakReferenceSource", false),
+    ("System.Collections.IEnumerable", "Windows.UI.Xaml.Interop.IBindableIterable", false),
+    ("System.Collections.IEnumerable", "Microsoft.UI.Xaml.Interop.IBindableIterable", false),
+    ("System.Collections.IEnumerator", "Windows.UI.Xaml.Interop.IBindableIterator", false),
+    ("System.Collections.IEnumerator", "Microsoft.UI.Xaml.Interop.IBindableIterator", false),
+    ("System.Collections.IList", "Windows.UI.Xaml.Interop.IBindableVector", false),
+    ("System.Collections.IList", "Microsoft.UI.Xaml.Interop.IBindableVector", false),
+    ("System.ComponentModel.INotifyPropertyChanged", "Windows.UI.Xaml.Data.INotifyPropertyChanged", true),
+    ("System.ComponentModel.INotifyPropertyChanged", "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", true),
+    ("System.ComponentModel.INotifyDataErrorInfo", "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", false),
+    ("System.Collections.Specialized.INotifyCollectionChanged", "Windows.UI.Xaml.Interop.INotifyCollectionChanged", true),
+    ("System.Collections.Specialized.INotifyCollectionChanged", "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", true),
+    ("System.IDisposable", "Windows.Foundation.IClosable", false),
+    ("System.IServiceProvider", "Microsoft.UI.Xaml.IXamlServiceProvider", false),
+    ("System.Windows.Input.ICommand", "Windows.UI.Xaml.Input.ICommand", false),
+    ("System.Windows.Input.ICommand", "Microsoft.UI.Xaml.Input.ICommand", false),
+    ("Windows.Foundation.Collections.IVectorChangedEventArgs", null, false),
+    ("Windows.Foundation.IAsyncAction", null, false),
+    ("Windows.Foundation.IAsyncInfo", null, false)
+};
+
+for (int i = 0; i < entries.Length; i++)
+{
+    if (i > 0) WriteLine("");
+
+    // Entries with no projected name are special cased fundamental interfaces (e.g. 'IUnknown').
+    // Otherwise, the entry will represent a non-generic custom mapped type defined in the runtime.
+    if (entries[i].ProjectedFullyQualifiedName == null)
+    {
+#>
+    /// <summary>The IID for <c><#=entries[i].WindowsRuntimeFullyQualifiedName#></c>.</summary>
+    public static ref readonly Guid IID_<#=entries[i].WindowsRuntimeFullyQualifiedName#>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_<#=entries[i].WindowsRuntimeFullyQualifiedName#>;
+    }
+<#
+    }
+    else
+    {
+        string projectedName = entries[i].ProjectedFullyQualifiedName.Split('.').Last();
+        string windowsRuntimeFullyQualifiedName = entries[i].WindowsRuntimeFullyQualifiedName ?? entries[i].ProjectedFullyQualifiedName;
+        string windowsRuntimeName = windowsRuntimeFullyQualifiedName.Split('.').Last();
+        string iidPrefix = windowsRuntimeFullyQualifiedName.StartsWith("Microsoft.UI.Xaml") ? "MUX" : "WUX";
+        string iidPropertyName = entries[i].Xaml
+            ? $"IID_{iidPrefix}_{windowsRuntimeName}"
+            : $"IID_{windowsRuntimeName}";
+#>
+    /// <summary>The IID for <c><#=windowsRuntimeFullyQualifiedName#></c> (mapped to <see cref="global::<#=entries[i].ProjectedFullyQualifiedName#>"/>.</summary>
+    public static ref readonly Guid IID_<#=windowsRuntimeFullyQualifiedName.Replace(".", "_")#>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.<#=iidPropertyName#>;
+    }
+<#
+    }
+}
+#>
+}

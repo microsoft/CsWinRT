@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using ABI.System;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -25,7 +24,7 @@ public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
     /// <inheritdoc/>
     protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(EventHandler value)
     {
-        return EventHandlerMarshaller.ConvertToUnmanaged(value);
+        return ABI.System.EventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

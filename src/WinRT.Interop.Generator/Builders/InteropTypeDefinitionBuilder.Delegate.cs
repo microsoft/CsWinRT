@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // 'IDelegate' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(delegateType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -50,7 +50,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // 'IReference<T>' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -62,14 +62,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature delegateType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -145,7 +143,6 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
                 vftblType: interopDefinitions.DelegateVftbl,
-                get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -158,7 +155,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Marshaller"/>.</param>
-        /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -166,7 +162,6 @@ internal partial class InteropTypeDefinitionBuilder
         public static void ReferenceImplType(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
-            MethodDefinition get_ReferenceIidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -256,7 +251,6 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),
                 vftblType: interopDefinitions.DelegateReferenceVftbl,
-                get_IidMethod: get_ReferenceIidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -270,6 +264,8 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
         /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="get_ReferenceIidMethod">The 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -278,6 +274,8 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateImplType,
             TypeDefinition delegateReferenceImplType,
+            MethodDefinition get_IidMethod,
+            MethodDefinition get_ReferenceIidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -291,15 +289,15 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out interfaceEntriesImplType,
                 implTypes: [
-                    (delegateImplType.GetMethod("get_IID"u8), delegateImplType.GetMethod("get_Vtable"u8)),
-                    (delegateReferenceImplType.GetMethod("get_IID"u8), delegateReferenceImplType.GetMethod("get_Vtable"u8)),
-                    (interopReferences.IPropertyValueImplget_IID, interopReferences.IPropertyValueImplget_OtherTypeVtable),
-                    (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
-                    (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                    (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
-                    (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
-                    (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
-                    (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable)]);
+                    (get_IidMethod, delegateImplType.GetMethod("get_Vtable"u8)),
+                    (get_ReferenceIidMethod, delegateReferenceImplType.GetMethod("get_Vtable"u8)),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue, interopReferences.IPropertyValueImplget_OtherTypeVtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                    (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
         }
 
         /// <summary>

@@ -304,7 +304,7 @@ public abstract unsafe class WindowsRuntimeObject :
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref _inspectableObjectReference,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIds.IID_IInspectable),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IInspectable),
                     comparand: null);
 
                 return _inspectableObjectReference;
@@ -458,7 +458,7 @@ public abstract unsafe class WindowsRuntimeObject :
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
         // We explicitly don't handle overridable interfaces and 'IInspectable'
-        if (IsOverridableInterface(in iid) || WellKnownInterfaceIds.IID_IInspectable == iid || WellKnownInterfaceIds.IID_IWeakReference == iid)
+        if (IsOverridableInterface(in iid) || WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid || WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid)
         {
             ppv = (nint)null;
 

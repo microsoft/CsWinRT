@@ -36,7 +36,7 @@ internal sealed unsafe partial class ManagedWeakReference : IWeakReference
             void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(targetObject, CreateComInterfaceFlags.TrackerSupport);
 
             // If the caller is requesting 'IUnknown', we can avoid a 'QueryInterface' call
-            if (interfaceId == WellKnownInterfaceIds.IID_IUnknown)
+            if (interfaceId == WellKnownWindowsInterfaceIIDs.IID_IUnknown)
             {
                 weakReference = thisPtr;
 

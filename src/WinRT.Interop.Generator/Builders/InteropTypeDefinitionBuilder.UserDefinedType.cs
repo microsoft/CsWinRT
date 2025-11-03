@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
@@ -70,41 +71,53 @@ internal partial class InteropTypeDefinitionBuilder
                 // only exception is for custom-mapped interface types: their ABI types are in 'WinRT.Runtime.dll'.
                 if (typeSignature is GenericInstanceTypeSignature)
                 {
-                    TypeDefinition typeDefinition = emitState.LookupTypeDefinition(typeSignature, "Impl");
+                    TypeDefinition implTypeDefinition = emitState.LookupTypeDefinition(typeSignature, "Impl");
+                    MethodDefinition get_VtableMethod = implTypeDefinition.GetMethod("get_Vtable"u8);
+
+                    // The IID will be in the generated '<InterfaceIIDs>' type in 'WinRT.Interop.dll'
+                    Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(typeSignature)}";
+                    MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
 
                     // Add the entry from the ABI type in 'WinRT.Interop.dll'
-                    entriesList.Add((
-                        get_IID: typeDefinition.GetMethod("get_IID"u8),
-                        get_Vtable: typeDefinition.GetMethod("get_Vtable"u8)));
+                    entriesList.Add((get_IIDMethod, get_VtableMethod));
                 }
                 else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences))
                 {
                     TypeReference typeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
+                    MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+
+                    // For custom-mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
+                    string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
+                    TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
+                    MemberReference get_IIDMethod = interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
                     // Add the entry from the ABI type in 'WinRT.Runtime.dll'
-                    entriesList.Add((
-                        get_IID: typeReference.CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences))),
-                        get_Vtable: typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr))));
+                    entriesList.Add((get_IIDMethod, get_VtableMethod));
                 }
                 else
                 {
-                    TypeReference typeReference = typeSignature.Resolve()!.Module!.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
+                    TypeReference ImplTypeReference = typeSignature.Resolve()!.Module!.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
+                    MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+
+                    // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the containing assembly
+                    string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
+                    TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
+                    TypeReference interfaceIIDsTypeReference = typeSignature.Resolve()!.Module!.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
+                    MemberReference get_IIDMethod = interfaceIIDsTypeReference.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
                     // Add the entry from the ABI type in the same declaring assembly
-                    entriesList.Add((
-                        get_IID: typeReference.CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences))),
-                        get_Vtable: typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr))));
+                    entriesList.Add((get_IIDMethod, get_VtableMethod));
                 }
             }
 
             // Add the default entries at the end
             entriesList.AddRange(
-                (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
-                (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
-                (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
-                (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
-                (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable));
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable));
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,

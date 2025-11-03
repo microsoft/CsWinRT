@@ -16,26 +16,6 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class WindowsRuntimeMarshal
 {
     /// <summary>
-    /// Checks whether a pointer to a COM object is actually a reference to a CCW produced for a managed object that was marshalled to native code.
-    /// </summary>
-    /// <param name="externalComObject">The external COM object to check.</param>
-    /// <returns>Whether <paramref name="externalComObject"/> refers to a CCW for a managed object, rather than a native COM object.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsReferenceToManagedObject(void* externalComObject)
-    {
-        ArgumentNullException.ThrowIfNull(externalComObject);
-
-        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
-
-        return
-            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
-            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
-            unknownVftbl->Release == runtimeVftbl->Release;
-    }
-
-    /// <summary>
     /// Checks whether two objects are the same, or represent the same underlying native object.
     /// </summary>
     /// <param name="left">The first object to compare.</param>
@@ -55,16 +35,36 @@ public static unsafe class WindowsRuntimeMarshal
 
         // Unwrap both objects and check whether the underlying object is the same. To do this we also need
         // to query for the 'IUnknown' interface pointer, to ensure we get the actual identity of the objects.
-        if (TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
-            TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
+        if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(left, out WindowsRuntimeObjectReference? leftReference) &&
+            WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(right, out WindowsRuntimeObjectReference? rightReference))
         {
-            using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
-            using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownInterfaceIds.IID_IUnknown);
+            using WindowsRuntimeObjectReferenceValue leftUnknown = leftReference.AsValue(WellKnownWindowsInterfaceIIDs.IID_IUnknown);
+            using WindowsRuntimeObjectReferenceValue rightUnknown = rightReference.AsValue(WellKnownWindowsInterfaceIIDs.IID_IUnknown);
 
             return leftUnknown.GetThisPtrUnsafe() == rightUnknown.GetThisPtrUnsafe();
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Checks whether a pointer to a COM object is actually a reference to a CCW produced for a managed object that was marshalled to native code.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to check.</param>
+    /// <returns>Whether <paramref name="externalComObject"/> refers to a CCW for a managed object, rather than a native COM object.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsReferenceToManagedObject(void* externalComObject)
+    {
+        ArgumentNullException.ThrowIfNull(externalComObject);
+
+        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
+        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
+
+        return
+            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
+            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
+            unknownVftbl->Release == runtimeVftbl->Release;
     }
 
     /// <summary>
@@ -89,42 +89,102 @@ public static unsafe class WindowsRuntimeMarshal
     }
 
     /// <summary>
-    /// Attempts to extract a <see cref="WindowsRuntimeObjectReference"/> from the specified object.
+    /// Tries to retrieve a native object from a managed object, if it is actually a wrapper of some native object.
     /// </summary>
-    /// <param name="value">The object to attempt to unwrap.</param>
-    /// <param name="objectReference">The unwrapped <see cref="WindowsRuntimeObjectReference"/> object, if successfully retrieved.</param>
-    /// <returns>Whether <paramref name="objectReference"/> was successfully unwrapped.</returns>
-    /// <remarks>
-    /// This method supports unwrapping objects that are either:
-    /// <list type="bullet">
-    ///   <item>A <see cref="WindowsRuntimeObject"/> with a native object reference that can be unwrapped.</item>
-    ///   <item>
-    ///     A <see cref="Delegate"/> whose target is a <see cref="WindowsRuntimeObjectReference"/>. Such instances
-    ///     are created by the generated projections, for all projected Windows runtime delegate types.
-    ///   </item>
-    /// </list>
-    /// If the object does not meet these criteria, this method will just return <see langword="null"/>.
-    /// </remarks>
-    public static bool TryUnwrapObjectReference(
-        [NotNullWhen(true)] object? value,
-        [NotNullWhen(true)] out WindowsRuntimeObjectReference? objectReference)
+    /// <param name="managedObject">The managed object to try to get a native object from.</param>
+    /// <param name="result">The resulting native object, if successfully retrieved.</param>
+    /// <returns>Whether <paramref name="managedObject"/> was a reference to a native object, and <paramref name="result"/> could be retrieved.</returns>
+    public static bool TryGetNativeObject(object? managedObject, out void* result)
     {
-        switch (value)
+        // If the input object is wrapping a native object, we can unwrap it and return it after incrementing its reference count
+        if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(managedObject, out WindowsRuntimeObjectReference? objectReference))
         {
-            // If 'value' is a 'WindowsRuntimeObject' that can be unwrapped, return the wrapped object reference
-            case WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject:
-                objectReference = windowsRuntimeObject.NativeObjectReference;
-                return true;
+            result = objectReference.GetThisPtr();
 
-            // If 'value' is a marshalled delegate, return the target object reference directly
-            case Delegate { Target: WindowsRuntimeObjectReference targetObjectReference }:
-                objectReference = targetObjectReference;
-                return true;
-
-            // Otherwise, we can't unwrap the value at all
-            default:
-                objectReference = null;
-                return false;
+            return true;
         }
+
+        result = null;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Marshals a managed object to a native object, unwrapping it or creating a CCW for it as needed.
+    /// </summary>
+    /// <param name="managedObject">The managed object to marshal.</param>
+    /// <remarks>
+    /// <para>
+    /// The returned native object will own an additional reference for the marshalled <paramref name="managedObject"/>
+    /// instance (either its underlying native object, or a runtime-provided CCW for the managed object instance). It is
+    /// responsibility of the caller to always make sure that the returned native object is disposed.
+    /// </para>
+    /// <para>
+    /// Additionally, it is responsibility of the caller to perform proper reference tracking or to handle different
+    /// COM contexts, in case the returned pointer is stored on a class field or passed across different threads.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToUnmanaged"/>
+    public static void* ConvertToUnmanaged(object? managedObject)
+    {
+        if (managedObject is null)
+        {
+            return null;
+        }
+
+        // If 'value' is some RCW type we recognize, return the wrapped native object reference
+        if (TryGetNativeObject(managedObject, out void* nativeObject))
+        {
+            return nativeObject;
+        }
+
+        // Marshal 'value' as an 'IUnknown' (this method will take care of correctly marshalling objects with the right vtables)
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(managedObject);
+    }
+
+    /// <summary>
+    /// Converts an unmanaged pointer to a Windows Runtime object to a managed object, either by unwrapping the
+    /// original managed object that was previously marshalled, or retrieving or creating an RCW for it.
+    /// </summary>
+    /// <param name="value">The input object to convert to managed.</param>
+    /// <returns>The resulting managed managed object.</returns>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
+    public static object? ConvertToManaged(void* value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // If the value is a CCW we recognize, retrieve the original managed object
+        if (TryGetManagedObject(value, out object? managedObject))
+        {
+            return managedObject;
+        }
+
+        // Marshal the object as an opaque object, as we have no static type information available
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+            externalComObject: (nint)value,
+            objectComWrappersCallback: null,
+            unsealedObjectComWrappersCallback: null);
+    }
+
+    /// <summary>
+    /// Release a given native object.
+    /// </summary>
+    /// <param name="value">The input object to free.</param>
+    /// <remarks>
+    /// Unlike <see cref="Marshal.Release"/>, this method will not throw <see cref="ArgumentNullException"/>
+    /// if <paramref name="value"/> is <see langword="null"/>. This method can be used with any object type.
+    /// </remarks>
+    /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.Free"/>
+    public static void Free(void* value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        _ = IUnknownVftbl.ReleaseUnsafe(value);
     }
 }

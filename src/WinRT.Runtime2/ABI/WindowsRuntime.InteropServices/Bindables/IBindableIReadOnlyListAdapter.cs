@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ABI.System.Collections;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -12,28 +12,15 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE0046, IDE1006
 
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(BindableIReadOnlyListAdapter),
-    typeof(ABI.WindowsRuntime.BindableIReadOnlyListAdapter))]
-
-namespace ABI.WindowsRuntime;
+namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
-/// ABI type for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
-[WindowsRuntimeClassName("Windows.UI.Xaml.Interop.IBindableVectorView")] // TODO: handle WinUI 3 as well
-[BindableIReadOnlyListAdapterComWrappersMarshaller]
-file static class BindableIReadOnlyListAdapter;
-
-/// <summary>
-/// Marshaller for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
+/// Marshaller for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
 internal static unsafe class BindableIReadOnlyListAdapterMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(BindableIReadOnlyListAdapter? value)
     {
         if (value is null)
         {
@@ -43,12 +30,12 @@ internal static unsafe class BindableIReadOnlyListAdapterMarshaller
         return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(
             instance: value,
             flags: CreateComInterfaceFlags.TrackerSupport,
-            iid: in WellKnownInterfaceIds.IID_IBindableVectorView));
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView));
     }
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
 file struct BindableIReadOnlyListAdapterInterfaceEntries
 {
@@ -68,7 +55,7 @@ file struct BindableIReadOnlyListAdapterInterfaceEntries
 file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="BindableIReadOnlyListAdapterInterfaceEntries"/> value for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
+    /// The <see cref="BindableIReadOnlyListAdapterInterfaceEntries"/> value for <see cref="BindableIReadOnlyListAdapter"/>.
     /// </summary>
     [FixedAddressValueType]
     public static readonly BindableIReadOnlyListAdapterInterfaceEntries Entries;
@@ -78,29 +65,33 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
     /// </summary>
     static BindableIReadOnlyListAdapterInterfaceEntriesImpl()
     {
-        Entries.IBindableVectorView.IID = BindableIReadOnlyListAdapterImpl.IID;
+        Entries.IBindableVectorView.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView;
         Entries.IBindableVectorView.Vtable = BindableIReadOnlyListAdapterImpl.Vtable;
-        Entries.IBindableEnumerable.IID = IEnumerableImpl.IID;
-        Entries.IBindableEnumerable.Vtable = IEnumerableImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IBindableEnumerable.IID = WellKnownWindowsInterfaceIIDs.IID_IBindableIterable;
+        Entries.IBindableEnumerable.Vtable = System.Collections.IEnumerableImpl.Vtable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
-file sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -118,12 +109,12 @@ file sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttrib
 }
 
 /// <summary>
-/// The native implementation for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
+/// The native implementation for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
 file static unsafe class BindableIReadOnlyListAdapterImpl
 {
     /// <summary>
-    /// The <see cref="IBindableVectorViewVftbl"/> value for the <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/> implementation.
+    /// The <see cref="IBindableVectorViewVftbl"/> value for the <see cref="BindableIReadOnlyListAdapter"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBindableVectorViewVftbl Vftbl;
@@ -141,16 +132,7 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableVectorView;
-    }
-
-    /// <summary>
-    /// Gets a pointer to the <see cref="global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter"/> implementation.
+    /// Gets a pointer to the <see cref="BindableIReadOnlyListAdapter"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -169,7 +151,7 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
             object? item = unboxedValue.GetAt(index);
 
@@ -194,7 +176,7 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
             *size = unboxedValue.Size;
 
@@ -217,7 +199,7 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
             object? target = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 

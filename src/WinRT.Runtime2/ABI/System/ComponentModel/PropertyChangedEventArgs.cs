@@ -9,18 +9,6 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventArgs))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(PropertyChangedEventArgs),
     typeof(ABI.System.ComponentModel.PropertyChangedEventArgs))]
@@ -33,7 +21,11 @@ namespace ABI.System.ComponentModel;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventargs"/>
 [PropertyChangedEventArgsComWrappersMarshaller]
-file static class PropertyChangedEventArgs;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class PropertyChangedEventArgs;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
@@ -93,11 +85,10 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgs;
-
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr: value,
+            iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgs,
+            pvObject: out void* result).Assert();
 
         try
         {
@@ -118,25 +109,9 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(RuntimeClassName, in IID);
-
-    /// <summary>
-    /// Gets the IID for <see cref="PropertyChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory;
-    }
-
-    /// <summary>
-    /// Gets the runtime class name for <see cref="PropertyChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static string RuntimeClassName => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? "Windows.UI.Xaml.Data.PropertyChangedEventArgs"
-        : "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs";
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+        runtimeClassName: WellKnownXamlRuntimeClassNames.PropertyChangedEventArgs,
+        iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.

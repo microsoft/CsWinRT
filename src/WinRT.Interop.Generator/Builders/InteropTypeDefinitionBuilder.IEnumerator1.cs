@@ -39,7 +39,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -504,7 +504,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumeratorType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -512,7 +511,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature enumeratorType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -550,7 +548,6 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
                 vftblType: interopDefinitions.IEnumerator1Vftbl,
-                get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,

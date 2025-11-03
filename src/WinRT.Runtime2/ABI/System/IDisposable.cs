@@ -27,7 +27,7 @@ public static unsafe class IDisposableMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IDisposable? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IDisposable>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IDisposable);
+        return WindowsRuntimeInterfaceMarshaller<IDisposable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IClosable);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -96,15 +96,6 @@ public static unsafe class IDisposableImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.Close = &Close;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="IDisposable"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IDisposable;
     }
 
     /// <summary>

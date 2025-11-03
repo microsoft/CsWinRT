@@ -5,7 +5,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using ABI.Windows.Foundation;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
@@ -15,7 +14,10 @@ namespace WindowsRuntime.AsyncInfo;
 /// The implementation of a native object for <see cref="IAsyncAction"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.iasyncaction"/>
-internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAction, IWindowsRuntimeInterface<IAsyncAction>
+internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
+    IAsyncAction,
+    IWindowsRuntimeInterface<IAsyncAction>,
+    IWindowsRuntimeInterface<IAsyncInfo>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeAsyncAction"/> instance with the specified parameters.
@@ -39,7 +41,7 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIds.IID_IAsyncInfo),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo),
                     comparand: null);
 
                 return field;
@@ -58,41 +60,47 @@ internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject, IAsyncAc
 
     public AsyncActionCompletedHandler? Completed
     {
-        get => IAsyncActionMethods.Completed(NativeObjectReference);
-        set => IAsyncActionMethods.Completed(NativeObjectReference, value);
+        get => ABI.Windows.Foundation.IAsyncActionMethods.Completed(NativeObjectReference);
+        set => ABI.Windows.Foundation.IAsyncActionMethods.Completed(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
-    public uint Id => IAsyncInfoMethods.Id(IAsyncInfoObjectReference);
+    public uint Id => ABI.Windows.Foundation.IAsyncInfoMethods.Id(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public AsyncStatus Status => IAsyncInfoMethods.Status(IAsyncInfoObjectReference);
+    public AsyncStatus Status => ABI.Windows.Foundation.IAsyncInfoMethods.Status(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
-    public Exception? ErrorCode => IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
+    public Exception? ErrorCode => ABI.Windows.Foundation.IAsyncInfoMethods.ErrorCode(IAsyncInfoObjectReference);
 
     /// <inheritdoc/>
     public void GetResults()
     {
-        IAsyncActionMethods.GetResults(NativeObjectReference);
+        ABI.Windows.Foundation.IAsyncActionMethods.GetResults(NativeObjectReference);
     }
 
     /// <inheritdoc/>
     public void Cancel()
     {
-        IAsyncInfoMethods.Cancel(IAsyncInfoObjectReference);
+        ABI.Windows.Foundation.IAsyncInfoMethods.Cancel(IAsyncInfoObjectReference);
     }
 
     /// <inheritdoc/>
     public void Close()
     {
-        IAsyncInfoMethods.Close(IAsyncInfoObjectReference);
+        ABI.Windows.Foundation.IAsyncInfoMethods.Close(IAsyncInfoObjectReference);
     }
 
     /// <inheritdoc/>
     WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncAction>.GetInterface()
     {
         return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IAsyncInfo>.GetInterface()
+    {
+        return IAsyncInfoObjectReference.AsValue();
     }
 
     /// <inheritdoc/>

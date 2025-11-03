@@ -279,7 +279,7 @@ internal partial class InteropGenerator
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
-                // custom mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
+                // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
                 // We need to check whether the type is a projected Windows Runtime type from the resolved type
                 // definition, and not from the generic type definition we can retrieve from the type signature.
                 // If we did the latter, the resulting type definition would not include any custom attributes.

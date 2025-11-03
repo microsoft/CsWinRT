@@ -108,7 +108,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // will have the 'IReferenceTracker' implementation. Otherwise, the new instance will be used. Since the
         // inner was composed, it should answer immediately without going through the outer. Either way, the
         // reference count will go to the new instance.
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownInterfaceIds.IID_IReferenceTracker, out void* referenceTracker);
+        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
         // Determine the flags needed for the native object wrapper (ie. RCW) creation.
         // These are the ones we'll pass to 'ComWrappers' to register the new object.
@@ -294,7 +294,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownInterfaceIds.IID_IReferenceTracker, out void* referenceTracker);
+        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
         if (referenceTracker != null)
         {
@@ -319,7 +319,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
 
         // Optimize the returned context-aware object reference if 'IInspectable' is requested
-        return iid == WellKnownInterfaceIds.IID_IInspectable
+        return iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
             ? new ContextAwareInspectableObjectReference(externalComObject, referenceTracker)
             : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid);
     }

@@ -10,9 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <see cref="Windows.Foundation.Collections.IObservableVector{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

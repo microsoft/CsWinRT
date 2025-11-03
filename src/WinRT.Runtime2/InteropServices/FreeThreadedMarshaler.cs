@@ -62,7 +62,7 @@ internal sealed unsafe class FreeThreadedMarshaler
 
                     // Query the IID from the free-threaded marshaler for the current thread.
                     // This will always be the same from any thread, so it doesn't matter.
-                    fixed (Guid* riid = &WellKnownInterfaceIds.IID_IUnknown)
+                    fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_IUnknown)
                     {
                         InstanceForCurrentThread.GetUnmarshalClass(
                             riid: riid,

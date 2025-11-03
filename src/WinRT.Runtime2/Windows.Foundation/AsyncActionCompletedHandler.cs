@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using ABI.Windows.Foundation;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -15,5 +14,5 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.AsyncActionCompletedHandler>")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-[AsyncActionCompletedHandlerComWrappersMarshaller]
+[ABI.Windows.Foundation.AsyncActionCompletedHandlerComWrappersMarshaller]
 public delegate void AsyncActionCompletedHandler(IAsyncAction asyncInfo, AsyncStatus asyncStatus);

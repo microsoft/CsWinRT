@@ -37,15 +37,6 @@ public static unsafe class IStringableImpl
     }
 
     /// <summary>
-    /// Gets the IID for the <c>IStringable</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IStringable;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IStringable</c> implementation.
     /// </summary>
     public static nint Vtable

@@ -73,7 +73,7 @@ internal static unsafe class ContextCallback
 
         HRESULT hresult;
 
-        fixed (Guid* riid = &WellKnownInterfaceIds.IID_ICallbackWithNoReentrancyToApplicationSTA)
+        fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_ICallbackWithNoReentrancyToApplicationSTA)
         {
             // Marshal the supplied callback on the target context
             hresult = IContextCallbackVftbl.ContextCallbackUnsafe(

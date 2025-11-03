@@ -774,31 +774,33 @@ namespace cswinrt
     static void write_iid_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%", name);
     }
 
     static void write_iid_reference_guid_property_name(writer& w, TypeDef const& type)
     {
         std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, true));
-        name = escape_type_name_for_identifier(name);
+        name = escape_type_name_for_identifier(name, true, true);
         w.write("IID_%Reference", name);
     }
 
     static void write_iid_reference_guid(writer& w, TypeDef const& type)
     {
-        w.write("ABI.InterfaceIIDs.%", bind<write_iid_reference_guid_property_name>(type));
+        w.write("global::ABI.InterfaceIIDs.%", bind<write_iid_reference_guid_property_name>(type));
     }
 
     static void write_iid_guid(writer& w, TypeDef const& type)
     {
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
-            w.write("%Impl.IID", bind<write_type_name>(type, typedef_name_type::ABI, true));
+            std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+            name = escape_type_name_for_identifier(name, true, true);
+            w.write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_%", name);
         }
         else
         {
-            w.write("ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
+            w.write("global::ABI.InterfaceIIDs.%", bind<write_iid_guid_property_name>(type));
         }
     }
 
@@ -3996,26 +3998,26 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.IReferenceValue.IID = %ReferenceImpl.IID;
+        Entries.IReferenceValue.IID = %;
         Entries.IReferenceValue.Vtable = %ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
-        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = IStringableImpl.IID;
-        Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
-        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = IMarshalImpl.IID;
-        Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
-        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-        Entries.IInspectable.IID = IInspectableImpl.IID;
-        Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = IUnknownImpl.IID;
-        Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
+        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
+        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
+        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;
+        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
     }
 }
 
-)", name, name, name, name);
+)", name, name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_delegates_interface_entries_impl(writer& w, TypeDef const& type)
@@ -4030,28 +4032,28 @@ R"(file static class %InterfaceEntriesImpl
     
     static %InterfaceEntriesImpl()
     {
-        Entries.Delegate.IID = %Impl.IID;
+        Entries.Delegate.IID = %;
         Entries.Delegate.Vtable = %Impl.Vtable;
-        Entries.DelegateReference.IID = %ReferenceImpl.IID;
+        Entries.DelegateReference.IID = %;
         Entries.DelegateReference.Vtable = %ReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = IPropertyValueImpl.IID;
-        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = IStringableImpl.IID;
-        Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = IWeakReferenceSourceImpl.IID;
-        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = IMarshalImpl.IID;
-        Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = IAgileObjectImpl.IID;
-        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
-        Entries.IInspectable.IID = IInspectableImpl.IID;
-        Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = IUnknownImpl.IID;
-        Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
+        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
+        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
+        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;
+        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
     }
 }
 
-)", name, name, name, name, name, name);
+)", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
@@ -7689,7 +7691,7 @@ return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
             if (sealed)
             {
                 w.write(R"(
-if (WindowsRuntimeMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))
+if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))
 {
 return objectReference.AsValue();
 }

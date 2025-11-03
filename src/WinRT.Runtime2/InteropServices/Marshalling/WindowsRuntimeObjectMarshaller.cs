@@ -12,6 +12,10 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime objects.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeObjectMarshaller
 {
     /// <summary>
@@ -42,7 +46,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {
             // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
-            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr))
+            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out void* inspectablePtr))
             {
                 [DoesNotReturn]
                 [StackTraceHidden]
@@ -60,7 +64,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // Marshal 'value' as an 'IInspectable' (this method will take care of correctly marshalling objects with the right vtables)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownInterfaceIds.IID_IInspectable);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownWindowsInterfaceIIDs.IID_IInspectable);
 
         return new(thisPtr);
     }
@@ -101,10 +105,6 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     /// whenever there is static type information available for the type. This allows the marshalling logic to be optimized and to avoid having
     /// to perform a lookup via the interop type map to retrieve the marshalling attribute, and to perform one extra <c>QueryInterface</c> call.
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public static object? ConvertToManaged<TCallback>(void* value)
         where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {

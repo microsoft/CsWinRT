@@ -11,9 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// A stateless adapter for <see cref="IReadOnlyList{T}"/>, to be exposed as <c>Windows.Foundation.Collections.IVectorView&lt;T&gt;</c>.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

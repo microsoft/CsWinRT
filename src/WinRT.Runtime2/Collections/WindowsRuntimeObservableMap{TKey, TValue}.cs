@@ -25,9 +25,6 @@ namespace WindowsRuntime;
 /// <typeparam name="TIMap">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> interface type.</typeparam>
 /// <typeparam name="TIMapMethods">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIObservableMapMethods">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> implementation type.</typeparam>
-/// <remarks>
-/// This type should only be used as a base type by generated generic instantiations.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
