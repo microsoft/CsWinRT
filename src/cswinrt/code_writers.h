@@ -2755,8 +2755,7 @@ public %()
     void write_objref_type_name(writer& w, type_semantics const& ifaceTypeSemantics)
     {
         auto objRefTypeCode = w.write_temp("%", bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::Projected, true));
-        std::string objRefTypeName = "_objRef_" + objRefTypeCode;
-        w.write("%", escape_type_name_for_identifier(objRefTypeName));
+        w.write("_objRef_%", escape_type_name_for_identifier(objRefTypeCode, true));
     }
 
     void write_unsafe_accessor_for_iid(writer& w, TypeDef ifaceType, bool isInNullableContext = false)
