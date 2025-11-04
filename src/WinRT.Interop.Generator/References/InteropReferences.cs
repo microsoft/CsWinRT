@@ -849,6 +849,11 @@ internal sealed class InteropReferences
     public TypeReference IAsyncInfo => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncInfo"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncAction</c>.
+    /// </summary>
+    public TypeReference IAsyncAction => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncAction"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncActionWithProgress1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncActionWithProgress`1"u8);
