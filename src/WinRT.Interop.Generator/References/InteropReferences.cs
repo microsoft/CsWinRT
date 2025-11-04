@@ -73,12 +73,20 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
     /// </summary>
-    public AssemblyReference SystemObjectModel => field ??= new AssemblyReference("System.ObjectModel"u8, new Version(10, 0, 0, 0));
+    public AssemblyReference SystemObjectModel => field ??= new AssemblyReference(
+        name: "System.ObjectModel"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
-    public AssemblyReference SystemMemory => field ??= new AssemblyReference("System.Memory"u8, new Version(10, 0, 0, 0));
+    public AssemblyReference SystemMemory => field ??= new AssemblyReference(
+        name: "System.Memory"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Attribute"/>.
