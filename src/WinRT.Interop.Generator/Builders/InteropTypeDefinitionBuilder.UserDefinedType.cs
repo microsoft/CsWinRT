@@ -43,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="vtableTypes">The vtable types implemented by <paramref name="userDefinedType"/>.</param>
+        /// <param name="args">The arguments for this invocation.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -51,6 +52,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceEntriesImpl(
             TypeSignature userDefinedType,
             TypeSignatureEquatableSet vtableTypes,
+            InteropGeneratorArgs args,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -87,9 +89,10 @@ internal partial class InteropTypeDefinitionBuilder
                     MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
 
                     // For custom-mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
-                    string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
-                    TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
-                    MemberReference get_IIDMethod = interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
+                    MemberReference get_IIDMethod = WellKnownInterfaceIIDs.get_IID(
+                        interfaceType: typeReference,
+                        interopReferences: interopReferences,
+                        useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
                     // Add the entry from the ABI type in 'WinRT.Runtime.dll'
                     entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod));
