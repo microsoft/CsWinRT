@@ -90,7 +90,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // For custom-mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
                     MemberReference get_IIDMethod = WellKnownInterfaceIIDs.get_IID(
-                        interfaceType: typeReference,
+                        interfaceType: typeSignature,
                         interopReferences: interopReferences,
                         useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 

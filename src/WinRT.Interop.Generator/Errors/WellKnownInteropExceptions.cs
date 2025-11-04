@@ -446,7 +446,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Invalid custom-mapped type used to get an IID.
     /// </summary>
-    public static Exception InvalidCustomMappedTypeForWellKnownInterfaceIIDs(TypeReference interfaceType)
+    public static Exception InvalidCustomMappedTypeForWellKnownInterfaceIIDs(TypeSignature interfaceType)
     {
         return Exception(51, $"Type '{interfaceType}' is not a valid well-known custom-mapped interface type: its IID could not be retrieved.");
     }
