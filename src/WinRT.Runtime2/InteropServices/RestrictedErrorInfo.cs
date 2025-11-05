@@ -27,7 +27,7 @@ public static unsafe class RestrictedErrorInfo
     /// calls (both in managed and native code). This improves the debugging experience.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static Exception GetExceptionForHR(HRESULT errorCode)
+    public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
         return GetExceptionForHR(errorCode, out _);
     }
@@ -35,8 +35,16 @@ public static unsafe class RestrictedErrorInfo
     /// <inheritdoc cref="GetExceptionForHR(int)"/>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
     /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
-    private static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
+    private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
+        // If the 'HRESULT' indicates success, there is no exception to return
+        if (errorCode.Succeeded())
+        {
+            restoredExceptionFromGlobalState = false;
+
+            return null;
+        }
+
         string? description = null;
         string? restrictedDescription = null;
         string? restrictedErrorReference = null;
@@ -189,9 +197,10 @@ public static unsafe class RestrictedErrorInfo
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static void Throw(int errorCode)
+        static void Throw(HRESULT errorCode)
         {
-            Exception? exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
+            // The 'HRESULT' is guaranteed to be a failure, so the exception will never be 'null'
+            Exception exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState)!;
 
             if (restoredExceptionFromGlobalState)
             {
@@ -216,7 +225,11 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception? exception)
     {
-        ArgumentNullException.ThrowIfNull(exception);
+        // If the input exception is 'null', we always just map to 'S_OK'
+        if (exception is null)
+        {
+            return WellKnownErrorCodes.S_OK;
+        }
 
         HRESULT hresult = exception.HResult;
 
@@ -242,8 +255,11 @@ public static unsafe class RestrictedErrorInfo
     /// Stores info on the input exception through the <c>IRestrictedErrorInfo</c> infrastructure, to retrieve it later.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
     public static void SetErrorInfo(Exception exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+
         try
         {
             // If the exception has an 'IRestrictedErrorInfo' value, use that as our error info to allow to propagate
@@ -335,6 +351,7 @@ public static unsafe class RestrictedErrorInfo
     /// Triggers the global error handler when an unhandled exception occurs.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
     /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
     /// <remarks>
     /// This method should only be called from custom dispatchers and other top-level delegate invokers that should
