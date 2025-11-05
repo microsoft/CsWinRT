@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// Well known mappings for exceptions and native error codes.
 /// </summary>
 /// <remarks>
-/// These are shared and kept in sync with <c>!analyze</c> (WinDbg), to properly bucket crash reports in Watson.
+/// These are shared and kept in sync with <c>!analyze</c> (WinDbg), to properly bucket crash reports from Windows Error Reporting.
 /// </remarks>
 internal static class WellKnownExceptionMappings
 {
@@ -96,7 +96,8 @@ internal static class WellKnownExceptionMappings
     /// <remarks>
     /// This method is used to map some well-known managed error code (i.e. thrown by CoreCLR or Native AOT) to
     /// <c>HRESULT</c> values that will be recognized by native code, when passed through the ABI. It is important
-    /// that Watson also recognizes these mapped values, as they are needed for proper bucketing of crash reports.
+    /// that the Windows Error Reporting infrastructure also recognizes these mapped values, as they are needed
+    /// for proper bucketing of crash reports.
     /// </remarks>
     public static HRESULT GetHRForNativeOrManagedErrorCode(HRESULT hresult)
     {
