@@ -48,7 +48,7 @@ namespace ABI.Windows.Storage
                 finally
                 {
                     interopHandle = new SafeFileHandle(_interopHandle, true);
-                    global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.Free(thisPtr);
+                    global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller.Free(thisPtr);
                 }
                 return interopHandle;
             }

@@ -474,7 +474,7 @@ namespace Windows.ApplicationModel.DataTransfer
             }
             finally
             {
-                global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.Free(ptr);
+                global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller.Free(ptr);
             }
         }
 
