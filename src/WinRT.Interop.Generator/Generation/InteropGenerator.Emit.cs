@@ -1946,6 +1946,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
+                    args: args,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
