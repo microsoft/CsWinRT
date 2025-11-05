@@ -25,6 +25,35 @@ internal static class WindowsRuntimeExtensions
     extension(ITypeDescriptor type)
     {
         /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the input type is a fundamental Windows Runtime type.</returns>
+        public bool IsFundamentalWindowsRuntimeType(InteropReferences interopReferences)
+        {
+            // Check all fundamental primitive types
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Boolean) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Single) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Double) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Char) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Byte) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object))
+            {
+                return true;
+            }
+
+            // 'Guid' is special and also counts as a fundamental type
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime generic interface type.
         /// </summary>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime generic interface type.</returns>
@@ -115,35 +144,6 @@ internal static class WindowsRuntimeExtensions
         public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
         {
             return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
-        }
-
-        /// <summary>
-        /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
-        /// </summary>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether the input type is a fundamental Windows Runtime type.</returns>
-        public bool IsFundamentalWindowsRuntimeType(InteropReferences interopReferences)
-        {
-            // Check all fundamental primitive types
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Boolean) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Single) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Double) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Char) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Byte) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object))
-            {
-                return true;
-            }
-
-            // 'Guid' is special and also counts as a fundamental type
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
         }
     }
 
