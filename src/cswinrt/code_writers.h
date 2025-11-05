@@ -2698,7 +2698,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%, %, [%])
+  :base(%.Instance, %, [%])
 {
 %}
 )",
@@ -2898,7 +2898,7 @@ if (HasUnwrappableNativeObjectReference)
                     }
                     else
                     {
-                        w.write("%, %, [%]",
+                        w.write("%.Instance, %, [%]",
                             bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
@@ -6196,9 +6196,14 @@ finally
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
+		auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
@@ -6208,8 +6213,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            bind<write_constructor_callback_method_name>(method),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
@@ -6259,9 +6266,14 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
+        auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedComposed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   WindowsRuntimeObject baseInterface,
   out void* innerInterface,
@@ -6273,8 +6285,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            bind<write_constructor_callback_method_name>(method),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_composable_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
