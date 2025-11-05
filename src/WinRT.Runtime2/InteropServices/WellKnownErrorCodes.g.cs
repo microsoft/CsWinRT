@@ -4,7 +4,7 @@
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WellKnownErrorCodes"/>
-internal partial class WellKnownErrorCodes
+internal static class WellKnownErrorCodes
 {
     /// <summary>Operation successful.</summary>
     public const HRESULT S_OK = unchecked((int)0x00000000);

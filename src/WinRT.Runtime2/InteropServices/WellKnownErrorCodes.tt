@@ -8,7 +8,7 @@
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WellKnownErrorCodes"/>
-internal partial class WellKnownErrorCodes
+internal static class WellKnownErrorCodes
 {
 <#
 var entries = new (string Name, uint Value, string Description)[]

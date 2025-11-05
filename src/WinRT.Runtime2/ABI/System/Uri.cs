@@ -96,7 +96,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }

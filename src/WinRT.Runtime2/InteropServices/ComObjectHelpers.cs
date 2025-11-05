@@ -68,7 +68,7 @@ internal unsafe partial class ComObjectHelpers
             // release the input object in case this method failed at this point. By doing this instead,
             // because we are only doing direct native calls, we can ensure the whole operation is never
             // throwing an exception, and we can just handle failure scenarios with normal flow control.
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 return hresult;
             }

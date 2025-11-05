@@ -35,7 +35,7 @@ internal sealed unsafe class WindowsRuntimePlatformModule
 
         // If we failed to increment the MTA usage, we want to suppress the finalizer.
         // We only need to run that if we actually have a cookie to use to decrement.
-        if (!WellKnownErrorCodes.Succeeded(hresult))
+        if (hresult.Failed())
         {
             GC.SuppressFinalize(this);
 
@@ -91,7 +91,7 @@ internal sealed unsafe class WindowsRuntimePlatformModule
         HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassName, in iid, out void* activationFactoryPtr);
 
         // If the operation succeeded, wrap the activation factory into a managed reference
-        activationFactory = WellKnownErrorCodes.Succeeded(hresult)
+        activationFactory = hresult.Succeeded()
             ? WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)
             : null;
 

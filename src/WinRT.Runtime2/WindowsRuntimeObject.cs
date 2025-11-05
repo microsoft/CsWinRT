@@ -688,7 +688,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
             // rest of the 'IDynamicInterfaceCastable' logic to run, as the cast can never succeed.
             // So we can just pre-cache the failure result here, to speedup future identical casts.
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 _ = TypeHandleCache.TryAdd(interfaceType, DynamicInterfaceCastFailure.Instance);
 

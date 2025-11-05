@@ -198,7 +198,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Stloc_3 },
                     { Leave_S, ldloc_3_finallyEnd.CreateLabel() },
                     { ldloc_2_finallyStart },
-                    { Call, interopReferences.WindowsRuntimeObjectMarshallerFree.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeUnknownMarshallerFree.Import(module) },
                     { Endfinally },
                     { ldloc_3_finallyEnd },
                     { Ret }

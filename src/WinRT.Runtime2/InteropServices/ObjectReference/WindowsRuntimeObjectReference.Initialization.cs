@@ -70,7 +70,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // That is, technically speaking we are ultimately going to create a 'WindowsRuntimeObjectReference'
         // object, which could throw 'OutOfMemoryException' in extreme circumstances. However, that is
         // considered an error state that cannot be recovered from, so that is not a concern here.
-        if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
+        if (isFreeThreaded.Failed())
         {
             // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
             // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
@@ -90,7 +90,7 @@ public unsafe partial class WindowsRuntimeObjectReference
             // transfer the ownership to the returned object reference, which would handle releases later on.
             // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of
             // the inner instance would've been extended, if we fail, we just need to ensure we release that object.
-            if (acquiredInnerInstanceUnknown != null)
+            if (acquiredInnerInstanceUnknown is not null)
             {
                 _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
             }
@@ -144,7 +144,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // infrastructure also allows the GC to crawl through objects across boundaries, to reconstruct the real dependency
         // graph. This is what allows the GC to still be able to detect cycles and avoid memory leaks, and what makes the
         // example code above "just work", like people writing C# would intuitively expect.
-        if (referenceTracker != null)
+        if (referenceTracker is not null)
         {
             createObjectFlags |= CreateObjectFlags.TrackerObject;
         }
@@ -197,7 +197,7 @@ public unsafe partial class WindowsRuntimeObjectReference
 
             // If we have a reference tracker and we're aggregating, we should not release
             // the wrapped COM object on disposal. The reference tracker will handle things.
-            if (referenceTracker != null)
+            if (referenceTracker is not null)
             {
                 createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseOnDispose;
 
@@ -207,7 +207,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
         else
         {
-            if (referenceTracker != null)
+            if (referenceTracker is not null)
             {
                 // Special handling in case we have a reference tracker. Like mentioned, this object is used to tell
                 // the reference tracker runtime whenever 'AddRef' and 'Release' are performed on 'acquiredNewInstanceUnknown'.
@@ -224,7 +224,7 @@ public unsafe partial class WindowsRuntimeObjectReference
                 _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
             }
 
-            if (acquiredInnerInstanceUnknown != null)
+            if (acquiredInnerInstanceUnknown is not null)
             {
                 // To balance the overall reference count on the inner instance (see notes at the start of the method),
                 // we need to release it here. This would've been handled in a 'finally' block in caller methods otherwise.
@@ -296,7 +296,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
         _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
-        if (referenceTracker != null)
+        if (referenceTracker is not null)
         {
             // If we have a reference tracker, we should report an 'AddRef' on it,
             // as we're wrapping the native object in a managed object reference.

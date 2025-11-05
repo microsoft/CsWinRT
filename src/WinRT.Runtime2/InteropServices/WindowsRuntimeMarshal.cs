@@ -76,7 +76,7 @@ public static unsafe class WindowsRuntimeMarshal
     public static bool TryGetManagedObject(void* externalComObject, [NotNullWhen(true)] out object? result)
     {
         // If the input pointer is a reference to a managed object, we can resolve the original managed object
-        if (externalComObject != null && IsReferenceToManagedObject(externalComObject))
+        if (externalComObject is not null && IsReferenceToManagedObject(externalComObject))
         {
             result = ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)externalComObject);
 

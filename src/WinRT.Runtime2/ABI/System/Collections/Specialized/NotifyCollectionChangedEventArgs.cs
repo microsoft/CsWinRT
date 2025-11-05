@@ -193,7 +193,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -238,7 +238,7 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
             innerInterface: out void* innerInterface,
             defaultInterface: out void* defaultInterface);
 
-        WindowsRuntimeObjectMarshaller.Free(innerInterface);
+        WindowsRuntimeUnknownMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

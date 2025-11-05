@@ -35,7 +35,7 @@ internal static unsafe class IBindableVectorViewMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 

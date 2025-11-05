@@ -163,7 +163,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
     {
         nuint currentContext = WindowsRuntimeImports.CoGetContextToken();
 
-        return _contextCallbackPtr == null || currentContext == _contextToken
+        return _contextCallbackPtr is null || currentContext == _contextToken
             ? null
             : CachedContexts.GetOrAdd(currentContext, CachedContextsObjectReferenceFactory.Value, this);
     }
@@ -206,7 +206,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
             state: this);
 
         // If the operation fails, just release without context as a best effort
-        if (hresult < 0)
+        if (hresult.Failed())
         {
             base.NativeReleaseWithoutContextUnsafe();
         }
@@ -223,7 +223,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         {
             HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(GetThisPtrUnsafe(), in iid, out void* targetObject);
 
-            if (WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Succeeded())
             {
                 if (IsAggregated)
                 {

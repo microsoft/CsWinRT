@@ -4328,7 +4328,7 @@ return %.AsValue();
                 call(semantics,
                     [&](object_type)
                     {
-                        w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
+                        w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                     },
                     [&](guid_type)
                     {
@@ -4345,7 +4345,7 @@ return %.AsValue();
                         case category::interface_type:
                         case category::class_type:
                         case category::delegate_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
+                            w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                             break;
                         case category::struct_type:
                             if (!is_type_blittable(td))
@@ -4379,7 +4379,7 @@ return %.AsValue();
                         call(td.generic_args[0],
                             [&](fundamental_type)
                             {
-                                w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
+                                w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                             },
                             [&](auto const&)
                             {
@@ -5701,7 +5701,7 @@ CopyToUnmanagedUnsafe_%(
             {
                 if (is_out() && (local_type == "void*" && param_type != "void*"))
                 {
-                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n", get_marshaler_local(w));
+                    w.write("WindowsRuntimeUnknownMarshaller.Free(%);\n", get_marshaler_local(w));
                 }
                 return;
             }
@@ -5718,7 +5718,7 @@ CopyToUnmanagedUnsafe_%(
                 }
                 else if (is_marshal_by_object_reference_value())
                 {
-                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
+                    w.write("WindowsRuntimeUnknownMarshaller.Free(%);\n",
                         get_param_local(w));
                 }
                 else if (marshaler_type == "HStringMarshaller")

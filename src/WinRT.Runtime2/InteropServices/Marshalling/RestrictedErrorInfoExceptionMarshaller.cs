@@ -24,7 +24,16 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// </summary>
     /// <param name="value">The managed exception to convert.</param>
     /// <returns>The <c>HRESULT</c> for the exception.</returns>
-    /// <remarks>This method also sets up <c>IErrorInfo</c> and <c>IRestrictedErrorInfo</c> for the input exception.</remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method also sets up <c>IErrorInfo</c> and <c>IRestrictedErrorInfo</c> for the input exception.
+    /// </para>
+    /// <para>
+    /// The <paramref name="value"/> parameter is never expected to be <see langword="null"/>, as this method
+    /// is only meant to be used from some marshalling stub, from within a <see langword="catch"/> clause.
+    /// </para>
+    /// </remarks>
     public static HRESULT ConvertToUnmanaged(Exception value)
     {
         RestrictedErrorInfo.SetErrorInfo(value);
@@ -39,6 +48,6 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// <returns>A managed exception.</returns>
     public static Exception? ConvertToManaged(HRESULT value)
     {
-        return RestrictedErrorInfo.GetExceptionForHR(value, out _);
+        return RestrictedErrorInfo.GetExceptionForHR(value);
     }
 }
