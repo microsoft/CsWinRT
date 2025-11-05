@@ -7,9 +7,7 @@ namespace System.IO
 {
     using System.ComponentModel;
     using System.Diagnostics;
-#if NET
     using System.Diagnostics.CodeAnalysis;
-#endif
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
@@ -20,12 +18,7 @@ namespace System.IO
     /// Contains extension methods for conversion between WinRT streams and managed streams.
     /// This class is the public facade for the stream adapters library.
     /// </summary>
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class WindowsRuntimeStreamExtensions
+    public static class WindowsRuntimeStreamExtensions
     {
         #region Constants and static Fields
 
@@ -38,9 +31,6 @@ namespace System.IO
                  = new ConditionalWeakTable<Stream, NetFxToWinRtStreamAdapter>();
 
         #endregion Constants and static Fields
-
-
-#if NET
 
         #region Helpers
 
@@ -343,8 +333,6 @@ namespace System.IO
             return adapter;
         }
         #endregion NetFx-to-WinRt conversion
-
-#endif
 
     }  // class WindowsRuntimeStreamExtensions
 }  // namespace

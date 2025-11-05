@@ -58,6 +58,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable CS0649 // "Field '...' is never assigned to"
 #pragma warning disable CA2207, CA1063, CA1033, CA1001, CA2213
 #pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
 )", VERSION_STRING);
         }

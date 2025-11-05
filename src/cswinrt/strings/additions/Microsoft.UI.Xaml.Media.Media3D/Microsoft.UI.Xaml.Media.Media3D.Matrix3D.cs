@@ -1,20 +1,13 @@
 
-namespace Windows.UI.Xaml.Media.Media3D
+namespace Microsoft.UI.Xaml.Media.Media3D
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Media3D.Matrix3D))]
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Matrix3D, Matrix3D>))]
-#endif
+    [WindowsRuntimeMetadata("Microsoft.UI")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Matrix3D>")]
+    [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    struct Matrix3D : IFormattable
+    public struct Matrix3D : IFormattable, IEquatable<Matrix3D>
     {
         // Assuming this matrix has fourth column of 0,0,0,1 and isn't identity this function:
         // Returns false if HasInverse is false, otherwise inverts the matrix.
@@ -183,7 +176,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M11
         {
-            get
+            readonly get
             {
                 return _m11;
             }
@@ -195,7 +188,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M12
         {
-            get
+            readonly get
             {
                 return _m12;
             }
@@ -207,7 +200,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M13
         {
-            get
+            readonly get
             {
                 return _m13;
             }
@@ -219,7 +212,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M14
         {
-            get
+            readonly get
             {
                 return _m14;
             }
@@ -231,7 +224,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M21
         {
-            get
+            readonly get
             {
                 return _m21;
             }
@@ -243,7 +236,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M22
         {
-            get
+            readonly get
             {
                 return _m22;
             }
@@ -255,7 +248,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M23
         {
-            get
+            readonly get
             {
                 return _m23;
             }
@@ -267,7 +260,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M24
         {
-            get
+            readonly get
             {
                 return _m24;
             }
@@ -279,7 +272,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M31
         {
-            get
+            readonly get
             {
                 return _m31;
             }
@@ -291,7 +284,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M32
         {
-            get
+            readonly get
             {
                 return _m32;
             }
@@ -303,7 +296,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M33
         {
-            get
+            readonly get
             {
                 return _m33;
             }
@@ -315,7 +308,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M34
         {
-            get
+            readonly get
             {
                 return _m34;
             }
@@ -327,7 +320,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double OffsetX
         {
-            get
+            readonly get
             {
                 return _offsetX;
             }
@@ -339,7 +332,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double OffsetY
         {
-            get
+            readonly get
             {
                 return _offsetY;
             }
@@ -351,7 +344,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double OffsetZ
         {
-            get
+            readonly get
             {
                 return _offsetZ;
             }
@@ -363,7 +356,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         public double M44
         {
-            get
+            readonly get
             {
                 return _m44;
             }
@@ -381,36 +374,36 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
         }
 
-        public bool IsIdentity
+        public readonly bool IsIdentity
         {
             get
             {
-                return (_m11 == 1 && _m12 == 0 && _m13 == 0 && _m14 == 0 &&
+                return _m11 == 1 && _m12 == 0 && _m13 == 0 && _m14 == 0 &&
                          _m21 == 0 && _m22 == 1 && _m23 == 0 && _m24 == 0 &&
                          _m31 == 0 && _m32 == 0 && _m33 == 1 && _m34 == 0 &&
-                         _offsetX == 0 && _offsetY == 0 && _offsetZ == 0 && _m44 == 1);
+                         _offsetX == 0 && _offsetY == 0 && _offsetZ == 0 && _m44 == 1;
             }
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, null /* format provider */);
         }
 
-        public string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, provider);
         }
 
-        string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string format, IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string format, IFormatProvider provider)
         {
             if (IsIdentity)
             {
@@ -418,19 +411,43 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
 
             // Helper to get the numeric list separator for a given culture.
-            char separator = TokenizerHelper.GetNumericListSeparator(provider);
-            return string.Format(provider,
-                                 "{1:" + format + "}{0}{2:" + format + "}{0}{3:" + format + "}{0}{4:" + format + "}{0}{5:" + format +
-                                 "}{0}{6:" + format + "}{0}{7:" + format + "}{0}{8:" + format + "}{0}{9:" + format + "}{0}{10:" + format +
-                                 "}{0}{11:" + format + "}{0}{12:" + format + "}{0}{13:" + format + "}{0}{14:" + format + "}{0}{15:" + format + "}{0}{16:" + format + "}",
-                                 separator,
-                                 _m11, _m12, _m13, _m14,
-                                 _m21, _m22, _m23, _m24,
-                                 _m31, _m32, _m33, _m34,
-                                 _offsetX, _offsetY, _offsetZ, _m44);
+            char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
+            DefaultInterpolatedStringHandler handler = new(0, 31, provider, stackalloc char[256]);
+            handler.AppendFormatted(_m11, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m12, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m13, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m14, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m21, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m22, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m23, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m24, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m31, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m32, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m33, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m34, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetX, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetY, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_offsetZ, format);
+            handler.AppendFormatted(separator);
+            handler.AppendFormatted(_m44, format);
+            return handler.ToStringAndClear();
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             // Perform field-by-field XOR of HashCodes
             return M11.GetHashCode() ^
@@ -451,12 +468,12 @@ namespace Windows.UI.Xaml.Media.Media3D
                    M44.GetHashCode();
         }
 
-        public override bool Equals(object o)
+        public readonly override bool Equals(object o)
         {
-            return o is Matrix3D && Matrix3D.Equals(this, (Matrix3D)o);
+            return o is Matrix3D matrix && Equals(this, matrix);
         }
 
-        public bool Equals(Matrix3D value)
+        public readonly bool Equals(Matrix3D value)
         {
             return Matrix3D.Equals(this, value);
         }
@@ -560,7 +577,7 @@ namespace Windows.UI.Xaml.Media.Media3D
             return matrix3D;
         }
 
-        public bool HasInverse
+        public readonly bool HasInverse
         {
             get
             {
@@ -629,7 +646,7 @@ namespace Windows.UI.Xaml.Media.Media3D
                    matrix1.M44.Equals(matrix2.M44);
         }
 
-        private double GetNormalizedAffineDeterminant()
+        private readonly double GetNormalizedAffineDeterminant()
         {
             double z20 = _m12 * _m23 - _m22 * _m13;
             double z10 = _m32 * _m13 - _m12 * _m33;
@@ -638,15 +655,15 @@ namespace Windows.UI.Xaml.Media.Media3D
             return _m31 * z20 + _m21 * z10 + _m11 * z00;
         }
 
-        private bool IsAffine
+        private readonly bool IsAffine
         {
             get
             {
-                return (_m14 == 0.0 && _m24 == 0.0 && _m34 == 0.0 && _m44 == 1.0);
+                return _m14 == 0.0 && _m24 == 0.0 && _m34 == 0.0 && _m44 == 1.0;
             }
         }
 
-        private double Determinant
+        private readonly double Determinant
         {
             get
             {
@@ -696,19 +713,5 @@ namespace Windows.UI.Xaml.Media.Media3D
         private double _offsetY;
         private double _offsetZ;
         private double _m44;
-    }
-}
-
-namespace ABI.Windows.UI.Xaml.Media.Media3D
-{
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class Matrix3D
-    {
-        public static string GetGuidSignature() => 
-            $"struct(Windows.UI.Xaml.Media.Media3D.Matrix3D;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8)";
     }
 }

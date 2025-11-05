@@ -53,13 +53,13 @@ public static unsafe class INotifyCollectionChangedMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChangedTable
+    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventHandlerEventSource> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> MakeCollectionChangedTable()
+            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -71,11 +71,11 @@ public static unsafe class INotifyCollectionChangedMethods
     }
 
     /// <see cref="INotifyCollectionChanged.CollectionChanged"/>
-    public static NotifyCollectionChangedEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static NotifyCollectionChangedEventHandlerEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return CollectionChangedTable.GetOrAdd(
             key: thisObject,
-            valueFactory: static (_, thisReference) => new NotifyCollectionChangedEventSource(thisReference, 6),
+            valueFactory: static (_, thisReference) => new NotifyCollectionChangedEventHandlerEventSource(thisReference, 6),
             factoryArgument: thisReference);
     }
 }

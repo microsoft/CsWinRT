@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public unsafe ref struct HStringReference
+public unsafe struct HStringReference
 {
     /// <summary>
     /// The underlying header for the <c>HSTRING</c> reference.

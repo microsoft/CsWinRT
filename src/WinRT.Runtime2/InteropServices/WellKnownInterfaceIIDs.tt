@@ -25,7 +25,9 @@ var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFull
 {
     (null, "IUnknown", false),
     (null, "IAgileObject", false),
+    (null, "IBufferByteAccess", false),
     (null, "IMarshal", false),
+    (null, "IMemoryBufferByteAccess", false),
     (null, "IInspectable", false),
     (null, "IStringable", false),
     (null, "IPropertyValue", false),

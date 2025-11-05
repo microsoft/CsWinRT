@@ -386,6 +386,17 @@ public static unsafe class RestrictedErrorInfo
     }
 
     /// <summary>
+    /// Attaches the error info stored by the <c>IRestrictedErrorInfo</c> infrastructure to the input exception.
+    /// </summary>
+    /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
+    /// <returns>The input <see cref="Exception"/> instance with attached error info.</returns>
+    public static Exception AttachErrorInfo(Exception exception)
+    {
+        // TODO
+        return exception;
+    }
+
+    /// <summary>
     /// Triggers the global error handler when an unhandled exception occurs.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>

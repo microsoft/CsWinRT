@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-
 namespace System.Runtime.InteropServices.WindowsRuntime
 {
     using System.Diagnostics;
@@ -13,26 +12,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
-    using Com;
+
     /// <summary>
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
-#if NET
-    [global::WinRT.WinRTExposedType(typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferWinRTTypeDetails))]
-#endif
-#if EMBED
-    internal
-#else
-    public
-#endif
-    sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
+    public sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess
     {
-        [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
-        private static extern unsafe int RoGetBufferMarshaler(IntPtr* bufferMarshalerPtr);
         #region Constants
 
-        private const string WinTypesDLL = "WinTypes.dll";
         private const int E_BOUNDS = unchecked((int)0x8000000B);
 
         #endregion Constants
@@ -64,46 +52,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
         #endregion Static factory methods
-
-
-        #region Static fields and helpers
-
-        // This object handles IMarshal calls for us:
-        [ThreadStatic]
-        private static IMarshal t_winRtMarshalProxy = null;
-
-        private static unsafe void EnsureHasMarshalProxy()
-        {
-            if (t_winRtMarshalProxy != null)
-                return;
-
-            try
-            {
-                IntPtr proxyPtr = default;
-                int hr = RoGetBufferMarshaler(&proxyPtr);
-                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr, global::WinRT.Interop.IID.IID_IMarshal));
-                t_winRtMarshalProxy = proxy;
-
-                if (hr != 0)
-                {
-                    Exception ex = new Exception(string.Format("{0} ({1}!RoGetBufferMarshaler)", global::Windows.Storage.Streams.SR.WinRtCOM_Error, WinTypesDLL));
-                    ex.SetHResult(hr);
-                    throw ex;
-                }
-
-                if (proxy == null)
-                    throw new NullReferenceException(string.Format("{0} ({1}!RoGetBufferMarshaler)", global::Windows.Storage.Streams.SR.WinRtCOM_Error, WinTypesDLL));
-            }
-            catch (DllNotFoundException ex)
-            {
-                throw new NotImplementedException(string.Format(global::Windows.Storage.Streams.SR.NotImplemented_NativeRoutineNotFound,
-                                                               string.Format("{0}!RoGetBufferMarshaler", WinTypesDLL)),
-                                                  ex);
-            }
-        }
-
-        #endregion Static fields and helpers
-
 
         #region Fields
 
@@ -161,7 +109,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             underlyingDataArray = _data;
             underlyingDataArrayStartOffset = _dataStartOffs;
         }
-
 
         private unsafe byte* PinUnderlyingData()
         {
@@ -234,7 +181,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 if (value > ((IBuffer)this).Capacity)
                 {
                     ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(value), global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
-                    ex.SetHResult(E_BOUNDS);
+                    ex.HResult = E_BOUNDS;
                     throw ex;
                 }
 
@@ -249,98 +196,89 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Implementation of IBufferByteAccess
 
-        unsafe IntPtr IBufferByteAccess.Buffer
+        unsafe byte* IBufferByteAccess.Buffer
         {
             get
             {
                 // Get pin handle:
                 IntPtr buffPtr = Volatile.Read(ref _dataPtr);
 
-                // If we are already pinned, return the pointer and have a nice day:
+                // If we are already pinned, return the pointer:
                 if (buffPtr != IntPtr.Zero)
-                    return buffPtr;
+                    return (byte*)buffPtr;
 
-                // Ok, we are not yet pinned. Let's do it.
-                return new IntPtr(PinUnderlyingData());
+                // Otherwise pin it.
+                return PinUnderlyingData();
             }
         }
 
         #endregion Implementation of IBufferByteAccess
-
-        #region Implementation of IMarshal
-
-        void IMarshal.DisconnectObject(uint dwReserved)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.DisconnectObject(dwReserved);
-        }
-
-
-        unsafe void IMarshal.GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
-        }
-
-
-        unsafe void IMarshal.GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
-        }
-
-
-        unsafe void IMarshal.MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
-        }
-
-
-        void IMarshal.ReleaseMarshalData(IntPtr pStm)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.ReleaseMarshalData(pStm);
-        }
-
-
-        unsafe void IMarshal.UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
-        {
-            EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.UnmarshalInterface(pStm, riid, ppv);
-        }
-        #endregion Implementation of IMarshal
     }  // class WindowsRuntimeBuffer
 }  // namespace
 
-#if NET
 namespace ABI.System.Runtime.InteropServices.WindowsRuntime
 {
-    internal sealed class WindowsRuntimeBufferWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+    [WindowsRuntimeClassName("Windows.Storage.Streams.IBuffer")]
+    [WindowsRuntimeBufferComWrappersMarshaller]
+    file static class WindowsRuntimeBuffer;
+
+    file struct WindowsRuntimeBufferInterfaceEntries
     {
-        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        public ComInterfaceEntry IBuffer;
+        public ComInterfaceEntry IBufferByteAccess;
+        public ComInterfaceEntry IStringable;
+        public ComInterfaceEntry IWeakReferenceSource;
+        public ComInterfaceEntry IMarshal;
+        public ComInterfaceEntry IAgileObject;
+        public ComInterfaceEntry IInspectable;
+        public ComInterfaceEntry IUnknown;
+    }
+
+    file static class WindowsRuntimeBufferInterfaceEntriesImpl
+    {
+        [FixedAddressValueType]
+        public static readonly WindowsRuntimeBufferInterfaceEntries Entries;
+
+        /// <summary>
+        /// Initializes <see cref="Entries"/>.
+        /// </summary>
+        static WindowsRuntimeBufferInterfaceEntriesImpl()
         {
-            return new ComWrappers.ComInterfaceEntry[]
-            {
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = global::WinRT.Interop.IID.IID_IBuffer,
-                    Vtable = global::ABI.Windows.Storage.Streams.IBuffer.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = global::WinRT.Interop.IID.IID_IBufferByteAccess,
-                    Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccess.Vftbl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = global::WinRT.Interop.IID.IID_IMarshal,
-                    Vtable = global::ABI.Com.IMarshal.Vftbl.AbiToProjectionVftablePtr
-                }
-            };
+            Entries.IBuffer.IID = global::ABI.InterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
+            Entries.IBuffer.Vtable = global::ABI.Windows.Storage.Streams.IBufferImpl.Vtable;
+            Entries.IBufferByteAccess.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IBufferByteAccess;
+            Entries.IBufferByteAccess.Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccessImpl.Vtable;
+            Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+            Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+            Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+            Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
+            Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+            Entries.IMarshal.Vtable = global::ABI.Windows.Storage.Streams.IBufferMarshalImpl.Vtable;
+            Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+            Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+            Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+            Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+            Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+            Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
+        }
+    }
+
+    file sealed unsafe class WindowsRuntimeBufferComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+    {
+        /// <inheritdoc/>
+        public override void* GetOrCreateComInterfaceForObject(object value)
+        {
+            return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        }
+
+        /// <inheritdoc/>
+        public override ComInterfaceEntry* ComputeVtables(out int count)
+        {
+            count = sizeof(WindowsRuntimeBufferInterfaceEntries) / sizeof(ComInterfaceEntry);
+
+            return (ComInterfaceEntry*)Unsafe.AsPointer(in WindowsRuntimeBufferInterfaceEntriesImpl.Entries);
         }
     }
 }
-#endif
 
 // WindowsRuntimeBuffer.cs

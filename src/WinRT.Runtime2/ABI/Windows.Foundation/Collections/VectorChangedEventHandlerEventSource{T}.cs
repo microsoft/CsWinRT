@@ -4,8 +4,10 @@
 using System;
 using System.ComponentModel;
 using Windows.Foundation.Collections;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.InteropServices;
+namespace ABI.Windows.Foundation.Collections;
 
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="VectorChangedEventHandler{T}"/>.

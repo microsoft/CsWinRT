@@ -3,8 +3,10 @@
 
 using System;
 using System.ComponentModel;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.InteropServices;
+namespace ABI.System.ComponentModel;
 
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="PropertyChangedEventHandler"/>.
@@ -13,10 +15,10 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChangedEventHandler>
+public sealed unsafe class PropertyChangedEventHandlerEventSource : EventSource<PropertyChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
-    public PropertyChangedEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+    public PropertyChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
         : base(nativeObjectReference, index)
     {
     }
@@ -34,7 +36,7 @@ public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChan
     }
 
     /// <summary>
-    /// The <see cref="EventSourceState{T}"/> implementation for <see cref="PropertyChangedEventSource"/>.
+    /// The <see cref="EventSourceState{T}"/> implementation for <see cref="PropertyChangedEventHandlerEventSource"/>.
     /// </summary>
     private sealed class EventState : EventSourceState<PropertyChangedEventHandler>
     {
