@@ -22,10 +22,10 @@ internal static class WindowsRuntimeExtensions
         public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
     }
 
-    extension(ITypeDefOrRef type)
+    extension(ITypeDescriptor type)
     {
         /// <summary>
-        /// Checks whether an <see cref="ITypeDefOrRef"/> represents a custom-mapped Windows Runtime generic interface type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime generic interface type.
         /// </summary>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
@@ -40,7 +40,7 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Checks whether an <see cref="ITypeDefOrRef"/> represents a custom-mapped Windows Runtime non-generic interface type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic interface type.
         /// </summary>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime non-generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
@@ -164,13 +164,9 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type represents a custom-mapped Windows Runtime interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeInterfaceType(InteropReferences interopReferences)
         {
-            if (signature is GenericInstanceTypeSignature genericSignature)
-            {
-                return genericSignature.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences);
-            }
-
-            // We need to go through this to ensure signatures compare correctly against type references
-            return signature.ToTypeDefOrRef().IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences);
+            return signature is GenericInstanceTypeSignature genericSignature
+                ? genericSignature.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences)
+                : signature.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences);
         }
 
         /// <summary>
@@ -187,7 +183,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The only non-generic custom-mapped delegate type is 'EventHandler'
-            return SignatureComparer.IgnoreVersion.Equals(signature.ToTypeDefOrRef(), interopReferences.EventHandler);
+            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
         }
     }
 
