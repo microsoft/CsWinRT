@@ -133,6 +133,11 @@ namespace cswinrt
         throw_invalid("Invoke method not found");
     }
 
+    bool is_projected_as_nullable(TypeDef const& type)
+    {
+        return type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1";
+    }
+
     enum class fundamental_type
     {
         Boolean,
