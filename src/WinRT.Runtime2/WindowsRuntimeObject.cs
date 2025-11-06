@@ -202,7 +202,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
         in Guid iid,
-        params ReadOnlySpan<object?> additionalParameters)
+        WindowsRuntimeActivationArgsReference additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
@@ -239,7 +239,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
-        params ReadOnlySpan<object?> additionalParameters)
+        WindowsRuntimeActivationArgsReference additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
