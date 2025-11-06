@@ -32,7 +32,7 @@ namespace cswinrt
         {"uint", "UInt32"},
         {"long", "Int64"},
         {"ulong", "UInt64"},
-        {"float", "Float"},
+        {"float", "Single"},
         {"double", "Double"},
         {"string", "String"},
     };
@@ -2698,7 +2698,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%, %, [%])
+  :base(%.Instance, %, [%])
 {
 %}
 )",
@@ -2898,7 +2898,7 @@ if (HasUnwrappableNativeObjectReference)
                     }
                     else
                     {
-                        w.write("%, %, [%]",
+                        w.write("%.Instance, %, [%]",
                             bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
@@ -5097,6 +5097,7 @@ event % %;)",
         std::string interface_init_rcw_helper;
         std::string interop_dll_type;
         bool skip_disposer;
+        bool is_boxed_value;
 
         bool is_out() const
         {
@@ -5387,6 +5388,15 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
 
             write_convert_to_unmanaged_function(w);
 
+            if (is_boxed_value)
+            {
+                w.write("using WindowsRuntimeObjectReferenceValue % = %.BoxToUnmanaged(%);\n",
+                    get_marshaler_local(w),
+                    marshaler_type,
+                    get_escaped_param_name(w));
+                return;
+            }
+
             w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged%(%%);\n",
                 get_marshaler_local(w),
                 interop_dll_type != "" ? "" : marshaler_type + ".",
@@ -5404,8 +5414,6 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
         {
             if (is_pinnable || is_pinnable_array_data() || is_object_in() || is_out() || local_type.empty())
                 return;
-
-            // TODO: Arrays
 
             if (!marshaler_type.empty() && !is_marshal_by_object_reference_value())
             {
@@ -5623,6 +5631,14 @@ CopyToUnmanagedUnsafe_%(
                     return;
                 }
                 w.write("%%", param_cast, source);
+                return;
+            }
+
+            if (is_boxed_value)
+            {
+                w.write("%.UnboxToManaged(%)",
+                    marshaler_type,
+                    source);
                 return;
             }
 
@@ -5845,7 +5861,30 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                     m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
-                    if (distance(type.GenericParam()) > 0)
+
+                    if (is_projected_as_nullable(type))
+                    {
+                        m.is_boxed_value = true;
+                        auto generic_arg = w.get_generic_arg(0);
+                        call(generic_arg,
+                        [&](guid_type)
+                        {
+                            m.marshaler_type = "ABI.System.GuidMarshaller";
+                        },
+                        [&](type_type)
+                        {
+                            m.marshaler_type = "ABI.System.TypeMarshaller";
+                        },
+                        [&](type_definition const& type) {
+                            m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                        },
+                        [&](fundamental_type const& type)
+                        {
+                            m.marshaler_type = w.write_temp("ABI.System.%Marshaller", bind<write_fundamental_non_projected_type>(type));
+                        },
+                        [&](auto const&) {});
+                    }
+                    else if (distance(type.GenericParam()) > 0)
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }
@@ -6157,9 +6196,14 @@ finally
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
+		auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
@@ -6169,8 +6213,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            bind<write_constructor_callback_method_name>(method),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
@@ -6220,9 +6266,14 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
+        auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedComposed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   WindowsRuntimeObject baseInterface,
   out void* innerInterface,
@@ -6234,8 +6285,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            bind<write_constructor_callback_method_name>(method),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_composable_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
@@ -6867,6 +6920,7 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
         std::string interop_dll_type;
         bool marshal_by_object_reference_value;
         bool is_blittable;
+        bool is_boxed_value;
 
         bool is_out() const
         {
@@ -7072,6 +7126,12 @@ static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] 
             {
                 w.write("__%", param_name);
             }
+            else if (is_boxed_value)
+            {
+                w.write("%.UnboxToManaged(%)",
+                    marshaler_type,
+                    bind<write_escaped_identifier>(param_name));
+            }
             else if (interop_dll_type != "")
             {
                 w.write("ConvertToManaged_%(null, %%)",
@@ -7152,6 +7212,12 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                         }
                     }
                 }
+                else if (is_boxed_value)
+                {
+                    w.write("%.BoxToUnmanaged(%).DetachThisPtrUnsafe();",
+                        marshaler_type,
+                        param_local);
+                }
                 else
                 {
                     w.write("%%ConvertToUnmanaged%(%%)%;",
@@ -7219,7 +7285,29 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
-                    if (distance(type.GenericParam()) > 0)
+                    if (is_projected_as_nullable(type))
+                    {
+                        m.is_boxed_value = true;
+                        auto generic_arg = w.get_generic_arg(0);
+                        call(generic_arg,
+                            [&](guid_type)
+                            {
+                                m.marshaler_type = "ABI.System.GuidMarshaller";
+                            },
+                            [&](type_type)
+                            {
+                                m.marshaler_type = "ABI.System.TypeMarshaller";
+                            },
+                            [&](type_definition const& type) {
+                                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                            },
+                            [&](fundamental_type const& type)
+                            {
+                                m.marshaler_type = w.write_temp("ABI.System.%Marshaller", bind<write_fundamental_non_projected_type>(type));
+                            },
+                            [&](auto const&) {});
+                    }
+                    else if (distance(type.GenericParam()) > 0)
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }

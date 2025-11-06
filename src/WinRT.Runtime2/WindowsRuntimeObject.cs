@@ -207,7 +207,7 @@ public abstract unsafe class WindowsRuntimeObject :
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
         // Delegate to the activation factory callback (see detailed explanation above)
-        activationFactoryCallback(
+        activationFactoryCallback.Invoke(
             additionalParameters: additionalParameters,
             defaultInterface: out void* defaultInterface);
 
@@ -246,7 +246,7 @@ public abstract unsafe class WindowsRuntimeObject :
         bool hasUnwrappableNativeObjectReference = HasUnwrappableNativeObjectReference;
 
         // Delegate to the activation factory callback (see detailed explanation above)
-        activationFactoryCallback(
+        activationFactoryCallback.Invoke(
             additionalParameters: additionalParameters,
             baseInterface: hasUnwrappableNativeObjectReference ? null : this,
             innerInterface: out void* innerInterface,
