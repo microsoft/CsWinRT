@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -38,6 +39,37 @@ internal static class TypeSignatureExtensions
                 }
 
                 return true;
+            }
+        }
+
+        public bool IsDelegate
+        {
+            get
+            {
+                if (signature is null)
+                {
+                    return false;
+                }
+
+                TypeDefinition? typeDef = signature.Resolve();
+                if (typeDef is null || !typeDef.IsClass)
+                {
+                    return false;
+                }
+
+                // Walk base types
+                TypeDefinition? baseType = typeDef.BaseType?.Resolve();
+                while (baseType != null)
+                {
+                    if (baseType.Namespace == "System" &&
+                        (baseType.Name == "MulticastDelegate" || baseType.Name == "Delegate"))
+                    {
+                        return true;
+                    }
+                    baseType = baseType.BaseType?.Resolve();
+                }
+
+                return false;
             }
         }
     }
