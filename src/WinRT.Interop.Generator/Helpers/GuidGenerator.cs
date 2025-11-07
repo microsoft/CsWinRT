@@ -212,7 +212,8 @@ internal static class GuidGenerator
 
     public static Guid CreateIID(TypeSignature type)
     {
-        return CreateIIDForGenericType(GetSignature(type));
+        return Guid.Empty;
+        //return CreateIIDForGenericType(GetSignature(type));
     }
 
     [SkipLocalsInit]
