@@ -429,6 +429,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeManagedOnlyTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeManagedOnlyTypeAttribute"u8);
@@ -502,6 +507,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationWithProgressMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationWithProgressMethodsImpl`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IIterableMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIterableMethodsImpl`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
@@ -1367,7 +1377,7 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Void.MakePointerType(),
                 ReadOnlySpanChar,
                 _corLibTypeFactory.Object.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback.CreateArray</c>.
@@ -1454,7 +1464,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Object,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                CreatedWrapperFlags.ToValueTypeSignature()]));
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject</c>.
@@ -1474,8 +1484,8 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe</c>.
@@ -1485,8 +1495,8 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
@@ -1831,6 +1841,20 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Current"u8, MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;.First</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IIterableMethodsImpl1First(TypeSignature elementType)
+    {
+        return IIterableMethodsImpl1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("First"u8, MethodSignature.CreateStatic(
+                returnType: IEnumerator1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>
@@ -2411,7 +2435,7 @@ internal sealed class InteropReferences
         return IVectorViewMethods1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetAt"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
@@ -145,6 +147,13 @@ internal static class WindowsRuntimeExtensions
         {
             return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
         }
+
+        public Utf8String? GetWindowsRuntimeMetadataName()
+        {
+            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
+            return attribute?.Signature?.FixedArguments?[0]?.Element is Utf8String metadataName
+                ? metadataName : null;
+        }
     }
 
     extension(TypeSignature signature)
@@ -184,6 +193,20 @@ internal static class WindowsRuntimeExtensions
 
             // The only non-generic custom-mapped delegate type is 'EventHandler'
             return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
+        }
+
+        public Utf8String? GetWindowsRuntimeMetadataName()
+        {
+            if (signature is GenericInstanceTypeSignature genericSignature)
+            {
+                return genericSignature.GenericType.Resolve()?.GetWindowsRuntimeMetadataName();
+            }
+            else if (signature is ArrayTypeSignature arraySignature)
+            {
+                return arraySignature.BaseType.GetWindowsRuntimeMetadataName();
+            }
+
+            return signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName();
         }
     }
 

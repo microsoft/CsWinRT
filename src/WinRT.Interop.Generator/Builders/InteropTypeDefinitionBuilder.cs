@@ -109,11 +109,11 @@ internal static partial class InteropTypeDefinitionBuilder
         ModuleDefinition module,
         out TypeDefinition callbackType)
     {
-        // We're declaring an 'internal abstract class' type
+        // We're declaring an 'internal sealed class' type
         callbackType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
         {
             Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback.Import(module)) }
@@ -253,9 +253,7 @@ internal static partial class InteropTypeDefinitionBuilder
         };
 
         // Add and implement the 'CreateObject' method
-        marshallerType.AddMethodImplementation(
-            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-            method: createObjectMethod);
+        marshallerType.Methods.Add(createObjectMethod);
     }
 
     /// <summary>

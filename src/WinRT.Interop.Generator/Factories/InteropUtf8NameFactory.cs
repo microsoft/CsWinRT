@@ -82,7 +82,7 @@ internal static class InteropUtf8NameFactory
 
             // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
             interpolatedStringHandler.AppendLiteral("<");
-            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name));
+            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature));
             interpolatedStringHandler.AppendLiteral(">");
 
             // If the type is generic, append the definition name and the type arguments
@@ -188,12 +188,13 @@ internal static class InteropUtf8NameFactory
     }
 
     /// <summary>
-    /// Gets the assembly name or a well known identifier for the given assembly name.
+    /// Gets the assembly name or a well known identifier based on the assembly name or the given type signature.
     /// </summary>
     /// <param name="assemblyName">The input assembly name to convert.</param>
+    /// <param name="typeSignature">The type signature for which to convert.</param>
     /// <returns>The resulting assembly name to use.</returns>
     [return: NotNullIfNotNull(nameof(assemblyName))]
-    private static Utf8String? AssemblyNameOrWellKnownIdentifier(Utf8String? assemblyName)
+    private static Utf8String? AssemblyNameOrWellKnownIdentifier(Utf8String? assemblyName, TypeSignature typeSignature)
     {
         // Replace some assembly names with well known constants, to make the names more compact
         return assemblyName switch
@@ -201,9 +202,7 @@ internal static class InteropUtf8NameFactory
             { Value: "System.Runtime" } => "#corlib"u8,
             { Value: "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" } => "#Windows"u8,
             { Value: "WinRT.Runtime" } => "#CsWinRT"u8,
-            { Value: "Microsoft.UI.Xaml.Projection" } => "#WinUI2"u8,
-            { Value: "Microsoft.Graphics.Canvas.Interop" } => "#Win2D"u8,
-            _ => assemblyName
+            _ => typeSignature.GetWindowsRuntimeMetadataName() ?? assemblyName
         };
     }
 

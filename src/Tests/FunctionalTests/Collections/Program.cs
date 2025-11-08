@@ -7,6 +7,7 @@ using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
 using Windows.Foundation;
+using WindowsRuntime.InteropServices;
 
 var instance = new Class();
 
@@ -77,6 +78,7 @@ if (!AllEqual(nonBlittableArr, nonBlittableArr2, outNonBlittableArr, retNonBlitt
     return 101;
 }
 
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
 TestComponent.Nested[] nestedArr = new TestComponent.Nested[]{
                 new TestComponent.Nested(
                     new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(TestComponent.ITests).GUID),
@@ -85,9 +87,10 @@ TestComponent.Nested[] nestedArr = new TestComponent.Nested[]{
                     new TestComponent.Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
                     new TestComponent.NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456))),
                 new TestComponent.Nested(
-                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(WinRT.IInspectable).GUID),
+                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, WellKnownInterfaceIIDs.IID_IInspectable),
                     new TestComponent.NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789)))
             };
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
 TestComponent.Nested[] nestedArr2 = new TestComponent.Nested[nestedArr.Length];
 TestComponent.Nested[] outNestedArr;
 TestComponent.Nested[] retNestedArr = instance2.Array15(nestedArr, nestedArr2, out outNestedArr);
