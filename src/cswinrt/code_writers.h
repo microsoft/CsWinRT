@@ -2875,7 +2875,7 @@ private WindowsRuntimeObjectReference %
 %% %%(%)
   :base(%)
 {
-if (HasUnwrappableNativeObjectReference)
+if (GetType() == typeof(%))
 {
 % = NativeObjectReference;
 }
@@ -2904,6 +2904,7 @@ if (HasUnwrappableNativeObjectReference)
                             bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
+                class_type.TypeName(),
                 bind<write_objref_type_name>(default_type_semantics),
                 gc_pressure);
 
@@ -8637,7 +8638,13 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             {
                 if (!type.Flags().Sealed())
                 {
-                    w.write("% = NativeObjectReference;\n", bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
+                    w.write(R"(
+if (GetType() == typeof(%))
+{
+% = NativeObjectReference;
+})",
+                    type.TypeName(),
+                    bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
                 }
             },
             [&](writer& w)

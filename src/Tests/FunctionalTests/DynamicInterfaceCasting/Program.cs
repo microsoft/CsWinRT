@@ -4,9 +4,15 @@ using System.Runtime.InteropServices;
 using TestComponent;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
-using WindowsRuntime.InteropServices.Marshalling;
-using WinRT;
-using WinRT.Interop;
+
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+// TODO: This shouldn't be needed if transitive references are detected correctly.
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
 
 var instance = new Class();
 TestComponentCSharp.Class instance2 = new TestComponentCSharp.Class();
