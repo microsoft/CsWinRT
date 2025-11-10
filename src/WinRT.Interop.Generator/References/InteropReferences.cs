@@ -1539,7 +1539,7 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [
                 Delegate.ToReferenceTypeSignature(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToManaged&lt;TCallback&gt;(void*)</c>.
@@ -1558,7 +1558,7 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [
                 Delegate.ToReferenceTypeSignature(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.UnboxToManaged&lt;TCallback&gt;(void*)</c>.
@@ -1578,7 +1578,7 @@ internal sealed class InteropReferences
             genericParameterCount: 1,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller.UnboxToManaged&lt;TCallback&gt;(void*, in Guid)</c>.
@@ -1589,7 +1589,7 @@ internal sealed class InteropReferences
             genericParameterCount: 1,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
@@ -1895,10 +1895,9 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                genericParameterCount: 1,
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    Guid.MakeByReferenceType()]));
+                    Guid.ToValueTypeSignature().MakeByReferenceType()]));
     }
 
     /// <summary>
