@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using TestComponent;
 using TestComponentCSharp;
 using WindowsRuntime.InteropServices;
@@ -39,8 +41,65 @@ _ = testComposable.Value;
 _ = Composable.ExpectComposable(testComposable);
 _ = Composable.ExpectRequiredOne(testComposable);
 
+TestMixedComClass testMixedComClass = new();
+
+unsafe
+{
+    void* testMixedComClassUnknownPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(testMixedComClass);
+    void* classicComActionPtr = null;
+    void* closablePtr = null;
+    void* inspectablePtr = null;
+
+    try
+    {
+        // We should be able to get an 'IClassicComAction' interface pointer
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
+            pUnk: (nint)testMixedComClassUnknownPtr,
+            iid: new Guid("3C832AA5-5F7E-46EE-B1BF-7FE03AE866AF"),
+            ppv: out *(nint*)&classicComActionPtr));
+
+        // Verify that we can correctly call 'Invoke'
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, int>)(*(void***)classicComActionPtr)[3])(classicComActionPtr));
+
+        // Sanity check: we should still also be able to 'QueryInterface' for other interfaces
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
+            pUnk: (nint)testMixedComClassUnknownPtr,
+            iid: new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
+            ppv: out *(nint*)&closablePtr));
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
+            pUnk: (nint)testMixedComClassUnknownPtr,
+            iid: new Guid("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90"),
+            ppv: out *(nint*)&inspectablePtr));
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(testMixedComClassUnknownPtr);
+        WindowsRuntimeMarshal.Free(classicComActionPtr);
+        WindowsRuntimeMarshal.Free(closablePtr);
+        WindowsRuntimeMarshal.Free(inspectablePtr);
+    }
+}
+
 sealed class TestComposable : Composable
 {
+}
+
+sealed class TestMixedComClass : IClassicComAction, IDisposable
+{
+    public void Invoke()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+}
+
+[Guid("3C832AA5-5F7E-46EE-B1BF-7FE03AE866AF")]
+[GeneratedComInterface]
+partial interface IClassicComAction
+{
+    void Invoke();
 }
 
 /*

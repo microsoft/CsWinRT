@@ -424,7 +424,31 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static Exception CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
     {
-        return Exception(45, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
+        return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a '[GeneratedComInterface]' type.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef interfaceType, TypeDefinition type)
+    {
+        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for a given interface type.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
+    {
+        return Warning(50, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
+    /// Invalid custom-mapped type used to get an IID.
+    /// </summary>
+    public static Exception InvalidCustomMappedTypeForWellKnownInterfaceIIDs(TypeSignature interfaceType)
+    {
+        return Exception(51, $"Type '{interfaceType}' is not a valid well-known custom-mapped interface type: its IID could not be retrieved.");
     }
 
     /// <summary>
@@ -437,6 +461,17 @@ internal static class WellKnownInteropExceptions
     private static Exception Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message, innerException);
+    }
+
+    /// <summary>
+    /// Creates a new warning with the specified id and message.
+    /// </summary>
+    /// <param name="id">The warning id.</param>
+    /// <param name="message">The warning message.</param>
+    /// <returns>The resulting warning.</returns>
+    private static WellKnownInteropWarning Warning(int id, string message)
+    {
+        return new($"{ErrorPrefix}{id:0000}", message);
     }
 }
 

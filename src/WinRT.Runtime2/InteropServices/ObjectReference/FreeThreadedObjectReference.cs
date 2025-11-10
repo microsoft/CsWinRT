@@ -36,7 +36,7 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
         {
             HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(GetThisPtrUnsafe(), in iid, out void* targetObject);
 
-            if (WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Succeeded())
             {
                 if (IsAggregated)
                 {

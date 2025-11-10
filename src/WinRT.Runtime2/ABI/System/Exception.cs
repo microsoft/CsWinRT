@@ -70,7 +70,7 @@ public static class ExceptionMarshaller
     /// <returns>The managed <see cref="global::System.Exception"/> value</returns>
     public static global::System.Exception? ConvertToManaged(Exception value)
     {
-        return RestrictedErrorInfo.GetExceptionForHR(value.Value, out _);
+        return RestrictedErrorInfo.GetExceptionForHR(value.Value);
     }
 }
 

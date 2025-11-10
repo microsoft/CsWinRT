@@ -194,6 +194,7 @@ Where <spec> is one or more of:
             w.flush_to_console();
 
             // Write GUID properties out to InterfaceIIDs static class 
+            std::set<TypeDef> interfacesFromClassesEmitted;
             writer guidWriter("ABI");
             guidWriter.write_begin_interface_iids();
             for (auto&& ns_members : c.namespaces())
@@ -202,9 +203,13 @@ Where <spec> is one or more of:
                 for (auto&& [name, type] : members.types)
                 {
                     if (!settings.filter.includes(type)) { continue; }
-                    if (get_mapped_type(ns, name))
+                    if (distance(type.GenericParam()) != 0) { continue; }
+                    if (auto mapping = get_mapped_type(ns, name))
                     {
-                        continue;
+                        if (!mapping->emit_abi)
+                        {
+                            continue;
+                        }
                     }
                     switch (get_category(type))
                     {
@@ -220,6 +225,9 @@ Where <spec> is one or more of:
                         break;
                     case category::struct_type:
                         write_iid_guid_property_from_signature(guidWriter, type);
+                        break;
+                    case category::class_type:
+                        write_iid_guid_property_for_class_interfaces(guidWriter, type, interfacesFromClassesEmitted);
                         break;
                     }
                 }
@@ -247,9 +255,13 @@ Where <spec> is one or more of:
                         {
                             currentType = name;
                             if (!settings.filter.includes(type)) { continue; }
-                            if (get_mapped_type(ns, name))
+                            if (distance(type.GenericParam()) != 0) { continue; }
+                            if (auto mapping = get_mapped_type(ns, name))
                             {
-                                continue;
+                                if (!mapping->emit_abi)
+                                {
+                                    continue;
+                                }
                             }
                             auto guard{ w.push_generic_params(type.GenericParam()) };
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
@@ -282,6 +294,17 @@ Where <spec> is one or more of:
                                 break;
                             }
                         }
+
+                        // Attributes need to be written at the start, so handling this addition separately.
+                        if (ns == "Windows.Storage.Streams" && settings.addition_filter.includes(ns))
+                        {
+                            w.write(R"(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
+    typeof(global::System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer),
+    typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer))]
+)");
+                        }
+
                         currentType = "";
 
                         w.write_begin_projected();
@@ -290,7 +313,7 @@ Where <spec> is one or more of:
                         {
                             currentType = name;
                             if (!settings.filter.includes(type)) { continue; }
-                            if (get_mapped_type(ns, name))
+                            if (get_mapped_type(ns, name) || distance(type.GenericParam()) != 0)
                             {
                                 written = true;
                                 continue;
@@ -353,7 +376,15 @@ Where <spec> is one or more of:
                             {
                                 currentType = name;
                                 if (!settings.filter.includes(type)) { continue; }
-                                if (get_mapped_type(ns, name)) continue;
+                                if (distance(type.GenericParam()) != 0) { continue; }
+                                if (auto mapping = get_mapped_type(ns, name))
+                                {
+                                    if (!mapping->emit_abi)
+                                    {
+                                        continue;
+                                    }
+                                }
+
                                 if (is_api_contract_type(type)) { continue; }
                                 if (is_attribute_type(type)) { continue; }
                                 auto guard{ w.push_generic_params(type.GenericParam()) };
@@ -507,7 +538,7 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
             {
                 for (auto&& string : strings::base)
                 {
-                    if (std::string(string.name) == "ComInteropHelpers" && !settings.filter.includes("Windows"))
+                    if (std::string(string.name) == "ComInteropHelpers"&& !settings.filter.includes("Windows"))
                     {
                         continue;
                     }

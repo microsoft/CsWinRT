@@ -2,8 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using WinRT;
-using WinRT.Interop;
+using WindowsRuntime.InteropServices;
+
+#pragma warning disable CSWINRT3001
 
 #nullable enable
 
@@ -150,8 +151,8 @@ internal unsafe struct DispatcherQueueProxyHandler
         [UnmanagedCallersOnly]
         public static int QueryInterface(DispatcherQueueProxyHandler* @this, Guid* riid, void** ppvObject)
         {
-            if (riid->Equals(IID.IID_IUnknown) ||
-                riid->Equals(IID.IID_IAgileObject) ||
+            if (riid->Equals(WellKnownInterfaceIIDs.IID_IUnknown) ||
+                riid->Equals(WellKnownInterfaceIIDs.IID_IAgileObject) ||
                 riid->Equals(IID_IDispatcherQueueHandler))
             {
                 Interlocked.Increment(ref @this->referenceCount);
@@ -214,7 +215,7 @@ internal unsafe struct DispatcherQueueProxyHandler
                 // Register the exception with the global error handler. The failfast behavior
                 // is governed by the state of the 'UnhandledExceptionEventArgs.Handled' property.
                 // If 'Handled' is true the app continues running, else it failfasts.
-                ExceptionHelpers.ReportUnhandledError(e);
+                RestrictedErrorInfo.ReportUnhandledError(e);
             }
 
             return S_OK;

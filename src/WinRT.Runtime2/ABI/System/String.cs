@@ -156,7 +156,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -302,7 +302,7 @@ file static unsafe class StringPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -379,7 +379,7 @@ file static unsafe class StringPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetGuid(void* thisPtr, Guid* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -406,7 +406,7 @@ file static unsafe class StringPropertyValueImpl
     private static HRESULT GetNumeric<T>(void* thisPtr, T* value)
         where T : unmanaged, IParsable<T>
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }

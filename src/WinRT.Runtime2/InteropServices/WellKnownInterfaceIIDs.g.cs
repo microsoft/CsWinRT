@@ -30,11 +30,25 @@ public static class WellKnownInterfaceIIDs
         get => ref WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
     }
 
+    /// <summary>The IID for <c>IBufferByteAccess</c>.</summary>
+    public static ref readonly Guid IID_IBufferByteAccess
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IBufferByteAccess;
+    }
+
     /// <summary>The IID for <c>IMarshal</c>.</summary>
     public static ref readonly Guid IID_IMarshal
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get => ref WellKnownWindowsInterfaceIIDs.IID_IMarshal;
+    }
+
+    /// <summary>The IID for <c>IMemoryBufferByteAccess</c>.</summary>
+    public static ref readonly Guid IID_IMemoryBufferByteAccess
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IMemoryBufferByteAccess;
     }
 
     /// <summary>The IID for <c>IInspectable</c>.</summary>

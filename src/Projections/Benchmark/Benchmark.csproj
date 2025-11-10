@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
   </ItemGroup>

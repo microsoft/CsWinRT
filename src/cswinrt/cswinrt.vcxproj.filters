@@ -73,7 +73,7 @@
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
-    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.cs">
+    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.CornerRadius.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs">
@@ -106,7 +106,10 @@
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
+	<None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs">
+		<Filter>strings\additions\Windows.Storage.Streams</Filter>
+	</None>
+	<None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>
     <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs">
@@ -160,19 +163,22 @@
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
-    <None Include="strings\additions\Windows.UI\Windows.UI.cs">
+    <None Include="strings\additions\Windows.UI\Windows.UI.Color.cs">
       <Filter>strings\additions\Windows.UI</Filter>
     </None>
-    <None Include="strings\additions\Microsoft.UI.Xaml.Media.Media3D\Microsoft.UI.Xaml.Media.Media3D.cs">
+    <None Include="strings\additions\Microsoft.UI.Xaml.Media.Media3D\Microsoft.UI.Xaml.Media.Media3D.Matrix3D.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Media.Media3D</Filter>
     </None>
-    <None Include="strings\additions\Microsoft.UI.Xaml.Media.Animation\Microsoft.UI.Xaml.Media.Animation.cs">
+    <None Include="strings\additions\Microsoft.UI.Xaml.Media.Animation\Microsoft.UI.Xaml.Media.Animation.KeyTime.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Media.Animation</Filter>
     </None>
-    <None Include="strings\additions\Microsoft.UI.Xaml.Media\Microsoft.UI.Xaml.Media.cs">
+    <None Include="strings\additions\Microsoft.UI.Xaml.Media\Microsoft.UI.Xaml.Media.Matrix.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Media</Filter>
     </None>
-    <None Include="strings\additions\Microsoft.UI.Xaml.Controls.Primitives\Microsoft.UI.Xaml.Controls.Primitives.cs">
+    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.CornerRadius.cs">
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Xaml.Controls.Primitives\Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Controls.Primitives</Filter>
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.SR.cs">
@@ -187,23 +193,56 @@
     <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Controls.Primitives</Filter>
     </None>
-    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.KeyTime.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Animation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.Matrix3D.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Media3D</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.Matrix.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.CornerRadius.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
     <None Include="strings\InspectableVftbl.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="strings\ReferenceInterfaceEntries.cs">
       <Filter>strings</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Duration.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.GridLength.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Thickness.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.RepeatBehavior.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Animation</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.Duration.cs">
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.GridLength.cs">
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.Thickness.cs">
+      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Xaml.Media.Animation\Microsoft.UI.Xaml.Media.Animation.RepeatBehavior.cs">
+      <Filter>strings\additions\Microsoft.UI.Xaml.Media.Animation</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

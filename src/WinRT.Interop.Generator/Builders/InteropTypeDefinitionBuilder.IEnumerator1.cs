@@ -98,7 +98,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [2]: 'void*' (the native value that was retrieved)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_currentNative = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_currentNative = enumeratorType.TypeArguments[0].IsValueType ? new(enumeratorType.TypeArguments[0].Import(module)) : new(module.CorLibTypeFactory.Void.MakePointerType());
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -427,9 +427,17 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Callvirt, interopReferences.IEnumerator1get_Current(elementType).Import(module) },
-                    { Ret }
                 }
             };
+
+            // If the element type is a value type, we need to box it
+            if (elementType.IsValueType)
+            {
+                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, elementType.Import(module).ToTypeDefOrRef());
+            }
+
+            // Add the return
+            _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Ret);
 
             // Create the 'IEnumerator.Current' property
             PropertyDefinition enumeratorCurrentProperty = new(

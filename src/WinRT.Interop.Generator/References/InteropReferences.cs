@@ -64,17 +64,29 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
     /// </summary>
-    public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference("System.Runtime.InteropServices"u8, new Version(10, 0, 0, 0));
+    public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference(
+        name: "System.Runtime.InteropServices"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
     /// </summary>
-    public AssemblyReference SystemObjectModel => field ??= new AssemblyReference("System.ObjectModel"u8, new Version(10, 0, 0, 0));
+    public AssemblyReference SystemObjectModel => field ??= new AssemblyReference(
+        name: "System.ObjectModel"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
-    public AssemblyReference SystemMemory => field ??= new AssemblyReference("System.Memory"u8, new Version(10, 0, 0, 0));
+    public AssemblyReference SystemMemory => field ??= new AssemblyReference(
+        name: "System.Memory"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Attribute"/>.
@@ -360,6 +372,16 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute"/>.
     /// </summary>
     public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IUnknownDerivedAttribute{T, TImpl}"/>.
+    /// </summary>
+    public TypeReference IUnknownDerivedAttribute2 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IUnknownDerivedAttribute`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType"/>.
+    /// </summary>
+    public TypeReference IIUnknownInterfaceType => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IIUnknownInterfaceType"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
@@ -712,6 +734,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeComWrappersMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshal"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeUnknownMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectMarshaller"u8);
@@ -824,7 +851,12 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncInfo</c>.
     /// </summary>
-    public TypeReference IAsyncInfo => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncInfo"u8);
+    public TypeReference IAsyncInfo => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncInfo"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncAction</c>.
+    /// </summary>
+    public TypeReference IAsyncAction => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncAction"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c>.
@@ -1074,6 +1106,18 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.Vtable"/>.
     /// </summary>
     public MemberReference ComInterfaceEntryVtable => field ??= ComInterfaceEntry.CreateMemberReference("Vtable"u8, new FieldSignature(_corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType.Iid"/>.
+    /// </summary>
+    public MemberReference IIUnknownInterfaceTypeget_Iid => field ??= IIUnknownInterfaceType.CreateMemberReference("get_Iid"u8, MethodSignature.CreateStatic(Guid.ToValueTypeSignature()));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType.ManagedVirtualMethodTable"/>.
+    /// </summary>
+    public MemberReference IIUnknownInterfaceTypeget_ManagedVirtualMethodTable => field ??= IIUnknownInterfaceType
+        .CreateMemberReference("get_ManagedVirtualMethodTable"u8, MethodSignature.CreateStatic(
+            returnType: CorLibTypeFactory.Void.MakePointerType().MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IUnknown()</c>.
@@ -1445,6 +1489,14 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeUnknownMarshallerFree => field ??= WindowsRuntimeUnknownMarshaller
+        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectMarshaller
@@ -1458,14 +1510,6 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Object,
-            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.Free(void*)</c>.
-    /// </summary>
-    public MemberReference WindowsRuntimeObjectMarshallerFree => field ??= WindowsRuntimeObjectMarshaller
-        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Void,
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>

@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0046
 
@@ -293,7 +294,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
             return "Empty";
         }
 
-        char separator = Point.GetNumericListSeparator(null);
+        char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}{separator}{Width}{separator}{Height}";
     }
@@ -308,7 +309,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
         }
 
         // We need the separator as a 'string', so we can pass it as a literal
-        string separator = Point.GetNumericListSeparator(formatProvider) is ',' ? "," : ";";
+        string separator = TokenizerHelper.GetNumericListSeparator(formatProvider) is ',' ? "," : ";";
 
         DefaultInterpolatedStringHandler handler = new(
             literalLength: 3,

@@ -32,7 +32,7 @@ namespace cswinrt
         {"uint", "UInt32"},
         {"long", "Int64"},
         {"ulong", "UInt64"},
-        {"float", "Float"},
+        {"float", "Single"},
         {"double", "Double"},
         {"string", "String"},
     };
@@ -415,16 +415,182 @@ namespace cswinrt
         return w.write_temp(format, bind<write_type_name>(type, nameType, false));
     }
 
-    void write_interop_dll_type_name(writer& w, type_semantics const& /*semantics*/)
+    void write_interop_assembly_name(writer& w, TypeDef const& type)
     {
-        // TODO
-        w.write("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>");
-
-        /*for_typedef(w, semantics, [&](auto type)
+		auto typeNamespace = type.TypeNamespace();
+        if (auto proj = get_mapped_type(typeNamespace, type.TypeName()))
         {
-            write_typedef_name(w, type, nameType, forceWriteNamespace);
-            write_type_params(w, type);
-        });*/
+            typeNamespace = proj->mapped_namespace;
+            if (starts_with(typeNamespace, "System"))
+            {
+                w.write("<#corlib>");
+                return;
+            }
+            else if (!proj->emit_abi)
+            {
+                w.write("<#CsWinRT>");
+                return;
+            }
+            else if (starts_with(typeNamespace, "Windows"))
+            {
+                w.write("<#%Windows>");
+                return;
+            }
+        }
+
+        if (starts_with(typeNamespace, "Windows"))
+        {
+            w.write("<#Windows>");
+        }
+        else
+        {
+            std::filesystem::path db_path(type.get_database().path());
+			auto metadata = db_path.stem().string();
+
+            // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
+            std::replace(metadata.begin(), metadata.end(), '.', '-');
+
+            w.write("<%>", metadata);
+        }
+    }
+
+    void write_interop_dll_type_name(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
+    void write_interop_dll_type_name_for_typedef(writer& w, type_definition const& type, typedef_name_type const& nameType, std::vector<type_semantics> generic_args = {})
+    {
+        if (nameType != typedef_name_type::Projected)
+        {
+            w.write("ABI.");
+        }
+
+        if (nameType == typedef_name_type::EventSource && type.TypeNamespace() == "Windows.Foundation")
+        {
+            w.write("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'%", size(type.GenericParam()));
+        }
+        else
+        {
+            auto typeNamespace = std::string(type.TypeNamespace());
+            auto typeName = std::string(type.TypeName());
+            if (auto proj = get_mapped_type(typeNamespace, typeName))
+            {
+                typeNamespace = std::string(proj->mapped_namespace);
+				typeName = std::string(proj->mapped_name);
+            }
+
+            // Replace generic arity with ' due to that is what interop dll uses.
+            std::replace(typeName.begin(), typeName.end(), '`', '\'');
+
+            // Arrays types are enclosed in <>
+            if (nameType == typedef_name_type::ArrayMarshaller)
+            {
+                w.write("<");
+			}
+
+            if (nameType == typedef_name_type::Projected)
+            {
+                // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
+                std::replace(typeNamespace.begin(), typeNamespace.end(), '.', '-');
+                w.write("%%-%", bind<write_interop_assembly_name>(type), typeNamespace, typeName);
+            }
+            else
+            {
+                w.write("%.%%", typeNamespace, bind<write_interop_assembly_name>(type), typeName);
+            }
+        }
+
+        if (size(type.GenericParam()) != 0)
+        {
+            if (generic_args.size() != 0)
+            {
+                w.write("<%>",
+                    bind_list<write_interop_dll_type_name>("|", generic_args, typedef_name_type::Projected));
+			}
+            else
+            {
+                separator s{ w, "|" };
+                int index = 0;
+                w.write("<%>",
+                    bind_each([&](writer& w, GenericParam const& /*gp*/)
+                    {
+                        s();
+                        write_interop_dll_type_name(w, w.get_generic_arg_scope(index++).first, typedef_name_type::Projected);
+                    }, type.GenericParam()));                        
+            }
+        }
+
+        // Arrays types are enclosed in <>
+        if (nameType == typedef_name_type::ArrayMarshaller)
+        {
+            w.write(">");
+        }
+    }
+
+    void write_interop_dll_type_name(writer& w, type_semantics const& semantics, typedef_name_type const& nameType)
+    {
+        call(semantics,
+            [&](object_type)
+            {
+                if (nameType == typedef_name_type::Projected)
+                {
+                    w.write("object");
+                }
+                else
+                {
+                    w.write("ABI.System.<<#corlib>Object>");
+                }
+            },
+            [&](guid_type)
+            {
+                if (nameType == typedef_name_type::Projected)
+                {
+                    w.write("System-Guid");
+                }
+                else
+                {
+                    w.write("ABI.System.<<#corlib>Guid>");
+                }
+            },
+            [&](type_type)
+            {
+                if (nameType == typedef_name_type::Projected)
+                {
+                    w.write("Type");
+                }
+                else
+                {
+                    w.write("ABI.System.<<#corlib>Type>");
+                }
+            },
+            [&](type_definition const& type) { write_interop_dll_type_name_for_typedef(w, type, nameType); },
+            [&](generic_type_instance const& type)
+            {
+                auto guard{ w.push_generic_args(type) };
+				write_interop_dll_type_name_for_typedef(w, type.generic_type, nameType, type.generic_args);
+            },
+            [&](fundamental_type const& type)
+            {
+                if (nameType == typedef_name_type::Projected)
+                {
+                    write_fundamental_type(w, type);
+                }
+                else
+                {
+                    w.write("ABI.System.<<#corlib>%>", bind<write_fundamental_non_projected_type>(type));
+                }
+            },
+            [&](auto const&) {});
+
+        if (nameType == typedef_name_type::StaticAbiClass)
+        {
+            w.write("Methods");
+        }
+        else if (nameType == typedef_name_type::Marshaller)
+        {
+            w.write("Marshaller");
+        }
+        else if (nameType == typedef_name_type::ArrayMarshaller)
+        {
+            w.write("ArrayMarshaller");
+        }
     }
 
     void write_static_abi_class_generic_instantiation_type(writer& w, type_semantics const& semantics)
@@ -549,6 +715,20 @@ namespace cswinrt
         write_parameter_name(w, param);
     }
 
+    // This is used to handle scenarios where we do boxing with parameters passed to the constructor.
+    // This means for pass_array which we project as a ReadOnlySpan<T>, we need to box the address of it.
+    void write_constructor_parameter_name_with_modifier(writer& w, method_signature::param_t const& param)
+    {
+        if (get_param_category(param) == param_category::pass_array)
+        {
+            w.write("(nint)(&%)", bind<write_parameter_name_with_modifier>(param));
+        }
+        else
+        {
+            write_parameter_name_with_modifier(w, param);
+        }
+    }
+
     void write_projection_parameter_type(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
@@ -565,12 +745,28 @@ namespace cswinrt
             w.write("out %", bind<write_projection_type>(semantics));
             break;
         case param_category::pass_array:
+            w.write("ReadOnlySpan<%>", bind<write_projection_type>(semantics));
+            break;
         case param_category::fill_array:
-            w.write("%[]", bind<write_projection_type>(semantics));
+            w.write("Span<%>", bind<write_projection_type>(semantics));
             break;
         case param_category::receive_array:
             w.write("out %[]", bind<write_projection_type>(semantics));
             break;
+        }
+    }
+
+    // This is similar to write_constructor_parameter_name_with_modifier but used in the callback.
+    void write_constructor_parameter_cast(writer& w, method_signature::param_t const& param)
+    {
+        if (get_param_category(param) == param_category::pass_array)
+        {
+            auto semantics = get_type_semantics(param.second->Type());
+            w.write("*(ReadOnlySpan<%>*)(nint)", bind<write_projection_type>(semantics));
+        }
+        else
+        {
+            w.write("(%)", bind<write_projection_parameter_type>(param));
         }
     }
 
@@ -614,10 +810,10 @@ namespace cswinrt
                 break;
             case param_category::pass_array:
             case param_category::fill_array:
-                w.write("%[]", bind<write_parameter_name>(param));
+                w.write("%", bind<write_parameter_name>(param));
                 break;
             case param_category::receive_array:
-                w.write("out %[]", bind<write_parameter_name>(param));
+                w.write("out %", bind<write_parameter_name>(param));
                 break;
         }
     }
@@ -792,6 +988,14 @@ namespace cswinrt
 
     static void write_iid_guid(writer& w, TypeDef const& type)
     {
+        if (distance(type.GenericParam()) != 0)
+        {
+            write_iid_guid_property_name(w, type);
+            // This is a unsafe accessor call, so write the function call to it too.
+            w.write("(null)");
+            return;
+        }
+
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
             std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
@@ -869,6 +1073,40 @@ namespace cswinrt
 )");
     }
 
+    static void write_iid_guid_property_for_class_interfaces(writer& w, TypeDef const& type, std::set<TypeDef>& interfacesEmitted)
+    {
+        for (auto& iface : type.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(iface.Interface());
+            for_typedef(w, semantics, [&](TypeDef ifaceType)
+            {
+                // IIDs for custom mapped interfaces and generic interfaces are handled differently.
+                if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()))
+                {
+                    return;
+                }
+
+                if (size(ifaceType.GenericParam()) != 0)
+                {
+                    return;
+                }
+
+                if (interfacesEmitted.find(ifaceType) != interfacesEmitted.end())
+                {
+                    return;
+                }
+
+                // If the IID for the interface is not already going to be written due to
+                // being projected in this projection, then write it so that we can use it
+                // for our objref.
+                if (!settings.filter.includes(ifaceType))
+                {
+                    write_iid_guid_property_from_type(w, ifaceType);
+                    interfacesEmitted.insert(ifaceType);
+                }
+            });
+        }
+    }
 
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
@@ -997,17 +1235,17 @@ namespace cswinrt
             w.write(", % %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::ref:
-            w.write(settings.netstandard_compat ? ", in % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
+            w.write(", %* %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::out:
-            w.write(settings.netstandard_compat ? ", out % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
+            w.write(", %* %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int __%Size, IntPtr %", param_name, param_name);
+            w.write(", uint __%Size, void* %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(settings.netstandard_compat ? ", out int __%Size, out IntPtr %" : ", int* __%Size, IntPtr* %", param_name, param_name);
+            w.write(", uint* __%Size, void** %", param_name, param_name);
             break;
         }
     }
@@ -1028,10 +1266,10 @@ namespace cswinrt
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int, IntPtr");
+            w.write(", uint, IntPtr");
             break;
         case param_category::receive_array:
-            w.write(", out int, out IntPtr");
+            w.write(", out uint, out IntPtr");
             break;
         }
     } 
@@ -1052,10 +1290,10 @@ namespace cswinrt
             break;
         case param_category::pass_array:
         case param_category::fill_array:
-            w.write(", int, IntPtr");
+            w.write(", uint, void*");
             break;
         case param_category::receive_array:
-            w.write(", int*, IntPtr*");
+            w.write(", uint*, void**");
             break;
         }
     }
@@ -1066,18 +1304,9 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
-            if (settings.netstandard_compat)
-            {
-                return_sig.Type().is_szarray() ?
-                    w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
-                    w.write(", out % %", bind<write_abi_type>(semantics), return_param);
-            }
-            else
-            {
-                return_sig.Type().is_szarray() ?
-                    w.write(", int* __%Size, IntPtr* %", signature.return_param_name(), return_param) :
-                    w.write(", %* %", bind<write_abi_type>(semantics), return_param);
-            }
+            return_sig.Type().is_szarray() ?
+                w.write(", uint* __%Size, void** %", signature.return_param_name(), return_param) :
+                w.write(", %* %", bind<write_abi_type>(semantics), return_param);
         }
     }
 
@@ -1087,7 +1316,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", out int, out IntPtr") :
+                w.write(", out uint, out IntPtr") :
                 w.write(", out %", bind<write_abi_type>(semantics));
         }
     }
@@ -1098,7 +1327,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", int*, IntPtr*") :
+                w.write(", uint*, void**") :
                 w.write(", %*", bind<write_abi_type>(semantics));
         }
     }
@@ -1367,6 +1596,16 @@ namespace cswinrt
             bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
     }
 
+    void write_unsafe_accessor_static_method_call(writer& w, std::string const& unsafeAccessorMethod, MethodDef const& method, std::string const& targetObjRef)
+    {
+        method_signature signature{ method };
+        w.write("%(null, %%%)",
+            unsafeAccessorMethod,
+            targetObjRef,
+            signature.has_params() ? ", " : "",
+            bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+    }
+
     void write_abi_get_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
         w.write("%.%(%)",
@@ -1383,21 +1622,48 @@ namespace cswinrt
             targetObjRef);
     }
 
+    void write_unsafe_accessor_property_static_method_call(writer& w, std::string const& unsafeAccessorMethod, std::string const& targetObjRef, bool get)
+    {
+        w.write("%(null, %%)",
+            unsafeAccessorMethod,
+            targetObjRef,
+            get ? "" : ", value");
+    }
+
     void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
     {
-        w.write("%.%(%, %).%(value)",
-            bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
-            evt.Name(),
+        bool is_unsafe_accessor_call = false;
+        w.write("%(%, %).%(value)",
             bind([&](writer& w) {
-                    if (is_static_event)
+                for_typedef(w, iface, [&](type_definition const& type)
+                {
+                    if (size(type.GenericParam()) != 0)
                     {
-                        w.write("%", targetObjRef);
+                        is_unsafe_accessor_call = true;
+                        auto interface_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
+                        w.write("%_%", escape_type_name_for_identifier(interface_name, true), evt.Name());
                     }
                     else
                     {
-                        w.write("(WindowsRuntimeObject)this");
+                        w.write("%.%", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true), evt.Name());
                     }
-                }),
+                });
+            }),
+            bind([&](writer& w) {
+                if (is_unsafe_accessor_call)
+                {
+                    w.write("null, ");
+                }
+                 
+                if (is_static_event)
+                {
+                    w.write("%", targetObjRef);
+                }
+                else
+                {
+                    w.write("(WindowsRuntimeObject)this");
+                }
+            }),
             targetObjRef,
             isSubscribeCall ? "Subscribe" : "Unsubscribe");
     }
@@ -1408,6 +1674,27 @@ namespace cswinrt
         std::string_view platform_attribute = ""sv,
         std::optional<std::pair<type_semantics, MethodDef>> paramsForStaticMethodCall = {})
     {
+        std::optional<std::string> unsafe_accessor;
+        if (paramsForStaticMethodCall.has_value())
+        {
+            auto parent = paramsForStaticMethodCall.value().second.Parent();
+            if (size(parent.GenericParam()) != 0)
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent, typedef_name_type::Projected, true));
+                unsafe_accessor = w.write_temp("%_%", escape_type_name_for_identifier(parent_type_name, true), method_name);
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern % %([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference%%);
+)",
+                    method_name,
+                    return_type,
+                    unsafe_accessor.value(),
+                    bind<write_interop_dll_type_name>(parent, typedef_name_type::StaticAbiClass),
+                    signature.params().size() != 0 ? ", " : "",
+                    bind_list<write_projection_parameter>(", ", signature.params()));
+            }
+        }
+
         w.write(R"(
 %%%% %(%) => %;
 )",
@@ -1418,18 +1705,30 @@ namespace cswinrt
             method_name,
             bind_list<write_projection_parameter>(", ", signature.params()),
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                if (paramsForStaticMethodCall.has_value())
+                {
+                    if (unsafe_accessor.has_value())
                     {
-                        w.write("%", bind<write_abi_static_method_call>(paramsForStaticMethodCall.value().first, paramsForStaticMethodCall.value().second,
+                        w.write("%", bind<write_unsafe_accessor_static_method_call>(
+                            unsafe_accessor.value(),
+                            paramsForStaticMethodCall.value().second,
                             w.write_temp("%", method_target)));
                     }
                     else
                     {
-                        w.write("%.%(%)", method_target,
-                            method_name,
-                            bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                        w.write("%", bind<write_abi_static_method_call>(
+                            paramsForStaticMethodCall.value().first,
+                            paramsForStaticMethodCall.value().second,
+                            w.write_temp("%", method_target)));
                     }
-                }));
+                }
+                else
+                {
+                    w.write("%.%(%)", method_target,
+                        method_name,
+                        bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                }
+            }));
     }
 
     void write_explicitly_implemented_method_for_abi(writer& w, MethodDef const& method,
@@ -1665,6 +1964,34 @@ namespace cswinrt
             setter_platform = ""sv;
         }
 
+        std::optional<std::string> unsafe_accessor;
+        if (params_for_static_getter.has_value())
+        {
+            auto parent = params_for_static_getter.value().second.Parent();
+            if (size(parent.GenericParam()) != 0)
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(params_for_static_getter.value().first, typedef_name_type::Projected, true));
+                unsafe_accessor = w.write_temp("%_%", escape_type_name_for_identifier(parent_type_name, true), external_prop_name);
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern % %([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern void %([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference thisReference, % value);
+)",
+                // get
+                external_prop_name,
+                prop_type,
+                unsafe_accessor.value(),
+                bind<write_interop_dll_type_name>(params_for_static_getter.value().first, typedef_name_type::StaticAbiClass),
+                // set
+                external_prop_name,
+                unsafe_accessor.value(),
+                bind<write_interop_dll_type_name>(params_for_static_getter.value().first, typedef_name_type::StaticAbiClass),
+                prop_type);
+            }
+        }
+
         w.write(R"(
 %%%% %
 {
@@ -1681,8 +2008,20 @@ namespace cswinrt
             bind([&](writer& w) {
                 if (params_for_static_getter.has_value())
                 {
-                    w.write("%", bind<write_abi_get_property_static_method_call>(params_for_static_getter.value().first, params_for_static_getter.value().second,
-                        w.write_temp("%", getter_target)));
+                    if (unsafe_accessor.has_value())
+                    {
+                        w.write("%", bind<write_unsafe_accessor_property_static_method_call>(
+                            unsafe_accessor.value(),
+                            w.write_temp("%", getter_target),
+                            true));
+                    }
+                    else
+                    {
+                        w.write("%", bind<write_abi_get_property_static_method_call>(
+                            params_for_static_getter.value().first,
+                            params_for_static_getter.value().second,
+                            w.write_temp("%", getter_target)));
+                    }
                 }
                 else
                 {
@@ -1693,8 +2032,20 @@ namespace cswinrt
             bind([&](writer& w) {
                 if (params_for_static_setter.has_value())
                 {
-                    w.write("%", bind<write_abi_set_property_static_method_call>(params_for_static_setter.value().first, params_for_static_setter.value().second,
-                        w.write_temp("%", setter_target)));
+                    if (unsafe_accessor.has_value())
+                    {
+                        w.write("%", bind<write_unsafe_accessor_property_static_method_call>(
+                            unsafe_accessor.value(),
+                            w.write_temp("%", setter_target),
+                            false));
+                    }
+                    else
+                    {
+                        w.write("%", bind<write_abi_set_property_static_method_call>(
+                            params_for_static_setter.value().first,
+                            params_for_static_setter.value().second,
+                            w.write_temp("%", setter_target)));
+                    }
                 }
                 else
                 {
@@ -1706,69 +2057,6 @@ namespace cswinrt
     std::string write_as_cast(writer& w, TypeDef const& iface)
     {
         return w.write_temp("((%)(WindowsRuntimeObject)this)", bind<write_type_name>(iface, typedef_name_type::Projected, false));
-    }
-
-    void write_lazy_interface_type_name(writer& w, type_semantics const& ifaceTypeSemantics)
-    {
-        auto interfaceTypeCode = w.write_temp("%", bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::Projected, true));
-        std::string interfaceTypeName = "_lazy_" + interfaceTypeCode;
-        w.write("%", escape_type_name_for_identifier(interfaceTypeName));
-    }
-
-    void write_lazy_interface_initialization(writer& w, TypeDef const& type)
-    {
-        int numLazyInterfaces = 0;
-        auto lazyInterfaces = w.write_temp("%", [&](writer& w) 
-        {
-            for (auto&& ii : type.InterfaceImpl())
-            {
-                if (has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute"))
-                {
-                    continue;
-                }
-
-                for_typedef(w, get_type_semantics(ii.Interface()), [&](auto interface_type)
-                {
-                    if (!is_manually_generated_iface(interface_type) && !settings.netstandard_compat)
-                    {
-                        return;
-                    }
-
-                    numLazyInterfaces++;
-                    auto lazy_interface_name = w.write_temp("%", bind<write_lazy_interface_type_name>(interface_type)); 
-                    auto interface_name = write_type_name_temp(w, interface_type);
-                    auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
-
-                    auto interface_init_code = settings.netstandard_compat
-                        ? w.write_temp(R"(new %(GetReferenceForQI()))",
-                            interface_abi_name)
-                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))",
-                            interface_name,
-                            interface_name);
-
-                    w.write(R"(
-private volatile % %;
-private % Make_%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref %, %, null);
-    return %;
-}
-)",
-                        interface_name,
-                        lazy_interface_name,
-                        interface_name,
-                        lazy_interface_name,
-                        lazy_interface_name,
-                        interface_init_code,
-                        lazy_interface_name);
-                });
-            }
-        });
-
-        if (numLazyInterfaces != 0)
-        {
-            w.write(R"(%)", lazyInterfaces);
-        }
     }
 
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
@@ -1799,17 +2087,33 @@ private % Make_%()
         std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
     {
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+        auto parent_type = event.Parent();
 
         // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
         // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
         if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
         {
-            auto parent_type = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
-            if (parent_type == "Microsoft.UI.Xaml.Input.ICommand" || parent_type == "Windows.UI.Xaml.Input.ICommand")
+            auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent_type, typedef_name_type::NonProjected, true));
+            if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
             {
                 event_type = "global::System.EventHandler";
             }
         }
+
+        if (paramsForStaticMethodCall.has_value() && size(parent_type.GenericParam()) != 0)
+        {
+            auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent_type, typedef_name_type::Projected, true));
+            w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "%")]
+static extern % %_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, object thisObject, WindowsRuntimeObjectReference thisReference);
+)",
+                external_event_name,
+                bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::EventSource, false),
+                escape_type_name_for_identifier(parent_type_name, true),
+                external_event_name,
+                bind<write_interop_dll_type_name>(parent_type, typedef_name_type::StaticAbiClass));
+        }
+
         w.write(R"(
 %%%event % %
 {
@@ -2199,6 +2503,11 @@ remove => %;
         write_custom_attributes(w, type.CustomAttribute(), enable_platform_attrib);
     }
 
+    void write_constructor_callback_method_name(writer& w, MethodDef const& method)
+    {
+        w.write("%_%", method.Name(), size(method.Signature().Params()));
+    }
+
     struct attributed_type
     {
         TypeDef type;
@@ -2389,7 +2698,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%, %, [%])
+  :base(%.Instance, %, [%])
 {
 %}
 )",
@@ -2398,9 +2707,9 @@ private static class _%
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 // base
-                method.Name(),
+                bind<write_constructor_callback_method_name>(method),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
-                bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
+                bind_list<write_constructor_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
@@ -2446,8 +2755,17 @@ public %()
     void write_objref_type_name(writer& w, type_semantics const& ifaceTypeSemantics)
     {
         auto objRefTypeCode = w.write_temp("%", bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::Projected, true));
-        std::string objRefTypeName = "_objRef_" + objRefTypeCode;
-        w.write("%", escape_type_name_for_identifier(objRefTypeName));
+        w.write("_objRef_%", escape_type_name_for_identifier(objRefTypeCode, true));
+    }
+
+    void write_unsafe_accessor_for_iid(writer& w, TypeDef ifaceType, bool isInNullableContext = false)
+    {
+        w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+static extern Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop.dll")] object% _);
+)",
+                bind<write_iid_guid_property_name>(ifaceType),
+                isInNullableContext ? "?" : "");
     }
 
     void write_class_objrefs_definition(writer& w, TypeDef const& classType, bool replaceDefaultByInner)
@@ -2463,11 +2781,12 @@ public %()
                     }
     
                     auto objrefname = bind<write_objref_type_name>(semantics);
-                    bool useInner = replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0;
+                    bool isDefaultInterface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
+                    bool useInner = replaceDefaultByInner && isDefaultInterface;
 
                     if (!useInner)
                     {
-                        w.write(R"(
+                        w.write(R"(%
 private WindowsRuntimeObjectReference %
 {
     get
@@ -2484,11 +2803,23 @@ private WindowsRuntimeObjectReference %
         }
 
         return field ?? MakeObjectReference();
-    }
+    }%
 }
 )",
+                        [&](writer& w) {
+                            if (distance(ifaceType.GenericParam()) != 0)
+                            {
+                                write_unsafe_accessor_for_iid(w, ifaceType);
+                            }
+                        },
                         objrefname,
-                        bind<write_iid_guid>(ifaceType));
+                        bind<write_iid_guid>(ifaceType),
+                        [&](writer& w) {
+                            if(isDefaultInterface)
+                            {
+                                w.write("\n    init;");
+                            }
+                        });
 
                         /*
                         TODO handle fast ABI
@@ -2501,6 +2832,12 @@ private WindowsRuntimeObjectReference %
                     else
                     {
                         w.write(R"(private WindowsRuntimeObjectReference % => NativeObjectReference;)", objrefname);
+
+                        // Write it here so that we can pass the default interface IID as part of the constructor.
+                        if (distance(ifaceType.GenericParam()) != 0)
+                        {
+                            write_unsafe_accessor_for_iid(w, ifaceType);
+                        }
                     }
                 });
         }
@@ -2508,7 +2845,12 @@ private WindowsRuntimeObjectReference %
 
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
-        write_static_objref_definition(w, composable_type, class_type);
+        // Write the factory objref if there are constructors on this type.
+        if (size(composable_type.MethodList()) != 0)
+        {
+            write_static_objref_definition(w, composable_type, class_type);
+        }
+
         auto cache_object = bind<write_objref_type_name>(composable_type);
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
         auto gc_pressure = w.write_temp("%",
@@ -2520,8 +2862,6 @@ private WindowsRuntimeObjectReference %
 
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
 
-        bool has_constructor_without_parameters = false;
-        bool has_constructor_with_parameters = false;
         for (auto&& method : composable_type.MethodList())
         {
             method_signature signature{ method };
@@ -2535,6 +2875,10 @@ private WindowsRuntimeObjectReference %
 %% %%(%)
   :base(%)
 {
+if (HasUnwrappableNativeObjectReference)
+{
+% = NativeObjectReference;
+}
 %}
 )",
                 platform_attribute, 
@@ -2554,12 +2898,13 @@ private WindowsRuntimeObjectReference %
                     }
                     else
                     {
-                        w.write("%, %, [%]",
-                            method.Name(),
+                        w.write("%.Instance, %, [%]",
+                            bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
-                            bind_list<write_parameter_name_with_modifier>(", ", params_without_objects));
+                            bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
+                bind<write_objref_type_name>(default_type_semantics),
                 gc_pressure);
 
             // Write activation callback method if the constructor has parameters.
@@ -2568,14 +2913,9 @@ private WindowsRuntimeObjectReference %
             {
                 write_static_composing_factory_method(w, composable_type, method);
             }
-
-            has_constructor_without_parameters |= params_without_objects.empty();
-            has_constructor_with_parameters |= !params_without_objects.empty();
         }
 
-        if (has_constructor_without_parameters)
-        {
-            w.write(R"(
+        w.write(R"(
 protected %(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
   :base(_, activationFactoryObjectReference, in iid)
 {
@@ -2585,16 +2925,7 @@ protected %(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectR
   :base(_, activationFactoryObjectReference, in iid)
 {
 %}
-)",
-                class_type.TypeName(),
-                gc_pressure,
-                class_type.TypeName(),
-                gc_pressure);
-        }
 
-        if (has_constructor_with_parameters)
-        {
-            w.write(R"(
 protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, params ReadOnlySpan<object> additionalParameters)
   :base(activationFactoryCallback, in iid, additionalParameters)
 {
@@ -2605,11 +2936,18 @@ protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFact
 {
 %}
 )",
-                class_type.TypeName(),
-                gc_pressure,
-                class_type.TypeName(),
-                gc_pressure);
-        }
+            // WindowsRuntimeActivationTypes.DerivedComposed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationTypes.DerivedSealed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationFactoryCallback.DerivedComposed
+            class_type.TypeName(),
+            gc_pressure,
+            // WindowsRuntimeActivationFactoryCallback.DerivedSealed
+            class_type.TypeName(),
+            gc_pressure);
     }
 
     void write_static_factory_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view platform_attribute = ""sv)
@@ -2741,6 +3079,14 @@ protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFact
         write_static_members(w, type);
     }
 
+    void write_nongeneric_enumerable_members_using_static_abi_methods(writer& w, std::string const& objref_name)
+    {
+        w.write(R"(
+IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator(%);
+)",
+objref_name);
+    }
+
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
     {
         w.write(R"(
@@ -2754,20 +3100,30 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerable<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IEnumerableMethods<%>", element);
+        auto interop_method_name_prefix = w.write_temp("IEnumerableMethods_%_", escape_type_name_for_identifier(element, true));
+        auto element_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
 
         w.write(R"(
-%IEnumerator<%> %GetEnumerator() => %.GetEnumerator(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "GetEnumerator")]
+static extern IEnumerator<%> %GetEnumerator([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerable'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
 )",
-visibility, element, self, abiClass, objref_name);
+    element,
+    interop_method_name_prefix,
+    element_interop_type_name
+);
+
+        w.write(R"(
+%IEnumerator<%> %GetEnumerator() => %GetEnumerator(null, %);
+)",
+visibility, element, self, interop_method_name_prefix, objref_name);
 
         if (!include_nongeneric) return;
 
         if (emit_explicit)
         {
             w.write(R"(
-IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator(%);
-)", abiClass, objref_name);
+IEnumerator IEnumerable.GetEnumerator() => %GetEnumerator(null, %);
+)", interop_method_name_prefix, objref_name);
         }
         else
         {
@@ -2792,7 +3148,7 @@ IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.Generic.
 )", element);
     }
 
-    void write_enumerator_members(writer& w)
+    void write_enumerator_members_using_idic(writer& w)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
 
@@ -2814,19 +3170,44 @@ object IEnumerator.Current => Current;
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerator<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IEnumeratorMethods<%>", element);
+        auto interop_method_name_prefix = w.write_temp("IEnumeratorMethods_%_", escape_type_name_for_identifier(element, true));
+        auto element_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
 
         w.write(R"(
-%bool %MoveNext() => %.MoveNext(%);
-%void %Reset() => %.Reset(%);
-%void %Dispose() => %.Dispose(%);
-%% %Current => %.get_Current(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "MoveNext")]
+static extern bool %MoveNext([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerator'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Reset")]
+static extern void %Reset([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerator'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+static extern void %Dispose([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerator'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Current")]
+static extern % %Current([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IEnumerator'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+)",
+interop_method_name_prefix,
+element_interop_type_name,
+interop_method_name_prefix,
+element_interop_type_name,
+interop_method_name_prefix,
+element_interop_type_name,
+element,
+interop_method_name_prefix,
+element_interop_type_name
+);
+
+        w.write(R"(
+%bool %MoveNext() => %MoveNext(null, %);
+%void %Reset() => %Reset(null, %);
+%void %Dispose() => %Dispose(null, %);
+%% %Current => %Current(null, %);
 object IEnumerator.Current => Current;
 )",
-visibility, self, abiClass, objref_name,
-visibility, self, abiClass, objref_name,
-visibility, self, abiClass, objref_name,
-visibility, element, self, abiClass, objref_name);
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, self, interop_method_name_prefix, objref_name,
+visibility, element, self, interop_method_name_prefix, objref_name);
     }
 
     void write_readonlydictionary_members_using_static_abi_methods(writer& w, bool emit_explicit, std::string const& objref_name)
@@ -2836,23 +3217,52 @@ visibility, element, self, abiClass, objref_name);
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
         auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<%, %>", key, value);
         auto enumerableObjRefName = std::regex_replace(objref_name, std::regex("IDictionary"), "IEnumerable_global__System_Collections_Generic_KeyValuePair") + "_";
+        auto interop_method_name_prefix = w.write_temp("IReadOnlyDictionaryMethods_%_%_", escape_type_name_for_identifier(key, true), escape_type_name_for_identifier(value, true));
+        auto key_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
+        auto value_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(1).first, typedef_name_type::Projected));
 
         w.write(R"(
-%IEnumerable<%> %Keys => %.get_Keys(%);
-%IEnumerable<%> %Values => %.get_Values(%);
-%int %Count => %.get_Count(%);
-%% %this[% key] => %.Indexer_Get(%, key);
-%bool %ContainsKey(% key) => %.ContainsKey(%, key);
-%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, key, out value);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
 )",
-visibility, key, self, abiClass, objref_name,
-visibility, value, self, abiClass, objref_name,
-visibility, ireadonlycollection, abiClass, objref_name,
-visibility, value, self, key, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, value, abiClass, objref_name);
+key, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Keys
+value, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Values
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Count
+value, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, // Item
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, // ContainsKey
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value // TryGetValue
+);
+
+        w.write(R"(
+%IEnumerable<%> %Keys => %Keys(null, %);
+%IEnumerable<%> %Values => %Values(null, %);
+%int %Count => %Count(null, %);
+%% %this[% key] => %Item(null, %, key);
+%bool %ContainsKey(% key) => %ContainsKey(null, %, key);
+%bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
+)",
+visibility, key, self, interop_method_name_prefix, objref_name,
+visibility, value, self, interop_method_name_prefix, objref_name,
+visibility, ireadonlycollection, interop_method_name_prefix, objref_name,
+visibility, value, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, value, interop_method_name_prefix, objref_name);
     }
 
     void write_readonlydictionary_members_using_idic(writer& w, bool include_enumerable)
@@ -2893,43 +3303,104 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IDictionary<%, %>.", key, value) : "";
         auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IDictionaryMethods<%, %>", key, value);
         auto enumerableObjRefName = std::regex_replace(objref_name, std::regex("IDictionary"), "IEnumerable_global__System_Collections_Generic_KeyValuePair") + "_";
+        auto interop_method_name_prefix = w.write_temp("IDictionaryMethods_%_%_", escape_type_name_for_identifier(key, true), escape_type_name_for_identifier(value, true));
+        auto key_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
+        auto value_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(1).first, typedef_name_type::Projected));
 
         w.write(R"(
-%ICollection<%> %Keys => %.get_Keys(%);
-%ICollection<%> %Values => %.get_Values(%);
-%int %Count => %.get_Count(%);
-%bool %IsReadOnly => %.get_IsReadOnly(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ContainsKey")]
+static extern bool %ContainsKey([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryGetValue")]
+static extern bool %TryGetValue([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % key, out % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, WindowsRuntimeObjectReference enumObjRef, KeyValuePair<%, %>[] array, int arrayIndex);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IDictionary'2<%|%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, KeyValuePair<%, %> item);
+)",
+key, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Keys
+value, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Values
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Count
+value, interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, // Item get
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // Item set
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // Add
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, // ContainsKey
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, // Remove
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // TryGetValue
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // Add
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, // Clear
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // Contains
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value, // CopyTo
+interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key, value // Remove
+);
+
+        w.write(R"(
+%ICollection<%> %Keys => %Keys(null, %);
+%ICollection<%> %Values => %Values(null, %);
+%int %Count => %Count(null, %);
+%bool %IsReadOnly => false;
 %% %this[% key] 
 {
-get => %.Indexer_Get(%, null, key);
-set => %.Indexer_Set(%, key, value);
+get => %Item(null, %, key);
+set => %Item(null, %, key, value);
 }
-%void %Add(% key, % value) => %.Add(%, key, value);
-%bool %ContainsKey(% key) => %.ContainsKey(%, key);
-%bool %Remove(% key) => %.Remove(%, key);
-%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, null, key, out value);
-%void %Add(KeyValuePair<%, %> item) => %.Add(%, item);
-%void %Clear() => %.Clear(%);
-%bool %Contains(KeyValuePair<%, %> item) => %.Contains(%, null, item);
-%void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(%, %, array, arrayIndex);
-bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove(%, item);
+%void %Add(% key, % value) => %Add(null, %, key, value);
+%bool %ContainsKey(% key) => %ContainsKey(null, %, key);
+%bool %Remove(% key) => %Remove(null, %, key);
+%bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
+%void %Add(KeyValuePair<%, %> item) => %Add(null, %, item);
+%void %Clear() => %Clear(null, %);
+%bool %Contains(KeyValuePair<%, %> item) => %Contains(null, %, item);
+%void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %CopyTo(null, %, %, array, arrayIndex);
+bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %Remove(null, %, item);
 )",
-visibility, key, self, abiClass, objref_name, //Keys
-visibility, value, self, abiClass, objref_name, // Values
-visibility, icollection, abiClass, objref_name, // Count
-visibility, icollection, abiClass, objref_name, // IsReadOnly
-visibility, value, self, key, abiClass, objref_name, abiClass, objref_name, // Indexer
-visibility, self, key, value, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, abiClass, objref_name,
-visibility, self, key, value, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name,
-visibility, icollection, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name,
-visibility, icollection, key, value, abiClass, objref_name, enumerableObjRefName,
-key, value, key, value, abiClass, objref_name);
+visibility, key, self, interop_method_name_prefix, objref_name, //Keys
+visibility, value, self, interop_method_name_prefix, objref_name, // Values
+visibility, icollection, interop_method_name_prefix, objref_name, // Count
+visibility, icollection, // IsReadOnly
+visibility, value, self, key, interop_method_name_prefix, objref_name, interop_method_name_prefix, objref_name, // Indexer
+visibility, self, key, value, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, interop_method_name_prefix, objref_name,
+visibility, self, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name,
+visibility, icollection, key, value, interop_method_name_prefix, objref_name, enumerableObjRefName,
+key, value, key, value, interop_method_name_prefix, objref_name);
     }
 
     void write_dictionary_members_using_idic(writer& w, bool include_enumerable)
@@ -2989,17 +3460,29 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyList<%>.", element) : "";
         auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IReadOnlyListMethods<%>", element);
         auto objRefName = w.write_temp("%", objref_name);
+        auto interop_method_name_prefix = w.write_temp("IReadOnlyListMethods_%_", escape_type_name_for_identifier(element, true));
+        auto element_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
 
         w.write(R"(
-%int %Count => %.get_Count(%);
-%
-%% %this[int index] => %.Indexer_Get(%, index);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IReadOnlyList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
 )",
-visibility, ireadonlycollection, abiClass, objRefName,
+interop_method_name_prefix, element_interop_type_name, // Count
+element, interop_method_name_prefix, element_interop_type_name // Item
+);
+
+        w.write(R"(
+%int %Count => %Count(null, %);
+%
+%% %this[int index] => %Item(null, %, index);
+)",
+visibility, ireadonlycollection, interop_method_name_prefix, objRefName,
 !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")])" : "",
-visibility, element, self, abiClass, objRefName);
+visibility, element, self, interop_method_name_prefix, objRefName);
 
     }
 
@@ -3025,7 +3508,54 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             element, enumerable_type, target);
     }
 
-    void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
+    void write_nongeneric_list_members_using_static_abi_methods(writer& w, bool emit_explicit, std::string objref_name)
+    {
+        auto self = emit_explicit ? "global::System.Collections.IList." : "";
+        auto icollection = emit_explicit ? "global::System.Collections.ICollection." : "";
+        auto visibility = emit_explicit ? "" : "public ";
+        auto target = "global::ABI.System.Collections.IListMethods";
+
+        w.write(R"(
+%int %Count => %.Count(%);
+%bool %IsSynchronized => false;
+%object %SyncRoot => this;
+%void %CopyTo(Array array, int index) => %.CopyTo(%, array, index);
+%
+%object %this[int index]
+{
+get => %.Item(%, index);
+set => %.Item(%, index, value);
+}
+%bool %IsFixedSize => false;
+%bool %IsReadOnly => false;
+%int %Add(object value) => %.Add(%, value);
+%void %Clear() => %.Clear(%);
+%bool %Contains(object value) => %.Contains(%, value);
+%int %IndexOf(object value) => %.IndexOf(%, value);
+%void %Insert(int index, object value) => %.Insert(%, index, value);
+%void %Remove(object value) => %.Remove(%, value);
+%void %RemoveAt(int index) => %.RemoveAt(%, index);
+)",
+visibility, icollection, target, objref_name,
+visibility, icollection,
+visibility, icollection,
+visibility, icollection, target, objref_name,
+!emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")])" : "",
+visibility, self,
+target, objref_name,
+target, objref_name,
+visibility, self,
+visibility, self,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name,
+visibility, self, target, objref_name);
+    }
+
+    void write_nongeneric_list_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto self = emit_explicit ? "global::System.Collections.IList." : "";
         auto icollection = emit_explicit ? "global::System.Collections.ICollection." : "";
@@ -3127,38 +3657,87 @@ element, enumerable_type, target);
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IList<%>.", element) : "";
         auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
-        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IListMethods<%>", element);
         auto objRefName = w.write_temp("%", objref_name);
+        auto interop_method_name_prefix = w.write_temp("IListMethods_%_", escape_type_name_for_identifier(element, true));
+        auto element_interop_type_name = w.write_temp("%", bind<write_interop_dll_type_name>(w.get_generic_arg_scope(0).first, typedef_name_type::Projected));
+
         w.write(R"(
-%int %Count => %.get_Count(%);
-%bool %IsReadOnly => %.get_IsReadOnly(%);
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
+static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern % %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Item")]
+static extern void %Item([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % value);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "IndexOf")]
+static extern int %IndexOf([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Insert")]
+static extern void %Insert([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "RemoveAt")]
+static extern void %RemoveAt([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, int index);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Add")]
+static extern void %Add([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Clear")]
+static extern void %Clear([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Contains")]
+static extern bool %Contains([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyTo")]
+static extern void %CopyTo([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, %[] array, int arrayIndex);
+
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Remove")]
+static extern bool %Remove([UnsafeAccessorType("ABI.System.Collections.Generic.<#CsWinRT>IList'1<%>Methods, WinRT.Interop.dll")] object _, WindowsRuntimeObjectReference objRef, % item);
+)",
+interop_method_name_prefix, element_interop_type_name, // Count
+element, interop_method_name_prefix, element_interop_type_name, // Item get
+interop_method_name_prefix, element_interop_type_name, element,  // Item set
+interop_method_name_prefix, element_interop_type_name, element, // IndexOf
+interop_method_name_prefix, element_interop_type_name, element, // Insert
+interop_method_name_prefix, element_interop_type_name, // RemoveAt
+interop_method_name_prefix, element_interop_type_name, element, // Add
+interop_method_name_prefix, element_interop_type_name, // Clear
+interop_method_name_prefix, element_interop_type_name, element, // Contains
+interop_method_name_prefix, element_interop_type_name, element, // CopyTo
+interop_method_name_prefix, element_interop_type_name, element // Remove
+);
+
+        w.write(R"(
+%int %Count => %Count(null, %);
+%bool %IsReadOnly => false;
 %
 %% %this[int index] 
 {
-get => %.Indexer_Get(%, index);
-set => %.Indexer_Set(%, index, value);
+get => %Item(null, %, index);
+set => %Item(null, %, index, value);
 }
-%int %IndexOf(% item) => %.IndexOf(%, item);
-%void %Insert(int index, % item) => %.Insert(%, index, item);
-%void %RemoveAt(int index) => %.RemoveAt(%, index);
-%void %Add(% item) => %.Add(%, item);
-%void %Clear() => %.Clear(%);
-%bool %Contains(% item) => %.Contains(%, item);
-%void %CopyTo(%[] array, int arrayIndex) => %.CopyTo(%, array, arrayIndex);
-%bool %Remove(% item) => %.Remove(%, item);
+%int %IndexOf(% item) => %IndexOf(null, %, item);
+%void %Insert(int index, % item) => %Insert(null, %, index, item);
+%void %RemoveAt(int index) => %RemoveAt(null, %, index);
+%void %Add(% item) => %Add(null, %, item);
+%void %Clear() => %Clear(null, %);
+%bool %Contains(% item) => %Contains(null, %, item);
+%void %CopyTo(%[] array, int arrayIndex) => %CopyTo(null, %, array, arrayIndex);
+%bool %Remove(% item) => %Remove(null, %, item);
 )", 
-            visibility, icollection, abiClass, objref_name, //Count
-            visibility, icollection, abiClass, objref_name, //IsReadOnly
+            visibility, icollection, interop_method_name_prefix, objref_name, //Count
+            visibility, icollection, //IsReadOnly
             !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "", //Indexer
-            visibility, element, self, abiClass, objref_name, abiClass, objref_name, //Indexer
-            visibility, self, element, abiClass, objref_name, //IndexOf
-            visibility, self, element, abiClass, objref_name, //Insert
-            visibility, self, abiClass, objref_name, //RemoveAt
-            visibility, icollection, element, abiClass, objref_name, //Add
-            visibility, icollection, abiClass, objref_name, //Clear
-            visibility, icollection, element, abiClass, objref_name, //Contains
-            visibility, icollection, element, abiClass, objref_name, //CopyTo
-            visibility, icollection, element, abiClass, objref_name); //Remove
+            visibility, element, self, interop_method_name_prefix, objref_name, interop_method_name_prefix, objref_name, //Indexer
+            visibility, self, element, interop_method_name_prefix, objref_name, //IndexOf
+            visibility, self, element, interop_method_name_prefix, objref_name, //Insert
+            visibility, self, interop_method_name_prefix, objref_name, //RemoveAt
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //Add
+            visibility, icollection, interop_method_name_prefix, objref_name, //Clear
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //Contains
+            visibility, icollection, element, interop_method_name_prefix, objref_name, //CopyTo
+            visibility, icollection, element, interop_method_name_prefix, objref_name); //Remove
     }
 
     void write_idisposable_members(writer& w)
@@ -3208,17 +3787,17 @@ bool %HasErrors {get => %.HasErrors; }
 
 %event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
 {
-add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Subscribe(value);
-remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Unsubscribe(value);
+add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, %).Subscribe(value);
+remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, %).Unsubscribe(value);
 }
-%bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.get_HasErrors(%); }
+%bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors(%); }
 )",
 visibility, self, objref_name,
 visibility, self, objref_name, objref_name,
 visibility, self, objref_name);
     }
 
-    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private, std::string objref_name)
+    void write_custom_mapped_type_members(writer& w, mapped_type const& mapping, bool is_private, std::string objref_name)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
@@ -3246,11 +3825,11 @@ visibility, self, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
-            write_nongeneric_enumerable_members(w, target);
+            write_nongeneric_enumerable_members_using_static_abi_methods(w, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {
-            write_nongeneric_list_members(w, target, false, is_private);
+            write_nongeneric_list_members_using_static_abi_methods(w, is_private, objref_name);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
@@ -3361,9 +3940,9 @@ visibility, self, objref_name);
             auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type);
             auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
-            // Write IWindowsRuntimeInterface implementation for non-default interface
+            // Write IWindowsRuntimeInterface implementation for non-default interfaces and for the default interface if it isn't exclusive.
             // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_default_interface)
+            if (!is_exclusive_to(interface_type) || is_overridable_interface)
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
@@ -3374,7 +3953,7 @@ return %.AsValue();
                 interface_name,
                 bind<write_objref_type_name>(interface_type));
             }
-            else if (!type.Flags().Sealed())
+            else if (is_default_interface && !type.Flags().Sealed())
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
 
@@ -3392,7 +3971,7 @@ return %.AsValue();
             {
                 bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
                 auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
-                write_custom_mapped_type_members(w, target, *mapping, is_private, objref_name);
+                write_custom_mapped_type_members(w, *mapping, is_private, objref_name);
                 return;
             }
 
@@ -3749,7 +4328,7 @@ return %.AsValue();
                 call(semantics,
                     [&](object_type)
                     {
-                        w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
+                        w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                     },
                     [&](guid_type)
                     {
@@ -3764,24 +4343,29 @@ return %.AsValue();
                         switch (get_category(td))
                         {
                         case category::interface_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
-                            break;
                         case category::class_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
-                            break;
                         case category::delegate_type:
-                            w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
-                            break;
-                        case category::enum_type:
+                            w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                             break;
                         case category::struct_type:
                             if (!is_type_blittable(td))
                             {
-                                w.write("%Marshaller.Dispose(value.%);\n", td.TypeName(), field_name);
+                                if (td.TypeNamespace() == "Windows.Foundation" && 
+                                    (td.TypeName() == "DateTime" ||
+                                     td.TypeName() == "TimeSpan" ||
+                                     td.TypeName() == "HResult"))
+                                {
+                                    // These types require marshaling due to being custom mapped,
+                                    // but are still blittable and don't have disposer.
+                                    break;
+                                }
+
+                                w.write("%Marshaller.Dispose(value.%);\n",
+                                    bind<write_type_name>(td, typedef_name_type::ABI, true),
+                                    field_name);
                             }
                             break;
                         default:
-                            w.write("// Unsupported type_definition for %\n", field_name);
                             break;
                         }
                     },
@@ -3795,7 +4379,7 @@ return %.AsValue();
                         call(td.generic_args[0],
                             [&](fundamental_type)
                             {
-                                w.write("WindowsRuntimeObjectMarshaller.Free(value.%);\n", field_name);
+                                w.write("WindowsRuntimeUnknownMarshaller.Free(value.%);\n", field_name);
                             },
                             [&](auto const&)
                             {
@@ -4392,7 +4976,7 @@ Vtable = %.AbiToProjectionVftablePtr
 [return: UnsafeAccessorType("%, WinRT.Interop.dll")]
 static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
 )",
-bind<write_interop_dll_type_name>(semantics)
+bind<write_interop_dll_type_name>(semantics, typedef_name_type::EventSource)
 );
     }
 
@@ -4429,13 +5013,13 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private static ConditionalWeakTable<WindowsRuntimeObject, %> _%
+private static ConditionalWeakTable<object, %> _%
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static ConditionalWeakTable<WindowsRuntimeObject, %> MakeTable()
+        static ConditionalWeakTable<object, %> MakeTable()
         {
             _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);
 
@@ -4513,6 +5097,7 @@ event % %;)",
         std::string interface_init_rcw_helper;
         std::string interop_dll_type;
         bool skip_disposer;
+        bool is_boxed_value;
 
         bool is_out() const
         {
@@ -4546,6 +5131,11 @@ event % %;)",
                 marshaler_type.empty() && local_type == "void*";
         }
 
+        bool is_pinnable_array_data() const
+        {
+            return is_array() && !is_out();
+        }
+
         // We pass using in for .NET Standard.  Outside of .NET Standard,
         // we want our function pointers to be blittable and be able to disable
         // runtime marshaling, so we use ptrs with the managed function calling the
@@ -4570,7 +5160,7 @@ event % %;)",
             if (!is_generic())
             {
                 return is_array() ?
-                    w.write_temp("(__%_length, __%_data)",
+                    w.write_temp("__%_length, &__%_data",
                         param_name, param_name) :
                     get_marshaler_local(w);
             }
@@ -4584,12 +5174,54 @@ event % %;)",
         {
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+static extern %[] ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
+param_type,
+param_name,
+interop_dll_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
 static extern % ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
 )",
 param_type,
+param_name,
+interop_dll_type);
+                }
+            }
+        }
+
+        void write_interop_dispose_function(writer& w) const
+        {
+            if (interop_dll_type != "" && is_array())
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+static extern void Dispose_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
+param_name,
+interop_dll_type);
+            }
+        }
+
+        void write_interop_free_function(writer& w) const
+        {
+            if (interop_dll_type != "" && is_array())
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+static extern void Free_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, uint length, void** data);
+
+)",
 param_name,
 interop_dll_type);
             }
@@ -4599,7 +5231,20 @@ interop_dll_type);
         {
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
@@ -4607,6 +5252,52 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAcc
 param_name,
 interop_dll_type,
 param_type);
+                }
+            }
+        }
+
+        void write_copy_to_unmanaged_function(writer& w) const
+        {
+            if (is_array() && marshaler_type == "HStringMarshaller")
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanagedUnsafe")]
+static extern void CopyToUnmanagedUnsafe_%([UnsafeAccessorType("string_ArrayMarshaller, WinRT.Interop.dll")] object _, ReadOnlySpan<string> value, uint destinationSize, void* destination, uint headersSize, void* headers);
+
+)",
+param_name);
+            }
+            else if (interop_dll_type != "")
+            {
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, uint length, void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+            }
+        }
+
+        void write_copy_to_managed_function(writer& w) const
+        {
+            if (interop_dll_type != "")
+            {
+                if (is_ref())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, uint length, void** data, Span<%> span);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
             }
         }
 
@@ -4620,8 +5311,58 @@ param_type);
 
             if (is_array())
             {
-                w.write("int __%_length = default;\n", param_name);
-                w.write("IntPtr __%_data = default;\n", param_name);
+                if (is_out())
+                {
+                    w.write("uint __%_length = default;\n", param_name);
+                    w.write("void* __%_data = default;\n", param_name);
+                }
+                else
+                {
+                    w.write(R"(
+Unsafe.SkipInit(out InlineArray16<%> __%_inlineArray);
+%[] __%_arrayFromPool = null;
+Span<%> __%_span = %.Length <= 16
+    ? __%_inlineArray[..%.Length]
+    : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent(%.Length));
+)",
+                        // SkipInit
+                        local_type,
+                        param_name,
+                        // array
+                        local_type,
+                        param_name,
+                        // span
+                        local_type,
+                        param_name,
+                        get_escaped_param_name(w),
+                        param_name,
+                        get_escaped_param_name(w),
+                        param_name,
+                        local_type,
+                        get_escaped_param_name(w));
+
+                    if (!is_ref() && marshaler_type == "HStringMarshaller")
+                    {
+                        w.write(R"(
+Unsafe.SkipInit(out InlineArray16<HStringReference> __%_inlineReferenceArray);
+HStringReference[] __%_referenceArrayFromPool = null;
+Span<HStringReference> __%_referenceSpan = %.Length <= 16
+    ? __%_inlineReferenceArray[..%.Length]
+    : (__%_referenceArrayFromPool = global::System.Buffers.ArrayPool<HStringReference>.Shared.Rent(%.Length));
+)",
+                            // SkipInit
+                            param_name,
+                            // array
+                            param_name,
+                            // span
+                            param_name,
+                            get_escaped_param_name(w),
+                            param_name,
+                            get_escaped_param_name(w),
+                            param_name,
+                            get_escaped_param_name(w));
+                    }
+                }
                 return;
             }
 
@@ -4633,7 +5374,7 @@ param_type);
                     local_type,
                     get_marshaler_local(w),
                     marshaler_type,
-                    param_name);
+                    get_escaped_param_name(w));
                 return;
             }
 
@@ -4647,12 +5388,21 @@ param_type);
 
             write_convert_to_unmanaged_function(w);
 
+            if (is_boxed_value)
+            {
+                w.write("using WindowsRuntimeObjectReferenceValue % = %.BoxToUnmanaged(%);\n",
+                    get_marshaler_local(w),
+                    marshaler_type,
+                    get_escaped_param_name(w));
+                return;
+            }
+
             w.write("using WindowsRuntimeObjectReferenceValue % = %ConvertToUnmanaged%(%%);\n",
                 get_marshaler_local(w),
                 interop_dll_type != "" ? "" : marshaler_type + ".",
                 interop_dll_type != "" ? "_" + param_name : "",
                 interop_dll_type != "" ? "null, " : "",
-                param_name);
+                get_escaped_param_name(w));
         }
 
         auto get_escaped_param_name(writer& w) const
@@ -4662,17 +5412,15 @@ param_type);
 
         void write_assignments(writer& w) const
         {
-            if (is_pinnable || is_object_in() || is_out() || local_type.empty())
+            if (is_pinnable || is_pinnable_array_data() || is_object_in() || is_out() || local_type.empty())
                 return;
-
-            // TODO: Arrays
 
             if (!marshaler_type.empty() && !is_marshal_by_object_reference_value())
             {
                 w.write("% = %.ConvertToUnmanaged(%);\n",
                     get_marshaler_local(w),
                     marshaler_type,
-                    param_name);
+                    get_escaped_param_name(w));
             }
         }
 
@@ -4687,28 +5435,77 @@ param_type);
 
         void write_fixed_expression(writer& w, bool& write_delimiter) const
         {
-            if (!is_pinnable)
+            if (!is_pinnable && !is_pinnable_array_data())
                 return;
             if (write_delimiter)
             {
                 w.write(", ");
             }
-            w.write("_% = %",
-                param_name,
-                marshaler_type == "global::ABI.System.TypeMarshaller" 
+
+            if (!is_pinnable && is_pinnable_array_data())
+            {
+                w.write("_% = __%_span",
+                    param_name,
+                    param_name);
+                
+                if (!is_ref() && marshaler_type == "HStringMarshaller")
+                {
+                    w.write(", _%_reference = __%_referenceSpan",
+                        param_name,
+                        param_name);
+                }
+            }
+            else
+            {
+                w.write("_% = %",
+                    param_name,
+                    marshaler_type == "global::ABI.System.TypeMarshaller"
                     ? "__" + param_name : get_escaped_param_name(w));
+            }
             write_delimiter = true;
         }
 
         void write_fixed_marshaler(writer& w) const
         {
-            if (!is_pinnable)
+            if (!is_pinnable && !is_pinnable_array_data())
                 return;
 
             if (marshaler_type == "HStringMarshaller")
             {
-                w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
-                    param_name, get_escaped_param_name(w), param_name);
+                if (is_pinnable_array_data())
+                {
+                    if (is_ref())
+                    {
+                        return;
+                    }
+
+                    write_copy_to_unmanaged_function(w);
+                    w.write(R"(
+CopyToUnmanagedUnsafe_%(
+    null,
+    value: %,
+    destinationSize: (uint)__%_span.Length,
+    destination: _%,
+    headersSize: (uint)__%_referenceSpan.Length,
+    headers: _%_reference);
+)",
+                        param_name,
+                        get_escaped_param_name(w),
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name);
+                }
+                else
+                {
+                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
+                        param_name, get_escaped_param_name(w), param_name);
+                }
+            }
+            else if (!is_pinnable && is_pinnable_array_data() && !is_ref())
+            {
+                write_copy_to_unmanaged_function(w);
+                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, &_%);\n", param_name, get_escaped_param_name(w), get_escaped_param_name(w), param_name);
             }
         }
 
@@ -4718,9 +5515,16 @@ param_type);
             {
                 if (is_array())
                 {
-                    w.write("%__%_length, %__%_data",
-                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name,
-                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name);
+                    if (is_pinnable || is_pinnable_array_data())
+                    {
+                        w.write("(uint) %.Length, _%", get_escaped_param_name(w), param_name);
+                    }
+                    else
+                    {
+                        w.write("%__%_length, %__%_data",
+                            is_out() ? "&" : "", param_name,
+                            is_out() ? "&" : "", param_name);
+                    }
                     return;
                 }
 
@@ -4830,6 +5634,14 @@ param_type);
                 return;
             }
 
+            if (is_boxed_value)
+            {
+                w.write("%.UnboxToManaged(%)",
+                    marshaler_type,
+                    source);
+                return;
+            }
+
             w.write("%ConvertToManaged%(%%)",
                 interop_dll_type != "" ? "" : marshaler_type + ".",
                 interop_dll_type != "" ? "_" + param_name : "",
@@ -4875,13 +5687,14 @@ param_type);
                 return;
             if (is_ref())
             {
-                if (!starts_with(marshaler_type, "MarshalBlittable"))
+                if (!is_pinnable)
                 {
-                    w.write("%.CopyAbiArray(%, (__%_length, __%_data));\n",
-                        marshaler_type,
-                        bind<write_escaped_identifier>(param_name),
+                    write_copy_to_managed_function(w);
+                    w.write("CopyToManaged_%(null, (uint)__%_span.Length, &_%, %);\n",
                         param_name,
-                        param_name);
+                        param_name,
+                        param_name,
+                        bind<write_escaped_identifier>(param_name));
                 }
                 return;
             }
@@ -4904,7 +5717,7 @@ param_type);
             {
                 if (is_out() && (local_type == "void*" && param_type != "void*"))
                 {
-                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n", get_marshaler_local(w));
+                    w.write("WindowsRuntimeUnknownMarshaller.Free(%);\n", get_marshaler_local(w));
                 }
                 return;
             }
@@ -4913,14 +5726,15 @@ param_type);
             {
                 if (is_array())
                 {
-                    w.write("%.DisposeAbi%(%);\n",
-                        marshaler_type,
-                        is_array() ? "Array" : "",
+                    write_interop_free_function(w);
+
+                    w.write("Free_%(null, %);\n",
+                        param_name,
                         get_param_local(w));
                 }
                 else if (is_marshal_by_object_reference_value())
                 {
-                    w.write("WindowsRuntimeObjectMarshaller.Free(%);\n",
+                    w.write("WindowsRuntimeUnknownMarshaller.Free(%);\n",
                         get_param_local(w));
                 }
                 else if (marshaler_type == "HStringMarshaller")
@@ -4938,10 +5752,42 @@ param_type);
             }
             else
             {
-                // TODO arrays
-                w.write("%.Dispose(%);\n",
-                    marshaler_type,
-                    get_param_local(w));
+                if (is_array())
+                {
+                    // HStringReference doesn't need to be freed.
+                    if (is_ref() || marshaler_type != "HStringMarshaller")
+                    {
+                        write_interop_dispose_function(w);
+
+                        w.write(R"(
+fixed(void* _% = __%_span)
+{
+Dispose_%(null, (uint) __%_span.Length, &_%);
+}
+)",
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name);
+                    }
+
+                    w.write(R"(
+if (__%_arrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
+}
+)",
+                        param_name,
+                        local_type,
+                        param_name);
+                }
+                else
+                {
+                    w.write("%.Dispose(%);\n",
+                        marshaler_type,
+                        get_param_local(w));
+                }
             }
         }
     };
@@ -4966,9 +5812,10 @@ param_type);
         {
             if (m.is_array())
             {
-                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                 m.marshaler_type += "<" + m.param_type + ">";
-                m.local_type = m.marshaler_type + ".MarshalerArray";
+                m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
             else if (!is_type_blittable(type))
             {
@@ -5002,16 +5849,44 @@ param_type);
                 m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
+                    m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+                    if (m.local_type == "void*")
+                    {
+                        m.local_type = "nint";
+                    }
                 }
                 else
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                     m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
-                    if (distance(type.GenericParam()) > 0)
+
+                    if (is_projected_as_nullable(type))
                     {
-                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                        m.is_boxed_value = true;
+                        auto generic_arg = w.get_generic_arg(0);
+                        call(generic_arg,
+                        [&](guid_type)
+                        {
+                            m.marshaler_type = "ABI.System.GuidMarshaller";
+                        },
+                        [&](type_type)
+                        {
+                            m.marshaler_type = "ABI.System.TypeMarshaller";
+                        },
+                        [&](type_definition const& type) {
+                            m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                        },
+                        [&](fundamental_type const& type)
+                        {
+                            m.marshaler_type = w.write_temp("ABI.System.%Marshaller", bind<write_fundamental_non_projected_type>(type));
+                        },
+                        [&](auto const&) {});
+                    }
+                    else if (distance(type.GenericParam()) > 0)
+                    {
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }
                 }
 
@@ -5020,7 +5895,8 @@ param_type);
                 m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
+                    m.local_type = "nint";
                 }
                 else
                 {
@@ -5029,10 +5905,11 @@ param_type);
                 }
                 break;
             case category::delegate_type:
-                m.marshaler_type = get_abi_type();
+                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
-                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                    m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
+                    m.local_type = "nint";
                 }
                 else
                 {
@@ -5040,7 +5917,7 @@ param_type);
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
                     if (distance(type.GenericParam()) > 0)
                     {
-                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }
                 }
                 break;
@@ -5055,7 +5932,8 @@ param_type);
                     m.marshaler_type = "WindowsRuntimeObjectMarshaller";
                     if (m.is_array())
                     {
-                        m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
+                        m.local_type = "nint";
                     }
                     else
                     {
@@ -5094,8 +5972,10 @@ param_type);
                     {
                         if (m.is_array())
                         {
-                            m.marshaler_type = "MarshalString";
-                            m.local_type = "MarshalString.MarshalerArray";
+                            m.marshaler_type = "HStringMarshaller";
+                            m.local_type = "nint";
+                            m.interop_dll_type = "string";
+                            // m.is_pinnable = !m.is_out();
                         }
                         else
                         {
@@ -5123,9 +6003,11 @@ param_type);
             }
             else
             {
+                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                 m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
-                m.local_type = m.marshaler_type + ".MarshalerArray";
+                m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
         }
     }
@@ -5180,7 +6062,7 @@ param_type);
             bool have_pinnables{};
             for (auto&& m : marshalers)
             {
-                have_pinnables |= m.is_pinnable;
+                have_pinnables |= m.is_pinnable || m.is_pinnable_array_data();
                 m.write_pinnable(w);
             }
 
@@ -5299,9 +6181,10 @@ finally
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size(); i++)
             {
-                w.write("% = (%)additionalParameters[%];\n",
-                    bind<write_projection_parameter>(params[i]),
+                w.write("% % = %additionalParameters[%];\n",
                     bind<write_projection_parameter_type>(params[i]),
+                    bind<write_parameter_name>(params[i]),
+                    bind<write_constructor_parameter_cast>(params[i]),
                     i);
             }
         };
@@ -5313,9 +6196,14 @@ finally
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
+		auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
@@ -5325,8 +6213,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            method.Name(),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
@@ -5347,9 +6237,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
             auto const& params = method_sig.params();
             for (size_t i = 0; i < params.size() - 2; i++)
             {
-                w.write("% = (%)additionalParameters[%];\n",
-                    bind<write_projection_parameter>(params[i]),
+                w.write("% % = %additionalParameters[%];\n",
                     bind<write_projection_parameter_type>(params[i]),
+                    bind<write_parameter_name>(params[i]),
+                    bind<write_constructor_parameter_cast>(params[i]),
                     i);
             }
         };
@@ -5375,9 +6266,14 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
+        auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
+private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedComposed
+{
+public static readonly % Instance = new();
+
 [MethodImpl(MethodImplOptions.NoInlining)]
-private static unsafe void %(
+public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   WindowsRuntimeObject baseInterface,
   out void* innerInterface,
@@ -5389,8 +6285,10 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 %
 }
+}
 )",
-            method.Name(),
+            callback_class,
+            callback_class,
             cache_object,
             bind(write_composable_constructor_params_as_variables, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
@@ -5619,7 +6517,7 @@ public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value
             w.write(R"(
 %
 
-public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+public static % %(object thisObject, WindowsRuntimeObjectReference thisReference)
 {
     %
     return _%.GetOrAdd(
@@ -5679,7 +6577,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerator_members>()),
+                        w.write_temp("%", bind<write_enumerator_members_using_idic>()),
                     };
                 }
                 else if (mapping->abi_name == "IMapView`2") // IReadOnlyDictionary`2
@@ -5731,7 +6629,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_nongeneric_list_members>(
+                        w.write_temp("%", bind<write_nongeneric_list_members_using_idic>(
                             "((global::System.Collections.IList)(WindowsRuntimeObject)this)",
                             true,
                             true))
@@ -5794,7 +6692,7 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         }
     }
 
-    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi, bool include_exclusive_interface, bool includeWindowsRuntimeObject)
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool include_exclusive_interface, bool includeWindowsRuntimeObject)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -5830,12 +6728,6 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                     }
                 }
             });
-        }
-
-        if (add_custom_qi)
-        {
-            write_delimiter();
-            w.write("global::System.Runtime.InteropServices.ICustomQueryInterface");
         }
     }
    
@@ -5981,26 +6873,12 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
                 
                 if (param_cat == param_category::ref)
                 {
-                    if (settings.netstandard_compat)
-                    {
-                        param_prefix = "in ";
-                    }
-                    else
-                    {
-                        param_suffix = "*";
-                    }
+                    param_suffix = "*";
                 }
 
                 if (param_cat == param_category::out)
                 {
-                    if (settings.netstandard_compat)
-                    {
-                        param_prefix = "out ";
-                    }
-                    else
-                    {
-                        param_suffix = "*";
-                    }
+                    param_suffix = "*";
                 }
 
                 w.write(", %%% %",
@@ -6039,9 +6917,10 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         std::string marshaler_type;
         std::string interface_guid;
         bool abi_boxed;
-        bool use_pointers;
         std::string interop_dll_type;
         bool marshal_by_object_reference_value;
+        bool is_blittable;
+        bool is_boxed_value;
 
         bool is_out() const
         {
@@ -6071,27 +6950,48 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
 
         void write_local(writer& w) const
         {
-            if ((category == param_category::in) || (category == param_category::pass_array))
+            if (category == param_category::in || category == param_category::ref)
                 return;
-            if (category == param_category::fill_array)
+
+            if (category == param_category::pass_array || category == param_category::fill_array)
             {
-                w.write("% __% = %.FromAbiArray((__%Size, %));\n",
-                    local_type,
-                    param_name,
-                    marshaler_type,
-                    param_name, bind<write_escaped_identifier>(param_name));
-                return;
-            }
-            if (category == param_category::ref)
-            {
-                if (!use_pointers)
+                if (is_blittable)
                 {
-                    w.write("var __% = %;\n",
+                    w.write("%<%> __% = new(%, (int)__%Size);\n",
+                        category == param_category::pass_array ? "ReadOnlySpan" : "Span",
+                        param_type,
                         param_name,
-                        bind<write_escaped_identifier>(param_name));
+                        bind<write_escaped_identifier>(param_name),
+                        param_name);
+                }
+                else
+                {
+                    w.write(R"(
+Unsafe.SkipInit(out InlineArray16<%> __%_inlineArray);
+%[] __%_arrayFromPool = null;
+Span<%> __% = __%Size <= 16
+    ? __%_inlineArray[..(int)__%Size]
+    : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent((int)__%Size));
+)",
+                        // SkipInit
+                        param_type,
+                        param_name,
+                        // Array
+                        param_type,
+                        param_name,
+                        // Span
+                        param_type,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_name,
+                        param_type,
+                        param_name);
                 }
                 return;
             }
+
             std::string_view out_local_type;
             if (param_type == "bool")
             {
@@ -6113,26 +7013,20 @@ public static % %(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference
         void write_out_initialize(writer& w) const
         {
             XLANG_ASSERT(is_out());
-            if (!use_pointers)
+            w.write("*% = default;\n", bind<write_escaped_identifier>(param_name));
+            if (is_array())
             {
-                w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
-                if (is_array())
-                {
-                    w.write("__%Size = default;\n", param_name);
-                }
-            }
-            else
-            {
-                w.write("*% = default;\n", bind<write_escaped_identifier>(param_name));
-                if (is_array())
-                {
-                    w.write("*__%Size = default;\n", param_name);
-                }
+                w.write("*__%Size = default;\n", param_name);
             }
         }
 
         void write_convert_to_managed_function(writer& w) const
         {
+            if (is_array() || is_out())
+            {
+                return;
+            }
+
             if (interop_dll_type != "")
             {
                 w.write(R"(
@@ -6148,9 +7042,27 @@ interop_dll_type);
 
         void write_convert_to_unmanaged_function(writer& w) const
         {
+            if (!is_out())
+            {
+                return;
+            }
+
             if (interop_dll_type != "")
             {
-                w.write(R"(
+                if (is_array())
+                {
+                    w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+
+)",
+param_name,
+interop_dll_type,
+param_type);
+                }
+                else
+                {
+                    w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
 static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, % value);
 
@@ -6158,6 +7070,28 @@ static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAcc
 param_name,
 interop_dll_type,
 param_type);
+                }
+            }
+        }
+
+        void write_copy_to_managed(writer& w) const
+        {
+            if (!is_blittable && category == param_category::pass_array)
+            {
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, uint length, void** data, Span<%> span);
+
+)",
+                    param_name,
+                    interop_dll_type,
+                    param_type);
+
+                w.write("CopyToManaged_%(null, __%Size, &%, __%);",
+                    param_name,
+                    param_name,
+                    bind<write_escaped_identifier>(param_name),
+                    param_name);
             }
         }
 
@@ -6180,14 +7114,7 @@ param_type);
                 }
                 else if (category == param_category::ref)
                 {
-                    if (!use_pointers)
-                    {
-                        format_string = "in __%";
-                    }
-                    else
-                    {
-                        format_string = "*%";
-                    }
+                    format_string = "*%";
                 }
                 else
                 {
@@ -6197,9 +7124,13 @@ param_type);
             }
             else if (is_array())
             {
-                w.write("%.FromAbiArray((__%Size, %))",
+                w.write("__%", param_name);
+            }
+            else if (is_boxed_value)
+            {
+                w.write("%.UnboxToManaged(%)",
                     marshaler_type,
-                    param_name, bind<write_escaped_identifier>(param_name));
+                    bind<write_escaped_identifier>(param_name));
             }
             else if (interop_dll_type != "")
             {
@@ -6224,61 +7155,97 @@ param_type);
             auto param_local = get_param_local(w);
             if (is_ref())
             {
-                w.write("%.CopyManagedArray(%, %);\n",
-                    marshaler_type,
-                    param_local,
+                if (is_blittable)
+                {
+                    return;
+                }
+
+                w.write(R"(
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, ReadOnlySpan<%> span, uint length, void** data);
+
+CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
+
+)",
+                    // CopyToUnmanaged function
+                    param_name,
+                    interop_dll_type,
+                    param_type,
+                    // function call
+                    param_name,
+                    param_name,
+                    param_name,
                     bind<write_escaped_identifier>(param_name));
+
                 return;
             }
-            if (!use_pointers)
+
+            if (is_array())
             {
-                is_array() ?
-                    w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
-                    w.write("% = ", bind<write_escaped_identifier>(param_name));
+                w.write("ConvertToUnmanaged_%(null, __%, out *__%Size, out *(void***)%);\n", param_name, param_name, param_name, bind<write_escaped_identifier>(param_name));
             }
             else
             {
-                is_array() ?
-                    w.write("(*__%Size, *%) = ", param_name, bind<write_escaped_identifier>(param_name)) :
-                    w.write("*% = ", bind<write_escaped_identifier>(param_name));
-            }
-            if (marshaler_type.empty())
-            {
-                if (local_type == "void*")
+                w.write("*% = ", bind<write_escaped_identifier>(param_name));
+
+                if (marshaler_type.empty())
                 {
-                    w.write("%.ConvertToUnmanaged(%);",
-                        param_type,
+                    if (local_type == "void*")
+                    {
+                        w.write("%.ConvertToUnmanaged(%);",
+                            param_type,
+                            param_local);
+                    }
+                    else
+                    {
+                        if (param_type == "bool")
+                        {
+                            w.write("(byte)(% ? 1 : 0);", param_local);
+                        }
+                        else if (param_type == "char")
+                        {
+                            w.write("(ushort)%;", param_local);
+                        }
+                        else
+                        {
+                            w.write("%;", param_local);
+                        }
+                    }
+                }
+                else if (is_boxed_value)
+                {
+                    w.write("%.BoxToUnmanaged(%).DetachThisPtrUnsafe();",
+                        marshaler_type,
                         param_local);
                 }
                 else
                 {
-                    if (param_type == "bool")
-                    {
-                        w.write("(byte)(% ? 1 : 0);", param_local);
-                    }
-                    else if (param_type == "char")
-                    {
-                        w.write("(ushort)%;", param_local);
-                    }
-                    else
-                    {
-                        w.write("%;", param_local);
-                    }
+                    w.write("%%ConvertToUnmanaged%(%%)%;",
+                        abi_boxed ? w.write_temp("(%)", param_type) : "",
+                        interop_dll_type != "" ? "" : marshaler_type + ".",
+                        interop_dll_type != "" ? "_" + param_name : "",
+                        interop_dll_type != "" ? "null, " : "",
+                        param_local,
+                        is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
                 }
             }
-            else
-            {
-                w.write("%%ConvertToUnmanaged%%(%%)%;",
-                    abi_boxed && !is_array() ?
-                        w.write_temp("(%)", param_type) : "",
-                    interop_dll_type != "" ? "" : marshaler_type + ".",
-                    is_array() ? "Array" : "",
-                    interop_dll_type != "" ? "_" + param_name : "",
-                    interop_dll_type != "" ? "null, " : "",
-                    param_local,
-                    is_marshal_by_object_reference_value() ? ".DetachThisPtrUnsafe()" : "");
-            }
+
             w.write("\n");
+        }
+
+        bool need_dispose() const
+        {
+            return is_array() && !is_blittable && (category == param_category::pass_array || category == param_category::fill_array);
+        }
+
+        void write_dispose(writer& w) const
+        {
+            if (!need_dispose())
+            {
+                return;
+            }
+
+            w.write("global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);\n", param_type, param_name);
         }
     };
 
@@ -6314,27 +7281,49 @@ param_type);
                     }
                     break;
                 case category::interface_type:
-                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
-                    if (distance(type.GenericParam()) > 0)
+                    if (is_projected_as_nullable(type))
                     {
-                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                        m.is_boxed_value = true;
+                        auto generic_arg = w.get_generic_arg(0);
+                        call(generic_arg,
+                            [&](guid_type)
+                            {
+                                m.marshaler_type = "ABI.System.GuidMarshaller";
+                            },
+                            [&](type_type)
+                            {
+                                m.marshaler_type = "ABI.System.TypeMarshaller";
+                            },
+                            [&](type_definition const& type) {
+                                m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
+                            },
+                            [&](fundamental_type const& type)
+                            {
+                                m.marshaler_type = w.write_temp("ABI.System.%Marshaller", bind<write_fundamental_non_projected_type>(type));
+                            },
+                            [&](auto const&) {});
+                    }
+                    else if (distance(type.GenericParam()) > 0)
+                    {
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }
                     break;
                 case category::class_type:
-                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));;
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.marshal_by_object_reference_value = true;
                     break;
                 case category::delegate_type:
-                    m.marshaler_type = get_abi_type();
+                    m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
                     m.marshal_by_object_reference_value = true;
                     if (distance(type.GenericParam()) > 0)
                     {
-                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type));
+                        m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(type, typedef_name_type::Marshaller));
                     }
                     break;
                 }
@@ -6388,12 +7377,13 @@ param_type);
             {
                 if (m.marshaler_type.empty())
                 {
+                    m.is_blittable = is_type_blittable(semantics, true);
                     m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                     m.marshaler_type += "<" + m.param_type + ">";
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
+                m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
             }
-            m.use_pointers = !settings.netstandard_compat;
         };
 
         for (auto&& param : signature.params())
@@ -6438,18 +7428,20 @@ R"(
 try
 {
 %
+%
 %%
 return 0;
 }
 catch (Exception __exception__)
 {
 return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
-}
+}%
 )",
             [&](writer& w) {
                 w.write(bind_each([](writer& w, managed_marshaler const& m)
                 {
                     m.write_convert_to_managed_function(w);
+                    m.write_convert_to_unmanaged_function(w);
                 }, marshalers));
 
                 if (return_sig)
@@ -6480,6 +7472,13 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
             },
             [&](writer& w)
             {
+                w.write(bind_each([](writer& w, managed_marshaler const& m)
+                {
+                    m.write_copy_to_managed(w);
+                }, marshalers));
+            },
+            [&](writer& w)
+            {
                 if (return_sig)
                 {
                     w.write("__% = ", return_marshaler.param_name);
@@ -6502,6 +7501,28 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
             [&](writer& w) {
                 if (!return_sig) return;
                 return_marshaler.write_marshal_from_managed(w);
+            },
+            [&](writer& w) {
+                bool write_dispose = false;
+                w.write(bind_each([&](writer&, managed_marshaler const& m)
+                {
+                    write_dispose |= m.need_dispose();
+                }, marshalers));
+
+                if (write_dispose)
+                {
+                    w.write(R"(
+finally
+{
+%
+}
+)",
+                        bind_each([](writer& w, managed_marshaler const& m)
+                        {
+                            m.write_dispose(w);
+                        }, marshalers)
+);
+                }
             });
     }
 
@@ -6556,10 +7577,11 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
                 setter_sig,
-                w.write_temp("ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr).% = %",
+                w.write_temp("ComInterfaceDispatch.GetInstance<%>((ComInterfaceDispatch*)thisPtr).% = %%",
                     type_name,
                     prop.Name(),
-                    "%"),
+                    "%",
+                    prop.Type().Type().is_szarray() ? ".ToArray()" : ""),
                 false));
         }
 
@@ -6655,16 +7677,18 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
 static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop.dll")] object _, void* value);
 
-var __handler = ConvertToManaged(null, handler);
+var __handler = ConvertToManaged(null, %);
 )",
-bind<write_type_name>(semantics, typedef_name_type::Projected, false),
-bind<write_interop_dll_type_name>(semantics)
+                        bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+                        bind<write_interop_dll_type_name>(semantics, typedef_name_type::Marshaller),
+                        handler_parameter_name
 );
                 }
                 else
                 {
-                    w.write("var __handler = %Marshaller.ConvertToManaged(handler);",
-                        bind<write_type_name>(semantics, typedef_name_type::ABI, false));
+                    w.write("var __handler = %Marshaller.ConvertToManaged(%);",
+                        bind<write_type_name>(semantics, typedef_name_type::ABI, false),
+                        handler_parameter_name);
                 }
             },
             add_handler_event_token_name,
@@ -7190,7 +8214,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_type_custom_attributes>(type, false),
             (is_exclusive_to(type) && !settings.public_exclusiveto) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type, object_type{}, false, false, false),
+            bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -7586,7 +8610,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 % %(WindowsRuntimeObjectReference nativeObjectReference)
 : base(nativeObjectReference)
 {
-%}
+%%}
 
 %
 %
@@ -7603,12 +8627,19 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_class_modifiers>(type),
             // class name
             type_name,
-            bind<write_type_inheritance>(type, base_semantics, false, false, true),
+            bind<write_type_inheritance>(type, base_semantics, false, true),
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             // ObjectReference constructor
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
+            [&](writer& w)
+            {
+                if (!type.Flags().Sealed())
+                {
+                    w.write("% = NativeObjectReference;\n", bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
+                }
+            },
             [&](writer& w)
             {
                 if (!gc_pressure_amount) return;
@@ -7699,12 +8730,27 @@ return objectReference.AsValue();
             }
             else
             {
-                w.write(R"(
+                auto default_type_semantics = get_type_semantics(get_default_interface(type));
+                auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
+                if (!is_exclusive_to(default_interface_typedef))
+                {
+                    w.write(R"(
+if (value is IWindowsRuntimeInterface<%> windowsRuntimeInterface)
+{
+return windowsRuntimeInterface.GetInterface();
+}
+)",
+                        bind<write_type_name>(default_type_semantics, typedef_name_type::Projected, false));
+                }
+                else
+                {
+                    w.write(R"(
 if (value is not null)
 {
 return value.GetDefaultInterface();
 }
 )");
+                }
             }
         }),
         projected_type_name,
@@ -7719,7 +8765,7 @@ return value.GetDefaultInterface();
 
         w.write(R"(
 file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-{
+{%
 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -7732,6 +8778,15 @@ return new %(valueReference);
 }
 )",
             type.TypeName(),
+            bind([&](writer& w) {
+                for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
+                {
+                    if (size(interface_type.GenericParam()) != 0)
+                    {
+                        write_unsafe_accessor_for_iid(w, interface_type, true);
+                    }
+                });
+            }),
             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
             bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
@@ -7745,7 +8800,7 @@ return new %(valueReference);
         {
             w.write(R"(
 file sealed unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
-{
+{%
 public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
 {
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
@@ -7758,6 +8813,15 @@ return new %(valueReference);
 }
 )",
                 type.TypeName(),
+                bind([&](writer& w) {
+                    for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
+                    {
+                        if (size(interface_type.GenericParam()) != 0)
+                        {
+                            write_unsafe_accessor_for_iid(w, interface_type, true);
+                        }
+                    });
+                }),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
@@ -7765,7 +8829,7 @@ return new %(valueReference);
         {
             w.write(R"(
 file sealed unsafe class %ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
-{
+{%
 public static unsafe bool TryCreateObject(
     void* value,
     ReadOnlySpan<char> runtimeClassName,
@@ -7790,6 +8854,15 @@ return false;
 }
 )",
                 type.TypeName(),
+                bind([&](writer& w) {
+                    for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
+                    {
+                        if (size(interface_type.GenericParam()) != 0)
+                        {
+                            write_unsafe_accessor_for_iid(w, interface_type, true);
+                        }
+                    });
+                }),
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
@@ -7819,7 +8892,7 @@ return false;
 %%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_type_custom_attributes>(type, true),
+            bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
@@ -8112,10 +9185,11 @@ R"(
         }
 
         // struct
-        w.write("%%%public struct %: IEquatable<%>\n{\n",
+        w.write("%%%public% struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_struct_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
+            has_addition_to_type(type) ? " partial" : "",
             type.TypeName(),
             type.TypeName());
 

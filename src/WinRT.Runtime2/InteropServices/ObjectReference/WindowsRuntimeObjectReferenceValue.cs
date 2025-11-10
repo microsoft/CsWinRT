@@ -79,7 +79,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
             return thisPtr;
         }
 
-        if (_thisPtr != null)
+        if (_thisPtr is not null)
         {
             _ = IUnknownVftbl.AddRefUnsafe(_thisPtr);
 
@@ -152,7 +152,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
         {
             _objectReference.ReleaseUnsafe();
         }
-        else if (_thisPtr != null)
+        else if (_thisPtr is not null)
         {
             _ = IUnknownVftbl.ReleaseUnsafe(_thisPtr);
         }

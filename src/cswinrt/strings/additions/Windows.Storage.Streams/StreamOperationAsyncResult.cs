@@ -16,7 +16,7 @@ namespace System.IO
     using System.Diagnostics.CodeAnalysis;
     #region class StreamOperationAsyncResult
 
-    internal abstract partial class StreamOperationAsyncResult : IAsyncResult
+    internal abstract class StreamOperationAsyncResult : IAsyncResult
     {
         private readonly AsyncCallback _userCompletionCallback = null;
         private readonly object _userAsyncStateInfo = null;
@@ -177,7 +177,7 @@ namespace System.IO
 
         internal abstract void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted);
 
-         private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo errInfo, string errMsg)
+        private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo errInfo, string errMsg)
         {
             Exception errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
 
@@ -284,7 +284,7 @@ namespace System.IO
 
         private void ThrowWithIOExceptionDispatchInfo(Exception e)
         {
-            WinRtIOHelper.NativeExceptionToIOExceptionInfo(WinRT.ExceptionHelpers.AttachRestrictedErrorInfo(_completedOperation.ErrorCode)).Throw();
+            WinRtIOHelper.NativeExceptionToIOExceptionInfo(RestrictedErrorInfo.AttachErrorInfo(_completedOperation.ErrorCode)).Throw();
         }
     }  // class StreamOperationAsyncResult
 

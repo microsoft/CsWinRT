@@ -65,7 +65,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
 
             // This is unlikely to fail, since we'd only get here with an object that passed a cast to the interface type
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 // Helper to throw the exception without increasing the codegen in the fast path.
                 // The JIT can already optimize throw helpers, but that's only when they contain
@@ -109,7 +109,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
 
             // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
             // or something else happened that is not really supported). Still, we can produce a nice error message for it.
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 // Same exception logic as above, see notes there
                 [StackTraceHidden]

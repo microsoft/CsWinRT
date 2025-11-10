@@ -194,7 +194,7 @@ namespace System.IO
             if (str == null)
             {
                 ObjectDisposedException ex = new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
-                ex.SetHResult(RO_E_CLOSED);
+                ex.HResult = RO_E_CLOSED;
                 throw ex;
             }
 
@@ -224,9 +224,7 @@ namespace System.IO
 
         #region IInputStream public interface
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
         {
             if (buffer == null)
@@ -238,14 +236,14 @@ namespace System.IO
             if (count < 0 || int.MaxValue < count)
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(count));
-                ex.SetHResult(E_INVALIDARG);
+                ex.HResult = E_INVALIDARG;
                 throw ex;
             }
 
             if (buffer.Capacity < count)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
-                ex.SetHResult(E_INVALIDARG);
+                ex.HResult = E_INVALIDARG;
                 throw ex;
             }
 
@@ -253,7 +251,7 @@ namespace System.IO
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options),
                                                                                  global::Windows.Storage.Streams.SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
-                ex.SetHResult(E_INVALIDARG);
+                ex.HResult = E_INVALIDARG;
                 throw ex;
             }
 
@@ -289,9 +287,7 @@ namespace System.IO
 
         #region IOutputStream public interface
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public IAsyncOperationWithProgress<uint, uint> WriteAsync(IBuffer buffer)
         {
             if (buffer == null)
@@ -303,7 +299,7 @@ namespace System.IO
             if (buffer.Capacity < buffer.Length)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
-                ex.SetHResult(E_INVALIDARG);
+                ex.HResult = E_INVALIDARG;
                 throw ex;
             }
 
@@ -311,9 +307,7 @@ namespace System.IO
             return StreamOperationsImplementation.WriteAsync_AbstractStream(str, buffer);
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public IAsyncOperation<bool> FlushAsync()
         {
             Stream str = EnsureNotDisposed();
@@ -333,7 +327,7 @@ namespace System.IO
             if (position > long.MaxValue)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
-                ex.SetHResult(E_INVALIDARG);
+                ex.HResult = E_INVALIDARG;
                 throw ex;
             }
 
@@ -391,7 +385,7 @@ namespace System.IO
                 if (value > long.MaxValue)
                 {
                     ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSetSizeBeyondInt64MaxValue);
-                    ex.SetHResult(E_INVALIDARG);
+                    ex.HResult = E_INVALIDARG;
                     throw ex;
                 }
 
@@ -400,7 +394,7 @@ namespace System.IO
                 if (!str.CanWrite)
                 {
                     InvalidOperationException ex = new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
-                    ex.SetHResult(E_ILLEGAL_METHOD_CALL);
+                    ex.HResult = E_ILLEGAL_METHOD_CALL;
                     throw ex;
                 }
 
@@ -428,7 +422,7 @@ namespace System.IO
         private static void ThrowCloningNotSupported(string methodName)
         {
             NotSupportedException nse = new NotSupportedException(string.Format(global::Windows.Storage.Streams.SR.NotSupported_CloningNotSupported, methodName));
-            nse.SetHResult(E_NOTIMPL);
+            nse.HResult = E_NOTIMPL;
             throw nse;
         }
 

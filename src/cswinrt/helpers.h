@@ -133,6 +133,11 @@ namespace cswinrt
         throw_invalid("Invoke method not found");
     }
 
+    bool is_projected_as_nullable(TypeDef const& type)
+    {
+        return type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1";
+    }
+
     enum class fundamental_type
     {
         Boolean,
@@ -678,6 +683,7 @@ namespace cswinrt
         std::string_view mapped_name;
         bool requires_marshaling;
         bool has_custom_members_output;
+        bool emit_abi;
     };
 
     inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
@@ -694,14 +700,12 @@ namespace cswinrt
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Microsoft.UI.Xaml",
                 {
-                    { "CornerRadius", "Microsoft.UI.Xaml", "CornerRadius" },
+                    { "CornerRadius", "Microsoft.UI.Xaml", "CornerRadius", false, false, true },
                     { "CornerRadiusHelper" },
-                    { "Duration", "Microsoft.UI.Xaml", "Duration" },
+                    { "Duration", "Microsoft.UI.Xaml", "Duration", false, false, true },
                     { "DurationHelper" },
-                    { "DurationType", "Microsoft.UI.Xaml", "DurationType" },
-                    { "GridLength", "Microsoft.UI.Xaml", "GridLength" },
+                    { "GridLength", "Microsoft.UI.Xaml", "GridLength", false, false, true },
                     { "GridLengthHelper" },
-                    { "GridUnitType", "Microsoft.UI.Xaml", "GridUnitType" },
                     { "ICornerRadiusHelper" },
                     { "ICornerRadiusHelperStatics" },
                     { "IDurationHelper" },
@@ -710,14 +714,12 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "Thickness", "Microsoft.UI.Xaml", "Thickness" },
                     { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
                 {
-                    { "GeneratorPosition", "Microsoft.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
                     { "GeneratorPositionHelper" },
                     { "IGeneratorPositionHelper" },
                     { "IGeneratorPositionHelperStatics" },
@@ -751,7 +753,6 @@ namespace cswinrt
                 {
                     { "IMatrixHelper" },
                     { "IMatrixHelperStatics" },
-                    { "Matrix", "Microsoft.UI.Xaml.Media", "Matrix" },
                     { "MatrixHelper" },
                 }
             },
@@ -761,18 +762,17 @@ namespace cswinrt
                     { "IKeyTimeHelperStatics" },
                     { "IRepeatBehaviorHelper" },
                     { "IRepeatBehaviorHelperStatics" },
-                    { "KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime", false, false, true },
                     { "KeyTimeHelper" },
-                    { "RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior", false, false, true },
                     { "RepeatBehaviorHelper" },
-                    { "RepeatBehaviorType", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
                 }
             },
             { "Microsoft.UI.Xaml.Media.Media3D",
                 {
                     { "IMatrix3DHelper" },
                     { "IMatrix3DHelperStatics" },
-                    { "Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D", false, false, true },
                     { "Matrix3DHelper" },
                 }
             },
@@ -784,29 +784,37 @@ namespace cswinrt
             },
             { "Windows.Foundation",
                 {
+                    { "AsyncActionCompletedHandler", "Windows.Foundation", "AsyncActionCompletedHandler" },
+                    { "AsyncStatus", "Windows.Foundation", "AsyncStatus" },
                     { "DateTime", "System", "DateTimeOffset", true },
-                    { "EventHandler`1", "System", "EventHandler", false },
+                    { "EventHandler`1", "System", "EventHandler`1", false },
                     { "EventRegistrationToken", "WindowsRuntime.InteropServices", "EventRegistrationToken", false },
                     { "FoundationContract", "Windows.Foundation", "FoundationContract"},
                     { "HResult", "System", "Exception", true },
+                    { "IAsyncAction", "Windows.Foundation", "IAsyncAction" },
+                    { "IAsyncInfo", "Windows.Foundation", "IAsyncInfo" },
                     { "IClosable", "System", "IDisposable", true, true },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
-                    { "IReference`1", "System", "Nullable", true },
+                    { "IReference`1", "System", "Nullable`1", true },
                     { "Point", "Windows.Foundation", "Point" },
+                    { "PropertyType", "Windows.Foundation", "PropertyType" },
                     { "Rect", "Windows.Foundation", "Rect" },
                     { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
+                    { "TypedEventHandler`2", "System", "EventHandler`2", false },
                     { "Uri", "System", "Uri", true }
                 }
             },
             { "Windows.Foundation.Collections",
                 {
+                    { "CollectionChange", "Windows.Foundation.Collections", "CollectionChange" },
                     { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true },
                     { "IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true },
                     { "IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true },
                     { "IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true },
                     { "IMap`2", "System.Collections.Generic", "IDictionary`2", true, true },
+                    { "IVectorChangedEventArgs", "Windows.Foundation.Collections", "IVectorChangedEventArgs" },
                     { "IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true },
                     { "IVector`1", "System.Collections.Generic", "IList`1", true, true },
                 }
@@ -829,21 +837,14 @@ namespace cswinrt
                     { "Vector4", "System.Numerics", "Vector4" },
                 }
             },
-            { "Windows.UI",
-                {
-                    { "Color", "Windows.UI", "Color" },
-                }
-            },
             { "Windows.UI.Xaml",
                 {
-                    { "CornerRadius", "Windows.UI.Xaml", "CornerRadius" },
+                    { "CornerRadius", "Windows.UI.Xaml", "CornerRadius", false, false, true },
                     { "CornerRadiusHelper" },
-                    { "Duration", "Windows.UI.Xaml", "Duration" },
+                    { "Duration", "Windows.UI.Xaml", "Duration", false, false, true },
                     { "DurationHelper" },
-                    { "DurationType", "Windows.UI.Xaml", "DurationType" },
-                    { "GridLength", "Windows.UI.Xaml", "GridLength" },
+                    { "GridLength", "Windows.UI.Xaml", "GridLength", false, false, true },
                     { "GridLengthHelper" },
-                    { "GridUnitType", "Windows.UI.Xaml", "GridUnitType" },
                     { "ICornerRadiusHelper" },
                     { "ICornerRadiusHelperStatics" },
                     { "IDurationHelper" },
@@ -852,14 +853,12 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "Thickness", "Windows.UI.Xaml", "Thickness" },
                     { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
                 }
             },
             { "Windows.UI.Xaml.Controls.Primitives",
                 {
-                    { "GeneratorPosition", "Windows.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
                     { "GeneratorPositionHelper" },
                     { "IGeneratorPositionHelper" },
                     { "IGeneratorPositionHelperStatics" },
@@ -895,7 +894,6 @@ namespace cswinrt
                 {
                     { "IMatrixHelper" },
                     { "IMatrixHelperStatics" },
-                    { "Matrix", "Windows.UI.Xaml.Media", "Matrix" },
                     { "MatrixHelper" },
                 }
             },
@@ -905,18 +903,17 @@ namespace cswinrt
                     { "IKeyTimeHelperStatics" },
                     { "IRepeatBehaviorHelper" },
                     { "IRepeatBehaviorHelperStatics" },
-                    { "KeyTime", "Windows.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTime", "Windows.UI.Xaml.Media.Animation", "KeyTime", false, false, true },
                     { "KeyTimeHelper" },
-                    { "RepeatBehavior", "Windows.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehavior", "Windows.UI.Xaml.Media.Animation", "RepeatBehavior", false, false, true },
                     { "RepeatBehaviorHelper" },
-                    { "RepeatBehaviorType", "Windows.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
                 }
             },
             { "Windows.UI.Xaml.Media.Media3D",
                 {
                     { "IMatrix3DHelper" },
                     { "IMatrix3DHelperStatics" },
-                    { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D", false, false, true },
                     { "Matrix3DHelper" },
                 }
             },
@@ -1189,6 +1186,83 @@ namespace cswinrt
         return versionItr->platform_version;
     }
 
+    bool has_addition_to_type(TypeDef const& type)
+    {
+        static const struct
+        {
+            std::string_view name_space;
+            std::vector<std::string_view> types;
+        } addition_types[] =
+        {
+            { "Microsoft.UI.Xaml",
+                {
+                    "Thickness"
+                }
+            },
+            { "Microsoft.UI.Xaml.Controls.Primitives",
+                {
+                    "GeneratorPosition"
+                }
+            },
+            { "Microsoft.UI.Xaml.Media",
+                {
+                    "Matrix"
+                }
+            },
+            { "Microsoft.UI.Xaml.Media.Animation",
+                {
+                    "KeyTime"
+                }
+            },
+            { "Windows.UI",
+                {
+                    "Color",
+                }
+            },
+            { "Windows.UI.Xaml",
+                {
+                    "Thickness"
+                }
+            },
+            { "Windows.UI.Xaml.Controls.Primitives",
+                {
+                    "GeneratorPosition"
+                }
+            },
+            { "Windows.UI.Xaml.Media",
+                {
+                    "Matrix"
+                }
+            },
+            { "Windows.UI.Xaml.Media.Animation",
+                {
+                    "KeyTime"
+                }
+            },
+        };
+
+        auto nsItr = std::lower_bound(std::begin(addition_types), std::end(addition_types), type.TypeNamespace(), [](auto&& v, std::string_view ns)
+        {
+            return v.name_space < ns;
+        });
+
+        if ((nsItr == std::end(addition_types)) || (nsItr->name_space != type.TypeNamespace()))
+        {
+            return false;
+        }
+
+        auto nameItr = std::lower_bound(nsItr->types.begin(), nsItr->types.end(), type.TypeName(), [](auto&& v, std::string_view name)
+        {
+            return v < name;
+        });
+        if ((nameItr == nsItr->types.end()) || (*nameItr != type.TypeName()))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     enum class typedef_name_type
     {
         Projected,
@@ -1196,7 +1270,10 @@ namespace cswinrt
         ABI,
         NonProjected,
         StaticAbiClass,
-        EventSource
+        EventSource,
+        // Used only with interop dll name
+        Marshaller,
+        ArrayMarshaller
     };
 
     std::string get_mapped_element_type(ElementType elementType)

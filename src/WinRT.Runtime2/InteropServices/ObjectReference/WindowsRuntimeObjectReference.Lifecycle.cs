@@ -292,7 +292,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 
-        if (referenceTrackerPtr != null)
+        if (referenceTrackerPtr is not null)
         {
             _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTrackerPtr);
         }
@@ -358,7 +358,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 
-        if (referenceTrackerPtr != null)
+        if (referenceTrackerPtr is not null)
         {
             _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
         }
@@ -376,7 +376,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 
-        if (referenceTrackerPtr != null)
+        if (referenceTrackerPtr is not null)
         {
             // Unless we want to prevent the release from the tracker source (used in some XAML scenarios),
             // here we're releasing the reference from the tracker source for a second time, other than the

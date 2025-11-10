@@ -120,7 +120,7 @@ public static unsafe class IAsyncActionMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 
