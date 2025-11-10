@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -69,5 +70,41 @@ internal static class WellKnownInterfaceIIDs
         return interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(
             memberName: $"get_IID_{nameSuffix}",
             signature: MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences)));
+    }
+
+    public static Guid get_GUID(
+        TypeSignature signature,
+        bool useWindowsUIXamlProjections,
+        InteropReferences interopReferences)
+    {
+        if (signature is GenericInstanceTypeSignature genericSignature)
+        {
+            return genericSignature switch
+            {
+                // Shared types
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler)
+                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler1)
+                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler2)
+                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                _ => Guid.Empty
+            };
+        }
+        // TODO: remove this once comparisons work fine without it
+        ITypeDefOrRef interfaceTypeRef = signature.ToTypeDefOrRef();
+
+        // Get the name for the right IID property from 'WinRT.Runtime.dll'
+        return signature switch
+        {
+            // Shared types
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler)
+                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler1)
+                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler2)
+                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+            _ => Guid.Empty
+        };
     }
 }

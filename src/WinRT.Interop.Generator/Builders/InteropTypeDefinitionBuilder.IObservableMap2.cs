@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(mapType), // TODO
+                iid: GuidGenerator.CreateIID(mapType, interopReferences), // TODO
                 out get_IidMethod);
         }
 

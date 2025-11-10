@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType), // TODO
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences), // TODO
                 out get_IidMethod);
 
             // 'IReference<T>' IID
@@ -54,7 +54,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType), // TODO
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences), // TODO
                 out get_ReferenceIidMethod);
         }
 

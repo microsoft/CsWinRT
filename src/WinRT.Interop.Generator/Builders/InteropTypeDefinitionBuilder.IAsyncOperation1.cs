@@ -40,7 +40,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(operationType), // TODO
+                iid: GuidGenerator.CreateIID(operationType, interopReferences), // TODO
                 out get_IidMethod);
         }
 

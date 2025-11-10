@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(vectorType), // TODO
+                iid: GuidGenerator.CreateIID(vectorType, interopReferences), // TODO
                 out get_IidMethod);
         }
 
