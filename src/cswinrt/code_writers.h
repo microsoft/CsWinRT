@@ -8972,7 +8972,7 @@ file abstract unsafe class %ComWrappersCallback : IWindowsRuntimeObjectComWrappe
 }
 )",
             type.TypeName(),
-            bind<write_iid_reference_guid>(type),
+            bind<write_iid_guid>(type),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             type.TypeName()
         );
@@ -8998,9 +8998,20 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
         return (ComInterfaceEntry*)Unsafe.AsPointer(in %InterfaceEntriesImpl.Entries);
     }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<%ComWrappersCallback>(value, in %)!;
+    }
 }
 
-)", name, name);
+)", 
+    name,
+    name,
+    name,
+    bind<write_iid_reference_guid>(type));
     }
 
     void write_delegate_marshaller(writer& w, TypeDef const& type)
@@ -9029,7 +9040,7 @@ public static unsafe class %Marshaller
 )",
             type.TypeName(),
             projected_type,
-            bind<write_iid_reference_guid>(type),
+            bind<write_iid_guid>(type),
             projected_type,
             projected_type,
             type.TypeName()

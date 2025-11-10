@@ -374,7 +374,7 @@ internal static partial class InteropTypeDefinitionBuilder
         //
         // [FixedAddressValueType]
         // private static readonly <VTABLE_TYPE> Vftbl;
-        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToValueTypeSignature())
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private | FieldAttributes.Static, vftblType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };

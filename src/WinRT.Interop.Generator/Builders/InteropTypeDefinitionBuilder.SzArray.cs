@@ -426,9 +426,7 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             // Add and implement the 'GetOrCreateComInterfaceForObject' method
-            marshallerType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject.Import(module),
-                method: getOrCreateComInterfaceForObjectMethod);
+            marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -452,9 +450,7 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             // Add and implement the 'ComputeVtables' method
-            marshallerType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-                method: computeVtablesMethod);
+            marshallerType.Methods.Add(computeVtablesMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the array
             IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor = interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
@@ -490,9 +486,7 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             // Add and implement the 'CreateObject' method
-            marshallerType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-                method: createObjectMethod);
+            marshallerType.Methods.Add(createObjectMethod);
         }
 
         /// <summary>
