@@ -27,40 +27,37 @@ internal static class WellKnownInterfaceIIDs
     /// The types handled by this method should be kept in sync with <see cref="WindowsRuntimeExtensions.IsCustomMappedWindowsRuntimeNonGenericInterfaceType"/>.
     /// </remarks>
     public static MemberReference get_IID(
-        TypeSignature interfaceType,
+        ITypeDescriptor interfaceType,
         bool useWindowsUIXamlProjections,
         InteropReferences interopReferences)
     {
-        // TODO: remove this once comparisons work fine without it
-        ITypeDefOrRef interfaceTypeRef = interfaceType.ToTypeDefOrRef();
-
         // Get the name for the right IID property from 'WinRT.Runtime.dll'
         string nameSuffix = interfaceType switch
         {
             // Shared types
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.IDisposable)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
                 => "Windows_Foundation_IClosable",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.IServiceProvider)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IServiceProvider)
                 => "Microsoft_UI_Xaml_IXamlServiceProvider",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.IAsyncInfo)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncInfo)
                => "Windows_Foundation_IAsyncInfo",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.IAsyncAction)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncAction)
                 => "Windows_Foundation_IAsyncAction",
 
             // XAML types
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
                 => "Windows_UI_Xaml_Interop_INotifyCollectionChanged",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.INotifyCollectionChanged)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged)
                 => "Microsoft_UI_Xaml_Interop_INotifyCollectionChanged",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.INotifyPropertyChanged) && useWindowsUIXamlProjections
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyPropertyChanged) && useWindowsUIXamlProjections
                 => "Windows_UI_Xaml_Data_INotifyPropertyChanged",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.INotifyPropertyChanged)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyPropertyChanged)
                 => "Microsoft_UI_Xaml_Data_INotifyPropertyChanged",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.ICommand) && useWindowsUIXamlProjections
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.ICommand) && useWindowsUIXamlProjections
                 => "Windows_UI_Xaml_Input_ICommand",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.ICommand)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.ICommand)
                 => "Microsoft_UI_Xaml_Input_ICommand",
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.INotifyDataErrorInfo)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyDataErrorInfo)
                 => "Microsoft_UI_Xaml_Data_INotifyDataErrorInfo",
             _ => throw WellKnownInteropExceptions.InvalidCustomMappedTypeForWellKnownInterfaceIIDs(interfaceType)
         };

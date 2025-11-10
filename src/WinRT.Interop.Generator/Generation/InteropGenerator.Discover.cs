@@ -349,14 +349,6 @@ internal partial class InteropGenerator
 
                     continue;
                 }
-
-                // Also track all user-defined types that should be exposed to Windows Runtime
-                if (typeDefinition.IsPossiblyWindowsRuntimeExposedType &&
-                    !typeDefinition.IsProjectedWindowsRuntimeType &&
-                    !typeDefinition.IsWindowsRuntimeManagedOnlyType(interopReferences))
-                {
-                    // TODO
-                }
             }
         }
         catch (Exception e) when (!e.IsWellKnown)

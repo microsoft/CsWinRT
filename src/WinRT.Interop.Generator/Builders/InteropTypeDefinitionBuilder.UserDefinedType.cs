@@ -118,13 +118,13 @@ internal partial class InteropTypeDefinitionBuilder
                     {
                         // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types. In this
                         // case, the marshalling code will just be in the declaring assembly of each of these projected interface types.
-                        TypeReference ImplTypeReference = interfaceType.Module!.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
+                        TypeReference ImplTypeReference = interfaceType.DeclaringModule!.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
                         MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
 
                         // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the containing assembly
                         string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";
                         TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
-                        TypeReference interfaceIIDsTypeReference = interfaceType.Module!.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
+                        TypeReference interfaceIIDsTypeReference = interfaceType.DeclaringModule!.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
                         MemberReference get_IIDMethod = interfaceIIDsTypeReference.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
                         // Add the entry from the ABI type in the same declaring assembly

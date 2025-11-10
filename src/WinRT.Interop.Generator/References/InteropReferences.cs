@@ -1752,18 +1752,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
-    /// <param name="module">The optional <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition? module = null)
+    /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
+    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
     {
-        // Optionally import the signature, if needed (if required to properly resolve it)
-        if (module is not null)
-        {
-            // TODO: use new 'Resolve' overload in beta 5
-            delegateType = delegateType.Import(module);
-        }
-
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-        MethodDefinition invokeMethod = delegateType.Resolve()!.GetMethod("Invoke"u8);
+        MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
 
         // Construct the generic signature for the method with the context of the input delegate.
         // We can use this to get all the parameters, which might be any combination of explicitly
