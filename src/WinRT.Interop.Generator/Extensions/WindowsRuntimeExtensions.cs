@@ -196,16 +196,12 @@ internal static class WindowsRuntimeExtensions
 
         public Utf8String? GetWindowsRuntimeMetadataName()
         {
-            if (signature is GenericInstanceTypeSignature genericSignature)
+            return signature switch
             {
-                return genericSignature.GenericType.Resolve()?.GetWindowsRuntimeMetadataName();
-            }
-            else if (signature is ArrayTypeSignature arraySignature)
-            {
-                return arraySignature.BaseType.GetWindowsRuntimeMetadataName();
-            }
-
-            return signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName();
+                GenericInstanceTypeSignature generic => generic.GenericType.Resolve()?.GetWindowsRuntimeMetadataName(),
+                ArrayTypeSignature array => array.BaseType.GetWindowsRuntimeMetadataName(),
+                _ => signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName()
+            };
         }
     }
 
