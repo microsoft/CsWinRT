@@ -11,9 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the observable map.</typeparam>
 /// <typeparam name="TValue">The type of values in the observable map.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -27,5 +24,5 @@ public interface IObservableMapMethodsImpl<TKey, TValue>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The <see cref="EventSource{T}"/> instance associated with <see cref="Windows.Foundation.Collections.IObservableMap{K, V}.MapChanged"/>.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablemap-2.mapchanged"/>
-    static abstract MapChangedEventHandlerEventSource<TKey, TValue> MapChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference);
+    static abstract global::ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> MapChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference);
 }

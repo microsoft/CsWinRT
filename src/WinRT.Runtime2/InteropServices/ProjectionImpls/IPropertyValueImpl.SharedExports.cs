@@ -20,7 +20,7 @@ public unsafe partial class IPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     internal static HRESULT get_IsNumericScalarTrue(void* thisPtr, bool* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -37,7 +37,7 @@ public unsafe partial class IPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     internal static HRESULT get_IsNumericScalarFalse(void* thisPtr, bool* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -54,7 +54,7 @@ public unsafe partial class IPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     internal static HRESULT ThrowStubForGetOverloads(void* thisPtr, void* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -76,7 +76,7 @@ public unsafe partial class IPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     internal static HRESULT ThrowStubForGetArrayOverloads(void* thisPtr, int* size, void** value)
     {
-        if (size == null || value == null)
+        if (size is null || value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }

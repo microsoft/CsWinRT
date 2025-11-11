@@ -18,15 +18,6 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class IAgileObjectImpl
 {
     /// <summary>
-    /// Gets the IID for the <c>IAgileObject</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAgileObject;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IAgileObject</c> implementation.
     /// </summary>
     public static nint Vtable

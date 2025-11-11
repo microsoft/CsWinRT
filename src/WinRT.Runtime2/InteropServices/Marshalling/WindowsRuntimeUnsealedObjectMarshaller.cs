@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -31,9 +30,9 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
         }
 
         // Unwrap CCWs we recognize (same as with opaque objects)
-        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the value with the supplied callback for unsealed types (or interfaces)

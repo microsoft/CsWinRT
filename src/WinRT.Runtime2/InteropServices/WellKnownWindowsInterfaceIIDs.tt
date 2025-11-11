@@ -1,0 +1,175 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".g.cs"#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>IIDs for common COM/WinRT interfaces from the Windows SDK.</summary>
+internal static class WellKnownWindowsInterfaceIIDs
+{
+<#
+var entries = new (string Name, string IID)[]
+{
+    ("IUnknown", "00000000-0000-0000-C000-000000000046"),
+    ("IInspectable", "AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90"),
+    ("IWeakReference", "00000037-0000-0000-C000-000000000046"),
+    ("IWeakReferenceSource", "00000038-0000-0000-C000-000000000046"),
+    ("IReferenceTracker", "11D3B13A-180E-4789-A8BE-7712882893E6"),
+    ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21"),
+    ("IActivationFactory", "00000035-0000-0000-C000-000000000046"),
+    ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90"),
+    ("IMarshal", "00000003-0000-0000-C000-000000000046"),
+    ("IBuffer", "905A0FE0-BC53-11DF-8C49-001E4FC686DA"),
+    ("IBufferByteAccess", "905A0FEF-BC53-11DF-8C49-001E4FC686DA"),
+    ("IMemoryBufferByteAccess", "5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D"),
+    ("IContextCallback", "000001DA-0000-0000-C000-000000000046"),
+    ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57"),
+    ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119"),
+    ("ISupportErrorInfo", "DF0B3D60-548F-101B-8E65-08002B2BD119"),
+    ("ILanguageExceptionErrorInfo", "04A2DBF3-DF83-116C-0946-0812ABF6E07D"),
+    ("ILanguageExceptionErrorInfo2", "5746E5C4-5B97-424C-B620-2822915734DD"),
+    ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E"),
+    ("IAsyncInfo", "00000036-0000-0000-C000-000000000046"),
+    ("IAsyncAction", "5A648006-843A-4DA9-865B-9D26E5DFAD7B"),
+    ("AsyncActionCompletedHandler", "A4ED5C81-76C9-40BD-8BE6-B1D90FB20AE7"),
+    ("IVectorChangedEventArgs", "575933DF-34FE-4480-AF15-07691F3D5D9B"),
+    ("MUX_INotifyPropertyChanged", "90B17601-B065-586E-83D9-9ADC3A695284"),
+    ("WUX_INotifyPropertyChanged", "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA"),
+    ("MUX_INotifyCollectionChanged", "530155E1-28A5-5693-87CE-30724D95A06D"),
+    ("WUX_INotifyCollectionChanged", "28B167D5-1A31-465B-9B25-D5C3AE686C40"),
+    ("MUX_INotifyCollectionChangedEventArgsFactory", "5108EBA4-4892-5A20-8374-A96815E0FD27"),
+    ("WUX_INotifyCollectionChangedEventArgsFactory", "B30C3E3A-DF8D-44A5-9A38-7AC0D08CE63D"),
+    ("MUX_INotifyCollectionChangedEventArgs", "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F"),
+    ("WUX_INotifyCollectionChangedEventArgs", "4CF68D33-E3F2-4964-B85E-945B4F7E2F21"),
+    ("MUX_NotifyCollectionChangedEventHandler", "8B0909DC-2005-5D93-BF8A-725F017BAA8D"),
+    ("WUX_NotifyCollectionChangedEventHandler", "CA10B37C-F382-4591-8557-5E24965279B0"),
+    ("MUX_PropertyChangedEventArgs", "63D0C952-396B-54F4-AF8C-BA8724A427BF"),
+    ("WUX_PropertyChangedEventArgs", "4F33A9A0-5CF4-47A4-B16F-D7FAAF17457E"),
+    ("MUX_PropertyChangedEventArgsRuntimeClassFactory", "7C0C27A8-0B41-5070-B160-FC9AE960A36C"),
+    ("WUX_PropertyChangedEventArgsRuntimeClassFactory", "6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C"),
+    ("MUX_PropertyChangedEventHandler", "E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D"),
+    ("WUX_PropertyChangedEventHandler", "50F19C16-0A22-4D8E-A089-1EA9951657D2"),
+    ("DataErrorsChangedEventArgs", "D026DD64-5F26-5F15-A86A-0DEC8A431796"),
+    ("DataErrorsChangedEventArgsRuntimeClassFactory", "62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5"),
+    ("UriRuntimeClass", "9E365E57-48B2-4160-956F-C7385120BBFC"),
+    ("UriRuntimeClassFactory", "44A9796F-723E-4FDF-A218-033E75B0C084"),
+    ("INotifyDataErrorInfo", "0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA"),
+    ("ICommand", "E5AF3542-CA67-4081-995B-709DD13792DF"),
+    ("IGlobalInterfaceTable", "00000146-0000-0000-C000-000000000046"),
+    ("EventHandler", "C50898F6-C536-5F47-8583-8B2C2438A13B"),
+    ("IBindableIterable", "036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),
+    ("IBindableIterator", "6A1D6C07-076D-49F2-8314-F52C9C9A8331"),
+    ("IBindableVector", "393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
+    ("IBindableVectorView", "346DD6E7-976E-4BC3-815D-ECE243BC0F33"),
+    ("ICustomProperty", "30DA92C0-23E8-42A0-AE7C-734A0E5D2782"),
+    ("ICustomPropertyProvider", "7C925755-3E48-42B4-8677-76372267033F"),
+    ("IPropertyValue", "4BD682DD-7554-40E9-9A9B-82654EDE7E62"),
+    ("IClosable", "30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
+    ("IStringable", "96369F54-8EB6-48F0-ABCE-C1B211E627C3"),
+    ("IXamlServiceProvider", "68B3A2DF-8173-539F-B524-C8A2348F5AFB"),
+    ("IReferenceOfByte", "E5198CC8-2873-55F5-B0A1-84FF9E4AAD62"),
+    ("IReferenceOfSByte", "95500129-FBF6-5AFC-89DF-70642D741990"),
+    ("IReferenceOfShort", "6EC9E41B-6709-5647-9918-A1270110FC4E"),
+    ("IReferenceOfUShort", "5AB7D2C3-6B62-5E71-A4B6-2D49C4F238FD"),
+    ("IReferenceOfInt", "548CEFBD-BC8A-5FA0-8DF2-957440FC8BF4"),
+    ("IReferenceOfUInt", "513EF3AF-E784-5325-A91E-97C2B8111CF3"),
+    ("IReferenceOfLong", "4DDA9E24-E69F-5C6A-A0A6-93427365AF2A"),
+    ("IReferenceOfULong", "6755E376-53BB-568B-A11D-17239868309E"),
+    ("IReferenceOfFloat", "719CC2BA-3E76-5DEF-9F1A-38D85A145EA8"),
+    ("IReferenceOfDouble", "2F2D6C29-5473-5F3E-92E7-96572BB990E2"),
+    ("IReferenceOfChar", "FB393EF3-BBAC-5BD5-9144-84F23576F415"),
+    ("IReferenceOfBool", "3C00FD60-2950-5939-A21A-2D12C5A01B8A"),
+    ("IReferenceOfGuid", "7D50F649-632C-51F9-849A-EE49428933EA"),
+    ("IReferenceOfDateTimeOffset", "5541D8A7-497C-5AA4-86FC-7713ADBF2A2C"),
+    ("IReferenceOfTimeSpan", "604D0C4C-91DE-5C2A-935F-362F13EAF800"),
+    ("IReferenceOfObject", "06DCCC90-A058-5C88-87B7-6F3360A2FC16"),
+    ("IReferenceOfType", "3830AD99-D8DA-53F3-989B-FC92AD222778"),
+    ("IReferenceOfException", "6FF27A1E-4B6A-59B7-B2C3-D1F2EE474593"),
+    ("IReferenceOfEventHandler", "25230F05-B49C-57EE-8961-5373D98E1AB1"),
+    ("IReferenceOfString", "FD416DFB-2A07-52EB-AAE3-DFCE14116C05"),
+    ("IReferenceOfPoint", "84F14C22-A00A-5272-8D3D-82112E66DF00"),
+    ("IReferenceOfSize", "61723086-8E53-5276-9F36-2A4BB93E2B75"),
+    ("IReferenceOfRect", "80423F11-054F-5EAC-AFD3-63B6CE15E77B"),
+    ("IReferenceOfMatrix3x2", "76358CFD-2CBD-525B-A49E-90EE18247B71"),
+    ("IReferenceOfMatrix4x4", "DACBFFDC-68EF-5FD0-B657-782D0AC9807E"),
+    ("IReferenceOfPlane", "46D542A1-52F7-58E7-ACFC-9A6D364DA022"),
+    ("IReferenceOfQuaternion", "B27004BB-C014-5DCE-9A21-799C5A3C1461"),
+    ("IReferenceOfVector2", "48F6A69E-8465-57AE-9400-9764087F65AD"),
+    ("IReferenceOfVector3", "1EE770FF-C954-59CA-A754-6199A9BE282C"),
+    ("IReferenceOfVector4", "A5E843C9-ED20-5339-8F8D-9FE404CF3654"),
+    ("IReferenceOfEventRegistrationToken", "A9B18291-CE2A-5DAE-8A23-B7F7388416DB"),
+    ("IReferenceOfCollectionChange", "25BCAF91-880D-537D-82FC-9BBF0CACCB8B"),
+    ("IReferenceOfAsyncActionCompletedHandler", "F31DBB29-606D-5A89-A23A-C09AB9605B8F"),
+    ("IReferenceArrayOfInt32", "A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7"),
+    ("IReferenceArrayOfString", "0385688E-E3C7-5C5E-A389-5524EDE349F1"),
+    ("IReferenceArrayOfByte", "2AF22683-3734-56D0-A60E-688CC85D1619"),
+    ("IReferenceArrayOfInt16", "912F8FD7-ADC0-5D60-A896-7ED76089CC5B"),
+    ("IReferenceArrayOfUInt16", "6624A2DD-83F7-519C-9D55-BB1F6560456B"),
+    ("IReferenceArrayOfUInt32", "97374B68-EB87-56CC-B18E-27EF0F9CFC0C"),
+    ("IReferenceArrayOfInt64", "6E333271-2E2A-5955-8790-836C76EE53B6"),
+    ("IReferenceArrayOfUInt64", "38B60434-D67C-523E-9D0E-24D643411073"),
+    ("IReferenceArrayOfSingle", "6AB1EA83-CB41-5F99-92CC-23BD4336A1FB"),
+    ("IReferenceArrayOfDouble", "D301F253-E0A3-5D2B-9A41-A4D62BEC4623"),
+    ("IReferenceArrayOfChar", "A4095AAB-EB7D-5782-8FAD-1609DEA249AD"),
+    ("IReferenceArrayOfBoolean", "E8E72666-48CC-593F-BA85-2663496956E3"),
+    ("IReferenceArrayOfGuid", "EECF9838-C1C2-5B4A-976F-CEC261AE1D55"),
+    ("IReferenceArrayOfDateTimeOffset", "1B8E9594-588E-5A07-9E65-0731A4C9A2DB"),
+    ("IReferenceArrayOfTimeSpan", "AD73197D-2CFA-57A6-8993-9FAC40FEB791"),
+    ("IReferenceArrayOfObject", "9CD7A84F-0C80-59C5-B44E-977841BB43D9"),
+    ("IReferenceArrayOfType", "DA8457A7-C2EB-5DA1-80BE-7132A2E1BFA4"),
+    ("IReferenceArrayOfMatrix3x2", "A525D9FF-C09B-501A-A785-4D1ED9E102B8"),
+    ("IReferenceArrayOfMatrix4x4", "FC0D5A15-8F9D-5E8F-8828-AEF2C2E25BAD"),
+    ("IReferenceArrayOfPlane", "F9CF7F7D-5459-5F98-91B9-F2632A9EC298"),
+    ("IReferenceArrayOfQuaternion", "E9BA76BE-2C31-5E1D-98A4-EBDB625AEE93"),
+    ("IReferenceArrayOfVector2", "29DF2178-FFDB-563E-88DB-3869A007305E"),
+    ("IReferenceArrayOfVector3", "AA1A35FA-0B4E-5248-BD79-FFD47CFE4027"),
+    ("IReferenceArrayOfVector4", "68757250-5849-5772-90E3-AADB4C970BFF"),
+    ("IReferenceArrayOfException", "401AE4CC-4AB9-5A8F-B993-E327900C364D"),
+    ("MUX_IReferenceOfPropertyChangedEventHandler", "1EEAE0CB-8F57-5C37-A087-A55d46E2FE3F"),
+    ("WUX_IReferenceOfPropertyChangedEventHandler", "B1A920A9-C2F2-5453-A53E-66B1294A8BFE"),
+    ("MUX_IReferenceOfNotifyCollectionChangedEventHandler", "779D5A21-0E7d-5476-BB90-27FA3B4B8DE5"),
+    ("WUX_IReferenceOfNotifyCollectionChangedEventHandler", "A4FD5C6E-6549-59A9-86EF-5A490A1875D9")
+};
+
+for (int i = 0; i < entries.Length; i++)
+{
+    if (i > 0) WriteLine("");
+
+    var bytes = new Guid(entries[i].IID).ToByteArray();
+    var hex = bytes.Select(b => $"0x{b.ToString("X2").ToUpperInvariant()}").ToArray();
+#>
+    /// <summary>The IID for <c><#=entries[i].Name#></c> (<#=entries[i].IID#>).</summary>
+    public static ref readonly Guid IID_<#=entries[i].Name#>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                <#=hex[0]#>, <#=hex[1]#>, <#=hex[2]#>, <#=hex[3]#>,
+                <#=hex[4]#>, <#=hex[5]#>,
+                <#=hex[6]#>, <#=hex[7]#>,
+                <#=hex[8]#>,
+                <#=hex[9]#>,
+                <#=hex[10]#>,
+                <#=hex[11]#>,
+                <#=hex[12]#>,
+                <#=hex[13]#>,
+                <#=hex[14]#>,
+                <#=hex[15]#>
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+<#
+}
+#>
+}

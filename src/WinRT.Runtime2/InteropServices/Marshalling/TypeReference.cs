@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Interop;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// Represents a reference to a <see cref="System.Type"/> value, for fast marshalling to native.
+/// Represents a reference to a <see cref="Type"/> value, for fast marshalling to native.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

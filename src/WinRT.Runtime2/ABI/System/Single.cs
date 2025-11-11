@@ -43,7 +43,7 @@ public static unsafe class SingleMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(float? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfFloat);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -84,21 +84,21 @@ file static class SingleInterfaceEntriesImpl
     /// </summary>
     static SingleInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfSingle.IID = WellKnownInterfaceIds.IID_IReferenceOfFloat;
+        Entries.IReferenceOfSingle.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat;
         Entries.IReferenceOfSingle.Vtable = SingleReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = SinglePropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -127,7 +127,7 @@ internal sealed unsafe class SingleComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<float>(value, in WellKnownInterfaceIds.IID_IReferenceOfFloat);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<float>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
     }
 }
 
@@ -270,7 +270,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -284,7 +284,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetUInt8(void* thisPtr, byte* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -312,7 +312,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetInt16(void* thisPtr, short* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -340,7 +340,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetUInt16(void* thisPtr, ushort* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -368,7 +368,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetInt32(void* thisPtr, int* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -396,7 +396,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetUInt32(void* thisPtr, uint* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -424,7 +424,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetInt64(void* thisPtr, long* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -452,7 +452,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetUInt64(void* thisPtr, ulong* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -480,7 +480,7 @@ file static unsafe class SinglePropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetDouble(void* thisPtr, double* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }

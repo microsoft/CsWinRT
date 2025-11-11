@@ -11,9 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Methods for implementations of <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> types.
 /// </summary>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

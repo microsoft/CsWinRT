@@ -11,9 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

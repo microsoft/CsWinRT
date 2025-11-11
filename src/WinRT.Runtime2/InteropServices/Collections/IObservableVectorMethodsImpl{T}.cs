@@ -10,9 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <see cref="Windows.Foundation.Collections.IObservableVector{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -26,5 +23,5 @@ public interface IObservableVectorMethodsImpl<T>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The <see cref="EventSource{T}"/> instance associated with <see cref="Windows.Foundation.Collections.IObservableVector{T}.VectorChanged"/>.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1.vectorchanged"/>
-    static abstract VectorChangedEventHandlerEventSource<T> VectorChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference);
+    static abstract global::ABI.Windows.Foundation.Collections.VectorChangedEventHandlerEventSource<T> VectorChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference);
 }

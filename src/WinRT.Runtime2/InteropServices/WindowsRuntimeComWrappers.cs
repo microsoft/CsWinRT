@@ -315,7 +315,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
                 externalComObject: interfacePointer,
-                iid: in WellKnownInterfaceIds.IID_IInspectable,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
                 wrapperFlags: out wrapperFlags);
 
             // Because we created object reference for exactly 'IInspectable', we can optimize things here by pre-initializing that
@@ -339,7 +339,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // 'ComWrappers' will pass all objects that have been created so far and that are eligible for release though,
             // meaning we can very well encounter objects that we cannot unwrap and dispose manually. In those cases, we
             // are just skipping them to avoid crashing the app (there were several reports of this causing issues before).
-            if (WindowsRuntimeMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objReference))
+            if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objReference))
             {
                 objReference.Dispose();
             }

@@ -10,9 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
-/// <remarks>
-/// This type should only be used by generated code.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

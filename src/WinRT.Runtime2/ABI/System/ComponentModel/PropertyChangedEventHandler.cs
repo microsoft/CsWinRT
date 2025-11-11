@@ -13,35 +13,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
-    trimTarget: typeof(PropertyChangedEventHandler))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>",
-    target: typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
-    trimTarget: typeof(PropertyChangedEventHandler))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(PropertyChangedEventHandler),
-    typeof(ABI.System.ComponentModel.PropertyChangedEventHandler))]
-
 namespace ABI.System.ComponentModel;
 
 /// <summary>
-/// ABI type for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>")]
-[PropertyChangedEventHandlerComWrappersMarshaller]
-file static class PropertyChangedEventHandler;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// Marshaller for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -50,41 +25,37 @@ file static class PropertyChangedEventHandler;
 public static unsafe class PropertyChangedEventHandlerMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in PropertyChangedEventHandlerImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.ComponentModel.PropertyChangedEventHandler? ConvertToManaged(void* value)
+    public static PropertyChangedEventHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<global::System.ComponentModel.PropertyChangedEventHandler?>(result);
+        return (PropertyChangedEventHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in PropertyChangedEventHandlerReferenceImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
-    public static global::System.ComponentModel.PropertyChangedEventHandler? UnboxToManaged(void* value)
+    public static PropertyChangedEventHandler? UnboxToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<global::System.ComponentModel.PropertyChangedEventHandler?>(result);
+        return (PropertyChangedEventHandler?)WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
     }
 }
 
 /// <summary>
-/// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 file static unsafe class PropertyChangedEventHandlerNativeDelegate
 {
-    /// <inheritdoc cref="global::System.ComponentModel.PropertyChangedEventHandler"/>
-    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, PropertyChangedEventArgs e)
+    /// <inheritdoc cref="PropertyChangedEventHandler"/>
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, global::System.ComponentModel.PropertyChangedEventArgs e)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
@@ -102,7 +73,7 @@ file static unsafe class PropertyChangedEventHandlerNativeDelegate
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
 {
@@ -111,10 +82,10 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in PropertyChangedEventHandlerImpl.IID,
+            iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler,
             wrapperFlags: out wrapperFlags);
 
-        return new global::System.ComponentModel.PropertyChangedEventHandler(valueReference.Invoke);
+        return new PropertyChangedEventHandler(valueReference.Invoke);
     }
 }
 
@@ -140,7 +111,7 @@ file struct PropertyChangedEventHandlerInterfaceEntries
 file static class PropertyChangedEventHandlerInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="PropertyChangedEventHandlerInterfaceEntries"/> value for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+    /// The <see cref="PropertyChangedEventHandlerInterfaceEntries"/> value for <see cref="PropertyChangedEventHandler"/>.
     /// </summary>
     [FixedAddressValueType]
     public static readonly PropertyChangedEventHandlerInterfaceEntries Entries;
@@ -150,31 +121,35 @@ file static class PropertyChangedEventHandlerInterfaceEntriesImpl
     /// </summary>
     static PropertyChangedEventHandlerInterfaceEntriesImpl()
     {
-        Entries.PropertyChangedEventHandler.IID = PropertyChangedEventHandlerImpl.IID;
+        Entries.PropertyChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventHandler;
         Entries.PropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerImpl.Vtable;
-        Entries.IReferenceOfPropertyChangedEventHandler.IID = PropertyChangedEventHandlerReferenceImpl.IID;
+        Entries.IReferenceOfPropertyChangedEventHandler.IID = WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler;
         Entries.IReferenceOfPropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
-file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -195,12 +170,12 @@ file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribu
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in PropertyChangedEventHandlerReferenceImpl.IID)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfPropertyChangedEventHandler)!;
     }
 }
 
 /// <summary>
-/// Binding type for the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
+/// Binding type for the <see cref="PropertyChangedEventHandler"/> implementation.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 file unsafe struct PropertyChangedEventHandlerVftbl
@@ -212,12 +187,12 @@ file unsafe struct PropertyChangedEventHandlerVftbl
 }
 
 /// <summary>
-/// The native implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// The native implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 file static unsafe class PropertyChangedEventHandlerImpl
 {
     /// <summary>
-    /// The <see cref="PropertyChangedEventHandlerVftbl"/> value for the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
+    /// The <see cref="PropertyChangedEventHandlerVftbl"/> value for the <see cref="PropertyChangedEventHandler"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly PropertyChangedEventHandlerVftbl Vftbl;
@@ -233,18 +208,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventHandler;
-    }
-
-    /// <summary>
-    /// Gets a pointer to the <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> implementation.
+    /// Gets a pointer to the <see cref="PropertyChangedEventHandler"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -252,13 +216,13 @@ file static unsafe class PropertyChangedEventHandlerImpl
         get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
-    /// <inheritdoc cref="global::System.ComponentModel.PropertyChangedEventHandler"/>
+    /// <inheritdoc cref="PropertyChangedEventHandler"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT Invoke(void* thisPtr, void* sender, void* e)
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
@@ -274,7 +238,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
 }
 
 /// <summary>
-/// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 file unsafe struct PropertyChangedEventHandlerReferenceVftbl
@@ -289,7 +253,7 @@ file unsafe struct PropertyChangedEventHandlerReferenceVftbl
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// The <c>IReference`1</c> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
 file static unsafe class PropertyChangedEventHandlerReferenceImpl
 {
@@ -307,17 +271,6 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Value = &get_Value;
-    }
-
-    /// <summary>
-    /// Gets the IID for <c>IReference`1</c> of <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_IReferenceOfPropertyChangedEventHandler
-            : ref WellKnownInterfaceIds.IID_MUX_IReferenceOfPropertyChangedEventHandler;
     }
 
     /// <summary>
@@ -340,7 +293,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
             *result = PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
 

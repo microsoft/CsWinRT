@@ -72,7 +72,8 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return null;
         }
 
-        // If the value is a CCW we recognize, unwrap it (and assume it's a 'Delegate' instance)
+        // If the value is a CCW we recognize, unwrap it (and assume it's a 'Delegate' instance).
+        // We use 'ComInterfaceDispatch' directly as we also need a fast type cast on the result.
         if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
         {
             return ComWrappers.ComInterfaceDispatch.GetInstance<Delegate>((ComWrappers.ComInterfaceDispatch*)value);

@@ -31,9 +31,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyCollectionChanged>.ConvertToUnmanaged(
             value: value,
-            iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-                : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged);
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChanged);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -55,13 +53,13 @@ public static unsafe class INotifyCollectionChangedMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChangedTable
+    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventHandlerEventSource> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> MakeCollectionChangedTable()
+            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -73,11 +71,11 @@ public static unsafe class INotifyCollectionChangedMethods
     }
 
     /// <see cref="INotifyCollectionChanged.CollectionChanged"/>
-    public static NotifyCollectionChangedEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static NotifyCollectionChangedEventHandlerEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return CollectionChangedTable.GetOrAdd(
             key: thisObject,
-            valueFactory: static (_, thisReference) => new NotifyCollectionChangedEventSource(thisReference, 6),
+            valueFactory: static (_, thisReference) => new NotifyCollectionChangedEventHandlerEventSource(thisReference, 6),
             factoryArgument: thisReference);
     }
 }
@@ -122,17 +120,6 @@ public static unsafe class INotifyCollectionChangedImpl
 
         Vftbl.add_CollectionChanged = &add_CollectionChanged;
         Vftbl.remove_CollectionChanged = &remove_CollectionChanged;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="INotifyCollectionChanged"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChanged
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChanged;
     }
 
     /// <summary>

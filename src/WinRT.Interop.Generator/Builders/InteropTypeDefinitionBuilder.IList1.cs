@@ -38,7 +38,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(listType, "IID"),
+                name: InteropUtf8NameFactory.TypeName(listType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -1081,7 +1081,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -1090,7 +1089,6 @@ internal partial class InteropTypeDefinitionBuilder
         public static void ImplType(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
-            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -1102,7 +1100,6 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "Impl"),
                 vftblType: vftblType,
-                get_IidMethod: get_IidMethod,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,

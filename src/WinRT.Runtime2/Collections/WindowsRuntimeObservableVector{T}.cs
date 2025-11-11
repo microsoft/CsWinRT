@@ -23,9 +23,6 @@ namespace WindowsRuntime;
 /// <typeparam name="TIVector">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> interface type.</typeparam>
 /// <typeparam name="TIVectorMethods">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIObservableVectorMethods">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> implementation type.</typeparam>
-/// <remarks>
-/// This type should only be used as a base type by generated generic instantiations.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

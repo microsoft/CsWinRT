@@ -3,13 +3,10 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
-
-#pragma warning disable IDE0060 // TODO
 
 namespace WindowsRuntime.InteropServices;
 
@@ -23,11 +20,7 @@ public static unsafe class RestrictedErrorInfo
     /// Converts an <c>HRESULT</c> error code to a corresponding <see cref="Exception"/> object.
     /// </summary>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
-    /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
-    /// <returns>
-    /// An <see cref="Exception"/> instance that represents the converted <c>HRESULT</c>,
-    /// or <see langword="null"/> if the HRESULT value doesn't represent an error code.
-    /// </returns>
+    /// <returns>An <see cref="Exception"/> instance that represents the converted <c>HRESULT</c>.</returns>
     /// <remarks>
     /// This method differs from <see cref="Marshal.GetExceptionForHR(int)"/> in that it leverages
     /// the <c>IRestrictedErrorInfo</c> infrastructure to flow <see cref="Exception"/> objects through
@@ -36,9 +29,24 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
-        restoredExceptionFromGlobalState = false;
+        return GetExceptionForHR(errorCode, out _);
+    }
+
+    /// <inheritdoc cref="GetExceptionForHR(int)"/>
+    /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
+    /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
+    private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
+    {
+        // If the 'HRESULT' indicates success, there is no exception to return
+        if (errorCode.Succeeded())
+        {
+            restoredExceptionFromGlobalState = false;
+
+            return null;
+        }
+
         string? description = null;
-        string? restrictedError = null;
+        string? restrictedDescription = null;
         string? restrictedErrorReference = null;
         string? restrictedCapabilitySid = null;
         string? errorMessage = null;
@@ -46,176 +54,125 @@ public static unsafe class RestrictedErrorInfo
         Exception? internalGetGlobalErrorStateException = null;
         WindowsRuntimeObjectReference? restrictedErrorInfoToSave = null;
 
-
-        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
-
-        try
+        // First, try to get the current 'IRestrictedErrorInfo' object from the global state.
+        // This can be present if some other failure path before has already set it. Note that
+        // this might be from both some other C# code, or from some native code path as well.
+        using (WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo())
         {
-            void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
+            void* restrictedErrorInfoPtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
-            if (restrictedErrorInfoValuePtr != null)
+            // If there is no global 'IRestrictedErrorInfo' object, we'll just create a new local exception
+            if (restrictedErrorInfoPtr is null)
             {
-                if (WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                        restrictedErrorInfoValuePtr,
-                        in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo,
-                        out void* languageErrorInfoPtr)))
+                goto GetLocalExceptionForHR;
+            }
+
+            // We never want to throw if anything goes wrong when recovering the previously stored exception.
+            // So if any exceptions are thrown internally here, we'll continue and just forward those too.
+            try
+            {
+                // Initialize an object reference for the global 'IRestrictedErrorInfo' object we retrieved.
+                // We will always need this, regardless of whether we can restore the global exception or not.
+                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
+                    thisPtr: restrictedErrorInfoPtr,
+                    iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
+
+                // Check if the stored exception is a language exception, which we can return directly
+                if (IUnknownVftbl.QueryInterfaceUnsafe(
+                    thisPtr: restrictedErrorInfoPtr,
+                    iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
+                    pvObject: out void* languageErrorInfoPtr).Succeeded())
                 {
                     try
                     {
-                        exception = ExceptionHelpers.GetLanguageException(languageErrorInfoPtr, errorCode);
-
-                        if (exception is not null)
+                        // If we can restore the original language exception, we populate its exception data
+                        // with a reference to the global restricted error info object, and return it. We
+                        // only do this if the 'HRESULT' for the recovered exception matches the input one.
+                        if (ILanguageExceptionErrorInfoMethods.TryGetLanguageException(languageErrorInfoPtr, errorCode, out exception))
                         {
                             restoredExceptionFromGlobalState = true;
-                            WindowsRuntimeObjectReference? restrictedErrorInfo = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
 
-                            if (restrictedErrorInfo != null)
-                            {
-                                ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(exception, restrictedErrorInfo, true);
-                            }
+                            RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfoToSave, true);
 
                             return exception;
                         }
                     }
                     finally
                     {
-                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfoPtr);
+                        WindowsRuntimeUnknownMarshaller.Free(languageErrorInfoPtr);
                     }
                 }
 
-                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(restrictedErrorInfoValuePtr, WellKnownInterfaceIds.IID_IRestrictedErrorInfo);
+                // We're going to create a new exception, so first we extract all the available info
+                // from the global 'IRestrictedErrorInfo' object, to attach it to the managed exception.
+                IRestrictedErrorInfoMethods.GetErrorDetails(
+                    thisPtr: restrictedErrorInfoPtr,
+                    description: out description,
+                    error: out HRESULT restrictedError,
+                    restrictedDescription: out restrictedDescription,
+                    capabilitySid: out restrictedCapabilitySid);
 
-                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out HRESULT hrLocal, out restrictedError, out restrictedCapabilitySid);
+                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
 
-                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
-
-                if (errorCode == hrLocal)
+                // For cross language Windows Runtime exceptions, general information will be available in the description,
+                // which is populated from 'IRestrictedErrorInfo.GetErrorDetails', and more specific information will be
+                // available in 'restrictedError', which also comes from 'IRestrictedErrorInfo.GetErrorDetails'. If both are
+                // available, we need to concatinate them to produce the final exception message.
+                if (errorCode == restrictedError)
                 {
-                    // For cross language WinRT exceptions, general information will be available in the description,
-                    // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
-                    // in the restrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
-
-                    // need to concatinate them to produce the final exception message.
+                    // Append the description first
                     if (!string.IsNullOrEmpty(description))
                     {
                         errorMessage += description;
 
-                        if (!string.IsNullOrEmpty(restrictedError))
+                        if (!string.IsNullOrEmpty(restrictedDescription))
                         {
-                            errorMessage += Environment.NewLine;
+                            errorMessage += " ";
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(restrictedError))
+                    // Next append the restricted description. If we have both, we insert a space to separate
+                    // the two. We're not using a newline, as exception messages should always be a single line.
+                    if (!string.IsNullOrEmpty(restrictedDescription))
                     {
-                        errorMessage += restrictedError;
+                        errorMessage += restrictedDescription;
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            // If we fail to get the error info or the exception from it,
-            // we fallback to using the hresult to create the exception.
-            // But we do store it in the exception data for debugging purposes.
-            Debug.Assert(false, e.Message, e.StackTrace);
-            internalGetGlobalErrorStateException = e;
-        }
-
-        if (string.IsNullOrWhiteSpace(errorMessage))
-        {
-            char* message = null;
-
-            if (WindowsRuntimeImports.FormatMessageW(0x13FF /* FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK */,
-                                        null,
-                                        (uint)errorCode,
-                                        0,
-                                        &message,
-                                        0,
-                                        null) > 0)
+            catch (Exception e)
             {
-                errorMessage = $"{new string(message)}(0x{errorCode:X8})";
+                Debug.Assert(false, e.Message, e.StackTrace);
 
-                // LocalHandle isn't needed since FormatMessage uses LMEM_FIXED,
-                // and while we can use Marshal.FreeHGlobal since it uses LocalFree internally,
-                // it's not guranteed that this behavior stays the same in the future,
-                // especially considering the method's name, so it's safer to use LocalFree directly.
-                _ = WindowsRuntimeImports.LocalFree(message);
+                // If we fail to get the error info or the exception from it, we fallback
+                // to using the 'HRESULT' value to create the exception. In this case we will
+                // also store the caught exception, for debugging purposes (and bug reports).
+                internalGetGlobalErrorStateException = e;
             }
         }
 
+    GetLocalExceptionForHR:
 
-        exception = errorCode switch
+        // If we still have no available error message, try to get a system-provided one
+        if (string.IsNullOrWhiteSpace(errorMessage))
         {
-            // InvalidOperationException 
-            WellKnownErrorCodes.E_CHANGED_STATE or
-            WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE or
-            WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL or
-            WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT or
-            WellKnownErrorCodes.APPMODEL_ERROR_NO_PACKAGE or
-            WellKnownErrorCodes.COR_E_INVALIDOPERATION => !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException(),
+            errorMessage = SystemErrorInfoHelpers.GetSystemErrorMessageForHR(errorCode);
+        }
 
-            // XamlParseException
-            WellKnownErrorCodes.E_XAMLPARSEFAILED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.XamlParseException(errorMessage) : new Windows.UI.Xaml.XamlParseException()
-                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.XamlParseException(),
+        // Create a new local exception using the 'HRESULT' mapping
+        exception = WellKnownExceptionMappings.GetExceptionForHR(errorCode, errorMessage);
 
-            // LayoutCycleException
-            WellKnownErrorCodes.E_LAYOUTCYCLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException()
-                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException(),
-
-            // ElementNotAvailableException
-            WellKnownErrorCodes.E_ELEMENTNOTAVAILABLE => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.ElementNotAvailableException()
-                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.ElementNotAvailableException(),
-
-            // ElementNotEnabledException
-            WellKnownErrorCodes.E_ELEMENTNOTENABLED => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.ElementNotEnabledException()
-                : !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.ElementNotEnabledException(),
-
-            // COMException for invalid window handle with guidance
-            WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE => new COMException(
-                "Invalid window handle (0x80070578). Consider WindowNative, InitializeWithWindow. See https://aka.ms/cswinrt/interop#windows-sdk.",
-                WellKnownErrorCodes.ERROR_INVALID_WINDOW_HANDLE),
-
-            // Other common exceptions
-            WellKnownErrorCodes.RO_E_CLOSED => !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty),
-            WellKnownErrorCodes.E_POINTER => !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException(),
-            WellKnownErrorCodes.E_NOTIMPL => !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException(),
-            WellKnownErrorCodes.E_ACCESSDENIED => !string.IsNullOrEmpty(errorMessage) ? new UnauthorizedAccessException(errorMessage) : new UnauthorizedAccessException(),
-            WellKnownErrorCodes.E_INVALIDARG => !string.IsNullOrEmpty(errorMessage) ? new ArgumentException(errorMessage) : new ArgumentException(),
-            WellKnownErrorCodes.E_NOINTERFACE => !string.IsNullOrEmpty(errorMessage) ? new InvalidCastException(errorMessage) : new InvalidCastException(),
-            WellKnownErrorCodes.E_OUTOFMEMORY => !string.IsNullOrEmpty(errorMessage) ? new OutOfMemoryException(errorMessage) : new OutOfMemoryException(),
-            WellKnownErrorCodes.E_BOUNDS => !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException(),
-            WellKnownErrorCodes.E_NOTSUPPORTED => !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException(),
-            WellKnownErrorCodes.ERROR_ARITHMETIC_OVERFLOW => !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException(),
-            WellKnownErrorCodes.ERROR_FILENAME_EXCED_RANGE => !string.IsNullOrEmpty(errorMessage) ? new PathTooLongException(errorMessage) : new PathTooLongException(),
-            WellKnownErrorCodes.ERROR_FILE_NOT_FOUND => !string.IsNullOrEmpty(errorMessage) ? new FileNotFoundException(errorMessage) : new FileNotFoundException(),
-            WellKnownErrorCodes.ERROR_HANDLE_EOF => !string.IsNullOrEmpty(errorMessage) ? new EndOfStreamException(errorMessage) : new EndOfStreamException(),
-            WellKnownErrorCodes.ERROR_PATH_NOT_FOUND => !string.IsNullOrEmpty(errorMessage) ? new DirectoryNotFoundException(errorMessage) : new DirectoryNotFoundException(),
-            WellKnownErrorCodes.ERROR_STACK_OVERFLOW => !string.IsNullOrEmpty(errorMessage) ? new StackOverflowException(errorMessage) : new StackOverflowException(),
-            WellKnownErrorCodes.ERROR_BAD_FORMAT => !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException(),
-            WellKnownErrorCodes.ERROR_CANCELLED => !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException(),
-            WellKnownErrorCodes.ERROR_TIMEOUT => !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException(),
-
-            // Fallback to COMException
-            _ => !string.IsNullOrEmpty(errorMessage) ? new COMException(errorMessage, errorCode) : new COMException($"0x{errorCode:X8}", errorCode),
-        };
-
-        // Ensure HResult matches.
-        exception.HResult = errorCode;
-
-        ExceptionHelpers.AddExceptionDataForRestrictedErrorInfo(
+        // Append all information we retrieved above to the new exception object
+        RestrictedErrorInfoHelpers.AddExceptionData(
             exception,
             description,
-            restrictedError,
+            restrictedDescription,
             restrictedErrorReference,
             restrictedCapabilitySid,
             restrictedErrorInfoToSave,
             false,
             internalGetGlobalErrorStateException);
+
+        restoredExceptionFromGlobalState = false;
 
         return exception;
     }
@@ -231,17 +188,19 @@ public static unsafe class RestrictedErrorInfo
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="errorCode"/> represents a failure.</exception>
     /// <seealso cref="Marshal.ThrowExceptionForHR(int)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
-        if (errorCode < 0)
+        if (errorCode.Failed())
         {
             Throw(errorCode);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static void Throw(int errorCode)
+        static void Throw(HRESULT errorCode)
         {
-            Exception? exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState);
+            // The 'HRESULT' is guaranteed to be a failure, so the exception will never be 'null'
+            Exception exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState)!;
 
             if (restoredExceptionFromGlobalState)
             {
@@ -266,139 +225,149 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception? exception)
     {
-        ArgumentNullException.ThrowIfNull(exception);
+        // If the input exception is 'null', we always just map to 'S_OK'
+        if (exception is null)
+        {
+            return WellKnownErrorCodes.S_OK;
+        }
 
         HRESULT hresult = exception.HResult;
 
         try
         {
-            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
+            if (RestrictedErrorInfoHelpers.TryGetErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out _))
             {
-                if (restrictedErrorObject != null)
-                {
-                    using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
-                    IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
-                }
+                using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
+
+                IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObjectValue.GetThisPtrUnsafe(), out hresult);
             }
         }
         catch (Exception e)
         {
-            // If we fail to get the hresult from the error info, we fallback to the exception hresult.
+            // If we fail to get the hresult from the error info, we fallback to the exception 'HRESULT' value
             Debug.Assert(false, e.Message, e.StackTrace);
         }
 
-        return hresult switch
-        {
-            WellKnownErrorCodes.COR_E_OBJECTDISPOSED => WellKnownErrorCodes.RO_E_CLOSED,
-            WellKnownErrorCodes.COR_E_OPERATIONCANCELED => WellKnownErrorCodes.ERROR_CANCELLED,
-            WellKnownErrorCodes.COR_E_ARGUMENTOUTOFRANGE or WellKnownErrorCodes.COR_E_INDEXOUTOFRANGE => WellKnownErrorCodes.E_BOUNDS,
-            WellKnownErrorCodes.COR_E_TIMEOUT => WellKnownErrorCodes.ERROR_TIMEOUT,
-            _ => hresult,
-        };
+        return WellKnownExceptionMappings.GetHRForNativeOrManagedErrorCode(hresult);
     }
 
     /// <summary>
     /// Stores info on the input exception through the <c>IRestrictedErrorInfo</c> infrastructure, to retrieve it later.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
-    public static unsafe void SetErrorInfo(Exception exception)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
+    public static void SetErrorInfo(Exception exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+
         try
         {
-            // If the exception has an IRestrictedErrorInfo, use that as our error info
-            // to allow to propagate the original error through WinRT with the end to end information
-            // rather than losing that context.
-            if (ExceptionHelpers.TryGetRestrictedLanguageErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
+            // If the exception has an 'IRestrictedErrorInfo' value, use that as our error info to allow to propagate
+            // the original error through WinRT with the end to end information rather than losing that context.
+            if (RestrictedErrorInfoHelpers.TryGetErrorInfo(exception, out WindowsRuntimeObjectReference? restrictedErrorObject, out bool isLanguageException))
             {
-                // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
-                // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
-                if (!isLanguageException && restrictedErrorObject != null &&
-                    WellKnownErrorCodes.Succeeded(IUnknownVftbl.QueryInterfaceUnsafe(
-                            restrictedErrorObject.GetThisPtrUnsafe(),
-                            in WellKnownInterfaceIds.IID_ILanguageExceptionErrorInfo2,
-                            out void* languageErrorInfo2Ptr)))
+                // Capture the C# language exception if it hasn't already been captured previously either during the
+                // throw or during a propagation. Given the C# exception itself captures propagation context on rethrow,
+                // we don't do it each time.
+                if (!isLanguageException)
                 {
-                    try
+                    if (IUnknownVftbl.QueryInterfaceUnsafe(
+                        thisPtr: restrictedErrorObject.GetThisPtrUnsafe(),
+                        iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
+                        pvObject: out void* languageErrorInfo2Ptr).Succeeded())
                     {
-                        using WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                        // If the error object supports 'ILanguageExceptionErrorInfo2', marshal the exception and pass it to 'CapturePropagationContext'
+                        try
+                        {
+                            using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(exception);
 
-                        ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
-                            languageErrorInfo2Ptr,
-                            managedExceptionWrapper.GetThisPtrUnsafe()).Assert();
-                    }
-                    finally
-                    {
-                        WindowsRuntimeObjectMarshaller.Free(languageErrorInfo2Ptr);
+                            ((ILanguageExceptionErrorInfo2Vftbl*)*(void***)languageErrorInfo2Ptr)->CapturePropagationContext(
+                                languageErrorInfo2Ptr,
+                                exceptionValue.GetThisPtrUnsafe()).Assert();
+                        }
+                        finally
+                        {
+                            _ = IUnknownVftbl.ReleaseUnsafe(languageErrorInfo2Ptr);
+                        }
                     }
                 }
                 else if (isLanguageException)
                 {
                     // Remove object reference to avoid cycles between error info holding exception
-                    // and exception holding error info.  We currently can't avoid this cycle
+                    // and exception holding error info. We currently can't avoid this cycle
                     // when the C# exception is caught on the C# side.
-                    exception.Data.Remove("__RestrictedErrorObjectReference");
-                    exception.Data.Remove("__HasRestrictedLanguageErrorObject");
+                    exception.Data.Remove(WellKnownExceptionDataKeys.RestrictedErrorObjectReference);
+                    exception.Data.Remove(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject);
                 }
-                if (restrictedErrorObject != null)
-                {
-                    using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
 
-                    _ = WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObjectValue.GetThisPtrUnsafe());
-                }
+                using WindowsRuntimeObjectReferenceValue restrictedErrorObjectValue = restrictedErrorObject.AsValue();
+
+                _ = WindowsRuntimeImports.SetRestrictedErrorInfo(restrictedErrorObjectValue.GetThisPtrUnsafe());
             }
             else
             {
                 string message = exception.Message;
 
+                // If the exception has no message, we fallback to the exception type name
                 if (string.IsNullOrEmpty(message))
                 {
-                    Type exceptionType = exception.GetType();
-
-                    if (exceptionType != null)
-                    {
-                        message = exceptionType.Name;
-                    }
+                    message = exception.GetType().Name;
                 }
 
+                // In this case we have no existing 'IRestrictedErrorInfo' value, so we capture a new C# language
+                // exception from this location, for the current exception, to flow the error info from now on.
                 fixed (char* lpMessage = message)
                 {
                     HStringMarshaller.ConvertToUnmanagedUnsafe(lpMessage, message.Length, out HStringReference hstring);
 
-                    WindowsRuntimeObjectReferenceValue managedExceptionWrapper = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(exception);
+                    using WindowsRuntimeObjectReferenceValue exceptionValue = WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(exception);
 
-                    try
-                    {
-                        _ = WindowsRuntimeImports.RoOriginateLanguageException(GetHRForException(exception), hstring.HString, managedExceptionWrapper.GetThisPtrUnsafe());
-                    }
-                    finally
-                    {
-                        _ = Marshal.Release((nint)managedExceptionWrapper.DetachThisPtrUnsafe());
-                    }
-
+                    _ = WindowsRuntimeImports.RoOriginateLanguageException(
+                        error: GetHRForException(exception),
+                        message: hstring.HString,
+                        languageException: exceptionValue.GetThisPtrUnsafe());
                 }
             }
         }
         catch (Exception e)
         {
-            // If we fail to set the error info, we continue on reporting the original exception.
+            // If we fail to set the error info, we continue on reporting the original exception
             Debug.Assert(false, e.Message, e.StackTrace);
         }
+    }
+
+    /// <summary>
+    /// Attaches the error info stored by the <c>IRestrictedErrorInfo</c> infrastructure to the input exception.
+    /// </summary>
+    /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
+    /// <returns>The input <see cref="Exception"/> instance with attached error info.</returns>
+    public static Exception AttachErrorInfo(Exception exception)
+    {
+        // TODO
+        return exception;
     }
 
     /// <summary>
     /// Triggers the global error handler when an unhandled exception occurs.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to flow to the global error handler.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
     /// <see href="https://learn.microsoft.com/windows/win32/api/roerrorapi/nf-roerrorapi-roreportunhandlederror"/>
-    public static unsafe void ReportUnhandledError(Exception exception)
+    /// <remarks>
+    /// This method should only be called from custom dispatchers and other top-level delegate invokers that should
+    /// trigger an application-wide crash in case of failures. For better error reporting, especially in XAML scenarios,
+    /// it is recommended to also call <see cref="ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent"/> right before
+    /// calling this method, so that the correct stacktrace will also be captured in crash reports for later inspection.
+    /// </remarks>
+    public static void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
 
-        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = ExceptionHelpers.BorrowRestrictedErrorInfo();
+        using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();
 
         void* restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetThisPtrUnsafe();
 
-        if (restrictedErrorInfoValuePtr != null)
+        if (restrictedErrorInfoValuePtr is not null)
         {
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }

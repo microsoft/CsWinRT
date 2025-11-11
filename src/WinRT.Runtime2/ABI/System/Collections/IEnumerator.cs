@@ -14,18 +14,6 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Interop.IBindableIterator",
-    target: typeof(ABI.System.Collections.IEnumerator),
-    trimTarget: typeof(IEnumerator))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Interop.IBindableIterator",
-    target: typeof(ABI.System.Collections.IEnumerator),
-    trimTarget: typeof(IEnumerator))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     typeof(IEnumerator),
     typeof(ABI.System.Collections.IEnumeratorInterfaceImpl))]
@@ -40,7 +28,11 @@ namespace ABI.System.Collections;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
 [IEnumeratorComWrappersMarshaller]
-file static class IEnumerator;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IEnumerator;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.IEnumerator"/>.
@@ -54,7 +46,7 @@ public static unsafe class IEnumeratorMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IEnumerator? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IBindableIterator);
+        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -69,17 +61,6 @@ public static unsafe class IEnumeratorMarshaller
 /// </summary>
 file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
-    /// <summary>
-    /// Gets the runtime class name for <see cref="global::System.Collections.IEnumerator"/>.
-    /// </summary>
-    private static string RuntimeClassName
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? "Windows.UI.Xaml.Interop.IBindableIterator"
-            : "Microsoft.UI.Xaml.Interop.IBindableIterator";
-    }
-
     /// <inheritdoc/>
 	public static unsafe bool TryCreateObject(
         void* value,
@@ -87,11 +68,11 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags)
     {
-        if (runtimeClassName.SequenceEqual(RuntimeClassName))
+        if (runtimeClassName.SequenceEqual(WellKnownXamlRuntimeClassNames.IBindableIterator))
         {
             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                 externalComObject: value,
-                iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
                 wrapperFlags: out wrapperFlags);
 
             wrapperObject = new WindowsRuntimeIterator(valueReference);
@@ -116,7 +97,7 @@ file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRunt
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
             externalComObject: value,
-            iid: in WellKnownInterfaceIds.IID_IBindableIterator,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
             wrapperFlags: out wrapperFlags);
 
         return new WindowsRuntimeIterator(valueReference);
@@ -172,15 +153,6 @@ public static unsafe class IEnumeratorImpl
         Vftbl.get_HasCurrent = &get_HasCurrent;
         Vftbl.MoveNext = &MoveNext;
         Vftbl.GetMany = &GetMany;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="global::System.Collections.IEnumerator"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IBindableIterator;
     }
 
     /// <summary>

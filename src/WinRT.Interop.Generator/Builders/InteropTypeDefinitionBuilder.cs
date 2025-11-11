@@ -14,6 +14,8 @@ using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
+#pragma warning disable IDE0061
+
 namespace WindowsRuntime.InteropGenerator.Builders;
 
 /// <summary>
@@ -62,7 +64,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="nativeObjectType">The resulting native object type.</param>
-    public static void NativeObject(
+    private static void NativeObject(
         TypeSignature typeSignature,
         TypeSignature nativeObjectBaseType,
         InteropReferences interopReferences,
@@ -98,7 +100,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="callbackType">The resulting callback type.</param>
-    public static void ComWrappersCallback(
+    private static void ComWrappersCallback(
         string runtimeClassName,
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
@@ -200,7 +202,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    public static void ComWrappersMarshallerAttribute(
+    private static void ComWrappersMarshallerAttribute(
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
         MethodDefinition get_IidMethod,
@@ -265,7 +267,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    public static void Marshaller(
+    private static void Marshaller(
         TypeSignature typeSignature,
         TypeDefinition interfaceComWrappersCallbackType,
         MethodDefinition get_IidMethod,
@@ -330,6 +332,7 @@ internal static partial class InteropTypeDefinitionBuilder
             {
                 { Ldarg_0 },
                 { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
+                { Castclass, typeSignature2.ToTypeDefOrRef() },
                 { Ret }
             }
         };
@@ -344,18 +347,16 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="vftblType">The vtable type to use for the CCW vtable.</param>
-    /// <param name="get_IidMethod">The 'IID' get method for the interface being constructed.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="vtableMethods">The set of implementation methods for the implementation type.</param>
-    public static void Impl(
+    private static void Impl(
         [ConstantExpected] ComInterfaceType interfaceType,
         Utf8String ns,
         Utf8String name,
         TypeDefinition vftblType,
-        MethodDefinition get_IidMethod,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -434,17 +435,6 @@ internal static partial class InteropTypeDefinitionBuilder
         // Don't forget the 'ret' at the end of the static constructor
         _ = cctor.CilMethodBody.Instructions.Add(Ret);
 
-        // Create the public 'IID' property
-        WellKnownMemberDefinitionFactory.IID(
-            forwardedIidMethod: get_IidMethod,
-            interopReferences: interopReferences,
-            module: module,
-            out MethodDefinition get_IidMethod2,
-            out PropertyDefinition iidProperty);
-
-        implType.Methods.Add(get_IidMethod2);
-        implType.Properties.Add(iidProperty);
-
         // Create the 'Vtable' property
         WellKnownMemberDefinitionFactory.Vtable(
             vftblField: vftblField,
@@ -474,6 +464,94 @@ internal static partial class InteropTypeDefinitionBuilder
         ModuleDefinition module,
         out TypeDefinition implType,
         params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
+    {
+        // Loads the 'IID' property and dereferences it (it's a 'ref readonly Guid' property)
+        static void LoadIID(
+            (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
+            CilInstructionCollection instructions,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            _ = instructions.Add(Call, arg.get_IID.Import(module));
+            _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
+        }
+
+        // Load the vtable property
+        static void LoadVtable(
+            (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
+            CilInstructionCollection instructions,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            _ = instructions.Add(Call, arg.get_Vtable.Import(module));
+        }
+
+        InterfaceEntriesImpl(
+            ns: ns,
+            name: name,
+            entriesFieldType: entriesFieldType,
+            interopReferences: interopReferences,
+            module: module,
+            get_IID: LoadIID,
+            get_Vtable: LoadVtable,
+            implTypes: implTypes,
+            implType: out implType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
+    /// </summary>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="implType">The resulting implementation type.</param>
+    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
+    private static void InterfaceEntriesImpl(
+        Utf8String ns,
+        Utf8String name,
+        TypeDefinition entriesFieldType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition implType,
+        params ReadOnlySpan<InterfaceEntryInfo> implTypes)
+    {
+        InterfaceEntriesImpl(
+            ns: ns,
+            name: name,
+            entriesFieldType: entriesFieldType,
+            interopReferences: interopReferences,
+            module: module,
+            get_IID: static (arg, il, references, module) => arg.LoadIID(il, references, module),
+            get_Vtable: static (arg, il, references, module) => arg.LoadVtable(il, references, module),
+            implTypes: implTypes,
+            implType: out implType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
+    /// </summary>
+    /// <typeparam name="TArg">The type of arguments to use to populate the interface entries.</typeparam>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
+    /// <param name="get_IID">The callback to emit code to get the IID.</param>
+    /// <param name="get_Vtable">The callback to emit code to get the vtable.</param>
+    /// <param name="implType">The resulting implementation type.</param>
+    private static void InterfaceEntriesImpl<TArg>(
+        Utf8String ns,
+        Utf8String name,
+        TypeDefinition entriesFieldType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        ReadOnlySpan<TArg> implTypes,
+        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_IID,
+        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_Vtable,
+        out TypeDefinition implType)
     {
         // We're declaring an 'internal static class' type
         implType = new TypeDefinition(
@@ -522,12 +600,17 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, implTypes[i].get_IID.Import(module));
-            _ = cctorInstructions.Add(Ldobj, interopReferences.Guid.Import(module));
+
+            // Invoke the callback to emit code to load 'IID' on the evaluation stack
+            get_IID(implTypes[i], cctorInstructions, interopReferences, module);
+
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, implTypes[i].get_Vtable.Import(module));
+
+            // Same as above, but to get the vtable pointer on the stack
+            get_Vtable(implTypes[i], cctorInstructions, interopReferences, module);
+
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }
 
@@ -607,7 +690,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 value: runtimeClassName))));
 
         // Add the generated marshaller attribute
-        marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!));
+        marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
     }
 
     /// <summary>
@@ -622,7 +705,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    public static void TypeMapAttributes(
+    private static void TypeMapAttributes(
         string? runtimeClassName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
@@ -666,5 +749,27 @@ internal static partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module));
         }
+    }
+
+    /// <summary>
+    /// A base type to abstract inserting interface entries information into a static constructor.
+    /// </summary>
+    private abstract class InterfaceEntryInfo
+    {
+        /// <summary>
+        /// Loads the IID for the interface onto the evaluation stack.
+        /// </summary>
+        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
+        public abstract void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module);
+
+        /// <summary>
+        /// Loads the vtable for the interface onto the evaluation stack.
+        /// </summary>
+        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
+        public abstract void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module);
     }
 }

@@ -21,12 +21,6 @@ internal sealed unsafe class FreeThreadedMarshaler
     private static readonly Lock IID_InProcFreeThreadedMarshalerLock = new();
 
     /// <summary>
-    /// The <see cref="FreeThreadedMarshaler"/> instance for the current thread, if initialized.
-    /// </summary>
-    [ThreadStatic]
-    private static FreeThreadedMarshaler? instanceForCurrentThread;
-
-    /// <summary>
     /// The boxed value of <see cref="IID_InProcFreeThreadedMarshaler"/>, if initialized (it'll be a <see cref="Guid"/>).
     /// </summary>
     private static volatile object? iid_InProcFreeThreadedMarshalerBox;
@@ -62,7 +56,7 @@ internal sealed unsafe class FreeThreadedMarshaler
 
                     // Query the IID from the free-threaded marshaler for the current thread.
                     // This will always be the same from any thread, so it doesn't matter.
-                    fixed (Guid* riid = &WellKnownInterfaceIds.IID_IUnknown)
+                    fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_IUnknown)
                     {
                         InstanceForCurrentThread.GetUnmarshalClass(
                             riid: riid,
@@ -90,11 +84,11 @@ internal sealed unsafe class FreeThreadedMarshaler
     /// <remarks>
     /// The returned value is only meant to be used from the current thread.
     /// </remarks>
+    [field: ThreadStatic]
     public static FreeThreadedMarshaler InstanceForCurrentThread
     {
         get
         {
-            [MemberNotNull(nameof(instanceForCurrentThread))]
             [MethodImpl(MethodImplOptions.NoInlining)]
             static FreeThreadedMarshaler InitializeInstanceForCurrentThread()
             {
@@ -106,13 +100,13 @@ internal sealed unsafe class FreeThreadedMarshaler
                 try
                 {
                     // We need an explicit 'QueryInterface' call to actually get the 'IMarshal' interface pointer to use
-                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownInterfaceIds.IID_IMarshal, out void* marshalPtr).Assert();
+                    IUnknownVftbl.QueryInterfaceUnsafe(marshalUnknownPtr, in WellKnownWindowsInterfaceIIDs.IID_IMarshal, out void* marshalPtr).Assert();
 
                     // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
                     // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
                     FreeThreadedObjectReference objectReference = new(marshalPtr, referenceTrackerPtr: null);
 
-                    return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
+                    return field = new FreeThreadedMarshaler(objectReference);
                 }
                 finally
                 {
@@ -120,7 +114,7 @@ internal sealed unsafe class FreeThreadedMarshaler
                 }
             }
 
-            return instanceForCurrentThread ?? InitializeInstanceForCurrentThread();
+            return field ?? InitializeInstanceForCurrentThread();
         }
     }
 

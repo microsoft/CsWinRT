@@ -54,15 +54,13 @@ public static unsafe class EventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.EventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_EventHandler);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_EventHandler);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static global::System.EventHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<EventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<global::System.EventHandler?>(result);
+        return (global::System.EventHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<EventHandlerComWrappersCallback>(value);
     }
 }
 
@@ -99,7 +97,7 @@ file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeObje
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
             externalComObject: value,
-            iid: in WellKnownInterfaceIds.IID_EventHandler,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_EventHandler,
             wrapperFlags: out wrapperFlags);
 
         return new global::System.EventHandler(valueReference.Invoke);
@@ -138,23 +136,23 @@ file static class EventHandlerInterfaceEntriesImpl
     /// </summary>
     static EventHandlerInterfaceEntriesImpl()
     {
-        Entries.EventHandler.IID = WellKnownInterfaceIds.IID_EventHandler;
+        Entries.EventHandler.IID = WellKnownWindowsInterfaceIIDs.IID_EventHandler;
         Entries.EventHandler.Vtable = EventHandlerImpl.Vtable;
-        Entries.IReferenceOfEventHandler.IID = WellKnownInterfaceIds.IID_IReferenceOfEventHandler;
+        Entries.IReferenceOfEventHandler.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventHandler;
         Entries.IReferenceOfEventHandler.Vtable = EventHandlerReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }

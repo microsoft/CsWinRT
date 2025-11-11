@@ -5,13 +5,16 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
 /// A marshaller for Windows Runtime objects.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeObjectMarshaller
 {
     /// <summary>
@@ -42,7 +45,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {
             // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
-            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr))
+            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out void* inspectablePtr))
             {
                 [DoesNotReturn]
                 [StackTraceHidden]
@@ -60,7 +63,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // Marshal 'value' as an 'IInspectable' (this method will take care of correctly marshalling objects with the right vtables)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownInterfaceIds.IID_IInspectable);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, in WellKnownWindowsInterfaceIIDs.IID_IInspectable);
 
         return new(thisPtr);
     }
@@ -78,9 +81,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the object as an opaque object, as we have no static type information available
@@ -101,10 +104,6 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     /// whenever there is static type information available for the type. This allows the marshalling logic to be optimized and to avoid having
     /// to perform a lookup via the interop type map to retrieve the marshalling attribute, and to perform one extra <c>QueryInterface</c> call.
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public static object? ConvertToManaged<TCallback>(void* value)
         where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {
@@ -114,9 +113,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the object as an opaque object, as we have no static type information available
@@ -124,23 +123,5 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             externalComObject: (nint)value,
             objectComWrappersCallback: WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>(),
             unsealedObjectComWrappersCallback: null);
-    }
-
-    /// <summary>
-    /// Release a given Windows Runtime object.
-    /// </summary>
-    /// <param name="value">The input object to free.</param>
-    /// <remarks>
-    /// Unlike <see cref="Marshal.Release"/>, this method will not throw <see cref="ArgumentNullException"/>
-    /// if <paramref name="value"/> is <see langword="null"/>. This method can be used with any object type.
-    /// </remarks>
-    public static void Free(void* value)
-    {
-        if (value == null)
-        {
-            return;
-        }
-
-        _ = IUnknownVftbl.ReleaseUnsafe(value);
     }
 }

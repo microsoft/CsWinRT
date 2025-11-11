@@ -56,6 +56,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Add all default top level internal types to the interop module
+        DefineDefaultImplementationDetailTypes(interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for generic delegates
         DefineGenericDelegateTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
@@ -81,33 +86,48 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IReadOnlyDictionary<,>' types
+        // Emit interop types for 'IReadOnlyDictionary<TKey, TValue>' types
         DefineIReadOnlyDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IDictionary<,>' types
+        // Emit interop types for 'IDictionary<TKey, TValue>' types
         DefineIDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'KeyValuePair<,>' types
+        // Emit interop types for 'KeyValuePair<TKey, TValue>' types
         DefineKeyValuePairTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IMapChangedEventArgs<>' types
+        // Emit interop types for 'IMapChangedEventArgs<K, V>' types
         DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IObservableVector<>' types
+        // Emit interop types for 'IObservableVector<T>' types
         DefineIObservableVectorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IObservableMap<>' types
+        // Emit interop types for 'IObservableMap<K, V>' types
         DefineIObservableMapTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for 'IAsyncActionWithProgress<TProgress>' types
+        DefineIAsyncActionWithProgressTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for 'IAsyncOperation<TResult>' types
+        DefineIAsyncOperationTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit interop types for 'IAsyncOperationWithProgress<TResult, TProgress>' types
+        DefineIAsyncOperationWithProgressTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -121,8 +141,13 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add all top level internal types to the interop module
-        DefineImplementationDetailTypes(interopDefinitions, module);
+        // Add all dynamic top level internal types to the interop module
+        DefineDynamicImplementationDetailTypes(interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Add all dynamic type map entries for custom-mapped types
+        DefineDynamicCustomMappedTypeMapEntries(args, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -257,7 +282,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.Delegate.ImplType(
                     delegateType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -266,7 +290,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Delegate.ReferenceImplType(
                     delegateType: typeSignature,
                     marshallerType: marshallerType,
-                    get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -276,6 +299,8 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
+                    get_IidMethod: get_IidMethod,
+                    get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -349,6 +374,15 @@ internal partial class InteropGenerator
                         module: module,
                         eventSourceType: out _);
                 }
+                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionProgressHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationProgressHandler2) ||
+                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationWithProgressCompletedHandler2))
+                {
+                    // We need these marshaller types for the various async type implementations
+                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
+                }
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
@@ -389,7 +423,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ImplType(
                     enumeratorType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -503,7 +536,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IEnumerable1.ImplType(
                     enumerableType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -625,7 +657,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyList1.ImplType(
                     readOnlyListType: typeSignature,
                     vftblType: vftblType,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -755,7 +786,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.ImplType(
                     listType: typeSignature,
                     vftblType: vftblType,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -879,7 +909,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ImplType(
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1009,7 +1038,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.ImplType(
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1122,7 +1150,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1131,6 +1158,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.KeyValuePair.InterfaceEntriesImplType(
                     keyValuePairType: typeSignature,
                     keyValuePairTypeImplType: keyValuePairTypeImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1175,7 +1203,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ImplType(
                     argsType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1281,7 +1308,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.ImplType(
                     vectorType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1397,7 +1423,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableMap2.ImplType(
                     mapType: typeSignature,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1482,6 +1507,321 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIAsyncActionWithProgressTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.IID(
+                    actionType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ImplType(
+                    actionType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Methods(
+                    actionType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    actionMethodsType: out TypeDefinition actionMethodsType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.NativeObject(
+                    actionType: typeSignature,
+                    actionMethodsType: actionMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ComWrappersCallbackType(
+                    actionType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition actionComWrappersCallbackType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ComWrappersMarshallerAttribute(
+                    actionType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition actionComWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Marshaller(
+                    actionType: typeSignature,
+                    operationComWrappersCallbackType: actionComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.InterfaceImpl(
+                    actionType: typeSignature,
+                    actionMethodsType: actionMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Proxy(
+                    actionType: typeSignature,
+                    actionComWrappersMarshallerAttributeType: actionComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.TypeMapAttributes(
+                    actionType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IAsyncActionWithProgressTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIAsyncOperationTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropTypeDefinitionBuilder.IAsyncOperation1.IID(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.ImplType(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.Methods(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    operationMethodsType: out TypeDefinition operationMethodsType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.NativeObject(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.ComWrappersCallbackType(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersCallbackType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.ComWrappersMarshallerAttribute(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.Marshaller(
+                    operationType: typeSignature,
+                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.InterfaceImpl(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.Proxy(
+                    operationType: typeSignature,
+                    operationComWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperation1.TypeMapAttributes(
+                    operationType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IAsyncOperationTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIAsyncOperationWithProgressTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.IID(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    get_IidMethod: out MethodDefinition get_IidMethod);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ImplType(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    implType: out _);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Methods(
+                    operationType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    operationMethodsType: out TypeDefinition operationMethodsType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.NativeObject(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ComWrappersCallbackType(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersCallbackType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ComWrappersMarshallerAttribute(
+                    operationType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition operationComWrappersMarshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Marshaller(
+                    operationType: typeSignature,
+                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.InterfaceImpl(
+                    operationType: typeSignature,
+                    operationMethodsType: operationMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Proxy(
+                    operationType: typeSignature,
+                    operationComWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.TypeMapAttributes(
+                    operationType: typeSignature,
+                    proxyType: proxyType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IAsyncOperationWithProgressTypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the interop types for SZ array types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -1525,7 +1865,6 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.ArrayImpl(
                     arrayType: typeSignature,
                     marshallerType: marshallerType,
-                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1534,6 +1873,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
                     implType: arrayImplType,
+                    get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1606,6 +1946,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
+                    args: args,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1658,14 +1999,17 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the implementation detail types.
+    /// Defines the default implementation detail types.
     /// </summary>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
-    private static void DefineImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    private static void DefineDefaultImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
     {
         try
         {
+            // These types are emitted before all other types, so that members in them can more easily
+            // be referenced (and imported) without causing issues. The reason is that adding these
+            // earlier on ensures that they're already part of the output module.
             module.TopLevelTypes.Add(interopDefinitions.RvaFields);
             module.TopLevelTypes.Add(interopDefinitions.InterfaceIIDs);
             module.TopLevelTypes.Add(interopDefinitions.IUnknownVftbl);
@@ -1683,10 +2027,28 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.IObservableVectorVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IObservableMapVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IAsyncActionWithProgressVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IAsyncOperationVftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IAsyncOperationWithProgressVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DefaultImplementationDetailTypeCodeGenerationError(e);
+        }
+    }
 
+    /// <summary>
+    /// Defines the dynamic implementation detail types.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineDynamicImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    {
+        try
+        {
             // Also emit all shared COM interface entries types that are programmatically generated
             foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
             {
@@ -1695,7 +2057,31 @@ internal partial class InteropGenerator
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
+            throw WellKnownInteropExceptions.DynamicImplementationDetailTypeCodeGenerationError(e);
+        }
+    }
+
+    /// <summary>
+    /// Defines the dynamic type map entries for custom-mapped types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineDynamicCustomMappedTypeMapEntries(
+        InteropGeneratorArgs args,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        try
+        {
+            DynamicCustomMappedTypeMapEntriesBuilder.AssemblyAttributes(
+                args: args,
+                interopReferences: interopReferences,
+                module: module);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e);
         }
     }
 

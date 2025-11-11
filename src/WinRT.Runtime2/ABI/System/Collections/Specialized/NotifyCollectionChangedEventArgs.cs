@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -12,18 +11,6 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0008, IDE0055
-
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
-    trimTarget: typeof(NotifyCollectionChangedEventArgs))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-    target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
-    trimTarget: typeof(NotifyCollectionChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(NotifyCollectionChangedEventArgs),
@@ -37,7 +24,11 @@ namespace ABI.System.Collections.Specialized;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.notifycollectionchangedeventargs"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.notifycollectionchangedeventargs"/>
 [NotifyCollectionChangedEventArgsComWrappersMarshaller]
-file static class NotifyCollectionChangedEventArgs;
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class NotifyCollectionChangedEventArgs;
 
 /// <summary>
 /// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
@@ -191,11 +182,10 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;
-
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr: value,
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgs,
+            pvObject: out void* result).Assert();
 
         try
         {
@@ -203,7 +193,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -216,25 +206,9 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(RuntimeClassName, in IID);
-
-    /// <summary>
-    /// Gets the IID for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgsFactory
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgsFactory;
-    }
-
-    /// <summary>
-    /// Gets the runtime class name for <see cref="NotifyCollectionChangedEventArgsRuntimeClassFactory"/>.
-    /// </summary>
-    private static string RuntimeClassName => WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-        ? "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"
-        : "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs";
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+        runtimeClassName: WellKnownXamlRuntimeClassNames.NotifyCollectionChangedEventArgs,
+        iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
@@ -248,8 +222,8 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* CreateInstance(
         NotifyCollectionChangedAction action,
-        IList? newItems,
-        IList? oldItems,
+        global::System.Collections.IList? newItems,
+        global::System.Collections.IList? oldItems,
         int newIndex,
         int oldIndex)
     {
@@ -264,7 +238,7 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
             innerInterface: out void* innerInterface,
             defaultInterface: out void* defaultInterface);
 
-        WindowsRuntimeObjectMarshaller.Free(innerInterface);
+        WindowsRuntimeUnknownMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

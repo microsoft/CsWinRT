@@ -46,7 +46,7 @@ public static unsafe class StringMarshaller
     {
         return value is null
             ? default
-            : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfString));
+            : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString));
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -105,21 +105,21 @@ file static class StringInterfaceEntriesImpl
     /// </summary>
     static StringInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfString.IID = WellKnownInterfaceIds.IID_IReferenceOfString;
+        Entries.IReferenceOfString.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString;
         Entries.IReferenceOfString.Vtable = StringReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = StringPropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -148,7 +148,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_IReferenceOfString, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString, out void* result).Assert();
 
         try
         {
@@ -156,7 +156,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -302,7 +302,7 @@ file static unsafe class StringPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -379,7 +379,7 @@ file static unsafe class StringPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetGuid(void* thisPtr, Guid* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -406,7 +406,7 @@ file static unsafe class StringPropertyValueImpl
     private static HRESULT GetNumeric<T>(void* thisPtr, T* value)
         where T : unmanaged, IParsable<T>
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }

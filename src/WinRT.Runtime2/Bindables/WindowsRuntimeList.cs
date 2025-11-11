@@ -6,7 +6,6 @@ using System.Collections;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using ABI.System.Collections;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
@@ -42,7 +41,7 @@ internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIds.IID_IBindableIterable),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable),
                     comparand: null);
 
                 return field;
@@ -132,7 +131,7 @@ internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
     /// <inheritdoc/>
     public IEnumerator GetEnumerator()
     {
-        return IEnumerableMethods.GetEnumerator(IBindableIterableObjectReference);
+        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(IBindableIterableObjectReference);
     }
 
     /// <inheritdoc/>

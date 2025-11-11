@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Runtime.Versioning;
-using ABI.Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -22,7 +21,7 @@ namespace Windows.Foundation.Collections;
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Collections.CollectionChange>")]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-[CollectionChangeComWrappersMarshaller]
+[ABI.Windows.Foundation.Collections.CollectionChangeComWrappersMarshaller]
 public enum CollectionChange
 {
     /// <summary>

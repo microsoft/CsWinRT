@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using ABI.System.Collections;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
@@ -35,7 +34,7 @@ internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerab
     /// <inheritdoc/>
     public IEnumerator GetEnumerator()
     {
-        return IEnumerableMethods.GetEnumerator(NativeObjectReference);
+        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(NativeObjectReference);
     }
 
     /// <inheritdoc/>

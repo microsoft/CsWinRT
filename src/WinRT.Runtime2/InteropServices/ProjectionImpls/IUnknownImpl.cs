@@ -42,15 +42,6 @@ public static unsafe class IUnknownImpl
     }
 
     /// <summary>
-    /// Gets the IID for the <c>IUnknown</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IUnknown;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IUnknown</c> implementation.
     /// </summary>
     public static nint Vtable

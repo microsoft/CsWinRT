@@ -14,69 +14,22 @@
     <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-
-    <!--
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />	
-    -->
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- Uncomment to generate projection -->
+    <CsWinRTExcludes>
+      TestComponentCSharp.AnotherAssembly;
+    </CsWinRTExcludes>
     <CsWinRTIncludes>
-      TestComponent.Blittable;
-      TestComponent.NonBlittable;
-      TestComponent.Nested;
-      TestComponentCSharp.FlagValue;
-      TestComponentCSharp.EnumValue;
-      TestComponentCSharp.FlagStruct;
-      TestComponentCSharp.EnumStruct;
-      TestComponentCSharp.BlittableStruct;
-      TestComponentCSharp.ComposedBlittableStruct;
-      TestComponentCSharp.NonBlittableStringStruct;
-      TestComponentCSharp.NonBlittableBoolStruct;
-      TestComponentCSharp.NonBlittableRefStruct;
-      TestComponentCSharp.ComposedNonBlittableStruct
-      TestComponentCSharp.CustomDisposableTest;
-      TestComponentCSharp.ICustomDisposableTest;
-      TestComponent.Composable;
-      TestComponent.IComposableStatics;
-      TestComponent.IRequiredOne;
-      TestComponent.IRequiredTwo;
-      TestComponent.IRequiredThree;
-      TestComponent.IRequiredFour;
-      TestComponent.IComposable;
-      TestComponentCSharp.ComImports;
-      TestComponentCSharp.IComImports;
-      TestComponentCSharp.ISingleton;
-      TestComponentCSharp.Singleton;
-      TestComponentCSharp.IProperties1;
-      TestComponentCSharp.ThrowingManagedProperties;
-      TestComponentCSharp.IThrowingManagedProperties;
-      TestComponent.Param1Handler;
-      TestComponent.Param2Handler;
-      TestComponent.Param3Handler;
-      TestComponent.Param4Handler;
-      TestComponent.Param5Handler;
-      TestComponent.Param6Handler;
-      TestComponent.Param7Handler;
-      TestComponent.Param8Handler;
-      TestComponent.Param9Handler;
-      TestComponent.Param10Handler;
-      TestComponent.Param11Handler;
-      TestComponent.Param12Handler;
-      TestComponent.Param13Handler;
-      TestComponent.Param14Handler;
-      TestComponent.Param15Handler;
-      TestComponentCSharp.EventWithReturn;
-      TestComponentCSharp.EventWithGuid;
-      TestComponentCSharp.ProvideInt;
-      TestComponentCSharp.ProvideBool;
-      TestComponentCSharp.ProvideString;
+      TestComponent;
+      TestComponentCSharp;
       test_component_base;
       test_component_derived;
+      test_component_fast;
     </CsWinRTIncludes>
-
+      
     <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>

@@ -31,7 +31,7 @@ internal static unsafe class ContextCallback
         object state)
     {
         // Check if we are already on the same context, if so we do not need to switch
-        if (contextCallbackPtr == null || WindowsRuntimeImports.CoGetContextToken() == contextToken)
+        if (contextCallbackPtr is null || WindowsRuntimeImports.CoGetContextToken() == contextToken)
         {
             callback(state);
 
@@ -73,7 +73,7 @@ internal static unsafe class ContextCallback
 
         HRESULT hresult;
 
-        fixed (Guid* riid = &WellKnownInterfaceIds.IID_ICallbackWithNoReentrancyToApplicationSTA)
+        fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_ICallbackWithNoReentrancyToApplicationSTA)
         {
             // Marshal the supplied callback on the target context
             hresult = IContextCallbackVftbl.ContextCallbackUnsafe(

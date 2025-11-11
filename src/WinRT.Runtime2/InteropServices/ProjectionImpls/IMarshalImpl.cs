@@ -40,15 +40,6 @@ public static unsafe class IMarshalImpl
     }
 
     /// <summary>
-    /// Gets the IID for the <c>IMarshal</c> interface.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IMarshal;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <c>IMarshal</c> implementation.
     /// </summary>
     public static nint Vtable

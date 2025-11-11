@@ -33,7 +33,7 @@ public static unsafe class IAsyncActionMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncAction? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncAction);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -57,9 +57,10 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
     {
         if (runtimeClassName.SequenceEqual("Windows.Foundation.IAsyncAction"))
         {
-            WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
-
-            wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+                wrapperFlags: out wrapperFlags);
 
             wrapperObject = new WindowsRuntimeAsyncAction(objectReference);
 
@@ -82,9 +83,10 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
     /// <inheritdoc/>
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in WellKnownInterfaceIds.IID_IAsyncAction)!;
-
-        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+            wrapperFlags: out wrapperFlags);
 
         return new WindowsRuntimeAsyncAction(objectReference);
     }
@@ -118,7 +120,7 @@ public static unsafe class IAsyncActionMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 
@@ -192,15 +194,6 @@ public static unsafe class IAsyncActionImpl
         Vftbl.get_Completed = &get_Completed;
         Vftbl.set_Completed = &set_Completed;
         Vftbl.GetResults = &GetResults;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="IAsyncAction"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAsyncAction;
     }
 
     /// <summary>

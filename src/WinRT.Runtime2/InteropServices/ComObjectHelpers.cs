@@ -33,7 +33,7 @@ internal unsafe partial class ComObjectHelpers
     public static HRESULT IsFreeThreadedUnsafe(void* thisPtr)
     {
         // Check whether the object is free-threaded by querying for 'IAgileObject'
-        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIds.IID_IAgileObject, out void* pAgileObject) >= WellKnownErrorCodes.S_OK)
+        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownWindowsInterfaceIIDs.IID_IAgileObject, out void* pAgileObject) >= WellKnownErrorCodes.S_OK)
         {
             _ = IUnknownVftbl.ReleaseUnsafe(pAgileObject);
 
@@ -41,13 +41,13 @@ internal unsafe partial class ComObjectHelpers
         }
 
         // Also check for 'IMarshal'
-        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIds.IID_IMarshal, out void* pMarshal) >= WellKnownErrorCodes.S_OK)
+        if (IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownWindowsInterfaceIIDs.IID_IMarshal, out void* pMarshal) >= WellKnownErrorCodes.S_OK)
         {
             Guid unmarshalClass;
             HRESULT hresult;
 
             // Get the class IID of the unmarshalling code for the current object
-            fixed (Guid* riid = &WellKnownInterfaceIds.IID_IUnknown)
+            fixed (Guid* riid = &WellKnownWindowsInterfaceIIDs.IID_IUnknown)
             {
                 hresult = IMarshalVftbl.GetUnmarshalClassUnsafe(
                     thisPtr: pMarshal,
@@ -68,7 +68,7 @@ internal unsafe partial class ComObjectHelpers
             // release the input object in case this method failed at this point. By doing this instead,
             // because we are only doing direct native calls, we can ensure the whole operation is never
             // throwing an exception, and we can just handle failure scenarios with normal flow control.
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 return hresult;
             }

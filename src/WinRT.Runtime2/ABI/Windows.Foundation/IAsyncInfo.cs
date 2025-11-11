@@ -5,7 +5,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ABI.System;
 using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -28,7 +27,7 @@ public static unsafe class IAsyncInfoMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncInfo? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IAsyncInfo);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncInfo>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -81,7 +80,7 @@ public static unsafe class IAsyncInfoMethods
 
     /// <see cref="IAsyncInfo.ErrorCode"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static global::System.Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
+    public static Exception? ErrorCode(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
 
@@ -92,7 +91,7 @@ public static unsafe class IAsyncInfoMethods
 
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-        return ExceptionMarshaller.ConvertToManaged(result);
+        return System.ExceptionMarshaller.ConvertToManaged(result);
     }
 
     /// <see cref="IAsyncInfo.Cancel"/>
@@ -171,15 +170,6 @@ public static unsafe class IAsyncInfoImpl
     }
 
     /// <summary>
-    /// Gets the IID for <see cref="IAsyncInfo"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IAsyncInfo;
-    }
-
-    /// <summary>
     /// Gets a pointer to the managed <see cref="IAsyncInfo"/> implementation.
     /// </summary>
     public static nint Vtable
@@ -201,11 +191,11 @@ public static unsafe class IAsyncInfoImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *errorCode = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -228,7 +218,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -251,7 +241,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -269,7 +259,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -287,7 +277,7 @@ public static unsafe class IAsyncInfoImpl
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
@@ -323,7 +313,7 @@ file interface IAsyncInfoInterfaceImpl : IAsyncInfo
     }
 
     /// <inheritdoc/>
-    global::System.Exception? IAsyncInfo.ErrorCode
+    Exception? IAsyncInfo.ErrorCode
     {
         get
         {

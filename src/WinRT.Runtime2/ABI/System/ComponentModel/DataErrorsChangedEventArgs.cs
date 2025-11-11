@@ -87,7 +87,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgs, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_DataErrorsChangedEventArgs, out void* result).Assert();
 
         try
         {
@@ -95,7 +95,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -110,7 +110,7 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
         "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
-        in WellKnownInterfaceIds.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
+        in WellKnownWindowsInterfaceIIDs.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
@@ -128,7 +128,7 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
             defaultInterface: out void* defaultInterface);
 
         // The value of 'innerInterface' should always be 'null', but let's release it just in case
-        WindowsRuntimeObjectMarshaller.Free(innerInterface);
+        WindowsRuntimeUnknownMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

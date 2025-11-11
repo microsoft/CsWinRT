@@ -6,7 +6,7 @@ using System;
 namespace WindowsRuntime.InteropGenerator.Errors;
 
 /// <summary>
-/// A well known exceptions for the interop generator.
+/// A well known exception for the interop generator.
 /// </summary>
 internal sealed class WellKnownInteropException : Exception
 {

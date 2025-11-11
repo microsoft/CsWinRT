@@ -75,7 +75,7 @@ public static unsafe class TimeSpanMarshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.TimeSpan? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -118,21 +118,21 @@ file static class TimeSpanInterfaceEntriesImpl
     /// </summary>
     static TimeSpanInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfTimeSpan.IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan;
+        Entries.IReferenceOfTimeSpan.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan;
         Entries.IReferenceOfTimeSpan.Vtable = TimeSpanReferenceImpl.Vtable;
-        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = TimeSpanPropertyValueImpl.Vtable;
-        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
-        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
-        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.IID = WellKnownWindowsInterfaceIIDs.IID_IMarshal;
         Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
-        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
-        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IAgileObject.IID = WellKnownWindowsInterfaceIIDs.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IAgileObjectImpl.Vtable;
+        Entries.IInspectable.IID = WellKnownWindowsInterfaceIIDs.IID_IInspectable;
         Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
-        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.IID = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
         Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
@@ -161,7 +161,7 @@ internal sealed unsafe class TimeSpanComWrappersMarshallerAttribute : WindowsRun
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
+        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
 
         return TimeSpanMarshaller.ConvertToManaged(abi);
     }
@@ -308,7 +308,7 @@ file static unsafe class TimeSpanPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }

@@ -31,7 +31,7 @@ public static unsafe class ICommandMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<ICommand>.ConvertToUnmanaged(
             value: value,
-            iid: in WellKnownInterfaceIds.IID_ICommand);
+            iid: in WellKnownWindowsInterfaceIIDs.IID_ICommand);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -151,15 +151,6 @@ public static unsafe class ICommandImpl
         Vftbl.remove_CanExecuteChanged = &remove_CanExecuteChanged;
         Vftbl.CanExecute = &CanExecute;
         Vftbl.Execute = &Execute;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="ICommand"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_ICommand;
     }
 
     /// <summary>

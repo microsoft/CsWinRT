@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -9,6 +10,10 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for the Windows Runtime <c>HSTRING</c> type.
 /// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class HStringMarshaller
 {
     /// <summary>
@@ -107,7 +112,7 @@ public static unsafe class HStringMarshaller
     /// <returns>The resulting <see cref="string"/> value.</returns>
     public static string ConvertToManaged(HSTRING value)
     {
-        if (value == null)
+        if (value is null)
         {
             return "";
         }
@@ -138,7 +143,7 @@ public static unsafe class HStringMarshaller
     /// </remarks>
     public static ReadOnlySpan<char> ConvertToManagedUnsafe(HSTRING value)
     {
-        if (value == null)
+        if (value is null)
         {
             return "";
         }
@@ -158,7 +163,7 @@ public static unsafe class HStringMarshaller
     {
         // We technically don't need this check, since 'WindowsDeleteString' can handle 'null' values
         // as well. However, we can check this to avoid going through the native call if not needed.
-        if (value == null)
+        if (value is null)
         {
             return;
         }

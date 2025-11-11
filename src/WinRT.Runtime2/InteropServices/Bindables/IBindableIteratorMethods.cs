@@ -33,7 +33,7 @@ internal static unsafe class IBindableIteratorMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 

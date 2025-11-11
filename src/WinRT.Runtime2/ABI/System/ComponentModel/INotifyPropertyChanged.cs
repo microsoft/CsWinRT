@@ -30,9 +30,7 @@ public static unsafe class INotifyPropertyChangedMarshaller
     {
         return WindowsRuntimeInterfaceMarshaller<INotifyPropertyChanged>.ConvertToUnmanaged(
             value: value,
-            iid: in WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-                ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
-                : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged);
+            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyPropertyChanged);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -54,13 +52,13 @@ public static unsafe class INotifyPropertyChangedMethods
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> PropertyChangedTable
+    private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventHandlerEventSource> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> MakePropertyChanged()
+            static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventHandlerEventSource> MakePropertyChanged()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -72,11 +70,11 @@ public static unsafe class INotifyPropertyChangedMethods
     }
 
     /// <see cref="INotifyPropertyChanged.PropertyChanged"/>
-    public static PropertyChangedEventSource PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static PropertyChangedEventHandlerEventSource PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         return PropertyChangedTable.GetOrAdd(
             key: thisObject,
-            valueFactory: static (_, thisReference) => new PropertyChangedEventSource(thisReference, 6),
+            valueFactory: static (_, thisReference) => new PropertyChangedEventHandlerEventSource(thisReference, 6),
             factoryArgument: thisReference);
     }
 }
@@ -121,17 +119,6 @@ public static unsafe class INotifyPropertyChangedImpl
 
         Vftbl.add_PropertyChanged = &add_PropertyChanged;
         Vftbl.remove_PropertyChanged = &remove_PropertyChanged;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="INotifyPropertyChanged"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownInterfaceIds.IID_WUX_INotifyPropertyChanged
-            : ref WellKnownInterfaceIds.IID_MUX_INotifyPropertyChanged;
     }
 
     /// <summary>

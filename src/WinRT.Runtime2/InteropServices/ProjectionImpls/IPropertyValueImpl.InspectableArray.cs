@@ -88,7 +88,7 @@ file static unsafe class InspectableArrayPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
-        if (value == null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -102,7 +102,7 @@ file static unsafe class InspectableArrayPropertyValueImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     internal static HRESULT GetInspectableArray(void* thisPtr, int* size, void*** value)
     {
-        if (size == null || value == null)
+        if (size is null || value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -140,7 +140,7 @@ file static unsafe class InspectableArrayPropertyValueImpl
                         // Array elements can be 'null' even if marshalled correctly.
                         // That is, it's completely normal for some objects in the
                         // initial managed array to also be 'null' to begin with.
-                        if (objectPtr != null)
+                        if (objectPtr is not null)
                         {
                             _ = IUnknownVftbl.ReleaseUnsafe(objectPtr);
                         }

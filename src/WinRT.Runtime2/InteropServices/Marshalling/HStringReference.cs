@@ -1,12 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
+
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
 /// Represents a reference to a fast-pass <c>HSTRING</c> value (passed without copying).
 /// </summary>
-public unsafe ref struct HStringReference
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public unsafe struct HStringReference
 {
     /// <summary>
     /// The underlying header for the <c>HSTRING</c> reference.

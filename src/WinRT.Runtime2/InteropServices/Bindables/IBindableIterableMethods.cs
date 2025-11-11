@@ -3,7 +3,6 @@
 
 using System.Collections;
 using System.Runtime.CompilerServices;
-using ABI.System.Collections;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -31,11 +30,11 @@ internal static unsafe class IBindableIterableMethods
 
         try
         {
-            return IEnumeratorMarshaller.ConvertToManaged(result)!;
+            return ABI.System.Collections.IEnumeratorMarshaller.ConvertToManaged(result)!;
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }

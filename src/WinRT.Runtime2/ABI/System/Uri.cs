@@ -88,7 +88,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_UriRuntimeClass, out void* result).Assert();
+        IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_UriRuntimeClass, out void* result).Assert();
 
         try
         {
@@ -96,7 +96,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -111,7 +111,7 @@ file static unsafe class UriRuntimeClassFactory
     /// </summary>
     private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
         "Windows.Foundation.Uri",
-        in WellKnownInterfaceIds.IID_UriRuntimeClassFactory);
+        in WellKnownWindowsInterfaceIIDs.IID_UriRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Uri"/>.

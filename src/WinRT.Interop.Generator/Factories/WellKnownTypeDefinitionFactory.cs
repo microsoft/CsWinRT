@@ -119,7 +119,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, void*, int> Invoke;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT> Invoke;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
@@ -152,7 +152,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT>'
         MethodSignature valueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -727,7 +727,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT>'
         MethodSignature get_KeyOrValueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -821,7 +821,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT>'
         MethodSignature collectionChangeType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -832,7 +832,7 @@ internal static partial class WellKnownTypeDefinitionFactory
                 module.CorLibTypeFactory.Void.MakePointerType(),
                 interopReferences.CollectionChange.MakePointerType()]);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
         MethodSignature keyType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -901,8 +901,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int> add_VectorChanged;
-        // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int> remove_VectorChanged;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> add_VectorChanged;
+        // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> remove_VectorChanged;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
@@ -951,8 +951,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int> add_MapChanged;
-        // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int> remove_MapChanged;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> add_MapChanged;
+        // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> remove_MapChanged;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
@@ -961,6 +961,193 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("add_MapChanged"u8, FieldAttributes.Public, add_MapChanged.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("remove_MapChanged"u8, FieldAttributes.Public, remove_MapChanged.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an 'IAsyncActionWithProgress`1&lt;TProgress&gt;' instantiation for some type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IAsyncActionWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IAsyncActionWithProgressVftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Get the 'Progress' signatures
+        MethodSignature get_ProgressType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_ProgressType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
+
+        // Get the 'Completed' signatures
+        MethodSignature get_CompletedType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_CompletedType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, HRESULT>'
+        MethodSignature getResultsType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+
+        // The vtable layout for 'IAsyncActionWithProgress`1<TProgress>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Progress;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Progress;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an 'IAsyncOperation`1&lt;TResult&gt;' instantiation for some type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IAsyncOperationVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IAsyncOperationVftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Get the 'Completed' signatures
+        MethodSignature get_CompletedType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_CompletedType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
+
+        // Get the 'GetResults' signature
+        MethodSignature getResultsType = WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences);
+
+        // The vtable layout for 'IAsyncOperation`1<TResult>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> GetResults;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an 'IAsyncOperationWithProgress`2&lt;TResult, TProgress&gt;' instantiation for some type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IAsyncOperationWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IAsyncOperationWithProgressVftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Get the 'Progress' signatures
+        MethodSignature get_ProgressType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_ProgressType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
+
+        // Get the 'Completed' signatures
+        MethodSignature get_CompletedType = WellKnownTypeSignatureFactory.get_Handler(interopReferences);
+        MethodSignature set_CompletedType = WellKnownTypeSignatureFactory.set_Handler(interopReferences);
+
+        // Get the 'GetResults' signature
+        MethodSignature getResultsType = WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences);
+
+        // The vtable layout for 'IAsyncOperation`1<TResult>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Progress;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Progress;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> GetResults;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -989,7 +1176,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, void**, int>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>'
         MethodSignature valueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(

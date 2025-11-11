@@ -392,9 +392,7 @@ namespace Windows.Storage.Streams
 
         #region Reading
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         private IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
         {
             // This method is somewhat tricky: We could consider just calling ReadAsync (recall that Task implements IAsyncResult).
@@ -498,9 +496,7 @@ namespace Windows.Storage.Streams
             }
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (buffer == null)
@@ -525,9 +521,7 @@ namespace Windows.Storage.Streams
             return ReadAsyncInternal(buffer, offset, count, cancellationToken);
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public override int Read(byte[] buffer, int offset, int count)
         {
             // Arguments validation and not-disposed validation are done in BeginRead.
@@ -537,9 +531,7 @@ namespace Windows.Storage.Streams
             return bytesread;
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public override int ReadByte()
         {
             // EnsureNotDisposed will be called in Read->BeginRead.
@@ -639,9 +631,7 @@ namespace Windows.Storage.Streams
             }
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (buffer == null)
@@ -738,9 +728,7 @@ namespace Windows.Storage.Streams
             }
         }
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         public override Task FlushAsync(CancellationToken cancellationToken)
         {
             IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
@@ -765,9 +753,7 @@ namespace Windows.Storage.Streams
         // Moved it to the end while using Dev10 VS because it does not understand async and everything that follows looses intellisense.
         // Should move this code into the Reading regios once using Dev11 VS becomes the norm.
 
-#if NET
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
         private async Task<int> ReadAsyncInternal(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Debug.Assert(buffer != null);

@@ -27,7 +27,7 @@ public static unsafe class IServiceProviderMarshaller
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IServiceProvider? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IServiceProvider>.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_IServiceProvider);
+        return WindowsRuntimeInterfaceMarshaller<IServiceProvider>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IXamlServiceProvider);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
@@ -68,7 +68,7 @@ public static unsafe class IServiceProviderMethods
         }
         finally
         {
-            WindowsRuntimeObjectMarshaller.Free(result);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
@@ -111,15 +111,6 @@ public static unsafe class IServiceProviderImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.GetService = &GetService;
-    }
-
-    /// <summary>
-    /// Gets the IID for <see cref="IServiceProvider"/>.
-    /// </summary>
-    public static ref readonly Guid IID
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WellKnownInterfaceIds.IID_IServiceProvider;
     }
 
     /// <summary>

@@ -207,7 +207,7 @@ public abstract unsafe class WindowsRuntimeObject :
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
         // Delegate to the activation factory callback (see detailed explanation above)
-        activationFactoryCallback(
+        activationFactoryCallback.Invoke(
             additionalParameters: additionalParameters,
             defaultInterface: out void* defaultInterface);
 
@@ -246,7 +246,7 @@ public abstract unsafe class WindowsRuntimeObject :
         bool hasUnwrappableNativeObjectReference = HasUnwrappableNativeObjectReference;
 
         // Delegate to the activation factory callback (see detailed explanation above)
-        activationFactoryCallback(
+        activationFactoryCallback.Invoke(
             additionalParameters: additionalParameters,
             baseInterface: hasUnwrappableNativeObjectReference ? null : this,
             innerInterface: out void* innerInterface,
@@ -304,7 +304,7 @@ public abstract unsafe class WindowsRuntimeObject :
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref _inspectableObjectReference,
-                    value: NativeObjectReference.As(in WellKnownInterfaceIds.IID_IInspectable),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IInspectable),
                     comparand: null);
 
                 return _inspectableObjectReference;
@@ -458,7 +458,7 @@ public abstract unsafe class WindowsRuntimeObject :
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
         // We explicitly don't handle overridable interfaces and 'IInspectable'
-        if (IsOverridableInterface(in iid) || WellKnownInterfaceIds.IID_IInspectable == iid || WellKnownInterfaceIds.IID_IWeakReference == iid)
+        if (IsOverridableInterface(in iid) || WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid || WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid)
         {
             ppv = (nint)null;
 
@@ -688,7 +688,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
             // rest of the 'IDynamicInterfaceCastable' logic to run, as the cast can never succeed.
             // So we can just pre-cache the failure result here, to speedup future identical casts.
-            if (!WellKnownErrorCodes.Succeeded(hresult))
+            if (hresult.Failed())
             {
                 _ = TypeHandleCache.TryAdd(interfaceType, DynamicInterfaceCastFailure.Instance);
 

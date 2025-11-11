@@ -59,7 +59,7 @@ internal sealed unsafe class EventSourceCache
     public static void Create(WindowsRuntimeObjectReference objectReference, int index, WeakReference<object> state)
     {
         // Try to get the weak reference source for the input object (it's not guaranteed to be present)
-        if (!objectReference.TryAsUnsafe(in WellKnownInterfaceIds.IID_IWeakReferenceSource, out void* weakRefSourceSource))
+        if (!objectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource, out void* weakRefSourceSource))
         {
             return;
         }
@@ -194,10 +194,10 @@ internal sealed unsafe class EventSourceCache
         // If the target no longer exists, destroy the cache
         lock (this)
         {
-            _ = _target.Resolve(WellKnownInterfaceIds.IID_IUnknown, out weakReference);
+            _ = _target.Resolve(WellKnownWindowsInterfaceIIDs.IID_IUnknown, out weakReference);
 
             // Update the target and clear the state if the old target is not alive anymore
-            if (weakReference == null)
+            if (weakReference is null)
             {
                 _target = target;
 
@@ -229,11 +229,11 @@ internal sealed unsafe class EventSourceCache
         // If target no longer exists, destroy cache
         lock (this)
         {
-            _ = _target.Resolve(WellKnownInterfaceIds.IID_IUnknown, out weakReference);
+            _ = _target.Resolve(WellKnownWindowsInterfaceIIDs.IID_IUnknown, out weakReference);
         }
 
         // There's no state to return if the target is not alive anymore
-        if (weakReference == null)
+        if (weakReference is null)
         {
             return null;
         }
