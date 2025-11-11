@@ -33,9 +33,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static PropertyChangedEventHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<PropertyChangedEventHandler?>(result);
+        return (PropertyChangedEventHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
@@ -47,9 +45,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
     public static PropertyChangedEventHandler? UnboxToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<PropertyChangedEventHandler?>(result);
+        return (PropertyChangedEventHandler?)WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
     }
 }
 
