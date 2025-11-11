@@ -94,6 +94,11 @@ internal sealed class InteropReferences
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.FlagsAttribute"/>.
+    /// </summary>
+    public TypeReference FlagsAttributeAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "FlagsAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeTargets"/>.
     /// </summary>
     public TypeReference AttributeTargets => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "AttributeTargets"u8);

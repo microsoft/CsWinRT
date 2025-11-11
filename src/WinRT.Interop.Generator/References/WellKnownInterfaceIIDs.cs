@@ -74,8 +74,15 @@ internal static class WellKnownInterfaceIIDs
         bool useWindowsUIXamlProjections,
         InteropReferences interopReferences)
     {
+
         if (signature is GenericInstanceTypeSignature genericSignature)
         {
+            bool result = SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1);
+            if (result)
+            {
+            }
+
+
             return genericSignature switch
             {
                 // Shared types
@@ -95,6 +102,18 @@ internal static class WellKnownInterfaceIIDs
                     => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerator1)
                     => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
+                    => new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1)
+                    => new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.MapChangedEventHandler2)
+                    => new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IList1)
+                    => new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), // Unsure of this one
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyList1)
+                    => new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), // Unsure of this one
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyDictionary2)
+                    => new Guid("b78f0653-fa89-59cf-ba95-726938aae666"),
                 _ => Guid.Empty
             };
         }

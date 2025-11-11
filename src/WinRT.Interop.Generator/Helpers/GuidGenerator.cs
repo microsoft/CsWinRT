@@ -60,9 +60,8 @@ internal static class GuidGenerator
 
             case ElementType.String:
                 return "string";
-
             case ElementType.Type:
-                return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
+                return "struct(Windows.UI.Xaml.Interop.222TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
 
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
@@ -92,15 +91,7 @@ internal static class GuidGenerator
             }
             else if (typeDefinition.IsEnum)
             {
-                bool isFlags = false;
-                foreach (CustomAttribute customAttribute in typeDefinition.CustomAttributes)
-                {
-                    if (customAttribute.Type is not null && customAttribute.Type.FullName.ToString() == "System.FlagsAttribute")
-                    {
-                        isFlags = true;
-                        break;
-                    }
-                }
+                bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
                 return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
             }
         }
@@ -140,6 +131,8 @@ internal static class GuidGenerator
         AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
+            _ = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
+
             // 4) Find [System.Runtime.InteropServices.GuidAttribute(...)]
             foreach (AsmResolver.DotNet.CustomAttribute customAttribute in typeDef.CustomAttributes)
             {
