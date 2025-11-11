@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Helpers;
 
@@ -20,7 +21,108 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal partial class InteropGenerator
 {
     /// <summary>
-    /// Runs the debug repro logic for the generator.
+    /// Runs the debug repro unpack logic for the generator.
+    /// </summary>
+    /// <param name="path">The path to the debug repro file to unpack.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The path to the resulting response file to use.</returns>
+    private static string UnpackDebugRepro(string path, CancellationToken token)
+    {
+        // Create a temporary directory to extract the files from the debug repro
+        string tempFolderName = $"cswinrtgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
+        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
+
+        _ = Directory.CreateDirectory(tempDirectory);
+
+        token.ThrowIfCancellationRequested();
+
+        using ZipArchive archive = ZipFile.OpenRead(path);
+
+        // Get all entries of interest
+        ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtgen.rsp");
+        ZipArchiveEntry originalPathsEntry = archive.Entries.Single(entry => entry.Name == "original-paths.json");
+        ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(entry.Name) == ".dll")];
+
+        token.ThrowIfCancellationRequested();
+
+        InteropGeneratorArgs args;
+
+        // Parse the debug repro .rsp file
+        using (Stream stream = responseFileEntry.Open())
+        {
+            args = InteropGeneratorArgs.ParseFromResponseFile(stream, token);
+        }
+
+        token.ThrowIfCancellationRequested();
+
+        Dictionary<string, string> originalPaths;
+
+        // Load the mapping with all the original file paths for the included .dll-s
+        using (Stream stream = originalPathsEntry.Open())
+        {
+            originalPaths = JsonSerializer.Deserialize(stream, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+        }
+
+        token.ThrowIfCancellationRequested();
+
+        List<string> referencePaths = [];
+        string? outputAssemblyPath = null;
+
+        // Extract all .dll-s, one per directory, so we can ensure there's no name conflicts
+        foreach ((int index, ZipArchiveEntry dllEntry) in dllEntries.Index())
+        {
+            string destinationFolder = Path.Combine(tempDirectory, index.ToString("000"));
+
+            _ = Directory.CreateDirectory(destinationFolder);
+
+            // Construct the path in the temporary subfolder with the original .dll name
+            string originalPath = originalPaths[dllEntry.Name];
+            string originalName = Path.GetFileName(originalPath);
+            string destinationPath = Path.Combine(destinationFolder, originalName);
+
+            // Extract the .dll to the new destination path
+            dllEntry.ExtractToFile(destinationPath, overwrite: true);
+
+            // Track all extracted reference paths, as well as the output assembly path
+            if (originalPath == args.OutputAssemblyPath)
+            {
+                outputAssemblyPath = destinationPath;
+            }
+            else
+            {
+                referencePaths.Add(destinationPath);
+            }
+        }
+
+        token.ThrowIfCancellationRequested();
+
+        // Prepare the .rsp file with all updated arguments
+        string rspText = new InteropGeneratorArgs
+        {
+            ReferenceAssemblyPaths = [.. referencePaths],
+            OutputAssemblyPath = outputAssemblyPath!,
+            GeneratedAssemblyDirectory = Path.Combine(tempDirectory, "bin"),
+            UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
+            ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
+            ValidateWinRTRuntimeDllVersion2References = args.ValidateWinRTRuntimeDllVersion2References,
+            EnableIncrementalGeneration = args.EnableIncrementalGeneration,
+            TreatWarningsAsErrors = args.TreatWarningsAsErrors,
+            MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
+            DebugReproDirectory = null,
+            Token = CancellationToken.None
+        }.FormatToResponseFile();
+
+        // Create the actual .rsp file
+        string rspFilePath = Path.Combine(tempDirectory, "cswinrtgen.rsp");
+
+        File.WriteAllText(rspFilePath, rspText);
+
+        // Return the resulting .rsp file so it can be used to replay the debug repro
+        return rspFilePath;
+    }
+
+    /// <summary>
+    /// Runs the debug repro save logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     private static void SaveDebugRepro(InteropGeneratorArgs args)
@@ -55,6 +157,8 @@ internal partial class InteropGenerator
         // Add all reference assemblies to the temp directory with hashed names
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
+            args.Token.ThrowIfCancellationRequested();
+
             string hashedName = GetHashedFileName(referenceAssemblyPath);
             string destinationPath = Path.Combine(tempDirectory, hashedName);
 
@@ -64,37 +168,40 @@ internal partial class InteropGenerator
             originalPaths.Add(hashedName, referenceAssemblyPath);
         }
 
+        args.Token.ThrowIfCancellationRequested();
+
         // Add the output assembly to the temp directory with a hashed name
         string outputAssemblyHashedName = GetHashedFileName(args.OutputAssemblyPath);
         string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
 
         File.Copy(args.OutputAssemblyPath, outputAssemblyDestination, overwrite: true);
 
+        args.Token.ThrowIfCancellationRequested();
+
         originalPaths.Add(outputAssemblyHashedName, args.OutputAssemblyPath);
 
         // Prepare the .rsp file with all updated arguments
-        StringBuilder builder = new();
-
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.ReferenceAssemblyPaths)));
-        _ = builder.Append(' ');
-        _ = builder.AppendLine(string.Join(',', updatedDllNames));
-
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.OutputAssemblyPath)));
-        _ = builder.Append(' ');
-        _ = builder.AppendLine(outputAssemblyDestination);
-
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.UseWindowsUIXamlProjections)));
-        _ = builder.Append(' ');
-        _ = builder.AppendLine(args.UseWindowsUIXamlProjections.ToString());
-
-        _ = builder.Append(InteropGeneratorArgs.GetCommandLineArgumentName(nameof(InteropGeneratorArgs.MaxDegreesOfParallelism)));
-        _ = builder.Append(' ');
-        _ = builder.AppendLine(args.MaxDegreesOfParallelism.ToString());
+        string rspText = new InteropGeneratorArgs
+        {
+            ReferenceAssemblyPaths = [.. updatedDllNames],
+            OutputAssemblyPath = outputAssemblyHashedName,
+            GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
+            UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
+            ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
+            ValidateWinRTRuntimeDllVersion2References = args.ValidateWinRTRuntimeDllVersion2References,
+            EnableIncrementalGeneration = args.EnableIncrementalGeneration,
+            TreatWarningsAsErrors = args.TreatWarningsAsErrors,
+            MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
+            DebugReproDirectory = args.DebugReproDirectory,
+            Token = CancellationToken.None
+        }.FormatToResponseFile();
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtgen.rsp");
 
-        File.WriteAllText(rspFilePath, builder.ToString());
+        File.WriteAllText(rspFilePath, rspText);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Create the .json file with the original paths
         string jsonFilePath = Path.Combine(tempDirectory, "original-paths.json");
@@ -102,10 +209,10 @@ internal partial class InteropGenerator
         // Serialize the original paths
         using (Stream jsonStream = File.Create(jsonFilePath))
         {
-            var jsonTypeInfo = (JsonTypeInfo<Dictionary<string, string>>)InteropGeneratorJsonSerializerContext.Default.GetTypeInfo(typeof(Dictionary<string, string>))!;
-
-            JsonSerializer.Serialize(jsonStream, originalPaths, jsonTypeInfo);
+            JsonSerializer.Serialize(jsonStream, originalPaths, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString);
         }
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Delete the previous file, if it exists
         if (File.Exists(zipPath))
