@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
@@ -91,7 +92,15 @@ internal static class GuidGenerator
             }
             else if (typeDefinition.IsEnum)
             {
-                bool isFlags = true;/*type.IsDefined(typeof(FlagsAttribute));*/
+                bool isFlags = false;
+                foreach (CustomAttribute customAttribute in typeDefinition.CustomAttributes)
+                {
+                    if (customAttribute.Type is not null && customAttribute.Type.FullName.ToString() == "System.FlagsAttribute")
+                    {
+                        isFlags = true;
+                        break;
+                    }
+                }
                 return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
             }
         }
