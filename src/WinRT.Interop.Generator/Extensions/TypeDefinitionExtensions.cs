@@ -27,7 +27,7 @@ internal static class TypeDefinitionExtensions
         /// <param name="attributeType">The attribute type to look for.</param>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(TypeReference attributeType, CorLibTypeFactory corLibTypeFactory)
+        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
         {
             for (
                 TypeDefinition? currentType = type;
