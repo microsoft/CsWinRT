@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CS8909
 
@@ -94,7 +95,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <param name="managedObject">The managed object to try to get a native object from.</param>
     /// <param name="result">The resulting native object, if successfully retrieved.</param>
     /// <returns>Whether <paramref name="managedObject"/> was a reference to a native object, and <paramref name="result"/> could be retrieved.</returns>
-    public static bool TryGetNativeObject(object? managedObject, out void* result)
+    public static bool TryGetNativeObject([NotNullWhen(true)] object? managedObject, out void* result)
     {
         // If the input object is wrapping a native object, we can unwrap it and return it after incrementing its reference count
         if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(managedObject, out WindowsRuntimeObjectReference? objectReference))
@@ -127,19 +128,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToUnmanaged"/>
     public static void* ConvertToUnmanaged(object? managedObject)
     {
-        if (managedObject is null)
-        {
-            return null;
-        }
-
-        // If 'value' is some RCW type we recognize, return the wrapped native object reference
-        if (TryGetNativeObject(managedObject, out void* nativeObject))
-        {
-            return nativeObject;
-        }
-
-        // Marshal 'value' as an 'IUnknown' (this method will take care of correctly marshalling objects with the right vtables)
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(managedObject);
+        return WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(managedObject).DetachThisPtrUnsafe();
     }
 
     /// <summary>
@@ -151,22 +140,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
     {
-        if (value is null)
-        {
-            return null;
-        }
-
-        // If the value is a CCW we recognize, retrieve the original managed object
-        if (TryGetManagedObject(value, out object? managedObject))
-        {
-            return managedObject;
-        }
-
-        // Marshal the object as an opaque object, as we have no static type information available
-        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
-            externalComObject: (nint)value,
-            objectComWrappersCallback: null,
-            unsealedObjectComWrappersCallback: null);
+        return WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 
     /// <summary>
@@ -180,11 +154,6 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.Free"/>
     public static void Free(void* value)
     {
-        if (value is null)
-        {
-            return;
-        }
-
-        _ = IUnknownVftbl.ReleaseUnsafe(value);
+        WindowsRuntimeUnknownMarshaller.Free(value);
     }
 }
