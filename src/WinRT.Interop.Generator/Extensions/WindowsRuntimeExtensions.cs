@@ -151,8 +151,7 @@ internal static class WindowsRuntimeExtensions
         public Utf8String? GetWindowsRuntimeMetadataName()
         {
             CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
-            return attribute?.Signature?.FixedArguments?[0]?.Element is Utf8String metadataName
-                ? metadataName : null;
+            return attribute?.Signature?.FixedArguments?[0]?.Element as Utf8String;
         }
     }
 
