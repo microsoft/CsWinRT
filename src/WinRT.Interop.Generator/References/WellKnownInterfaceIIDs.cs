@@ -80,11 +80,21 @@ internal static class WellKnownInterfaceIIDs
             {
                 // Shared types
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler)
-                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                    => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler1)
-                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                    => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.EventHandler2)
-                    => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
+                    => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.KeyValuePair)
+                    => new Guid("02B51929-C1C4-4A7E-8940-0312B5C18500"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerable)
+                    => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerable1)
+                    => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerator)
+                    => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IEnumerator1)
+                    => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
                 _ => Guid.Empty
             };
         }

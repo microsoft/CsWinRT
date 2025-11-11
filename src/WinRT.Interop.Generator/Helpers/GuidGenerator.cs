@@ -22,23 +22,6 @@ internal static class GuidGenerator
     {
         AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()!;
 
-        // Gather all known delegate types. We want to gather all projected delegate types, plus any
-        // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
-        // We need to check whether the type is a projected Windows Runtime type from the resolved type
-        // definition, and not from the generic type definition we can retrieve from the type signature.
-        // If we did the latter, the resulting type definition would not include any custom attributes.
-        if (typeDefinition is not null)
-        {
-            if (typeDefinition.IsDelegate)
-            {
-                return "delegate({" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "})";
-            }
-            else if (typeDefinition.IsEnum)
-            {
-                bool isFlags = true;/*type.IsDefined(typeof(FlagsAttribute));*/
-                return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
-            }
-        }
 #pragma warning disable IDE0010 // Add missing cases
         switch (typeSignature.ElementType)
         {
@@ -91,11 +74,28 @@ internal static class GuidGenerator
                 return "pinterface({" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
 
             case ElementType.Class:
-                return "cinterface(IInspectable)";
-
-            default:
-                throw new NotSupportedException($"Unsupported element type: {typeSignature.ElementType}");
+                // TODO: Get default interface and add it to the signature
+                return "rc(" + typeSignature.FullName + ")";
         }
+
+        // Gather all known delegate types. We want to gather all projected delegate types, plus any
+        // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
+        // We need to check whether the type is a projected Windows Runtime type from the resolved type
+        // definition, and not from the generic type definition we can retrieve from the type signature.
+        // If we did the latter, the resulting type definition would not include any custom attributes.
+        if (typeDefinition is not null)
+        {
+            if (typeDefinition.IsDelegate)
+            {
+                return "delegate({" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "})";
+            }
+            else if (typeDefinition.IsEnum)
+            {
+                bool isFlags = true;/*type.IsDefined(typeof(FlagsAttribute));*/
+                return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+            }
+        }
+        return "";
     }
 
     /// <summary>
