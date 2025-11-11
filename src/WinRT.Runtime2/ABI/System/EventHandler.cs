@@ -60,9 +60,7 @@ public static unsafe class EventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static global::System.EventHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<EventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<global::System.EventHandler?>(result);
+        return (global::System.EventHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<EventHandlerComWrappersCallback>(value);
     }
 }
 

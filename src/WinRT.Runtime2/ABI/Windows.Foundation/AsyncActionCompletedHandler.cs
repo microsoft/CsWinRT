@@ -40,9 +40,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static AsyncActionCompletedHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<AsyncActionCompletedHandler?>(result);
+        return (AsyncActionCompletedHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
@@ -54,9 +52,7 @@ public static unsafe class AsyncActionCompletedHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
     public static AsyncActionCompletedHandler? UnboxToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<AsyncActionCompletedHandler?>(result);
+        return (AsyncActionCompletedHandler?)WindowsRuntimeDelegateMarshaller.UnboxToManaged<AsyncActionCompletedHandlerComWrappersCallback>(value);
     }
 }
 
