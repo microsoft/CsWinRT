@@ -332,6 +332,7 @@ internal static partial class InteropTypeDefinitionBuilder
             {
                 { Ldarg_0 },
                 { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
+                { Castclass, typeSignature2.ToTypeDefOrRef() },
                 { Ret }
             }
         };
