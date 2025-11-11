@@ -100,5 +100,4 @@ internal static class IHasCustomAttributeExtensions
     {
         return TryGetCustomAttribute(member, attributeType, out _);
     }
-
 }
