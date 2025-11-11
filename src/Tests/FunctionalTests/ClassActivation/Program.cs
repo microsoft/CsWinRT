@@ -19,7 +19,7 @@ using WindowsRuntime.InteropServices;
 
 
 ThrowingManagedProperties throwingManagedProperties = new();
-throwingManagedProperties.ThrowWithIProperty1(new ThrowingManagedProperty(new NullReferenceException()));
+throwingManagedProperties.ThrowWithIProperty1(new TestProperty1(new NullReferenceException()));
 
 //Composable composable = new();
 //_ = composable.Value;
@@ -92,9 +92,9 @@ unsafe
     }
 }
 
-sealed class TestComposable : Composable
+sealed class TestProperty1 : IProperties1
 {
-    public ThrowingManagedProperty(Exception exceptionToThrow)
+    public TestProperty1(Exception exceptionToThrow)
     {
         ExceptionToThrow = exceptionToThrow;
     }
