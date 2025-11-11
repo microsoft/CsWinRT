@@ -21,7 +21,7 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
+        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
     }
 
     extension(ITypeDescriptor type)
@@ -272,4 +272,20 @@ internal static class WindowsRuntimeExtensions
             }
         }
     }
+}
+
+/// <summary>
+/// Cached, well-known metadata names.
+/// </summary>
+file static class WellKnownMetadataNames
+{
+    /// <summary>
+    /// The <c>"WindowsRuntime"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntime = "WindowsRuntime"u8;
+
+    /// <summary>
+    /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeMetadataAttribute = "WindowsRuntimeMetadataAttribute"u8;
 }
