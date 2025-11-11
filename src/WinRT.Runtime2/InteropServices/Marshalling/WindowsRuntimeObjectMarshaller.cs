@@ -82,9 +82,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the object as an opaque object, as we have no static type information available
@@ -114,9 +114,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeMarshal.IsReferenceToManagedObject(value))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
         {
-            return ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)value);
+            return managedObject;
         }
 
         // Marshal the object as an opaque object, as we have no static type information available
