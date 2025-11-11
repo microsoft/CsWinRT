@@ -200,6 +200,7 @@ internal partial class InteropGenerator
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
+
                 args.Token.ThrowIfCancellationRequested();
 
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
@@ -226,6 +227,13 @@ internal partial class InteropGenerator
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {
+                        if (type.FullName is "ThrowingManagedProperties" or "TestProperty1")
+                        {
+                            ConsoleAppFramework.ConsoleApp.Log(currentType.FullName + "  Found interface " + implementation.Interface?.FullName + " " + implementation.IsProjectedWindowsRuntimeType + " " + implementation.Interface?.IsProjectedWindowsRuntimeType);
+                            ConsoleAppFramework.ConsoleApp.Log(currentType.FullName + "  Found interface " + implementation.Interface?.FullName + "  Custom Attributes: " + implementation.Interface?.CustomAttributes.Count + " " + string.Join(", ", implementation.Interface?.CustomAttributes.Select(attr => attr.Type?.FullName) ?? []));
+                            ConsoleAppFramework.ConsoleApp.Log(currentType.FullName + "  Found interface " + implementation.Interface?.FullName + "  Custom Attributes2: " + implementation.CustomAttributes.Count + " " + string.Join(", ", implementation.CustomAttributes.Select(attr => attr.Type?.FullName) ?? []));
+                        }
+
                         // Check for projected Windows Runtime interfaces first
                         if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
                             implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
