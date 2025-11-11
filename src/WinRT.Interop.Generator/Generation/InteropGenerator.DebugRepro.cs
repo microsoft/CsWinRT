@@ -83,8 +83,9 @@ internal partial class InteropGenerator
             // Extract the .dll to the new destination path
             dllEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track all extracted reference paths, as well as the output assembly path
-            if (originalPath == args.OutputAssemblyPath)
+            // Track all extracted reference paths, as well as the output assembly path.
+            // Note that the debug repro only uses filenames, not full paths, for .dll-s.
+            if (dllEntry.Name == args.OutputAssemblyPath)
             {
                 outputAssemblyPath = destinationPath;
             }
@@ -101,7 +102,7 @@ internal partial class InteropGenerator
         {
             ReferenceAssemblyPaths = [.. referencePaths],
             OutputAssemblyPath = outputAssemblyPath!,
-            GeneratedAssemblyDirectory = Path.Combine(tempDirectory, "bin"),
+            GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
             ValidateWinRTRuntimeDllVersion2References = args.ValidateWinRTRuntimeDllVersion2References,
