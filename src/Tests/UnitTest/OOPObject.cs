@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Windows.Win32;
 using Windows.Win32.System.Com;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace UnitTest
 {
@@ -64,7 +65,12 @@ namespace UnitTest
             object obj = this.createFunction();
             if (riid == IUnknown)
             {
-                ppvObject = WinRT.MarshalInspectable<object>.FromManaged(obj);
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+                unsafe
+                {
+                    ppvObject = (IntPtr)WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(obj).DetachThisPtrUnsafe();
+                }
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
             }
             else
             {

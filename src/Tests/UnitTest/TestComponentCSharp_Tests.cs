@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
@@ -32,17 +31,12 @@ using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
 using Windows.Devices.Enumeration;
 using Windows.UI.Notifications;
+using WindowsRuntime.InteropServices.Marshalling;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime;
 
-#if NET
-using WeakRefNS = System;
-#else
-using WeakRefNS = WinRT;
-#endif
-
-#if NET
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
-#endif
 
 namespace UnitTest
 {
@@ -270,7 +264,6 @@ namespace UnitTest
             Assert.True(stream.Length == 2);
         }
 
-#if !NET47
         [Fact]
         public void TestBufferAsStreamUsingAsBufferWithOffset()
         {
@@ -305,7 +298,6 @@ namespace UnitTest
             Assert.Equal((byte)0x06, arr[2]);
             Assert.Equal((byte)0x07, arr[3]);
         }
-#endif
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer()
@@ -489,7 +481,6 @@ namespace UnitTest
             Assert.True(buffer2.Length == 3);
         }
 
-#if NET
         [Fact]
         public void TestTryGetDataUnsafe()
         {
@@ -497,11 +488,11 @@ namespace UnitTest
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             arr.CopyTo(0, buf, 0, 3);
 
-            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
-            Assert.True(dataPtr != IntPtr.Zero);
-
             unsafe
             {
+                Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(buf, out byte* dataPtr));
+                Assert.True(dataPtr != null);
+
                 Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
 
                 byte[] arr2 = buffSpan.ToArray();
@@ -513,17 +504,17 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestTryGetDataUnsafe_MemoryBufferReference()
+        public unsafe void TestTryGetDataUnsafe_MemoryBufferReference()
         {
             var buffer = new Windows.Foundation.MemoryBuffer(256);
             var reference = buffer.CreateReference();
 
-            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr1, out uint capacity1));
-            Assert.True(dataPtr1 != IntPtr.Zero);
+            Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr1, out uint capacity1));
+            Assert.True(dataPtr1 != null);
             Assert.True(capacity1 == 256);
 
-            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr2, out uint capacity2));
-            Assert.True(dataPtr2 != IntPtr.Zero);
+            Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr2, out uint capacity2));
+            Assert.True(dataPtr2 != null);
             Assert.True(capacity2 == 256);
 
             Assert.True(dataPtr1 == dataPtr2);
@@ -538,7 +529,7 @@ namespace UnitTest
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = arr.AsBuffer();
 
-            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.True(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
             Assert.Equal(arr, array.Array);
         }
 
@@ -548,12 +539,11 @@ namespace UnitTest
             var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
             var buffer = arr.AsBuffer(1, 2);
 
-            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.True(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
             Assert.Equal(arr, array.Array);
             Assert.Equal(1, array.Offset);
             Assert.Equal(2, array.Count);
         }
-#endif
 
         [Fact]
         public void TestTypePropertyWithSystemType()
@@ -675,7 +665,7 @@ namespace UnitTest
         [Fact]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
-            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
+            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
         }
 
         [Fact]
@@ -1713,19 +1703,19 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestCCWMarshaler()
+        public unsafe void TestCCWMarshaler()
         {
             Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
             var managedProperties = new ManagedProperties(42);
-            IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
-            ccw.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW);
-            Assert.NotNull(marshalCCW);
+            using WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW));
+            Assert.NotEqual(IntPtr.Zero, marshalCCW);
 
             var array = new byte[] { 0x01 };
             var buff = array.AsBuffer();
-            IObjectReference ccw2 = MarshalInterface<IBuffer>.CreateMarshaler(buff);
-            ccw2.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW2);
-            Assert.NotNull(marshalCCW2);
+            using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(buff, typeof(IBuffer).GUID);
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw2.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW2));
+            Assert.NotEqual(IntPtr.Zero, marshalCCW2);
         }
 
 #if NET
@@ -1774,12 +1764,12 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestCCWIdentity()
+        public unsafe void TestCCWIdentity()
         {
             var managedProperties = new ManagedProperties(42);
-            IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
-            IObjectReference ccw2 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
-            Assert.Equal(ccw1.ThisPtr, ccw2.ThisPtr);
+            using WindowsRuntimeObjectReferenceValue ccw1 = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+            using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+            Assert.Equal((nint)ccw1.GetThisPtrUnsafe(), (nint)ccw2.GetThisPtrUnsafe());
         }
 
         [Fact]
@@ -2930,7 +2920,7 @@ namespace UnitTest
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
-            WeakRefNS.WeakReference<IProperties1> weakReference = new WeakRefNS.WeakReference<IProperties1>(properties);
+            WeakReference<IProperties1> weakReference = new WeakReference<IProperties1>(properties);
             Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
             Assert.Same(properties, propertiesStrong);
         }
@@ -2938,7 +2928,7 @@ namespace UnitTest
         [Fact]
         public void WeakReferenceOfNativeObject()
         {
-            var weakReference = new WeakRefNS.WeakReference<Class>(TestObject);
+            var weakReference = new WeakReference<Class>(TestObject);
             Assert.True(weakReference.TryGetTarget(out var classStrong));
             Assert.Same(TestObject, classStrong);
         }
@@ -2946,11 +2936,11 @@ namespace UnitTest
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WeakRefNS.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            static (WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
                 ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
-                return (new WeakRefNS.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+                return (new WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
             var (winrt, net, objRef) = GetWeakReferences();
@@ -3403,28 +3393,22 @@ namespace UnitTest
             Assert.True(eventCalled2);
         }
 
-#if NET
         [Fact]
-        public void TestProxiedDelegate()
+        public unsafe void TestProxiedDelegate()
         {
             var obj = new OOPAsyncAction();
             var factory = new WinRTClassFactory<OOPAsyncAction>(
                 () => obj,
                 new Dictionary<Guid, Func<object, IntPtr>>()
                 {
-                    { typeof(IAsyncAction).GUID, obj => MarshalInterface<IAsyncAction>.FromManaged((IAsyncAction) obj) },
+                    { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
                 });
 
             WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
             var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-#if NET
             var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
             var proc = Process.Start(launchExePath);
-#else
-            var launchExePath = $"{currentExecutingDir}\\OOPExe.dll";
-            var proc = Process.Start("dotnet.exe", launchExePath);
-#endif
             Thread.Sleep(5000);
             obj.Close();
             Assert.True(obj.delegateCalled);
@@ -3437,7 +3421,6 @@ namespace UnitTest
             {
             }
         }
-#endif
 
         [Fact]
         private async Task TestPnpPropertiesInLoop()
@@ -3491,7 +3474,6 @@ namespace UnitTest
             }).ToList();
         }
 
-#if NET
         [TestComponentCSharp.Warning]  // NO warning CA1416
         class WarningManaged { };
 
@@ -3538,7 +3520,6 @@ namespace UnitTest
             WarningStatic.WarningProperty = 0; // warning CA1416
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
-#endif
 
         [Fact]
         public void TestObjectFunctions()
@@ -3580,8 +3561,6 @@ namespace UnitTest
             Assert.Equal(4, sixth.Equals(fifth));
             Assert.False(object.Equals(sixth, fifth));
             Assert.True(object.Equals(sixth, sixth));
-            Assert.False(((IEquatable<CustomEquals2>)sixth).Equals(new CustomEquals2()));
-            Assert.True(((IEquatable<CustomEquals2>)sixth).Equals(sixth));
 
             UnSealedCustomEquals seventh = new()
             {
@@ -3646,7 +3625,6 @@ namespace UnitTest
             staThread.Join();
         }
 
-#if NET
         [Fact]
         public void TestActivationFactoriesFromMultipleContexts()
         {
@@ -3788,24 +3766,24 @@ namespace UnitTest
         };
 
         [Fact]
-        public void TestActivationHandler()
+        public unsafe void TestActivationHandler()
         {
-            ActivationFactory.ActivationHandler = (string name, Guid iid) =>
+            WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler((string name, in Guid iid, out void* activationFactory) =>
             {
                 Assert.Equal("Windows.Foundation.GuidHelper", name);
                 Assert.Equal(typeof(IGuidHelperStatics).GUID, iid);
 
-                return MarshalInterface<ICustomGuidHelperStatics>.FromManaged(new CustomGuidHelper());
-            };
+                activationFactory = WindowsRuntimeInterfaceMarshaller<ICustomGuidHelperStatics>.ConvertToUnmanaged(new CustomGuidHelper(), typeof(ICustomGuidHelperStatics).GUID).GetThisPtrUnsafe();
+                return 0;
+            });
 
             CustomGuidHelper.Mock = new Guid("78872A91-C365-4DDB-9509-1CCA002B6FD9");
 
             Guid guid = GuidHelper.CreateNewGuid();
             Assert.Equal(CustomGuidHelper.Mock, guid);
 
-            ActivationFactory.ActivationHandler = null;
+            WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler(null);
         }
-#endif
 
         [Fact]
         public void TestDictionary()

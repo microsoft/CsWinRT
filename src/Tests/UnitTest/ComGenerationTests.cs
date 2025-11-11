@@ -1,5 +1,4 @@
-﻿#if NET8_0_OR_GREATER
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
@@ -53,4 +52,3 @@ namespace UnitTest
         }
     }
 }
-#endif
