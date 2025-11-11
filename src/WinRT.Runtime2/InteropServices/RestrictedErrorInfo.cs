@@ -27,7 +27,7 @@ public static unsafe class RestrictedErrorInfo
     /// calls (both in managed and native code). This improves the debugging experience.
     /// </remarks>
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
-    public static Exception GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
+    public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
         return GetExceptionForHR(errorCode, out _);
     }
