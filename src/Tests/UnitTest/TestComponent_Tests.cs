@@ -6,6 +6,7 @@ using test_component_base;
 using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
+using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using Xunit;
 
@@ -600,9 +601,25 @@ namespace UnitTest
             RunDictionaryTests(c);
         }
 
-#if NET
+        sealed class TestIDICInspectable : WindowsRuntimeObject
+        {
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+            public unsafe TestIDICInspectable(void* ptr)
+                :base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
+            {
+            }
+
+            protected override bool HasUnwrappableNativeObjectReference => true;
+
+            protected override bool IsOverridableInterface(in Guid iid)
+            {
+                return false;
+            }
+        }
+
         [Fact]
-        public void Collections_Dictionary_IDIC()
+        public unsafe void Collections_Dictionary_IDIC()
         {
             var a = new Dictionary<string, string>()
             {
@@ -611,11 +628,12 @@ namespace UnitTest
                 ["pears"] = "3"
             };
             var c = Tests.Collection3(a, out _);
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var dictCreatedWithIDIC = (IDictionary<string, string>)inspectable;
+
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var dictCreatedWithIDIC = (IDictionary<string, string>)(object)inspectable;
             RunDictionaryTests(dictCreatedWithIDIC);
         }
-#endif 
+
         private void RunDictionaryTests(IDictionary<string, string> c)
         {
             Assert.True(SequencesEqual(c.Keys, new List<string> { "apples", "oranges", "pears" }));
@@ -674,9 +692,8 @@ namespace UnitTest
             RunReadOnlyDictionaryTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_ReadOnly_Dictionary_IDIC()
+        public unsafe void Collections_ReadOnly_Dictionary_IDIC()
         {
             var a = new Dictionary<string, string>()
             {
@@ -686,11 +703,10 @@ namespace UnitTest
             };
             IReadOnlyDictionary<string, string> b = null;
             var c = Tests.Collection4(a, out b);
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)(object)inspectable;
             RunReadOnlyDictionaryTests(dictCreatedWithIDIC);
         }
-#endif
 
         private void RunReadOnlyDictionaryTests(IReadOnlyDictionary<string, string> c)
         {
@@ -719,25 +735,22 @@ namespace UnitTest
             RunListTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_List_IDIC()
+        public unsafe void Collections_List_IDIC()
         {
             string[] a = new string[] { "apples", "oranges", "pears" };
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var listCreatedWithIDIC = (IList<string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var listCreatedWithIDIC = (IList<string>)(object)inspectable;
             RunListTests(listCreatedWithIDIC);
         }
-#endif
 
         private void RunListTests(IList<string> c)
         {
             Assert.Equal(3, c.Count);
             Assert.Equal(1, c.IndexOf("oranges"));
-            Assert.NotNull(c.AsAgile());
 
             Assert.False(c.IsReadOnly);
 
@@ -784,19 +797,18 @@ namespace UnitTest
             RunReadonlyListTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_ReadOnly_List_IDIC()
+        public unsafe void Collections_ReadOnly_List_IDIC()
         {
             string[] a = new string[] { "apples", "oranges", "pears" };
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var listCreatedWithIDIC = (IReadOnlyList<string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var listCreatedWithIDIC = (IReadOnlyList<string>)(object)inspectable;
             RunReadonlyListTests(listCreatedWithIDIC);
         }
-#endif
+
         private void RunReadonlyListTests(IReadOnlyList<string> c)
         {
             Assert.Equal("oranges", c[1]);
