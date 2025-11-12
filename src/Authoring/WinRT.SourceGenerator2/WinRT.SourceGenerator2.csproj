@@ -1,7 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
+    <RootNamespace>WindowsRuntime.SourceGenerator</RootNamespace>
+
+    <!-- The assembly name must always be 'WinRT.SourceGenerator', for back-compatibility -->
+    <AssemblyName>WinRT.SourceGenerator2</AssemblyName>
+
+    <!--
+      While this project does not produce a .dll that consuming projects execute at runtime, we still want to
+      include debugging information, to make it easier to debug the generator themselves in case of issues.
+      Rather than using portable .pdb files, we just embed them, to ensure debuggers will load them correctly.
+      Using portable .pdb-s results in Visual Studio not automatically loading them when attaching a debugger
+      to the Roslyn code analysis process to try to debug the generators, forcing to pick the path manually.
+    -->
+    <DebugType>embedded</DebugType>
+
+    <!-- Treat all warnings as errors, only in release configurations (same as in the runtime) -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+
+    <!-- Enable the latest warning wave (same as in the runtime) -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- Import the global configs from the CodeStyle package (enables all IDExxxx warnings)-->
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+
+    <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Enable the compiler strict mode (same as in the runtime) -->
+    <Features>strict</Features>
+
+    <!-- Roslyn settings -->
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
+
+  <!-- Assembly info -->
+  <PropertyGroup>
+    <Authors>Microsoft Corporation</Authors>
+    <Company>Microsoft Corporation</Company>
+    <Product>C#/WinRT</Product>
+    <FileVersion>$(VersionNumber)</FileVersion>
+    <Version>$(VersionNumber)</Version>
+    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>C#/WinRT Authoring Source Generator $(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Authoring Source Generator v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="5.0.0-2.final" PrivateAssets="all" />
+  </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
@@ -15,7 +15,6 @@
       the exact .dll name. For instance, the UWP XAML compiler special cases 'WinRT.Runtime.dll'.
     -->
     <AssemblyName>WinRT.Runtime2</AssemblyName>
-    
 
     <!--
       Treat all warnings as errors, only in release configurations. This allows the dev inner loop to remain
