@@ -18,10 +18,36 @@ internal static partial class InteropGenerator
     /// <summary>
     /// Runs the interop generator to produce the resulting <c>WinRT.Interop.dll</c> assembly.
     /// </summary>
-    /// <param name="responseFilePath">The path to the response file to use.</param>
+    /// <param name="inputFilePath">The path to the response file or debug repro to use.</param>
     /// <param name="token">The token for the operation.</param>
-    public static void Run([Argument] string responseFilePath, CancellationToken token)
+    public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
+        string responseFilePath = inputFilePath;
+        bool isUsingDebugRepro = false;
+
+        // Load the debug repro to investigate with, if we have one
+        try
+        {
+            // If no debug repro directory was provided, we have nothing to do.
+            // This is fully expected, it just means no debug repro is needed.
+            if (Path.GetExtension(inputFilePath) == ".zip")
+            {
+                ConsoleApp.Log("Unpacking input 'cswinrtgen' debug repro");
+
+                isUsingDebugRepro = true;
+
+                // If we unpacked a debug repro, we'll also replace the input file
+                // path with the extracted response file from the input repro.
+                responseFilePath = UnpackDebugRepro(inputFilePath, token);
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledInteropException("unpack-debug-repro", e);
+        }
+
+        token.ThrowIfCancellationRequested();
+
         InteropGeneratorArgs args;
 
         // Parse the actual arguments from the response file
@@ -36,12 +62,14 @@ internal static partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Same a debug repro, if needed
+        // Save a debug repro, if needed
         try
         {
             // If no debug repro directory was provided, we have nothing to do.
             // This is fully expected, it just means no debug repro is needed.
-            if (args.DebugReproDirectory is not null)
+            // We also skip this if we're currently processing an input debug
+            // repro, as there would be no point in creating a new one from that.
+            if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
             {
                 ConsoleApp.Log("Saving 'cswinrtgen' debug repro");
 
@@ -50,7 +78,7 @@ internal static partial class InteropGenerator
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw new UnhandledInteropException("debug-repro", e);
+            throw new UnhandledInteropException("save-debug-repro", e);
         }
 
         args.Token.ThrowIfCancellationRequested();
