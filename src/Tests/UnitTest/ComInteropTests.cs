@@ -15,7 +15,6 @@ using Windows.UI.Input.Core;
 using Windows.UI.Input.Spatial;
 using Windows.UI.ViewManagement;
 using Xunit;
-using WinRT;
 using TestComponentCSharp;
 
 namespace UnitTest

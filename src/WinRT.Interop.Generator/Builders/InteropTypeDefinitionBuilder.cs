@@ -253,9 +253,7 @@ internal static partial class InteropTypeDefinitionBuilder
         };
 
         // Add and implement the 'CreateObject' method
-        marshallerType.AddMethodImplementation(
-            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-            method: createObjectMethod);
+        marshallerType.Methods.Add(createObjectMethod);
     }
 
     /// <summary>
@@ -376,7 +374,7 @@ internal static partial class InteropTypeDefinitionBuilder
         //
         // [FixedAddressValueType]
         // private static readonly <VTABLE_TYPE> Vftbl;
-        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToValueTypeSignature())
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private | FieldAttributes.Static, vftblType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Globalization;
-using WinRT;
+using WindowsRuntime.InteropServices;
 using Xunit;
 
 namespace UnitTest
@@ -12,7 +12,7 @@ namespace UnitTest
         {
             const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
 
-            Exception exception = ExceptionHelpers.GetExceptionForHR(RPC_E_WRONG_THREAD);
+            Exception exception = RestrictedErrorInfo.GetExceptionForHR(RPC_E_WRONG_THREAD);
             Assert.NotNull(exception);
             Assert.False(string.IsNullOrWhiteSpace(exception.Message));
             if (CultureInfo.CurrentUICulture.Name == "en-US")

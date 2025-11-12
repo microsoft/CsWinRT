@@ -6,7 +6,8 @@ using test_component_base;
 using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
-using WinRT;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 using Xunit;
 
 namespace UnitTest
@@ -425,7 +426,7 @@ namespace UnitTest
                     new Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
                     new NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456))),
                 new Nested(
-                    new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(IInspectable).GUID),
+                    new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, WellKnownInterfaceIIDs.IID_IInspectable),
                     new NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789)))
             };
             Nested[] b = new Nested[a.Length];
@@ -459,12 +460,12 @@ namespace UnitTest
             Assert.Null(d);
         }
 
-        private T[] Array_Call<T>(T[] a, T[] b, out T[] c)
+        private T[] Array_Call<T>(ReadOnlySpan<T> a, Span<T> b, out T[] c)
         {
             Assert.True(a.Length == b.Length);
-            a.CopyTo(b, 0);
-            c = (T[])a.Clone();
-            return a;
+            a.CopyTo(b);
+            c = a.ToArray();
+            return a.ToArray();
         }
 
         [Fact]
@@ -600,9 +601,25 @@ namespace UnitTest
             RunDictionaryTests(c);
         }
 
-#if NET
+        sealed class TestIDICInspectable : WindowsRuntimeObject
+        {
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+            public unsafe TestIDICInspectable(void* ptr)
+                :base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
+            {
+            }
+
+            protected override bool HasUnwrappableNativeObjectReference => true;
+
+            protected override bool IsOverridableInterface(in Guid iid)
+            {
+                return false;
+            }
+        }
+
         [Fact]
-        public void Collections_Dictionary_IDIC()
+        public unsafe void Collections_Dictionary_IDIC()
         {
             var a = new Dictionary<string, string>()
             {
@@ -611,11 +628,12 @@ namespace UnitTest
                 ["pears"] = "3"
             };
             var c = Tests.Collection3(a, out _);
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var dictCreatedWithIDIC = (IDictionary<string, string>)inspectable;
+
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var dictCreatedWithIDIC = (IDictionary<string, string>)(object)inspectable;
             RunDictionaryTests(dictCreatedWithIDIC);
         }
-#endif 
+
         private void RunDictionaryTests(IDictionary<string, string> c)
         {
             Assert.True(SequencesEqual(c.Keys, new List<string> { "apples", "oranges", "pears" }));
@@ -674,9 +692,8 @@ namespace UnitTest
             RunReadOnlyDictionaryTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_ReadOnly_Dictionary_IDIC()
+        public unsafe void Collections_ReadOnly_Dictionary_IDIC()
         {
             var a = new Dictionary<string, string>()
             {
@@ -686,11 +703,10 @@ namespace UnitTest
             };
             IReadOnlyDictionary<string, string> b = null;
             var c = Tests.Collection4(a, out b);
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)(object)inspectable;
             RunReadOnlyDictionaryTests(dictCreatedWithIDIC);
         }
-#endif
 
         private void RunReadOnlyDictionaryTests(IReadOnlyDictionary<string, string> c)
         {
@@ -719,25 +735,22 @@ namespace UnitTest
             RunListTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_List_IDIC()
+        public unsafe void Collections_List_IDIC()
         {
             string[] a = new string[] { "apples", "oranges", "pears" };
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var listCreatedWithIDIC = (IList<string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var listCreatedWithIDIC = (IList<string>)(object)inspectable;
             RunListTests(listCreatedWithIDIC);
         }
-#endif
 
         private void RunListTests(IList<string> c)
         {
             Assert.Equal(3, c.Count);
             Assert.Equal(1, c.IndexOf("oranges"));
-            Assert.NotNull(c.AsAgile());
 
             Assert.False(c.IsReadOnly);
 
@@ -784,19 +797,18 @@ namespace UnitTest
             RunReadonlyListTests(c);
         }
 
-#if NET
         [Fact]
-        public void Collections_ReadOnly_List_IDIC()
+        public unsafe void Collections_ReadOnly_List_IDIC()
         {
             string[] a = new string[] { "apples", "oranges", "pears" };
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
-            var listCreatedWithIDIC = (IReadOnlyList<string>)inspectable;
+            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var listCreatedWithIDIC = (IReadOnlyList<string>)(object)inspectable;
             RunReadonlyListTests(listCreatedWithIDIC);
         }
-#endif
+
         private void RunReadonlyListTests(IReadOnlyList<string> c)
         {
             Assert.Equal("oranges", c[1]);
@@ -983,6 +995,13 @@ namespace UnitTest
             Assert.Equal((T)boxedVal, val);
         }
 
+        private void Box_array<T>(ReadOnlySpan<T> val, Func<ReadOnlySpan<T>, object, object> boxFunc)
+        {
+            var boxedVal = boxFunc(val, val.ToArray());
+            Assert.IsType<T[]>(boxedVal);
+            Assert.Equal(val.ToArray(), (T[])boxedVal);
+        }
+
         [Fact]
         public void Box_Byte()
         {
@@ -1090,72 +1109,71 @@ namespace UnitTest
         [Fact]
         public void Box_LongArray()
         {
-            long[] arr = new long[] { 2, 4, 6 };
-            Box_type(arr, Tests.Box18);
+            ReadOnlySpan<long> arr = new long[] { 2, 4, 6 };
+            Box_array(arr, Tests.Box18);
 
             long[] arr2 = new long[] { 2, 4, 6 };
-            Box_type(arr2, Tests.Box18);
-            Box_type(arr2, Tests.Box18);
+            Box_array(arr2, Tests.Box18);
+            Box_array(arr2, Tests.Box18);
 
             long[] arr3 = new long[0];
-            Box_type(arr3, Tests.Box18);
+            Box_array(arr3, Tests.Box18);
 
             long[] arr4 = new long[0];
-            Box_type(arr4, Tests.Box18);
+            Box_array(arr4, Tests.Box18);
         }
 
         [Fact]
         public void Box_BoolArray()
         {
             bool[] arr = new bool[] { true, false, true };
-            Box_type(arr, Tests.Box19);
+            Box_array(arr, Tests.Box19);
 
             bool[] arr2 = new bool[] { true, false, true };
-            Box_type(arr2, Tests.Box19);
-            Box_type(arr2, Tests.Box19);
+            Box_array(arr2, Tests.Box19);
+            Box_array(arr2, Tests.Box19);
 
             bool[] arr3 = new bool[0];
-            Box_type(arr3, Tests.Box19);
+            Box_array(arr3, Tests.Box19);
 
             bool[] arr4 = new bool[0];
-            Box_type(arr4, Tests.Box19);
+            Box_array(arr4, Tests.Box19);
         }
 
         [Fact]
         public void Box_StringArray()
         {
             string[] arr = new string[] { "one", "two", "three" };
-            Box_type(arr, Tests.Box20);
+            Box_array(arr, Tests.Box20);
 
             string[] arr2 = new string[] { "four", "five", "six" };
-            Box_type(arr2, Tests.Box20);
-            Box_type(arr2, Tests.Box20);
+            Box_array(arr2, Tests.Box20);
+            Box_array(arr2, Tests.Box20);
 
             string[] arr3 = new string[0];
-            Box_type(arr3, Tests.Box20);
+            Box_array(arr3, Tests.Box20);
 
             string[] arr4 = new string[0];
-            Box_type(arr4, Tests.Box20);
+            Box_array(arr4, Tests.Box20);
         }
 
         [Fact]
         public void Box_TimeSpanArray()
         {
             TimeSpan[] arr = new TimeSpan[] { TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5), TimeSpan.FromMilliseconds(6) };
-            Box_type(arr, Tests.Box21);
+            Box_array(arr, Tests.Box21);
 
             TimeSpan[] arr2 = new TimeSpan[] { TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5), TimeSpan.FromMilliseconds(6) };
-            Box_type(arr2, Tests.Box21);
-            Box_type(arr2, Tests.Box21);
+            Box_array(arr2, Tests.Box21);
+            Box_array(arr2, Tests.Box21);
 
             TimeSpan[] arr3 = new TimeSpan[0];
-            Box_type(arr3, Tests.Box21);
+            Box_array(arr3, Tests.Box21);
 
             TimeSpan[] arr4 = new TimeSpan[0];
-            Box_type(arr4, Tests.Box21);
+            Box_array(arr4, Tests.Box21);
         }
 
-#if NET
         [Fact]
         public void Fast_Abi_Simple()
         {
@@ -1201,7 +1219,6 @@ namespace UnitTest
             sv.ObjectProperty = new List<int> { 1, 2, 3 };
             Assert.Equal(3, ((List<int>)sv.ObjectProperty).Count);
         }
-#endif
 
         // Nota Bene: this test case must always remain the final one
         [Fact]

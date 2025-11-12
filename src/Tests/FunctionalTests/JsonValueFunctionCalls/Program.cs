@@ -1,5 +1,17 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
+using WindowsRuntime.InteropServices;
+
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+// TODO: This shouldn't be needed if transitive references are detected correctly.
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
+
 
 // Static function calls and create RCW for existing object.
 IStringable[] a = new IStringable[] {
@@ -23,7 +35,6 @@ CheckBoxedEnum();
 
 return result == 17 ? 100 : 101;
 
-[WinRT.DynamicWindowsRuntimeCast(typeof(TestComponentCSharp.EnumValue))]
 void CheckBoxedEnum()
 {
     var enumVal = TestComponentCSharp.Class.BoxedEnum;

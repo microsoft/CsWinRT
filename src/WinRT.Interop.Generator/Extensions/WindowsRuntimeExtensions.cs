@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
@@ -145,6 +147,17 @@ internal static class WindowsRuntimeExtensions
         {
             return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
         }
+
+        /// <summary>
+        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/>, if available.
+        /// </summary>
+        /// <returns>The Windows Runtime metadata name from the <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
+        public Utf8String? GetWindowsRuntimeMetadataName()
+        {
+            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
+
+            return attribute?.Signature?.FixedArguments?[0]?.Element as Utf8String;
+        }
     }
 
     extension(TypeSignature signature)
@@ -184,6 +197,27 @@ internal static class WindowsRuntimeExtensions
 
             // The only non-generic custom-mapped delegate type is 'EventHandler'
             return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
+        }
+
+        /// <summary>
+        /// Gets the Windows Runtime metadata name for a <see cref="TypeSignature"/>, if available.
+        /// </summary>
+        /// <returns>The Windows Runtime metadata name from the underlying type's <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method resolves the underlying type definition from the signature and retrieves its Windows Runtime metadata name.
+        /// For generic instance types, it uses the generic type definition. For array types, it uses the base element type.
+        /// For other types, it resolves the type definition directly.
+        /// </para>
+        /// </remarks>
+        public Utf8String? GetWindowsRuntimeMetadataName()
+        {
+            return signature switch
+            {
+                GenericInstanceTypeSignature generic => generic.GenericType.Resolve()?.GetWindowsRuntimeMetadataName(),
+                ArrayTypeSignature array => array.BaseType.GetWindowsRuntimeMetadataName(),
+                _ => signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName()
+            };
         }
     }
 

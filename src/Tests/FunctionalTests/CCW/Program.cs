@@ -1,15 +1,22 @@
 ﻿using System;
-using TestComponentCSharp;
-using WinRT.Interop;
-using WinRT;
-using System.Collections.Generic;
 using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using System.Collections.Specialized;
-using Windows.Foundation;
-using Windows.Web.Http;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Windows.Input;
+using TestComponentCSharp;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+
+// TODO: This shouldn't be needed if transitive references are detected correctly.
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -21,185 +28,188 @@ if (managedProperties.ReadWriteProperty != instance.ReadWriteProperty)
     return 101;
 }
 
-// Check for the default interfaces provided by WinRT.Runtime
-Guid IID_IMarshal = new("00000003-0000-0000-c000-000000000046");
-IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
-ccw.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW);
-if (marshalCCW == null)
+unsafe
 {
-    return 102;
-}
+    // Check for the default interfaces provided by WinRT.Runtime
+    Guid IID_IMarshal = new("00000003-0000-0000-c000-000000000046");
+    WindowsRuntimeObjectReferenceValue ccwValue = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IMarshal, out nint marshalCCW));
+    if (marshalCCW == IntPtr.Zero)
+    {
+        return 102;
+    }
 
-// Check for managed implemented interface to ensure not trimmed.
-Guid IID_IUriHandler = new("FF4B4334-2104-537D-812E-67E3856AC7A2");
-ccw.TryAs<IUnknownVftbl>(IID_IUriHandler, out var uriHandlerCCW);
-if (uriHandlerCCW == null)
-{
-    return 103;
-}
+    // Check for managed implemented interface to ensure not trimmed.
+    Guid IID_IUriHandler = new("FF4B4334-2104-537D-812E-67E3856AC7A2");
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IUriHandler, out nint uriHandlerCCW));
+    if (uriHandlerCCW == IntPtr.Zero)
+    {
+        return 103;
+    }
 
-if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties1"))
-{
-    return 119;
-}
+    if (!CheckRuntimeClassName(ccwValue.GetThisPtrUnsafe(), "TestComponentCSharp.IProperties1"))
+    {
+        return 119;
+    }
 
-// Ensure that interfaces on the vtable / object don't get trimmed even if unused.
-Guid IID_IWarning1 = new("4DB3FA26-4BB1-50EA-8362-98F49651E516");
-Guid IID_IWarningClassOverrides = new("E5635CE4-D483-55AA-86D5-080DC07F0A09");
-Guid IID_IArtist = new("B7233F79-63CF-5AFA-A026-E4F1924F17A1");
+    // Ensure that interfaces on the vtable / object don't get trimmed even if unused.
+    Guid IID_IWarning1 = new("4DB3FA26-4BB1-50EA-8362-98F49651E516");
+    Guid IID_IWarningClassOverrides = new("E5635CE4-D483-55AA-86D5-080DC07F0A09");
+    Guid IID_IArtist = new("B7233F79-63CF-5AFA-A026-E4F1924F17A1");
 
-var managedWarningClass = new ManagedWarningClass();
-ccw = MarshalInterface<IUriHandler>.CreateMarshaler(managedWarningClass);
-ccw.TryAs<IUnknownVftbl>(IID_IWarning1, out var warningCCW);
-if (warningCCW == null)
-{
-    return 104;
-}
+    var managedWarningClass = new ManagedWarningClass();
+    ccwValue = WindowsRuntimeInterfaceMarshaller<IUriHandler>.ConvertToUnmanaged(managedWarningClass, typeof(IUriHandler).GUID);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IWarning1, out nint warningCCW));
+    if (warningCCW == IntPtr.Zero)
+    {
+        return 104;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IWarningClassOverrides, out var warningOverrideCCW);
-if (warningOverrideCCW == null)
-{
-    return 105;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IWarningClassOverrides, out nint warningOverrideCCW));
+    if (warningOverrideCCW == IntPtr.Zero)
+    {
+        return 105;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IArtist, out var artistCCW);
-if (artistCCW == null)
-{
-    return 106;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IArtist, out nint artistCCW));
+    if (artistCCW == IntPtr.Zero)
+    {
+        return 106;
+    }
 
-// Testing for overrided name using attribute specified by author on type.
-if (!CheckRuntimeClassName(ccw, "ManagedWarningClass"))
-{
-    return 120;
-}
+    // Testing for overrided name using attribute specified by author on type.
+    if (!CheckRuntimeClassName(ccwValue.GetThisPtrUnsafe(), "ManagedWarningClass"))
+    {
+        return 120;
+    }
 
-var managedWarningClass2 = new ManagedWarningClass2();
-ccw = MarshalInspectable<object>.CreateMarshaler(managedWarningClass2);
-ccw.TryAs<IUnknownVftbl>(IID_IWarning1, out var warningCCW2);
-if (warningCCW2 == null)
-{
-    return 107;
-}
+    var managedWarningClass2 = new ManagedWarningClass2();
+    void* ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(managedWarningClass2);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IWarning1, out nint warningCCW2));
+    if (warningCCW2 == IntPtr.Zero)
+    {
+        return 107;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IWarningClassOverrides, out var warningOverrideCCW2);
-if (warningOverrideCCW2 == null)
-{
-    return 108;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IWarningClassOverrides, out nint warningOverrideCCW2));
+    if (warningOverrideCCW2 == IntPtr.Zero)
+    {
+        return 108;
+    }
 
-Guid IID_IProperties1 = new("4BB22177-718B-57C4-8977-CDF2621C781A");
-Guid IID_IProperties2 = new("6090AE4B-83A1-5474-A8D9-AF9B8C8DBD09");
-var managedInterfaceInheritance = new ManagedInterfaceInheritance();
-ccw = MarshalInspectable<object>.CreateMarshaler(managedInterfaceInheritance);
-ccw.TryAs<IUnknownVftbl>(IID_IProperties1, out var propertiesCCW);
-if (propertiesCCW == null)
-{
-    return 109;
-}
+    Guid IID_IProperties1 = new("4BB22177-718B-57C4-8977-CDF2621C781A");
+    Guid IID_IProperties2 = new("6090AE4B-83A1-5474-A8D9-AF9B8C8DBD09");
+    var managedInterfaceInheritance = new ManagedInterfaceInheritance();
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(managedInterfaceInheritance);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties1, out nint propertiesCCW));
+    if (propertiesCCW == IntPtr.Zero)
+    {
+        return 109;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out var properties2CCW);
-if (properties2CCW == null)
-{
-    return 110;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out nint properties2CCW));
+    if (properties2CCW == IntPtr.Zero)
+    {
+        return 110;
+    }
 
-if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties2"))
-{
-    return 121;
-}
+    if (!CheckRuntimeClassName(ccwPtr, "TestComponentCSharp.IProperties2"))
+    {
+        return 121;
+    }
 
-Guid IID_IlistInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
-Guid IID_IEnumerable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
-var intList = new ManagedIntList();
-ccw = MarshalInspectable<object>.CreateMarshaler(intList);
-ccw.TryAs<IUnknownVftbl>(IID_IlistInt, out var listIntCCW);
-if (listIntCCW == null)
-{
-    return 111;
-}
+    Guid IID_IlistInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
+    Guid IID_IEnumerable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
+    var intList = new ManagedIntList();
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(intList);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IlistInt, out nint listIntCCW));
+    if (listIntCCW == IntPtr.Zero)
+    {
+        return 111;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IEnumerable, out var enumerableCCW);
-if (enumerableCCW == null)
-{
-    return 112;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerable, out nint enumerableCCW));
+    if (enumerableCCW == IntPtr.Zero)
+    {
+        return 112;
+    }
 
-if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Int32>"))
-{
-    return 122;
-}
+    if (!CheckRuntimeClassName(ccwPtr, "Windows.Foundation.Collections.IVector`1<Int32>"))
+    {
+        return 122;
+    }
 
-Guid IID_IEnumerableDerived = new ("A70EC662-9975-51BB-9A28-82A876E01177");
-Guid IID_IEnumerableComposed = new ("BDCEC2FC-5BBE-5A69-989D-222563A811A6");
-Guid IID_IEnumerableIRequiredTwo = new ("10879613-0953-58AC-A6C0-817E28DD5A25");
-var derivedList = new ManagedDerivedList();
-ccw = MarshalInspectable<object>.CreateMarshaler(derivedList);
-ccw.TryAs<IUnknownVftbl>(IID_IEnumerableDerived, out var enumerableDerived);
-if (enumerableDerived == null)
-{
-    return 113;
-}
+    Guid IID_IEnumerableDerived = new("A70EC662-9975-51BB-9A28-82A876E01177");
+    Guid IID_IEnumerableComposed = new("BDCEC2FC-5BBE-5A69-989D-222563A811A6");
+    Guid IID_IEnumerableIRequiredTwo = new("10879613-0953-58AC-A6C0-817E28DD5A25");
+    var derivedList = new ManagedDerivedList();
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(derivedList);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableDerived, out nint enumerableDerived));
+    if (enumerableDerived == IntPtr.Zero)
+    {
+        return 113;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IEnumerableComposed, out var enumerableComposed);
-if (enumerableComposed == null)
-{
-    return 114;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableComposed, out nint enumerableComposed));
+    if (enumerableComposed == IntPtr.Zero)
+    {
+        return 114;
+    }
 
-ccw.TryAs<IUnknownVftbl>(IID_IEnumerableIRequiredTwo, out var enumerableRequiredTwo);
-if (enumerableRequiredTwo == null)
-{
-    return 115;
-}
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableIRequiredTwo, out nint enumerableRequiredTwo));
+    if (enumerableRequiredTwo == IntPtr.Zero)
+    {
+        return 115;
+    }
 
-if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
-{
-    return 123;
-}
+    if (!CheckRuntimeClassName(ccwPtr, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
+    {
+        return 123;
+    }
 
-var nestedClass = TestClass2.GetInstance();
-ccw = MarshalInspectable<object>.CreateMarshaler(nestedClass);
-ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out properties2CCW);
-if (properties2CCW == null)
-{
-    return 116;
-}
+    var nestedClass = TestClass2.GetInstance();
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(nestedClass);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out properties2CCW));
+    if (properties2CCW == IntPtr.Zero)
+    {
+        return 116;
+    }
 
-var genericNestedClass = TestClass2.GetGenericInstance();
-ccw = MarshalInspectable<object>.CreateMarshaler(genericNestedClass);
-ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out properties2CCW);
-if (properties2CCW == null)
-{
-    return 117;
-}
+    var genericNestedClass = TestClass2.GetGenericInstance();
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(genericNestedClass);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out properties2CCW));
+    if (properties2CCW == IntPtr.Zero)
+    {
+        return 117;
+    }
 
-var managedWarningClassList = new List<ManagedWarningClass>();
-instance.BindableIterableProperty = managedWarningClassList;
+    var managedWarningClassList = new List<ManagedWarningClass>();
+    instance.BindableIterableProperty = managedWarningClassList;
 
-var notifyCollectionChangedActionList = new List<NotifyCollectionChangedAction>();
-instance.BindableIterableProperty = notifyCollectionChangedActionList;
+    var notifyCollectionChangedActionList = new List<NotifyCollectionChangedAction>();
+    instance.BindableIterableProperty = notifyCollectionChangedActionList;
 
-var nullableDoubleList = new List<double?>();
-instance.BindableIterableProperty = nullableDoubleList;
+    var nullableDoubleList = new List<double?>();
+    instance.BindableIterableProperty = nullableDoubleList;
 
-var nullableDoubleList2 = new List<System.Nullable<double>>();
-instance.BindableIterableProperty = nullableDoubleList2;
+    var nullableDoubleList2 = new List<System.Nullable<double>>();
+    instance.BindableIterableProperty = nullableDoubleList2;
 
-var nullableHandleList = new List<GCHandle?>();
-instance.BindableIterableProperty = nullableHandleList;
+    var nullableHandleList = new List<GCHandle?>();
+    instance.BindableIterableProperty = nullableHandleList;
 
-var customCommand = new CustomCommand() as ICommand;
-ccw = MarshalInspectable<object>.CreateMarshaler(customCommand);
-ccw.TryAs<IUnknownVftbl>(ABI.System.Windows.Input.ICommandMethods.IID, out var commandCCW);
-if (commandCCW == null)
-{
-    return 118;
-}
+    var customCommand = new CustomCommand() as ICommand;
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(customCommand);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, WellKnownInterfaceIIDs.IID_Microsoft_UI_Xaml_Input_ICommand, out var commandCCW));
+    if (commandCCW == IntPtr.Zero)
+    {
+        return 118;
+    }
 
-if (!CheckRuntimeClassName(ccw, "Microsoft.UI.Xaml.Input.ICommand"))
-{
-    return 124;
+    if (!CheckRuntimeClassName(ccwPtr, "Microsoft.UI.Xaml.Input.ICommand"))
+    {
+        return 124;
+    }
 }
 
 TestClass.TestNestedClass();
@@ -326,17 +336,15 @@ if ((int)retrievedValue8 != 4 ||
     return 136;
 }
 
-#if NET8_0_OR_GREATER
-if (RunAndGetException(() => ComWrappersSupport.CreateCCWForObject(new ManagedOnlyClass())) is not NotSupportedException)
+if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedOnlyClass())) is not NotSupportedException)
 {
     return 137;
 }
 
-if (RunAndGetException(() => ComWrappersSupport.CreateCCWForObject(new ManagedOnlyStruct())) is not NotSupportedException)
+if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedOnlyStruct())) is not NotSupportedException)
 {
     return 138;
 }
-#endif
 
 return 100;
 
@@ -363,30 +371,22 @@ static Exception RunAndGetException(Action action)
 }
 #endif
 
-unsafe bool CheckRuntimeClassName(IObjectReference objRef, string expected)
+static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 {
-    objRef.TryAs<IInspectable.Vftbl>(IID.IID_IInspectable, out var inspectable);
-    if (inspectable == null)
-    {
-        return false;
-    }
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
 
-    IntPtr __retval = default;
+    void* __retval = default;
     try
     {
-        var hr = inspectable.Vftbl.GetRuntimeClassName(inspectable.ThisPtr, &__retval);
-        if (hr != 0)
-        {
-            return false;
-        }
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
 
         uint length;
-        char* buffer = WindowsGetStringRawBuffer(__retval, &length);
+        char* buffer = WindowsGetStringRawBuffer((IntPtr)__retval, &length);
         return expected == new string(buffer, 0, (int)length);
     }
     finally
     {
-        WindowsDeleteString(__retval);
+        WindowsDeleteString((IntPtr)__retval);
     }
 }
 
@@ -409,7 +409,7 @@ sealed partial class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
-[WinRTRuntimeClassName("ManagedWarningClass")]
+// [WinRTRuntimeClassName("ManagedWarningClass")]
 sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
     public int Test => 4;
@@ -691,7 +691,7 @@ sealed partial class CustomCommand : ICommand
     }
 }
 
-[GeneratedBindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
+// [GeneratedBindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
 partial class Language
 {
     private readonly string[] _values = new string[4];
@@ -705,20 +705,20 @@ partial class Language
     }
 }
 
-[global::WinRT.GeneratedBindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
+// [global::WinRT.GeneratedBindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
 partial class LanguageDervied : Language
 {
     public int Derived { get; } = 4;
 }
 
-[WinRT.GeneratedBindableCustomProperty]
+// [WinRT.GeneratedBindableCustomProperty]
 partial class LanguageDervied2 : Language
 {
     public int Derived { get; set; }
 }
 
 // Testing code compiles when not marked partial
-[GeneratedBindableCustomProperty]
+// [GeneratedBindableCustomProperty]
 #pragma warning disable CsWinRT1028 // Class is not marked partial
 class LanguageDervied3 : Language
 #pragma warning restore CsWinRT1028 // Class is not marked partial
@@ -729,7 +729,7 @@ class LanguageDervied3 : Language
 class ParentClass
 {
     // Testing code compiles when not marked partial
-    [GeneratedBindableCustomProperty]
+    // [GeneratedBindableCustomProperty]
 #pragma warning disable CsWinRT1028 // Class is not marked partial
     partial class LanguageDervied3 : Language
 #pragma warning restore CsWinRT1028 // Class is not marked partial
@@ -739,7 +739,7 @@ class ParentClass
 }
 
 
-[GeneratedBindableCustomPropertyAttribute]
+// [GeneratedBindableCustomPropertyAttribute]
 sealed partial class Language2
 {
     public string Name { get; } = "Language2";
@@ -757,14 +757,14 @@ sealed partial class Language2
     public ManagedProperties ManagedProperties { get; set; } = new(4);
 }
 
-[GeneratedBindableCustomProperty]
+// [GeneratedBindableCustomProperty]
 sealed partial class Language4
 {
     internal string Name { get; }
     private int Number { get; set; }
 }
 
-[GeneratedBindableCustomProperty]
+// [GeneratedBindableCustomProperty]
 sealed partial class Language5<T>
 {
     private readonly Dictionary<T, T> _values = new();
@@ -784,7 +784,7 @@ namespace Test
     {
         sealed partial class Nested
         {
-            [GeneratedBindableCustomProperty([nameof(Value)], [])]
+            // [GeneratedBindableCustomProperty([nameof(Value)], [])]
             sealed partial class Language3 : IProperties2
             {
                 private readonly string[] _values = new string[4];
@@ -803,14 +803,12 @@ namespace Test
     }
 }
 
-#if NET8_0_OR_GREATER
-[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]
+[WindowsRuntimeManagedOnlyType]
 public sealed partial class ManagedOnlyClass
 {
 }
 
-[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]
+[WindowsRuntimeManagedOnlyType]
 public partial struct ManagedOnlyStruct
 {
 }
-#endif
