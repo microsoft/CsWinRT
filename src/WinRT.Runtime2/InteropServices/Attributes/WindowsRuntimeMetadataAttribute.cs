@@ -4,7 +4,7 @@
 using System;
 using System.ComponentModel;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Indicates the source Windows Runtime metadata file (.winmd) that a given projected type is from.

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Indicates the runtime class name to use for types exposed to the Windows Runtime.

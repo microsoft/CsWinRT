@@ -3,7 +3,7 @@
 
 using System;
 using System.Runtime.Versioning;
-using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0060
 

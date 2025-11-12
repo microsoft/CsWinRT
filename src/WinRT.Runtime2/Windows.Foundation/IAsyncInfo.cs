@@ -3,7 +3,7 @@
 
 using System;
 using Windows.Foundation.Metadata;
-using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 namespace Windows.Foundation;
 

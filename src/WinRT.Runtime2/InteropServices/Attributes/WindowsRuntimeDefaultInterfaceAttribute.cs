@@ -4,7 +4,7 @@
 using System;
 using System.ComponentModel;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Indicates the default interface for a projected Windows Runtime class type.

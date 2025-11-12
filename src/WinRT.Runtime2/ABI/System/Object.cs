@@ -3,7 +3,6 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 

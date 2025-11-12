@@ -4,7 +4,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Windows.Foundation.Metadata;
-using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 namespace Windows.Foundation.Collections;
 
