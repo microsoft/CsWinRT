@@ -17,6 +17,7 @@
     </Project>
     <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4120/WinRT.SourceGenerator.Roslyn4120.csproj" />
     <Project Path="Authoring/WinRT.SourceGenerator/WinRT.SourceGenerator.shproj" />
+    <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
   </Folder>
   <Folder Name="/Files/">
     <File Path=".gitignore" />
