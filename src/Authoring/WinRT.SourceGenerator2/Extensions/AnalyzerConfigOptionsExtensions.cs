@@ -4,7 +4,7 @@
 using System;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace WindowsRuntime.SourceGenerator.Extensions;
+namespace WindowsRuntime.SourceGenerator;
 
 /// <summary>
 /// Extensions for <see cref="AnalyzerConfigOptions"/>.
