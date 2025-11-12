@@ -104,24 +104,6 @@ internal static class GuidGenerator
     /// </summary>
     internal static Guid TryGetGuidFromGuidAttribute(TypeSignature typeSig, InteropReferences interopReferences)
     {
-        //guid = default;
-
-        //// 1) Peel wrappers (array/byref/pointer/modopt/pinned/boxed).
-        //var core = Peel(typeSig);
-
-        //// 2) Reduce to a TypeDefOrRefSignature (unwrap GenericInstance to its generic type).
-        //TypeDefOrRefSignature? typeRefSig = core switch
-        //{
-        //    GenericInstanceTypeSignature gi => gi.GenericType,
-        //    TypeDefOrRefSignature tdr => tdr,
-        //    _ => null
-        //};
-
-        //if (typeRefSig is null)
-        //    return false;
-
-        // 3) Resolve to a TypeDefinition (metadata owner of attributes).
-
         Guid result = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
         if (result != Guid.Empty)
         {
@@ -131,33 +113,12 @@ internal static class GuidGenerator
         AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
-            _ = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
-
-            // 4) Find [System.Runtime.InteropServices.GuidAttribute(...)]
-            foreach (AsmResolver.DotNet.CustomAttribute customAttribute in typeDef.CustomAttributes)
+            if (typeDef.TryGetCustomAttribute("", "GuidAttribute", out CustomAttribute? customAttribute))
             {
-                AsmResolver.DotNet.ITypeDefOrRef? ctorType = customAttribute.Constructor?.DeclaringType;
-                if (ctorType is null)
-                {
-                    continue;
-                }
-
-                // Match on full name to be precise.
-                if (!string.Equals(ctorType.Namespace, "System.Runtime.InteropServices", StringComparison.Ordinal) ||
-                    !string.Equals(ctorType.Name, "GuidAttribute", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                // GuidAttribute normally has a single string fixed argument: the textual GUID.
                 CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
                 if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
                 {
                     object? first = customAttributeSignature.FixedArguments[0].Element;
-                    if (first is null)
-                    {
-                        continue;
-                    }
                     // AsmResolver represents strings as System.String here.
                     if (first is string s && Guid.TryParse(s, out result))
                     {
@@ -165,7 +126,7 @@ internal static class GuidGenerator
                     }
                 }
             }
-            return Guid.Empty;
+
         }
         return Guid.Empty;
     }

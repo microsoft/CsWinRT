@@ -74,15 +74,13 @@ internal static class WellKnownInterfaceIIDs
         bool useWindowsUIXamlProjections,
         InteropReferences interopReferences)
     {
-
-        if (signature is GenericInstanceTypeSignature genericSignature)
+        if (signature is SzArrayTypeSignature)
         {
-            bool result = SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1);
-            if (result)
-            {
-            }
-
-
+            // TODO: SzArrayTypeSignature case
+            return Guid.Empty;
+        }
+        else if (signature is GenericInstanceTypeSignature genericSignature)
+        {
             return genericSignature switch
             {
                 // Shared types
@@ -114,23 +112,13 @@ internal static class WellKnownInterfaceIIDs
                     => new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), // Unsure of this one
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IReadOnlyDictionary2)
                     => new Guid("b78f0653-fa89-59cf-ba95-726938aae666"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IDictionary2)
+                    => new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable)
+                    => new Guid("61c17706-2d65-11e0-9ae8-d48564015472"),
                 _ => Guid.Empty
             };
         }
-        // TODO: remove this once comparisons work fine without it
-        ITypeDefOrRef interfaceTypeRef = signature.ToTypeDefOrRef();
-
-        // Get the name for the right IID property from 'WinRT.Runtime.dll'
-        return signature switch
-        {
-            // Shared types
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler)
-                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler1)
-                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceTypeRef, interopReferences.EventHandler2)
-                => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
-            _ => Guid.Empty
-        };
+        return Guid.Empty;
     }
 }

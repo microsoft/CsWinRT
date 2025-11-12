@@ -94,11 +94,6 @@ internal sealed class InteropReferences
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.FlagsAttribute"/>.
-    /// </summary>
-    public TypeReference FlagsAttributeAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "FlagsAttribute"u8);
-
-    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeTargets"/>.
     /// </summary>
     public TypeReference AttributeTargets => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "AttributeTargets"u8);
@@ -132,6 +127,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Array"/>.
     /// </summary>
     public TypeReference Array => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Nullable"/>.
+    /// </summary>
+    public TypeReference Nullable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.
@@ -434,6 +434,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeManagedOnlyTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeManagedOnlyTypeAttribute"u8);
@@ -507,6 +512,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationWithProgressMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationWithProgressMethodsImpl`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IIterableMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIterableMethodsImpl`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
@@ -801,7 +811,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference EventSource1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventSource`1"u8);
+    public TypeReference EventSource1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventSource`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
@@ -816,27 +826,27 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference IObservableVector1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
+    public TypeReference IObservableVector1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c>.
     /// </summary>
-    public TypeReference IObservableMap2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
+    public TypeReference IObservableMap2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c>.
     /// </summary>
-    public TypeReference IMapChangedEventArgs1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
+    public TypeReference IMapChangedEventArgs1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
     /// </summary>
-    public TypeReference CollectionChange => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
+    public TypeReference CollectionChange => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference VectorChangedEventHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
+    public TypeReference VectorChangedEventHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
@@ -846,7 +856,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
     /// </summary>
-    public TypeReference MapChangedEventHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
+    public TypeReference MapChangedEventHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
@@ -866,42 +876,42 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c>.
     /// </summary>
-    public TypeReference IAsyncActionWithProgress1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncActionWithProgress`1"u8);
+    public TypeReference IAsyncActionWithProgress1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncActionWithProgress`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncActionProgressHandler&lt;TProgress&gt;</c>.
     /// </summary>
-    public TypeReference AsyncActionProgressHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionProgressHandler`1"u8);
+    public TypeReference AsyncActionProgressHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionProgressHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncActionWithProgressCompletedHandler&lt;TProgress&gt;</c>.
     /// </summary>
-    public TypeReference AsyncActionWithProgressCompletedHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionWithProgressCompletedHandler`1"u8);
+    public TypeReference AsyncActionWithProgressCompletedHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionWithProgressCompletedHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c>.
     /// </summary>
-    public TypeReference IAsyncOperation1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperation`1"u8);
+    public TypeReference IAsyncOperation1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperation`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationCompletedHandler&lt;TResult&gt;</c>.
     /// </summary>
-    public TypeReference AsyncOperationCompletedHandler1 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationCompletedHandler`1"u8);
+    public TypeReference AsyncOperationCompletedHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationCompletedHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c>.
     /// </summary>
-    public TypeReference IAsyncOperationWithProgress2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperationWithProgress`2"u8);
+    public TypeReference IAsyncOperationWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperationWithProgress`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
     /// </summary>
-    public TypeReference AsyncOperationProgressHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationProgressHandler`2"u8);
+    public TypeReference AsyncOperationProgressHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationProgressHandler`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationWithProgressCompletedHandler&lt;TResult&gt;</c>.
     /// </summary>
-    public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsSdkProjectionModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
+    public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
@@ -1372,7 +1382,7 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Void.MakePointerType(),
                 ReadOnlySpanChar,
                 _corLibTypeFactory.Object.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback.CreateArray</c>.
@@ -1459,7 +1469,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Object,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                CreatedWrapperFlags.ToValueTypeSignature()]));
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject</c>.
@@ -1479,8 +1489,8 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe</c>.
@@ -1490,8 +1500,8 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType(),
-                CreatedWrapperFlags.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
@@ -1534,7 +1544,7 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [
                 Delegate.ToReferenceTypeSignature(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToManaged&lt;TCallback&gt;(void*)</c>.
@@ -1553,7 +1563,7 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [
                 Delegate.ToReferenceTypeSignature(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.UnboxToManaged&lt;TCallback&gt;(void*)</c>.
@@ -1573,7 +1583,7 @@ internal sealed class InteropReferences
             genericParameterCount: 1,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller.UnboxToManaged&lt;TCallback&gt;(void*, in Guid)</c>.
@@ -1584,7 +1594,7 @@ internal sealed class InteropReferences
             genericParameterCount: 1,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
-                Guid.MakeByReferenceType()]));
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
@@ -1839,6 +1849,20 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;.First</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IIterableMethodsImpl1First(TypeSignature elementType)
+    {
+        return IIterableMethodsImpl1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("First"u8, MethodSignature.CreateStatic(
+                returnType: IEnumerator1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethodsImpl&lt;T&gt;.Current</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -1876,10 +1900,9 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                genericParameterCount: 1,
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    Guid.MakeByReferenceType()]));
+                    Guid.ToValueTypeSignature().MakeByReferenceType()]));
     }
 
     /// <summary>
@@ -2416,7 +2439,7 @@ internal sealed class InteropReferences
         return IVectorViewMethods1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetAt"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),

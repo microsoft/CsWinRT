@@ -29,7 +29,8 @@ namespace ABI.Windows.Foundation;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class PointMarshaller
+[WindowsRuntimeDefaultInterfaceAttribute(typeof(interface1))]
+public static unsafe class PointMarshaller : interface1, interface2
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Point? value)
