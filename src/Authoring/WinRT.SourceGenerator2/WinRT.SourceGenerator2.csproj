@@ -5,6 +5,14 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+    <!--
+	  Suppress the following warning:
+	  "RS1041: This compiler extension should not be implemented in an assembly with target framework
+	  '.NET 10.0'. References to other target frameworks will cause the compiler to behave unpredictably."
+	  Using .NET 10 is fine for the scenarios we need to support.
+	-->
+    <NoWarn>$(NoWarn);RS1041</NoWarn>
+
     <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
     <RootNamespace>WindowsRuntime.SourceGenerator</RootNamespace>
 
@@ -59,7 +67,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="5.0.0-2.final" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0-2.final" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
