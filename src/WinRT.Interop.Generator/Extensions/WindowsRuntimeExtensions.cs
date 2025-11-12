@@ -21,7 +21,9 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute(
+            ns: WellKnownMetadataNames.WindowsRuntimeInteropServices,
+            name: WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
     }
 
     extension(ITypeDescriptor type)
@@ -154,7 +156,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>The Windows Runtime metadata name from the <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
         public Utf8String? GetWindowsRuntimeMetadataName()
         {
-            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
+            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
 
             return attribute?.Signature?.FixedArguments?[0]?.Element as Utf8String;
         }
@@ -280,9 +282,9 @@ internal static class WindowsRuntimeExtensions
 file static class WellKnownMetadataNames
 {
     /// <summary>
-    /// The <c>"WindowsRuntime"</c> text.
+    /// The <c>"WindowsRuntime.InteropServices"</c> text.
     /// </summary>
-    public static readonly Utf8String WindowsRuntime = "WindowsRuntime"u8;
+    public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
