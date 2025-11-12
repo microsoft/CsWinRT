@@ -8,7 +8,7 @@ using System.Threading;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.AsyncInfo;
+namespace WindowsRuntime;
 
 /// <summary>
 /// The implementation of a native object for <see cref="IAsyncAction"/>.
