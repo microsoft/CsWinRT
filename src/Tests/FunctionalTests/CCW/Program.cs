@@ -32,8 +32,8 @@ unsafe
 {
     // Check for the default interfaces provided by WinRT.Runtime
     Guid IID_IMarshal = new("00000003-0000-0000-c000-000000000046");
-    WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IMarshal, out nint marshalCCW));
+    WindowsRuntimeObjectReferenceValue ccwValue = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IMarshal, out nint marshalCCW));
     if (marshalCCW == IntPtr.Zero)
     {
         return 102;
@@ -41,13 +41,13 @@ unsafe
 
     // Check for managed implemented interface to ensure not trimmed.
     Guid IID_IUriHandler = new("FF4B4334-2104-537D-812E-67E3856AC7A2");
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IUriHandler, out nint uriHandlerCCW));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IUriHandler, out nint uriHandlerCCW));
     if (uriHandlerCCW == IntPtr.Zero)
     {
         return 103;
     }
 
-    if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties1"))
+    if (!CheckRuntimeClassName(ccwValue.GetThisPtrUnsafe(), "TestComponentCSharp.IProperties1"))
     {
         return 119;
     }
@@ -58,40 +58,40 @@ unsafe
     Guid IID_IArtist = new("B7233F79-63CF-5AFA-A026-E4F1924F17A1");
 
     var managedWarningClass = new ManagedWarningClass();
-    ccw = WindowsRuntimeInterfaceMarshaller<IUriHandler>.ConvertToUnmanaged(managedProperties, typeof(IUriHandler).GUID);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IWarning1, out nint warningCCW));
+    ccwValue = WindowsRuntimeInterfaceMarshaller<IUriHandler>.ConvertToUnmanaged(managedWarningClass, typeof(IUriHandler).GUID);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IWarning1, out nint warningCCW));
     if (warningCCW == IntPtr.Zero)
     {
         return 104;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IWarningClassOverrides, out nint warningOverrideCCW));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IWarningClassOverrides, out nint warningOverrideCCW));
     if (warningOverrideCCW == IntPtr.Zero)
     {
         return 105;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IArtist, out nint artistCCW));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwValue.GetThisPtrUnsafe(), IID_IArtist, out nint artistCCW));
     if (artistCCW == IntPtr.Zero)
     {
         return 106;
     }
 
     // Testing for overrided name using attribute specified by author on type.
-    if (!CheckRuntimeClassName(ccw, "ManagedWarningClass"))
+    if (!CheckRuntimeClassName(ccwValue.GetThisPtrUnsafe(), "ManagedWarningClass"))
     {
         return 120;
     }
 
     var managedWarningClass2 = new ManagedWarningClass2();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(managedWarningClass2);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IWarning1, out nint warningCCW2));
+    void* ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(managedWarningClass2);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IWarning1, out nint warningCCW2));
     if (warningCCW2 == IntPtr.Zero)
     {
         return 107;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IWarningClassOverrides, out nint warningOverrideCCW2));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IWarningClassOverrides, out nint warningOverrideCCW2));
     if (warningOverrideCCW2 == IntPtr.Zero)
     {
         return 108;
@@ -100,20 +100,20 @@ unsafe
     Guid IID_IProperties1 = new("4BB22177-718B-57C4-8977-CDF2621C781A");
     Guid IID_IProperties2 = new("6090AE4B-83A1-5474-A8D9-AF9B8C8DBD09");
     var managedInterfaceInheritance = new ManagedInterfaceInheritance();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(managedInterfaceInheritance);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IProperties1, out nint propertiesCCW));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(managedInterfaceInheritance);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties1, out nint propertiesCCW));
     if (propertiesCCW == IntPtr.Zero)
     {
         return 109;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IProperties2, out nint properties2CCW));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out nint properties2CCW));
     if (properties2CCW == IntPtr.Zero)
     {
         return 110;
     }
 
-    if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties2"))
+    if (!CheckRuntimeClassName(ccwPtr, "TestComponentCSharp.IProperties2"))
     {
         return 121;
     }
@@ -121,20 +121,20 @@ unsafe
     Guid IID_IlistInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
     Guid IID_IEnumerable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
     var intList = new ManagedIntList();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(intList);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IlistInt, out nint listIntCCW));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(intList);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IlistInt, out nint listIntCCW));
     if (listIntCCW == IntPtr.Zero)
     {
         return 111;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IEnumerable, out nint enumerableCCW));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerable, out nint enumerableCCW));
     if (enumerableCCW == IntPtr.Zero)
     {
         return 112;
     }
 
-    if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Int32>"))
+    if (!CheckRuntimeClassName(ccwPtr, "Windows.Foundation.Collections.IVector`1<Int32>"))
     {
         return 122;
     }
@@ -143,41 +143,41 @@ unsafe
     Guid IID_IEnumerableComposed = new("BDCEC2FC-5BBE-5A69-989D-222563A811A6");
     Guid IID_IEnumerableIRequiredTwo = new("10879613-0953-58AC-A6C0-817E28DD5A25");
     var derivedList = new ManagedDerivedList();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(derivedList);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IEnumerableDerived, out nint enumerableDerived));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(derivedList);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableDerived, out nint enumerableDerived));
     if (enumerableDerived == IntPtr.Zero)
     {
         return 113;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IEnumerableComposed, out nint enumerableComposed));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableComposed, out nint enumerableComposed));
     if (enumerableComposed == IntPtr.Zero)
     {
         return 114;
     }
 
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IEnumerableIRequiredTwo, out nint enumerableRequiredTwo));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IEnumerableIRequiredTwo, out nint enumerableRequiredTwo));
     if (enumerableRequiredTwo == IntPtr.Zero)
     {
         return 115;
     }
 
-    if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
+    if (!CheckRuntimeClassName(ccwPtr, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
     {
         return 123;
     }
 
     var nestedClass = TestClass2.GetInstance();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(nestedClass);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IProperties2, out properties2CCW));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(nestedClass);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out properties2CCW));
     if (properties2CCW == IntPtr.Zero)
     {
         return 116;
     }
 
     var genericNestedClass = TestClass2.GetGenericInstance();
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(genericNestedClass);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), IID_IProperties2, out properties2CCW));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(genericNestedClass);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, IID_IProperties2, out properties2CCW));
     if (properties2CCW == IntPtr.Zero)
     {
         return 117;
@@ -199,14 +199,14 @@ unsafe
     instance.BindableIterableProperty = nullableHandleList;
 
     var customCommand = new CustomCommand() as ICommand;
-    ccw = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(customCommand);
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw.GetThisPtrUnsafe(), WellKnownInterfaceIIDs.IID_Microsoft_UI_Xaml_Input_ICommand, out var commandCCW));
+    ccwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(customCommand);
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccwPtr, WellKnownInterfaceIIDs.IID_Microsoft_UI_Xaml_Input_ICommand, out var commandCCW));
     if (commandCCW == IntPtr.Zero)
     {
         return 118;
     }
 
-    if (!CheckRuntimeClassName(ccw, "Microsoft.UI.Xaml.Input.ICommand"))
+    if (!CheckRuntimeClassName(ccwPtr, "Microsoft.UI.Xaml.Input.ICommand"))
     {
         return 124;
     }
@@ -371,9 +371,9 @@ static Exception RunAndGetException(Action action)
 }
 #endif
 
-static unsafe bool CheckRuntimeClassName(WindowsRuntimeObjectReferenceValue objRef, string expected)
+static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 {
-    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)objRef.GetThisPtrUnsafe(), WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
+    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
 
     void* __retval = default;
     try

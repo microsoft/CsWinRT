@@ -65,12 +65,10 @@ namespace UnitTest
             object obj = this.createFunction();
             if (riid == IUnknown)
             {
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
                 unsafe
                 {
                     ppvObject = (IntPtr)WindowsRuntimeMarshal.ConvertToUnmanaged(obj);
                 }
-#pragma warning restore CSWINRT3001 // Type or member is obsolete
             }
             else
             {
