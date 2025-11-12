@@ -1975,7 +1975,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgressMethodsImpl1
             .MakeGenericReferenceType(progressType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Progress"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Progress"u8, MethodSignature.CreateStatic(
                 returnType: AsyncActionProgressHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
@@ -1989,7 +1989,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgressMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Progress"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Progress"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2005,7 +2005,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgressMethodsImpl1
             .MakeGenericReferenceType(progressType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
                 returnType: AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
@@ -2019,7 +2019,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgressMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2035,7 +2035,7 @@ internal sealed class InteropReferences
         return IAsyncActionWithProgressMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
