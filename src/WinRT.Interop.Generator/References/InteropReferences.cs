@@ -619,19 +619,19 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeObject => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObject"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncActionWithProgress&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.AsyncInfo.WindowsRuntimeAsyncActionWithProgress&lt;T, ...&gt;</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeAsyncActionWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncActionWithProgress`2"u8);
+    public TypeReference WindowsRuntimeAsyncActionWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.AsyncInfo"u8, "WindowsRuntimeAsyncActionWithProgress`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperation&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.AsyncInfo.WindowsRuntimeAsyncOperation&lt;T, ...&gt;</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeAsyncOperation2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncOperation`2"u8);
+    public TypeReference WindowsRuntimeAsyncOperation2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.AsyncInfo"u8, "WindowsRuntimeAsyncOperation`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperationWithProgress&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.AsyncInfo.WindowsRuntimeAsyncOperationWithProgress&lt;T, ...&gt;</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeAsyncOperationWithProgress3 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncOperationWithProgress`3"u8);
+    public TypeReference WindowsRuntimeAsyncOperationWithProgress3 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.AsyncInfo"u8, "WindowsRuntimeAsyncOperationWithProgress`3"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerator&lt;T, ...&gt;</c>.
@@ -2088,7 +2088,7 @@ internal sealed class InteropReferences
         return IAsyncOperationMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
                 returnType: AsyncOperationCompletedHandler1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
@@ -2102,7 +2102,7 @@ internal sealed class InteropReferences
         return IAsyncOperationMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Completed"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -2118,7 +2118,7 @@ internal sealed class InteropReferences
         return IAsyncOperationMethodsImpl1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
