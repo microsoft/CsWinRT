@@ -76,7 +76,7 @@ internal partial class InteropTypeDefinitionBuilder
             vftblType = WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Vftbl"),
-                elementType: elementType, // TODO: use ABI type
+                elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -141,7 +141,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_result = new(elementType.Import(module)); // TODO: use ABI type
+            CilLocalVariable loc_2_result = new(elementType.GetAbiType(interopReferences).Import(module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);

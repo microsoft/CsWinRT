@@ -46,7 +46,7 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType()])) // TODO
+                        elementType.GetAbiType(interopReferences).Import(module)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -249,7 +249,7 @@ internal static partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType(), // TODO
+                        elementType.GetAbiType(interopReferences).Import(module),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }

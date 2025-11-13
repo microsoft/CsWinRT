@@ -431,7 +431,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
-    public TypeReference ABIType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
+    public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -1661,7 +1661,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
-                ABIType.MakePointerType()]));
+                AbiType.MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeBlittableArrayUnsafe</c>.
