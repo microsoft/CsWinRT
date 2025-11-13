@@ -47,7 +47,7 @@ internal static class ModuleDefinitionExtensions
     /// Enumerates all (transitive) assembly references for a given <see cref="ModuleDefinition"/>.
     /// </summary>
     /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
-    public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module, Utf8String assemblyName)
+    public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module)
     {
         foreach (AssemblyReference reference in module.AssemblyReferences)
         {
@@ -56,7 +56,7 @@ internal static class ModuleDefinitionExtensions
             // Also enumerate all transitive references as well
             foreach (ModuleDefinition transitiveModule in reference.Resolve()?.Modules ?? [])
             {
-                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences(assemblyName))
+                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences())
                 {
                     yield return transitiveReference;
                 }
