@@ -168,7 +168,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</returns>
         public bool IsKeyValuePairType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair);
+            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
         }
 
         /// <summary>
