@@ -4,6 +4,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
+#pragma warning disable CS1734
+
 namespace WindowsRuntime.SourceGenerator;
 
 /// <summary>
