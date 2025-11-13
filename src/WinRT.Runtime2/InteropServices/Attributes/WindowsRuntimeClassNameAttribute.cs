@@ -10,20 +10,18 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This attribute is emitted by the CsWinRT generator for non-authored types implementing Windows Runtime interfaces.
+/// By default, types marshalled as Windows Runtime objects will automatically have their runtime class name be the one for the
+/// first projected Windows Runtime interface they implement. This attribute allows to customize that behavior and explicitly set
+/// a runtime class name. This name is the one that will be returned to native callers when
+/// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nf-inspectable-iinspectable-getruntimeclassname"><c>IInspectable::GetRuntimeClassName</c></see>
+/// is invoked on a CCW for the marshalled object.
 /// </para>
 /// <para>
-/// It can also be used manually to explicitly customize the runtime class name of exposed types.
+/// For instance, this can be useful in OOP (out-of-process) scenarios, where having the runtime class name of a managed type matching the
+/// class name that will be used with MBM (metadata-based marshalling), will ensure that marshalling will work correctly at runtime.
 /// </para>
 /// </remarks>
-[AttributeUsage(
-    AttributeTargets.Class |
-    AttributeTargets.Struct |
-    AttributeTargets.Enum |
-    AttributeTargets.Interface |
-    AttributeTargets.Delegate,
-    AllowMultiple = false,
-    Inherited = false)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class WindowsRuntimeClassNameAttribute : Attribute
 {
     /// <summary>
