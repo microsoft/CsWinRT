@@ -73,7 +73,22 @@ internal static class GuidGenerator
 
             case ElementType.Class:
                 // TODO: Get default interface and add it to the signature
-                return "rc(" + typeSignature.FullName + ")";
+                if (typeDefinition is not null)
+                {
+                    if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
+                    {
+                        CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+                        if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+                        {
+                            object? element = customAttributeSignature.FixedArguments[0].Element;
+                            if (element is TypeSignature defaultInterfaceSig)
+                            {
+                                return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
+                            }
+                        }
+                    }
+                }
+                return "{" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "}";
         }
 #pragma warning restore IDE0010
 
@@ -103,15 +118,16 @@ internal static class GuidGenerator
         AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
-            if (typeDef.TryGetCustomAttribute("", "GuidAttribute", out CustomAttribute? customAttribute))
+            if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out CustomAttribute? customAttribute))
             {
                 CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
                 if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
                 {
                     object? first = customAttributeSignature.FixedArguments[0].Element;
                     // AsmResolver represents strings as System.String here.
-                    if (first is string s && Guid.TryParse(s, out result))
+                    if (first is AsmResolver.Utf8String s)
                     {
+                        _ = Guid.TryParse(s.Value, out result);
                         return result;
                     }
                 }
