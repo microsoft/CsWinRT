@@ -116,6 +116,26 @@ internal static class WellKnownInterfaceIIDs
                     => new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"),
                 _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable)
                     => new Guid("61c17706-2d65-11e0-9ae8-d48564015472"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IAsyncActionWithProgress1)
+                    => new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IAsyncOperationWithProgress2)
+                    => new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationProgressHandler1)
+                    => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncOperationProgressHandler2)
+                    => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1)
+                    => new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IObservableVector1)
+                    => new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IObservableMap2)
+                    => new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.IAsyncOperation1)
+                    => new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.VectorChangedEventHandler1)
+                    => new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"),
+                _ when SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.AsyncActionProgressHandler1)
+                    => new Guid("c261d8d0-71ba-5f38-a239-872342253a18"),
                 _ => Guid.Empty
             };
         }
