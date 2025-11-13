@@ -4709,6 +4709,17 @@ R"(#pragma warning disable IL2026
             type.TypeNamespace(), type.TypeName());
     }
 
+    void write_default_interface_attribute(writer& w, TypeDef const& type)
+    {
+        auto default_interface = get_default_interface(type);
+
+        for_typedef(w, get_type_semantics(default_interface), [&](auto type)
+        {
+            auto interface_name = bind<write_type_name>(type, typedef_name_type::CCW, false);
+            w.write("[WindowsRuntimeDefaultInterfaceAttribute(typeof(%))]\n", interface_name);
+        });
+    }
+
     void write_winrt_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
@@ -8604,7 +8615,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
         w.write(R"(
 %[WindowsRuntimeClassName(%.RuntimeClassName)]
-%%% %class %%
+%%%% %class %%
 {
 %
 
@@ -8624,6 +8635,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_type_name>(type, typedef_name_type::ABI, false),
             bind<write_type_custom_attributes>(type, true),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_default_interface_attribute>(type),
             (settings.internal) ? "internal" : "public",
             bind<write_class_modifiers>(type),
             // class name
