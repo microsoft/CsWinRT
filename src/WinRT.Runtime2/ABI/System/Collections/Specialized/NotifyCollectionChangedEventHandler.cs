@@ -34,9 +34,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static NotifyCollectionChangedEventHandler? ConvertToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<NotifyCollectionChangedEventHandler?>(result);
+        return (NotifyCollectionChangedEventHandler?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
@@ -48,9 +46,7 @@ public static unsafe class NotifyCollectionChangedEventHandlerMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
     public static NotifyCollectionChangedEventHandler? UnboxToManaged(void* value)
     {
-        object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
-
-        return Unsafe.As<NotifyCollectionChangedEventHandler?>(result);
+        return (NotifyCollectionChangedEventHandler?)WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value);
     }
 }
 

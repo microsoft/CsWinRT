@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 
 namespace WindowsRuntime;
 
 /// <summary>
 /// Indicates the source Windows Runtime metadata file (.winmd) that a given projected type is from.
 /// </summary>
-/// <remarks>
-/// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly.
-/// </remarks>
 [AttributeUsage(
     AttributeTargets.Class |
     AttributeTargets.Struct |
@@ -19,6 +17,10 @@ namespace WindowsRuntime;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class WindowsRuntimeMetadataAttribute : Attribute
 {
     /// <summary>

@@ -1,12 +1,22 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
-using WinRT;
+using WindowsRuntime.InteropServices;
+
+#pragma warning disable CSWINRT3001 // Type or member is obsolete
+// TODO: This shouldn't be needed if transitive references are detected correctly.
+[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
+#pragma warning restore CSWINRT3001 // Type or member is obsolete
 
 var instance = new Class();
 
@@ -92,32 +102,57 @@ if (string.IsNullOrEmpty(sw.ReadToEnd()))
     return 109;
 }
 
-using var fileStream = File.OpenRead(folderPath + "\\Async.exe");
-var randomAccessStream = fileStream.AsRandomAccessStream();
-var ptr = MarshalInterface<IRandomAccessStream>.FromManaged(randomAccessStream);
-if (ptr == IntPtr.Zero)
+unsafe
 {
-    return 110;
-}
-var arr = new byte[100];
-var buffer = arr.AsBuffer();
-ptr = MarshalInterface<IBuffer>.FromManaged(buffer);
-if (ptr == IntPtr.Zero)
-{
-    return 111;
-}
+    using var fileStream = File.OpenRead(folderPath + "\\Async.exe");
+    var randomAccessStream = fileStream.AsRandomAccessStream();
+    var ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(randomAccessStream);
+    if (ptr is null)
+    {
+        return 110;
+    }
 
-var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
-ptr = MarshalInterface<IAsyncOperationWithProgress<IBuffer, uint>>.FromManaged(asyncOperation);
-if (ptr == IntPtr.Zero)
-{
-    return 112;
-}
+    if (Marshal.QueryInterface((nint)ptr, typeof(IRandomAccessStream).GUID, out var ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 111;
+    }
 
-ptr = MarshalInterface<IAsyncInfo>.FromManaged(asyncOperation);
-if (ptr == IntPtr.Zero)
-{
-    return 113;
+    var arr = new byte[100];
+    var buffer = arr.AsBuffer();
+    ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(buffer);
+    if (ptr is null)
+    {
+        return 112;
+    }
+
+    if (Marshal.QueryInterface((nint)ptr, typeof(IBuffer).GUID, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 113;
+    }
+
+    var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
+    ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(asyncOperation);
+    if (ptr is null)
+    {
+        return 114;
+    }
+
+    // IID for IAsyncOperationWithProgress<IBuffer, uint>
+    Guid IID_IAsyncOperationWithProgress = new("d26b2819-897f-5c7d-84d6-56d796561431");
+    if (Marshal.QueryInterface((nint)ptr, IID_IAsyncOperationWithProgress, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 115;
+    }
+
+    Guid IID_IAsyncInfo = new("00000036-0000-0000-C000-000000000046");
+    if (Marshal.QueryInterface((nint)ptr, IID_IAsyncInfo, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 116;
+    }
 }
 
 bool progressCalledWithExpectedResults = false;
@@ -131,7 +166,7 @@ var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, p
 Class.UnboxAndCallProgressHandler(asyncProgressHandler);
 if (!progressCalledWithExpectedResults)
 {
-    return 114;
+    return 117;
 }
 
 return 100;

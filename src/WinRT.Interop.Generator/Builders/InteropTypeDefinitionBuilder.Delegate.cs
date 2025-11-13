@@ -684,6 +684,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Call, windowsRuntimeDelegateMarshallerConvertToManaged },
+                    { Castclass, delegateType2.ToTypeDefOrRef() },
                     { Ret }
                 }
             };

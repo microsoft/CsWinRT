@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Windows.Win32;
 using Windows.Win32.System.Com;
+using WindowsRuntime.InteropServices;
 
 namespace UnitTest
 {
@@ -64,7 +65,10 @@ namespace UnitTest
             object obj = this.createFunction();
             if (riid == IUnknown)
             {
-                ppvObject = WinRT.MarshalInspectable<object>.FromManaged(obj);
+                unsafe
+                {
+                    ppvObject = (IntPtr)WindowsRuntimeMarshal.ConvertToUnmanaged(obj);
+                }
             }
             else
             {

@@ -65,11 +65,11 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature resultType = operationType.TypeArguments[0];
             TypeSignature progressType = operationType.TypeArguments[1];
 
-            // We're declaring an 'internal static class' type
+            // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType(resultType, progressType).Import(module).ToTypeDefOrRef()) }
@@ -166,7 +166,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldnull },
-                    { Ret } // TODO
+                    { Throw } // TODO
                 }
             };
 

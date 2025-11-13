@@ -667,6 +667,7 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     vectorViewMethodsType: out TypeDefinition vectorViewMethodsType);
 

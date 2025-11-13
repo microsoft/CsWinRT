@@ -89,12 +89,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="vectorViewMethodsType">The resulting methods type.</param>
         public static void IVectorViewMethods(
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition vectorViewMethodsType)
         {
@@ -111,6 +113,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             module.TopLevelTypes.Add(vectorViewMethodsType);
+
+            // Track the type
+            emitState.TrackTypeDefinition(vectorViewMethodsType, readOnlyListType, "IVectorViewMethods");
 
             // Define the 'GetAt' method as follows:
             //
@@ -331,12 +336,12 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
-            // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IREADONLYLIST_METHODS>>'
+            // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS>, <IVECTORVIEW_METHODS>>'
             TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericReferenceType(
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                readOnlyListMethodsType.ToReferenceTypeSignature());
+                emitState.LookupTypeDefinition(readOnlyListType, "IVectorViewMethods").ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: readOnlyListType,

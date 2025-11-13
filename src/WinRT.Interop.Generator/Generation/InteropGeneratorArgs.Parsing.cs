@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using WindowsRuntime.InteropGenerator;
 using WindowsRuntime.InteropGenerator.Attributes;
 using WindowsRuntime.InteropGenerator.Errors;
 
@@ -32,22 +31,46 @@ internal partial class InteropGeneratorArgs
             path = escapedPath;
         }
 
-        string[] responseArgs;
+        string[] lines;
 
         // Read all lines in the response file (each line contains a single command line argument)
         try
         {
-            responseArgs = File.ReadAllLines(path);
+            lines = File.ReadAllLines(path);
         }
         catch (Exception e)
         {
             throw WellKnownInteropExceptions.ResponseFileReadError(e);
         }
 
+        return ParseFromResponseFile(lines, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="InteropGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="stream">The stream to the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="InteropGeneratorArgs"/> instance.</returns>
+    public static InteropGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
+    {
+        string[] responseArgs = File.ReadAllLines(stream);
+
+        return ParseFromResponseFile(responseArgs, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="InteropGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="lines">The lines read from the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="InteropGeneratorArgs"/> instance.</returns>
+    private static InteropGeneratorArgs ParseFromResponseFile(string[] lines, CancellationToken token)
+    {
         Dictionary<string, string> argsMap = [];
 
         // Build a map with all the commands and their values
-        foreach (string line in responseArgs)
+        foreach (string line in lines)
         {
             string trimmedLine = line.Trim();
 

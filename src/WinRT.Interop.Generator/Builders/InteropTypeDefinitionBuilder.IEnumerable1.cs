@@ -119,7 +119,10 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IIterableMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+            };
 
             module.TopLevelTypes.Add(iterableMethodsType);
 
@@ -137,7 +140,10 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             { NoInlining = true };
 
-            iterableMethodsType.Methods.Add(firstMethod);
+            // Add and implement the 'First' method
+            iterableMethodsType.AddMethodImplementation(
+                declaration: interopReferences.IIterableMethodsImpl1First(elementType).Import(module),
+                method: firstMethod);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'IEnumerator<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
