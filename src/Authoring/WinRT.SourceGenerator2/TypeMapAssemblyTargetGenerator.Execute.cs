@@ -33,13 +33,7 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
                 return [];
             }
 
-            // Try to get a good initial capacity (if we fail, just use '0', since private projections are not common)
-            if (!Enumerable.TryGetNonEnumeratedCount(data.Compilation.References, out int initialCapacity))
-            {
-                initialCapacity = 0;
-            }
-
-            var executableReferences = ImmutableArray.CreateBuilder<EquatablePortableExecutableReference>(initialCapacity);
+            var executableReferences = ImmutableArray.CreateBuilder<EquatablePortableExecutableReference>();
 
             foreach (MetadataReference metadataReference in data.Compilation.References)
             {
