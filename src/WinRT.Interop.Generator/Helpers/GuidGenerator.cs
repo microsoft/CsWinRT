@@ -61,21 +61,26 @@ internal static class GuidGenerator
             case ElementType.ValueType:
                 if (typeDefinition is not null)
                 {
-                    if (typeDefinition.IsEnum)
-                    {
-                        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                        return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
-                    }
                     if (typeDefinition.IsClass) // struct case
                     {
-                        IList<FieldDefinition> fieldDefinition = typeDefinition.Fields; // IList<TypeSignature>
-                        String[] typeArgumentSignatures = new String[fieldDefinition.Count];
+                        if (typeDefinition.IsEnum)
+                        {
+                            bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
+                            return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+                        }
+                        if (typeDefinition.IsGuid)
+                        {
+                            return "g16";
+                        }
+                        IList<AsmResolver.DotNet.FieldDefinition> fieldDefinition = typeDefinition.Fields; // IList<TypeSignature>
+                        List<string> typeArgumentSignatures = [];
                         for (int i = 0; i < fieldDefinition.Count; i++)
                         {
-                            FieldSignature? fieldSignature = fieldDefinition[i].Signature;
-                            typeArgumentSignatures[i] = fieldSignature != null
-                                ? GetSignature(fieldSignature.FieldType, interopReferences)
-                                : throw new ArgumentException("FieldSignature is missing");
+                            if (!fieldDefinition[i].IsStatic)
+                            {
+                                FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
+                                typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences));
+                            }
                         }
                         return "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
                     }
@@ -86,25 +91,11 @@ internal static class GuidGenerator
                 AsmResolver.DotNet.TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
                 if (genericTypeDefinition is not null)
                 {
-                    if (genericTypeDefinition.IsDelegate)
-                    {
-                        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
-                    }
                     if (genericTypeDefinition.IsClass)
                     {
-                        if (genericTypeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
-                        {
-                            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-                            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
-                            {
-                                object? element = customAttributeSignature.FixedArguments[0].Element;
-                                if (element is TypeSignature defaultInterfaceSig)
-                                {
-                                    return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
-                                }
-                            }
-                        }
-                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
+                        return genericTypeDefinition.IsDelegate
+                            ? GetDelegateGuidSignature(genericTypeSignature, genericTypeDefinition, interopReferences)
+                            : GetClassGuidSignature(genericTypeSignature, genericTypeDefinition, interopReferences);
                     }
                     if (genericTypeDefinition.IsInterface)
                     {
@@ -122,25 +113,11 @@ internal static class GuidGenerator
                 // TODO: Get default interface and add it to the signature
                 if (typeDefinition is not null)
                 {
-                    if (typeDefinition.IsDelegate)
-                    {
-                        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
-                    }
                     if (typeDefinition.IsClass)
                     {
-                        if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
-                        {
-                            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-                            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
-                            {
-                                object? element = customAttributeSignature.FixedArguments[0].Element;
-                                if (element is TypeSignature defaultInterfaceSig)
-                                {
-                                    return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
-                                }
-                            }
-                        }
-                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
+                        return typeDefinition.IsDelegate
+                            ? GetDelegateGuidSignature(typeSignature, typeDefinition, interopReferences)
+                            : GetClassGuidSignature(typeSignature, typeDefinition, interopReferences);
                     }
                     if (typeDefinition.IsInterface)
                     {
@@ -150,20 +127,45 @@ internal static class GuidGenerator
                 throw new ArgumentException("TypeSignature with GenericInst does not resolve to genericTypeSignature");
         }
 #pragma warning restore IDE0010
+        throw new ArgumentException("Unhandled ElementType");
+    }
 
-        //if (typeDefinition is not null)
-        //{
-        //    if (typeDefinition.IsDelegate)
-        //    {
-        //        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
-        //    }
-        //    else if (typeDefinition.IsEnum)
-        //    {
-        //        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-        //        return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
-        //    }
-        //}
-        return "";
+    internal static string GetClassGuidSignature(
+        TypeSignature typeSignature,
+        AsmResolver.DotNet.TypeDefinition typeDefinition,
+        InteropReferences interopReferences)
+    {
+        if (!typeDefinition.IsClass)
+        {
+            throw new ArgumentException("typeDefinition IsClass is false");
+        }
+        if (typeDefinition.IsEnum || typeDefinition.IsInterface)
+        {
+            throw new ArgumentException("typeDefinition IsEnum or IsInterface is true");
+        }
+        if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        {
+            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+            {
+                object? element = customAttributeSignature.FixedArguments[0].Element;
+                if (element is TypeSignature defaultInterfaceSig)
+                {
+                    return "rc(" + typeDefinition.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
+                }
+            }
+        }
+        return "{" + GetGuid(typeSignature, interopReferences) + "}";
+    }
+
+    internal static string GetDelegateGuidSignature(
+        TypeSignature typeSignature,
+        AsmResolver.DotNet.TypeDefinition typeDefinition,
+        InteropReferences interopReferences)
+    {
+        return !typeDefinition.IsDelegate
+            ? throw new ArgumentException("typeDefinition IsDelegate is false")
+            : "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
     }
 
     internal static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
@@ -177,7 +179,7 @@ internal static class GuidGenerator
 
         if (typeDef is not null)
         {
-            if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out CustomAttribute? customAttribute))
+            if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
             {
                 CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
                 if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)

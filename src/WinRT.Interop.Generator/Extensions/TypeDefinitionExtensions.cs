@@ -21,6 +21,13 @@ internal static class TypeDefinitionExtensions
         /// </summary>
         public bool IsStatic => type.IsAbstract && type.IsSealed;
 
+
+        /// <summary>
+        /// Gets whether a given type is a System.Guid
+        /// </summary>
+        /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
+        public bool IsGuid => type.FullName == "System.Guid";
+
         /// <summary>
         /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
