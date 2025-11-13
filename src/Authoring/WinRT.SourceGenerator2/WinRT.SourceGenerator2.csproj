@@ -44,6 +44,9 @@
     <!-- Enable the compiler strict mode (same as in the runtime) -->
     <Features>strict</Features>
 
+    <!-- Generate documentation files (same workaround as in the runtime) -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <!-- Roslyn settings -->
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
