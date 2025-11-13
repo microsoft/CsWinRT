@@ -673,8 +673,8 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(marshallerType);
 
-        // Get the constructor for '[WindowsRuntimeClassName]'
-        MemberReference windowsRuntimeClassNameAttributeCtor = interopReferences.WindowsRuntimeClassNameAttribute
+        // Get the constructor for '[WindowsRuntimeMetadataClassName]'
+        MemberReference windowsRuntimeMetadataClassNameAttributeCtor = interopReferences.WindowsRuntimeMetadataClassNameAttribute
             .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
                 returnType: module.CorLibTypeFactory.Void,
                 parameterTypes: [module.CorLibTypeFactory.String]))
@@ -682,7 +682,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Add the attribute with the name of the runtime class
         marshallerType.CustomAttributes.Add(new CustomAttribute(
-            constructor: windowsRuntimeClassNameAttributeCtor,
+            constructor: windowsRuntimeMetadataClassNameAttributeCtor,
             signature: new CustomAttributeSignature(new CustomAttributeArgument(
                 argumentType: module.CorLibTypeFactory.String,
                 value: runtimeClassName))));
