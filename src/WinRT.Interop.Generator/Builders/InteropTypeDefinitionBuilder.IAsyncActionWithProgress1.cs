@@ -64,11 +64,11 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature progressType = actionType.TypeArguments[0];
 
-            // We're declaring an 'internal static class' type
+            // We're declaring an 'internal abstract class' type
             actionMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
                 name: InteropUtf8NameFactory.TypeName(actionType, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncActionWithProgressMethodsImpl1.MakeGenericReferenceType(progressType).Import(module).ToTypeDefOrRef()) }

@@ -442,7 +442,7 @@ internal partial class InteropGenerator
         // type and member references to APIs defined in that module, so this is good enough for this scenario.
         // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
         Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime"u8, new Version(3, 0, 0, 0));
+        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime2"u8, new Version(3, 0, 0, 0));
         AssemblyReference windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET"u8, new Version(10, 0, 0, 0));
 
         // Set the public keys, as it's needed to ensure references compare as equals as expected

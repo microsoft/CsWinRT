@@ -63,11 +63,11 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature resultType = operationType.TypeArguments[0];
 
-            // We're declaring an 'internal static class' type
+            // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).Import(module).ToTypeDefOrRef()) }

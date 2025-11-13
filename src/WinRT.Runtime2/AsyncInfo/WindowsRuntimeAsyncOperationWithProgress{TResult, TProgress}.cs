@@ -9,7 +9,7 @@ using ABI.Windows.Foundation;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.AsyncInfo;
+namespace WindowsRuntime;
 
 /// <summary>
 /// The implementation of a native object for <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.

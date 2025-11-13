@@ -202,6 +202,7 @@ internal static class InteropUtf8NameFactory
             { Value: "System.Runtime" } => "#corlib"u8,
             { Value: "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" } => "#Windows"u8,
             { Value: "WinRT.Runtime" } => "#CsWinRT"u8,
+            { Value: "WinRT.Runtime2" } => "#CsWinRT"u8,
             _ => typeSignature.GetWindowsRuntimeMetadataName() ?? assemblyName
         };
     }
