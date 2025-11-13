@@ -166,7 +166,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldnull },
-                    { Ret } // TODO
+                    { Throw } // TODO
                 }
             };
 
