@@ -48,10 +48,6 @@ internal static class GuidGenerator
                 return "Boolean";
             case ElementType.Char:
                 return "Char";
-
-            //case ElementType.GUID:
-            //    return "u8";
-
             case ElementType.Object:
                 return "cinterface(IInspectable)";
             case ElementType.String:
