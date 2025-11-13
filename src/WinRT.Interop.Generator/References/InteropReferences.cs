@@ -219,6 +219,16 @@ internal sealed class InteropReferences
     public TypeReference IDisposable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IDisposable"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.TimeSpan"/>.
+    /// </summary>
+    public TypeReference TimeSpan => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "TimeSpan"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.DateTimeOffset"/>.
+    /// </summary>
+    public TypeReference DateTimeOffset => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "DateTimeOffset"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
     public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);

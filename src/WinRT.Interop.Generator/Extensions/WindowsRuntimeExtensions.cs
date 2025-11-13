@@ -58,6 +58,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime generic interface type.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
         {
@@ -73,6 +74,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic interface type.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime non-generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
         {
@@ -85,6 +87,99 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction);
+        }
+
+        /// <summary>
+        /// Checks whether a given type is blittable.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is blittable.</returns>
+        public bool IsBlittable(InteropReferences interopReferences)
+        {
+            // Generic instantiations can never be blittable (as they're pointers at the ABI level)
+            if (type is GenericInstanceTypeSignature)
+            {
+                return false;
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            // Enum types are always blittable
+            if (typeDefinition.IsEnum)
+            {
+                return true;
+            }
+
+            // Only value types are possibly blittable
+            if (!typeDefinition.IsValueType)
+            {
+                return false;
+            }
+
+            // All fundamental types are blittable (i.e. primitive types)
+            if (IsFundamentalWindowsRuntimeType(type, interopReferences))
+            {
+                return true;
+            }
+
+            // The 'TimeSpan' and 'DateTimeOffset' types are not blittable (even though they're custom-mapped)
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            {
+                return false;
+            }
+
+            // We have some complex struct, so we need to recursively check all fields
+            foreach (FieldDefinition fieldDefinition in typeDefinition.Fields)
+            {
+                // We only care about non-constant instance fields
+                if (fieldDefinition.IsStatic || fieldDefinition.IsLiteral)
+                {
+                    continue;
+                }
+
+                // If any fields aren't blittable, then the whole type isn't
+                if (!fieldDefinition.Signature!.FieldType.IsBlittable(interopReferences))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the ABI type for a given type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>The ABi type for the input type.</returns>
+        public TypeSignature GetAbiType(InteropReferences interopReferences)
+        {
+            // All constructed generics will use 'void*' for the ABI type. This applies to both reference
+            // types, as well as 'KeyValuePair<,>', which also maps to 'void*', since it's an interface.
+            if (type is GenericInstanceTypeSignature)
+            {
+                return interopReferences.CorLibTypeFactory.Void.MakePointerType();
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            if (typeDefinition.IsValueType)
+            {
+                // If the type is blittable, then it's the same as the ABI type
+                if (type.IsBlittable(interopReferences))
+                {
+                    return type.ToTypeDefOrRef().ToValueTypeSignature();
+                }
+
+                // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
+                return typeDefinition.DeclaringModule!.CreateTypeReference(
+                    ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
+                    name: typeDefinition.Name!).ToValueTypeSignature();
+            }
+
+            // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
+            return interopReferences.CorLibTypeFactory.Void.MakePointerType();
         }
     }
 
