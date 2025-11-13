@@ -16,11 +16,6 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Gather all PE references from the current compilation
-        IncrementalValuesProvider<EquatablePortableExecutableReference> executableReferences =
-            context.CompilationProvider
-            .SelectMany(Execute.GetAllPortableExecutableReferences);
-
         // Get whether the current project is an .exe
         IncrementalValueProvider<bool> isOutputTypeExe = context.CompilationProvider.Select(static (compilation, token) =>
         {
@@ -51,28 +46,15 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             .Combine(isPublishAotLibrary)
             .Select(static (flags, token) => flags.Left || flags.Right);
 
-        // Bypass all items if the flag is not set
-        IncrementalValuesProvider<(EquatablePortableExecutableReference Value, bool)> enabledExecutableReferences =
-            executableReferences
+        // Gather all assembly names for referenced PE files
+        IncrementalValueProvider<ImmutableArray<string>> assemblyNames =
+            context.CompilationProvider
             .Combine(isGeneratorEnabled)
-            .Where(static item => item.Right);
-
-        // Get all the names of assemblies with '[WindowsRuntimeReferenceAssembly]'
-        IncrementalValuesProvider<string?> assemblyNames = enabledExecutableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeReferenceAssembly);
-
-        // Combine all matching assembly names
-        IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
-            assemblyNames
-            .Where(static name => name is not null)
-            .Collect()!;
-
-        // Sort the assembly names
-        IncrementalValueProvider<EquatableArray<string>> sortedAssemblyNames =
-           filteredAssemblyNames
-           .Select(static (names, token) => names.Sort().AsEquatableArray());
+            .SelectMany(Execute.GetAllWindowsRuntimeReferenceAssemblyNames)
+            .Collect();
 
         // Generate the attributes for all matching assemblies
-        context.RegisterImplementationSourceOutput(sortedAssemblyNames, Execute.EmitPrivateProjectionsTypeMapAssemblyTargetAttributes);
+        context.RegisterImplementationSourceOutput(assemblyNames, Execute.EmitPrivateProjectionsTypeMapAssemblyTargetAttributes);
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the default items
         context.RegisterImplementationSourceOutput(isGeneratorEnabled, Execute.EmitDefaultTypeMapAssemblyTargetAttributes);
