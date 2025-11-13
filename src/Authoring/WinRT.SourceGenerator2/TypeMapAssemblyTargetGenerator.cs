@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -46,15 +47,28 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             .Combine(isPublishAotLibrary)
             .Select(static (flags, token) => flags.Left || flags.Right);
 
-        // Gather all assembly names for referenced PE files
-        IncrementalValueProvider<ImmutableArray<string>> assemblyNames =
+        // Gather all PE references from the current compilation
+        IncrementalValuesProvider<EquatablePortableExecutableReference> executableReferences =
             context.CompilationProvider
             .Combine(isGeneratorEnabled)
-            .SelectMany(Execute.GetAllWindowsRuntimeReferenceAssemblyNames)
-            .Collect();
+            .SelectMany(Execute.GetAllPortableExecutableReferences);
+
+        // Get all the names of assemblies with '[WindowsRuntimeReferenceAssembly]'
+        IncrementalValuesProvider<string?> assemblyNames = executableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeReferenceAssembly);
+
+        // Combine all matching assembly names
+        IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
+            assemblyNames
+            .Where(static name => name is not null)
+            .Collect()!;
+
+        // Sort the assembly names
+        IncrementalValueProvider<EquatableArray<string>> sortedAssemblyNames =
+           filteredAssemblyNames
+           .Select(static (names, token) => names.Sort(StringComparer.Ordinal).AsEquatableArray());
 
         // Generate the attributes for all matching assemblies
-        context.RegisterImplementationSourceOutput(assemblyNames, Execute.EmitPrivateProjectionsTypeMapAssemblyTargetAttributes);
+        context.RegisterImplementationSourceOutput(sortedAssemblyNames, Execute.EmitPrivateProjectionsTypeMapAssemblyTargetAttributes);
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the default items
         context.RegisterImplementationSourceOutput(isGeneratorEnabled, Execute.EmitDefaultTypeMapAssemblyTargetAttributes);

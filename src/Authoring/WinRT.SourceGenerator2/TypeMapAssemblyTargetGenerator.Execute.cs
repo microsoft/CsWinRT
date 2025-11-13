@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -21,12 +20,12 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
     private static class Execute
     {
         /// <summary>
-        /// Gets all assembly names for all referenced Windows Runtime reference assemblies.
+        /// Gets all portable executable references from a compilation.
         /// </summary>
         /// <param name="data">The input data.</param>
         /// <param name="token">The cancellation token for the operation.</param>
-        /// <returns>The assembly names for all referenced Windows Runtime reference assemblies..</returns>
-        public static ImmutableArray<string> GetAllWindowsRuntimeReferenceAssemblyNames((Compilation Compilation, bool IsEnabled) data, CancellationToken token)
+        /// <returns>All portable executable references for the input compilation.</returns>
+        public static ImmutableArray<EquatablePortableExecutableReference> GetAllPortableExecutableReferences((Compilation Compilation, bool IsEnabled) data, CancellationToken token)
         {
             // Bypass the entire operation if the generator is disabled
             if (!data.IsEnabled)
@@ -34,45 +33,57 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
                 return [];
             }
 
-            ITypeSymbol attributeSymbol = data.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute")!;
-
             // Try to get a good initial capacity (if we fail, just use '0', since private projections are not common)
             if (!Enumerable.TryGetNonEnumeratedCount(data.Compilation.References, out int initialCapacity))
             {
                 initialCapacity = 0;
             }
 
-            var assemblyNames = ImmutableArray.CreateBuilder<string>(initialCapacity);
+            var executableReferences = ImmutableArray.CreateBuilder<EquatablePortableExecutableReference>(initialCapacity);
 
             foreach (MetadataReference metadataReference in data.Compilation.References)
             {
                 token.ThrowIfCancellationRequested();
 
                 // We are only interested in PE references (not project references)
-                if (metadataReference is not PortableExecutableReference)
+                if (metadataReference is not PortableExecutableReference executableReference)
                 {
                     continue;
                 }
 
-                // Make sure we can resolve the symbol for the assembly from the reference
-                if (data.Compilation.GetAssemblyOrModuleSymbol(metadataReference) is not IAssemblySymbol assemblySymbol)
-                {
-                    continue;
-                }
-
-                // If the assembly has '[WindowsRuntimeReferenceAssembly]', track its name
-                if (assemblySymbol.HasAttributeWithType(attributeSymbol))
-                {
-                    assemblyNames.Add(assemblySymbol.Identity.Name);
-                }
+                executableReferences.Add(new EquatablePortableExecutableReference(executableReference, data.Compilation));
             }
 
             token.ThrowIfCancellationRequested();
 
-            // Also sort the assembly names (both for better incrementality and to make the output more readable)
-            assemblyNames.Sort(StringComparer.OrdinalIgnoreCase);
+            return executableReferences.ToImmutable();
+        }
 
-            return assemblyNames.DrainToImmutable();
+        /// <summary>
+        /// Gets the assembly name for the input assembly, if it is a Windows Runtime reference assembly.
+        /// </summary>
+        /// <param name="executableReference">The input <see cref="EquatablePortableExecutableReference"/> instance.</param>
+        /// <param name="token">The cancellation token for the operation.</param>
+        /// <returns>The assembly name for <paramref name="executableReference"/>, if it is a Windows Runtime reference assembly.</returns>
+        public static string? GetAssemblyNameIfWindowsRuntimeReferenceAssembly(EquatablePortableExecutableReference executableReference, CancellationToken token)
+        {
+            Compilation compilation = executableReference.GetCompilationUnsafe();
+
+            token.ThrowIfCancellationRequested();
+
+            // We only care about resolved assembly symbols (this should always be the case anyway)
+            if (compilation.GetAssemblyOrModuleSymbol(executableReference.Reference) is not IAssemblySymbol assemblySymbol)
+            {
+                return null;
+            }
+
+            token.ThrowIfCancellationRequested();
+
+            ITypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute")!;
+
+            token.ThrowIfCancellationRequested();
+
+            return assemblySymbol.HasAttributeWithType(attributeSymbol) ? assemblySymbol.Identity.Name : null;
         }
 
         /// <summary>
@@ -80,7 +91,7 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
         /// </summary>
         /// <param name="context">The <see cref="SourceProductionContext"/> instance to use.</param>
         /// <param name="assemblyNames">The input assembly names.</param>
-        public static void EmitPrivateProjectionsTypeMapAssemblyTargetAttributes(SourceProductionContext context, ImmutableArray<string> assemblyNames)
+        public static void EmitPrivateProjectionsTypeMapAssemblyTargetAttributes(SourceProductionContext context, EquatableArray<string> assemblyNames)
         {
             if (assemblyNames.IsEmpty)
             {
