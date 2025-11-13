@@ -45,9 +45,9 @@ internal static class GuidGenerator
             case ElementType.R8:
                 return "f8";
             case ElementType.Boolean:
-                return "Boolean";
+                return "b1";
             case ElementType.Char:
-                return "Char";
+                return "c2";
             case ElementType.Object:
                 return "cinterface(IInspectable)";
             case ElementType.String:
@@ -121,6 +121,13 @@ internal static class GuidGenerator
                     }
                 }
                 throw new ArgumentException("TypeSignature with GenericInst does not resolve to genericTypeSignature");
+            case ElementType.SzArray:
+                SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)typeSignature;
+                if (arrayTypeSignature != null)
+                {
+                    return "pinterface({61C17707-2D65-11E0-9AE8-D48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences) + ")";
+                }
+                throw new ArgumentException("TypeSignature with SzArray does not resolve to a SzArrayTypeSignature");
         }
 #pragma warning restore IDE0010
         throw new ArgumentException("Unhandled ElementType");
@@ -219,10 +226,10 @@ internal static class GuidGenerator
 
     public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences)
     {
-        return CreateIIDForGenericType(GetSignature(type, interopReferences));
+        return CreateGuidFromSignature(GetSignature(type, interopReferences));
     }
 
-    internal static Guid CreateIIDForGenericType(string signature)
+    internal static Guid CreateGuidFromSignature(string signature)
     {
         // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
         // If the minimum buffer is small enough, we can stack-allocate it.
