@@ -19,7 +19,7 @@ namespace Windows.Foundation;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Rect>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Windows.Foundation.Rect>")]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.RectComWrappersMarshaller]

@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="long"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Int64>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Int64>")]
 [Int64ComWrappersMarshaller]
 file static class Int64;
 

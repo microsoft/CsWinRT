@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="float"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Single>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Single>")]
 [SingleComWrappersMarshaller]
 file static class Single;
 

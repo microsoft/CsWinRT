@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="uint"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt32>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<UInt32>")]
 [UInt32ComWrappersMarshaller]
 file static class UInt32;
 

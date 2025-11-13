@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="global::System.Guid"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Guid>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Guid>")]
 [GuidComWrappersMarshaller]
 file static class Guid;
 

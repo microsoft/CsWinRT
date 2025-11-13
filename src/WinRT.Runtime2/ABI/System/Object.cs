@@ -13,7 +13,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="object"/>.
 /// </summary>
-[WindowsRuntimeClassName("Object")]
+[WindowsRuntimeMetadataClassName("Object")]
 [ObjectComWrappersMarshaller]
 file static class Object;
 

@@ -29,7 +29,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Vector3"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector3"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector3>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector3>")]
 [Vector3ComWrappersMarshaller]
 file static class Vector3;
 

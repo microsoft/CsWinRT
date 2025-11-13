@@ -38,7 +38,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.EventHandler"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventhandler-1"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>")]
 [EventHandlerComWrappersMarshaller]
 file static class EventHandler;
 

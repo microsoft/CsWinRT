@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="byte"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<UInt8>")]
 [ByteComWrappersMarshaller]
 file static class Byte;
 

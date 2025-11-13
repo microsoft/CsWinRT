@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="double"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Double>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Double>")]
 [DoubleComWrappersMarshaller]
 file static class Double;
 

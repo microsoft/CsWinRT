@@ -28,7 +28,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="string"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<String>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<String>")]
 [StringComWrappersMarshaller]
 file static class String;
 

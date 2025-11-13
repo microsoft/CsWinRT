@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="short"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Int16>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Int16>")]
 [Int16ComWrappersMarshaller]
 file static class Int16;
 

@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="bool"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Boolean>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Boolean>")]
 [BooleanComWrappersMarshaller]
 file static class Boolean;
 

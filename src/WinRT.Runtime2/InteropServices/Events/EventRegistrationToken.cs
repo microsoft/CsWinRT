@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.EventRegistrationToken>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<Windows.Foundation.EventRegistrationToken>")]
 [ABI.WindowsRuntime.InteropServices.EventRegistrationTokenComWrappersMarshaller]
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
 {

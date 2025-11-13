@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="ushort"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt16>")]
+[WindowsRuntimeMetadataClassName("Windows.Foundation.IReference<UInt16>")]
 [UInt16ComWrappersMarshaller]
 file static class UInt16;
 
