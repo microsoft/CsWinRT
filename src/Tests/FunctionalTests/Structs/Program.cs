@@ -4,7 +4,7 @@ using WindowsRuntime.InteropServices;
 
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
 // TODO: This shouldn't be needed if transitive references are detected correctly.
-[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
+[assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
 
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
