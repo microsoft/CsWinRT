@@ -443,14 +443,37 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <remarks>This method is only meant to be used on managed types passed to native.</remarks>
     public string GetRuntimeClassName()
     {
+        // Tries to get the runtime class name for the current type (works for both projected and user-defined types)
+        bool TryResolveRuntimeClassName([NotNullWhen(true)] out string? runtimeClassName)
+        {
+            // First try to get the runtime class name from the metadata provider type directly.
+            // This path will apply to e.g. marshalled projected value types and delegate types.
+            if (_metadataProviderType.GetCustomAttribute<WindowsRuntimeMetadataClassNameAttribute>(inherit: false) is { } metadataClassNameAttribute)
+            {
+                runtimeClassName = metadataClassNameAttribute.RuntimeClassName;
+
+                return true;
+            }
+
+            // Otherwise, get the public type and try to find the '[WindowsRuntimeClassName]' attribute.
+            // This path will apply to non-authored, user-defined types needing a specific runtime class name.
+            if (PublicType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false) is { } runtimeClassNameAttribute)
+            {
+                runtimeClassName = runtimeClassNameAttribute.RuntimeClassName;
+
+                return true;
+            }
+
+            runtimeClassName = null;
+
+            return false;
+        }
+
+        // Initializes the runtime class name, with caching, and throws if one could not be retrieved
         [MethodImpl(MethodImplOptions.NoInlining)]
         string InitializeRuntimeClassName()
         {
-            WindowsRuntimeClassNameAttribute? runtimeClassNameAttribute =
-                _metadataProviderType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false)
-                ?? PublicType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false);
-
-            if (runtimeClassNameAttribute is null)
+            if (!TryResolveRuntimeClassName(out string? runtimeClassName))
             {
                 // Analogous validation as for when retrieving the marshaller attribute
                 [DoesNotReturn]
@@ -465,7 +488,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
                 ThrowNotSupportedException();
             }
 
-            return _runtimeClassName ??= runtimeClassNameAttribute.RuntimeClassName;
+            return _runtimeClassName ??= runtimeClassName;
         }
 
         return _runtimeClassName ?? InitializeRuntimeClassName();
