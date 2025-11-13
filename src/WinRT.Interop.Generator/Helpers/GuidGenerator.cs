@@ -20,7 +20,6 @@ internal static class GuidGenerator
             InteropReferences interopReferences)
     {
         AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()!;
-
 #pragma warning disable IDE0010 // Maybe temporary until all cases are handled
         switch (typeSignature.ElementType)
         {
@@ -55,67 +54,127 @@ internal static class GuidGenerator
 
             case ElementType.Object:
                 return "cinterface(IInspectable)";
-
             case ElementType.String:
                 return "string";
             case ElementType.Type:
                 return "struct(Windows.UI.Xaml.Interop.222TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
-
+            case ElementType.ValueType:
+                if (typeDefinition is not null)
+                {
+                    if (typeDefinition.IsEnum)
+                    {
+                        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
+                        return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+                    }
+                    if (typeDefinition.IsClass) // struct case
+                    {
+                        IList<FieldDefinition> fieldDefinition = typeDefinition.Fields; // IList<TypeSignature>
+                        String[] typeArgumentSignatures = new String[fieldDefinition.Count];
+                        for (int i = 0; i < fieldDefinition.Count; i++)
+                        {
+                            FieldSignature? fieldSignature = fieldDefinition[i].Signature;
+                            typeArgumentSignatures[i] = fieldSignature != null
+                                ? GetSignature(fieldSignature.FieldType, interopReferences)
+                                : throw new ArgumentException("FieldSignature is missing");
+                        }
+                        return "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
+                    }
+                }
+                throw new ArgumentException("TypeSignature with ValueType is neither Enum or Struct");
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
-                IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments; // IList<TypeSignature>
-                String[] typeArgumentSignatures = new String[typeArugmentList.Count];
-                for (int i = 0; i < typeArugmentList.Count; i++)
+                AsmResolver.DotNet.TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
+                if (genericTypeDefinition is not null)
                 {
-                    typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
+                    if (genericTypeDefinition.IsDelegate)
+                    {
+                        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
+                    }
+                    if (genericTypeDefinition.IsClass)
+                    {
+                        if (genericTypeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
+                        {
+                            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+                            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+                            {
+                                object? element = customAttributeSignature.FixedArguments[0].Element;
+                                if (element is TypeSignature defaultInterfaceSig)
+                                {
+                                    return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
+                                }
+                            }
+                        }
+                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
+                    }
+                    if (genericTypeDefinition.IsInterface)
+                    {
+                        IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments; // IList<TypeSignature>
+                        String[] typeArgumentSignatures = new String[typeArugmentList.Count];
+                        for (int i = 0; i < typeArugmentList.Count; i++)
+                        {
+                            typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
+                        }
+                        return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
+                    }
                 }
-                return "pinterface({" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
-
+                throw new ArgumentException("TypeSignature with GenericInst does not resolve to genericTypeSignature");
             case ElementType.Class:
                 // TODO: Get default interface and add it to the signature
                 if (typeDefinition is not null)
                 {
-                    if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
+                    if (typeDefinition.IsDelegate)
                     {
-                        CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-                        if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+                        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
+                    }
+                    if (typeDefinition.IsClass)
+                    {
+                        if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out CustomAttribute? customAttribute))
                         {
-                            object? element = customAttributeSignature.FixedArguments[0].Element;
-                            if (element is TypeSignature defaultInterfaceSig)
+                            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+                            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
                             {
-                                return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
+                                object? element = customAttributeSignature.FixedArguments[0].Element;
+                                if (element is TypeSignature defaultInterfaceSig)
+                                {
+                                    return "rc(" + typeSignature.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
+                                }
                             }
                         }
+                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
+                    }
+                    if (typeDefinition.IsInterface)
+                    {
+                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
                     }
                 }
-                return "{" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "}";
+                throw new ArgumentException("TypeSignature with GenericInst does not resolve to genericTypeSignature");
         }
 #pragma warning restore IDE0010
 
-        if (typeDefinition is not null)
-        {
-            if (typeDefinition.IsDelegate)
-            {
-                return "delegate({" + TryGetGuidFromGuidAttribute(typeSignature, interopReferences) + "})";
-            }
-            else if (typeDefinition.IsEnum)
-            {
-                bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
-            }
-        }
+        //if (typeDefinition is not null)
+        //{
+        //    if (typeDefinition.IsDelegate)
+        //    {
+        //        return "delegate({" + GetGuid(typeSignature, interopReferences) + "})";
+        //    }
+        //    else if (typeDefinition.IsEnum)
+        //    {
+        //        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
+        //        return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+        //    }
+        //}
         return "";
     }
 
-    internal static Guid TryGetGuidFromGuidAttribute(TypeSignature typeSig, InteropReferences interopReferences)
+    internal static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
     {
+        AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         Guid result = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
         if (result != Guid.Empty)
         {
             return result;
         }
 
-        AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
             if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out CustomAttribute? customAttribute))
