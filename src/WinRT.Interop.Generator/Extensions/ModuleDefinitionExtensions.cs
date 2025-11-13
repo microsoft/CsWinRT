@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -15,6 +16,54 @@ namespace WindowsRuntime.InteropGenerator;
 /// </summary>
 internal static class ModuleDefinitionExtensions
 {
+    /// <summary>
+    /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
+    /// </summary>
+    /// <returns>Whether the module references the Windows Runtime assembly.</returns>
+    public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
+    {
+        // Check all direct assembly references and check if they match
+        foreach (AssemblyReference reference in module.AssemblyReferences)
+        {
+            if (reference.Name == assemblyName)
+            {
+                return true;
+            }
+
+            // Also traverse the entire transitive dependency graph and check those assemblies
+            foreach (ModuleDefinition transitiveModule in reference.Resolve()?.Modules ?? [])
+            {
+                if (transitiveModule.ReferencesAssembly(assemblyName))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Enumerates all (transitive) assembly references for a given <see cref="ModuleDefinition"/>.
+    /// </summary>
+    /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
+    public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module, Utf8String assemblyName)
+    {
+        foreach (AssemblyReference reference in module.AssemblyReferences)
+        {
+            yield return reference;
+
+            // Also enumerate all transitive references as well
+            foreach (ModuleDefinition transitiveModule in reference.Resolve()?.Modules ?? [])
+            {
+                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences(assemblyName))
+                {
+                    yield return transitiveReference;
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
