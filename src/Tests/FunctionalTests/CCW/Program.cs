@@ -11,13 +11,6 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
 
-// TODO: This shouldn't be needed if transitive references are detected correctly.
-[assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
-
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
-
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
 

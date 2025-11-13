@@ -3,20 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using TestComponentCSharp;
 using Windows.Foundation.Collections;
-using WindowsRuntime.InteropServices;
-
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
-// TODO: This shouldn't be needed if transitive references are detected correctly.
-[assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
-
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
-#pragma warning restore CSWINRT3001 // Type or member is obsolete
 
 int events_expected = 0;
 int events_received = 0;
