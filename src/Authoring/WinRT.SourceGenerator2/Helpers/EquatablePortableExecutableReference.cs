@@ -51,12 +51,28 @@ internal sealed class EquatablePortableExecutableReference(
     /// <inheritdoc/>
     public bool Equals([NotNullWhen(true)] EquatablePortableExecutableReference? other)
     {
-        return other?.Reference.GetMetadataId() == Reference.GetMetadataId();
+        try
+        {
+            return other?.Reference.GetMetadataId() == Reference.GetMetadataId();
+        }
+        catch
+        {
+            // 'GetMetadataId' can throws in some rare cases, so just handle that explicitly
+            return false;
+        }
     }
 
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        return Reference.GetMetadataId().GetHashCode();
+        try
+        {
+            return Reference.GetMetadataId().GetHashCode();
+        }
+        catch
+        {
+            // If we throw, we just always use '0'. The 'Equals' calls after it will return 'false' anyway.
+            return 0;
+        }
     }
 }
