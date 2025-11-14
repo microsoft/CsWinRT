@@ -1661,7 +1661,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
-                AbiType.MakePointerType()]));
+                AbiType.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeBlittableArrayUnsafe</c>.
