@@ -151,8 +151,8 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add all '[IgnoreAccessChecksTo]' attributes
-        DefineIgnoreAccessChecksToAttributes(discoveryState, interopDefinitions, module);
+        // Add all '[IgnoresAccessChecksTo]' attributes
+        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2087,27 +2087,27 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the <c>[IgnoreAccessChecksTo]</c> attribute, and applies it to the assembly for each input reference.
+    /// Defines the <c>[IgnoresAccessChecksTo]</c> attribute, and applies it to the assembly for each input reference.
     /// </summary>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
-    private static void DefineIgnoreAccessChecksToAttributes(
+    private static void DefineIgnoresAccessChecksToAttributes(
         InteropGeneratorDiscoveryState discoveryState,
         InteropDefinitions interopDefinitions,
         ModuleDefinition module)
     {
         try
         {
-            // Emit the '[IgnoreAccessChecksTo]' type first
-            module.TopLevelTypes.Add(interopDefinitions.IgnoreAccessChecksToAttribute);
+            // Emit the '[IgnoresAccessChecksTo]' type first
+            module.TopLevelTypes.Add(interopDefinitions.IgnoresAccessChecksToAttribute);
 
-            // Next, emit all the '[IgnoreAccessChecksTo]' attributes for each type
-            IgnoreAccessChecksToBuilder.AssemblyAttributes(discoveryState.ModuleDefinitions.Values, interopDefinitions, module);
+            // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
+            IgnoresAccessChecksToBuilder.AssemblyAttributes(discoveryState.ModuleDefinitions.Values, interopDefinitions, module);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw WellKnownInteropExceptions.DefineIgnoreAccessChecksToAttributesError(e);
+            throw WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e);
         }
     }
 

@@ -164,11 +164,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to define the <c>[IgnoreAccessChecksTo]</c> attributes
+    /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes
     /// </summary>
-    public static Exception DefineIgnoreAccessChecksToAttributesError(Exception exception)
+    public static Exception DefineIgnoresAccessChecksToAttributesError(Exception exception)
     {
-        return Exception(19, "Failed to generate the '[IgnoreAccessChecksTo]' attribute definition and annotations.", exception);
+        return Exception(19, "Failed to generate the '[IgnoresAccessChecksTo]' attribute definition and annotations.", exception);
     }
 
     /// <summary>

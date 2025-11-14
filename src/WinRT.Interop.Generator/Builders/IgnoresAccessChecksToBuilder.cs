@@ -10,9 +10,9 @@ using WindowsRuntime.InteropGenerator.References;
 namespace WindowsRuntime.InteropGenerator.Builders;
 
 /// <summary>
-/// A builder for the <c>[IgnoreAccessChecksTo]</c> uses.
+/// A builder for the <c>[IgnoresAccessChecksTo]</c> uses.
 /// </summary>
-internal static partial class IgnoreAccessChecksToBuilder
+internal static partial class IgnoresAccessChecksToBuilder
 {
     /// <summary>
     /// Defines all assembly attributes for target modules using the Windows TFM.
@@ -38,7 +38,7 @@ internal static partial class IgnoreAccessChecksToBuilder
             string assemblyName = Path.GetFileNameWithoutExtension(assemblyModule.Name!);
 
             // Create the attribute and add it to the assembly
-            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoreAccessChecksTo(assemblyName, interopDefinitions, module));
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, module));
         }
     }
 }

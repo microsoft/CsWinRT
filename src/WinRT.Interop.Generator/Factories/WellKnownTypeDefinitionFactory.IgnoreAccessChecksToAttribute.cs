@@ -15,17 +15,17 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal partial class WellKnownTypeDefinitionFactory
 {
     /// <summary>
-    /// Creates the <c>IgnoreAccessChecksToAttribute</c> type.
+    /// Creates the <c>IgnoresAccessChecksToAttribute</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    /// <returns>The resulting <c>IgnoreAccessChecksToAttribute</c> type.</returns>
-    public static TypeDefinition IgnoreAccessChecksToAttribute(InteropReferences interopReferences, ModuleDefinition module)
+    /// <returns>The resulting <c>IgnoresAccessChecksToAttribute</c> type.</returns>
+    public static TypeDefinition IgnoresAccessChecksToAttribute(InteropReferences interopReferences, ModuleDefinition module)
     {
         // We're declaring a 'public sealed class' type
-        TypeDefinition ignoreAccessChecksToType = new(
+        TypeDefinition IgnoresAccessChecksToType = new(
             ns: "System.Runtime.CompilerServices"u8,
-            name: "IgnoreAccessChecksToAttribute"u8,
+            name: "IgnoresAccessChecksToAttribute"u8,
             attributes: TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Attribute.Import(module));
 
@@ -35,12 +35,12 @@ internal partial class WellKnownTypeDefinitionFactory
             attributes: FieldAttributes.Private | FieldAttributes.InitOnly,
             fieldType: module.CorLibTypeFactory.String);
 
-        ignoreAccessChecksToType.Fields.Add(assemblyNameField);
+        IgnoresAccessChecksToType.Fields.Add(assemblyNameField);
 
         // Define the constructor
         MethodDefinition ctor = MethodDefinition.CreateConstructor(module, module.CorLibTypeFactory.String);
 
-        ignoreAccessChecksToType.Methods.Add(ctor);
+        IgnoresAccessChecksToType.Methods.Add(ctor);
 
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
@@ -63,8 +63,8 @@ internal partial class WellKnownTypeDefinitionFactory
             GetMethod = get_AssemblyNameMethod
         };
 
-        ignoreAccessChecksToType.Properties.Add(assemblyNameProperty);
-        ignoreAccessChecksToType.Methods.Add(get_AssemblyNameMethod);
+        IgnoresAccessChecksToType.Properties.Add(assemblyNameProperty);
+        IgnoresAccessChecksToType.Methods.Add(get_AssemblyNameMethod);
 
         // Create a method body for the 'AssemblyName' property
         get_AssemblyNameMethod.CilMethodBody = new CilMethodBody()
@@ -78,12 +78,12 @@ internal partial class WellKnownTypeDefinitionFactory
         };
 
         // Also emit '[AttributeUsage]' on the type
-        ignoreAccessChecksToType.CustomAttributes.Add(InteropCustomAttributeFactory.AttributeUsage(
+        IgnoresAccessChecksToType.CustomAttributes.Add(InteropCustomAttributeFactory.AttributeUsage(
             attributeTargets: AttributeTargets.Assembly,
             allowMultiple: true,
             interopReferences: interopReferences,
             module: module));
 
-        return ignoreAccessChecksToType;
+        return IgnoresAccessChecksToType;
     }
 }
