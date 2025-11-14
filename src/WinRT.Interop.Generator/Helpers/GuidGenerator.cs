@@ -58,19 +58,25 @@ internal static class GuidGenerator
             case ElementType.ValueType:
                 if (typeDefinition is not null)
                 {
-                    if (typeDefinition.IsClass) // struct case
+                    if (typeDefinition.IsClass)
                     {
+                        // Enum case
                         if (typeDefinition.IsEnum)
                         {
                             bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
                             return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
                         }
+
+                        // Guid Case
                         if (typeDefinition.IsGuid)
                         {
                             return "g16";
                         }
+
+                        // Struct case
                         IList<AsmResolver.DotNet.FieldDefinition> fieldDefinition = typeDefinition.Fields;
                         List<string> typeArgumentSignatures = [];
+
                         for (int i = 0; i < fieldDefinition.Count; i++)
                         {
                             if (!fieldDefinition[i].IsStatic)
@@ -79,6 +85,7 @@ internal static class GuidGenerator
                                 typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences));
                             }
                         }
+
                         return "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
                     }
                 }
@@ -86,6 +93,7 @@ internal static class GuidGenerator
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
                 AsmResolver.DotNet.TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
+
                 if (genericTypeDefinition is not null)
                 {
                     if (genericTypeDefinition.IsInterface || genericTypeDefinition.IsDelegate)
@@ -98,6 +106,7 @@ internal static class GuidGenerator
                         }
                         return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
                     }
+
                     if (genericTypeDefinition.IsClass)
                     {
                         return GetClassGuidSignature(genericTypeSignature, genericTypeDefinition, interopReferences);
@@ -113,6 +122,7 @@ internal static class GuidGenerator
                             ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})"
                             : GetClassGuidSignature(typeSignature, typeDefinition, interopReferences);
                     }
+
                     if (typeDefinition.IsInterface)
                     {
                         return "{" + GetGuid(typeSignature, interopReferences) + "}";
@@ -121,10 +131,12 @@ internal static class GuidGenerator
                 throw new ArgumentException("Invalid ElementType.Class");
             case ElementType.SzArray:
                 SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)typeSignature;
+
                 if (arrayTypeSignature != null)
                 {
                     return "pinterface({61c17707-2d65-11e0-9ae8-d48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences) + ")";
                 }
+
                 throw new ArgumentException("Invalid ElementType.SzArray");
         }
         return typeDefinition.FullName; // For debugging purpo0ses
