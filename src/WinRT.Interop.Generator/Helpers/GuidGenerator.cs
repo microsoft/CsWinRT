@@ -4,13 +4,13 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
-using System.IO;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -85,8 +85,9 @@ internal static class GuidGenerator
                                 typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences));
                             }
                         }
-
-                        return "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
+                        return typeDefinition.Namespace is null || typeDefinition.Name is null
+                            ? "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")"
+                            : "struct(" + TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name) + ";" + string.Join(";", typeArgumentSignatures) + ")";
                     }
                 }
                 throw new ArgumentException("Invalid ElementType.ValueType");
