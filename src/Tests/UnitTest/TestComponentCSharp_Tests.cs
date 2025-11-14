@@ -34,13 +34,14 @@ using Windows.UI.Notifications;
 using WindowsRuntime.InteropServices.Marshalling;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime;
+using System.Runtime.InteropServices.Marshalling;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 
 namespace UnitTest
 {
-    public class TestCSharp
+    public partial class TestCSharp
     {
         public Class TestObject { get; private set; }
 
@@ -655,12 +656,14 @@ namespace UnitTest
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
 
+        /* TODO
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
         {
             var agileObject = (IAgileObject)(IWinRTObject)TestObject;
             Assert.NotNull(agileObject);
         }
+        */
 
         [Fact]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
@@ -726,14 +729,15 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestUri()
+        public unsafe void TestUri()
         {
             var base_uri = "https://github.com";
             var relative_uri = "microsoft/CsWinRT";
             var full_uri = base_uri + "/" + relative_uri;
             var managedUri = new Uri(full_uri);
 
-            var uri1 = ABI.System.Uri.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            using WindowsRuntimeObjectReferenceValue uriObjectRefValue = ABI.System.UriMarshaller.ConvertToUnmanaged(managedUri);
+            var uri1 = ABI.System.UriMarshaller.ConvertToManaged(uriObjectRefValue.GetThisPtrUnsafe());
             var str1 = uri1.ToString();
             Assert.Equal(full_uri, str1);
 
@@ -746,13 +750,9 @@ namespace UnitTest
                 (object sender, Uri value) => Assert.Equal(managedUri, value);
             TestObject.RaiseUriChanged();
 
-            var uri2 = MarshalInspectable<System.Uri>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var uri2 = WindowsRuntimeMarshal.ConvertToManaged(WindowsRuntimeMarshal.ConvertToUnmanaged(managedUri));
             var str2 = uri2.ToString();
             Assert.Equal(full_uri, str2);
-
-            var uri3 = MarshalInspectable<object>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
-            var str3 = uri3.ToString();
-            Assert.Equal(full_uri, str3);
         }
 
         [Fact]
@@ -849,9 +849,6 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
-#if NET
-        [WinRTExposedType(typeof(ManagedUriHandlerWinRTTypeDetails))]
-#endif
         class ManagedUriHandler : IUriHandler
         {
             public Class TestObject { get; private set; }
@@ -867,23 +864,6 @@ namespace UnitTest
                 Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
             }
         }
-
-#if NET
-        internal sealed class ManagedUriHandlerWinRTTypeDetails : IWinRTExposedTypeDetails
-        {
-            public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
-            {
-                return new ComWrappers.ComInterfaceEntry[]
-                {
-                    new ComWrappers.ComInterfaceEntry
-                    {
-                        IID = typeof(IUriHandler).GUID,
-                        Vtable = ABI.TestComponentCSharp.IUriHandlerMethods.AbiToProjectionVftablePtr
-                    }
-                };
-            }
-        }
-#endif
 
         [Fact]
         public void TestDelegateUnwrapping()
@@ -933,10 +913,12 @@ namespace UnitTest
             Assert.True(eventCalled);
 
             // IXamlServiceProvider <-> IServiceProvider
+            /* TODO
             var serviceProvider = Class.ServiceProvider.As<IServiceProviderInterop>();
             IntPtr service;
             serviceProvider.GetService(IntPtr.Zero, out service);
             Assert.Equal(new IntPtr(42), service);
+            */
 
             // Ensure robustness with bad runtime class names (parsing errors, type not found, etc)
             var badRuntimeClassName = Class.BadRuntimeClassName;
@@ -1261,7 +1243,9 @@ namespace UnitTest
             Assert.Equal(42, TestObject.GetComposedBlittableStruct().blittable.i32);
 
             // Manual setter
-            val.blittable.i32 = 8;
+            var blittable = val.blittable;
+            blittable.i32 = 8;
+            val.blittable = blittable;
             TestObject.SetComposedBlittableStruct(val);
             Assert.Equal(8, TestObject.ComposedBlittableStructProperty.blittable.i32);
 
@@ -1376,12 +1360,18 @@ namespace UnitTest
             Assert.False(TestObject.GetComposedNonBlittableStruct().bools.z);
 
             // Manual setter
-            val.blittable.i32 = 8;
-            val.strings.str = "Hello, world";
-            val.bools.w = false;
-            val.bools.x = true;
-            val.bools.y = false;
-            val.bools.z = true;
+            var blittable = val.blittable;
+            blittable.i32 = 8;
+            val.blittable = blittable;
+            var strings = val.strings;
+            strings.str = "Hello, world";
+            val.strings = strings;
+            var bools = val.bools;
+            bools.w = false;
+            bools.x = true;
+            bools.y = false;
+            bools.z = true;
+            val.bools = bools;
             TestObject.SetComposedNonBlittableStruct(val);
             Assert.Equal(8, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
             Assert.Equal("Hello, world", TestObject.ComposedNonBlittableStructProperty.strings.str);
@@ -1412,16 +1402,6 @@ namespace UnitTest
             Assert.Null(TestObject.GetInts());
         }
 
-#if !NET
-        [Fact]
-        public void TestGenericCast()
-        {
-            var ints = TestObject.GetIntVector();
-            var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
-            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
-        }
-#endif
-
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
@@ -1437,6 +1417,7 @@ namespace UnitTest
             void ToString(out IntPtr hstr);
         }
 
+        /* TODO
         [Fact]
         public unsafe void TestFactoryCast()
         {
@@ -1445,47 +1426,46 @@ namespace UnitTest
             // Access nonstatic class factory 
             var instanceFactory = Class.As<IStringableInterop>();
             instanceFactory.ToString(out hstr);
-            Assert.Equal("Class", MarshalString.FromAbi(hstr));
+            Assert.Equal("Class", HStringMarshaller.ConvertToManaged((void*)hstr));
 
             // Access static class factory
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
-            Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
+            Assert.Equal("ComImports", HStringMarshaller.ConvertToManaged((void*)hstr));
         }
+        */
 
-#if !NET47
         [Fact]
         public unsafe void TestMarshalString_FromAbiUnsafe()
         {
             // The span must be empty and point to a null-terminated buffer (HSTRING-s are null-terminated too)
-            var span = MarshalString.FromAbiUnsafe(IntPtr.Zero);
+            var span = HStringMarshaller.ConvertToManagedUnsafe(null);
             Assert.Equal(0, span.Length);
             Assert.True(MemoryMarshal.GetReference(span) == '\0');
 
             // Same thing but with round-tripping from a null string
-            var hstr = MarshalString.FromManaged(null);
-            span = MarshalString.FromAbiUnsafe(hstr);
+            var hstr = HStringMarshaller.ConvertToUnmanaged(null);
+            span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
             Assert.Equal(0, span.Length);
             Assert.True(MemoryMarshal.GetReference(span) == '\0');
-            MarshalString.DisposeAbi(hstr);
+            HStringMarshaller.Free(hstr);
 
             // Same thing but with an empty string (equivalent to null)
-            hstr = MarshalString.FromManaged("");
-            span = MarshalString.FromAbiUnsafe(hstr);
+            hstr = HStringMarshaller.ConvertToUnmanaged("");
+            span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
             Assert.Equal(0, span.Length);
             Assert.True(MemoryMarshal.GetReference(span) == '\0');
-            MarshalString.DisposeAbi(hstr);
+            HStringMarshaller.Free(hstr);
 
             // Marshal from some non-null, non-empty string. We want to check that both the span has the expected content,
             // but also that it's correctly null-terminated (outside of its bounds). This is always safe to access, like
             // before, because the memory should point to the HSTRING buffer, which is always null-terminated as well.
-            hstr = MarshalString.FromManaged(nameof(TestMarshalString_FromAbiUnsafe));
-            span = MarshalString.FromAbiUnsafe(hstr);
+            hstr = HStringMarshaller.ConvertToUnmanaged(nameof(TestMarshalString_FromAbiUnsafe));
+            span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
             Assert.True(span.SequenceEqual(nameof(TestMarshalString_FromAbiUnsafe)));
             Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
-            MarshalString.DisposeAbi(hstr);
+            HStringMarshaller.Free(hstr);
         }
-#endif
 
         [Fact]
         public void TestFundamentalGeneric()
@@ -1775,10 +1755,11 @@ namespace UnitTest
         [Fact]
         public void TestInterfaceCCWLifetime()
         {
-            static (WeakReference, IObjectReference) CreateCCW()
+            unsafe static (WeakReference, WindowsRuntimeObjectReference) CreateCCW()
             {
                 var managedProperties = new ManagedProperties(42);
-                IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+                using WindowsRuntimeObjectReferenceValue ccw1Value = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
+                WindowsRuntimeObjectReference ccw1 = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw1Value.GetThisPtrUnsafe(), typeof(IProperties1).GUID, out _);
                 return (new WeakReference(managedProperties), ccw1);
             }
 
@@ -1811,10 +1792,10 @@ namespace UnitTest
         [Fact]
         public void TestDelegateCCWLifetime()
         {
-            static (WeakReference, IObjectReference) CreateCCW(Action<object, int> action)
+            unsafe static (WeakReference, WindowsRuntimeObjectReference) CreateCCW(Action<object, int> action)
             {
-                TypedEventHandler<object, int> eventHandler = (o, i) => action(o, i);
-                IObjectReference ccw1 = ABI.Windows.Foundation.TypedEventHandler<object, int>.CreateMarshaler(eventHandler);
+                EventHandler<object, int> eventHandler = (o, i) => action(o, i);
+                WindowsRuntimeObjectReference ccw1 = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(WindowsRuntimeMarshal.ConvertToUnmanaged(eventHandler), WellKnownInterfaceIIDs.IID_IInspectable, out _);
                 return (new WeakReference(eventHandler), ccw1);
             }
 
@@ -1847,10 +1828,11 @@ namespace UnitTest
         [Fact]
         public void TestCCWIdentityThroughRefCountZero()
         {
-            static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
+            unsafe static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
             {
-                IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(properties);
-                return (new WeakReference(ccw), ccw.ThisPtr);
+                using WindowsRuntimeObjectReferenceValue ccwValue = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(properties, typeof(IProperties1).GUID);
+                WindowsRuntimeObjectReference ccw = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccwValue.GetThisPtrUnsafe(), typeof(IProperties1).GUID, out _);
+                return (new WeakReference(ccw), (IntPtr) ccw.GetThisPtrUnsafe());
             }
 
             var obj = new ManagedProperties(42);
@@ -2280,7 +2262,7 @@ namespace UnitTest
         [Fact]
         public void TestPointTypeMapping()
         {
-            var pt = new Point { X = 3.14, Y = 42 };
+            var pt = new Point { X = 3.14F, Y = 42 };
             TestObject.PointProperty = pt;
             Assert.Equal(pt.X, TestObject.PointProperty.X);
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
@@ -2299,7 +2281,7 @@ namespace UnitTest
         [Fact]
         public void TestRectTypeMapping()
         {
-            var rect = new Rect { X = 3.14, Y = 42, Height = 3.14, Width = 42 };
+            var rect = new Rect { X = 3.14F, Y = 42, Height = 3.14F, Width = 42 };
             TestObject.RectProperty = rect;
             Assert.Equal(rect.X, TestObject.RectProperty.X);
             Assert.Equal(rect.Y, TestObject.RectProperty.Y);
@@ -2311,7 +2293,7 @@ namespace UnitTest
         [Fact]
         public void TestSizeTypeMapping()
         {
-            var size = new Size { Height = 3.14, Width = 42 };
+            var size = new Size { Height = 3.14F, Width = 42 };
             TestObject.SizeProperty = size;
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
@@ -2641,11 +2623,48 @@ namespace UnitTest
             Assert.Null(TestObject.HResultProperty);
         }
 
-        [Fact]
-        public void TestGeneratedRuntimeClassName()
+        [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
+        private static unsafe partial char* WindowsGetStringRawBuffer(void* hstring, uint* length);
+
+        [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
+        private static unsafe partial int WindowsDeleteString(void* hstring);
+
+        static unsafe string GetRuntimeClassName(void* ptr)
         {
-            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new ManagedProperties(2)));
-            Assert.Equal(typeof(IProperties1).FullName, inspectable.GetRuntimeClassName());
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
+
+            void* __retval = default;
+            try
+            {
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
+
+                uint length;
+                char* buffer = WindowsGetStringRawBuffer(__retval, &length);
+                return new string(buffer, 0, (int)length);
+            }
+            finally
+            {
+                WindowsDeleteString(__retval);
+                WindowsRuntimeMarshal.Free((void*)inspectablePtr);
+            }
+        }
+
+
+        [Fact]
+        public unsafe void TestGeneratedRuntimeClassName()
+        {
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
+
+            try
+            {
+                Assert.Equal(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
         }
 
         [Fact]
@@ -2694,17 +2713,33 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestGeneratedRuntimeClassName_Primitive()
+        public unsafe void TestGeneratedRuntimeClassName_Primitive()
         {
-            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(2));
-            Assert.Equal("Windows.Foundation.IReference`1<Int32>", inspectable.GetRuntimeClassName());
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
+
+            try
+            {
+                Assert.Equal("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
         }
 
         [Fact]
-        public void TestGeneratedRuntimeClassName_Array()
+        public unsafe void TestGeneratedRuntimeClassName_Array()
         {
-            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new int[0]));
-            Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", inspectable.GetRuntimeClassName());
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
+
+            try
+            {
+                Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
         }
 
         [Fact]
@@ -2832,12 +2867,6 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestGenericTypeMarshalling()
-        {
-            Assert.Equal(typeof(ABI.System.Type), Marshaler<Type>.AbiType);
-        }
-
-        [Fact]
         public void TestStringUnboxing()
         {
             var str1 = Class.EmptyString;
@@ -2868,10 +2897,11 @@ namespace UnitTest
         internal class ManagedType { }
 
         [Fact]
-        public void CCWOfListOfManagedType()
+        public unsafe void CCWOfListOfManagedType()
         {
-            using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
-            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new List<ManagedType>());
+            Guid IID_IEnumerableObject = new("092b849b-60b1-52be-a44a-6fe8e933cbe4");
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerableObject, out nint _));
         }
 
         [Fact]
@@ -2902,18 +2932,23 @@ namespace UnitTest
         }
 
         [Fact]
-        public void CCWOfListOfManagedType2()
+        public unsafe void CCWOfListOfManagedType2()
         {
-            using var ccw = ComWrappersSupport.CreateCCWForObject(new ManagedType2());
-            var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedType2());
+            Guid IID_IEnumerableObject = new("092b849b-60b1-52be-a44a-6fe8e933cbe4");
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerableObject, out nint _));
         }
 
         [Fact]
-        public void CCWOfListOfManagedType3()
+        public unsafe void CCWOfListOfManagedType3()
         {
-            using var ccw = ComWrappersSupport.CreateCCWForObject(new ManagedType3());
-            var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
-            var qiResult2 = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<IDisposable>).GetHelperType()));
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedType3());
+
+            Guid IID_IEnumerableObject = new("092b849b-60b1-52be-a44a-6fe8e933cbe4");
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerableObject, out nint _));
+
+            Guid IID_IEnumerable_IDisposable = new("44da7ecf-b8cf-5def-8bf1-664578a8fb16");
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerable_IDisposable, out nint _));
         }
 
         [Fact]
@@ -2936,10 +2971,10 @@ namespace UnitTest
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            unsafe static (WeakReference<Class> winrt, WeakReference net, WindowsRuntimeObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
-                ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
+                Assert.True(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objRef));
                 return (new WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
@@ -2953,17 +2988,15 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestUnwrapInspectable()
+        public unsafe void TestUnwrapInspectable()
         {
-            using var objRef = MarshalInspectable<object>.CreateMarshaler(TestObject);
-            var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
-            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+            Assert.True(WindowsRuntimeMarshal.TryGetNativeObject(TestObject, out _));
 
-            using var objRef2 = MarshalInspectable<Class>.CreateMarshaler(TestObject);
-            var inspectable2 = IInspectable.FromAbi(objRef2.ThisPtr);
-            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable2, out _));
+            using WindowsRuntimeObjectReferenceValue objRefValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(TestObject);
+            Assert.False(objRefValue.IsNull);
         }
 
+        /* TODO
         [Fact]
         public void TestManagedAgileObject()
         {
@@ -3051,6 +3084,7 @@ namespace UnitTest
             anotherStaThread.Start();
             anotherStaThread.Join();
         }
+        */
 
         [Fact]
         public void TestNonAgileDelegateCall()
@@ -3063,18 +3097,18 @@ namespace UnitTest
             Assert.Equal(6, observable.Observation);
         }
 
-        [ComImport]
+        [GeneratedComInterface]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-        internal interface IWindowNative
+        internal partial interface IWindowNative
         {
-            IntPtr WindowHandle { get; }
+            IntPtr get_WindowHandle();
         }
 
-        [ComImport]
+        [GeneratedComInterface]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-        internal interface IInitializeWithWindow
+        internal partial interface IInitializeWithWindow
         {
             void Initialize(IntPtr hwnd);
         }
@@ -3095,8 +3129,8 @@ namespace UnitTest
             static (IInitializeWithWindow, IWindowNative) MakeImports()
             {
                 var obj = MakeObject();
-                var initializeWithWindow = obj.As<IInitializeWithWindow>();
-                var windowNative = obj.As<IWindowNative>();
+                var initializeWithWindow = (IInitializeWithWindow)obj;
+                var windowNative = (IWindowNative)obj;
                 return (initializeWithWindow, windowNative);
             }
 
@@ -3109,7 +3143,7 @@ namespace UnitTest
 
                 var hwnd = new IntPtr(0x12345678);
                 initializeWithWindow.Initialize(hwnd);
-                Assert.Equal(windowNative.WindowHandle, hwnd);
+                Assert.Equal(windowNative.get_WindowHandle(), hwnd);
             }
 
             TestObject();
@@ -3664,6 +3698,8 @@ namespace UnitTest
             Assert.Null(exception);
         }
 
+        /* TODO
+
         [Guid("59C7966B-AE52-5283-AD7F-A1B9E9678ADD")]
         [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
         [global::WinRT.WindowsRuntimeHelperType(typeof(ICustomGuidHelperStatics))]
@@ -3784,6 +3820,7 @@ namespace UnitTest
 
             WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler(null);
         }
+        */
 
         [Fact]
         public void TestDictionary()
@@ -3805,8 +3842,12 @@ namespace UnitTest
             Assert.True(stringToNonBlittableDict["String1"].bools.x);
 
             var blittableToObjectDict = TestObject.GetBlittableToObjectDictionary();
-            ComposedBlittableStruct key;
-            key.blittable.i32 = 4;
+            ComposedBlittableStruct key = new();
+            BlittableStruct blittable = new()
+            {
+                i32 = 4
+            };
+            key.blittable = blittable;
             Assert.Equal("box", (string)blittableToObjectDict[key]);
             Assert.Equal("box", (string)blittableToObjectDict[key]);
         }

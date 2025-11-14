@@ -16,13 +16,14 @@ using Windows.UI.Input.Spatial;
 using Windows.UI.ViewManagement;
 using Xunit;
 using TestComponentCSharp;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace UnitTest
 {
-    [ComImport]
+    [GeneratedComInterface]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")]
-    internal interface IComInterop
+    internal partial interface IComInterop
     {
         Int64 ReturnWindowHandle(IntPtr hwnd, Guid iid);
     }
@@ -34,7 +35,7 @@ namespace UnitTest
         [Fact]
         public void TestHWND()
         {
-            var comInterop = Class.ComInterop.As<IComInterop>();
+            var comInterop = (IComInterop) Class.ComInterop;
             if (System.Environment.Is64BitProcess)
             {
                 var hwnd = new IntPtr(0x0123456789ABCDEF);
@@ -54,8 +55,8 @@ namespace UnitTest
         [Fact]
         public void TestMockDragDropManager()
         {
-            var interop = Class.ComInterop.As<WinRT.Interop.IDragDropManagerInterop>();
-            Guid iid = GuidGenerator.CreateIID(typeof(ICoreDragDropManager));
+            var interop = (WinRT.Interop.IDragDropManagerInterop) Class.ComInterop;
+            Guid iid = typeof(ICoreDragDropManager).GUID;
             var manager = interop.GetForWindow(new IntPtr(0), iid);
             Assert.NotNull(manager);
         }

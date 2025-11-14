@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!--Target .NET Core 3.1 to test .NET Standard 2.0 projection -->
     <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
@@ -34,16 +33,6 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
-    <Compile Remove="**/*.net5.cs" />
-    <None Include="**/*.net5.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
-    <Compile Remove="**/*.netstandard2.0.cs" />
-    <None Include="**/*.netstandard2.0.cs" />
   </ItemGroup>
 
 </Project>

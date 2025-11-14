@@ -1105,7 +1105,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("GetInstance"u8, MethodSignature.CreateStatic(
             returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
             genericParameterCount: 1,
-            parameterTypes: [ComInterfaceDispatch.MakePointerType()]));
+            parameterTypes: [ComInterfaceDispatch.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.IID"/>.
