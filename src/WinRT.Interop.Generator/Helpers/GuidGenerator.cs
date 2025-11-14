@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
+using System.IO;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -125,12 +126,12 @@ internal static class GuidGenerator
                 SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)typeSignature;
                 if (arrayTypeSignature != null)
                 {
-                    return "pinterface({61C17707-2D65-11E0-9AE8-D48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences) + ")";
+                    return "pinterface({61c17707-2d65-11e0-9ae8-d48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences) + ")";
                 }
                 throw new ArgumentException("TypeSignature with SzArray does not resolve to a SzArrayTypeSignature");
         }
+        return typeDefinition.FullName; // For debugging purpo0ses
 #pragma warning restore IDE0010
-        throw new ArgumentException("Unhandled ElementType");
     }
 
     internal static string GetClassGuidSignature(
@@ -224,9 +225,25 @@ internal static class GuidGenerator
 
     private static readonly Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
 
+
+    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
+
+
+#pragma warning disable IDE0044 // Add readonly modifier
+    private static HashSet<TypeSignature> generatedIIDs = [];
+    private static StreamWriter writer = new(printPath, append: false);
+#pragma warning restore IDE0044 // Add readonly modifier
+
     public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences)
     {
-        return CreateGuidFromSignature(GetSignature(type, interopReferences));
+        string signature = GetSignature(type, interopReferences);
+        Guid guid = CreateGuidFromSignature(signature);
+        if (!generatedIIDs.Contains(type))
+        {
+            writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
+            _ = generatedIIDs.Add(type);
+        }
+        return guid;
     }
 
     internal static Guid CreateGuidFromSignature(string signature)
