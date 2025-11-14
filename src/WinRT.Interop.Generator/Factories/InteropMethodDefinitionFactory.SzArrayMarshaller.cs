@@ -41,7 +41,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()])); // TODO
+                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType()]));
 
             // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
             // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
