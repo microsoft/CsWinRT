@@ -41,9 +41,9 @@ internal sealed class InteropDefinitions
     }
 
     /// <summary>
-    /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoreAccessChecksToAttribute</c> type.
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoresAccessChecksToAttribute</c> type.
     /// </summary>
-    public TypeDefinition IgnoreAccessChecksToAttribute => field ??= WellKnownTypeDefinitionFactory.IgnoreAccessChecksToAttribute(_interopReferences, _interopModule);
+    public TypeDefinition IgnoresAccessChecksToAttribute => field ??= WellKnownTypeDefinitionFactory.IgnoresAccessChecksToAttribute(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>RvaFields</c> type.
