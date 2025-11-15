@@ -20,7 +20,15 @@ internal static class GuidGenerator
             TypeSignature typeSignature,
             InteropReferences interopReferences)
     {
+
+        string? mappedSignature = TypeMapping.FindGuidSignatureForMappedType(typeSignature.Namespace, typeSignature.Name);
+        if (mappedSignature is not null)
+        {
+            return mappedSignature;
+        }
+
         AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()!;
+
 #pragma warning disable IDE0010 // Maybe temporary until all cases are handled
         switch (typeSignature.ElementType)
         {
@@ -91,29 +99,23 @@ internal static class GuidGenerator
                     }
                 }
                 throw new ArgumentException("Invalid ElementType.ValueType");
+
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
                 AsmResolver.DotNet.TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
 
                 if (genericTypeDefinition is not null)
                 {
-                    if (genericTypeDefinition.IsInterface || genericTypeDefinition.IsDelegate)
+                    IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments;
+                    String[] typeArgumentSignatures = new String[typeArugmentList.Count];
+                    for (int i = 0; i < typeArugmentList.Count; i++)
                     {
-                        IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments;
-                        String[] typeArgumentSignatures = new String[typeArugmentList.Count];
-                        for (int i = 0; i < typeArugmentList.Count; i++)
-                        {
-                            typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
-                        }
-                        return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
+                        typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
                     }
-
-                    if (genericTypeDefinition.IsClass)
-                    {
-                        return GetClassGuidSignature(genericTypeSignature, genericTypeDefinition, interopReferences);
-                    }
+                    return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
                 }
                 throw new ArgumentException("Invalid ElementType.GenericInst");
+
             case ElementType.Class:
                 if (typeDefinition is not null)
                 {
@@ -130,6 +132,7 @@ internal static class GuidGenerator
                     }
                 }
                 throw new ArgumentException("Invalid ElementType.Class");
+
             case ElementType.SzArray:
                 SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)typeSignature;
 
@@ -139,6 +142,7 @@ internal static class GuidGenerator
                 }
 
                 throw new ArgumentException("Invalid ElementType.SzArray");
+
         }
         return typeDefinition.FullName; // For debugging purpo0ses
 #pragma warning restore IDE0010
