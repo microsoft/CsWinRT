@@ -203,7 +203,9 @@ internal static class GuidGenerator
             }
 
         }
-        return Guid.Empty;
+        _ = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
+
+        throw new ArgumentException("Type does not have a Guid attribute");
     }
 
 
