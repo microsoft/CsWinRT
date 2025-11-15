@@ -1,56 +1,56 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks
-{
-    using System;
-    using System.Diagnostics;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using global::Windows.Foundation;
+namespace System.Threading.Tasks;
+
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using global::Windows.Foundation;
 
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+[global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal sealed partial class TaskToAsyncActionAdapter
-                        : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
-                          IAsyncAction
+internal sealed partial class TaskToAsyncActionAdapter
+                    : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
+                      IAsyncAction
+{
+    internal TaskToAsyncActionAdapter(Delegate taskGenerator)
+
+         : base(taskGenerator)
     {
-        internal TaskToAsyncActionAdapter(Delegate taskGenerator)
-
-             : base(taskGenerator)
-        {
-        }
+    }
 
 
-        internal TaskToAsyncActionAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource)
+    internal TaskToAsyncActionAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource)
 
-            : base(underlyingTask, underlyingCancelTokenSource, underlyingProgressDispatcher: null)
-        {
-        }
-
-
-        internal TaskToAsyncActionAdapter(bool isCanceled)
-
-            : base(default(VoidValueTypeParameter))
-        {
-            if (isCanceled)
-                DangerousSetCanceled();
-        }
+        : base(underlyingTask, underlyingCancelTokenSource, underlyingProgressDispatcher: null)
+    {
+    }
 
 
-        public void GetResults()
-        {
-            GetResultsInternal();
-        }
+    internal TaskToAsyncActionAdapter(bool isCanceled)
+
+        : base(default(VoidValueTypeParameter))
+    {
+        if (isCanceled)
+            DangerousSetCanceled();
+    }
 
 
-        internal override void OnCompleted(AsyncActionCompletedHandler userCompletionHandler, AsyncStatus asyncStatus)
-        {
-            Debug.Assert(userCompletionHandler != null);
-            userCompletionHandler(this, asyncStatus);
-        }
-    }  // class TaskToAsyncActionAdapter
-}  // namespace
+    public void GetResults()
+    {
+        GetResultsInternal();
+    }
+
+
+    internal override void OnCompleted(AsyncActionCompletedHandler userCompletionHandler, AsyncStatus asyncStatus)
+    {
+        Debug.Assert(userCompletionHandler != null);
+        userCompletionHandler(this, asyncStatus);
+    }
+}  // class TaskToAsyncActionAdapter
+// namespace
 
 // TaskToAsyncActionAdapter.cs

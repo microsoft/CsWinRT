@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks
+namespace System.Threading.Tasks;
+
+internal interface ITaskAwareAsyncInfo
 {
-    internal interface ITaskAwareAsyncInfo
-    {
-        Task Task { get; }
-    }
+    Task Task { get; }
 }
