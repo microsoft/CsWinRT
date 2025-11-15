@@ -282,19 +282,18 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
     }
 
 
-    internal bool DangerousSetError(Exception error)
+    internal bool DangerousSetError(Exception exception)
     {
         if (!CompletedSynchronously)
+        {
             return false;
-
-        if (error == null)
-            throw new ArgumentNullException(nameof(error));
+        }
 
         // Here we do not try to deal with the inherit races: Use this method only when constructing a synchronously
         // completed IAsyncInfo in a desired state when you understand the threading conditions well.
 
         _dataContainer = null;
-        _error = error;
+        _error = exception;
 
         // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + ERROR:
         _state = (STATEFLAG_COMPLETED_SYNCHRONOUSLY
