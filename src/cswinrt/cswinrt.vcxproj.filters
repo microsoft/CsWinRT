@@ -70,9 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.CornerRadius.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
@@ -136,33 +133,6 @@
     <None Include="strings\additions\Windows.Storage\Windows.Storage.SR.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>
-    <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionAdapter.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionWithProgressAdapter.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncInfoAdapter.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationAdapter.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationWithProgressAdapter.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
-    </None>
     <None Include="strings\additions\Windows.UI\Windows.UI.Color.cs">
       <Filter>strings\additions\Windows.UI</Filter>
     </None>
@@ -189,9 +159,6 @@
     <None Include="Directory.Build.props" />
     <None Include="strings\ComInteropHelpers.cs">
       <Filter>strings</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
-      <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
