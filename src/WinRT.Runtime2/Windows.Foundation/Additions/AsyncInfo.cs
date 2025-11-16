@@ -35,7 +35,7 @@ public static class AsyncInfo
     /// </para>
     /// <para>
     /// The <paramref name="factory"/> delegate is passed a <see cref="CancellationToken"/> that the task may monitor
-    /// to be notified of a cancellation request. You may ignore the it if your task does not support cancellation.
+    /// to be notified of a cancellation request. You may ignore it if your task does not support cancellation.
     /// </para>
     /// </remarks>
     public static IAsyncAction Run(Func<CancellationToken, Task> factory)
@@ -46,19 +46,32 @@ public static class AsyncInfo
     }
 
     /// <summary>
-    /// Creates and starts an <see cref="IAsyncActionWithProgress{TProgress}"/> instance from a function
-    /// that generates a <see cref="System.Threading.Tasks.Task"/>.
-    /// Use this overload if your task supports cancellation and progress monitoring is order to:
-    /// (1) hook-up the <code>Cancel</code> mechanism of the created asynchronous action and the cancellation of your task,
-    /// and (2) hook-up the <code>Progress</code> update delegate exposed by the created async action and the progress updates
-    /// published by your task.</summary>
-    /// <param name="factory">The function to invoke to create the task when the IAsyncInfo is started.
-    /// The function is passed a <see cref="System.Threading.CancellationToken"/> that the task may monitor
-    /// to be notified of a cancellation request;
-    /// you may ignore the <code>CancellationToken</code> if your task does not support cancellation.
-    /// It is also passed a <see cref="System.IProgress{TProgress}"/> instance to which progress updates may be published;
-    /// you may ignore the <code>IProgress</code> if your task does not support progress reporting.</param>
-    /// <returns>An unstarted <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
+    /// Creates and starts an <see cref="IAsyncActionWithProgress{TProgress}"/> instance from a function that generates a <see cref="Task"/>.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="factory">The function to invoke to create the <see cref="Task"/> when the <see cref="IAsyncActionWithProgress{TProgress}"/> is started.</param>
+    /// <returns>The (already started) <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="factory"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Use this overload if your task supports cancellation and progress monitoring in order to:
+    /// <list type="bullet">
+    ///   <item>Hook-up the <see cref="IAsyncInfo.Cancel"/> mechanism of the created asynchronous action and the cancellation of your task.</item>
+    ///   <item>
+    ///     Hook-up the <see cref="IAsyncActionWithProgress{TProgress}.Progress"/> update delegate exposed by the created
+    ///     async action and the progress updates published by your task.
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// The <paramref name="factory"/> delegate is passed a <see cref="CancellationToken"/> that the task may monitor
+    /// to be notified of a cancellation request. You may ignore it if your task does not support cancellation.
+    /// </para>
+    /// <para>
+    /// It is also passed an <see cref="IProgress{TProgress}"/> instance to which progress updates may be published.
+    /// You may ignore it if your task does not support progress reporting.
+    /// </para>
+    /// </remarks>
     public static IAsyncActionWithProgress<TProgress> Run<TProgress>(Func<CancellationToken, IProgress<TProgress>, Task> factory)
     {
         ArgumentNullException.ThrowIfNull(factory);
@@ -67,15 +80,22 @@ public static class AsyncInfo
     }
 
     /// <summary>
-    /// Creates and starts  an <see cref="IAsyncOperation{TResult}"/> instance from a function
-    /// that generates a <see cref="System.Threading.Tasks.Task{TResult}"/>.
-    /// Use this overload if your task supports cancellation in order to hook-up the <code>Cancel</code>
-    /// mechanism exposed by the created asynchronous operation and the cancellation of your task.</summary>
-    /// <param name="factory">The function to invoke to create the task when the IAsyncInfo is started.
-    /// The function is passed a <see cref="System.Threading.CancellationToken"/> that the task may monitor
-    /// to be notified of a cancellation request;
-    /// you may ignore the <code>CancellationToken</code> if your task does not support cancellation.</param>
-    /// <returns>An unstarted <see cref="IAsyncOperation{TResult}"/> instance.</returns>
+    /// Creates and starts an <see cref="IAsyncOperation{TResult}"/> instance from a function that generates a <see cref="Task{TResult}"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> when the <see cref="IAsyncOperation{TResult}"/> is started.</param>
+    /// <returns>The (already started) <see cref="IAsyncOperation{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="factory"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Use this overload if your task supports cancellation in order to hook-up the <see cref="IAsyncInfo.Cancel"/>
+    /// mechanism exposed by the created asynchronous operation and the cancellation of your task.
+    /// </para>
+    /// <para>
+    /// The function is passed a <see cref="CancellationToken"/> that the task may monitor to be notified
+    /// of a cancellation request. You may ignore it if your task does not support cancellation.
+    /// </para>
+    /// </remarks>
     public static IAsyncOperation<TResult> Run<TResult>(Func<CancellationToken, Task<TResult>> factory)
     {
         ArgumentNullException.ThrowIfNull(factory);
@@ -84,21 +104,37 @@ public static class AsyncInfo
     }
 
     /// <summary>
-    /// Creates and starts  an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance
-    /// from a function that generates a <see cref="System.Threading.Tasks.Task{TResult}"/>.<br />
-    /// Use this overload if your task supports cancellation and progress monitoring is order to:
-    /// (1) hook-up the <code>Cancel</code> mechanism of the created asynchronous operation and the cancellation of your task,
-    /// and (2) hook-up the <code>Progress</code> update delegate exposed by the created async operation and the progress
-    /// updates published by your task.</summary>
-    /// <typeparam name="TResult">The result type of the task.</typeparam>
-    /// <typeparam name="TProgress">The type used for progress notifications.</typeparam>
-    /// <param name="factory">The function to invoke to create the task when the IAsyncOperationWithProgress is started.<br />
-    /// The function is passed a <see cref="System.Threading.CancellationToken"/> that the task may monitor
-    /// to be notified of a cancellation request;
-    /// you may ignore the <code>CancellationToken</code> if your task does not support cancellation.
-    /// It is also passed a <see cref="System.IProgress{TProgress}"/> instance to which progress updates may be published;
-    /// you may ignore the <code>IProgress</code> if your task does not support progress reporting.</param>
-    /// <returns>An unstarted <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
+    /// Creates and starts an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance from a function that generates a <see cref="Task{TResult}"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> when the <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> is started.</param>
+    /// <returns>The (already started) <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="factory"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Use this overload if your task supports cancellation and progress monitoring in order to:
+    /// <list type="bullet">
+    ///   <item>Hook-up the <see cref="IAsyncInfo.Cancel"/> mechanism of the created asynchronous operation and the cancellation of your task.</item>
+    ///   <item>
+    ///     Hook-up the <see cref="IAsyncOperationWithProgress{TResult, TProgress}.Progress"/> update delegate exposed
+    ///     by the created async operation and the progress updates published by your task.
+    ///   </item>
+    ///   <item>
+    ///     Hook-up the <see cref="IAsyncOperationWithProgress{TResult, TProgress}.Progress"/> update delegate
+    ///     exposed by the created async operation and the progress updates published by your task.
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// The function is passed a <see cref="CancellationToken"/> that the task may monitor to be notified
+    /// of a cancellation request. You may ignore it if your task does not support cancellation.
+    /// </para>
+    /// <para>
+    /// It is also passed a <see cref="IProgress{TProgress}"/> instance to which progress updates
+    /// may be published. You may ignore it if your task does not support progress reporting.
+    /// </para>
+    /// </remarks>
     public static IAsyncOperationWithProgress<TResult, TProgress> Run<TResult, TProgress>(
         Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
     {
