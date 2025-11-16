@@ -997,10 +997,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         {
             EnsureNotClosed();
 
-            if (_id != AsyncInfoIdGenerator.InvalidId)
-                return _id;
-
-            return AsyncInfoIdGenerator.EnsureInitializedThreadsafe(ref _id);
+            return AsyncInfoIdGenerator.EnsureInitialized(ref _id);
         }
     }
 
