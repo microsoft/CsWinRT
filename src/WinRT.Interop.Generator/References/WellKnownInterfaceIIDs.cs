@@ -89,21 +89,21 @@ internal static class WellKnownInterfaceIIDs
         {
             // Shared types
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler)
-                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
+                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler1)
-                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
+                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler2)
-                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
+                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.KeyValuePair)
-                => new Guid("02B51929-C1C4-4A7E-8940-0312B5C18500"),
+                => new Guid("02b51929-c1c4-4a7e-8940-0312b5c18500"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable)
-                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+                => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable1)
-                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+                => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator)
-                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+                => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator1)
-                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+                => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2)
                 => new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationCompletedHandler1)
@@ -111,7 +111,7 @@ internal static class WellKnownInterfaceIIDs
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.MapChangedEventHandler2)
                 => new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList)
-                => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"), // Unsure of this one
+                => new Guid("393de7de-6fd0-4c0d-bb71-47244a113e93"), // Unsure of this one
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList1)
                 => new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), // Unsure of this one
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyList1)
@@ -143,7 +143,7 @@ internal static class WellKnownInterfaceIIDs
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionProgressHandler1)
                 => new Guid("c261d8d0-71ba-5f38-a239-872342253a18"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs)
-                => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
+                => new Guid("575933df-34fe-4480-af15-07691f3d5d9b"),
             _ => Guid.Empty
         };
     }
