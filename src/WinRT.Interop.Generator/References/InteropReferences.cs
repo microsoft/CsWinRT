@@ -839,6 +839,11 @@ internal sealed class InteropReferences
     public TypeReference IMapChangedEventArgs1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IVectorChangedEventArgs&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IVectorChangedEventArgs => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collection"u8, "IVectorChangedEventArgs"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
     /// </summary>
     public TypeReference CollectionChange => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
