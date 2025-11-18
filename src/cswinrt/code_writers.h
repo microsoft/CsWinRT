@@ -8908,11 +8908,13 @@ return false;
     {
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(
-%%%% delegate % %(%);
+%%%%
+% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_guid_attribute>(type),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),

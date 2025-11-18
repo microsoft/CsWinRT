@@ -841,7 +841,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IVectorChangedEventArgs&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference IVectorChangedEventArgs => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collection"u8, "IVectorChangedEventArgs"u8);
+    public TypeReference IVectorChangedEventArgs => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IVectorChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.

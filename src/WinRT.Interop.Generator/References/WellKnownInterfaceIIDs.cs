@@ -74,17 +74,12 @@ internal static class WellKnownInterfaceIIDs
         bool useWindowsUIXamlProjections,
         InteropReferences interopReferences)
     {
-        ITypeDefOrRef type;
-        if (signature is SzArrayTypeSignature)
+        ITypeDefOrRef type = signature switch
         {
-            // TODO: SzArrayTypeSignature case
-            return Guid.Empty;
-        }
-        else
-        {
-            type = signature is GenericInstanceTypeSignature genericSignature ? genericSignature.GenericType : signature.ToTypeDefOrRef();
-        }
-
+            SzArrayTypeSignature szArrayTypeSignature => szArrayTypeSignature.GetUnderlyingType().ToTypeDefOrRef(),
+            GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
+            _ => signature.ToTypeDefOrRef(),
+        };
         return type switch
         {
             // Shared types
