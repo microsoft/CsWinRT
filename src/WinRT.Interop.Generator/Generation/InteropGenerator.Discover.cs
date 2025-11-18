@@ -155,17 +155,6 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-
-                if (type.FullName.Equals("System.Void"))
-                {
-                    Console.WriteLine("Found System.Void*");
-                }
-                if (type.FullName.Equals("System.IntPtr"))
-                {
-                    Console.WriteLine("Found System.IntPtr*");
-                }
-
-
                 // We only care about projected Windows Runtime classes
                 if (!type.IsProjectedWindowsRuntimeClassType)
                 {
@@ -212,15 +201,6 @@ internal partial class InteropGenerator
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 args.Token.ThrowIfCancellationRequested();
-
-                if (type.FullName.Equals("System.Void"))
-                {
-                    Console.WriteLine("Found System.Void*");
-                }
-                if (type.FullName.Equals("System.IntPtr"))
-                {
-                    Console.WriteLine("Found System.IntPtr*");
-                }
 
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
                 if (!type.IsPossiblyWindowsRuntimeExposedType ||
