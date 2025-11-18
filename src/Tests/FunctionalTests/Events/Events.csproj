@@ -12,11 +12,4 @@
     <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>
-
-  <Target Name="TestGatherRefPaths" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <_TestAllRefPathForCsWinRT>@(ReferencePath)</_TestAllRefPathForCsWinRT>
-    </PropertyGroup>
-  </Target>
-  
 </Project>
