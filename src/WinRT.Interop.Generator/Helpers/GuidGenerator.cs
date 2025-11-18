@@ -16,12 +16,26 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 
 internal static class GuidGenerator
 {
+    private static readonly Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
+
+    /// <summary>
+    /// Generates the WinRT signature string for the specified type.
+    /// </summary>
+    /// <param name="typeSignature">
+    /// The CLR/AsmResolver type signature to translate.
+    /// </param>
+    /// <param name="interopReferences">
+    /// Interop metadata used to resolve GUIDs for interfaces, delegates, and generics.
+    /// </param>
+    /// <returns>
+    /// A WinRT signature string representing the given type.
+    /// </returns>
     internal static string GetSignature(
             TypeSignature typeSignature,
             InteropReferences interopReferences)
     {
-
         string? mappedSignature = TypeMapping.FindGuidSignatureForMappedType(typeSignature.Namespace, typeSignature.Name);
+
         if (mappedSignature is not null)
         {
             return mappedSignature;
@@ -29,7 +43,6 @@ internal static class GuidGenerator
 
         AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()!;
 
-#pragma warning disable IDE0010 // Maybe temporary until all cases are handled
         switch (typeSignature.ElementType)
         {
             // value types
@@ -93,11 +106,13 @@ internal static class GuidGenerator
                                 typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences));
                             }
                         }
+
                         return typeDefinition.Namespace is null || typeDefinition.Name is null
                             ? "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")"
                             : "struct(" + TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name) + ";" + string.Join(";", typeArgumentSignatures) + ")";
                     }
                 }
+
                 throw new ArgumentException("Invalid ElementType.ValueType");
 
             case ElementType.GenericInst:
@@ -108,12 +123,15 @@ internal static class GuidGenerator
                 {
                     IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments;
                     String[] typeArgumentSignatures = new String[typeArugmentList.Count];
+
                     for (int i = 0; i < typeArugmentList.Count; i++)
                     {
                         typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
                     }
+
                     return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
                 }
+
                 throw new ArgumentException("Invalid ElementType.GenericInst");
 
             case ElementType.Class:
@@ -122,15 +140,17 @@ internal static class GuidGenerator
                     if (typeDefinition.IsClass)
                     {
                         return typeDefinition.IsDelegate
-                            ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})"
-                            : GetClassGuidSignature(typeSignature, typeDefinition, interopReferences);
+                            ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
+                            : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, out TypeSignature defaultInterfaceSig)
+                                ? "rc(" + typeDefinition.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")" // Class case with default interface
+                                : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
                     }
-
-                    if (typeDefinition.IsInterface)
+                    if (typeDefinition.IsInterface) // interface case
                     {
                         return "{" + GetGuid(typeSignature, interopReferences) + "}";
                     }
                 }
+
                 throw new ArgumentException("Invalid ElementType.Class");
 
             case ElementType.SzArray:
@@ -143,71 +163,108 @@ internal static class GuidGenerator
 
                 throw new ArgumentException("Invalid ElementType.SzArray");
 
+            case ElementType.None:
+            case ElementType.Void:
+            case ElementType.Ptr:
+            case ElementType.ByRef:
+            case ElementType.Var:
+            case ElementType.Array:
+            case ElementType.TypedByRef:
+            case ElementType.I:
+            case ElementType.U:
+            case ElementType.FnPtr:
+            case ElementType.MVar:
+            case ElementType.CModReqD:
+            case ElementType.CModOpt:
+            case ElementType.Internal:
+            case ElementType.Modifier:
+            case ElementType.Sentinel:
+            case ElementType.Pinned:
+            case ElementType.Boxed:
+            case ElementType.Enum:
+            default:
+                // TODO: throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
+                return typeSignature.FullName;
         }
-        return typeDefinition.FullName; // For debugging purpo0ses
-#pragma warning restore IDE0010
     }
 
-    internal static string GetClassGuidSignature(
-        TypeSignature typeSignature,
-        AsmResolver.DotNet.TypeDefinition typeDefinition,
-        InteropReferences interopReferences)
-    {
-        if (!typeDefinition.IsClass)
-        {
-            throw new ArgumentException("typeDefinition's IsClass is false");
-        }
-        if (typeDefinition.IsEnum || typeDefinition.IsInterface || typeDefinition.IsDelegate)
-        {
-            throw new ArgumentException("typeDefinition's IsEnum or IsInterface or IsDelegate must not be true");
-        }
-        if (typeDefinition.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
-        {
-            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
-            {
-                object? element = customAttributeSignature.FixedArguments[0].Element;
-                if (element is TypeSignature defaultInterfaceSig)
-                {
-                    return "rc(" + typeDefinition.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")";
-                }
-            }
-        }
-        return "{" + GetGuid(typeSignature, interopReferences) + "}";
-    }
-
+    /// <summary>
+    /// Resolves a GUID for the specified type signature by checking well-known WinRT interfaces
+    /// and, if necessary, the type's <c>System.Runtime.InteropServices.GuidAttribute</c>.
+    /// </summary>
+    /// <param name="typeSig">
+    /// The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to resolve to a GUID.
+    /// </param>
+    /// <param name="interopReferences">
+    /// Context used to resolve well-known WinRT interface IIDs and related interop metadata.
+    /// </param>
+    /// <returns>
+    /// The resolved <see cref="Guid"/> if found.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
     internal static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
     {
-        AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         Guid result = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
+
         if (result != Guid.Empty)
         {
             return result;
         }
 
+        AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
-            if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
+            if (GetGuidFromAttribute(typeDef, out result))
             {
-                CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-                if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
-                {
-                    object? first = customAttributeSignature.FixedArguments[0].Element;
-                    // AsmResolver represents strings as System.String here.
-                    if (first is AsmResolver.Utf8String s)
-                    {
-                        _ = Guid.TryParse(s.Value, out result);
-                        return result;
-                    }
-                }
+                return result;
             }
-
+            //else
+            //{
+            //    //throw new ArgumentException("Type does not have a Guid attribute"); 
+            //}
         }
-        //_ = WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences);
-        return Guid.Empty;
+
+        return Guid.Empty; // TODO: don'turn empty guid but throw instead like below. Currently, not all the types we need to be filtered are not filtered out such as System.Reflection.* types.
         //throw new ArgumentException("Type does not have a Guid attribute");
     }
 
+    internal static bool GetGuidFromAttribute(TypeDefinition typeDef, out Guid guid)
+    {
+        guid = Guid.Empty;
+        if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        {
+            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+            {
+                object? first = customAttributeSignature.FixedArguments[0].Element;
+                // AsmResolver represents strings as System.String here.
+                if (first is AsmResolver.Utf8String s)
+                {
+                    return Guid.TryParse(s.Value, out guid);
+                }
+            }
+        }
+        return false;
+    }
+
+    internal static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, out TypeSignature defaultInterfaceSig)
+    {
+        defaultInterfaceSig = null!;
+        if (typeDef.TryGetCustomAttribute("WindowsRuntime", "WindowsRuntimeDefaultInterfaceAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        {
+            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
+            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+            {
+                object? element = customAttributeSignature.FixedArguments[0].Element;
+                if (element is TypeSignature sig)
+                {
+                    defaultInterfaceSig = sig;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private static Guid EncodeGuid(Span<byte> data)
     {
@@ -229,26 +286,24 @@ internal static class GuidGenerator
         return new Guid(data[0..16]);
     }
 
-    private static readonly Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
 
-
-    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
-
-
-#pragma warning disable IDE0044 // Add readonly modifier
-    private static HashSet<TypeSignature> generatedIIDs = [];
-    private static StreamWriter writer = new(printPath, append: false);
-#pragma warning restore IDE0044 // Add readonly modifier
+    // TODO: Debug code; Will remove later
+//#pragma warning disable IDE0044 // Add readonly modifier
+//    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
+//    private static HashSet<TypeSignature> generatedIIDs = [];
+//    private static StreamWriter writer = new(printPath, append: false);
+//#pragma warning restore IDE0044 // Add readonly modifier
 
     public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences)
     {
         string signature = GetSignature(type, interopReferences);
         Guid guid = CreateGuidFromSignature(signature);
-        if (!generatedIIDs.Contains(type))
-        {
-            writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
-            _ = generatedIIDs.Add(type);
-        }
+        // TODO: Debug code; Will remove later
+        //if (!generatedIIDs.Contains(type))
+        //{
+        //    writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
+        //    _ = generatedIIDs.Add(type);
+        //}
         return guid;
     }
 
