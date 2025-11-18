@@ -19,7 +19,7 @@ public static class VectorExtensions
     /// <returns>A <see cref="Point"/> with X and Y coordinates from the vector's X and Y components.</returns>
     public static Point ToPoint(this Vector2 vector)
     {
-        return new Point(vector.X, vector.Y);
+        return new(vector.X, vector.Y);
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public static class VectorExtensions
     /// <returns>A <see cref="Size"/> with Width and Height from the vector's X and Y components.</returns>
     public static Size ToSize(this Vector2 vector)
     {
-        return new Size(vector.X, vector.Y);
+        return new(vector.X, vector.Y);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public static class VectorExtensions
     /// <returns>A <see cref="Vector2"/> with X and Y components from the point's X and Y coordinates.</returns>
     public static Vector2 ToVector2(this Point point)
     {
-        return new Vector2(point.X, point.Y);
+        return new(point.X, point.Y);
     }
 
     /// <summary>
@@ -49,6 +49,6 @@ public static class VectorExtensions
     /// <returns>A <see cref="Vector2"/> with X and Y components from the size's Width and Height properties.</returns>
     public static Vector2 ToVector2(this Size size)
     {
-        return new Vector2(size.Width, size.Height);
+        return new(size.Width, size.Height);
     }
 }
