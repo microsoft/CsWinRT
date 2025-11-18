@@ -125,4 +125,13 @@ internal static class WellKnownErrorCodes
 
     /// <summary>This operation returned because the timeout period expired.</summary>
     public const HRESULT ERROR_TIMEOUT = unchecked((int)0x800705B4);
+
+    /// <summary>The object invoked has disconnected from its clients.</summary>
+    public const HRESULT RPC_E_DISCONNECTED = unchecked((int)0x80010108);
+
+    /// <summary>The RPC server is unavailable.</summary>
+    public const HRESULT RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+
+    /// <summary>Cannot execute script.</summary>
+    public const HRESULT JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 }
