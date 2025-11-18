@@ -25,11 +25,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
                                                                             where TCompletedHandler : class
                                                                             where TProgressHandler : class
 {
-    private const int E_ILLEGAL_STATE_CHANGE = unchecked((int)0x8000000D);
-    private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000E);
-    private const int E_ILLEGAL_DELEGATE_ASSIGNMENT = unchecked((int)0x80000018);
-    private const int E_FAIL = unchecked((int)0x80004005);
-
     #region Private Types, Statics and Constants
 
     // ! THIS DIAGRAM ILLUSTRATES THE CONSTANTS BELOW. UPDATE THIS IF UPDATING THE CONSTANTS BELOW!:
@@ -80,7 +75,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         InvalidOperationException ex = (cause == null)
                         ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
                         : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, cause);
-        ex.HResult = E_ILLEGAL_METHOD_CALL;
+        ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
         return ex;
     }
 
@@ -361,7 +356,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
             return;
 
         ObjectDisposedException ex = new ObjectDisposedException(SR.ObjectDisposed_AsyncInfoIsClosed);
-        ex.HResult = E_ILLEGAL_METHOD_CALL;
+        ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
         throw ex;
     }
 
@@ -786,7 +781,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
             if (handlerBefore != null)
             {
                 InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce);
-                ex.HResult = E_ILLEGAL_DELEGATE_ASSIGNMENT;
+                ex.HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT;
                 throw ex;
             }
 
@@ -869,7 +864,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
             if (0 != (_state & STATEMASK_SELECT_ANY_ASYNC_STATE))
             {
                 InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_IllegalStateChange);
-                ex.HResult = E_ILLEGAL_STATE_CHANGE;
+                ex.HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE;
                 throw ex;
             }
         }
@@ -910,7 +905,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
             if (aggregateException == null)
             {
                 error = new Exception(SR.WinRtCOM_Error);
-                error.HResult = E_FAIL;
+                error.HResult = WellKnownErrorCodes.E_FAIL;
             }
             else
             {
@@ -950,7 +945,4 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         }
     }
     #endregion Implementation of IAsyncInfo
-}  // class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
-// namespace
-
-// TaskToAsyncInfoAdapter.cs
+}

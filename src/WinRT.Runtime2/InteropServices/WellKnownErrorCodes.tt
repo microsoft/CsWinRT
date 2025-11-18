@@ -16,6 +16,7 @@ var entries = new (string Name, uint Value, string Description)[]
     ("S_OK", 0x0, "Operation successful."),
     ("S_FALSE", 0x1, "Operation successful (false)."),
     ("E_ABORT", 0x80004004, "Operation aborted."),
+    ("E_FAIL", 0x80004005, "Unspecified error."),
     ("E_NOINTERFACE", 0x80004002, "No such interface supported."),
     ("E_POINTER", 0x80004003, "Pointer that is not valid."),
     ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered."),

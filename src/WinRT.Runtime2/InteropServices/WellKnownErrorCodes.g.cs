@@ -15,6 +15,9 @@ internal static class WellKnownErrorCodes
     /// <summary>Operation aborted.</summary>
     public const HRESULT E_ABORT = unchecked((int)0x80004004);
 
+    /// <summary>Unspecified error.</summary>
+    public const HRESULT E_FAIL = unchecked((int)0x80004005);
+
     /// <summary>No such interface supported.</summary>
     public const HRESULT E_NOINTERFACE = unchecked((int)0x80004002);
 
