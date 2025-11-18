@@ -11,6 +11,7 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using global::Windows.Foundation;
+using WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Implements a wrapper that allows to expose managed <code>System.Threading.Tasks.Task</code> objects as
@@ -671,7 +672,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         }
         catch (Exception ex)
         {
-            ExceptionDispatchHelper.ThrowAsync(ex, _startingContext);
+            ExceptionDispatchInfo.ThrowAsync(ex, _startingContext);
         }
     }
 
