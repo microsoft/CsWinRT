@@ -117,9 +117,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
     /// <summary>Registered progress handler.</summary>
     private TProgressHandler _progressHandler;
 
-    /// <summary>The synchronization context on which this instance was created/started. Used to callback invocations.</summary>
-    private SynchronizationContext _startingContext;
-
     #endregion Instance variables
 
 
@@ -135,13 +132,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
                         || (null != (taskProvider as Func<CancellationToken, Task>))
                         || (null != (taskProvider as Func<IProgress<TProgressInfo>, Task>))
                         || (null != (taskProvider as Func<CancellationToken, IProgress<TProgressInfo>, Task>)));
-
-        // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
-        // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
-        // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
-        // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
-        // by allowing the awaiter to decide the context.
-        _startingContext = null;
 
         // Construct task from the specified provider:
         Task task = InvokeTaskProvider(taskProvider);
@@ -182,13 +172,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         if (underlyingTask.Status == TaskStatus.Created)
             throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
 
-        // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
-        // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
-        // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
-        // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
-        // by allowing the awaiter to decide the context.
-        _startingContext = null;
-
         // We do not need to invoke any delegates to get the task, it is provided for us:
         _dataContainer = underlyingTask;
 
@@ -215,10 +198,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
     /// <param name="synchronousResult">The result of this synchronously completed IAsyncInfo.</param>
     internal TaskToAsyncInfoAdapter(TResult synchronousResult)
     {
-        // We already completed. There will be no progress callback invokations and a potential completed handler invokation will be synchronous.
-        // We do not need the starting SynchronizationContext:
-        _startingContext = null;
-
         // Set the synchronous result:
         _dataContainer = synchronousResult;
 
@@ -355,16 +334,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
 
     #region Infrastructure methods
 
-    private SynchronizationContext GetStartingContext()
-    {
-#if DESKTOP // as a reminder that on most platforms we want a different behavior
-        return SynchronizationContext.CurrentNoFlow;
-#else
-        return SynchronizationContext.Current;
-#endif
-    }
-
-
     Task ITaskAwareAsyncInfo.Task
     {
         get
@@ -447,23 +416,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
     }
 
 
-    // This is a separate method from IProgress<TProgressInfo>.Report to avoid alocating the closure if it is not used.
-    private void OnProgressInvokerCrossContext(TProgressHandler handler, TProgressInfo progressInfo)
-    {
-        Debug.Assert(handler != null);
-        Debug.Assert(_startingContext != null);
-
-        _startingContext.Post((tupleObject) =>
-        {
-            var tuple = (Tuple<TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>,
-                               TProgressHandler,
-                               TProgressInfo>)tupleObject!;
-
-            tuple.Item1.OnProgress(tuple.Item2, tuple.Item3);
-        }, Tuple.Create(this, handler, progressInfo));
-    }
-
-
     /// <summary>Reports a progress update.</summary>
     /// <param name="value">The new progress value to report.</param>
     void IProgress<TProgressInfo>.Report(TProgressInfo value)
@@ -479,16 +431,14 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         // If the user does not catch it, it will be treated just as any other exception coming from the async execution code:
         // this AsyncInfo will be faulted.
 
-        if (_startingContext == null)
-        {
-            // The starting context is null, invoke directly:
-            OnProgress(handler, value);
-        }
-        else
-        {
-            // Invoke callback in the right context:
-            OnProgressInvokerCrossContext(handler, value);
-        }
+        // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
+        // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
+        // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
+        // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
+        // by allowing the awaiter to decide the context.
+
+        // The starting context is null, invoke directly:
+        OnProgress(handler, value);
     }
 
 
@@ -655,24 +605,12 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         // to ensure a diagnostic message and a fail-fast-like teardown.
         try
         {
-            if (_startingContext == null)
-            {
-                // The starting context is null, invoking directly:
-                OnCompletedInvoker(terminationStatus);
-            }
-            else
-            {
-                // Invoke callback in the right context (delegate cached by compiler):
-                _startingContext.Post((tupleObject) =>
-                {
-                    var tuple = (Tuple<TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>, AsyncStatus>)tupleObject!;
-                    tuple.Item1.OnCompletedInvoker(tuple.Item2);
-                }, Tuple.Create(this, terminationStatus));
-            }
+            // The starting context is null, invoking directly:
+            OnCompletedInvoker(terminationStatus);
         }
         catch (Exception ex)
         {
-            ExceptionDispatchInfo.ThrowAsync(ex, _startingContext);
+            ExceptionDispatchInfo.ThrowAsync(ex, synchronizationContext: null);
         }
     }
 
@@ -811,7 +749,6 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
         _error = null;
         _completedHandler = null;
         _progressHandler = null;
-        _startingContext = null;
     }
 
     #endregion Infrastructure methods
