@@ -13,4 +13,5 @@
     <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>
+
 </Project>
