@@ -28,7 +28,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">Boolean on whether to use Windows.UI.Xaml namespace</param>
+        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="actionType"/>.</param>
         public static void IID(
             GenericInstanceTypeSignature actionType,

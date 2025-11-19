@@ -11,14 +11,14 @@ internal static class TypeMapping
 {
     internal readonly record struct MappedType(
          string PublicName,
-         string WinRTNamespace, // WinRT (ABI) namespace
-         string WinRTName,      // WinRT (ABI) type name (same as winrt_name)
+         string WinRTNamespace, // WinRT namespace
+         string WinRTName,      // WinRT type name (same as winrt_name)
          string? Signature = null
     );
 
     internal readonly record struct WindowsUIXamlMappedType(
-         string WinRTNamespace, // WinRT (ABI) namespace
-         string WinRTName,      // WinRT (ABI) type name (same as winrt_name)
+         string WinRTNamespace, // WinRT namespace
+         string WinRTName,      // WinRT type name (same as winrt_name)
          string? Signature = null
     );
 
@@ -159,7 +159,15 @@ internal static class TypeMapping
     };
 
 
-
+    /// <summary>
+    /// Returns the mapped WinRT full type name for a given CLR namespace and type name.
+    /// </summary>
+    /// <param name="Namespace">The CLR namespace of the type.</param>
+    /// <param name="Name">The CLR type name.</param>
+    /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
+    /// <returns>
+    /// The WinRT full type name if a mapping exists; otherwise, the original CLR namespace and type name.
+    /// </returns>
     internal static string FindMappedWinRTFullName(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
     {
         if (Namespace is null || Name is null)
@@ -179,6 +187,16 @@ internal static class TypeMapping
                 ? WindowsUIXamlProjectionTypeMapping[result].WinRTNamespace + "." + WindowsUIXamlProjectionTypeMapping[result].WinRTName : result;
     }
 
+
+    /// <summary>
+    /// Retrieves the WinRT signature string for a mapped CLR type.
+    /// </summary>
+    /// <param name="Namespace">The CLR namespace of the type.</param>
+    /// <param name="Name">The CLR type name.</param>
+    /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
+    /// <returns>
+    /// The signature string if found; otherwise, null.
+    /// </returns>
     internal static string? FindGuidSignatureForMappedType(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
     {
         if (Namespace is null || Name is null)

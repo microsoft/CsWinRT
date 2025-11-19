@@ -27,7 +27,7 @@ internal static class GuidGenerator
     /// <param name="interopReferences">
     /// Interop metadata used to resolve GUIDs for interfaces, delegates, and generics.
     /// </param>
-    /// <param name="useWindowsUIXamlProjections">Boolean on whether to use Windows.UI.Xaml namespace</param>
+    /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
     /// <returns>
     /// A WinRT signature string representing the given type.
     /// </returns>
