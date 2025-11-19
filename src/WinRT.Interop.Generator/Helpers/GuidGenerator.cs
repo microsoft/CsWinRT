@@ -26,6 +26,13 @@ internal static class GuidGenerator
     private static StreamWriter writer = new(printPath, append: false);
 #pragma warning restore IDE0044 // Add readonly modifier
 
+    /// <summary>
+    /// Generates the IID for the specified type by computing its WinRT signature and deriving a GUID from that signature.
+    /// </summary>
+    /// <param name="type">The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to generate an IID for.</param>
+    /// <param name="interopReferences">Interop metadata used to resolve type mappings and GUIDs during signature generation.</param>
+    /// <param name="useWindowsUIXamlProjections">When <c>true</c>, applies Windows.UI.Xaml projection mappings while producing the signature.</param>
+    /// <returns>The <see cref="Guid"/> IID derived from the computed WinRT signature.</returns>
     public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
         string signature = GetSignature(type, interopReferences, useWindowsUIXamlProjections);
@@ -42,16 +49,10 @@ internal static class GuidGenerator
     /// <summary>
     /// Generates the WinRT signature string for the specified type.
     /// </summary>
-    /// <param name="typeSignature">
-    /// The CLR/AsmResolver type signature to translate.
-    /// </param>
-    /// <param name="interopReferences">
-    /// Interop metadata used to resolve GUIDs for interfaces, delegates, and generics.
-    /// </param>
+    /// <param name="typeSignature"> The CLR/AsmResolver type signature to translate. </param>
+    /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-    /// <returns>
-    /// A WinRT signature string representing the given type.
-    /// </returns>
+    /// <returns>A WinRT signature string representing the given type.</returns>
     private static string GetSignature(
             TypeSignature typeSignature,
             InteropReferences interopReferences,
@@ -100,7 +101,7 @@ internal static class GuidGenerator
             case ElementType.String:
                 return "string";
             case ElementType.Type:
-                return "struct(Windows.UI.Xaml.Interop.222TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
+                return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
             case ElementType.ValueType:
                 if (typeDefinition.IsClass)
                 {
@@ -194,7 +195,7 @@ internal static class GuidGenerator
     /// The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to resolve to a GUID.
     /// </param>
     /// <param name="interopReferences">
-    /// Context used to resolve well-known WinRT interface IIDs and related interop metadata.
+    /// The <see cref="InteropReferences"/> instance to use.
     /// </param>
     /// <returns>
     /// The resolved <see cref="Guid"/> if found.
@@ -222,6 +223,13 @@ internal static class GuidGenerator
         //throw new ArgumentException("Type does not have a Guid attribute");
     }
 
+    /// <summary>
+    /// Attempts to retrieve a GUID from the <c>GuidAttribute</c> applied to the specified type.
+    /// </summary>
+    /// <param name="typeDef">The type definition to inspect for the GUID attribute.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="guid">When this method returns <c>true</c>, contains the parsed GUID value.</param>
+    /// <returns><c>true</c> if a valid GUID was found and parsed; otherwise, <c>false</c>.</returns>
     private static bool GetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
     {
         guid = Guid.Empty;
@@ -235,6 +243,14 @@ internal static class GuidGenerator
         return false;
     }
 
+    /// <summary>
+    /// Attempts to retrieve the default interface signature from the <c>WindowsRuntimeDefaultInterfaceAttribute</c>
+    /// applied to the specified type.
+    /// </summary>
+    /// <param name="typeDef">The type definition to inspect for the default interface attribute.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="defaultInterfaceSig">When this method returns <c>true</c>, contains the default interface type signature.</param>
+    /// <returns><c>true</c> if the default interface signature was found; otherwise, <c>false</c>.</returns>
     private static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
     {
         defaultInterfaceSig = null!;
@@ -249,6 +265,13 @@ internal static class GuidGenerator
         return false;
     }
 
+    /// <summary>
+    /// Encodes a GUID from a 16-byte sequence following RFC 4122 rules.
+    /// Adjusts byte order for little-endian systems and sets version and variant bits.
+    /// </summary>
+    /// <param name="data">A read-only span of bytes representing the GUID data. Must be at least 16 bytes.</param>
+    /// <returns>A <see cref="Guid"/> constructed from the encoded byte sequence.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="data"/> contains fewer than 16 bytes.</exception>
     private static Guid EncodeGuid(ReadOnlySpan<byte> data)
     {
         if (data.Length < 16)
@@ -261,24 +284,27 @@ internal static class GuidGenerator
 
         if (BitConverter.IsLittleEndian)
         {
-            // swap bytes of int a
+            // Swap bytes of int a
             (buffer[3], buffer[0]) = (buffer[0], buffer[3]);
             (buffer[2], buffer[1]) = (buffer[1], buffer[2]);
 
-            // swap bytes of short b
+            // Swap bytes of short b
             (buffer[5], buffer[4]) = (buffer[4], buffer[5]);
 
-            // swap bytes of short c and encode RFC time/version field
+            // Swap bytes of short c and encode RFC time/version field
             (buffer[7], buffer[6]) = ((byte)((buffer[6] & 0x0F) | (5 << 4)), buffer[7]);
 
-            // encode RFC clock/reserved field
+            // Encode RFC clock/reserved field
             buffer[8] = (byte)((buffer[8] & 0x3F) | 0x80);
         }
 
         return new Guid(buffer);
     }
 
-    internal static Guid CreateGuidFromSignature(string signature)
+    /// <summary>Computes a deterministic GUID (IID) from a WinRT signature</summary>
+    /// <param name="signature">WinRT signature string.</param>
+    /// <returns>The derived <see cref="Guid"/>.</returns>
+    private static Guid CreateGuidFromSignature(string signature)
     {
         // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
         // If the minimum buffer is small enough, we can stack-allocate it.
