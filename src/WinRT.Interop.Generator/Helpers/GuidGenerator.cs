@@ -278,24 +278,33 @@ internal static class GuidGenerator
         return false;
     }
 
-    private static Guid EncodeGuid(Span<byte> data)
+    private static Guid EncodeGuid(ReadOnlySpan<byte> data)
     {
+        if (data.Length < 16)
+        {
+            throw new ArgumentException("Data must be at least 16 bytes.", nameof(data));
+        }
+
+        Span<byte> buffer = stackalloc byte[16];
+        data[..16].CopyTo(buffer);
+
         if (BitConverter.IsLittleEndian)
         {
             // swap bytes of int a
-            (data[3], data[0]) = (data[0], data[3]);
-            (data[2], data[1]) = (data[1], data[2]);
+            (buffer[3], buffer[0]) = (buffer[0], buffer[3]);
+            (buffer[2], buffer[1]) = (buffer[1], buffer[2]);
 
             // swap bytes of short b
-            (data[5], data[4]) = (data[4], data[5]);
+            (buffer[5], buffer[4]) = (buffer[4], buffer[5]);
 
-            // swap bytes of short c and encode rfc time/version field
-            (data[7], data[6]) = ((byte)((data[6] & 0x0f) | (5 << 4)), data[7]);
+            // swap bytes of short c and encode RFC time/version field
+            (buffer[7], buffer[6]) = ((byte)((buffer[6] & 0x0F) | (5 << 4)), buffer[7]);
 
-            // encode rfc clock/reserved field
-            data[8] = (byte)((data[8] & 0x3f) | 0x80);
+            // encode RFC clock/reserved field
+            buffer[8] = (byte)((buffer[8] & 0x3F) | 0x80);
         }
-        return new Guid(data[0..16]);
+
+        return new Guid(buffer);
     }
 
     internal static Guid CreateGuidFromSignature(string signature)
