@@ -67,6 +67,7 @@ internal static class GuidGenerator
         TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
         string typeFullNameMapped = (typeDefinition.Namespace is null || typeDefinition.Name is null) ? typeDefinition.FullName : TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name, useWindowsUIXamlProjections);
 
+#pragma warning disable IDE0010 // Add missing cases
         switch (typeSignature.ElementType)
         {
             // value types
@@ -178,29 +179,11 @@ internal static class GuidGenerator
 
                 throw new ArgumentException("Invalid ElementType.SzArray");
 
-            case ElementType.None:
-            case ElementType.Void:
-            case ElementType.Ptr:
-            case ElementType.ByRef:
-            case ElementType.Var:
-            case ElementType.Array:
-            case ElementType.TypedByRef:
-            case ElementType.I:
-            case ElementType.U:
-            case ElementType.FnPtr:
-            case ElementType.MVar:
-            case ElementType.CModReqD:
-            case ElementType.CModOpt:
-            case ElementType.Internal:
-            case ElementType.Modifier:
-            case ElementType.Sentinel:
-            case ElementType.Pinned:
-            case ElementType.Boxed:
-            case ElementType.Enum:
             default:
                 // TODO: throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
                 return typeSignature.FullName;
         }
+#pragma warning restore IDE0010 // Add missing cases
     }
 
     /// <summary>
