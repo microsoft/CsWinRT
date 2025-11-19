@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -17,8 +18,30 @@ namespace WindowsRuntime.InteropGenerator;
 internal static class ModuleDefinitionExtensions
 {
     /// <summary>
+    /// Gets the first type with a given namespace and name from the specified type.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="ns">The namespace of the type.</param>
+    /// <param name="name">The name of the type to get.</param>
+    /// <returns>The resulting type.</returns>
+    /// <exception cref="ArgumentException">Thrown if the type couldn't be found.</exception>
+    public static TypeDefinition GetType(this ModuleDefinition module, Utf8String ns, Utf8String name)
+    {
+        foreach (TypeDefinition type in module.TopLevelTypes)
+        {
+            if (type.Namespace == ns && type.Name == name)
+            {
+                return type;
+            }
+        }
+
+        throw new ArgumentException($"Type with name '{ns}.{name}' not found.");
+    }
+
+    /// <summary>
     /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
     /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>Whether the module references the Windows Runtime assembly.</returns>
     public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
     {
@@ -46,6 +69,7 @@ internal static class ModuleDefinitionExtensions
     /// <summary>
     /// Enumerates all (transitive) assembly references for a given <see cref="ModuleDefinition"/>.
     /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
     public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module)
     {
