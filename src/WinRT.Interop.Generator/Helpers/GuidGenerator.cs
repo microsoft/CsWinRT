@@ -64,7 +64,7 @@ internal static class GuidGenerator
             return mappedSignature;
         }
 
-        AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
+        TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
         string typeFullNameMapped = (typeDefinition.Namespace is null || typeDefinition.Name is null) ? typeDefinition.FullName : TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name, useWindowsUIXamlProjections);
 
         switch (typeSignature.ElementType)
@@ -117,7 +117,7 @@ internal static class GuidGenerator
                     }
 
                     // Struct case
-                    IList<AsmResolver.DotNet.FieldDefinition> fieldDefinition = typeDefinition.Fields;
+                    IList<FieldDefinition> fieldDefinition = typeDefinition.Fields;
                     List<string> typeArgumentSignatures = [];
 
                     for (int i = 0; i < fieldDefinition.Count; i++)
@@ -135,7 +135,7 @@ internal static class GuidGenerator
 
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
-                AsmResolver.DotNet.TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
+                TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
 
                 if (genericTypeDefinition is not null)
                 {
@@ -226,7 +226,7 @@ internal static class GuidGenerator
             return result;
         }
 
-        AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
+        TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
             if (GetGuidFromAttribute(typeDef, interopReferences, out result))
@@ -242,7 +242,7 @@ internal static class GuidGenerator
     private static bool GetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
     {
         guid = Guid.Empty;
-        if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: AsmResolver.Utf8String guidString }, ..] })
             {
@@ -255,7 +255,7 @@ internal static class GuidGenerator
     private static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
     {
         defaultInterfaceSig = null!;
-        if (typeDef.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        if (typeDef.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
             {
