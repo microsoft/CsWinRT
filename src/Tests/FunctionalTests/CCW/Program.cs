@@ -11,13 +11,6 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
 
-// TODO: This shouldn't be needed if transitive references are detected correctly.
-[assembly: WindowsRuntime.WindowsRuntimeReferenceAssembly]
-
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("Test")]
-[assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
-
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
 
@@ -355,7 +348,6 @@ static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* lengt
 [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
 static extern int WindowsDeleteString(IntPtr hstring);
 
-#if NET8_0_OR_GREATER
 static Exception RunAndGetException(Action action)
 {
     try
@@ -369,7 +361,6 @@ static Exception RunAndGetException(Action action)
         return e;
     }
 }
-#endif
 
 static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 {

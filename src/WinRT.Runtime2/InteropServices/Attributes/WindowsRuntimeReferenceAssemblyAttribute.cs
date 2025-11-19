@@ -4,7 +4,7 @@
 using System;
 using System.ComponentModel;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Identifies an assembly as containing generated Windows Runtime APIs from a given Windows Runtime metadata file

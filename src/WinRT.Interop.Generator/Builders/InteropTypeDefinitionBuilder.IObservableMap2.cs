@@ -252,7 +252,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Get the base interfaces for the current element type
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
 
@@ -372,7 +372,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Prepare all the necessary base interface types
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
             TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
             TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);

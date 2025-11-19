@@ -17,6 +17,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
+    [WindowsRuntimeManagedOnlyType]
     public sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess
     {
         #region Constants
@@ -253,6 +254,7 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
             Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
             Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
             Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+            // This uses a custom IMarshal implmentation for buffers.
             Entries.IMarshal.Vtable = global::ABI.Windows.Storage.Streams.IBufferMarshalImpl.Vtable;
             Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
             Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;

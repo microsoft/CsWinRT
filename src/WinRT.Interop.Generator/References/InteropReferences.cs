@@ -224,6 +224,16 @@ internal sealed class InteropReferences
     public TypeReference IDisposable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IDisposable"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.TimeSpan"/>.
+    /// </summary>
+    public TypeReference TimeSpan => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "TimeSpan"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.DateTimeOffset"/>.
+    /// </summary>
+    public TypeReference DateTimeOffset => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "DateTimeOffset"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
     public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
@@ -306,7 +316,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
     /// </summary>
-    public TypeReference KeyValuePair => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
+    public TypeReference KeyValuePair2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
@@ -426,7 +436,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
-    public TypeReference ABIType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
+    public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -1120,7 +1130,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("GetInstance"u8, MethodSignature.CreateStatic(
             returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
             genericParameterCount: 1,
-            parameterTypes: [ComInterfaceDispatch.MakePointerType()]));
+            parameterTypes: [ComInterfaceDispatch.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.IID"/>.
@@ -1666,7 +1676,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
-                ABIType.MakePointerType()]));
+                AbiType.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers.FreeBlittableArrayUnsafe</c>.
@@ -3066,7 +3076,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
             .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
@@ -3088,7 +3098,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
             .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
@@ -3116,7 +3126,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
                     _corLibTypeFactory.Int32]))
@@ -3139,7 +3149,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
             .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
@@ -3639,7 +3649,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
@@ -3656,7 +3666,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
@@ -3673,7 +3683,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }
@@ -3690,7 +3700,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)))]);
     }

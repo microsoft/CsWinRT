@@ -91,7 +91,6 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 int typeArgumentIndex = name == "get_Key" ? 0 : 1;
                 TypeSignature typeArgument = keyValuePairType.TypeArguments[typeArgumentIndex];
-                TypeSignature typeArgumentAbiType = typeArgument.IsValueType ? typeArgument.Import(module).MakePointerType() : module.CorLibTypeFactory.Void.MakePointerType();
 
                 // Define the method as follows:
                 //
@@ -104,7 +103,7 @@ internal partial class InteropTypeDefinitionBuilder
                         returnType: module.CorLibTypeFactory.Int32,
                         parameterTypes: [
                             module.CorLibTypeFactory.Void.MakePointerType(),
-                            typeArgumentAbiType]))
+                            typeArgument.GetAbiType(interopReferences).Import(module).MakePointerType()]))
                 {
                     CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
                 };

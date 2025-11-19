@@ -61,6 +61,9 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
+            TypeSignature elementType = arrayType.BaseType;
+            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
@@ -79,9 +82,9 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(arrayType.BaseType).Import(module),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
                         module.CorLibTypeFactory.UInt32.MakeByReferenceType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()])) // TODO
+                        elementAbiType.Import(module).MakePointerType().MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2, 3],
                 CilInstructions =
@@ -103,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: arrayType.Import(module),
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()])) // TODO
+                        elementAbiType.Import(module).MakePointerType()]))
             {
                 CilInstructions =
                 {
@@ -124,8 +127,8 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType(), // TODO
-                        interopReferences.Span1.MakeGenericValueType(arrayType.BaseType).Import(module)]))
+                        elementAbiType.Import(module).MakePointerType(),
+                        interopReferences.Span1.MakeGenericValueType(elementType).Import(module)]))
             {
                 CilInstructions =
                 {
@@ -145,9 +148,9 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(arrayType.BaseType).Import(module),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
                         module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        elementAbiType.Import(module).MakePointerType()]))
             {
                 CilInstructions =
                 {
@@ -250,7 +253,7 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()])) // TODO
+                        arrayType.BaseType.GetAbiType(interopReferences).Import(module).MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };

@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>

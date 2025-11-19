@@ -103,14 +103,14 @@ internal partial class InteropGenerator
         // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
         // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
         // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
-        if (!module.IsOrReferencesWindowsRuntimeAssembly && !module.IsWindowsRuntimeAssembly)
+        if (!module.ReferencesWindowsRuntimeAssembly && !module.IsWindowsRuntimeModule)
         {
             return;
         }
 
         // If the module references the CsWinRT 2.x runtime assembly, we need to stop, as it's invalid.
         // We'll emit an error after loading all modules, to let the user know of the wrong configuration.
-        if (module.ReferencesWinRTRuntimeDllVersion2)
+        if (module.ReferencesWindowsRuntimeVersion2Assembly)
         {
             discoveryState.MarkWinRTRuntimeDllVersion2References();
 
@@ -329,7 +329,7 @@ internal partial class InteropGenerator
 
                 // Gather all 'KeyValuePair<,>' instances
                 if (typeDefinition.IsValueType &&
-                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair) &&
+                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2) &&
                     typeDefinition.IsProjectedWindowsRuntimeType)
                 {
                     discoveryState.TrackKeyValuePairType(typeSignature);
@@ -422,7 +422,7 @@ internal partial class InteropGenerator
         // Filter all invalid modules (i.e. that reference the 'WinRT.Runtime.dll' assembly version 2)
         IEnumerable<string> invalidModuleNames = discoveryState.ModuleDefinitions
             .Values
-            .Where(static module => module.ReferencesWinRTRuntimeDllVersion2)
+            .Where(static module => module.ReferencesWindowsRuntimeVersion2Assembly)
             .Select(static module => module.Name?.ToString() ?? "")
             .Order();
 

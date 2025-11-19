@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -58,6 +57,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime generic interface type.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
         {
@@ -73,6 +73,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic interface type.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime non-generic interface type.</returns>
         public bool IsCustomMappedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
         {
@@ -85,6 +86,99 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction);
+        }
+
+        /// <summary>
+        /// Checks whether a given type is blittable.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is blittable.</returns>
+        public bool IsBlittable(InteropReferences interopReferences)
+        {
+            // Generic instantiations can never be blittable (as they're pointers at the ABI level)
+            if (type is GenericInstanceTypeSignature)
+            {
+                return false;
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            // Enum types are always blittable
+            if (typeDefinition.IsEnum)
+            {
+                return true;
+            }
+
+            // Only value types are possibly blittable
+            if (!typeDefinition.IsValueType)
+            {
+                return false;
+            }
+
+            // All fundamental types are blittable (i.e. primitive types)
+            if (IsFundamentalWindowsRuntimeType(type, interopReferences))
+            {
+                return true;
+            }
+
+            // The 'TimeSpan' and 'DateTimeOffset' types are not blittable (even though they're custom-mapped)
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            {
+                return false;
+            }
+
+            // We have some complex struct, so we need to recursively check all fields
+            foreach (FieldDefinition fieldDefinition in typeDefinition.Fields)
+            {
+                // We only care about non-constant instance fields
+                if (fieldDefinition.IsStatic || fieldDefinition.IsLiteral)
+                {
+                    continue;
+                }
+
+                // If any fields aren't blittable, then the whole type isn't
+                if (!fieldDefinition.Signature!.FieldType.IsBlittable(interopReferences))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the ABI type for a given type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>The ABi type for the input type.</returns>
+        public TypeSignature GetAbiType(InteropReferences interopReferences)
+        {
+            // All constructed generics will use 'void*' for the ABI type. This applies to both reference
+            // types, as well as 'KeyValuePair<,>', which also maps to 'void*', since it's an interface.
+            if (type is GenericInstanceTypeSignature)
+            {
+                return interopReferences.CorLibTypeFactory.Void.MakePointerType();
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            if (typeDefinition.IsValueType)
+            {
+                // If the type is blittable, then it's the same as the ABI type
+                if (type.IsBlittable(interopReferences))
+                {
+                    return type.ToTypeDefOrRef().ToValueTypeSignature();
+                }
+
+                // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
+                return typeDefinition.DeclaringModule!.CreateTypeReference(
+                    ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
+                    name: typeDefinition.Name!).ToValueTypeSignature();
+            }
+
+            // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
+            return interopReferences.CorLibTypeFactory.Void.MakePointerType();
         }
     }
 
@@ -168,7 +262,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</returns>
         public bool IsKeyValuePairType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair);
+            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
         }
 
         /// <summary>
@@ -224,47 +318,33 @@ internal static class WindowsRuntimeExtensions
     extension(ModuleDefinition module)
     {
         /// <summary>
-        /// Checks whether a <see cref="ModuleDefinition"/> is or references the Windows Runtime assembly.
-        /// </summary>
-        /// <returns>Whether the module is or references the Windows Runtime assembly.</returns>
-        public bool IsOrReferencesWindowsRuntimeAssembly
-        {
-            get
-            {
-                // If the assembly references the Windows Runtime assembly, gather it
-                foreach (AssemblyReference reference in module.AssemblyReferences)
-                {
-                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntime2DllNameUtf8[..^4]) is true)
-                    {
-                        return true;
-                    }
-                }
-
-                // Otherwise, check if it's the Windows Runtime assembly itself
-                return module.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntime2DllNameUtf8) is true;
-            }
-        }
-
-        /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> is the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module is the Windows Runtime assembly.</returns>
-        public bool IsWindowsRuntimeAssembly => module.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntimeDllNameUtf8) is true;
+        public bool IsWindowsRuntimeModule => module.Name == WellKnownMetadataNames.WinRTRuntime2ModuleName;
 
         /// <summary>
-        /// Checks whether a <see cref="ModuleDefinition"/> references 'WinRT.Runtime.dll' version 2.
+        /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
         /// </summary>
-        /// <returns>Whether the module references 'WinRT.Runtime.dll' version 2.</returns>
-        public bool ReferencesWinRTRuntimeDllVersion2
+        /// <returns>Whether the module references the Windows Runtime assembly.</returns>
+        public bool ReferencesWindowsRuntimeAssembly => module.ReferencesAssembly(WellKnownMetadataNames.WinRTRuntime2AssemblyName);
+
+        /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly version 2.
+        /// </summary>
+        /// <returns>Whether the module references the Windows Runtime assembly version 2.</returns>
+        public bool ReferencesWindowsRuntimeVersion2Assembly
         {
             get
             {
-                // Get the 'WinRT.Runtime.dll' reference, and check if its version is the one for CsWinRT 2.x
-                foreach (AssemblyReference reference in module.AssemblyReferences)
+                // Look for the 'WinRT.Runtime.dll' reference, and check if its version is the one for CsWinRT 2.x.
+                // We need to enumerate and check all references, as we also expect CsWinRT 3.0 assembly references.
+                foreach (AssemblyReference reference in module.EnumerateAssemblyReferences())
                 {
-                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WinRTRuntimeDllNameUtf8[..^4]) is true)
+                    if (reference.Name == WellKnownMetadataNames.WinRTRuntimeAssemblyName &&
+                        reference.Version.Major == 2)
                     {
-                        return reference.Version.Major == 2;
+                        return true;
                     }
                 }
 
@@ -279,6 +359,21 @@ internal static class WindowsRuntimeExtensions
 /// </summary>
 file static class WellKnownMetadataNames
 {
+    /// <summary>
+    /// The current name of the WinRT runtime assembly.
+    /// </summary>
+    public static readonly Utf8String WinRTRuntimeAssemblyName = "WinRT.Runtime"u8;
+
+    /// <summary>
+    /// The current name of the WinRT runtime assembly.
+    /// </summary>
+    public static readonly Utf8String WinRTRuntime2AssemblyName = "WinRT.Runtime2"u8;
+
+    /// <summary>
+    /// The current name of the WinRT runtime module.
+    /// </summary>
+    public static readonly Utf8String WinRTRuntime2ModuleName = "WinRT.Runtime2.dll"u8;
+
     /// <summary>
     /// The <c>"WindowsRuntime"</c> text.
     /// </summary>

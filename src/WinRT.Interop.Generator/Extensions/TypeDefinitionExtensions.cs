@@ -38,7 +38,7 @@ internal static class TypeDefinitionExtensions
         {
             for (
                 TypeDefinition? currentType = type;
-                currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType.BaseType, corLibTypeFactory.Object);
+                currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, corLibTypeFactory.Object);
                 currentType = currentType.BaseType?.Resolve())
             {
                 if (currentType.HasCustomAttribute(attributeType))

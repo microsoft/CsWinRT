@@ -126,7 +126,7 @@ internal partial class InteropTypeDefinitionBuilder
             vftblType = WellKnownTypeDefinitionFactory.IList1Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
-                elementType: elementType, // TODO: use ABI type
+                elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences,
                 module: module);
 

@@ -118,7 +118,7 @@ internal static partial class InteropMethodDefinitionFactory
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            TypeSignature elementType = argsType.TypeArguments[0];
+            TypeSignature keyType = argsType.TypeArguments[0];
 
             // Define the 'get_Key' method as follows:
             //
@@ -131,7 +131,7 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType()])) // TODO
+                        keyType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -164,7 +164,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(argsType).Import(module) },
-                    { Callvirt, interopReferences.IMapChangedEventArgs1get_Key(elementType).Import(module) },
+                    { Callvirt, interopReferences.IMapChangedEventArgs1get_Key(keyType).Import(module) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -194,7 +194,7 @@ internal static partial class InteropMethodDefinitionFactory
             };
 
             // Marshal the managed value to the target address
-            if (SignatureComparer.IgnoreVersion.Equals(elementType, module.CorLibTypeFactory.String))
+            if (SignatureComparer.IgnoreVersion.Equals(keyType, module.CorLibTypeFactory.String))
             {
                 currentMethod.CilMethodBody!.Instructions.ReplaceRange(nop_convertToUnmanaged, [
                     new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
