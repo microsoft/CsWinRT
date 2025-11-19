@@ -264,15 +264,10 @@ internal static class GuidGenerator
         TypeReference windowsRuntimeDefaultInterfaceAttribute = interopReferences.WindowsRuntimeDefaultInterfaceAttribute;
         if (typeDef.TryGetCustomAttribute(windowsRuntimeDefaultInterfaceAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
         {
-            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+            if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
             {
-                object? element = customAttributeSignature.FixedArguments[0].Element;
-                if (element is TypeSignature sig)
-                {
-                    defaultInterfaceSig = sig;
-                    return true;
-                }
+                defaultInterfaceSig = signature;
+                return true;
             }
         }
         return false;
