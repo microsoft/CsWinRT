@@ -110,10 +110,10 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CopyEmbeddedSymbols" BeforeTargets="AfterBuild" Condition="'$(CIBuildReason)' == 'CI'">
+  <Target Name="CopyEmbeddedSymbols" AfterTargets="Build" Condition="'$(CIBuildReason)' == 'CI'">
     <PropertyGroup>
       <_Pdb2PdbPath>$(PkgMicrosoft_DiaSymReader_Pdb2Pdb)\tools\Pdb2Pdb.exe</_Pdb2PdbPath>
-      <_WinRTRuntimePdbPath>.\$(OutputPath)\$(AssemblyName).pdb</_WinRTRuntimePdbPath>
+      <_WinRTRuntimePdbPath>$(OutputPath)$(AssemblyName).pdb</_WinRTRuntimePdbPath>
       <_Pdb2PdbCommandLine>"$(TargetPath)" /out "$(_WinRTRuntimePdbPath)" /extract</_Pdb2PdbCommandLine>
     </PropertyGroup>
 
