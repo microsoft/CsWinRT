@@ -21,7 +21,7 @@ namespace UnitTest
             Tests = TestRunner.MakeTests();
         }
 
-        public static bool AllEqual<T>(T x, params T[] list) => 
+        public static bool AllEqual<T>(T x, params T[] list) =>
             list.All((y) => x.Equals(y));
 
         public static bool AllEqual<T>(T[] x, params T[][] list) =>
@@ -605,7 +605,7 @@ namespace UnitTest
         {
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
             public unsafe TestIDICInspectable(void* ptr)
-                :base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
+                : base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
 #pragma warning restore CSWINRT3001 // Type or member is obsolete
             {
             }
@@ -874,7 +874,7 @@ namespace UnitTest
         {
             Tests.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b) =>
             {
-                b = a.Select(s => s).ToList();  
+                b = a.Select(s => s).ToList();
                 return b.Select(s => s).ToList();
             });
         }

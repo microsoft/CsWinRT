@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -107,4 +107,3 @@ internal static class WellKnownImplExceptions
         return new WellKnownImplException($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 }
-

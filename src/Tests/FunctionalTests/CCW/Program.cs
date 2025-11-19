@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -213,7 +213,7 @@ try
 {
     TestClass.TestGenericList<bool>();
 }
-catch(Exception)
+catch (Exception)
 {
     if (RuntimeFeature.IsDynamicCodeCompiled)
     {
@@ -428,7 +428,7 @@ sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 
 // Used to test interfaces on base class where
 // the child class has no WinRT interfaces.
-sealed partial class ManagedWarningClass2 : WarningClass 
+sealed partial class ManagedWarningClass2 : WarningClass
 {
 }
 
@@ -738,9 +738,9 @@ sealed partial class Language2
     private int Number { get; set; }
     public string SetOnly
     {
-        set 
-        { 
-            PrivateSet = value; 
+        set
+        {
+            PrivateSet = value;
         }
     }
     public string PrivateSet { get; private set; } = "PrivateSet";

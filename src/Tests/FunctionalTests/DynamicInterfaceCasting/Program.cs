@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TestComponent;
@@ -13,7 +13,7 @@ unsafe
     Guid IID_IAgileObject = new("94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90");
     void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(instance);
     if (ptr == null ||
-        Marshal.QueryInterface((nint) ptr, IID_IAgileObject, out nint ptr2) != 0 ||
+        Marshal.QueryInterface((nint)ptr, IID_IAgileObject, out nint ptr2) != 0 ||
         ptr2 == IntPtr.Zero)
     {
         return 101;

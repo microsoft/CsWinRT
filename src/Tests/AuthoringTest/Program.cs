@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Markup;
@@ -95,7 +95,7 @@ namespace AuthoringTest
             return new CustomWWW();
         }
 
-        public BasicStruct GetBasicStruct() => 
+        public BasicStruct GetBasicStruct() =>
             new BasicStruct() { X = 4, Y = 8, Value = "CsWinRT" };
 
         public int GetSumOfInts(BasicStruct basicStruct)
@@ -186,7 +186,7 @@ namespace AuthoringTest
         public bool? Val;
         public BasicStruct BasicStruct;
     }
-    
+
     internal struct PrivateStruct
     {
         public int X, Y;
@@ -236,7 +236,7 @@ namespace AuthoringTest
     public static class CustomPropertyRecordTypeFactory
     {
         public static object CreateStruct() => new CustomPropertyStructType();
-        
+
         public static object CreateRecord() => new CustomPropertyRecordType();
 
         public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
@@ -459,9 +459,9 @@ namespace AuthoringTest
         {
             return new List<ComplexStruct>()
             {
-                new ComplexStruct() { 
+                new ComplexStruct() {
                     X = 12,
-                    Val = true, 
+                    Val = true,
                     BasicStruct = new BasicStruct() { X = 1, Y = 2, Value = "Basic" } },
             };
         }
@@ -1531,7 +1531,7 @@ namespace AuthoringTest
         private List<DisposableClass> _list = new List<DisposableClass>();
 
         DisposableClass IList<DisposableClass>.this[int index] { get => _list[index]; set => _list[index] = value; }
-        object IList.this[int index] { get => _list[index]; set => ((IList)_list) [index] = value; }
+        object IList.this[int index] { get => _list[index]; set => ((IList)_list)[index] = value; }
 
         int ICollection<DisposableClass>.Count => _list.Count;
 
@@ -1545,7 +1545,7 @@ namespace AuthoringTest
 
         bool ICollection.IsSynchronized => true;
 
-        object ICollection.SyncRoot => ((ICollection) _list).SyncRoot;
+        object ICollection.SyncRoot => ((ICollection)_list).SyncRoot;
 
         void ICollection<DisposableClass>.Add(DisposableClass item)
         {
@@ -1554,7 +1554,7 @@ namespace AuthoringTest
 
         int IList.Add(object value)
         {
-            return ((IList) _list).Add(value);
+            return ((IList)_list).Add(value);
         }
 
         void ICollection<DisposableClass>.Clear()
@@ -1574,7 +1574,7 @@ namespace AuthoringTest
 
         bool IList.Contains(object value)
         {
-            return ((IList) _list).Contains(value);
+            return ((IList)_list).Contains(value);
         }
 
         void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
@@ -1584,7 +1584,7 @@ namespace AuthoringTest
 
         void ICollection.CopyTo(Array array, int index)
         {
-             ((ICollection) _list).CopyTo(array, index);
+            ((ICollection)_list).CopyTo(array, index);
         }
 
         IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
@@ -1604,7 +1604,7 @@ namespace AuthoringTest
 
         int IList.IndexOf(object value)
         {
-            return ((IList) _list).IndexOf(value);
+            return ((IList)_list).IndexOf(value);
         }
 
         void IList<DisposableClass>.Insert(int index, DisposableClass item)
@@ -1614,7 +1614,7 @@ namespace AuthoringTest
 
         void IList.Insert(int index, object value)
         {
-            ((IList) _list).Insert(index, value);
+            ((IList)_list).Insert(index, value);
         }
 
         bool ICollection<DisposableClass>.Remove(DisposableClass item)
@@ -1624,7 +1624,7 @@ namespace AuthoringTest
 
         void IList.Remove(object value)
         {
-            ((IList) _list).Remove(value);
+            ((IList)_list).Remove(value);
         }
 
         void IList<DisposableClass>.RemoveAt(int index)
@@ -1659,7 +1659,7 @@ namespace AuthoringTest
 
         void ICollection<KeyValuePair<string, int>>.Add(KeyValuePair<string, int> item)
         {
-            ((ICollection<KeyValuePair<string, int>>) _dictionary).Add(item);
+            ((ICollection<KeyValuePair<string, int>>)_dictionary).Add(item);
         }
 
         void ICollection<KeyValuePair<string, int>>.Clear()
@@ -1679,7 +1679,7 @@ namespace AuthoringTest
 
         void ICollection<KeyValuePair<string, int>>.CopyTo(KeyValuePair<string, int>[] array, int arrayIndex)
         {
-            ((ICollection<KeyValuePair<string, int>>) _dictionary).CopyTo(array, arrayIndex);
+            ((ICollection<KeyValuePair<string, int>>)_dictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator<KeyValuePair<string, int>> IEnumerable<KeyValuePair<string, int>>.GetEnumerator()
@@ -1699,7 +1699,7 @@ namespace AuthoringTest
 
         bool ICollection<KeyValuePair<string, int>>.Remove(KeyValuePair<string, int> item)
         {
-            return ((ICollection<KeyValuePair<string, int>>) _dictionary).Remove(item);
+            return ((ICollection<KeyValuePair<string, int>>)_dictionary).Remove(item);
         }
 
         bool IDictionary<string, int>.TryGetValue(string key, out int value)

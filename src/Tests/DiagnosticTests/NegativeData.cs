@@ -432,7 +432,7 @@ namespace DiagnosticTests
         public System.Collections.Generic.List<int> IntList { get; set; }
     }
 }";
-        
+
         private const string InterfaceWithOverloadNoAttribute = @"
 namespace DiagnosticTests
 {
@@ -484,7 +484,7 @@ namespace DiagnosticTests
     { 
         private UnsealedClass() {} 
     } 
-}"; 
+}";
 
         private const string GenericClass = @"
 namespace DiagnosticTests 
@@ -502,7 +502,7 @@ namespace DiagnosticTests
         int Foo(T input); 
     }
 }";
- 
+
         private const string ClassInheritsException = @"
 namespace DiagnosticTests 
 { 
@@ -1142,7 +1142,7 @@ namespace DiagnosticTests
     } 
 }";
 
-        
+
         private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;
@@ -2079,7 +2079,7 @@ namespace DiagnosticTests
         public int OverloadExample(int n) { return n; }
     }
 }";
-        private const string ThreeOverloads_TwoAttributes_Unqualified= @"
+        private const string ThreeOverloads_TwoAttributes_Unqualified = @"
 using Windows.Foundation.Metadata;
 namespace DiagnosticTests
 {

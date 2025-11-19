@@ -1832,7 +1832,7 @@ namespace UnitTest
             {
                 using WindowsRuntimeObjectReferenceValue ccwValue = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(properties, typeof(IProperties1).GUID);
                 WindowsRuntimeObjectReference ccw = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccwValue.GetThisPtrUnsafe(), typeof(IProperties1).GUID, out _);
-                return (new WeakReference(ccw), (IntPtr) ccw.GetThisPtrUnsafe());
+                return (new WeakReference(ccw), (IntPtr)ccw.GetThisPtrUnsafe());
             }
 
             var obj = new ManagedProperties(42);
@@ -3479,7 +3479,8 @@ namespace UnitTest
                     "System.Devices.Children",
                 };
             var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
-            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
+            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject =>
+            {
                 var prop = pnpObject.Properties;
                 // Iterating through each key is necessary for this test even though we do not use each key directly
                 // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
@@ -3636,7 +3637,8 @@ namespace UnitTest
                 Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
 
                 watcher = DeviceInformation.CreateWatcher();
-                var exception = Record.Exception(() => {
+                var exception = Record.Exception(() =>
+                {
                     watcher.Added += OnDeviceAdded;
                 });
                 Assert.Null(exception);
@@ -3645,7 +3647,8 @@ namespace UnitTest
                 {
                     Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
 
-                    exception = Record.Exception(() => {
+                    exception = Record.Exception(() =>
+                    {
                         watcher.Updated += OnDeviceUpdated;
                     });
                     Assert.Null(exception);

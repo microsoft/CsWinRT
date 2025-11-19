@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Running;
 using System;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters.Json;
@@ -93,7 +93,7 @@ namespace Benchmarks
         private class CsProjGeneratorWithNativeExe : CsProjGenerator
         {
             public CsProjGeneratorWithNativeExe(NetCoreAppSettings settings)
-                :base(settings.TargetFrameworkMoniker, settings.CustomDotNetCliPath, settings.PackagesPath, settings.RuntimeFrameworkVersion)
+                : base(settings.TargetFrameworkMoniker, settings.CustomDotNetCliPath, settings.PackagesPath, settings.RuntimeFrameworkVersion)
             {
             }
 

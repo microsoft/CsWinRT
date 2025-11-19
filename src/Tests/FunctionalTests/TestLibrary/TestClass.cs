@@ -1,4 +1,4 @@
-﻿using TestComponentCSharp;
+using TestComponentCSharp;
 
 namespace TestLibrary;
 

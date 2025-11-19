@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +29,6 @@ namespace ObjectLifetimeTests
         }
 
         public Panel Root => this._root;
-        
+
     }
 }
