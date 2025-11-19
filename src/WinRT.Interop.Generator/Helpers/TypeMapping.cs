@@ -16,6 +16,12 @@ internal static class TypeMapping
          string? Signature = null
     );
 
+    internal readonly record struct WindowsUIXamlMappedType(
+         string WinRTNamespace, // WinRT (ABI) namespace
+         string WinRTName,      // WinRT (ABI) type name (same as winrt_name)
+         string? Signature = null
+    );
+
     private static readonly Dictionary<string, MappedType[]> WinRTToABITypeMapping = new(StringComparer.Ordinal)
     {
         ["System"] =
@@ -133,23 +139,23 @@ internal static class TypeMapping
 
 
 
-    private static readonly Dictionary<string, MappedType> WindowsUIXamlProjectionTypeMapping = new(StringComparer.Ordinal)
+    private static readonly Dictionary<string, WindowsUIXamlMappedType> WindowsUIXamlProjectionTypeMapping = new(StringComparer.Ordinal)
     {
-        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new MappedType("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
-        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"] = new MappedType("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})"),
-        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction"] = new MappedType("NotifyCollectionChangedAction", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
-        ["Microsoft.UI.Xaml.Interop.INotifyCollectionChanged"] = new MappedType("INotifyCollectionChanged", "Windows.UI.Xaml.Interop", "INotifyCollectionChanged"),
-        ["Microsoft.UI.Xaml.Interop.IBindableIterable"] = new MappedType("IBindableIterable", "Windows.UI.Xaml.Interop", "IBindableIterable"),
-        ["Microsoft.UI.Xaml.Interop.IBindableVector"] = new MappedType("IBindableVector", "Windows.UI.Xaml.Interop", "IBindableVector"),
-        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new MappedType("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
+        ["Microsoft.UI.Xaml.Interop.INotifyCollectionChanged"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "INotifyCollectionChanged"),
+        ["Microsoft.UI.Xaml.Interop.IBindableIterable"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "IBindableIterable"),
+        ["Microsoft.UI.Xaml.Interop.IBindableVector"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "IBindableVector"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
 
-        ["Microsoft.UI.Xaml.Input.ICommand"] = new MappedType("ICommand", "Windows.UI.Xaml.Input", "ICommand"),
+        ["Microsoft.UI.Xaml.Input.ICommand"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Input", "ICommand"),
 
-        ["Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs"] = new MappedType("DataErrorsChangedEventArgs", "Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})"),
-        ["Microsoft.UI.Xaml.Data.INotifyDataErrorInfo"] = new MappedType("INotifyDataErrorInfo", "Windows.UI.Xaml.Data", "INotifyDataErrorInfo"),
-        ["Microsoft.UI.Xaml.Data.INotifyPropertyChanged"] = new MappedType("INotifyPropertyChanged", "Windows.UI.Xaml.Data", "INotifyPropertyChanged"),
-        ["Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"] = new MappedType("PropertyChangedEventArgs", "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})"),
-        ["Microsoft.UI.Xaml.Data.PropertyChangedEventHandler"] = new MappedType("PropertyChangedEventHandler", "Windows.UI.Xaml.Data", "PropertyChangedEventHandler")
+        ["Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})"),
+        ["Microsoft.UI.Xaml.Data.INotifyDataErrorInfo"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "INotifyDataErrorInfo"),
+        ["Microsoft.UI.Xaml.Data.INotifyPropertyChanged"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "INotifyPropertyChanged"),
+        ["Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})"),
+        ["Microsoft.UI.Xaml.Data.PropertyChangedEventHandler"] = new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "PropertyChangedEventHandler")
     };
 
 
