@@ -229,7 +229,7 @@ internal static class GuidGenerator
         AsmResolver.DotNet.TypeDefinition? typeDef = typeSig.Resolve();
         if (typeDef is not null)
         {
-            if (GetGuidFromAttribute(typeDef, out result))
+            if (GetGuidFromAttribute(typeDef, interopReferences, out result))
             {
                 return result;
             }
@@ -239,20 +239,14 @@ internal static class GuidGenerator
         //throw new ArgumentException("Type does not have a Guid attribute");
     }
 
-    private static bool GetGuidFromAttribute(TypeDefinition typeDef, out Guid guid)
+    private static bool GetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
     {
         guid = Guid.Empty;
-        if (typeDef.TryGetCustomAttribute("System.Runtime.InteropServices", "GuidAttribute", out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
         {
-            CustomAttributeSignature? customAttributeSignature = customAttribute.Signature;
-            if (customAttributeSignature is not null && customAttributeSignature.FixedArguments.Count != 0)
+            if (customAttribute.Signature is { FixedArguments: [{ Element: AsmResolver.Utf8String guidString }, ..] })
             {
-                object? first = customAttributeSignature.FixedArguments[0].Element;
-                // AsmResolver represents strings as System.String here.
-                if (first is AsmResolver.Utf8String s)
-                {
-                    return Guid.TryParse(s.Value, out guid);
-                }
+                return Guid.TryParse(guidString.Value, out guid);
             }
         }
         return false;
@@ -261,8 +255,7 @@ internal static class GuidGenerator
     private static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
     {
         defaultInterfaceSig = null!;
-        TypeReference windowsRuntimeDefaultInterfaceAttribute = interopReferences.WindowsRuntimeDefaultInterfaceAttribute;
-        if (typeDef.TryGetCustomAttribute(windowsRuntimeDefaultInterfaceAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
+        if (typeDef.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out AsmResolver.DotNet.CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
             {
