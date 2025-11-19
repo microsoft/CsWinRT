@@ -185,27 +185,33 @@ internal static class TypeMapping
         {
             return null;
         }
+
         if (!WinRTToABITypeMapping.TryGetValue(Namespace, out MappedType[]? results))
         {
             return null;
         }
+
         MappedType? result = results.FirstOrDefault(t => t.PublicName == Name);
+
         if (result is null)
         {
             return null;
         }
+
         string? resultSignature = result.Value.Signature;
+
         if (resultSignature is null)
         {
             return null;
         }
 
         string? resultFullName = result.Value.WinRTNamespace + "." + result.Value.WinRTName;
+
         if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(resultFullName))
         {
             resultSignature = WindowsUIXamlProjectionTypeMapping[resultFullName].Signature;
-
         }
+
         return resultSignature;
     }
 }
