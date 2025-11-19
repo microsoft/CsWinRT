@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
@@ -35,7 +35,7 @@ namespace UnitTest
         [Fact]
         public void TestHWND()
         {
-            var comInterop = (IComInterop) Class.ComInterop;
+            var comInterop = (IComInterop)Class.ComInterop;
             if (System.Environment.Is64BitProcess)
             {
                 var hwnd = new IntPtr(0x0123456789ABCDEF);
@@ -43,7 +43,7 @@ namespace UnitTest
                 var hwndValue = hwnd.ToInt64();
                 Assert.Equal(hwndValue, value);
             }
-            else 
+            else
             {
                 var hwnd = new IntPtr(0x01234567);
                 var value = comInterop.ReturnWindowHandle(hwnd, typeof(IComInterop).GUID);
@@ -55,7 +55,7 @@ namespace UnitTest
         [Fact]
         public void TestMockDragDropManager()
         {
-            var interop = (WinRT.Interop.IDragDropManagerInterop) Class.ComInterop;
+            var interop = (WinRT.Interop.IDragDropManagerInterop)Class.ComInterop;
             Guid iid = typeof(ICoreDragDropManager).GUID;
             var manager = interop.GetForWindow(new IntPtr(0), iid);
             Assert.NotNull(manager);
@@ -78,7 +78,7 @@ namespace UnitTest
         [Fact]
         public void TestInputPane()
         {
-           Assert.Throws<TypeInitializationException>(() => InputPaneInterop.GetForWindow(new IntPtr(0)));
+            Assert.Throws<TypeInitializationException>(() => InputPaneInterop.GetForWindow(new IntPtr(0)));
         }
 
         [Fact]
@@ -122,20 +122,20 @@ namespace UnitTest
         [Fact(Skip = "Compile-time only interop test")]
         public void TestSpatialInteractionManager()
         {
-           Assert.Throws<COMException>(() => SpatialInteractionManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.Throws<COMException>(() => SpatialInteractionManagerInterop.GetForWindow(new IntPtr(0)));
         }
 
         // Skipping this test as it raises non-catchable 'System.AccessViolationException' occurred in Windows.dll 
         [Fact(Skip = "Compile-time only interop test")]
         public void TestSystemMediaTransportControls()
         {
-           Assert.Throws<COMException>(() => SystemMediaTransportControlsInterop.GetForWindow(new IntPtr(0)));
+            Assert.Throws<COMException>(() => SystemMediaTransportControlsInterop.GetForWindow(new IntPtr(0)));
         }
 
         [Fact]
         public void TestUIViewSettings()
         {
-           Assert.Throws<COMException>(() => UIViewSettingsInterop.GetForWindow(new IntPtr(0)));
+            Assert.Throws<COMException>(() => UIViewSettingsInterop.GetForWindow(new IntPtr(0)));
         }
 
         [Fact]

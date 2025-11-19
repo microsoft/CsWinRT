@@ -1,7 +1,25 @@
 # Remove the line below if you want to inherit .editorconfig settings from higher directories
 root = true
 
+# All files
 [*]
+
+#### Core EditorConfig Options ####
+
+# Encoding
+charset = utf-8
+
+# Indentation and spacing
+tab_width = 4
+indent_size = 4
+indent_style = space
+
+# New line preferences
+end_of_line = crlf
+insert_final_newline = false
+trim_trailing_whitespace = true
+
+# Misc settings
 max_line_length=160
 file_header_template = Copyright (c) Microsoft Corporation.\r\nLicensed under the MIT License.
 

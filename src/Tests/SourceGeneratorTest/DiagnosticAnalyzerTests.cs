@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Generator;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SourceGeneratorTest.Helpers;

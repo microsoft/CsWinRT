@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -151,7 +151,7 @@ namespace ObjectLifetimeTests
                 })
                 .CallFromUIThread(() =>
                 {
-                 //Force a GC
+                    //Force a GC
                     GC_ForceCollect();
 
                     //System.Diagnostics.Debugger.Launch();

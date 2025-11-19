@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 
@@ -9,16 +9,16 @@ using System.Collections.Specialized;
 // to ensure we can build them without a reference to the Windows SDK projection.
 // This is to ensure we do our best to only generate for WinRT scenarios.
 
-char[] charValues = new[] {'a', 'b', 'c'};
-_= string.Join(',', charValues);
+char[] charValues = new[] { 'a', 'b', 'c' };
+_ = string.Join(',', charValues);
 
 _ = bool.Parse("true");
 
 string[] strValues = new[] { "a", "b", "c" };
-_= string.Concat(strValues);
+_ = string.Concat(strValues);
 
-List<string> strList = new List<string>(){ "a", "b", "c" };
-_= string.Concat(strList);
+List<string> strList = new List<string>() { "a", "b", "c" };
+_ = string.Concat(strList);
 
 // Test scenarios where we can't tell for sure whether
 // it is not a WinRT scenario so we will still generate. But if

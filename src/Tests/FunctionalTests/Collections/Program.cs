@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -341,7 +341,7 @@ if (sum != 7)
     return 101;
 }
 
-var nullableDoubleList = new List<double?>() { 1, 2, null, 3, 4, null};
+var nullableDoubleList = new List<double?>() { 1, 2, null, 3, 4, null };
 var result = instance.Calculate(nullableDoubleList);
 if (result != 10)
 {

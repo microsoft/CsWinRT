@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -75,7 +75,7 @@ handle.Close();
 
 handle = null;
 var getFolderFromPathAsync = Windows.Storage.StorageFolder.GetFolderFromPathAsync(folderPath);
-getFolderFromPathAsync.Completed += (s, e) => 
+getFolderFromPathAsync.Completed += (s, e) =>
 {
     handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "Async.pdb", FileMode.Open, FileAccess.Read);
 };
@@ -147,7 +147,7 @@ unsafe
 }
 
 bool progressCalledWithExpectedResults = false;
-var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) => 
+var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) =>
 {
     if (progress.BytesReceived == 3 && progress.TotalBytesToReceive == 4)
     {

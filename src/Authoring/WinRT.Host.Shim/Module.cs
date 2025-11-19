@@ -1,4 +1,4 @@
-﻿// TODO: consider embedding this as a resource into WinRT.Host.dll, 
+// TODO: consider embedding this as a resource into WinRT.Host.dll, 
 // to simplify deployment
 
 using System;
@@ -179,4 +179,3 @@ namespace WinRT.Host
 #endif
     }
 }
-

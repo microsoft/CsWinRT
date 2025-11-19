@@ -4,7 +4,7 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
-        
+
         private const string Valid_UnrelatedNamespaceWithNoPublicTypes = @"
 namespace DiagnosticTests
 {
@@ -332,7 +332,7 @@ namespace DiagnosticTests
     }
 }";
 
- private const string Valid_ListUsage2 = @"
+        private const string Valid_ListUsage2 = @"
 namespace DiagnosticTests 
 {
     public sealed class A
@@ -1612,7 +1612,7 @@ namespace DiagnosticTests
         public AnEnum value;
     }
 }";
-        
+
         private const string Valid_StructWithImportedStruct = @"
 using System.Numerics;
 namespace DiagnosticTests
@@ -1652,4 +1652,3 @@ namespace DiagnosticTests
 }";
     }
 }
-
