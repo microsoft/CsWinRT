@@ -174,6 +174,7 @@ internal static class TypeMapping
         {
             throw new ArgumentNullException("Namespace or Name is null");
         }
+
         if (!WinRTToABITypeMapping.TryGetValue(Namespace, out MappedType[]? results))
         {
             return Namespace + "." + Name;

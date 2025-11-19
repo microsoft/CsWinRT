@@ -80,37 +80,34 @@ internal static class GuidGenerator
             case ElementType.Type:
                 return "struct(Windows.UI.Xaml.Interop.222TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
             case ElementType.ValueType:
-                if (typeDefinition is not null)
+                if (typeDefinition.IsClass)
                 {
-                    if (typeDefinition.IsClass)
+                    // Enum case
+                    if (typeDefinition.IsEnum)
                     {
-                        // Enum case
-                        if (typeDefinition.IsEnum)
-                        {
-                            bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                            return "enum(" + typeFullNameMapped + ";" + (isFlags ? "u4" : "i4") + ")";
-                        }
-
-                        // Guid Case
-                        if (typeDefinition.IsGuid)
-                        {
-                            return "g16";
-                        }
-
-                        // Struct case
-                        IList<AsmResolver.DotNet.FieldDefinition> fieldDefinition = typeDefinition.Fields;
-                        List<string> typeArgumentSignatures = [];
-
-                        for (int i = 0; i < fieldDefinition.Count; i++)
-                        {
-                            if (!fieldDefinition[i].IsStatic)
-                            {
-                                FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
-                                typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
-                            }
-                        }
-                        return "struct(" + typeFullNameMapped + ";" + string.Join(";", typeArgumentSignatures) + ")";
+                        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
+                        return "enum(" + typeFullNameMapped + ";" + (isFlags ? "u4" : "i4") + ")";
                     }
+
+                    // Guid Case
+                    if (typeSignature.IsGuidType(interopReferences))
+                    {
+                        return "g16";
+                    }
+
+                    // Struct case
+                    IList<AsmResolver.DotNet.FieldDefinition> fieldDefinition = typeDefinition.Fields;
+                    List<string> typeArgumentSignatures = [];
+
+                    for (int i = 0; i < fieldDefinition.Count; i++)
+                    {
+                        if (!fieldDefinition[i].IsStatic)
+                        {
+                            FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
+                            typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
+                        }
+                    }
+                    return "struct(" + typeFullNameMapped + ";" + string.Join(";", typeArgumentSignatures) + ")";
                 }
 
                 throw new ArgumentException("Invalid ElementType.ValueType");
@@ -135,20 +132,17 @@ internal static class GuidGenerator
                 throw new ArgumentException("Invalid ElementType.GenericInst");
 
             case ElementType.Class:
-                if (typeDefinition is not null)
+                if (typeDefinition.IsClass)
                 {
-                    if (typeDefinition.IsClass)
-                    {
-                        return typeDefinition.IsDelegate
-                            ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
-                            : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, out TypeSignature defaultInterfaceSig)
-                                ? "rc(" + typeFullNameMapped + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
-                                : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
-                    }
-                    if (typeDefinition.IsInterface) // interface case
-                    {
-                        return "{" + GetGuid(typeSignature, interopReferences) + "}";
-                    }
+                    return typeDefinition.IsDelegate
+                        ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
+                        : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, out TypeSignature defaultInterfaceSig)
+                            ? "rc(" + typeFullNameMapped + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
+                            : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
+                }
+                if (typeDefinition.IsInterface) // interface case
+                {
+                    return "{" + GetGuid(typeSignature, interopReferences) + "}";
                 }
 
                 throw new ArgumentException("Invalid ElementType.Class");
@@ -218,10 +212,6 @@ internal static class GuidGenerator
             {
                 return result;
             }
-            //else
-            //{
-            //    //throw new ArgumentException("Type does not have a Guid attribute"); 
-            //}
         }
 
         return Guid.Empty; // TODO: don'turn empty guid but throw instead like below. Currently, not all the types we need to be filtered are not filtered out such as System.Reflection.* types.

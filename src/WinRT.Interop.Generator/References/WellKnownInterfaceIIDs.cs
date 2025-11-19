@@ -80,6 +80,7 @@ internal static class WellKnownInterfaceIIDs
             GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
             _ => signature.ToTypeDefOrRef(),
         };
+
         return type switch
         {
             // Shared types
