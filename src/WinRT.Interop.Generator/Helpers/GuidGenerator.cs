@@ -27,21 +27,24 @@ internal static class GuidGenerator
     /// <param name="interopReferences">
     /// Interop metadata used to resolve GUIDs for interfaces, delegates, and generics.
     /// </param>
+    /// <param name="useWindowsUIXamlProjections">Boolean on whether to use Windows.UI.Xaml namespace</param>
     /// <returns>
     /// A WinRT signature string representing the given type.
     /// </returns>
     internal static string GetSignature(
             TypeSignature typeSignature,
-            InteropReferences interopReferences)
+            InteropReferences interopReferences,
+            bool useWindowsUIXamlProjections)
     {
-        string? mappedSignature = TypeMapping.FindGuidSignatureForMappedType(typeSignature.Namespace, typeSignature.Name);
+        string? mappedSignature = TypeMapping.FindGuidSignatureForMappedType(typeSignature.Namespace, typeSignature.Name, useWindowsUIXamlProjections);
 
         if (mappedSignature is not null)
         {
             return mappedSignature;
         }
 
-        AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()!;
+        AsmResolver.DotNet.TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
+        string typeFullNameMapped = (typeDefinition.Namespace is null || typeDefinition.Name is null) ? typeDefinition.FullName : TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name, useWindowsUIXamlProjections);
 
         switch (typeSignature.ElementType)
         {
@@ -85,7 +88,7 @@ internal static class GuidGenerator
                         if (typeDefinition.IsEnum)
                         {
                             bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                            return "enum(" + typeDefinition.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+                            return "enum(" + typeFullNameMapped + ";" + (isFlags ? "u4" : "i4") + ")";
                         }
 
                         // Guid Case
@@ -103,13 +106,10 @@ internal static class GuidGenerator
                             if (!fieldDefinition[i].IsStatic)
                             {
                                 FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
-                                typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences));
+                                typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
                             }
                         }
-
-                        return typeDefinition.Namespace is null || typeDefinition.Name is null
-                            ? "struct(" + typeDefinition.FullName + ";" + string.Join(";", typeArgumentSignatures) + ")"
-                            : "struct(" + TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name) + ";" + string.Join(";", typeArgumentSignatures) + ")";
+                        return "struct(" + typeFullNameMapped + ";" + string.Join(";", typeArgumentSignatures) + ")";
                     }
                 }
 
@@ -126,7 +126,7 @@ internal static class GuidGenerator
 
                     for (int i = 0; i < typeArugmentList.Count; i++)
                     {
-                        typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences);
+                        typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences, useWindowsUIXamlProjections);
                     }
 
                     return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
@@ -142,7 +142,7 @@ internal static class GuidGenerator
                         return typeDefinition.IsDelegate
                             ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
                             : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, out TypeSignature defaultInterfaceSig)
-                                ? "rc(" + typeDefinition.FullName + ";" + GetSignature(defaultInterfaceSig, interopReferences) + ")" // Class case with default interface
+                                ? "rc(" + typeFullNameMapped + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
                                 : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
                     }
                     if (typeDefinition.IsInterface) // interface case
@@ -158,7 +158,7 @@ internal static class GuidGenerator
 
                 if (arrayTypeSignature != null)
                 {
-                    return "pinterface({61c17707-2d65-11e0-9ae8-d48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences) + ")";
+                    return "pinterface({61c17707-2d65-11e0-9ae8-d48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences, useWindowsUIXamlProjections) + ")";
                 }
 
                 throw new ArgumentException("Invalid ElementType.SzArray");
@@ -288,22 +288,22 @@ internal static class GuidGenerator
 
 
     // TODO: Debug code; Will remove later
-//#pragma warning disable IDE0044 // Add readonly modifier
-//    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
-//    private static HashSet<TypeSignature> generatedIIDs = [];
-//    private static StreamWriter writer = new(printPath, append: false);
-//#pragma warning restore IDE0044 // Add readonly modifier
+#pragma warning disable IDE0044 // Add readonly modifier
+    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
+    private static HashSet<TypeSignature> generatedIIDs = [];
+    private static StreamWriter writer = new(printPath, append: false);
+#pragma warning restore IDE0044 // Add readonly modifier
 
-    public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences)
+    public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
-        string signature = GetSignature(type, interopReferences);
+        string signature = GetSignature(type, interopReferences, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
-        // TODO: Debug code; Will remove later
-        //if (!generatedIIDs.Contains(type))
-        //{
-        //    writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
-        //    _ = generatedIIDs.Add(type);
-        //}
+        //TODO: Debug code; Will remove later
+        if (!generatedIIDs.Contains(type))
+        {
+            writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
+            _ = generatedIIDs.Add(type);
+        }
         return guid;
     }
 

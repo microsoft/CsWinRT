@@ -49,19 +49,11 @@ internal static class TypeMapping
             new MappedType("INotifyPropertyChanged", "Microsoft.UI.Xaml.Data", "INotifyPropertyChanged"),
             new MappedType("PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs;{63d0c952-396b-54f4-af8c-ba8724a427bf})"),
             new MappedType("PropertyChangedEventHandler", "Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler"),
-
-            //new MappedType("DataErrorsChangedEventArgs", "Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs"),
-            //new MappedType("INotifyDataErrorInfo", "Windows.UI.Xaml.Data", "INotifyDataErrorInfo"),
-            //new MappedType("INotifyPropertyChanged", "Windows.UI.Xaml.Data", "INotifyPropertyChanged"),
-            //new MappedType("PropertyChangedEventArgs", "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})"),
-            //new MappedType("PropertyChangedEventHandler", "Windows.UI.Xaml.Data", "PropertyChangedEventHandler"),
         ],
 
         ["System.Windows.Input"] =
         [
             new MappedType("ICommand", "Microsoft.UI.Xaml.Input", "ICommand"),
-
-            //new MappedType("ICommand", "Windows.UI.Xaml.Input", "ICommand"),
         ],
 
 
@@ -70,8 +62,6 @@ internal static class TypeMapping
             new MappedType("IEnumerable", "Microsoft.UI.Xaml.Interop", "IBindableIterable"),
             new MappedType("IList", "Microsoft.UI.Xaml.Interop", "IBindableVector"),
 
-            //new MappedType("IBindableIterable", "Windows.UI.Xaml.Interop", "IBindableIterable"),
-            //new MappedType("IBindableVector", "Windows.UI.Xaml.Interop", "IBindableVector"),
         ],
 
         ["System.Collections.Specialized"] =
@@ -80,11 +70,6 @@ internal static class TypeMapping
             new MappedType("NotifyCollectionChangedAction", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction" , "enum(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
             new MappedType("NotifyCollectionChangedEventArgs", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{da049ff2-d2e0-5fe8-8c7b-f87f26060b6f})"),
             new MappedType("NotifyCollectionChangedEventHandler", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
-
-            //new MappedType("INotifyCollectionChanged", "Windows.UI.Xaml.Interop", "INotifyCollectionChanged"),
-            //new MappedType("NotifyCollectionChangedAction", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction" , "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
-            //new MappedType("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs" , "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})"),
-            //new MappedType("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
         ],
 
         ["Microsoft.UI.Xaml"] =
@@ -146,7 +131,30 @@ internal static class TypeMapping
         ]
     };
 
-    internal static string FindMappedWinRTFullName(string? Namespace, string? Name)
+
+
+    private static readonly Dictionary<string, MappedType> WindowsUIXamlProjectionTypeMapping = new(StringComparer.Ordinal)
+    {
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new MappedType("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"] = new MappedType("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction"] = new MappedType("NotifyCollectionChangedAction", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
+        ["Microsoft.UI.Xaml.Interop.INotifyCollectionChanged"] = new MappedType("INotifyCollectionChanged", "Windows.UI.Xaml.Interop", "INotifyCollectionChanged"),
+        ["Microsoft.UI.Xaml.Interop.IBindableIterable"] = new MappedType("IBindableIterable", "Windows.UI.Xaml.Interop", "IBindableIterable"),
+        ["Microsoft.UI.Xaml.Interop.IBindableVector"] = new MappedType("IBindableVector", "Windows.UI.Xaml.Interop", "IBindableVector"),
+        ["Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"] = new MappedType("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler"),
+
+        ["Microsoft.UI.Xaml.Input.ICommand"] = new MappedType("ICommand", "Windows.UI.Xaml.Input", "ICommand"),
+
+        ["Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs"] = new MappedType("DataErrorsChangedEventArgs", "Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})"),
+        ["Microsoft.UI.Xaml.Data.INotifyDataErrorInfo"] = new MappedType("INotifyDataErrorInfo", "Windows.UI.Xaml.Data", "INotifyDataErrorInfo"),
+        ["Microsoft.UI.Xaml.Data.INotifyPropertyChanged"] = new MappedType("INotifyPropertyChanged", "Windows.UI.Xaml.Data", "INotifyPropertyChanged"),
+        ["Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"] = new MappedType("PropertyChangedEventArgs", "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})"),
+        ["Microsoft.UI.Xaml.Data.PropertyChangedEventHandler"] = new MappedType("PropertyChangedEventHandler", "Windows.UI.Xaml.Data", "PropertyChangedEventHandler")
+    };
+
+
+
+    internal static string FindMappedWinRTFullName(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
     {
         if (Namespace is null || Name is null)
         {
@@ -158,12 +166,14 @@ internal static class TypeMapping
         }
 
         // Match the default struct case by checking PublicName for non-null
-        return results.FirstOrDefault(t => t.PublicName == Name) is { PublicName: not null } found
-            ? found.WinRTNamespace + "." + found.WinRTName
-            : Namespace + "." + Name;
+        string? result = results.FirstOrDefault(t => t.PublicName == Name) is { PublicName: not null } found ? found.WinRTNamespace + "." + found.WinRTName : null;
+        return result is null
+            ? Namespace + "." + Name
+            : (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(result))
+                ? WindowsUIXamlProjectionTypeMapping[result].WinRTNamespace + "." + WindowsUIXamlProjectionTypeMapping[result].WinRTName : result;
     }
 
-    internal static string? FindGuidSignatureForMappedType(string? Namespace, string? Name)
+    internal static string? FindGuidSignatureForMappedType(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
     {
         if (Namespace is null || Name is null)
         {
@@ -173,10 +183,23 @@ internal static class TypeMapping
         {
             return null;
         }
+        MappedType? result = results.FirstOrDefault(t => t.PublicName == Name);
+        if (result is null)
+        {
+            return null;
+        }
+        string? resultSignature = result.Value.Signature;
+        if (resultSignature is null)
+        {
+            return null;
+        }
 
-        // Match the default struct case by checking PublicName for non-null
-        return results.FirstOrDefault(t => t.PublicName == Name) is { PublicName: not null } found
-            ? found.Signature
-            : null;
+        string? resultFullName = result.Value.WinRTNamespace + "." + result.Value.WinRTName;
+        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(resultFullName))
+        {
+            resultSignature = WindowsUIXamlProjectionTypeMapping[resultFullName].Signature;
+
+        }
+        return resultSignature;
     }
 }

@@ -27,12 +27,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Boolean on whether to use Windows.UI.Xaml namespace</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="operationType"/>.</param>
         public static void IID(
             GenericInstanceTypeSignature operationType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
@@ -40,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(operationType, interopReferences),
+                iid: GuidGenerator.CreateIID(operationType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
         }
 

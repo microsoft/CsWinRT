@@ -29,6 +29,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Boolean on whether to use Windows.UI.Xaml namespace</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         public static void IIDs(
@@ -36,6 +37,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod,
             out MethodDefinition get_ReferenceIidMethod)
         {
@@ -45,7 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType, interopReferences),
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
             // 'IReference<T>' IID
@@ -54,7 +56,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType, interopReferences),
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
 
