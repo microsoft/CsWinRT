@@ -85,67 +85,64 @@ internal static class WellKnownInterfaceIIDs
         guid = interfaceType switch
         {
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler)
-                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
+                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler1)
-                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
+                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler2)
-                => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
+                => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.KeyValuePair2)
-                => new Guid("02b51929-c1c4-4a7e-8940-0312b5c18500"),
+                => new Guid("02B51929-C1C4-4A7E-8940-0312B5C18500"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
-                => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
+                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable1)
-                => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
+                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
-                => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
+                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator1)
-                => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
+                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
-                => new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"),
+                => new Guid("C2D078D8-AC47-55AB-83E8-123B2BE5BC5A"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationCompletedHandler1)
-                => new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"),
+                => new Guid("9D534225-231F-55E7-A6D0-6C938E2D9160"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.MapChangedEventHandler2)
-                => new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"),
+                => new Guid("19046F0B-CF81-5DEC-BBB2-7CC250DA8B8B"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
-                => new Guid("393de7de-6fd0-4c0d-bb71-47244a113e93"), // Unsure of this one
+                => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"), // Unsure of this one
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList1)
-                => new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), // Unsure of this one
+                => new Guid("0E3F106F-A266-50A1-8043-C90FCF3844F6"), // Unsure of this one
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyList1)
-                => new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), // Unsure of this one
+                => new Guid("5F07498B-8E14-556E-9D2E-2E98D5615DA9"), // Unsure of this one
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyDictionary2)
-                => new Guid("b78f0653-fa89-59cf-ba95-726938aae666"),
+                => new Guid("B78F0653-FA89-59CF-BA95-726938AAE666"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDictionary2)
-                => new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"),
+                => new Guid("9962CD50-09D5-5C46-B1E1-3C679C1C8FAE"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable)
-                => new Guid("61c17706-2d65-11e0-9ae8-d48564015472"),
+                => new Guid("61C17706-2D65-11E0-9AE8-D48564015472"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncActionWithProgress1)
-                => new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"),
+                => new Guid("DD725452-2DA3-5103-9C7D-22EE9BB14AD3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperationWithProgress2)
-                => new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"),
+                => new Guid("94645425-B9E5-5B91-B509-8DA4DF6A8916"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler1)
-                => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
+                => new Guid("264F1E0C-ABE4-590B-9D37-E1CC118ECC75"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler2)
-                => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
+                => new Guid("264F1E0C-ABE4-590B-9D37-E1CC118ECC75"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionWithProgressCompletedHandler1)
-                => new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"),
+                => new Guid("9A0D211C-0374-5D23-9E15-EAA3570FAE63"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableVector1)
-                => new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"),
+                => new Guid("D24C289F-2341-5128-AAA1-292DD0DC1950"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableMap2)
-                => new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"),
+                => new Guid("75F99E2A-137E-537E-A5B1-0B5A6245FC02"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperation1)
-                => new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"),
+                => new Guid("2BD35EE6-72D9-5C5D-9827-05EBB81487AB"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.VectorChangedEventHandler1)
-                => new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"),
+                => new Guid("A1E9ACD7-E4DF-5A79-AEFA-DE07934AB0FB"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionProgressHandler1)
-                => new Guid("c261d8d0-71ba-5f38-a239-872342253a18"),
+                => new Guid("C261D8D0-71BA-5F38-A239-872342253A18"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
-                => new Guid("575933df-34fe-4480-af15-07691f3d5d9b"),
+                => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
             _ => Guid.Empty
         };
 
         return guid != Guid.Empty;
     }
 }
-
-
-
