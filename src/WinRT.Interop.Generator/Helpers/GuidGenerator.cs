@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -207,7 +208,7 @@ internal static class GuidGenerator
             GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
             _ => typeSig.ToTypeDefOrRef(),
         };
-        if (WellKnownInterfaceIIDs.try_GetGUID(typeDefOrRef, interopReferences, out Guid result))
+        if (WellKnownInterfaceIIDs.TryGetGUID(typeDefOrRef, interopReferences, out Guid result))
         {
             return result;
         }
@@ -234,14 +235,14 @@ internal static class GuidGenerator
     /// <returns><c>true</c> if a valid GUID was found and parsed; otherwise, <c>false</c>.</returns>
     private static bool GetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
     {
-        guid = Guid.Empty;
         if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
         {
-            if (customAttribute.Signature is { FixedArguments: [{ Element: AsmResolver.Utf8String guidString }, ..] })
+            if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
             {
                 return Guid.TryParse(guidString.Value, out guid);
             }
         }
+        guid = Guid.Empty;
         return false;
     }
 
@@ -255,7 +256,6 @@ internal static class GuidGenerator
     /// <returns><c>true</c> if the default interface signature was found; otherwise, <c>false</c>.</returns>
     private static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
     {
-        defaultInterfaceSig = null!;
         if (typeDef.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
@@ -264,6 +264,7 @@ internal static class GuidGenerator
                 return true;
             }
         }
+        defaultInterfaceSig = null!;
         return false;
     }
 

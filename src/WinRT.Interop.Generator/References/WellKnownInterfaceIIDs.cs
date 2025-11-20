@@ -77,7 +77,7 @@ internal static class WellKnownInterfaceIIDs
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="guid">Out parameter for the resolved <see cref="Guid"/> of the type. </param>
     /// <returns><c>true</c> if a matching GUID was found; otherwise, <c>false</c>.</returns>
-    public static bool try_GetGUID(
+    public static bool TryGetGUID(
         ITypeDescriptor interfaceType,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out Guid guid)
