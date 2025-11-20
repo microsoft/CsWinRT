@@ -318,7 +318,7 @@ internal static class GuidGenerator
         _ = wrt_pinterface_namespace.TryWriteBytes(utf8Bytes);
 
         int encodedUtf8BytesWritten = Encoding.UTF8.GetBytes(signature, utf8Bytes[16..]);
-        Span<byte> sha1Bytes = stackalloc byte[20]; // 'SHA1.HashSizeInBytes' does not exist on .NET 6, update this when that's dropped
+        Span<byte> sha1Bytes = stackalloc byte[SHA1.HashSizeInBytes];
 
         // Hash the encoded signature (the bytes written are guaranteed to always match the span)
         _ = SHA1.HashData(utf8Bytes[..(16 + encodedUtf8BytesWritten)], sha1Bytes);
