@@ -201,7 +201,13 @@ internal static class GuidGenerator
     /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
     private static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
     {
-        if (WellKnownInterfaceIIDs.try_GetGUID(typeSig, interopReferences, out Guid result))
+        ITypeDefOrRef typeDefOrRef = typeSig switch
+        {
+            SzArrayTypeSignature szArrayTypeSignature => szArrayTypeSignature.GetUnderlyingType().ToTypeDefOrRef(),
+            GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
+            _ => typeSig.ToTypeDefOrRef(),
+        };
+        if (WellKnownInterfaceIIDs.try_GetGUID(typeDefOrRef, interopReferences, out Guid result))
         {
             return result;
         }

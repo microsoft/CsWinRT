@@ -74,80 +74,72 @@ internal static class WellKnownInterfaceIIDs
     /// <summary>
     /// Attempts to resolve a well-known Windows Runtime interface GUID for the specified type signature.
     /// </summary>
-    /// <param name="signature"> The <see cref="TypeSignature"/> representing the managed type to inspect. Arrays and generic instances
-    /// are normalized to their underlying type before comparison.</param>
+    /// <param name="interfaceType"> The <see cref="ITypeDescriptor"/> representing the managed type to inspect</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="guid">Out parameter for the resolved <see cref="Guid"/> of the type. </param>
     /// <returns><c>true</c> if a matching GUID was found; otherwise, <c>false</c>.</returns>
     public static bool try_GetGUID(
-        TypeSignature signature,
+        ITypeDescriptor interfaceType,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out Guid guid)
     {
-        ITypeDefOrRef type = signature switch
+        guid = interfaceType switch
         {
-            SzArrayTypeSignature szArrayTypeSignature => szArrayTypeSignature.GetUnderlyingType().ToTypeDefOrRef(),
-            GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
-            _ => signature.ToTypeDefOrRef(),
-        };
-
-        guid = type switch
-        {
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler)
                 => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler1)
                 => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler2)
                 => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.KeyValuePair2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.KeyValuePair2)
                 => new Guid("02b51929-c1c4-4a7e-8940-0312b5c18500"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
                 => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable1)
                 => new Guid("faa585ea-6214-4217-afda-7f46de5869b3"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
                 => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator1)
                 => new Guid("6a79e863-4300-459a-9966-cbb660963ee1"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
                 => new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationCompletedHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationCompletedHandler1)
                 => new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.MapChangedEventHandler2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.MapChangedEventHandler2)
                 => new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
                 => new Guid("393de7de-6fd0-4c0d-bb71-47244a113e93"), // Unsure of this one
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList1)
                 => new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), // Unsure of this one
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyList1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyList1)
                 => new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), // Unsure of this one
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyDictionary2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyDictionary2)
                 => new Guid("b78f0653-fa89-59cf-ba95-726938aae666"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDictionary2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDictionary2)
                 => new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Nullable)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable)
                 => new Guid("61c17706-2d65-11e0-9ae8-d48564015472"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncActionWithProgress1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncActionWithProgress1)
                 => new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperationWithProgress2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperationWithProgress2)
                 => new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationProgressHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler1)
                 => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationProgressHandler2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler2)
                 => new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionWithProgressCompletedHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionWithProgressCompletedHandler1)
                 => new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableVector1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableVector1)
                 => new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableMap2)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableMap2)
                 => new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperation1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperation1)
                 => new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.VectorChangedEventHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.VectorChangedEventHandler1)
                 => new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionProgressHandler1)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionProgressHandler1)
                 => new Guid("c261d8d0-71ba-5f38-a239-872342253a18"),
-            _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
                 => new Guid("575933df-34fe-4480-af15-07691f3d5d9b"),
             _ => Guid.Empty
         };
