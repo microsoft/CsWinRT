@@ -156,16 +156,15 @@ internal static class GuidGenerator
             case ElementType.Class:
                 if (typeDefinition.IsClass)
                 {
-                    if (typeDefinition.IsDelegate)
+                    if (typeDefinition.IsDelegate) // delegate case
                     {
-                        return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})"; // Class case without default interface
+                        return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})";
                     }
-                    else
-                    {
-                        return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig) ?
-                            "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
-                            "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface 
-                    }
+                    // class case
+
+                    return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig) ?
+                        "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
+                        "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface 
                 }
                 if (typeDefinition.IsInterface) // interface case
                 {
