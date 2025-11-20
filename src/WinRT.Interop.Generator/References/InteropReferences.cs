@@ -136,7 +136,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Nullable"/>.
     /// </summary>
-    public TypeReference Nullable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
+    public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.

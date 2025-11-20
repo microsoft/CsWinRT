@@ -116,7 +116,7 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("B78F0653-FA89-59CF-BA95-726938AAE666"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDictionary2)
                 => new Guid("9962CD50-09D5-5C46-B1E1-3C679C1C8FAE"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable)
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable1)
                 => new Guid("61C17706-2D65-11E0-9AE8-D48564015472"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncActionWithProgress1)
                 => new Guid("DD725452-2DA3-5103-9C7D-22EE9BB14AD3"),
