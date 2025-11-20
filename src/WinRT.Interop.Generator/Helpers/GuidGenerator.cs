@@ -148,7 +148,7 @@ internal static class GuidGenerator
                         typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences, useWindowsUIXamlProjections);
                     }
 
-                    return "pinterface({" + GetGuid(typeSignature, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
+                    return "pinterface({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(genericTypeSignature.GenericType, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
                 }
 
                 throw new ArgumentException("Invalid ElementType.GenericInst");
@@ -156,15 +156,20 @@ internal static class GuidGenerator
             case ElementType.Class:
                 if (typeDefinition.IsClass)
                 {
-                    return typeDefinition.IsDelegate
-                        ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
-                        : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig)
-                            ? "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
-                            : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
+                    if (typeDefinition.IsDelegate)
+                    {
+                        return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})"; // Class case without default interface
+                    }
+                    else
+                    {
+                        return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig) ?
+                            "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
+                            "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface 
+                    }
                 }
                 if (typeDefinition.IsInterface) // interface case
                 {
-                    return "{" + GetGuid(typeSignature, interopReferences) + "}";
+                    return "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}";
                 }
 
                 throw new ArgumentException("Invalid ElementType.Class");
@@ -190,8 +195,8 @@ internal static class GuidGenerator
     /// Resolves a GUID for the specified type signature by checking well-known WinRT interfaces
     /// and, if necessary, the type's <c>System.Runtime.InteropServices.GuidAttribute</c>.
     /// </summary>
-    /// <param name="typeSig">
-    /// The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to resolve to a GUID.
+    /// <param name="typeDefOrRef">
+    /// The <see cref="AsmResolver.DotNet.ITypeDefOrRef"/> to resolve to a GUID.
     /// </param>
     /// <param name="interopReferences">
     /// The <see cref="InteropReferences"/> instance to use.
@@ -200,23 +205,17 @@ internal static class GuidGenerator
     /// The resolved <see cref="Guid"/> if found.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
-    private static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
+    private static Guid GetGuidFromWellKnownInterfaceIIDsOrAttribute(ITypeDefOrRef typeDefOrRef, InteropReferences interopReferences)
     {
-        ITypeDefOrRef typeDefOrRef = typeSig switch
-        {
-            SzArrayTypeSignature szArrayTypeSignature => szArrayTypeSignature.GetUnderlyingType().ToTypeDefOrRef(),
-            GenericInstanceTypeSignature genericSignature => genericSignature.GenericType,
-            _ => typeSig.ToTypeDefOrRef(),
-        };
         if (WellKnownInterfaceIIDs.TryGetGUID(typeDefOrRef, interopReferences, out Guid result))
         {
             return result;
         }
 
-        TypeDefinition? typeDef = typeSig.Resolve();
+        TypeDefinition? typeDef = typeDefOrRef.Resolve();
         if (typeDef is not null)
         {
-            if (GetGuidFromAttribute(typeDef, interopReferences, out result))
+            if (TryGetGuidFromAttribute(typeDef, interopReferences, out result))
             {
                 return result;
             }
@@ -233,7 +232,7 @@ internal static class GuidGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="guid">When this method returns <c>true</c>, contains the parsed GUID value.</param>
     /// <returns><c>true</c> if a valid GUID was found and parsed; otherwise, <c>false</c>.</returns>
-    private static bool GetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
+    private static bool TryGetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out Guid guid)
     {
         if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
         {
@@ -254,7 +253,7 @@ internal static class GuidGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="defaultInterfaceSig">When this method returns <c>true</c>, contains the default interface type signature.</param>
     /// <returns><c>true</c> if the default interface signature was found; otherwise, <c>false</c>.</returns>
-    private static bool GetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
+    private static bool TryGetDefaultInterfaceSignatureFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature defaultInterfaceSig)
     {
         if (typeDef.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
         {
