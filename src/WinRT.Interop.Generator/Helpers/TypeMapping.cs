@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Frozen;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -12,235 +10,177 @@ internal static class TypeMapping
 {
     /// <summary>
     /// Represents a mapping from a CLR/public type name to its Windows Runtime (ABI) counterpart,
-    /// optionally including the WinRT type signature used for GUID generation and marshalling.
+    /// optionally including the hardcoded WinRT type signature used for GUID generation and marshalling.
     /// </summary>
-    /// <variable name="PublicName">The CLR/public type name.</variable>
     /// <variable name="WindowsRuntimeNamespace">The Windows Runtime namespace.</variable>
     /// <variable name="WindowsRuntimeName">The Windows Runtime type name.</variable>
     /// <variable name="Signature">Optional hardcoded WinRT type signature</variable>
     internal readonly record struct MappedType(
-         string PublicName,
          string WindowsRuntimeNamespace,
          string WindowsRuntimeName,
          string? Signature = null
     );
 
     /// <summary>
-    /// Represents a mapping from a projected Microsoft.UI.Xaml type to the Windows.UI.Xaml counterpart.
-    /// </summary>
-    /// <variable name="WindowsRuntimeNamespace">The Windows.UI.Xaml namespace.</variable>
-    /// <variable name="WindowsRuntimeName">The Windows.UI.Xaml type name.</variable>
-    /// <variable name="Signature">Optional hardcoded WinRT type signature</variable>
-    internal readonly record struct WindowsUIXamlMappedType(
-         string WindowsRuntimeNamespace,
-         string WindowsRuntimeName,
-         string? Signature = null
-    );
-
-    /// <summary>
-    /// Immutable map from CLR namespaces to the set of CLR→Windows Runtime type mappings.
-    /// Keys are CLR namespaces (e.g., "System"), and values are the materialized mappings for types
+    /// Immutable map from CLR fullnames to the set of CLR→Windows Runtime type mappings.
+    /// Keys are CLR fullnames (e.g., "System.String"), and values are the materialized mappings for types
     /// within that namespace.
-    /// 
-    /// This should be in sync with the mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-    /// 
     /// </summary>
-    private static readonly FrozenDictionary<string, ImmutableArray<MappedType>> WinRTToABITypeMapping = FrozenDictionary.Create<string, ImmutableArray<MappedType>>(comparer: null,
-        new("System", [
-            new("IServiceProvider", "Microsoft.UI.Xaml", "IXamlServiceProvider"),
-            new("IntPtr", "WinRT.Interop", "HWND"),
-            new("DateTimeOffset", "Windows.Foundation", "DateTime", "struct(Windows.Foundation.DateTime;i8)"),
-            new("EventHandler`1", "Windows.Foundation", "EventHandler`1"),
-            new("Exception", "Windows.Foundation", "HResult", "struct(Windows.Foundation.HResult;i4)"),
-            new("IDisposable", "Windows.Foundation", "IClosable"),
-            new("Nullable`1", "Windows.Foundation", "IReference`1"),
-            new("TimeSpan", "Windows.Foundation", "TimeSpan", "struct(Windows.Foundation.TimeSpan;i8)"),
-            new("EventHandler`2", "Windows.Foundation", "TypedEventHandler`2"),
-            new("Uri", "Windows.Foundation", "Uri", "rc(Windows.Foundation.Uri;{9e365e57-48b2-4160-956f-c7385120bbfc})"),
+    /// <remarks>
+    /// This should be in sync with the mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
+    /// </remarks>
+    private static readonly FrozenDictionary<string, MappedType> WinRTToABITypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
+        new("System.IServiceProvider", new("Microsoft.UI.Xaml", "IXamlServiceProvider")),
+        new("System.IntPtr", new("WinRT.Interop", "HWND")),
+        new("System.DateTimeOffset", new("Windows.Foundation", "DateTime", "struct(Windows.Foundation.DateTime;i8)")),
+        new("System.EventHandler`1", new("Windows.Foundation", "EventHandler`1")),
+        new("System.Exception", new("Windows.Foundation", "HResult", "struct(Windows.Foundation.HResult;i4)")),
+        new("System.IDisposable", new("Windows.Foundation", "IClosable")),
+        new("System.Nullable`1", new("Windows.Foundation", "IReference`1")),
+        new("System.TimeSpan", new("Windows.Foundation", "TimeSpan", "struct(Windows.Foundation.TimeSpan;i8)")),
+        new("System.EventHandler`2", new("Windows.Foundation", "TypedEventHandler`2")),
+        new("System.Uri", new("Windows.Foundation", "Uri", "rc(Windows.Foundation.Uri;{9e365e57-48b2-4160-956f-c7385120bbfc})")),
+        new("System.AttributeTargets", new("Windows.Foundation.Metadata", "AttributeTargets")),
+        new("System.AttributeUsageAttribute", new("Windows.Foundation.Metadata", "AttributeUsageAttribute")),
+        new("System.Type", new("Windows.UI.Xaml.Interop", "TypeName", "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4)")),
 
-            new("AttributeTargets", "Windows.Foundation.Metadata", "AttributeTargets"),
-            new("AttributeUsageAttribute", "Windows.Foundation.Metadata", "AttributeUsageAttribute"),
+        new("System.ComponentModel.DataErrorsChangedEventArgs", new("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
+        new("System.ComponentModel.INotifyDataErrorInfo", new("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo")),
+        new("System.ComponentModel.INotifyPropertyChanged", new("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged")),
+        new("System.ComponentModel.PropertyChangedEventArgs", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs;{63d0c952-396b-54f4-af8c-ba8724a427bf})")),
+        new("System.ComponentModel.PropertyChangedEventHandler", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler")),
 
-            new("IServiceProvider", "Windows.UI.Xaml", "IXamlServiceProvider"),
+        new("System.Windows.Input.ICommand", new("Microsoft.UI.Xaml.Input", "ICommand")),
 
-            new("Type", "Windows.UI.Xaml.Interop", "TypeName", "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))"),
-       ]),
+        new("System.Collections.IEnumerable", new("Microsoft.UI.Xaml.Interop", "IBindableIterable")),
+        new("System.Collections.IList", new("Microsoft.UI.Xaml.Interop", "IBindableVector")),
 
-       new("System.ComponentModel", [
-            new("DataErrorsChangedEventArgs", "Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})"),
-            new("INotifyDataErrorInfo", "Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo"),
-            new("INotifyPropertyChanged", "Microsoft.UI.Xaml.Data", "INotifyPropertyChanged"),
-            new("PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs;{63d0c952-396b-54f4-af8c-ba8724a427bf})"),
-            new("PropertyChangedEventHandler", "Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler")
-       ]),
+        new("System.Collections.Specialized.INotifyCollectionChanged", new("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged")),
+        new("System.Collections.Specialized.NotifyCollectionChangedAction", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
+        new("System.Collections.Specialized.NotifyCollectionChangedEventArgs", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{da049ff2-d2e0-5fe8-8c7b-f87f26060b6f})")),
+        new("System.Collections.Specialized.NotifyCollectionChangedEventHandler", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
 
-        new("System.Windows.Input", [
-            new("ICommand", "Microsoft.UI.Xaml.Input", "ICommand")
-        ]),
+        new("Microsoft.UI.Xaml.CornerRadius", new("Microsoft.UI.Xaml", "CornerRadius")),
+        new("Microsoft.UI.Xaml.Duration", new("Microsoft.UI.Xaml", "Duration")),
+        new("Microsoft.UI.Xaml.GridLength", new("Microsoft.UI.Xaml", "GridLength")),
 
-        new("System.Collections",
-        [
-            new("IEnumerable", "Microsoft.UI.Xaml.Interop", "IBindableIterable"),
-            new("IList", "Microsoft.UI.Xaml.Interop", "IBindableVector")
-,
-        ]),
+        new("Microsoft.UI.Xaml.Media.Animation.KeyTime", new("Microsoft.UI.Xaml.Media.Animation", "KeyTime")),
+        new("Microsoft.UI.Xaml.Media.Animation.RepeatBehavior", new("Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior")),
 
-        new("System.Collections.Specialized",
-        [
-            new("INotifyCollectionChanged", "Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged"),
-            new("NotifyCollectionChangedAction", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)"),
-            new("NotifyCollectionChangedEventArgs", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{da049ff2-d2e0-5fe8-8c7b-f87f26060b6f})"),
-            new("NotifyCollectionChangedEventHandler", "Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")
-        ]),
+        new("Microsoft.UI.Xaml.Media.Media3D.Matrix3D", new("Microsoft.UI.Xaml.Media.Media3D", "Matrix3D")),
 
-        new("Microsoft.UI.Xaml", [
-            new("CornerRadius", "Microsoft.UI.Xaml", "CornerRadius"),
-            new("Duration", "Microsoft.UI.Xaml", "Duration"),
-            new("GridLength", "Microsoft.UI.Xaml", "GridLength")
-        ]),
+        new("WindowsRuntime.InteropServices.EventRegistrationToken", new("Windows.Foundation", "EventRegistrationToken", "struct(Windows.Foundation.EventRegistrationToken;i8)")),
 
-        new("Microsoft.UI.Xaml.Media.Animation", [
-            new("KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime"),
-            new("RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior")
-        ]),
+        new("Windows.Foundation.IReferenceArray", new("Windows.Foundation", "IReferenceArray`1")),
 
-        new("Microsoft.UI.Xaml.Media.Media3D", [
-            new("Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D")
-        ]),
+        new("System.Collections.Generic.IEnumerable`1", new("Windows.Foundation.Collections", "IIterable`1")),
+        new("System.Collections.Generic.IEnumerator`1", new("Windows.Foundation.Collections", "IIterator`1")),
+        new("System.Collections.Generic.KeyValuePair`2", new("Windows.Foundation.Collections", "IKeyValuePair`2")),
+        new("System.Collections.Generic.IReadOnlyDictionary`2", new("Windows.Foundation.Collections", "IMapView`2")),
+        new("System.Collections.Generic.IDictionary`2", new("Windows.Foundation.Collections", "IMap`2")),
+        new("System.Collections.Generic.IReadOnlyList`1", new("Windows.Foundation.Collections", "IVectorView`1")),
+        new("System.Collections.Generic.IList`1", new("Windows.Foundation.Collections", "IVector`1")),
 
-        new("WindowsRuntime.InteropServices", [
-            new("EventRegistrationToken", "Windows.Foundation", "EventRegistrationToken", "struct(Windows.Foundation.EventRegistrationToken;i8)")
-        ]),
+        new("System.Numerics.Matrix3x2", new("Windows.Foundation.Numerics", "Matrix3x2", "struct(Windows.Foundation.Numerics.Matrix3x2;f4;f4;f4;f4;f4;f4)")),
+        new("System.Numerics.Matrix4x4", new("Windows.Foundation.Numerics", "Matrix4x4", "struct(Windows.Foundation.Numerics.Matrix4x4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4)")),
+        new("System.Numerics.Plane", new("Windows.Foundation.Numerics", "Plane", "struct(Windows.Foundation.Numerics.Plane;struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4);f4)")),
+        new("System.Numerics.Quaternion", new("Windows.Foundation.Numerics", "Quaternion", "struct(Windows.Foundation.Numerics.Quaternion;f4;f4;f4;f4)")),
+        new("System.Numerics.Vector2", new("Windows.Foundation.Numerics", "Vector2", "struct(Windows.Foundation.Numerics.Vector2;f4;f4)")),
+        new("System.Numerics.Vector3", new("Windows.Foundation.Numerics", "Vector3", "struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4)")),
+        new("System.Numerics.Vector4", new("Windows.Foundation.Numerics", "Vector4", "struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4)")),
 
-        new("WindowsRuntime.InteropServices", [
-            new("EventRegistrationToken", "Windows.Foundation", "EventRegistrationToken", "struct(Windows.Foundation.EventRegistrationToken;i8)")
-        ]),
-
-        new("Windows.Foundation", [
-            new("IReferenceArray", "Windows.Foundation", "IReferenceArray`1")
-        ]),
-
-        new("System.Collections.Generic", [
-            new("IEnumerable`1", "Windows.Foundation.Collections", "IIterable`1"),
-            new("IEnumerator`1", "Windows.Foundation.Collections", "IIterator`1"),
-            new("KeyValuePair`2", "Windows.Foundation.Collections", "IKeyValuePair`2"),
-            new("IReadOnlyDictionary`2", "Windows.Foundation.Collections", "IMapView`2"),
-            new("IDictionary`2", "Windows.Foundation.Collections", "IMap`2"),
-            new("IReadOnlyList`1", "Windows.Foundation.Collections", "IVectorView`1"),
-            new("IList`1", "Windows.Foundation.Collections", "IVector`1")
-        ]),
-
-        new("System.Numerics", [
-            new("Matrix3x2", "Windows.Foundation.Numerics", "Matrix3x2", "struct(Windows.Foundation.Numerics.Matrix3x2;f4;f4;f4;f4;f4;f4)"),
-            new("Matrix4x4", "Windows.Foundation.Numerics", "Matrix4x4", "struct(Windows.Foundation.Numerics.Matrix4x4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4)"),
-            new("Plane", "Windows.Foundation.Numerics", "Plane", "struct(Windows.Foundation.Numerics.Plane;struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4);f4)"),
-            new("Quaternion", "Windows.Foundation.Numerics", "Quaternion", "struct(Windows.Foundation.Numerics.Quaternion;f4;f4;f4;f4)"),
-            new("Vector2", "Windows.Foundation.Numerics", "Vector2", "struct(Windows.Foundation.Numerics.Vector2;f4;f4)"),
-            new("Vector3", "Windows.Foundation.Numerics", "Vector3", "struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4)"),
-            new("Vector4", "Windows.Foundation.Numerics", "Vector4", "struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4)")
-        ]),
-
-        new("Windows.Foundation", [
-            new("Point", "Windows.Foundation", "Point", "struct(Windows.Foundation.Point;f4;f4)"),
-            new("Size", "Windows.Foundation", "Size", "struct(Windows.Foundation.Size;f4;f4)"),
-            new("Rect", "Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")
-        ])
+        new("Windows.Foundation.Point", new("Windows.Foundation", "Point", "struct(Windows.Foundation.Point;f4;f4)")),
+        new("Windows.Foundation.Size", new("Windows.Foundation", "Size", "struct(Windows.Foundation.Size;f4;f4)")),
+        new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)"))
     );
 
     /// <summary>
     /// Immutable map from projected Microsoft.UI.Xaml type full names (keys) to their corresponding
     /// Windows.UI.Xaml mapping descriptor (values).
     /// </summary>
-    private static readonly FrozenDictionary<string, WindowsUIXamlMappedType> WindowsUIXamlProjectionTypeMapping = FrozenDictionary.Create<string, WindowsUIXamlMappedType>(comparer: null,
-        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
-        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})")),
-        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
-        new("Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "INotifyCollectionChanged")),
-        new("Microsoft.UI.Xaml.Interop.IBindableIterable", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "IBindableIterable")),
-        new("Microsoft.UI.Xaml.Interop.IBindableVector", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "IBindableVector")),
-        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new WindowsUIXamlMappedType("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
+    private static readonly FrozenDictionary<string, MappedType> WindowsUIXamlProjectionTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
+        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
+        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})")),
+        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
+        new("Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", new("Windows.UI.Xaml.Interop", "INotifyCollectionChanged")),
+        new("Microsoft.UI.Xaml.Interop.IBindableIterable", new("Windows.UI.Xaml.Interop", "IBindableIterable")),
+        new("Microsoft.UI.Xaml.Interop.IBindableVector", new("Windows.UI.Xaml.Interop", "IBindableVector")),
+        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
 
-        new("Microsoft.UI.Xaml.Input.ICommand", new WindowsUIXamlMappedType("Windows.UI.Xaml.Input", "ICommand")),
+        new("Microsoft.UI.Xaml.Input.ICommand", new("Windows.UI.Xaml.Input", "ICommand")),
 
-        new("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
-        new("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "INotifyDataErrorInfo")),
-        new("Microsoft.UI.Xaml.Data.INotifyPropertyChanged", new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "INotifyPropertyChanged")),
-        new("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})")),
-        new("Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", new WindowsUIXamlMappedType("Windows.UI.Xaml.Data", "PropertyChangedEventHandler"))
+        new("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", new("Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
+        new("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", new("Windows.UI.Xaml.Data", "INotifyDataErrorInfo")),
+        new("Microsoft.UI.Xaml.Data.INotifyPropertyChanged", new("Windows.UI.Xaml.Data", "INotifyPropertyChanged")),
+        new("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", new("Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})")),
+        new("Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", new("Windows.UI.Xaml.Data", "PropertyChangedEventHandler"))
     );
 
     /// <summary>
-    /// Returns the mapped WinRT full type name for a given CLR namespace and type name.
+    /// Returns the mapped WinRT full type name for a given CLR fullName.
     /// </summary>
-    /// <param name="Namespace">The CLR namespace of the type.</param>
-    /// <param name="Name">The CLR type name.</param>
+    /// <param name="fullName">The fullName of the type.</param>
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-    /// <returns>
-    /// The WinRT full type name if a mapping exists; otherwise, the original CLR namespace and type name.
-    /// </returns>
-    internal static string FindMappedWinRTFullName(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
+    /// <param name="mappedName">Resulting string representing the mapped full name.</param>
+    /// <returns><c>true</c> if mapped name was found; otherwise, <c>false</c>.</returns>
+    internal static bool TryFindMappedWinRTFullName(string? fullName, bool useWindowsUIXamlProjections, out string mappedName)
     {
-        if (Namespace is null || Name is null)
+        mappedName = string.Empty;
+        if (fullName is null)
         {
-            throw new ArgumentNullException("Namespace or Name is null");
+            throw new ArgumentNullException("fullName is null");
         }
 
-        if (!WinRTToABITypeMapping.TryGetValue(Namespace, out ImmutableArray<MappedType> results))
+        if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
         {
-            return Namespace + "." + Name;
+            return false;
         }
-
+        string fullname = result.WindowsRuntimeNamespace + "." + result.WindowsRuntimeName;
         // Match the default struct case by checking PublicName for non-null
-        string? result = results.FirstOrDefault(t => t.PublicName == Name) is { PublicName: not null } found ? found.WindowsRuntimeNamespace + "." + found.WindowsRuntimeName : null;
-        return result is null
-            ? Namespace + "." + Name
-            : (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(result))
-                ? WindowsUIXamlProjectionTypeMapping[result].WindowsRuntimeNamespace + "." + WindowsUIXamlProjectionTypeMapping[result].WindowsRuntimeName : result;
+        mappedName = (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(fullname))
+                ? WindowsUIXamlProjectionTypeMapping[fullname].WindowsRuntimeNamespace + "." + WindowsUIXamlProjectionTypeMapping[fullname].WindowsRuntimeName : fullname;
+        return true;
     }
-
 
     /// <summary>
     /// Retrieves the WinRT signature string for a mapped CLR type.
     /// </summary>
-    /// <param name="Namespace">The CLR namespace of the type.</param>
-    /// <param name="Name">The CLR type name.</param>
+    /// <param name="fullName">The fullName of the type.</param>
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-    /// <returns>
-    /// The signature string if found; otherwise, null.
-    /// </returns>
-    internal static string? FindGuidSignatureForMappedType(string? Namespace, string? Name, bool useWindowsUIXamlProjections)
+    /// <param name="signature">Resulting string represent the guid signature if found.</param>
+    /// <returns><c>true</c> if hardcoded GUID signature was found; otherwise, <c>false</c>.</returns>
+    internal static bool TryFindGuidSignatureForMappedType(string? fullName, bool useWindowsUIXamlProjections, out string signature)
     {
-        if (Namespace is null || Name is null)
+        signature = string.Empty;
+        if (fullName is null)
         {
-            return null;
+            throw new ArgumentNullException("fullName is null");
         }
 
-        if (!WinRTToABITypeMapping.TryGetValue(Namespace, out ImmutableArray<MappedType> results))
+        if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
         {
-            return null;
+            return false;
         }
 
-        MappedType? result = results.FirstOrDefault(t => t.PublicName == Name);
-
-        if (result is null)
+        if (result.Signature is not null)
         {
-            return null;
+            signature = result.Signature;
+            string resultFullName = result.WindowsRuntimeNamespace + "." + result.WindowsRuntimeName;
+            if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(resultFullName))
+            {
+                string? projSignature = WindowsUIXamlProjectionTypeMapping[resultFullName].Signature;
+                if (projSignature is not null)
+                {
+                    signature = projSignature;
+                    return true;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Signature missing for Windows UI Xaml projection mapping for type {resultFullName}");
+                }
+            }
+            return true;
         }
-
-        string? resultSignature = result.Value.Signature;
-
-        if (resultSignature is null)
-        {
-            return null;
-        }
-
-        string? resultFullName = result.Value.WindowsRuntimeNamespace + "." + result.Value.WindowsRuntimeName;
-
-        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(resultFullName))
-        {
-            resultSignature = WindowsUIXamlProjectionTypeMapping[resultFullName].Signature;
-        }
-
-        return resultSignature;
+        return false;
     }
 }

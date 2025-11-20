@@ -70,7 +70,17 @@ internal static class WellKnownInterfaceIIDs
             signature: MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences)));
     }
 
-    public static Boolean get_GUID(
+
+    /// <summary>
+    /// Attempts to resolve a well-known Windows Runtime interface GUID for the specified type signature.
+    /// </summary>
+    /// <param name="signature"> The <see cref="TypeSignature"/> representing the managed type to inspect. Arrays and generic instances
+    /// are normalized to their underlying type before comparison.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="guid">Out parameter for the resolved <see cref="Guid"/> of the type. </param>
+    /// <returns><c>true</c> if a matching GUID was found; otherwise, <c>false</c>.</returns>
+    public static bool try_GetGUID(
         TypeSignature signature,
         bool useWindowsUIXamlProjections,
         InteropReferences interopReferences,
@@ -85,7 +95,6 @@ internal static class WellKnownInterfaceIIDs
 
         guid = type switch
         {
-            // Shared types
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler)
                 => new Guid("9de1c535-6ae1-11e0-84e1-18a905bcc53f"),
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler1)

@@ -58,15 +58,13 @@ internal static class GuidGenerator
             InteropReferences interopReferences,
             bool useWindowsUIXamlProjections)
     {
-        string? mappedSignature = TypeMapping.FindGuidSignatureForMappedType(typeSignature.Namespace, typeSignature.Name, useWindowsUIXamlProjections);
-
-        if (mappedSignature is not null)
+        if (TypeMapping.TryFindGuidSignatureForMappedType(typeSignature.FullName, useWindowsUIXamlProjections, out string mappedSignature))
         {
             return mappedSignature;
         }
 
         TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
-        string typeFullNameMapped = (typeDefinition.Namespace is null || typeDefinition.Name is null) ? typeDefinition.FullName : TypeMapping.FindMappedWinRTFullName(typeDefinition.Namespace, typeDefinition.Name, useWindowsUIXamlProjections);
+        string typeFullName = TypeMapping.TryFindMappedWinRTFullName(typeDefinition.FullName, useWindowsUIXamlProjections, out string? typeFullNameMapped) ? typeFullNameMapped : typeDefinition.FullName;
 
 #pragma warning disable IDE0010 // Add missing cases
         switch (typeSignature.ElementType)
@@ -109,7 +107,7 @@ internal static class GuidGenerator
                     if (typeDefinition.IsEnum)
                     {
                         bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                        return "enum(" + typeFullNameMapped + ";" + (isFlags ? "u4" : "i4") + ")";
+                        return "enum(" + typeFullName + ";" + (isFlags ? "u4" : "i4") + ")";
                     }
 
                     // Guid Case
@@ -130,7 +128,7 @@ internal static class GuidGenerator
                             typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
                         }
                     }
-                    return "struct(" + typeFullNameMapped + ";" + string.Join(";", typeArgumentSignatures) + ")";
+                    return "struct(" + typeFullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
                 }
 
                 throw new ArgumentException("Invalid ElementType.ValueType");
@@ -160,7 +158,7 @@ internal static class GuidGenerator
                     return typeDefinition.IsDelegate
                         ? "delegate({" + GetGuid(typeSignature, interopReferences) + "})" // Delegate case
                         : GetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig)
-                            ? "rc(" + typeFullNameMapped + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
+                            ? "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" // Class case with default interface
                             : "{" + GetGuid(typeSignature, interopReferences) + "}"; // Class case without default interface
                 }
                 if (typeDefinition.IsInterface) // interface case
@@ -203,7 +201,7 @@ internal static class GuidGenerator
     /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
     private static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
     {
-        if (WellKnownInterfaceIIDs.get_GUID(typeSig, true, interopReferences, out Guid result))
+        if (WellKnownInterfaceIIDs.try_GetGUID(typeSig, true, interopReferences, out Guid result))
         {
             return result;
         }
