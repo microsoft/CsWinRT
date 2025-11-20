@@ -76,13 +76,11 @@ internal static class WellKnownInterfaceIIDs
     /// </summary>
     /// <param name="signature"> The <see cref="TypeSignature"/> representing the managed type to inspect. Arrays and generic instances
     /// are normalized to their underlying type before comparison.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="guid">Out parameter for the resolved <see cref="Guid"/> of the type. </param>
     /// <returns><c>true</c> if a matching GUID was found; otherwise, <c>false</c>.</returns>
     public static bool try_GetGUID(
         TypeSignature signature,
-        bool useWindowsUIXamlProjections,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out Guid guid)
     {

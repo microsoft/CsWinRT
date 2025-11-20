@@ -201,7 +201,7 @@ internal static class GuidGenerator
     /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
     private static Guid GetGuid(TypeSignature typeSig, InteropReferences interopReferences)
     {
-        if (WellKnownInterfaceIIDs.try_GetGUID(typeSig, true, interopReferences, out Guid result))
+        if (WellKnownInterfaceIIDs.try_GetGUID(typeSig, interopReferences, out Guid result))
         {
             return result;
         }
