@@ -231,7 +231,7 @@ internal static class GuidGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="guid">When this method returns <c>true</c>, contains the parsed GUID value.</param>
     /// <returns><c>true</c> if a valid GUID was found and parsed; otherwise, <c>false</c>.</returns>
-    private static bool TryGetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, [NotNullWhen(true)] out Guid guid)
+    private static bool TryGetGuidFromAttribute(TypeDefinition typeDef, InteropReferences interopReferences, out Guid guid)
     {
         if (typeDef.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
         {
