@@ -42,7 +42,7 @@ internal static class TypeMapping
         new("System.Uri", new("Windows.Foundation", "Uri", "rc(Windows.Foundation.Uri;{9e365e57-48b2-4160-956f-c7385120bbfc})")),
         new("System.AttributeTargets", new("Windows.Foundation.Metadata", "AttributeTargets")),
         new("System.AttributeUsageAttribute", new("Windows.Foundation.Metadata", "AttributeUsageAttribute")),
-        new("System.Type", new("Windows.UI.Xaml.Interop", "TypeName", "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4)")),
+        new("System.Type", new("Windows.UI.Xaml.Interop", "TypeName", "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))")),
         new("System.ComponentModel.DataErrorsChangedEventArgs", new("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
         new("System.ComponentModel.INotifyDataErrorInfo", new("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo")),
         new("System.ComponentModel.INotifyPropertyChanged", new("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged")),
