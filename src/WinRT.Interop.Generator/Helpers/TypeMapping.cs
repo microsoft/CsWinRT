@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -16,11 +17,10 @@ internal static class TypeMapping
     /// <variable name="WindowsRuntimeNamespace">The Windows Runtime namespace.</variable>
     /// <variable name="WindowsRuntimeName">The Windows Runtime type name.</variable>
     /// <variable name="Signature">Optional hardcoded WinRT type signature</variable>
-    public readonly record struct MappedType(
+    private readonly record struct MappedType(
          string WindowsRuntimeNamespace,
          string WindowsRuntimeName,
-         string? Signature = null
-    );
+         string? Signature = null);
 
     /// <summary>
     /// Immutable map from CLR fullnames to the set of CLR→Windows Runtime type mappings.
@@ -110,17 +110,29 @@ internal static class TypeMapping
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
     /// <param name="mappedName">Resulting string representing the mapped full name.</param>
     /// <returns><c>true</c> if mapped name was found; otherwise, <c>false</c>.</returns>
-    internal static bool TryFindMappedWinRTFullName(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string mappedName)
+    public static bool TryFindMappedWinRTFullName(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string? mappedName)
     {
         if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
         {
-            mappedName = string.Empty;
+            mappedName = null;
+
             return false;
         }
-        string fullname = result.WindowsRuntimeNamespace + "." + result.WindowsRuntimeName;
-        // Match the default struct case by checking PublicName for non-null
-        mappedName = (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(fullname))
-                ? WindowsUIXamlProjectionTypeMapping[fullname].WindowsRuntimeNamespace + "." + WindowsUIXamlProjectionTypeMapping[fullname].WindowsRuntimeName : fullname;
+
+        DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
+
+        // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML name
+        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
+        {
+            handler.Clear();
+
+            mappedName = $"{mappedType.WindowsRuntimeNamespace}.{mappedType.WindowsRuntimeName}";
+
+            return true;
+        }
+
+        mappedName = handler.ToStringAndClear();
+
         return true;
     }
 
@@ -131,31 +143,41 @@ internal static class TypeMapping
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
     /// <param name="signature">Resulting string represent the guid signature if found.</param>
     /// <returns><c>true</c> if hardcoded GUID signature was found; otherwise, <c>false</c>.</returns>
-    internal static bool TryFindGuidSignatureForMappedType(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string signature)
+    public static bool TryFindGuidSignatureForMappedType(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string? signature)
     {
         if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
         {
-            signature = string.Empty;
+            signature = null;
+
             return false;
         }
 
-        if (result.Signature is not null)
+        if (result.Signature is null)
         {
-            signature = result.Signature;
-            string resultFullName = result.WindowsRuntimeNamespace + "." + result.WindowsRuntimeName;
-            if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.ContainsKey(resultFullName))
-            {
-                string? projSignature = WindowsUIXamlProjectionTypeMapping[resultFullName].Signature;
-                if (projSignature is not null)
-                {
-                    signature = projSignature;
-                    return true;
-                }
-                throw new InvalidOperationException($"Signature missing for Windows UI Xaml projection mapping for type {resultFullName}");
-            }
+            signature = null;
+
+            return false;
+        }
+
+        DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
+
+        // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML signature
+        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
+        {
+            handler.Clear();
+
+            // All entries here will always have a signature, if their corresponding entries
+            // in the global table of type mappings also have signatures. If that's not the
+            // case, then it means an entry in the second lokup is just malformed
+            signature = mappedType.Signature!;
+
             return true;
         }
-        signature = string.Empty;
-        return false;
+
+        handler.Clear();
+
+        signature = result.Signature;
+
+        return true;
     }
 }
