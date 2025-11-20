@@ -329,8 +329,7 @@ internal partial class InteropGenerator
 
                 // Gather all 'KeyValuePair<,>' instances
                 if (typeDefinition.IsValueType &&
-                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2) &&
-                    typeDefinition.IsProjectedWindowsRuntimeType)
+                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2))
                 {
                     discoveryState.TrackKeyValuePairType(typeSignature);
 
