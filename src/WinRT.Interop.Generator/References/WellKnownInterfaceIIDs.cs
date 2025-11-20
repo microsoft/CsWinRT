@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -80,7 +79,7 @@ internal static class WellKnownInterfaceIIDs
     public static bool TryGetGUID(
         ITypeDescriptor interfaceType,
         InteropReferences interopReferences,
-        [NotNullWhen(true)] out Guid guid)
+        out Guid guid)
     {
         guid = interfaceType switch
         {
