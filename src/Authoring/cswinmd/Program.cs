@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Win32;
@@ -58,7 +58,7 @@ namespace Generator
                 else if (args[idx] == "-o")
                 {
                     idx++;
-                    o = args[idx]; 
+                    o = args[idx];
                 }
                 else if (args[idx] == "-a")
                 {
@@ -129,7 +129,7 @@ namespace Generator
                 var compilation = CSharpCompilation.Create(
                     assemblyName: assemblyName,
                     syntaxTrees: new[] { CSharpSyntaxTree.ParseText(inputText, new CSharpParseOptions(LanguageVersion.Preview), inputFile) },
-                    references: new[] { 
+                    references: new[] {
                         MetadataReference.CreateFromFile(windows_winmd),
                         MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)
                     },
@@ -137,7 +137,7 @@ namespace Generator
                     );
 
                 var g = new SourceGenerator();
-                
+
                 if (!Directory.Exists(outFolder))
                 {
                     Directory.CreateDirectory(outFolder);

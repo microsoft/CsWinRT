@@ -33,7 +33,7 @@ namespace DiagnosticTests
                 generators: ImmutableArray.Create(generators),
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,
                 parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
-                optionsProvider: options); 
+                optionsProvider: options);
 
         /// <summary>
         /// RunGenerators makes a driver and applies the given generators to the compilation, storing diagnostics in an out param
@@ -55,7 +55,7 @@ namespace DiagnosticTests
         /// <param name="arr"></param>
         /// <returns></returns>
         private static HashSet<DiagnosticDescriptor> MakeDiagnosticSet(ImmutableArray<Diagnostic> arr)
-        { 
+        {
             HashSet<DiagnosticDescriptor> setSoFar = new();
             foreach (var d in arr)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -63,7 +63,7 @@ namespace AuthoringWuxTest
         private List<DisposableClass> _list = new List<DisposableClass>();
 
         DisposableClass IList<DisposableClass>.this[int index] { get => _list[index]; set => _list[index] = value; }
-        object IList.this[int index] { get => _list[index]; set => ((IList)_list) [index] = value; }
+        object IList.this[int index] { get => _list[index]; set => ((IList)_list)[index] = value; }
 
         int ICollection<DisposableClass>.Count => _list.Count;
 
@@ -77,7 +77,7 @@ namespace AuthoringWuxTest
 
         bool ICollection.IsSynchronized => true;
 
-        object ICollection.SyncRoot => ((ICollection) _list).SyncRoot;
+        object ICollection.SyncRoot => ((ICollection)_list).SyncRoot;
 
         void ICollection<DisposableClass>.Add(DisposableClass item)
         {
@@ -86,7 +86,7 @@ namespace AuthoringWuxTest
 
         int IList.Add(object value)
         {
-            return ((IList) _list).Add(value);
+            return ((IList)_list).Add(value);
         }
 
         void ICollection<DisposableClass>.Clear()
@@ -106,7 +106,7 @@ namespace AuthoringWuxTest
 
         bool IList.Contains(object value)
         {
-            return ((IList) _list).Contains(value);
+            return ((IList)_list).Contains(value);
         }
 
         void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
@@ -116,7 +116,7 @@ namespace AuthoringWuxTest
 
         void ICollection.CopyTo(Array array, int index)
         {
-             ((ICollection) _list).CopyTo(array, index);
+            ((ICollection)_list).CopyTo(array, index);
         }
 
         IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
@@ -136,7 +136,7 @@ namespace AuthoringWuxTest
 
         int IList.IndexOf(object value)
         {
-            return ((IList) _list).IndexOf(value);
+            return ((IList)_list).IndexOf(value);
         }
 
         void IList<DisposableClass>.Insert(int index, DisposableClass item)
@@ -146,7 +146,7 @@ namespace AuthoringWuxTest
 
         void IList.Insert(int index, object value)
         {
-            ((IList) _list).Insert(index, value);
+            ((IList)_list).Insert(index, value);
         }
 
         bool ICollection<DisposableClass>.Remove(DisposableClass item)
@@ -156,7 +156,7 @@ namespace AuthoringWuxTest
 
         void IList.Remove(object value)
         {
-            ((IList) _list).Remove(value);
+            ((IList)_list).Remove(value);
         }
 
         void IList<DisposableClass>.RemoveAt(int index)

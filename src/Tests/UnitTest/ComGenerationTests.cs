@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
@@ -42,7 +42,7 @@ namespace UnitTest
                 var hwndValue = hwnd.ToInt64();
                 Assert.Equal(hwndValue, value);
             }
-            else 
+            else
             {
                 var hwnd = new IntPtr(0x01234567);
                 var value = comInterop.ReturnWindowHandle(hwnd, IID_IComInterop);

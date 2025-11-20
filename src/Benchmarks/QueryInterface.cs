@@ -1,4 +1,4 @@
-﻿using BenchmarkComponent;
+using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 using Windows.ApplicationModel.Chat;
 

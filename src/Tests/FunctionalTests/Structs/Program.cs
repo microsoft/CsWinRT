@@ -1,4 +1,4 @@
-﻿using TestComponentCSharp;
+using TestComponentCSharp;
 
 var instance = new Class();
 var blittable = instance.GetBlittableStructVector();
@@ -19,4 +19,3 @@ for (int i = 0; i < nonblittable.Count; i++)
 }
 
 return sum == expected_sum ? 100 : 101;
-

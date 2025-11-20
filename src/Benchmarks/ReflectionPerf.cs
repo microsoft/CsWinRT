@@ -1,4 +1,4 @@
-﻿using BenchmarkComponent;
+using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 using System;
 using System.Collections.Generic;
@@ -106,7 +106,7 @@ namespace Benchmarks
             }
             return count;
         }
-        
+
         [Benchmark]
         public object ExistingDictionaryLookupCached()
         {

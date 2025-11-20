@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -69,7 +69,6 @@ internal static class WellKnownInterfaceIIDs
             memberName: $"get_IID_{nameSuffix}",
             signature: MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences)));
     }
-
 
     /// <summary>
     /// Attempts to resolve a well-known Windows Runtime interface GUID for the specified type signature.

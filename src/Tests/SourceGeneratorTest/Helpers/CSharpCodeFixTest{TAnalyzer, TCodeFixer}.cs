@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -17,7 +17,7 @@ namespace SourceGeneratorTest.Helpers;
 
 internal static class Net10Helper
 {
-    public static ReferenceAssemblies Net10 { get;  } = GetNet10ReferenceAssembly();
+    public static ReferenceAssemblies Net10 { get; } = GetNet10ReferenceAssembly();
 
     /// <summary>
     /// Gets the reference assemblies for .NET 10.0.
