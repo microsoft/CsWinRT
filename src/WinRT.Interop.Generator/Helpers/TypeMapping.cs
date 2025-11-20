@@ -85,6 +85,9 @@ internal static class TypeMapping
     /// Immutable map from projected Microsoft.UI.Xaml type full names (keys) to their corresponding
     /// Windows.UI.Xaml mapping descriptor (values).
     /// </summary>
+    /// <remarks>
+    /// If the type has a signature in WinRTToABITypeMapping, it should also have one here.
+    /// </remarks>
     private static readonly FrozenDictionary<string, MappedType> WindowsUIXamlProjectionTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})")),
