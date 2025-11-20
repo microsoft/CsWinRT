@@ -16,8 +16,8 @@ using global::Windows.Foundation;
 #if EMBED
 internal
 #else 
-public 
-#endif 
+public
+#endif
 static class WindowsRuntimeSystemExtensions
 {
     public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
