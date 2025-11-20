@@ -31,7 +31,6 @@ internal static class TypeMapping
     /// </remarks>
     private static readonly FrozenDictionary<string, MappedType> WinRTToABITypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
         new("System.IServiceProvider", new("Microsoft.UI.Xaml", "IXamlServiceProvider")),
-        new("System.IntPtr", new("WinRT.Interop", "HWND")),
         new("System.DateTimeOffset", new("Windows.Foundation", "DateTime", "struct(Windows.Foundation.DateTime;i8)")),
         new("System.EventHandler`1", new("Windows.Foundation", "EventHandler`1")),
         new("System.Exception", new("Windows.Foundation", "HResult", "struct(Windows.Foundation.HResult;i4)")),
