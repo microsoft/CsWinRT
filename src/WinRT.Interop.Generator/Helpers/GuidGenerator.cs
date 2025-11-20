@@ -55,11 +55,11 @@ internal static class GuidGenerator
     /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
     /// <returns>A WinRT signature string representing the given type.</returns>
     private static string GetSignature(
-            TypeSignature typeSignature,
-            InteropReferences interopReferences,
-            bool useWindowsUIXamlProjections)
+        TypeSignature typeSignature,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
     {
-        if (TypeMapping.TryFindGuidSignatureForMappedType(typeSignature.FullName, useWindowsUIXamlProjections, out string mappedSignature))
+        if (TypeMapping.TryFindGuidSignatureForMappedType(typeSignature.FullName, useWindowsUIXamlProjections, out string? mappedSignature))
         {
             return mappedSignature;
         }
