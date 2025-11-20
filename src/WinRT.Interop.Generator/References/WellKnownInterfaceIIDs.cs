@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -69,10 +70,11 @@ internal static class WellKnownInterfaceIIDs
             signature: MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences)));
     }
 
-    public static Guid get_GUID(
+    public static Boolean get_GUID(
         TypeSignature signature,
         bool useWindowsUIXamlProjections,
-        InteropReferences interopReferences)
+        InteropReferences interopReferences,
+        [NotNullWhen(true)] out Guid guid)
     {
         ITypeDefOrRef type = signature switch
         {
@@ -81,7 +83,7 @@ internal static class WellKnownInterfaceIIDs
             _ => signature.ToTypeDefOrRef(),
         };
 
-        return type switch
+        guid = type switch
         {
             // Shared types
             _ when SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler)
@@ -142,6 +144,8 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("575933df-34fe-4480-af15-07691f3d5d9b"),
             _ => Guid.Empty
         };
+
+        return guid != Guid.Empty;
     }
 }
 
