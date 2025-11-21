@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using WindowsRuntime.InteropServices;
 
 namespace System.Runtime.InteropServices.WindowsRuntime;
 
@@ -42,7 +43,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new TaskToAsyncActionAdapter(factory);
+        return new AsyncActionAdapter(factory);
     }
 
     /// <summary>
@@ -145,7 +146,7 @@ public static class AsyncInfo
 
     public static IAsyncAction CompletedAction()
     {
-        return new TaskToAsyncActionAdapter(isCanceled: false);
+        return new AsyncActionAdapter(isCanceled: false);
     }
 
     public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
@@ -167,12 +168,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        TaskToAsyncActionAdapter asyncInfo = new(isCanceled: false);
-
-        asyncInfo.DangerousSetError(exception);
-        Debug.Assert(asyncInfo.Status == AsyncStatus.Error);
-
-        return asyncInfo;
+        return new AsyncActionAdapter(exception);
     }
 
     public static IAsyncActionWithProgress<TProgress> FromExceptionWithProgress<TProgress>(Exception exception)
@@ -213,7 +209,7 @@ public static class AsyncInfo
 
     public static IAsyncAction CanceledAction()
     {
-        return new TaskToAsyncActionAdapter(isCanceled: true);
+        return new AsyncActionAdapter(isCanceled: true);
     }
 
     public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()

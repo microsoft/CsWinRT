@@ -16,7 +16,7 @@ namespace System.Threading.Tasks;
 #if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-internal abstract partial class TaskToAsyncInfoAdapter<
+internal abstract class TaskToAsyncInfoAdapter<
     TResult,
     TProgress,
     TCompletedHandler,
@@ -108,7 +108,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     private object _dataContainer;
 
     /// <summary>Registered completed handler.</summary>
-    private TCompletedHandler _completedHandler;
+    private TCompletedHandler? _completedHandler;
 
     /// <summary>Registered progress handler.</summary>
     private TProgressHandler _progressHandler;
@@ -153,34 +153,33 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     /// The specified CancellationTokenSource and Progress are assumed to be the source of the specified Task's cancellation and
     /// the Progress that receives reports from the specified Task.
     /// </summary>
-    /// <param name="underlyingTask">The Task whose operation is represented by this IAsyncInfo</param>
-    /// <param name="underlyingCancelTokenSource">The cancellation control for the cancellation token observed
+    /// <param name="task">The Task whose operation is represented by this IAsyncInfo</param>
+    /// <param name="cancellationTokenSource">The cancellation control for the cancellation token observed
     /// by <code>underlyingTask</code>.</param>
-    /// <param name="underlyingProgressDispatcher">A progress listener/pugblisher that receives progress notifications
+    /// <param name="progress">A progress listener/pugblisher that receives progress notifications
     /// form <code>underlyingTask</code>.</param>
-    internal TaskToAsyncInfoAdapter(Task underlyingTask,
-                                    CancellationTokenSource underlyingCancelTokenSource, Progress<TProgress> underlyingProgressDispatcher)
+    internal TaskToAsyncInfoAdapter(Task task,
+                                    CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
-        ArgumentNullException.ThrowIfNull(underlyingTask);
+        ArgumentNullException.ThrowIfNull(task);
 
         // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
-        if (underlyingTask.Status == TaskStatus.Created)
+        if (task.Status == TaskStatus.Created)
             throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
 
         // We do not need to invoke any delegates to get the task, it is provided for us:
-        _dataContainer = underlyingTask;
+        _dataContainer = task;
 
         // This must be the cancellation source for the token that the specified underlyingTask observes for cancellation:
         // (it may also be null in cases where the specified underlyingTask does nto support cancellation)
-        _cancelTokenSource = underlyingCancelTokenSource;
+        _cancelTokenSource = cancellationTokenSource;
 
         // Iff the specified underlyingTask reports progress, chain the reports to this IAsyncInfo's reporting method:
-        if (underlyingProgressDispatcher != null)
-            underlyingProgressDispatcher.ProgressChanged += OnReportChainedProgress;
+        progress?.ProgressChanged += OnReportChainedProgress;
 
         _state = (STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED);
 
-        underlyingTask.ContinueWith(
+        task.ContinueWith(
             (_, this_) => ((TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>)this_!).TaskCompleted(),
             this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
@@ -435,7 +434,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     }
 
 
-    private void OnReportChainedProgress(object sender, TProgress progressInfo)
+    private void OnReportChainedProgress(object? sender, TProgress progressInfo)
     {
         ((IProgress<TProgress>)this).Report(progressInfo);
     }
@@ -757,15 +756,14 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     /// If we the completion handler is set AFTER this IAsyncInfo already completed, then this setter will invoke the handler synchronously
     /// on the current context.
     /// </summary>
-    public virtual TCompletedHandler Completed
+    public virtual TCompletedHandler? Completed
     {
         get
         {
-            TCompletedHandler handler = Volatile.Read(ref _completedHandler);
+            TCompletedHandler? handler = Volatile.Read(ref _completedHandler);
             EnsureNotClosed();
             return handler;
         }
-
         set
         {
             EnsureNotClosed();

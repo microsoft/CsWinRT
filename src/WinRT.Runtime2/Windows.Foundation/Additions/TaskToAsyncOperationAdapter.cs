@@ -29,7 +29,7 @@ internal sealed partial class TaskToAsyncOperationAdapter<TResult> : TaskToAsync
 
     internal TaskToAsyncOperationAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource)
 
-        : base(underlyingTask, underlyingCancelTokenSource, underlyingProgressDispatcher: null)
+        : base(underlyingTask, underlyingCancelTokenSource, progress: null)
     {
     }
 
