@@ -69,9 +69,8 @@ internal sealed class AsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
     public AsyncOperationAdapter(Exception exception)
-        : base(default(TResult)!)
+        : base(exception)
     {
-        _ = DangerousSetError(exception);
     }
 
     /// <inheritdoc/>

@@ -214,6 +214,23 @@ internal abstract class TaskToAsyncInfoAdapter<
             STATE_RUN_TO_COMPLETION;
     }
 
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
+    internal TaskToAsyncInfoAdapter(Exception exception)
+    {
+        _dataContainer = null;
+        _error = exception;
+
+        // Mark the task as completed and in faulted state
+        _state =
+            STATEFLAG_COMPLETED_SYNCHRONOUSLY |
+            STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET |
+            STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED |
+            STATE_ERROR;
+    }
+
 
     ~TaskToAsyncInfoAdapter()
     {
@@ -224,28 +241,6 @@ internal abstract class TaskToAsyncInfoAdapter<
 
 
     #region Synchronous completion controls
-
-    /// <summary> This method sets the result on a *synchronously completed* IAsyncInfo.
-    /// It does not try to deal with the inherit races: Use it only when constructing a synchronously
-    /// completed IAsyncInfo in a desired state when you understand the threading conditions well.</summary>
-    /// <param name="synchronousResult">The new result of this synchronously completed IAsyncInfo (may be <code>default(TResult)</code>)</param>
-    /// <returns>FALSE if this IAsyncInfo has not actually completed synchronously and this method had no effects, TRUE otherwise.</returns>
-    internal bool DangerousSetCompleted(TResult synchronousResult)
-    {
-        if (!CompletedSynchronously)
-            return false;
-
-        _dataContainer = synchronousResult;
-        _error = null;
-
-        // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + RUN_TO_COMPLETION:
-        _state = (STATEFLAG_COMPLETED_SYNCHRONOUSLY
-                      | STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
-                      | STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
-                      | STATE_RUN_TO_COMPLETION);
-        return true;
-    }
-
 
     internal bool DangerousSetCanceled()
     {
@@ -263,28 +258,6 @@ internal abstract class TaskToAsyncInfoAdapter<
                       | STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
                       | STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
                       | STATE_CANCELLATION_COMPLETED);
-        return true;
-    }
-
-
-    internal bool DangerousSetError(Exception exception)
-    {
-        if (!CompletedSynchronously)
-        {
-            return false;
-        }
-
-        // Here we do not try to deal with the inherit races: Use this method only when constructing a synchronously
-        // completed IAsyncInfo in a desired state when you understand the threading conditions well.
-
-        _dataContainer = null;
-        _error = exception;
-
-        // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + ERROR:
-        _state = (STATEFLAG_COMPLETED_SYNCHRONOUSLY
-                      | STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
-                      | STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
-                      | STATE_ERROR);
         return true;
     }
 

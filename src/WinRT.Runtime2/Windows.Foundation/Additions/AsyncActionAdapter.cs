@@ -57,9 +57,8 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
     public AsyncActionAdapter(Exception exception)
-        : base(default(VoidValueTypeParameter))
+        : base(exception)
     {
-        _ = DangerousSetError(exception);
     }
 
     /// <inheritdoc/>
