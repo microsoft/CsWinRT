@@ -21,13 +21,6 @@ internal static class GuidGenerator
 {
     private static readonly Guid WindowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
 
-    // TODO: Debug code; Will remove later
-    //#pragma warning disable IDE0044 // Add readonly modifier
-    //    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
-    //    private static HashSet<TypeSignature> generatedIIDs = [];
-    //    private static StreamWriter writer = new(printPath, append: false);
-    //#pragma warning restore IDE0044 // Add readonly modifier
-
     /// <summary>
     /// Generates the IID for the specified type by computing its WinRT signature and deriving a GUID from that signature.
     /// </summary>
@@ -39,12 +32,6 @@ internal static class GuidGenerator
     {
         string signature = GetSignature(type, interopReferences, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
-        //TODO: Debug code; Will remove later
-        //if (!generatedIIDs.Contains(type))
-        //{
-        //    writer.WriteLine(type.FullName + "\n    " + signature + "\n    " + guid);
-        //    _ = generatedIIDs.Add(type);
-        //}
         return guid;
     }
 
@@ -280,13 +267,13 @@ internal static class GuidGenerator
             buffer[8] = (byte)((buffer[8] & 0x3F) | 0x80);
         }
 
-        return new Guid(buffer);
+        return new(buffer);
     }
 
     /// <summary>Computes a deterministic GUID (IID) from a WinRT signature</summary>
     /// <param name="signature">WinRT signature string.</param>
     /// <returns>The derived <see cref="Guid"/>.</returns>
-    private static Guid CreateGuidFromSignature(string signature)
+    private static Guid CreateGuidFromSignature(ReadOnlySpan<char> signature)
     {
         // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
         // If the minimum buffer is small enough, we can stack-allocate it.
