@@ -101,7 +101,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new TaskToAsyncOperationAdapter<TResult>(factory);
+        return new AsyncOperationAdapter<TResult>(factory);
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public static class AsyncInfo
 
     public static IAsyncOperation<TResult> FromResult<TResult>(TResult synchronousResult)
     {
-        return new TaskToAsyncOperationAdapter<TResult>(synchronousResult);
+        return new AsyncOperationAdapter<TResult>(synchronousResult);
     }
 
     public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult synchronousResult)
@@ -182,7 +182,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return new TaskToAsyncOperationAdapter<TResult>(exception);
+        return new AsyncOperationAdapter<TResult>(exception);
     }
 
     public static IAsyncOperationWithProgress<TResult, TProgress> FromExceptionWithProgress<TResult, TProgress>(Exception exception)
@@ -209,7 +209,7 @@ public static class AsyncInfo
 
     public static IAsyncOperation<TResult> CanceledOperation<TResult>()
     {
-        return new TaskToAsyncOperationAdapter<TResult>(isCanceled: true);
+        return new AsyncOperationAdapter<TResult>(isCanceled: true);
     }
 
     public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()

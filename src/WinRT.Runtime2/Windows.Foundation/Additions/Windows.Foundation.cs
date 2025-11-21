@@ -258,7 +258,7 @@ static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        return new TaskToAsyncOperationAdapter<TResult>(source, cancellationTokenSource: null);
+        return new AsyncOperationAdapter<TResult>(source, cancellationTokenSource: null);
     }
 }
 

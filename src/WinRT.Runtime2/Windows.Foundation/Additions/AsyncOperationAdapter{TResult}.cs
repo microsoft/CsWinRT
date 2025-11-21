@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TResult">The result type.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal sealed class TaskToAsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
+internal sealed class AsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     TResult,
     VoidValueTypeParameter,
     AsyncOperationCompletedHandler<TResult>,
@@ -22,40 +22,40 @@ internal sealed class TaskToAsyncOperationAdapter<TResult> : TaskToAsyncInfoAdap
     IAsyncOperation<TResult>
 {
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
-    public TaskToAsyncOperationAdapter(Func<CancellationToken, Task<TResult>> factory)
+    public AsyncOperationAdapter(Func<CancellationToken, Task<TResult>> factory)
 
          : base(factory)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="task">The <see cref="Task"/> instance to wrap.</param>
     /// <param name="cancellationTokenSource">The <see cref="CancellationTokenSource"/> instance to use for cancellation.</param>
-    public TaskToAsyncOperationAdapter(Task<TResult> task, CancellationTokenSource? cancellationTokenSource)
+    public AsyncOperationAdapter(Task<TResult> task, CancellationTokenSource? cancellationTokenSource)
 
         : base(task, cancellationTokenSource, progress: null)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
-    public TaskToAsyncOperationAdapter(TResult result)
+    public AsyncOperationAdapter(TResult result)
         : base(result)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
-    public TaskToAsyncOperationAdapter(bool isCanceled)
+    public AsyncOperationAdapter(bool isCanceled)
         : base(default(TResult)!)
     {
         if (isCanceled)
@@ -65,10 +65,10 @@ internal sealed class TaskToAsyncOperationAdapter<TResult> : TaskToAsyncInfoAdap
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
-    public TaskToAsyncOperationAdapter(Exception exception)
+    public AsyncOperationAdapter(Exception exception)
         : base(default(TResult)!)
     {
         _ = DangerousSetError(exception);
