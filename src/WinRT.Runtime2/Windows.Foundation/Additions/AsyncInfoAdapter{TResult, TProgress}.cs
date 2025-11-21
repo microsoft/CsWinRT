@@ -724,7 +724,7 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// If we the completion handler is set AFTER this IAsyncInfo already completed, then this setter will invoke the handler synchronously
     /// on the current context.
     /// </summary>
-    public virtual TCompletedHandler? Completed
+    public TCompletedHandler? Completed
     {
         get
         {
@@ -772,7 +772,7 @@ internal abstract class TaskToAsyncInfoAdapter<
 
 
     /// <summary>Gets or sets the progress handler.</summary>
-    public virtual TProgressHandler? Progress
+    public TProgressHandler? Progress
     {
         get
         {
@@ -795,8 +795,8 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
 
-    /// <summary>Cancels the async info.</summary>
-    public virtual void Cancel()
+    /// <inheritdoc/>
+    public void Cancel()
     {
         // Cancel will be ignored in any terminal state including CLOSED.
         // In other words, it is ignored in any state except STARTED.
@@ -812,8 +812,8 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
 
-    /// <summary>Close the async info.</summary>
-    public virtual void Close()
+    /// <inheritdoc/>
+    public void Close()
     {
         if (IsInClosedState)
             return;
@@ -837,8 +837,8 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
 
-    /// <summary>Gets the error code for the async info.</summary>
-    public virtual Exception? ErrorCode
+    /// <inheritdoc/>
+    public Exception? ErrorCode
     {
         get
         {
@@ -887,8 +887,8 @@ internal abstract class TaskToAsyncInfoAdapter<
         }
     }
 
-
-    public virtual uint Id
+    /// <inheritdoc/>
+    public uint Id
     {
         get
         {
@@ -899,12 +899,13 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
 
-    /// <summary>Gets the status of the async info.</summary>
-    public virtual AsyncStatus Status
+    /// <inheritdoc/>
+    public AsyncStatus Status
     {
         get
         {
             EnsureNotClosed();
+
             return GetStatus(_state);
         }
     }
