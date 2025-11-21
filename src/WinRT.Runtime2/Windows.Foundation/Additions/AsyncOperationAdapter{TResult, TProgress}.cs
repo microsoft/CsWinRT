@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal sealed class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
+internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
     TResult,
     TProgress,
     AsyncOperationWithProgressCompletedHandler<TResult, TProgress>,
@@ -23,29 +23,29 @@ internal sealed class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress
     IAsyncOperationWithProgress<TResult, TProgress>
 {
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
-    public TaskToAsyncOperationWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
+    public AsyncOperationProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
 
          : base(factory)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
-    public TaskToAsyncOperationWithProgressAdapter(TResult result)
+    public AsyncOperationProgressAdapter(TResult result)
         : base(result)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
-    public TaskToAsyncOperationWithProgressAdapter(bool isCanceled)
+    public AsyncOperationProgressAdapter(bool isCanceled)
         : base(default(TResult)!)
     {
         if (isCanceled)
@@ -55,10 +55,10 @@ internal sealed class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
-    public TaskToAsyncOperationWithProgressAdapter(Exception exception)
+    public AsyncOperationProgressAdapter(Exception exception)
         : base(default(TResult)!)
     {
         _ = DangerousSetError(exception);
