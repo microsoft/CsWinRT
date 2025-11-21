@@ -1,17 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks;
-
-using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
-using System.Threading;
 using global::Windows.Foundation;
 using WindowsRuntime.InteropServices;
+
+namespace System.Threading.Tasks;
 
 /// <summary>
 /// Implements a wrapper that allows to expose managed <code>System.Threading.Tasks.Task</code> objects as
@@ -20,10 +16,15 @@ using WindowsRuntime.InteropServices;
 #if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
-                                                                            : AsyncInfoAdapter, IAsyncInfo, IProgress<TProgressInfo>
-                                                                            where TCompletedHandler : class
-                                                                            where TProgressHandler : class
+internal abstract partial class TaskToAsyncInfoAdapter<
+    TResult,
+    TProgress,
+    TCompletedHandler,
+    TProgressHandler> : AsyncInfoAdapter,
+    IAsyncInfo,
+    IProgress<TProgress>
+    where TCompletedHandler : class
+    where TProgressHandler : class
 {
     #region Private Types, Statics and Constants
 
@@ -125,8 +126,8 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
         Debug.Assert(taskProvider != null);
         Debug.Assert((null != (taskProvider as Func<Task>))
                         || (null != (taskProvider as Func<CancellationToken, Task>))
-                        || (null != (taskProvider as Func<IProgress<TProgressInfo>, Task>))
-                        || (null != (taskProvider as Func<CancellationToken, IProgress<TProgressInfo>, Task>)));
+                        || (null != (taskProvider as Func<IProgress<TProgress>, Task>))
+                        || (null != (taskProvider as Func<CancellationToken, IProgress<TProgress>, Task>)));
 
         // Construct task from the specified provider:
         Task task = InvokeTaskProvider(taskProvider);
@@ -142,7 +143,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
 
         // Set the completion routine and let the task running:
         task.ContinueWith(
-            (_, this_) => ((TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>)this_!).TaskCompleted(),
+            (_, this_) => ((TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>)this_!).TaskCompleted(),
             this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
@@ -158,7 +159,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
     /// <param name="underlyingProgressDispatcher">A progress listener/pugblisher that receives progress notifications
     /// form <code>underlyingTask</code>.</param>
     internal TaskToAsyncInfoAdapter(Task underlyingTask,
-                                    CancellationTokenSource underlyingCancelTokenSource, Progress<TProgressInfo> underlyingProgressDispatcher)
+                                    CancellationTokenSource underlyingCancelTokenSource, Progress<TProgress> underlyingProgressDispatcher)
     {
         ArgumentNullException.ThrowIfNull(underlyingTask);
 
@@ -180,7 +181,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
         _state = (STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED);
 
         underlyingTask.ContinueWith(
-            (_, this_) => ((TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>)this_!).TaskCompleted(),
+            (_, this_) => ((TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>)this_!).TaskCompleted(),
             this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
@@ -365,7 +366,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
     }
 
 
-    internal virtual void OnProgress(TProgressHandler userProgressHandler, TProgressInfo progressInfo)
+    internal virtual void OnProgress(TProgressHandler userProgressHandler, TProgress progressInfo)
     {
         Debug.Fail("This (sub-)type of IAsyncInfo does not support progress notifications "
                              + " (" + this.GetType().ToString() + ")");
@@ -410,7 +411,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
 
     /// <summary>Reports a progress update.</summary>
     /// <param name="value">The new progress value to report.</param>
-    void IProgress<TProgressInfo>.Report(TProgressInfo value)
+    void IProgress<TProgress>.Report(TProgress value)
     {
         // If no progress handler is set, there is nothing to do:
         TProgressHandler handler = Volatile.Read(ref _progressHandler);
@@ -434,9 +435,9 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
     }
 
 
-    private void OnReportChainedProgress(object sender, TProgressInfo progressInfo)
+    private void OnReportChainedProgress(object sender, TProgress progressInfo)
     {
-        ((IProgress<TProgressInfo>)this).Report(progressInfo);
+        ((IProgress<TProgress>)this).Report(progressInfo);
     }
 
 
@@ -703,13 +704,13 @@ internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgr
             return funcCTokTask(_cancelTokenSource.Token);
         }
 
-        var funcIPrgrTask = taskProvider as Func<IProgress<TProgressInfo>, Task>;
+        var funcIPrgrTask = taskProvider as Func<IProgress<TProgress>, Task>;
         if (funcIPrgrTask != null)
         {
             return funcIPrgrTask(this);
         }
 
-        var funcCTokIPrgrTask = taskProvider as Func<CancellationToken, IProgress<TProgressInfo>, Task>;
+        var funcCTokIPrgrTask = taskProvider as Func<CancellationToken, IProgress<TProgress>, Task>;
         if (funcCTokIPrgrTask != null)
         {
             _cancelTokenSource = new CancellationTokenSource();

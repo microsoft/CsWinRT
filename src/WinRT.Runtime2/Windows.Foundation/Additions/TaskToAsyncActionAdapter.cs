@@ -9,12 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using global::Windows.Foundation;
 
-#if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
-internal sealed partial class TaskToAsyncActionAdapter
-                    : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
-                      IAsyncAction
+internal sealed partial class TaskToAsyncActionAdapter : TaskToAsyncInfoAdapter<
+    VoidValueTypeParameter,
+    VoidValueTypeParameter,
+    AsyncActionCompletedHandler,
+    VoidReferenceTypeParameter>,
+    IAsyncAction
 {
     internal TaskToAsyncActionAdapter(Delegate taskGenerator)
 

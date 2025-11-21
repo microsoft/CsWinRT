@@ -13,12 +13,12 @@ using global::Windows.Foundation;
 #if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-internal sealed partial class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>
-                        : TaskToAsyncInfoAdapter<AsyncOperationWithProgressCompletedHandler<TResult, TProgress>,
-                                                 AsyncOperationProgressHandler<TResult, TProgress>,
-                                                 TResult,
-                                                 TProgress>,
-                          IAsyncOperationWithProgress<TResult, TProgress>
+internal sealed partial class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
+    TResult,
+    TProgress,
+    AsyncOperationWithProgressCompletedHandler<TResult, TProgress>,
+    AsyncOperationProgressHandler<TResult, TProgress>>,
+    IAsyncOperationWithProgress<TResult, TProgress>
 {
     internal TaskToAsyncOperationWithProgressAdapter(Delegate taskGenerator)
 
