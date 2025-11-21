@@ -9,6 +9,7 @@ using global::System.Runtime.InteropServices;
 using global::System.Threading;
 using global::System.Threading.Tasks;
 using global::Windows.Foundation;
+using WindowsRuntime.InteropServices;
 
 #if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
@@ -22,19 +23,14 @@ static class WindowsRuntimeSystemExtensions
 {
     public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
-#if NET
-        if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
+        if (source is AsyncInfoAdapter { Task: Task task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
                 task;
         }
-#endif
 
         switch (source.Status)
         {
@@ -70,19 +66,14 @@ static class WindowsRuntimeSystemExtensions
 
     public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
-#if NET
-        if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
+        if (source is AsyncInfoAdapter { Task: Task<TResult> task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
                 task;
         }
-#endif
 
         switch (source.Status)
         {
@@ -123,20 +114,15 @@ static class WindowsRuntimeSystemExtensions
 
     public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
-#if NET
         // fast path is underlying asyncInfo is Task and no IProgress provided
-        if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task && progress == null)
+        if (source is AsyncInfoAdapter { Task: Task task } && progress is null)
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
                 task;
         }
-#endif
 
         switch (source.Status)
         {
@@ -193,20 +179,15 @@ static class WindowsRuntimeSystemExtensions
 
     public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
-#if NET
         // fast path is underlying asyncInfo is Task and no IProgress provided
-        if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task && progress == null)
+        if (source is AsyncInfoAdapter { Task: Task<TResult> task } && progress is null)
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
                 task;
         }
-#endif
 
         switch (source.Status)
         {
@@ -268,16 +249,14 @@ static class WindowsRuntimeSystemExtensions
 
     public static IAsyncAction AsAsyncAction(this Task source)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new TaskToAsyncActionAdapter(source, underlyingCancelTokenSource: null);
     }
 
     public static IAsyncOperation<TResult> AsAsyncOperation<TResult>(this Task<TResult> source)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new TaskToAsyncOperationAdapter<TResult>(source, underlyingCancelTokenSource: null);
     }
@@ -302,10 +281,7 @@ sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TR
 
     internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
     {
-        if (asyncInfo == null)
-        {
-            throw new ArgumentNullException(nameof(asyncInfo));
-        }
+        ArgumentNullException.ThrowIfNull(asyncInfo);
 
         this._ct = cancellationToken;
         if (this._ct.CanBeCanceled)
@@ -358,10 +334,7 @@ sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TR
 
     private void Complete(IAsyncInfo asyncInfo, Func<IAsyncInfo, TResult> getResultsFunction, AsyncStatus asyncStatus)
     {
-        if (asyncInfo == null)
-        {
-            throw new ArgumentNullException(nameof(asyncInfo));
-        }
+        ArgumentNullException.ThrowIfNull(asyncInfo);
 
         try
         {

@@ -20,8 +20,8 @@ using WindowsRuntime.InteropServices;
 #if NET
 [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
-                                                                            : IAsyncInfo, IProgress<TProgressInfo>, ITaskAwareAsyncInfo
+internal abstract partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
+                                                                            : AsyncInfoAdapter, IAsyncInfo, IProgress<TProgressInfo>
                                                                             where TCompletedHandler : class
                                                                             where TProgressHandler : class
 {
@@ -160,8 +160,7 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
     internal TaskToAsyncInfoAdapter(Task underlyingTask,
                                     CancellationTokenSource underlyingCancelTokenSource, Progress<TProgressInfo> underlyingProgressDispatcher)
     {
-        if (underlyingTask == null)
-            throw new ArgumentNullException(nameof(underlyingTask));
+        ArgumentNullException.ThrowIfNull(underlyingTask);
 
         // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
         if (underlyingTask.Status == TaskStatus.Created)
@@ -329,16 +328,14 @@ internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandle
 
     #region Infrastructure methods
 
-    Task ITaskAwareAsyncInfo.Task
+    /// <inheritdoc/>
+    public sealed override Task? Task
     {
         get
         {
             EnsureNotClosed();
 
-            if (CompletedSynchronously)
-                return null;
-
-            return (Task)_dataContainer;
+            return CompletedSynchronously ? null : (Task)_dataContainer;
         }
     }
 
