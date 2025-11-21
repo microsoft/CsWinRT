@@ -16,6 +16,8 @@ using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
+#pragma warning disable IDE0010 // Add missing cases
+
 internal static class GuidGenerator
 {
     private static readonly Guid WindowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
@@ -67,7 +69,6 @@ internal static class GuidGenerator
         TypeDefinition? typeDefinition = typeSignature.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + typeSignature.FullName);
         string typeFullName = TypeMapping.TryFindMappedWinRTFullName(typeDefinition.FullName, useWindowsUIXamlProjections, out string? typeFullNameMapped) ? typeFullNameMapped : typeDefinition.FullName;
 
-#pragma warning disable IDE0010 // Add missing cases
         switch (typeSignature.ElementType)
         {
             // value types
@@ -169,7 +170,6 @@ internal static class GuidGenerator
                 // throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
                 return typeSignature.FullName;
         }
-#pragma warning restore IDE0010 // Add missing cases
     }
 
     /// <summary>
