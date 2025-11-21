@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using global::Windows.Foundation;
 using WindowsRuntime.InteropServices;
@@ -66,7 +67,7 @@ internal abstract class TaskToAsyncInfoAdapter<
     // These two masks are used to select any STATE_XXXX bits and clear all other (i.e. STATEFLAG_XXXX) bits.
     // It is set to (next power of 2 after the largest STATE_XXXX value) - 1.
     // !!! Make sure to update this if a new STATE_XXXX value is added above !!
-    private const int STATEMASK_SELECT_ANY_ASYNC_STATE = (64 - 1);
+    private const int STATEMASK_SELECT_ANY_ASYNC_STATE = 64 - 1;
 
     // These two masks are used to clear all STATE_XXXX bits and leave any STATEFLAG_XXXX bits.
     private const int STATEMASK_CLEAR_ALL_ASYNC_STATES = ~STATEMASK_SELECT_ANY_ASYNC_STATE;
@@ -86,15 +87,20 @@ internal abstract class TaskToAsyncInfoAdapter<
     #region Instance variables
 
     /// <summary>The token source used to cancel running operations.</summary>
-    private CancellationTokenSource _cancelTokenSource = null;
+    private CancellationTokenSource? _cancelTokenSource;
 
-    /// <summary>The async info's ID. InvalidAsyncId stands for not yet been initialised.</summary>
+    /// <summary>The async info's ID.</summary>
+    /// <remarks>The <see cref="AsyncInfoIdGenerator.InvalidId"/> value stands for not yet been initialised.</remarks>
     private uint _id = AsyncInfoIdGenerator.InvalidId;
 
-    /// <summary>The cached error code used to avoid creating several exception objects if the <code>ErrorCode</code>
-    /// property is accessed several times. <code>null</code> indicates either no error or that <code>ErrorCode</code>
-    /// has not yet been called.</summary>
-    private Exception _error = null;
+    /// <summary>
+    /// The cached error code used to avoid creating several exception objects
+    /// if the <see cref="ErrorCode"/> property is accessed several times.
+    /// </summary>
+    /// <remarks>
+    /// A <see langword="null"/> value indicates either no error or that <see cref="ErrorCode"/> has not yet been called.
+    /// </remarks>
+    private Exception? _error;
 
     /// <summary>The state of the async info. Interlocked operations are used to manipulate this field.</summary>
     private volatile int _state = STATE_NOT_INITIALIZED;
@@ -105,13 +111,13 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// or to one of Task or Task{TResult} in the latter case. This approach allows us to save a field on all IAsyncInfos.
     /// Notably, this makes us pay the added cost of boxing for synchronously completing IAsyncInfos where TResult is a
     /// value type, however, this is expected to occur rather rare compared to non-synchronously completed user-IAsyncInfos.</summary>
-    private object _dataContainer;
+    private object? _dataContainer;
 
-    /// <summary>Registered completed handler.</summary>
+    /// <summary>The registered completed handler.</summary>
     private TCompletedHandler? _completedHandler;
 
-    /// <summary>Registered progress handler.</summary>
-    private TProgressHandler _progressHandler;
+    /// <summary>The registered progress handler.</summary>
+    private TProgressHandler? _progressHandler;
 
     #endregion Instance variables
 
@@ -120,17 +126,17 @@ internal abstract class TaskToAsyncInfoAdapter<
 
     /// <summary>Creates an IAsyncInfo from the specified delegate. The delegate will be called to construct a task that will
     /// represent the future encapsulated by this IAsyncInfo.</summary>
-    /// <param name="taskProvider">The task generator to use for creating the task.</param>
-    internal TaskToAsyncInfoAdapter(Delegate taskProvider)
+    /// <param name="factory">The task generator to use for creating the task.</param>
+    internal TaskToAsyncInfoAdapter(Delegate factory)
     {
-        Debug.Assert(taskProvider != null);
-        Debug.Assert((null != (taskProvider as Func<Task>))
-                        || (null != (taskProvider as Func<CancellationToken, Task>))
-                        || (null != (taskProvider as Func<IProgress<TProgress>, Task>))
-                        || (null != (taskProvider as Func<CancellationToken, IProgress<TProgress>, Task>)));
+        Debug.Assert(factory is
+            Func<Task> or
+            Func<CancellationToken, Task> or
+            Func<IProgress<TProgress>, Task> or
+            Func<CancellationToken, IProgress<TProgress>, Task>);
 
-        // Construct task from the specified provider:
-        Task task = InvokeTaskProvider(taskProvider);
+        // Construct task from the specified provider
+        Task task = InvokeTaskFactory(factory);
 
         if (task == null)
             throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
@@ -139,12 +145,15 @@ internal abstract class TaskToAsyncInfoAdapter<
             throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
 
         _dataContainer = task;
-        _state = (STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED);
+        _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
 
-        // Set the completion routine and let the task running:
-        task.ContinueWith(
-            (_, this_) => ((TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>)this_!).TaskCompleted(),
-            this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        // Set the completion routine and let the task run
+        _ = task.ContinueWith(
+            continuationAction: static (_, @this) => Unsafe.As<TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
+            state: this,
+            cancellationToken: CancellationToken.None,
+            continuationOptions: TaskContinuationOptions.ExecuteSynchronously,
+            scheduler: TaskScheduler.Default);
     }
 
 
@@ -158,11 +167,8 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// by <code>underlyingTask</code>.</param>
     /// <param name="progress">A progress listener/pugblisher that receives progress notifications
     /// form <code>underlyingTask</code>.</param>
-    internal TaskToAsyncInfoAdapter(Task task,
-                                    CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
+    internal TaskToAsyncInfoAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
-        ArgumentNullException.ThrowIfNull(task);
-
         // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
         if (task.Status == TaskStatus.Created)
             throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
@@ -177,11 +183,15 @@ internal abstract class TaskToAsyncInfoAdapter<
         // Iff the specified underlyingTask reports progress, chain the reports to this IAsyncInfo's reporting method:
         progress?.ProgressChanged += OnReportChainedProgress;
 
-        _state = (STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED);
+        _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
 
-        task.ContinueWith(
-            (_, this_) => ((TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>)this_!).TaskCompleted(),
-            this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        // Set the completion routine and let the task run
+        _ = task.ContinueWith(
+            continuationAction: static (_, @this) => Unsafe.As<TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
+            state: this,
+            cancellationToken: CancellationToken.None,
+            continuationOptions: TaskContinuationOptions.ExecuteSynchronously,
+            scheduler: TaskScheduler.Default);
     }
 
 
@@ -197,10 +207,11 @@ internal abstract class TaskToAsyncInfoAdapter<
 
         // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + RUN_TO_COMPLETION:
         // (same state as assigned by DangerousSetCompleted())
-        _state = (STATEFLAG_COMPLETED_SYNCHRONOUSLY
-                      | STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
-                      | STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
-                      | STATE_RUN_TO_COMPLETION);
+        _state =
+            STATEFLAG_COMPLETED_SYNCHRONOUSLY |
+            STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET |
+            STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED |
+            STATE_RUN_TO_COMPLETION;
     }
 
 
@@ -687,44 +698,36 @@ internal abstract class TaskToAsyncInfoAdapter<
         }
     }
 
-
-    private Task InvokeTaskProvider(Delegate taskProvider)
+    private Task InvokeTaskFactory(Delegate factory)
     {
-        var funcVoidTask = taskProvider as Func<Task>;
-        if (funcVoidTask != null)
+        if (factory is Func<Task> taskFactory)
         {
-            return funcVoidTask();
+            return taskFactory();
         }
 
-        var funcCTokTask = taskProvider as Func<CancellationToken, Task>;
-        if (funcCTokTask != null)
+        if (factory is Func<CancellationToken, Task> cancelableTaskFactory)
         {
             _cancelTokenSource = new CancellationTokenSource();
-            return funcCTokTask(_cancelTokenSource.Token);
+
+            return cancelableTaskFactory(_cancelTokenSource.Token);
         }
 
-        var funcIPrgrTask = taskProvider as Func<IProgress<TProgress>, Task>;
-        if (funcIPrgrTask != null)
+        if (factory is Func<IProgress<TProgress>, Task> taskFactoryWithProgress)
         {
-            return funcIPrgrTask(this);
+            return taskFactoryWithProgress(this);
         }
 
-        var funcCTokIPrgrTask = taskProvider as Func<CancellationToken, IProgress<TProgress>, Task>;
-        if (funcCTokIPrgrTask != null)
+        if (factory is Func<CancellationToken, IProgress<TProgress>, Task> cancelableTaskFactoryWithProgress)
         {
             _cancelTokenSource = new CancellationTokenSource();
-            return funcCTokIPrgrTask(_cancelTokenSource.Token, this);
+
+            return cancelableTaskFactoryWithProgress(_cancelTokenSource.Token, this);
         }
 
-        Debug.Fail("We should never get here!"
-                             + " Public methods creating instances of this class must be typesafe to ensure that taskProvider"
-                             + " can always be cast to one of the above Func types."
-                             + " The taskProvider is " + (taskProvider == null
-                                                                ? "null."
-                                                                : "a " + taskProvider.GetType().ToString()) + ".");
+        Debug.Fail($"Invalid task factory of type '{factory}'.");
+
         return null;
     }
-
 
     private void TransitionToClosed()
     {
