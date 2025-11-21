@@ -140,7 +140,7 @@ internal static class WellKnownInterfaceIIDs
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
                 => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
-                => new Guid("1bfca4f6-2c4e-5174-9869-b39d35848fcc"),
+                => new Guid("1BFCA4F6-2C4E-5174-9869-B39D35848FCC"),
             _ => Guid.Empty
         };
 
