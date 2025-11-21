@@ -42,14 +42,19 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     /// <summary>
     /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
-    public AsyncActionAdapter(bool isCanceled)
+    /// <param name="_">The <see cref="CompletedTaskPlaceholder"/> value to select this overload.</param>
+    public AsyncActionAdapter(CompletedTaskPlaceholder _)
         : base(default(VoidValueTypeParameter))
     {
-        if (isCanceled)
-        {
-            _ = DangerousSetCanceled();
-        }
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
+    public AsyncActionAdapter(CanceledTaskPlaceholder _)
+        : base(default(CanceledTaskPlaceholder))
+    {
     }
 
     /// <summary>

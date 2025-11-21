@@ -145,12 +145,12 @@ public static class AsyncInfo
 
     public static IAsyncAction CompletedAction()
     {
-        return new AsyncActionAdapter(isCanceled: false);
+        return new AsyncActionAdapter(default(CompletedTaskPlaceholder));
     }
 
     public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
     {
-        return new AsyncActionWithProgressAdapter<TProgress>(isCanceled: false);
+        return new AsyncActionWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
     }
 
     public static IAsyncOperation<TResult> FromResult<TResult>(TResult synchronousResult)
@@ -193,21 +193,21 @@ public static class AsyncInfo
 
     public static IAsyncAction CanceledAction()
     {
-        return new AsyncActionAdapter(isCanceled: true);
+        return new AsyncActionAdapter(default(CanceledTaskPlaceholder));
     }
 
     public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()
     {
-        return new AsyncActionWithProgressAdapter<TProgress>(isCanceled: true);
+        return new AsyncActionWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
     }
 
     public static IAsyncOperation<TResult> CanceledOperation<TResult>()
     {
-        return new AsyncOperationAdapter<TResult>(isCanceled: true);
+        return new AsyncOperationAdapter<TResult>(default(CanceledTaskPlaceholder));
     }
 
     public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()
     {
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(isCanceled: true);
+        return new AsyncOperationProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
     }
 }

@@ -202,16 +202,32 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// <param name="result">The result of this synchronously completed IAsyncInfo.</param>
     internal TaskToAsyncInfoAdapter(TResult result)
     {
-        // Set the synchronous result:
+        // Set the synchronous result
         _dataContainer = result;
 
-        // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + RUN_TO_COMPLETION:
-        // (same state as assigned by DangerousSetCompleted())
+        // Mark the task as completed successfully
         _state =
             STATEFLAG_COMPLETED_SYNCHRONOUSLY |
             STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET |
             STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED |
             STATE_RUN_TO_COMPLETION;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
+    internal TaskToAsyncInfoAdapter(CanceledTaskPlaceholder _)
+    {
+        _dataContainer = null;
+        _error = null;
+
+        // Mark the task as completed and canceled
+        _state =
+            STATEFLAG_COMPLETED_SYNCHRONOUSLY |
+            STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET |
+            STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED |
+            STATE_CANCELLATION_COMPLETED;
     }
 
     /// <summary>
@@ -238,30 +254,6 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
     #endregion Constructors and Destructor
-
-
-    #region Synchronous completion controls
-
-    internal bool DangerousSetCanceled()
-    {
-        if (!CompletedSynchronously)
-            return false;
-
-        // Here we do not try to deal with the inherit races: Use this method only when constructing a synchronously
-        // completed IAsyncInfo in a desired state when you understand the threading conditions well.
-
-        _dataContainer = null;
-        _error = null;
-
-        // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + CANCELLATION_COMPLETED:
-        _state = (STATEFLAG_COMPLETED_SYNCHRONOUSLY
-                      | STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
-                      | STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
-                      | STATE_CANCELLATION_COMPLETED);
-        return true;
-    }
-
-    #endregion Synchronous completion controls
 
 
     #region State bit field operations

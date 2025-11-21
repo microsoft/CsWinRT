@@ -54,14 +54,10 @@ internal sealed class AsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     /// <summary>
     /// Creates a new <see cref="AsyncOperationAdapter{TResult}"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
-    public AsyncOperationAdapter(bool isCanceled)
-        : base(default(TResult)!)
+    /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
+    public AsyncOperationAdapter(CanceledTaskPlaceholder _)
+        : base(default(CanceledTaskPlaceholder))
     {
-        if (isCanceled)
-        {
-            _ = DangerousSetCanceled();
-        }
     }
 
     /// <summary>

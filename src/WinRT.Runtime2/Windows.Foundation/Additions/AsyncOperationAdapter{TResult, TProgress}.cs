@@ -44,14 +44,10 @@ internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskTo
     /// <summary>
     /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
-    public AsyncOperationProgressAdapter(bool isCanceled)
-        : base(default(TResult)!)
+    /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
+    public AsyncOperationProgressAdapter(CanceledTaskPlaceholder _)
+        : base(default(CanceledTaskPlaceholder))
     {
-        if (isCanceled)
-        {
-            _ = DangerousSetCanceled();
-        }
     }
 
     /// <summary>
