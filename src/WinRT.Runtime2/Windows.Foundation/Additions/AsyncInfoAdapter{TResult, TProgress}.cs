@@ -35,10 +35,11 @@ internal abstract class TaskToAsyncInfoAdapter<
 {
     #region Private Types, Statics and Constants
 
-    // ! THIS DIAGRAM ILLUSTRATES THE CONSTANTS BELOW. UPDATE THIS IF UPDATING THE CONSTANTS BELOW!:
+    // THIS DIAGRAM ILLUSTRATES THE CONSTANTS BELOW. UPDATE THIS IF UPDATING THE CONSTANTS BELOW:
+    //
     //     3         2         1         0
     //    10987654321098765432109876543210
-    //    X...............................   Reserved such that we can use Int32 and not worry about negative-valued state constants
+    //    X...............................   Reserved such that we can use 'int' and not worry about negative-valued state constants
     //    ..X.............................   STATEFLAG_COMPLETED_SYNCHRONOUSLY
     //    ...X............................   STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET
     //    ....X...........................   STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED
@@ -54,37 +55,66 @@ internal abstract class TaskToAsyncInfoAdapter<
     //     3         2         1         0
     //    10987654321098765432109876543210
 
-    // These STATE_XXXX constants describe the async state of this object.
-    // Objects of this type are in exactly in one of these states at any given time:
-    private const int STATE_NOT_INITIALIZED = 0;   // 0x00
-    private const int STATE_STARTED = 1;   // 0x01
-    private const int STATE_RUN_TO_COMPLETION = 2;   // 0x02
-    private const int STATE_CANCELLATION_REQUESTED = 4;   // 0x04
-    private const int STATE_CANCELLATION_COMPLETED = 8;   // 0x08
-    private const int STATE_ERROR = 16;  // 0x10
-    private const int STATE_CLOSED = 32;  // 0x20
+    // These 'STATE_XXXX' constants describe the async state of this object.
+    // Objects of this type are in exactly in one of these states at any given time.
 
-    // The STATEFLAG_XXXX constants can be bitmasked with the states to describe additional
-    // state info that cannot be easily inferred from the async state:
+    /// <summary>The object is not initialized (usually because a constructor threw an exception).</summary>
+    private const int STATE_NOT_INITIALIZED = 0;
+
+    /// <summary>The async action has started.</summary>
+    private const int STATE_STARTED = 1;
+
+    /// <summary>The async action has run to completion (successfully).</summary>
+    private const int STATE_RUN_TO_COMPLETION = 2;
+
+    /// <summary>Cancellation has been requested for the async action.</summary>
+    private const int STATE_CANCELLATION_REQUESTED = 4;
+
+    /// <summary>Cancellation has been performed for the async action.</summary>
+    private const int STATE_CANCELLATION_COMPLETED = 8;
+
+    /// <summary>The async action is in an error (faulted) state.</summary>
+    private const int STATE_ERROR = 16;
+
+    /// <summary>The async action has been disposed.</summary>
+    private const int STATE_CLOSED = 32;
+
+    // The 'STATEFLAG_XXXX' constants can be bitmasked with the states to describe
+    // additional state info that cannot be easily inferred from the async state.
+
+    /// <summary>The async action has completed synchronously.</summary>
     private const int STATEFLAG_COMPLETED_SYNCHRONOUSLY = 0x20000000;
+
+    /// <summary>The completion handler must be run immediately (synchronously) when set.</summary>
     private const int STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET = 0x10000000;
+
+    /// <summary>The completion handler has been set but not run yet.</summary>
     private const int STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED = 0x8000000;
 
-    // These two masks are used to select any STATE_XXXX bits and clear all other (i.e. STATEFLAG_XXXX) bits.
-    // It is set to (next power of 2 after the largest STATE_XXXX value) - 1.
-    // !!! Make sure to update this if a new STATE_XXXX value is added above !!
+    // This mask is used to select any 'STATE_XXXX' bits and clear all other
+    // (i.e. 'STATEFLAG_XXXX') bits. It is set to:
+    //
+    //     '(next power of 2 after the largest 'STATE_XXXX' value) - 1'.
+    //
+    // Make sure to update this if a new 'STATE_XXXX' value is added above.
+
+    /// <summary>Mask to select any async states.</summary>
     private const int STATEMASK_SELECT_ANY_ASYNC_STATE = 64 - 1;
 
-    // These two masks are used to clear all STATE_XXXX bits and leave any STATEFLAG_XXXX bits.
+    // This mask is used to clear all 'STATE_XXXX' bits and leave any 'STATEFLAG_XXXX' bits.
+
+    /// <summary>Mask to clear all async states and only leave combined flags (e.g. <see cref="STATEFLAG_COMPLETED_SYNCHRONOUSLY"/>).</summary>
     private const int STATEMASK_CLEAR_ALL_ASYNC_STATES = ~STATEMASK_SELECT_ANY_ASYNC_STATE;
 
     private static InvalidOperationException CreateCannotGetResultsFromIncompleteOperationException(Exception? cause)
     {
-        InvalidOperationException ex = (cause is null)
-                        ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
-                        : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, cause);
-        ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
-        return ex;
+        InvalidOperationException exception = cause is null
+            ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
+            : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, cause);
+
+        exception.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
+
+        return exception;
     }
 
     #endregion Private Types, Statics and Constants
@@ -126,7 +156,6 @@ internal abstract class TaskToAsyncInfoAdapter<
     private volatile TProgressHandler? _progressHandler;
 
     #endregion Instance variables
-
 
     #region Constructors and Destructor
 
