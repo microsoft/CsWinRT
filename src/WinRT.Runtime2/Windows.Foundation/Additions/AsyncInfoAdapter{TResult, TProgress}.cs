@@ -804,7 +804,7 @@ internal abstract class TaskToAsyncInfoAdapter<
 
 
     /// <summary>Gets or sets the progress handler.</summary>
-    public virtual TProgressHandler Progress
+    public virtual TProgressHandler? Progress
     {
         get
         {
@@ -870,7 +870,7 @@ internal abstract class TaskToAsyncInfoAdapter<
 
 
     /// <summary>Gets the error code for the async info.</summary>
-    public virtual Exception ErrorCode
+    public virtual Exception? ErrorCode
     {
         get
         {

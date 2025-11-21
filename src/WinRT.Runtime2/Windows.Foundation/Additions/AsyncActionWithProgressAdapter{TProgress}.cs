@@ -1,0 +1,72 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Runtime.Versioning;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Foundation;
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// Implements the Windows Runtime <see cref="IAsyncActionWithProgress{TProgress}"/> interface by wrapping a <see cref="Task"/> instance.
+/// </summary>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInfoAdapter<
+    VoidValueTypeParameter,
+    TProgress,
+    AsyncActionWithProgressCompletedHandler<TProgress>,
+    AsyncActionProgressHandler<TProgress>>,
+    IAsyncActionWithProgress<TProgress>
+{
+    /// <summary>
+    /// Creates a new <see cref="AsyncActionWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="factory">The function to invoke to create the <see cref="Task"/> instance to wrap.</param>
+    public AsyncActionWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task> factory)
+         : base(factory)
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncActionWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
+    public AsyncActionWithProgressAdapter(bool isCanceled)
+        : base(default(VoidValueTypeParameter))
+    {
+        if (isCanceled)
+        {
+            _ = DangerousSetCanceled();
+        }
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncActionWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
+    public AsyncActionWithProgressAdapter(Exception exception)
+        : base(default(VoidValueTypeParameter))
+    {
+        _ = DangerousSetError(exception);
+    }
+
+    /// <inheritdoc/>
+    public void GetResults()
+    {
+        _ = GetResultsInternal();
+    }
+
+    /// <inheritdoc/>
+    internal override void OnCompleted(AsyncActionWithProgressCompletedHandler<TProgress> userCompletionHandler, AsyncStatus asyncStatus)
+    {
+        userCompletionHandler(this, asyncStatus);
+    }
+
+    /// <inheritdoc/>
+    internal override void OnProgress(AsyncActionProgressHandler<TProgress> userProgressHandler, TProgress progressInfo)
+    {
+        userProgressHandler(this, progressInfo);
+    }
+}
