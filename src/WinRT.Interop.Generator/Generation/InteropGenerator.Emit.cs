@@ -253,6 +253,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
 
@@ -419,6 +420,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ImplType(
@@ -524,6 +526,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.Interface(
@@ -645,6 +648,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Vftbl(
@@ -767,6 +771,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IList1.Interface(
@@ -897,6 +902,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Vftbl(
@@ -1018,6 +1024,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IDictionary2.Interface(
@@ -1147,6 +1154,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
@@ -1200,6 +1208,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ImplType(
@@ -1305,6 +1314,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IObservableVector1.ImplType(
@@ -1420,6 +1430,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IObservableMap2.ImplType(
@@ -1535,6 +1546,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ImplType(
@@ -1640,6 +1652,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IAsyncOperation1.ImplType(
@@ -1745,6 +1758,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ImplType(
@@ -1848,6 +1862,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
                 InteropTypeDefinitionBuilder.SzArray.Marshaller(

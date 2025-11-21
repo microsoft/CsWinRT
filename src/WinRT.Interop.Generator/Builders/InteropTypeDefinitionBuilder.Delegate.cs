@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -10,6 +9,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Helpers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -29,6 +29,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         public static void IIDs(
@@ -36,6 +37,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod,
             out MethodDefinition get_ReferenceIidMethod)
         {
@@ -45,7 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(), // TODO
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
             // 'IReference<T>' IID
@@ -54,7 +56,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(), // TODO
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
 

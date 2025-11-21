@@ -266,6 +266,15 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Guid"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
+        public bool IsGuidType(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.Guid);
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="GenericInstanceTypeSignature"/> represents a custom-mapped Windows Runtime interface type.
         /// </summary>
         /// <returns>Whether the type represents a custom-mapped Windows Runtime interface type.</returns>

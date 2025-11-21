@@ -109,6 +109,11 @@ internal sealed class InteropReferences
     public TypeReference TypeMapAttribute1 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "TypeMapAttribute`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
+    /// </summary>
+    public TypeReference GuidAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "GuidAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="GenericInstanceTypeSignature"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/> of <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
     /// </summary>
     public GenericInstanceTypeSignature TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
@@ -127,6 +132,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Array"/>.
     /// </summary>
     public TypeReference Array => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Nullable"/>.
+    /// </summary>
+    public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.
@@ -437,6 +447,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
+    /// </summary>
+    public TypeReference WindowsRuntimeDefaultInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDefaultInterfaceAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
@@ -844,6 +859,11 @@ internal sealed class InteropReferences
     public TypeReference IMapChangedEventArgs1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IVectorChangedEventArgs&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IVectorChangedEventArgs => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IVectorChangedEventArgs"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
     /// </summary>
     public TypeReference CollectionChange => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
@@ -907,6 +927,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperationWithProgress`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
+    /// </summary>
+    public TypeReference AsyncOperationProgressHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationProgressHandler`1"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
