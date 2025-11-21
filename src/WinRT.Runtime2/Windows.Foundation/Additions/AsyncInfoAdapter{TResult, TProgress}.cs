@@ -392,10 +392,7 @@ internal abstract class TaskToAsyncInfoAdapter<
             // Remember to run the handler when it is set:
             _ = SetState(
                 newStateSetMask: STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET,
-                newStateIgnoreMask: ~STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET,
-                conditionBitMask: 0,
-                useCondition: false,
-                conditionFailed: out _);
+                newStateIgnoreMask: ~STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET);
 
             // The handler may have been set concurrently before we managed to call 'SetState', so check for it again
             handler = _completedHandler;
@@ -414,7 +411,6 @@ internal abstract class TaskToAsyncInfoAdapter<
             newStateSetMask: 0,
             newStateIgnoreMask: ~STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED,
             conditionBitMask: STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED,
-            useCondition: true,
             conditionFailed: out bool conditionFailed);
 
         // We lost the race, just stop here
@@ -465,84 +461,117 @@ internal abstract class TaskToAsyncInfoAdapter<
     }
 
     /// <summary>
-    /// Sets the <code>m_state</code> bit field to reflect the specified async state with the corresponding STATE_XXX bit mask.
+    /// Sets the <see cref="_state"/> field to reflect the specified async state with the corresponding <c>STATE_XXX</c> bit mask.
     /// </summary>
-    /// <param name="newAsyncState">Must be one of the STATE_XXX (not STATEYYY_ZZZ !) constants defined in this class.</param>
-    /// <param name="conditionBitMask">If <code>useCondition</code> is FALSE: this field is ignored.
-    ///                                If <code>useCondition</code> is TRUE: Unless this value has at least one bit with <code>m_state</code> in
-    ///                                                                      common, this method will not perform any action.</param>
-    /// <param name="useCondition">If TRUE, use <code>conditionBitMask</code> to determine whether the state should be set;
-    ///                            If FALSE, ignore <code>conditionBitMask</code>.</param>
-    /// <param name="conditionFailed">If <code>useCondition</code> is FALSE: this field is set to FALSE;
-    ///                               If <code>useCondition</code> is TRUE: this field indicated whether the specified <code>conditionBitMask</code>
-    ///                                                                     had at least one bit in common with <code>m_state</code> (TRUE)
-    ///                                                                     or not (FALSE).
-    ///                               (!) Note that the meaning of this parameter to the caller is not quite the same as whether <code>m_state</code>
-    ///                               is/was set to the specified value, because <code>m_state</code> may already have had the specified value, or it
-    ///                               may be set and then immediately changed by another thread. The true meaning of this parameter is whether or not
-    ///                               the specified condition did hold before trying to change the state.</param>
-    /// <returns>The value at which the current invocation of this method left <code>m_state</code>.</returns>
-    private int SetAsyncState(int newAsyncState, int conditionBitMask, bool useCondition, out bool conditionFailed)
+    /// <param name="newAsyncState">Must be one of the <c>STATE_XXX</c> (not <c>STATEFLAG_XXX</c>) constants defined in this class.</param>
+    /// <returns>The value at which the current invocation of this method left <see cref="_state"/>.</returns>
+    private int SetAsyncState(int newAsyncState)
     {
         Debug.Assert(CheckUniqueAsyncState(newAsyncState & STATEMASK_SELECT_ANY_ASYNC_STATE));
         Debug.Assert(CheckUniqueAsyncState(_state & STATEMASK_SELECT_ANY_ASYNC_STATE));
 
-        int resultState = SetState(newAsyncState, STATEMASK_CLEAR_ALL_ASYNC_STATES, conditionBitMask, useCondition, out conditionFailed);
+        int resultState = SetState(newAsyncState, STATEMASK_CLEAR_ALL_ASYNC_STATES);
 
         Debug.Assert(CheckUniqueAsyncState(resultState & STATEMASK_SELECT_ANY_ASYNC_STATE));
 
         return resultState;
     }
 
+    /// <summary>
+    /// Sets the <see cref="_state"/> field to reflect the specified async state with the corresponding <c>STATE_XXX</c> bit mask.
+    /// </summary>
+    /// <param name="newAsyncState">Must be one of the <c>STATE_XXX</c> (not <c>STATEFLAG_XXX</c>) constants defined in this class.</param>
+    /// <param name="conditionBitMask">Unless this value has at least one bit with <see cref="_state"/> in common, this method will not perform any action.</param>
+    /// <param name="conditionFailed">Indicates whether the specified <paramref name="conditionBitMask"/> had at least one bit in common with <see cref="_state"/>.</param>
+    /// <returns>The value at which the current invocation of this method left <see cref="_state"/>.</returns>
+    /// <remarks>
+    /// Note that the meaning of the <paramref name="conditionFailed"/> parameter to the caller is not quite the same as whether <see cref="_state"/>
+    /// is/was set to the specified value, because <see cref="_state"/> may already have had the specified value, or it may be set and then immediately
+    /// changed by another thread. The true meaning of this parameter is whether or not the specified condition did hold before trying to change the state.
+    /// </remarks>
+    private int SetAsyncState(int newAsyncState, int conditionBitMask, out bool conditionFailed)
+    {
+        Debug.Assert(CheckUniqueAsyncState(newAsyncState & STATEMASK_SELECT_ANY_ASYNC_STATE));
+        Debug.Assert(CheckUniqueAsyncState(_state & STATEMASK_SELECT_ANY_ASYNC_STATE));
+
+        int resultState = SetState(newAsyncState, STATEMASK_CLEAR_ALL_ASYNC_STATES, conditionBitMask, out conditionFailed);
+
+        Debug.Assert(CheckUniqueAsyncState(resultState & STATEMASK_SELECT_ANY_ASYNC_STATE));
+
+        return resultState;
+    }
 
     /// <summary>
-    /// Sets the specified bits in the <code>m_state</code> bit field according to the specified bit-mask parameters.
+    /// Sets the specified bits in the <see cref="_state"/> bit field according to the specified bit-mask parameters.
     /// </summary>
-    /// <param name="newStateSetMask">The bits to turn ON in the <code>m_state</code> bit field</param>
-    /// <param name="newStateIgnoreMask">Any bits that are OFF in this value will get turned OFF,
-    ///                                  unless they are explicitly switched on by <code>newStateSetMask</code>.</param>
-    /// <param name="conditionBitMask">If <code>useCondition</code> is FALSE: this field is ignored.
-    ///                                If <code>useCondition</code> is TRUE: Unless this value has at least one bit with <code>m_state</code> in
-    ///                                                                      common, this method will not perform any action.</param>
-    /// <param name="useCondition">If TRUE, use <code>conditionBitMask</code> to determine whether the state should be set;
-    ///                            If FALSE, ignore <code>conditionBitMask</code>.</param>
-    /// <param name="conditionFailed">If <code>useCondition</code> is FALSE: this field is set to FALSE;
-    ///                               If <code>useCondition</code> is TRUE: this field indicated whether the specified <code>conditionBitMask</code>
-    ///                                                                     had at least one bit in common with <code>m_state</code> (TRUE)
-    ///                                                                     or not (FALSE).
-    ///                               (!) Note that the meaning of this parameter to the caller is not quite the same as whether <code>m_state</code>
-    ///                               is/was set to the specified value, because <code>m_state</code> may already have had the specified value, or it
-    ///                               may be set and then immediately changed by another thread. The true meaning of this parameter is whether or not
-    ///                               the specified condition did hold before trying to change the state.</param>
-    /// <returns>The value at which the current invocation of this method left <code>m_state</code>.</returns>
-    private int SetState(int newStateSetMask, int newStateIgnoreMask, int conditionBitMask, bool useCondition, out bool conditionFailed)
+    /// <param name="newStateSetMask">The bits to set in the <see cref="_state"/> bit field</param>
+    /// <param name="newStateIgnoreMask">Any bits that are unset in this value will get unset, unless explicitly set by <paramref name="newStateSetMask"/>.</param>
+    /// <returns>The value at which the current invocation of this method left <see cref="_state"/>.</returns>
+    private int SetState(int newStateSetMask, int newStateIgnoreMask)
+    {
+        int originalState = _state;
+        int newState = (originalState & newStateIgnoreMask) | newStateSetMask;
+        int previousState = Interlocked.CompareExchange(ref _state, newState, originalState);
+
+        // If '_state' changed concurrently, we want to make sure that the change being made is
+        // based on a bitmask that is up to date. This relies of the fact that all state machines
+        // that save their state in '_state' have no cycles.
+        while (true)
+        {
+            if (previousState == originalState)
+            {
+                return newState;
+            }
+
+            originalState = _state;
+            newState = (originalState & newStateIgnoreMask) | newStateSetMask;
+            previousState = Interlocked.CompareExchange(ref _state, newState, originalState);
+        }
+    }
+
+    /// <summary>
+    /// Sets the specified bits in the <see cref="_state"/> bit field according to the specified bit-mask parameters.
+    /// </summary>
+    /// <param name="newStateSetMask">The bits to set in the <see cref="_state"/> bit field</param>
+    /// <param name="newStateIgnoreMask">Any bits that are unset in this value will get unset, unless explicitly set by <paramref name="newStateSetMask"/>.</param>
+    /// <param name="conditionBitMask">Unless this value has at least one bit with <see cref="_state"/> in common, this method will not perform any action.</param>
+    /// <param name="conditionFailed">Indicates whether the specified <paramref name="conditionBitMask"/> had at least one bit in common with <see cref="_state"/>.</param>
+    /// <returns>The value at which the current invocation of this method left <see cref="_state"/>.</returns>
+    /// <remarks>
+    /// Note that the meaning of the <paramref name="conditionFailed"/> parameter to the caller is not quite the same as whether <see cref="_state"/>
+    /// is/was set to the specified value, because <see cref="_state"/> may already have had the specified value, or it may be set and then immediately
+    /// changed by another thread. The true meaning of this parameter is whether or not the specified condition did hold before trying to change the state.
+    /// </remarks>
+    private int SetState(int newStateSetMask, int newStateIgnoreMask, int conditionBitMask, out bool conditionFailed)
     {
         int origState = _state;
 
-        if (useCondition && 0 == (origState & conditionBitMask))
+        if ((origState & conditionBitMask) == 0)
         {
             conditionFailed = true;
+
             return origState;
         }
 
         int newState = (origState & newStateIgnoreMask) | newStateSetMask;
         int prevState = Interlocked.CompareExchange(ref _state, newState, origState);
 
-        // If m_state changed concurrently, we want to make sure that the change being made is based on a bitmask that is up to date:
-        // (this relies of the fact that all state machines that save their state in m_state have no cycles)
+        // Same loop as above, plus the additional check for the condition
         while (true)
         {
             if (prevState == origState)
             {
                 conditionFailed = false;
+
                 return newState;
             }
 
             origState = _state;
 
-            if (useCondition && 0 == (origState & conditionBitMask))
+            if ((origState & conditionBitMask) == 0)
             {
                 conditionFailed = true;
+
                 return origState;
             }
 
@@ -586,7 +615,6 @@ internal abstract class TaskToAsyncInfoAdapter<
         int newState = SetAsyncState(
             newAsyncState: terminalAsyncState,
             conditionBitMask: STATEMASK_SELECT_ANY_ASYNC_STATE,
-            useCondition: true,
             conditionFailed: out _);
 
         Debug.Assert((newState & STATEMASK_SELECT_ANY_ASYNC_STATE) == terminalAsyncState);
@@ -746,11 +774,7 @@ internal abstract class TaskToAsyncInfoAdapter<
 
         // Always go to closed, even from STATE_NOT_INITIALIZED.
         // Any checking whether it is legal to call CLosed inthe current state, should occur in Close().
-        _ = SetAsyncState(
-            newAsyncState: STATE_CLOSED,
-            conditionBitMask: 0,
-            useCondition: false,
-            conditionFailed: out _);
+        _ = SetAsyncState(STATE_CLOSED);
 
         _cancelTokenSource = null;
         _dataContainer = null;
@@ -870,7 +894,6 @@ internal abstract class TaskToAsyncInfoAdapter<
         _ = SetAsyncState(
             newAsyncState: STATE_CANCELLATION_REQUESTED,
             conditionBitMask: STATE_STARTED,
-            useCondition: true,
             conditionFailed: out bool stateWasNotStarted);
 
         // If the state was different than 'STATE_STARTED'
