@@ -5,7 +5,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using AsmResolver;
@@ -23,11 +22,11 @@ internal static class GuidGenerator
     private static readonly Guid WindowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
 
     // TODO: Debug code; Will remove later
-//#pragma warning disable IDE0044 // Add readonly modifier
-//    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
-//    private static HashSet<TypeSignature> generatedIIDs = [];
-//    private static StreamWriter writer = new(printPath, append: false);
-//#pragma warning restore IDE0044 // Add readonly modifier
+    //#pragma warning disable IDE0044 // Add readonly modifier
+    //    private static readonly string printPath = @"C:\Users\kythant\Documents\staging\GUIDsFromCSWinRTGen.txt";
+    //    private static HashSet<TypeSignature> generatedIIDs = [];
+    //    private static StreamWriter writer = new(printPath, append: false);
+    //#pragma warning restore IDE0044 // Add readonly modifier
 
     /// <summary>
     /// Generates the IID for the specified type by computing its WinRT signature and deriving a GUID from that signature.
