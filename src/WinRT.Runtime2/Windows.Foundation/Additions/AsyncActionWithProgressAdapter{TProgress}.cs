@@ -12,6 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Implements the Windows Runtime <see cref="IAsyncActionWithProgress{TProgress}"/> interface by wrapping a <see cref="Task"/> instance.
 /// </summary>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInfoAdapter<
     VoidValueTypeParameter,

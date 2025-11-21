@@ -1,74 +1,84 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks;
-
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using global::Windows.Foundation;
+using Windows.Foundation;
 
-#if NET
-[global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
-internal sealed partial class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// Implements the Windows Runtime <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> interface by wrapping a <see cref="Task{TResult}"/> instance.
+/// </summary>
+/// <typeparam name="TResult">The result type.</typeparam>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
     TResult,
     TProgress,
     AsyncOperationWithProgressCompletedHandler<TResult, TProgress>,
     AsyncOperationProgressHandler<TResult, TProgress>>,
     IAsyncOperationWithProgress<TResult, TProgress>
 {
-    internal TaskToAsyncOperationWithProgressAdapter(Delegate taskGenerator)
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
+    public TaskToAsyncOperationWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
 
-         : base(taskGenerator)
+         : base(factory)
     {
     }
 
-    // This is currently not used, so commented out to save code.
-    // Leaving this is the source to be uncommented in case we decide to support IAsyncOperationWithProgress-consturction from a Task.
-    //
-    //internal TaskToAsyncOperationWithProgressAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource,
-    //                                                 Progress<TProgress> underlyingProgressDispatcher)
-    //
-    //    : base(underlyingTask, underlyingCancelTokenSource, underlyingProgressDispatcher) {
-    //}
-
-
-    internal TaskToAsyncOperationWithProgressAdapter(TResult synchronousResult)
-
-        : base(synchronousResult)
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
+    public TaskToAsyncOperationWithProgressAdapter(TResult result)
+        : base(result)
     {
     }
 
-    internal TaskToAsyncOperationWithProgressAdapter(bool isCanceled)
-        : base(default(TResult))
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
+    public TaskToAsyncOperationWithProgressAdapter(bool isCanceled)
+        : base(default(TResult)!)
     {
         if (isCanceled)
-            DangerousSetCanceled();
+        {
+            _ = DangerousSetCanceled();
+        }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
+    public TaskToAsyncOperationWithProgressAdapter(Exception exception)
+        : base(default(TResult)!)
+    {
+        _ = DangerousSetError(exception);
+    }
+
+    /// <inheritdoc/>
     public TResult GetResults()
     {
         return GetResultsInternal();
     }
 
-
-    internal override void OnCompleted(AsyncOperationWithProgressCompletedHandler<TResult, TProgress> userCompletionHandler,
-                                       AsyncStatus asyncStatus)
+    /// <inheritdoc/>
+    internal override void OnCompleted(AsyncOperationWithProgressCompletedHandler<TResult, TProgress> handler, AsyncStatus asyncStatus)
     {
-        Debug.Assert(userCompletionHandler != null);
-        userCompletionHandler(this, asyncStatus);
+        handler(this, asyncStatus);
     }
 
-
-    internal override void OnProgress(AsyncOperationProgressHandler<TResult, TProgress> userProgressHandler, TProgress progressInfo)
+    /// <inheritdoc/>
+    internal override void OnProgress(AsyncOperationProgressHandler<TResult, TProgress> handler, TProgress progressInfo)
     {
-        Debug.Assert(userProgressHandler != null);
-        userProgressHandler(this, progressInfo);
+        handler(this, progressInfo);
     }
-}  // class TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>
-// namespace
-
-// TaskToAsyncOperationWithProgressAdapter.cs
+}

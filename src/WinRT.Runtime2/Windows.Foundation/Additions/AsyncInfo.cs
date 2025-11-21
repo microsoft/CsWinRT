@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -189,12 +188,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        TaskToAsyncOperationWithProgressAdapter<TResult, TProgress> asyncInfo = new(default(TResult));
-
-        asyncInfo.DangerousSetError(exception);
-        Debug.Assert(asyncInfo.Status == AsyncStatus.Error);
-
-        return asyncInfo;
+        return new TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>(exception);
     }
 
     public static IAsyncAction CanceledAction()
