@@ -10,7 +10,7 @@ using System.Runtime.Versioning;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
-#pragma warning disable IDE0072
+#pragma warning disable CS0420, IDE0072
 
 namespace System.Threading.Tasks;
 
@@ -789,10 +789,10 @@ internal abstract class TaskToAsyncInfoAdapter<
             }
 
             // We have changed the handler and at some point this 'IAsyncInfo' may have transitioned to the closed state.
-            // This is fine, but if this happened we need to ensure that we only leave a 'null' handler behind:
+            // This is fine, but if this happened we need to ensure that we only leave a 'null' handler behind.
             if (IsInClosedState)
             {
-                _completedHandler = null;
+                Interlocked.Write(ref _completedHandler, null);
 
                 return;
             }
@@ -821,14 +821,14 @@ internal abstract class TaskToAsyncInfoAdapter<
         {
             EnsureNotClosed();
 
-            _progressHandler = value;
+            Interlocked.Write(ref _progressHandler, null);
 
             // If we transitioned into the closed state after the above check, we will need to reset the handler
             if (IsInClosedState)
             {
                 Debug.Assert(IsInTerminalState);
 
-                _completedHandler = null;
+                Interlocked.Write(ref _progressHandler, null);
             }
         }
     }
@@ -930,9 +930,7 @@ internal abstract class TaskToAsyncInfoAdapter<
         {
             EnsureNotClosed();
 
-#pragma warning disable CS0420 // A reference to a volatile field will not be treated as volatile ('EnsureInitialized' uses 'Volatile' internally)
             return AsyncInfoIdGenerator.EnsureInitialized(ref _id);
-#pragma warning restore CS0420
         }
     }
 
