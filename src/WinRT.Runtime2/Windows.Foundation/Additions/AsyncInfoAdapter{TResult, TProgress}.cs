@@ -189,11 +189,11 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// Creates an IAsyncInfo from the specified result value. The IAsyncInfo is created in the Completed state and the
     /// specified <code>synchronousResult</code> is used as the result value.
     /// </summary>
-    /// <param name="synchronousResult">The result of this synchronously completed IAsyncInfo.</param>
-    internal TaskToAsyncInfoAdapter(TResult synchronousResult)
+    /// <param name="result">The result of this synchronously completed IAsyncInfo.</param>
+    internal TaskToAsyncInfoAdapter(TResult result)
     {
         // Set the synchronous result:
-        _dataContainer = synchronousResult;
+        _dataContainer = result;
 
         // CompletedSynchronously + MustRunCompletionHandleImmediatelyWhenSet + CompletionHandlerNotYetInvoked + RUN_TO_COMPLETION:
         // (same state as assigned by DangerousSetCompleted())

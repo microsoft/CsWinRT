@@ -59,14 +59,14 @@ internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInf
     }
 
     /// <inheritdoc/>
-    internal override void OnCompleted(AsyncActionWithProgressCompletedHandler<TProgress> userCompletionHandler, AsyncStatus asyncStatus)
+    internal override void OnCompleted(AsyncActionWithProgressCompletedHandler<TProgress> handler, AsyncStatus asyncStatus)
     {
-        userCompletionHandler(this, asyncStatus);
+        handler(this, asyncStatus);
     }
 
     /// <inheritdoc/>
-    internal override void OnProgress(AsyncActionProgressHandler<TProgress> userProgressHandler, TProgress progressInfo)
+    internal override void OnProgress(AsyncActionProgressHandler<TProgress> handler, TProgress progressInfo)
     {
-        userProgressHandler(this, progressInfo);
+        handler(this, progressInfo);
     }
 }

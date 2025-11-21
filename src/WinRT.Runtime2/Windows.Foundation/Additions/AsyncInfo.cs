@@ -182,12 +182,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        TaskToAsyncOperationAdapter<TResult> asyncInfo = new(default(TResult));
-
-        asyncInfo.DangerousSetError(exception);
-        Debug.Assert(asyncInfo.Status == AsyncStatus.Error);
-
-        return asyncInfo;
+        return new TaskToAsyncOperationAdapter<TResult>(exception);
     }
 
     public static IAsyncOperationWithProgress<TResult, TProgress> FromExceptionWithProgress<TResult, TProgress>(Exception exception)

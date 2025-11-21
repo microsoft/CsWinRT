@@ -1,64 +1,88 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks;
-
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using global::Windows.Foundation;
+using Windows.Foundation;
 
-#if NET
-[global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
-internal sealed partial class TaskToAsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// Implements the Windows Runtime <see cref="IAsyncOperation{TResult}"/> interface by wrapping a <see cref="Task{TResult}"/> instance.
+/// </summary>
+/// <typeparam name="TResult">The result type.</typeparam>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class TaskToAsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     TResult,
     VoidValueTypeParameter,
     AsyncOperationCompletedHandler<TResult>,
     VoidReferenceTypeParameter>,
     IAsyncOperation<TResult>
 {
-    internal TaskToAsyncOperationAdapter(Delegate taskGenerator)
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
+    public TaskToAsyncOperationAdapter(Func<CancellationToken, Task<TResult>> factory)
 
-         : base(taskGenerator)
+         : base(factory)
     {
     }
 
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="task">The <see cref="Task"/> instance to wrap.</param>
+    /// <param name="cancellationTokenSource">The <see cref="CancellationTokenSource"/> instance to use for cancellation.</param>
+    public TaskToAsyncOperationAdapter(Task<TResult> task, CancellationTokenSource? cancellationTokenSource)
 
-    internal TaskToAsyncOperationAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource)
-
-        : base(underlyingTask, underlyingCancelTokenSource, progress: null)
+        : base(task, cancellationTokenSource, progress: null)
     {
     }
 
-
-    internal TaskToAsyncOperationAdapter(TResult synchronousResult)
-
-        : base(synchronousResult)
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
+    public TaskToAsyncOperationAdapter(TResult result)
+        : base(result)
     {
     }
 
-    internal TaskToAsyncOperationAdapter(bool isCanceled)
-        : base(default(TResult))
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="isCanceled">Whether the resulting instance should be marked as canceled or completed.</param>
+    public TaskToAsyncOperationAdapter(bool isCanceled)
+        : base(default(TResult)!)
     {
         if (isCanceled)
-            DangerousSetCanceled();
+        {
+            _ = DangerousSetCanceled();
+        }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncOperationAdapter{TResult}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
+    public TaskToAsyncOperationAdapter(Exception exception)
+        : base(default(TResult)!)
+    {
+        _ = DangerousSetError(exception);
+    }
+
+    /// <inheritdoc/>
     public TResult GetResults()
     {
         return GetResultsInternal();
     }
 
-
-    internal override void OnCompleted(AsyncOperationCompletedHandler<TResult> userCompletionHandler, AsyncStatus asyncStatus)
+    /// <inheritdoc/>
+    internal override void OnCompleted(AsyncOperationCompletedHandler<TResult> handler, AsyncStatus asyncStatus)
     {
-        Debug.Assert(userCompletionHandler != null);
-        userCompletionHandler(this, asyncStatus);
+        handler(this, asyncStatus);
     }
-}  // class TaskToAsyncOperationAdapter<TResult>
-// namespace
-
-// TaskToAsyncOperationAdapter.cs
+}
