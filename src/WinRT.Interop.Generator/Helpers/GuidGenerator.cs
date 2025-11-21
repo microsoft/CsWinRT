@@ -18,7 +18,7 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 
 internal static class GuidGenerator
 {
-    private static readonly Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
+    private static readonly Guid WindowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
 
     // TODO: Debug code; Will remove later
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -101,38 +101,6 @@ internal static class GuidGenerator
                 return "string";
             case ElementType.Type:
                 return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
-            case ElementType.ValueType:
-                if (typeDefinition.IsClass)
-                {
-                    // Enum case
-                    if (typeDefinition.IsEnum)
-                    {
-                        bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                        return "enum(" + typeFullName + ";" + (isFlags ? "u4" : "i4") + ")";
-                    }
-
-                    // Guid Case
-                    if (typeSignature.IsGuidType(interopReferences))
-                    {
-                        return "g16";
-                    }
-
-                    // Struct case
-                    IList<FieldDefinition> fieldDefinition = typeDefinition.Fields;
-                    List<string> typeArgumentSignatures = [];
-
-                    for (int i = 0; i < fieldDefinition.Count; i++)
-                    {
-                        if (!fieldDefinition[i].IsStatic)
-                        {
-                            FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
-                            typeArgumentSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
-                        }
-                    }
-                    return "struct(" + typeFullName + ";" + string.Join(";", typeArgumentSignatures) + ")";
-                }
-
-                throw new ArgumentException("Invalid ElementType.ValueType");
 
             case ElementType.GenericInst:
                 GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)typeSignature;
@@ -150,28 +118,40 @@ internal static class GuidGenerator
 
                     return "pinterface({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(genericTypeSignature.GenericType, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
                 }
-
                 throw new ArgumentException("Invalid ElementType.GenericInst");
 
-            case ElementType.Class:
-                if (typeDefinition.IsClass)
+            case ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum:
+                bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
+                return "enum(" + typeFullName + ";" + (isFlags ? "u4" : "i4") + ")";
+
+            case ElementType.ValueType when typeDefinition.IsClass && typeSignature.IsGuidType(interopReferences):
+                return "g16";
+
+            case ElementType.ValueType when typeDefinition.IsClass: // Struct case
+                IList<FieldDefinition> fieldDefinition = typeDefinition.Fields;
+                List<string> enumFieldSignatures = [];
+
+                for (int i = 0; i < fieldDefinition.Count; i++)
                 {
-                    if (typeDefinition.IsDelegate) // delegate case
+                    if (!fieldDefinition[i].IsStatic)
                     {
-                        return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})";
+                        FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
+                        enumFieldSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
                     }
-                    // class case
-
-                    return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig) ?
-                        "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
-                        "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface 
-                }
-                if (typeDefinition.IsInterface) // interface case
-                {
-                    return "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}";
                 }
 
-                throw new ArgumentException("Invalid ElementType.Class");
+                return "struct(" + typeFullName + ";" + string.Join(";", enumFieldSignatures) + ")";
+
+            case ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate: // delegate case
+                return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})";
+
+            case ElementType.Class when typeDefinition.IsClass: // class case
+                return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature defaultInterfaceSig) ?
+                    "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
+                    "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface
+
+            case ElementType.Class when typeDefinition.IsInterface: // interface case without generic parameters
+                return "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}";
 
             case ElementType.SzArray:
                 SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)typeSignature;
@@ -184,7 +164,9 @@ internal static class GuidGenerator
                 throw new ArgumentException("Invalid ElementType.SzArray");
 
             default:
-                // TODO: throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
+                // TODO: when all the type signatures are coming in are all properly filter out, for example: System.Void* or System.Reflection.* types,
+                // we can uncomment the below line to throw exception for unsupported types.
+                // throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
                 return typeSignature.FullName;
         }
 #pragma warning restore IDE0010 // Add missing cases
@@ -320,7 +302,7 @@ internal static class GuidGenerator
             ? stackalloc byte[512]
             : (utf8BytesFromPool = ArrayPool<byte>.Shared.Rent(minimumPooledLength));
 
-        _ = wrt_pinterface_namespace.TryWriteBytes(utf8Bytes);
+        _ = WindowsRuntimePIIDNamespace.TryWriteBytes(utf8Bytes);
 
         int encodedUtf8BytesWritten = Encoding.UTF8.GetBytes(signature, utf8Bytes[16..]);
         Span<byte> sha1Bytes = stackalloc byte[SHA1.HashSizeInBytes];
