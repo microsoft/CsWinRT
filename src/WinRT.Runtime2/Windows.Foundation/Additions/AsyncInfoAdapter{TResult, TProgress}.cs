@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using global::Windows.Foundation;
@@ -258,45 +259,45 @@ internal abstract class TaskToAsyncInfoAdapter<
 
     #region State bit field operations
 
-    internal bool CompletedSynchronously { [Pure] get { return (0 != (_state & STATEFLAG_COMPLETED_SYNCHRONOUSLY)); } }
+    private bool CompletedSynchronously
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & STATEFLAG_COMPLETED_SYNCHRONOUSLY) != 0;
+    }
 
-    private bool IsInStartedState { [Pure] get { return (0 != (_state & STATE_STARTED)); } }
+    private bool IsInRunToCompletionState
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & STATE_RUN_TO_COMPLETION) != 0;
+    }
 
-    private bool IsInRunToCompletionState { [Pure] get { return (0 != (_state & STATE_RUN_TO_COMPLETION)); } }
+    private bool IsInErrorState
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & STATE_ERROR) != 0;
+    }
 
-    private bool IsInErrorState { [Pure] get { return (0 != (_state & STATE_ERROR)); } }
-
-    private bool IsInClosedState { [Pure] get { return (0 != (_state & STATE_CLOSED)); } }
+    private bool IsInClosedState
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & STATE_CLOSED) != 0;
+    }
 
     private bool IsInRunningState
     {
-        [Pure]
-        get
-        {
-            return (0 != (_state & (STATE_STARTED
-                                   | STATE_CANCELLATION_REQUESTED)));
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & (STATE_STARTED | STATE_CANCELLATION_REQUESTED)) != 0;
     }
 
     private bool IsInTerminalState
     {
-        [Pure]
-        get
-        {
-            return (0 != (_state & (STATE_RUN_TO_COMPLETION
-                                   | STATE_CANCELLATION_COMPLETED
-                                   | STATE_ERROR)));
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_state & (STATE_RUN_TO_COMPLETION | STATE_CANCELLATION_COMPLETED | STATE_ERROR)) != 0;
     }
 
-    [Pure]
-    private bool CheckUniqueAsyncState(int state)
+    private static bool CheckUniqueAsyncState(int state)
     {
-        unchecked
-        {
-            uint asyncState = (uint)state;
-            return (asyncState & (~asyncState + 1)) == asyncState; // This checks if asyncState is 0 or a power of 2.
-        }
+        return state == 0 || BitOperations.IsPow2(unchecked((uint)state));
     }
 
     #endregion State bit field operations
@@ -311,7 +312,7 @@ internal abstract class TaskToAsyncInfoAdapter<
         {
             EnsureNotClosed();
 
-            return CompletedSynchronously ? null : (Task)_dataContainer;
+            return CompletedSynchronously ? null : (Task)_dataContainer!;
         }
     }
 
@@ -440,6 +441,7 @@ internal abstract class TaskToAsyncInfoAdapter<
         Debug.Assert(CheckUniqueAsyncState(_state & STATEMASK_SELECT_ANY_ASYNC_STATE));
 
         int resultState = SetState(newAsyncState, STATEMASK_CLEAR_ALL_ASYNC_STATES, conditionBitMask, useCondition, out conditionFailed);
+
         Debug.Assert(CheckUniqueAsyncState(resultState & STATEMASK_SELECT_ANY_ASYNC_STATE));
 
         return resultState;
