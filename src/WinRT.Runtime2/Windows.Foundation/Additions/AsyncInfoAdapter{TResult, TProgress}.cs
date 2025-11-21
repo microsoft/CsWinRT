@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -88,11 +89,11 @@ internal abstract class TaskToAsyncInfoAdapter<
     #region Instance variables
 
     /// <summary>The token source used to cancel running operations.</summary>
-    private CancellationTokenSource? _cancelTokenSource;
+    private volatile CancellationTokenSource? _cancelTokenSource;
 
     /// <summary>The async info's ID.</summary>
     /// <remarks>The <see cref="AsyncInfoIdGenerator.InvalidId"/> value stands for not yet been initialised.</remarks>
-    private uint _id = AsyncInfoIdGenerator.InvalidId;
+    private volatile uint _id = AsyncInfoIdGenerator.InvalidId;
 
     /// <summary>
     /// The cached error code used to avoid creating several exception objects
@@ -101,7 +102,7 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// <remarks>
     /// A <see langword="null"/> value indicates either no error or that <see cref="ErrorCode"/> has not yet been called.
     /// </remarks>
-    private Exception? _error;
+    private volatile Exception? _error;
 
     /// <summary>The state of the async info. Interlocked operations are used to manipulate this field.</summary>
     private volatile int _state = STATE_NOT_INITIALIZED;
@@ -112,13 +113,13 @@ internal abstract class TaskToAsyncInfoAdapter<
     /// or to one of Task or Task{TResult} in the latter case. This approach allows us to save a field on all IAsyncInfos.
     /// Notably, this makes us pay the added cost of boxing for synchronously completing IAsyncInfos where TResult is a
     /// value type, however, this is expected to occur rather rare compared to non-synchronously completed user-IAsyncInfos.</summary>
-    private object? _dataContainer;
+    private volatile object? _dataContainer;
 
     /// <summary>The registered completed handler.</summary>
-    private TCompletedHandler? _completedHandler;
+    private volatile TCompletedHandler? _completedHandler;
 
     /// <summary>The registered progress handler.</summary>
-    private TProgressHandler? _progressHandler;
+    private volatile TProgressHandler? _progressHandler;
 
     #endregion Instance variables
 
@@ -137,13 +138,17 @@ internal abstract class TaskToAsyncInfoAdapter<
             Func<CancellationToken, IProgress<TProgress>, Task>);
 
         // Construct task from the specified provider
-        Task task = InvokeTaskFactory(factory);
+        Task? task = InvokeTaskFactory(factory);
 
-        if (task == null)
+        if (task is null)
+        {
             throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
+        }
 
         if (task.Status == TaskStatus.Created)
+        {
             throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
+        }
 
         _dataContainer = task;
         _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
@@ -259,6 +264,7 @@ internal abstract class TaskToAsyncInfoAdapter<
 
     #region State bit field operations
 
+    [MemberNotNullWhen(false, nameof(_dataContainer))]
     private bool CompletedSynchronously
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -315,7 +321,6 @@ internal abstract class TaskToAsyncInfoAdapter<
             return CompletedSynchronously ? null : (Task)_dataContainer!;
         }
     }
-
 
     internal CancellationTokenSource CancelTokenSource
     {
@@ -384,15 +389,21 @@ internal abstract class TaskToAsyncInfoAdapter<
         OnCompleted(handler, status);
     }
 
-
-    /// <summary>Reports a progress update.</summary>
-    /// <param name="value">The new progress value to report.</param>
+    /// <inheritdoc/>
     void IProgress<TProgress>.Report(TProgress value)
     {
-        // If no progress handler is set, there is nothing to do:
-        TProgressHandler handler = Volatile.Read(ref _progressHandler);
-        if (handler == null)
+        Report(value);
+    }
+
+    private void Report(TProgress value)
+    {
+        TProgressHandler? handler = _progressHandler;
+
+        // If no progress handler is set, there is nothing to do
+        if (handler is null)
+        {
             return;
+        }
 
         // Try calling progress handler in the right synchronization context.
         // If the user callback throws an exception, it will bubble up through here and reach the
@@ -410,12 +421,10 @@ internal abstract class TaskToAsyncInfoAdapter<
         OnProgress(handler, value);
     }
 
-
     private void OnReportChainedProgress(object? sender, TProgress progressInfo)
     {
-        ((IProgress<TProgress>)this).Report(progressInfo);
+        Report(progressInfo);
     }
-
 
     /// <summary>
     /// Sets the <code>m_state</code> bit field to reflect the specified async state with the corresponding STATE_XXX bit mask.
@@ -545,9 +554,8 @@ internal abstract class TaskToAsyncInfoAdapter<
                 break;
         }
 
-        bool ignore;
         int newState = SetAsyncState(terminalAsyncState,
-                                       conditionBitMask: STATEMASK_SELECT_ANY_ASYNC_STATE, useCondition: true, conditionFailed: out ignore);
+                                       conditionBitMask: STATEMASK_SELECT_ANY_ASYNC_STATE, useCondition: true, conditionFailed: out _);
 
         Debug.Assert((newState & STATEMASK_SELECT_ANY_ASYNC_STATE) == terminalAsyncState);
         Debug.Assert((_state & STATEMASK_SELECT_ANY_ASYNC_STATE) == terminalAsyncState || IsInClosedState,
@@ -665,7 +673,7 @@ internal abstract class TaskToAsyncInfoAdapter<
         }
     }
 
-    private Task InvokeTaskFactory(Delegate factory)
+    private Task? InvokeTaskFactory(Delegate factory)
     {
         if (factory is Func<Task> taskFactory)
         {
@@ -703,8 +711,11 @@ internal abstract class TaskToAsyncInfoAdapter<
 
         // Always go to closed, even from STATE_NOT_INITIALIZED.
         // Any checking whether it is legal to call CLosed inthe current state, should occur in Close().
-        bool ignore;
-        SetAsyncState(STATE_CLOSED, 0, useCondition: false, conditionFailed: out ignore);
+        _ = SetAsyncState(
+            newAsyncState: STATE_CLOSED,
+            conditionBitMask: 0,
+            useCondition: false,
+            conditionFailed: out _);
 
         _cancelTokenSource = null;
         _dataContainer = null;
@@ -720,124 +731,148 @@ internal abstract class TaskToAsyncInfoAdapter<
 
     /// <summary>
     /// Gets or sets the completed handler.
-    ///
-    /// We will set the completion handler even when this IAsyncInfo is already started (no other choice).
-    /// If we the completion handler is set BEFORE this IAsyncInfo completed, then the handler will be called upon completion as normal.
-    /// If we the completion handler is set AFTER this IAsyncInfo already completed, then this setter will invoke the handler synchronously
-    /// on the current context.
     /// </summary>
+    /// <remarks>
+    /// The completion handler even when this <see cref="IAsyncInfo"/> instance is already started (no other choice).
+    /// If we the completion handler is set before this <see cref="IAsyncInfo"/> instance completes, then the handler
+    /// will be called upon completion as normal. If we the completion handler is set after this <see cref="IAsyncInfo"/>
+    /// instance completes, then this setter will invoke the handler synchronously on the current context.
+    /// </remarks>
     public TCompletedHandler? Completed
     {
         get
         {
-            TCompletedHandler? handler = Volatile.Read(ref _completedHandler);
+            TCompletedHandler? handler = _completedHandler;
+
             EnsureNotClosed();
+
             return handler;
         }
         set
         {
             EnsureNotClosed();
 
-            // Try setting completion handler, but only if this has not yet been done:
-            // (Note: We allow setting Completed to null multiple times iff it has not yet been set to anything else than null.
-            //  Some other WinRT projection languages do not allow setting the Completed handler more than once, even if it is set to null.
-            //  We could do the same by introducing a new STATEFLAG_COMPLETION_HNDL_SET bit-flag constant and saving a this state into
-            //  the m_state field to indicate that the completion handler has been set previously, but we choose not to do this.)
-            TCompletedHandler handlerBefore = Interlocked.CompareExchange(ref _completedHandler, value, null);
-            if (handlerBefore != null)
+            // Try setting completion handler, but only if this has not yet been done. We allow setting 'Completed' to 'null'
+            // multiple times if and only if it has not yet been set to anything else than 'null'. Some other Windows Runtime
+            // projection languages do not allow setting the 'Completed' handler more than once, even if it is set to 'null'.
+            // We could do the same by introducing a new 'STATEFLAG_COMPLETION_HNDL_SET' bit-flag constant and saving a this
+            // state into the '_state' field to indicate that the completion handler has been set previously, but we choose
+            // not to do this, which gives more flexibility to users of this class.
+            TCompletedHandler? handlerBefore = Interlocked.CompareExchange(ref _completedHandler, value, null);
+
+            if (handlerBefore is not null)
             {
-                InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce);
-                ex.HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT;
-                throw ex;
+                InvalidOperationException exception = new(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
+                {
+                    HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
+                };
+
+                throw exception;
             }
 
-            if (value == null)
+            // The handler was 'null' and it's being set to 'null' again, so nothing to do
+            if (value is null)
+            {
                 return;
+            }
 
-            // If STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET is OFF then we are done (i.e. no need to invoke the handler synchronously)
-            if (0 == (_state & STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET))
+            // If 'STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET' is not set, then we are done (i.e. no need to invoke the handler synchronously)
+            if ((_state & STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET) == 0)
+            {
                 return;
+            }
 
-            // We have changed the handler and at some point this IAsyncInfo may have transitioned to the Closed state.
-            // This is OK, but if this happened we need to ensure that we only leave a null handler behind:
+            // We have changed the handler and at some point this 'IAsyncInfo' may have transitioned to the closed state.
+            // This is fine, but if this happened we need to ensure that we only leave a 'null' handler behind:
             if (IsInClosedState)
             {
-                Interlocked.Exchange(ref _completedHandler, null);
+                _completedHandler = null;
+
                 return;
             }
 
-            // The STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET-flag was set, so we need to call the completion handler now:
             Debug.Assert(IsInTerminalState);
+
+            // The 'STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET' flag was set, so we need to call the completion handler now
             OnCompletedInvoker(Status);
         }
     }
 
-
-    /// <summary>Gets or sets the progress handler.</summary>
+    /// <summary>
+    /// Gets or sets the progress handler.
+    /// </summary>
     public TProgressHandler? Progress
     {
         get
         {
-            TProgressHandler handler = Volatile.Read(ref _progressHandler);
+            TProgressHandler? handler = _progressHandler;
+
             EnsureNotClosed();
 
             return handler;
         }
-
         set
         {
             EnsureNotClosed();
 
-            Interlocked.Exchange(ref _progressHandler, value);
+            _progressHandler = value;
 
-            // We transitioned into CLOSED after the above check, we will need to null out m_progressHandler:
+            // If we transitioned into the closed state after the above check, we will need to reset the handler
             if (IsInClosedState)
-                Interlocked.Exchange(ref _progressHandler, null);
+            {
+                Debug.Assert(IsInTerminalState);
+
+                _completedHandler = null;
+            }
         }
     }
-
 
     /// <inheritdoc/>
     public void Cancel()
     {
-        // Cancel will be ignored in any terminal state including CLOSED.
-        // In other words, it is ignored in any state except STARTED.
+        // 'Cancel' will be ignored in any terminal state, including closed.
+        // In other words, it is ignored in any state except the started one.
+        _ = SetAsyncState(
+            newAsyncState: STATE_CANCELLATION_REQUESTED,
+            conditionBitMask: STATE_STARTED,
+            useCondition: true,
+            conditionFailed: out bool stateWasNotStarted);
 
-        bool stateWasNotStarted;
-        SetAsyncState(STATE_CANCELLATION_REQUESTED, conditionBitMask: STATE_STARTED, useCondition: true, conditionFailed: out stateWasNotStarted);
-
+        // If the state was different than 'STATE_STARTED'
         if (!stateWasNotStarted)
-        {  // i.e. if state was different from STATE_STARTED:
-            if (_cancelTokenSource != null)
-                _cancelTokenSource.Cancel();
+        {
+            _cancelTokenSource?.Cancel();
         }
     }
-
 
     /// <inheritdoc/>
     public void Close()
     {
         if (IsInClosedState)
+        {
             return;
+        }
 
-        // Cannot Close from a non-terminal state:
+        // 'Close' can only be invoked from a terminal state
         if (!IsInTerminalState)
         {
-            // If we are STATE_NOT_INITIALIZED, the we probably threw from the ctor.
-            // The finalizer will be called anyway and we need to free this partially constructed object correctly.
-            // So we avoid throwing when we are in STATE_NOT_INITIALIZED.
-            // In other words throw only if *some* async state is set:
-            if (0 != (_state & STATEMASK_SELECT_ANY_ASYNC_STATE))
+            // If 'STATE_NOT_INITIALIZED' is set, the we probably threw from the constructor.
+            // The finalizer will be called anyway and we need to free this partially
+            // constructed object correctly. So we avoid throwing when we are in this scenario.
+            // In other words, we throw only if some async state is set correctly.
+            if ((_state & STATEMASK_SELECT_ANY_ASYNC_STATE) != 0)
             {
-                InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_IllegalStateChange);
-                ex.HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE;
-                throw ex;
+                InvalidOperationException exception = new(SR.InvalidOperation_IllegalStateChange)
+                {
+                    HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE
+                };
+
+                throw exception;
             }
         }
 
         TransitionToClosed();
     }
-
 
     /// <inheritdoc/>
     public Exception? ErrorCode
@@ -846,46 +881,39 @@ internal abstract class TaskToAsyncInfoAdapter<
         {
             EnsureNotClosed();
 
-            // If the task is faulted, hand back an HR representing its first exception.
-            // Otherwise, hand back S_OK (which is a null Exception).
-
+            // If the task is faulted, hand back an error representing its first exception.
+            // Otherwise, hand back 'S_OK' (which is just a 'null' exception, with no error code).
             if (!IsInErrorState)
+            {
                 return null;
+            }
 
-            Exception error = Volatile.Read(ref _error);
+            Exception? error = _error;
 
-            // ERROR is a terminal state. SO if we have an error, just return it.
-            // If we completed synchronously, we return the current error iven if it is null since we do not expect this to change:
-            if (error != null || CompletedSynchronously)
+            // If we have an exception object, then it means we are in a terminal state. So if we do
+            // have an instance, we can just return it. If we completed synchronously, we return the
+            // current error, given that even if it is 'null' we do not expect this to change.
+            if (error is not null || CompletedSynchronously)
+            {
                 return error;
-
-            Task task = _dataContainer as Task;
-            Debug.Assert(task != null);
-
-            AggregateException aggregateException = task.Exception;
-
-            // By spec, if task.IsFaulted is true, then task.Exception must not be null and its InnerException must
-            // also not be null. However, in case something is unexpected on the Task side of the road, lets be defensive
-            // instead of failing with an inexplicable NullReferenceException:
-
-            if (aggregateException == null)
-            {
-                error = new Exception(SR.WinRtCOM_Error);
-                error.HResult = WellKnownErrorCodes.E_FAIL;
-            }
-            else
-            {
-                Exception innerException = aggregateException.InnerException;
-
-                error = (innerException == null)
-                            ? aggregateException
-                            : innerException;
             }
 
-            // If m_error was set concurrently, setError will be non-null. Then we use that - as it is the first m_error
-            // that was set. If setError we know that we won any races and we can return error:
-            Exception setError = Interlocked.CompareExchange(ref _error, error, null);
-            return setError ?? error;
+            // The '_dataContainer' field is always set to the wrapped 'Task' from the constructor,
+            // if the one not marking the 'IAsyncInfo' object as completed synchronously was used.
+            Task task = (Task)_dataContainer;
+
+            // By spec, if 'Task.IsFaulted' is 'true', then 'Task.Exception' must not be 'null', and
+            // its 'InnerException' property must also not be 'null'. However, in case something is
+            // unexpected on the 'Task' side of the road, let's be defensive instead of failing with
+            // an inexplicable 'NullReferenceException'.
+            error = task.Exception is AggregateException aggregateException
+                ? aggregateException.InnerException ?? aggregateException
+                : new Exception(SR.WinRtCOM_Error) { HResult = WellKnownErrorCodes.E_FAIL };
+
+            // If '_error' was set concurrently, the previous value will be not 'null'. If we see that,
+            // then we return that value, as it would be the first error that was set on this instance.
+            // Otherwise if the old value was still 'null', it means we won the race, and can return.
+            return Interlocked.CompareExchange(ref _error, error, null) ?? error;
         }
     }
 
@@ -896,10 +924,11 @@ internal abstract class TaskToAsyncInfoAdapter<
         {
             EnsureNotClosed();
 
+#pragma warning disable CS0420 // A reference to a volatile field will not be treated as volatile ('EnsureInitialized' uses 'Volatile' internally)
             return AsyncInfoIdGenerator.EnsureInitialized(ref _id);
+#pragma warning restore CS0420
         }
     }
-
 
     /// <inheritdoc/>
     public AsyncStatus Status
