@@ -60,7 +60,7 @@ internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInf
     /// <inheritdoc/>
     public void GetResults()
     {
-        _ = GetResultsInternal();
+        _ = GetResultsCore();
     }
 
     /// <inheritdoc/>

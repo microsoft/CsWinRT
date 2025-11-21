@@ -69,7 +69,7 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     /// <inheritdoc/>
     public void GetResults()
     {
-        _ = GetResultsInternal();
+        _ = GetResultsCore();
     }
 
     /// <inheritdoc/>

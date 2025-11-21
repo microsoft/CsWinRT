@@ -72,7 +72,7 @@ internal sealed class AsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     /// <inheritdoc/>
     public TResult GetResults()
     {
-        return GetResultsInternal();
+        return GetResultsCore();
     }
 
     /// <inheritdoc/>

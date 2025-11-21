@@ -62,7 +62,7 @@ internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskTo
     /// <inheritdoc/>
     public TResult GetResults()
     {
-        return GetResultsInternal();
+        return GetResultsCore();
     }
 
     /// <inheritdoc/>
