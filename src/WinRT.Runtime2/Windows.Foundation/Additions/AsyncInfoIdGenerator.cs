@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Threading.Tasks;
+using System;
+using System.Threading;
+
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Reusable component to generate unique IDs for any of the different implementations of <see cref="global::Windows.Foundation.IAsyncInfo"/>.
+/// Reusable component to generate unique IDs for any of the different implementations of <see cref="Windows.Foundation.IAsyncInfo"/>.
 /// </summary>
 internal static class AsyncInfoIdGenerator
 {
@@ -23,9 +26,9 @@ internal static class AsyncInfoIdGenerator
     private static readonly Random IdGenerator = new(19830118);
 
     /// <summary>
-    /// Generate a unique ID that can be used for an <see cref="global::Windows.Foundation.IAsyncInfo"/> object.
+    /// Generate a unique ID that can be used for an <see cref="Windows.Foundation.IAsyncInfo"/> object.
     /// </summary>
-    /// <returns>A new unique <see cref="global::Windows.Foundation.IAsyncInfo"/> ID.</returns>
+    /// <returns>A new unique <see cref="Windows.Foundation.IAsyncInfo"/> ID.</returns>
     public static uint CreateNext()
     {
         lock (IdGenerator)
@@ -39,12 +42,12 @@ internal static class AsyncInfoIdGenerator
 
     /// <summary>
     /// Initialises the specified <paramref name="id"/> value to a unique ID that can be used for an
-    /// <see cref="global::Windows.Foundation.IAsyncInfo"/> object object under the assumption that another
+    /// <see cref="Windows.Foundation.IAsyncInfo"/> object object under the assumption that another
     /// thread may also attempt to initialise <paramref name="id"/>. The thread that changes <paramref name="id"/>
     /// first from <see cref="InvalidId"/> to another value wins and all other threads will respect that
     /// choice and leave <paramref name="id"/> unchanged. The method returns the ID that was agreed upon by the race.
     /// </summary>
-    /// <param name="id">The <see cref="global::Windows.Foundation.IAsyncInfo"/> ID to initialise.</param>
+    /// <param name="id">The <see cref="Windows.Foundation.IAsyncInfo"/> ID to initialise.</param>
     /// <returns>The unique value to which the specified reference target was initialised.</returns>
     public static uint EnsureInitialized(ref uint id)
     {

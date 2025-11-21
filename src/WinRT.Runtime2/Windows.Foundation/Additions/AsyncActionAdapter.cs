@@ -73,7 +73,7 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     }
 
     /// <inheritdoc/>
-    internal override void OnCompleted(AsyncActionCompletedHandler handler, AsyncStatus asyncStatus)
+    protected override void OnCompleted(AsyncActionCompletedHandler handler, AsyncStatus asyncStatus)
     {
         handler(this, asyncStatus);
     }

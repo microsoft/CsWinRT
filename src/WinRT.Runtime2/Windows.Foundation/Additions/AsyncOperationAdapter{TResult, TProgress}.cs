@@ -66,13 +66,13 @@ internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskTo
     }
 
     /// <inheritdoc/>
-    internal override void OnCompleted(AsyncOperationWithProgressCompletedHandler<TResult, TProgress> handler, AsyncStatus asyncStatus)
+    protected override void OnCompleted(AsyncOperationWithProgressCompletedHandler<TResult, TProgress> handler, AsyncStatus asyncStatus)
     {
         handler(this, asyncStatus);
     }
 
     /// <inheritdoc/>
-    internal override void OnProgress(AsyncOperationProgressHandler<TResult, TProgress> handler, TProgress progressInfo)
+    protected override void OnProgress(AsyncOperationProgressHandler<TResult, TProgress> handler, TProgress progressInfo)
     {
         handler(this, progressInfo);
     }
