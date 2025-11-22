@@ -4,13 +4,12 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
-#pragma warning disable CS0420, IDE0072
+#pragma warning disable IDE0270
 
 namespace WindowsRuntime.InteropServices;
 
@@ -33,8 +32,6 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     where TCompletedHandler : class
     where TProgressHandler : class
 {
-    #region Instance variables
-
     /// <summary>The token source used to cancel running operations.</summary>
     private volatile CancellationTokenSource? _cancelTokenSource;
 
@@ -68,13 +65,10 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     /// <summary>The registered progress handler.</summary>
     private volatile TProgressHandler? _progressHandler;
 
-    #endregion Instance variables
-
-    #region Constructors and Destructor
-
-    /// <summary>Creates an IAsyncInfo from the specified delegate. The delegate will be called to construct a task that will
-    /// represent the future encapsulated by this IAsyncInfo.</summary>
-    /// <param name="factory">The task generator to use for creating the task.</param>
+    /// <summary>
+    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="factory">The function to invoke to create the <see cref="Task"/> instance to wrap.</param>
     protected TaskToAsyncInfoAdapter(Delegate factory)
     {
         Debug.Assert(factory is
@@ -108,17 +102,12 @@ internal abstract partial class TaskToAsyncInfoAdapter<
             scheduler: TaskScheduler.Default);
     }
 
-
     /// <summary>
-    /// Creates an IAsyncInfo from the Task object. The specified task represents the future encapsulated by this IAsyncInfo.
-    /// The specified CancellationTokenSource and Progress are assumed to be the source of the specified Task's cancellation and
-    /// the Progress that receives reports from the specified Task.
+    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="task">The Task whose operation is represented by this IAsyncInfo</param>
-    /// <param name="cancellationTokenSource">The cancellation control for the cancellation token observed
-    /// by <code>underlyingTask</code>.</param>
-    /// <param name="progress">A progress listener/pugblisher that receives progress notifications
-    /// form <code>underlyingTask</code>.</param>
+    /// <param name="task">The <see cref="Task"/> instance to wrap.</param>
+    /// <param name="cancellationTokenSource">The <see cref="CancellationTokenSource"/> instance to use for cancellation.</param>
+    /// <param name="progress">The <see cref="Progress{T}"/> instance to use to receive progress notifications from <paramref name="task"/>.</param>
     protected TaskToAsyncInfoAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
         // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
@@ -150,10 +139,9 @@ internal abstract partial class TaskToAsyncInfoAdapter<
 
 
     /// <summary>
-    /// Creates an IAsyncInfo from the specified result value. The IAsyncInfo is created in the Completed state and the
-    /// specified <code>synchronousResult</code> is used as the result value.
+    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="result">The result of this synchronously completed IAsyncInfo.</param>
+    /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
     protected TaskToAsyncInfoAdapter(TResult result)
     {
         // Set the synchronous result
@@ -201,14 +189,13 @@ internal abstract partial class TaskToAsyncInfoAdapter<
             STATE_ERROR;
     }
 
+    /// <summary>
+    /// Finalizes the current instance.
+    /// </summary>
     ~TaskToAsyncInfoAdapter()
     {
         TransitionToClosed();
     }
-
-    #endregion Constructors and Destructor
-
-    #region Infrastructure methods
 
     /// <inheritdoc/>
     public sealed override Task? Task
@@ -221,310 +208,9 @@ internal abstract partial class TaskToAsyncInfoAdapter<
         }
     }
 
-    private void EnsureNotClosed()
-    {
-        if (!IsInClosedState)
-        {
-            return;
-        }
-
-        ObjectDisposedException ex = new(SR.ObjectDisposed_AsyncInfoIsClosed)
-        {
-            HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
-        };
-
-        throw ex;
-    }
-
-    protected abstract void OnCompleted(TCompletedHandler handler, AsyncStatus asyncStatus);
-
-
-    protected virtual void OnProgress(TProgressHandler handler, TProgress progressInfo)
-    {
-        Debug.Fail($"This 'IAsyncInfo' adapter type ('{GetType()}') doesn't support progress notifications.");
-    }
-
-
-    private void OnCompletedInvoker(AsyncStatus status)
-    {
-        // Get the current handler value
-        TCompletedHandler? handler = _completedHandler;
-
-        // If we might not run the handler now, we need to remember that if it is set later, it will need to be run then
-        if (handler is null)
-        {
-            // Remember to run the handler when it is set:
-            _ = SetState(
-                newStateSetMask: STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET,
-                newStateIgnoreMask: ~STATEFLAG_MUST_RUN_COMPLETION_HNDL_WHEN_SET);
-
-            // The handler may have been set concurrently before we managed to call 'SetState', so check for it again
-            handler = _completedHandler;
-
-            // If handler was not set cuncurrently after all, then no worries
-            if (handler is null)
-            {
-                return;
-            }
-        }
-
-        // This method might be running cuncurrently. Create a block by emulating an interlocked reset of the
-        // 'STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED' flag in the '_state' field. Only the thread that wins
-        // the race for unsetting this bit, wins, others give up.
-        _ = SetState(
-            newStateSetMask: 0,
-            newStateIgnoreMask: ~STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED,
-            conditionBitMask: STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED,
-            conditionFailed: out bool conditionFailed);
-
-        // We lost the race, just stop here
-        if (conditionFailed)
-        {
-            return;
-        }
-
-        // Invoke the user handler
-        OnCompleted(handler, status);
-    }
-
     /// <inheritdoc/>
     void IProgress<TProgress>.Report(TProgress value)
     {
-        Report(value);
+        ReportProgress(value);
     }
-
-    private void Report(TProgress value)
-    {
-        TProgressHandler? handler = _progressHandler;
-
-        // If no progress handler is set, there is nothing to do
-        if (handler is null)
-        {
-            return;
-        }
-
-        // Try calling progress handler in the right synchronization context.
-        // If the user callback throws an exception, it will bubble up through here and reach the
-        // user worker code running as this async future. The user should catch it.
-        // If the user does not catch it, it will be treated just as any other exception coming from the async execution code:
-        // this AsyncInfo will be faulted.
-
-        // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
-        // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
-        // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
-        // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
-        // by allowing the awaiter to decide the context.
-
-        // The starting context is null, invoke directly:
-        OnProgress(handler, value);
-    }
-
-    private void OnReportChainedProgress(object? sender, TProgress progressInfo)
-    {
-        Report(progressInfo);
-    }
-
-    private int TransitionToTerminalState()
-    {
-        Debug.Assert(IsInRunningState);
-        Debug.Assert(!CompletedSynchronously);
-
-        Task task = (Task)_dataContainer;
-
-        Debug.Assert(task is not null);
-        Debug.Assert(task.IsCompleted);
-
-        // If the switch below defaults, we have an erroneous implementation
-        Debug.Assert(task.Status is TaskStatus.RanToCompletion or TaskStatus.Canceled or TaskStatus.Faulted);
-
-        // Recall that 'STATE_CANCELLATION_REQUESTED' and 'STATE_CANCELLATION_COMPLETED' flags both map to the public
-        // canceled state. So, we are either started or canceled. We will ask the task how it completed, and possibly
-        // transition out of the canceled state. This may happen if cancellation was requested while in the started
-        // state, but the task does not support cancellation, or if it can support cancellation in principle, but the
-        // 'Cancel' request came in while still in the started state, but after the last opportunity to cancel.
-        //
-        // If the underlying operation was not able to react to the cancellation request and instead either run to
-        // completion or faulted, then the state will transition into completed or faulted accordingly. If the operation
-        // was really cancelled, the state will remain canceled.
-        int terminalAsyncState = task.Status switch
-        {
-            TaskStatus.RanToCompletion => STATE_RUN_TO_COMPLETION,
-            TaskStatus.Canceled => STATE_CANCELLATION_COMPLETED,
-            TaskStatus.Faulted => STATE_ERROR,
-            _ => STATE_ERROR
-        };
-
-        // Update the async state for this instance to represent the transition that should occur
-        int newState = SetAsyncState(
-            newAsyncState: terminalAsyncState,
-            conditionBitMask: STATEMASK_SELECT_ANY_ASYNC_STATE,
-            conditionFailed: out _);
-
-        Debug.Assert((newState & STATEMASK_SELECT_ANY_ASYNC_STATE) == terminalAsyncState);
-        Debug.Assert((_state & STATEMASK_SELECT_ANY_ASYNC_STATE) == terminalAsyncState || IsInClosedState);
-
-        return newState;
-    }
-
-
-    private void TaskCompleted()
-    {
-        int terminalState = TransitionToTerminalState();
-
-        Debug.Assert(IsInTerminalState);
-
-        // We transitioned into a terminal state, so it became legal to close us concurrently.
-        // So we use data from this stack and not from '_state' to get the completion status.
-        // On this code path we will also fetch '_completedHandler', however that race is benign
-        // because in the closed state the handler can only change to 'null', so it won't be
-        // invoked, which is appropriate for this scenario.
-        AsyncStatus terminationStatus = GetStatus(terminalState);
-
-        // Try calling completed handler synchronusly (always on this synchronization context).
-        // If the user callback throws an exception, it will bubble up through here. If we let
-        // it though, it will be caught and swallowed by the 'Task' subsystem, which is just
-        // below us on the stack. Instead we follow the same pattern as 'Task' and other parallel
-        // libs and re-throw the excpetion on the thread pool to ensure a diagnostic message and
-        // a fail-fast-like teardown.
-        try
-        {
-            OnCompletedInvoker(terminationStatus);
-        }
-        catch (Exception ex)
-        {
-            ExceptionDispatchInfo.ThrowAsync(ex, synchronizationContext: null);
-        }
-    }
-
-
-    private static AsyncStatus GetStatus(int state)
-    {
-        int asyncState = state & STATEMASK_SELECT_ANY_ASYNC_STATE;
-
-        CheckUniqueAsyncState(asyncState);
-
-        switch (asyncState)
-        {
-            case STATE_NOT_INITIALIZED:
-                Debug.Fail("'STATE_NOT_INITIALIZED' should only occur when this object was not fully constructed, meaning this code shouldn't be reachable.");
-                return AsyncStatus.Error;
-            case STATE_STARTED:
-                return AsyncStatus.Started;
-            case STATE_RUN_TO_COMPLETION:
-                return AsyncStatus.Completed;
-            case STATE_CANCELLATION_REQUESTED:
-            case STATE_CANCELLATION_COMPLETED:
-                return AsyncStatus.Canceled;
-            case STATE_ERROR:
-                return AsyncStatus.Error;
-            case STATE_CLOSED:
-                Debug.Fail("This method should never be called is this 'IAsyncInfo' instance is closed.");
-                return AsyncStatus.Error;
-            default:
-                Debug.Fail("'GetStatus' is missing an 'AsyncStatus' value to handle.");
-                return AsyncStatus.Error;
-        }
-    }
-
-    protected TResult GetResultsCore()
-    {
-        EnsureNotClosed();
-
-        // If this 'IAsyncInfo' has actually faulted, 'GetResults' will throw the same error as returned by 'ErrorCode'
-        if (IsInErrorState)
-        {
-            Exception error = ErrorCode;
-
-            Debug.Assert(error is not null);
-
-            ExceptionDispatchInfo.Capture(error).Throw();
-        }
-
-        // 'IAsyncInfo' throws 'E_ILLEGAL_METHOD_CALL' when called in a state other than completed (successfully)
-        if (!IsInRunToCompletionState)
-        {
-            throw CreateCannotGetResultsFromIncompleteOperationException(null);
-        }
-
-
-        // If this is a synchronous operation, use the cached result
-        if (CompletedSynchronously)
-        {
-            return (TResult)_dataContainer!;
-        }
-
-        // The operation is asynchronous, so we should have a 'Task' instance here.
-        // Since 'CompletedSynchronously' is 'false' at this point, and our call to
-        // 'EnsureNotClosed' did not throw, the task can only be 'null' if:
-        //  - This 'IAsyncInfo' instance has completed synchronously, however we checked for this above
-        //  - The safe cast to 'Task<TResult>' failed, which means we have a non-generic Task. In that case we cannot get a result.
-        if (_dataContainer is not Task<TResult> task)
-        {
-            return default!;
-        }
-
-        Debug.Assert(IsInRunToCompletionState);
-
-        // Pull out the task result and return. Any exceptions thrown in the task will be rethrown.
-        // If this exception is a cancelation exception, meaning there was actually no error except
-        // for being cancelled, we return an error code appropriate for Windows Runtime instead.
-        // That is, we'll throw 'InvalidOperation' with an error code of 'E_ILLEGAL_METHOD_CALL'.
-        try
-        {
-            return task.GetAwaiter().GetResult();
-        }
-        catch (TaskCanceledException tcEx)
-        {
-            throw CreateCannotGetResultsFromIncompleteOperationException(tcEx);
-        }
-    }
-
-    private Task? InvokeTaskFactory(Delegate factory)
-    {
-        if (factory is Func<Task> taskFactory)
-        {
-            return taskFactory();
-        }
-
-        if (factory is Func<CancellationToken, Task> cancelableTaskFactory)
-        {
-            _cancelTokenSource = new CancellationTokenSource();
-
-            return cancelableTaskFactory(_cancelTokenSource.Token);
-        }
-
-        if (factory is Func<IProgress<TProgress>, Task> taskFactoryWithProgress)
-        {
-            return taskFactoryWithProgress(this);
-        }
-
-        if (factory is Func<CancellationToken, IProgress<TProgress>, Task> cancelableTaskFactoryWithProgress)
-        {
-            _cancelTokenSource = new CancellationTokenSource();
-
-            return cancelableTaskFactoryWithProgress(_cancelTokenSource.Token, this);
-        }
-
-        Debug.Fail($"Invalid task factory of type '{factory}'.");
-
-        return null;
-    }
-
-    private void TransitionToClosed()
-    {
-        // From the finaliser we always call this Close version since finalisation can happen any time, even when STARTED (e.g. process ends)
-        // and we do not want to throw in those cases.
-
-        // Always go to closed, even from STATE_NOT_INITIALIZED.
-        // Any checking whether it is legal to call CLosed inthe current state, should occur in Close().
-        _ = SetAsyncState(STATE_CLOSED);
-
-        _cancelTokenSource = null;
-        _dataContainer = null;
-        _error = null;
-        _completedHandler = null;
-        _progressHandler = null;
-    }
-
-    #endregion Infrastructure methods
 }

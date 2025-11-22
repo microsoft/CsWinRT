@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
-#pragma warning disable CS0420
+#pragma warning disable CS0420, CA1816
 
 namespace WindowsRuntime.InteropServices;
 
@@ -125,6 +125,8 @@ internal partial class TaskToAsyncInfoAdapter<
                 throw exception;
             }
         }
+
+        GC.SuppressFinalize(this);
 
         TransitionToClosed();
     }
