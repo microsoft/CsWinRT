@@ -1,36 +1,46 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System;
-
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
-using global::System.Diagnostics;
-using global::System.Runtime.CompilerServices;
-using global::System.Runtime.InteropServices;
-using global::System.Threading;
-using global::System.Threading.Tasks;
-using global::Windows.Foundation;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
-#if NET
-[global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
-#if EMBED
-internal
-#else 
-public
-#endif
-static class WindowsRuntimeSystemExtensions
+#pragma warning disable IDE0010
+
+namespace System;
+
+/// <summary>
+/// Provides extensions for <see cref="IAsyncInfo"/> types to interoperate with <see cref="Task"/> types.
+/// </summary>
+[SupportedOSPlatform("windows10.0.10240.0")]
+public static class WindowsRuntimeSystemExtensions
 {
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncAction"/> instance.
+    /// </summary>
+    /// <param name="source">The input <see cref="IAsyncAction"/> instance.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task AsTask(this IAsyncAction source)
     {
         return AsTask(source, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncAction"/> instance.
+    /// </summary>
+    /// <param name="source">The input <see cref="IAsyncAction"/> instance.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
 
+        // If the source is already an adapter over a 'Task', return the underlying 'Task' directly
         if (source is AsyncInfoAdapter { Task: Task task })
         {
             return cancellationToken.CanBeCanceled ?
@@ -38,6 +48,7 @@ static class WindowsRuntimeSystemExtensions
                 task;
         }
 
+        // Handle terminal states for the input async object
         switch (source.Status)
         {
             case AsyncStatus.Completed:
@@ -48,28 +59,45 @@ static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
+        // The input async object is in progress, so create a bridge to represent it as a 'Task' instance
         AsyncInfoToTaskBridge<ValueTypePlaceholder> bridge = new(source, cancellationToken);
 
+        // Assign a completion handler to notify our bridge object of completion.
+        // This will complete the 'Task' instance that we're returning to callers.
         source.Completed = bridge.Complete;
 
         return bridge.Task;
     }
 
+    /// <summary>Gets an awaiter used to await this <see cref="IAsyncAction"/>.</summary>
+    /// <param name="source">The input <see cref="IAsyncAction"/> instance.</param>
+    /// <returns>An awaiter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static TaskAwaiter GetAwaiter(this IAsyncAction source)
     {
         return AsTask(source).GetAwaiter();
     }
 
-    public static void Wait(this IAsyncAction source)
-    {
-        AsTask(source).Wait();
-    }
-
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperation{TResult}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperation{TResult}"/> instance.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source)
     {
         return AsTask(source, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperation{TResult}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperation{TResult}"/> instance.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -98,22 +126,41 @@ static class WindowsRuntimeSystemExtensions
         return bridge.Task;
     }
 
+    /// <summary>Gets an awaiter used to await this <see cref="IAsyncOperation{TResult}"/>.</summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperation{TResult}"/> instance.</param>
+    /// <returns>An awaiter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static TaskAwaiter<TResult> GetAwaiter<TResult>(this IAsyncOperation<TResult> source)
     {
         return AsTask(source).GetAwaiter();
     }
 
-    public static void Wait<TResult>(this IAsyncOperation<TResult> source)
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncActionWithProgress{TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source)
     {
-        AsTask(source).Wait();
+        return AsTask(source, CancellationToken.None);
     }
 
-    public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncActionWithProgress{TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        // fast path is underlying asyncInfo is Task and no IProgress provided
-        if (source is AsyncInfoAdapter { Task: Task task } && progress is null)
+        if (source is AsyncInfoAdapter { Task: Task task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -124,61 +171,104 @@ static class WindowsRuntimeSystemExtensions
         {
             case AsyncStatus.Completed:
                 return Task.CompletedTask;
-
             case AsyncStatus.Error:
-                return Task.FromException(source.ErrorCode);
-
+                return Task.FromException(source.ErrorCode!);
             case AsyncStatus.Canceled:
                 return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        if (progress != null)
-        {
-            SetProgress(source, progress);
-        }
+        AsyncInfoToTaskBridge<TProgress> bridge = new(source, cancellationToken);
 
-        var bridge = new AsyncInfoToTaskBridge<TProgress>(source, cancellationToken);
         source.Completed = bridge.Complete;
+
         return bridge.Task;
     }
 
-    private static void SetProgress<TProgress>(IAsyncActionWithProgress<TProgress> source, IProgress<TProgress> sink)
-    {
-        // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
-        source.Progress = new AsyncActionProgressHandler<TProgress>((_, info) => sink.Report(info));
-    }
-
-    public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source)
-    {
-        return AsTask(source, CancellationToken.None, null);
-    }
-
-    public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken)
-    {
-        return AsTask(source, cancellationToken, null);
-    }
-
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncActionWithProgress{TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</param>
+    /// <param name="progress">The <see cref="IProgress{T}"/> instance to use to monitor progress on <paramref name="source"/>.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <typeparamref name="TProgress"/> are <see langword="null"/>.</exception>
     public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, IProgress<TProgress> progress)
     {
-        return AsTask(source, CancellationToken.None, progress);
+        return AsTask(source, progress, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncActionWithProgress{TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</param>
+    /// <param name="progress">The <see cref="IProgress{T}"/> instance to use to monitor progress on <paramref name="source"/>.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <typeparamref name="TProgress"/> are <see langword="null"/>.</exception>
+    public static Task AsTask<TProgress>(
+        this IAsyncActionWithProgress<TProgress> source,
+        IProgress<TProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        switch (source.Status)
+        {
+            case AsyncStatus.Completed:
+                return Task.CompletedTask;
+            case AsyncStatus.Error:
+                return Task.FromException(source.ErrorCode!);
+            case AsyncStatus.Canceled:
+                return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
+        }
+
+        AsyncInfoToTaskBridge<TProgress> bridge = new(source, cancellationToken);
+
+        source.Progress = new AsyncActionProgressHandler<TProgress>((_, info) => progress.Report(info));
+        source.Completed = bridge.Complete;
+
+        return bridge.Task;
+    }
+
+    /// <summary>Gets an awaiter used to await this <see cref="IAsyncActionWithProgress{TProgress}"/>.</summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</param>
+    /// <returns>An awaiter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static TaskAwaiter GetAwaiter<TProgress>(this IAsyncActionWithProgress<TProgress> source)
     {
         return AsTask(source).GetAwaiter();
     }
 
-    public static void Wait<TProgress>(this IAsyncActionWithProgress<TProgress> source)
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
     {
-        AsTask(source).Wait();
+        return AsTask(source, CancellationToken.None);
     }
 
-    public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        // fast path is underlying asyncInfo is Task and no IProgress provided
-        if (source is AsyncInfoAdapter { Task: Task<TResult> task } && progress is null)
+        if (source is AsyncInfoAdapter { Task: Task<TResult> task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -189,55 +279,86 @@ static class WindowsRuntimeSystemExtensions
         {
             case AsyncStatus.Completed:
                 return Task.FromResult(source.GetResults());
-
             case AsyncStatus.Error:
-                return Task.FromException<TResult>(source.ErrorCode);
-
+                return Task.FromException<TResult>(source.ErrorCode!);
             case AsyncStatus.Canceled:
                 return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        if (progress != null)
-        {
-            SetProgress(source, progress);
-        }
+        AsyncInfoToTaskBridge<TResult, TProgress> bridge = new(source, cancellationToken);
 
-        var bridge = new AsyncInfoToTaskBridge<TResult, TProgress>(source, cancellationToken);
         source.Completed = bridge.Complete;
+
         return bridge.Task;
     }
 
-    private static void SetProgress<TResult, TProgress>(IAsyncOperationWithProgress<TResult, TProgress> source, IProgress<TProgress> sink)
-    {
-        // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
-        source.Progress = new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => sink.Report(info));
-    }
-
-    public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
-    {
-        return AsTask(source, CancellationToken.None, null);
-    }
-
-    public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken)
-    {
-        return AsTask(source, cancellationToken, null);
-    }
-
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</param>
+    /// <param name="progress">The <see cref="IProgress{T}"/> instance to use to monitor progress on <paramref name="source"/>.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <typeparamref name="TProgress"/> are <see langword="null"/>.</exception>
     public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, IProgress<TProgress> progress)
     {
-        return AsTask(source, CancellationToken.None, progress);
+        return AsTask(source, progress, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Creates a <see cref="Task{TResult}"/> for the asynchronous operation represented by the specified <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</param>
+    /// <param name="progress">The <see cref="IProgress{T}"/> instance to use to monitor progress on <paramref name="source"/>.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>The resulting <see cref="Task{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <typeparamref name="TProgress"/> are <see langword="null"/>.</exception>
+    public static Task<TResult> AsTask<TResult, TProgress>(
+        this IAsyncOperationWithProgress<TResult, TProgress> source,
+        IProgress<TProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        switch (source.Status)
+        {
+            case AsyncStatus.Completed:
+                return Task.FromResult(source.GetResults());
+            case AsyncStatus.Error:
+                return Task.FromException<TResult>(source.ErrorCode!);
+            case AsyncStatus.Canceled:
+                return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
+        }
+
+        AsyncInfoToTaskBridge<TResult, TProgress> bridge = new(source, cancellationToken);
+
+        source.Progress = new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => progress.Report(info));
+        source.Completed = bridge.Complete;
+
+        return bridge.Task;
+    }
+
+    /// <summary>Gets an awaiter used to await this <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.</summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="source">The input <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</param>
+    /// <returns>An awaiter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static TaskAwaiter<TResult> GetAwaiter<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
     {
         return AsTask(source).GetAwaiter();
     }
 
-    public static void Wait<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
-    {
-        AsTask(source).Wait();
-    }
-
+    /// <summary>
+    /// Creates a <see cref="IAsyncAction"/> to represent the specified <see cref="Task"/> instance.
+    /// </summary>
+    /// <param name="source">The input <see cref="Task"/> instance.</param>
+    /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static IAsyncAction AsAsyncAction(this Task source)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -245,6 +366,13 @@ static class WindowsRuntimeSystemExtensions
         return new AsyncActionAdapter(source, cancellationTokenSource: null);
     }
 
+    /// <summary>
+    /// Creates a <see cref="IAsyncOperation{TResult}"/> to represent the specified <see cref="Task{TResult}"/> instance.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="source">The input <see cref="Task{TResult}"/> instance.</param>
+    /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static IAsyncOperation<TResult> AsAsyncOperation<TResult>(this Task<TResult> source)
     {
         ArgumentNullException.ThrowIfNull(source);
