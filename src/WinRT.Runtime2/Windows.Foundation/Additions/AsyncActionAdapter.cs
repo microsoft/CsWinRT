@@ -14,10 +14,10 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 [SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
-    VoidValueTypeParameter,
-    VoidValueTypeParameter,
+    ValueTypePlaceholder,
+    ValueTypePlaceholder,
     AsyncActionCompletedHandler,
-    VoidReferenceTypeParameter>,
+    ReferenceTypePlaceholder>,
     IAsyncAction
 {
     /// <summary>
@@ -44,7 +44,7 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     /// </summary>
     /// <param name="_">The <see cref="CompletedTaskPlaceholder"/> value to select this overload.</param>
     public AsyncActionAdapter(CompletedTaskPlaceholder _)
-        : base(default(VoidValueTypeParameter))
+        : base(default(ValueTypePlaceholder))
     {
     }
 

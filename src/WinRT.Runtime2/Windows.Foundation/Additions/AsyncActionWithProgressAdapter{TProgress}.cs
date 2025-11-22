@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInfoAdapter<
-    VoidValueTypeParameter,
+    ValueTypePlaceholder,
     TProgress,
     AsyncActionWithProgressCompletedHandler<TProgress>,
     AsyncActionProgressHandler<TProgress>>,
@@ -35,7 +35,7 @@ internal sealed class AsyncActionWithProgressAdapter<TProgress> : TaskToAsyncInf
     /// </summary>
     /// <param name="_">The <see cref="CompletedTaskPlaceholder"/> value to select this overload.</param>
     public AsyncActionWithProgressAdapter(CompletedTaskPlaceholder _)
-        : base(default(VoidValueTypeParameter))
+        : base(default(ValueTypePlaceholder))
     {
     }
 

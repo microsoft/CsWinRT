@@ -16,9 +16,9 @@ namespace WindowsRuntime.InteropServices;
 [SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncOperationAdapter<TResult> : TaskToAsyncInfoAdapter<
     TResult,
-    VoidValueTypeParameter,
+    ValueTypePlaceholder,
     AsyncOperationCompletedHandler<TResult>,
-    VoidReferenceTypeParameter>,
+    ReferenceTypePlaceholder>,
     IAsyncOperation<TResult>
 {
     /// <summary>

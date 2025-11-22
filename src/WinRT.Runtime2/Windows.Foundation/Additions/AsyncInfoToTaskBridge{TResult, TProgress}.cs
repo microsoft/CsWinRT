@@ -80,7 +80,7 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
     /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperation{TResult}.Completed"/>).</param>
     internal void Complete(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus)
     {
-        Debug.Assert(typeof(TProgress) == typeof(VoidValueTypeParameter));
+        Debug.Assert(typeof(TProgress) == typeof(ValueTypePlaceholder));
 
         CompleteCore(asyncInfo, asyncStatus);
     }
@@ -92,7 +92,7 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
     /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperationWithProgress{TResult, TProgress}.Completed"/>).</param>
     internal void Complete(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, AsyncStatus asyncStatus)
     {
-        Debug.Assert(typeof(TProgress) != typeof(VoidValueTypeParameter));
+        Debug.Assert(typeof(TProgress) != typeof(ValueTypePlaceholder));
 
         CompleteCore(asyncInfo, asyncStatus);
     }
@@ -137,7 +137,7 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
                 // So here we can avoid the interface casts to reduce overhead.
                 try
                 {
-                    result = typeof(TProgress) == typeof(VoidValueTypeParameter)
+                    result = typeof(TProgress) == typeof(ValueTypePlaceholder)
                         ? Unsafe.As<IAsyncOperation<TResult>>(asyncInfo).GetResults()
                         : Unsafe.As<IAsyncOperationWithProgress<TResult, TProgress>>(asyncInfo).GetResults();
                 }
