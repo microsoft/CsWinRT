@@ -143,26 +143,53 @@ public static class AsyncInfo
         return new AsyncOperationProgressAdapter<TResult, TProgress>(factory);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncAction"/> instance in the completed state.
+    /// </summary>
+    /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CompletedAction()
     {
         return new AsyncActionAdapter(default(CompletedTaskPlaceholder));
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncActionWithProgress{TProgress}"/> instance in the completed state.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
     {
         return new AsyncActionWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
     }
 
-    public static IAsyncOperation<TResult> FromResult<TResult>(TResult synchronousResult)
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperation{TResult}"/> instance in the completed state, with a specified result.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="result">The result to wrap.</param>
+    /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
+    public static IAsyncOperation<TResult> FromResult<TResult>(TResult result)
     {
-        return new AsyncOperationAdapter<TResult>(synchronousResult);
+        return new AsyncOperationAdapter<TResult>(result);
     }
 
-    public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult synchronousResult)
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance in the completed state, with a specified result.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="result">The result to wrap.</param>
+    /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
+    public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult result)
     {
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(synchronousResult);
+        return new AsyncOperationProgressAdapter<TResult, TProgress>(result);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncAction"/> instance in the error state.
+    /// </summary>
+    /// <param name="exception">The exception representing the error state.</param>
+    /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction FromException(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -170,6 +197,12 @@ public static class AsyncInfo
         return new AsyncActionAdapter(exception);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncActionWithProgress{TProgress}"/> instance in the error state.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="exception">The exception representing the error state.</param>
+    /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> FromExceptionWithProgress<TProgress>(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -177,6 +210,12 @@ public static class AsyncInfo
         return new AsyncActionWithProgressAdapter<TProgress>(exception);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperation{TResult}"/> instance in the error state.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="exception">The exception representing the error state.</param>
+    /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> FromException<TResult>(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -184,6 +223,13 @@ public static class AsyncInfo
         return new AsyncOperationAdapter<TResult>(exception);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance in the error state.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <param name="exception">The exception representing the error state.</param>
+    /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> FromExceptionWithProgress<TResult, TProgress>(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -191,21 +237,41 @@ public static class AsyncInfo
         return new AsyncOperationProgressAdapter<TResult, TProgress>(exception);
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncAction"/> instance in the canceled state.
+    /// </summary>
+    /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CanceledAction()
     {
         return new AsyncActionAdapter(default(CanceledTaskPlaceholder));
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncActionWithProgress{TProgress}"/> instance in the canceled state.
+    /// </summary>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()
     {
         return new AsyncActionWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperation{TResult}"/> instance in the canceled state.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> CanceledOperation<TResult>()
     {
         return new AsyncOperationAdapter<TResult>(default(CanceledTaskPlaceholder));
     }
 
+    /// <summary>
+    /// Creates an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance in the canceled state.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <typeparam name="TProgress">The type of progress information.</typeparam>
+    /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()
     {
         return new AsyncOperationProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
