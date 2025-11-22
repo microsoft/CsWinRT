@@ -38,26 +38,35 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
     public AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
     {
         _cancellationToken = cancellationToken;
+
+        // The logic for this constructor should be kept in sync with the one without 'TResult'
         if (_cancellationToken.CanBeCanceled)
         {
-            _registration = _cancellationToken.Register(static (b, ct) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(ct), this);
+            // Register the cancellation from the input cancellation token
+            _registration = _cancellationToken.Register(
+                callback: static (@this, ct) => Unsafe.As<TaskCompletionSource>(@this!).TrySetCanceled(ct),
+                state: this);
 
-            // Handle Exception from Cancel() if the token is already canceled.
+            // Register the cancellation from the async object as well
             try
             {
-                _asyncInfoRegistration = _cancellationToken.Register(static ai => ((IAsyncInfo)ai).Cancel(), asyncInfo);
+                _asyncInfoRegistration = _cancellationToken.Register(
+                    callback: static asyncInfo => Unsafe.As<IAsyncInfo>(asyncInfo!).Cancel(),
+                    state: asyncInfo);
             }
             catch (Exception ex)
             {
-                if (!base.Task.IsFaulted)
+                // Handle exceptions from 'Cancel' if the token is already canceled
+                if (!Task.IsFaulted)
                 {
-                    Debug.Fail($"Expected base task to already be faulted but found it in state {base.Task.Status}");
-                    base.TrySetException(ex);
+                    Debug.Fail($"Expected base task to already be faulted, but found it in state '{Task.Status}'.");
+
+                    _ = TrySetException(ex);
                 }
             }
         }
 
-        // If we're already completed, unregister everything again.  Unregistration is idempotent and thread-safe.
+        // If we're already completed, unregister everything again
         if (Task.IsCompleted)
         {
             Dispose();
@@ -95,61 +104,69 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
 
         try
         {
-            Debug.Assert(asyncInfo.Status == asyncStatus, "asyncInfo.Status does not match asyncStatus; are we dealing with a faulty IAsyncInfo implementation?");
+            Debug.Assert(asyncInfo.Status == asyncStatus, "The input async status doesn't match what 'IAsyncInfo' is reporting.");
 
-            if (asyncStatus != AsyncStatus.Completed && asyncStatus != AsyncStatus.Canceled && asyncStatus != AsyncStatus.Error)
+            // Validate that the async status is valid for this call
+            if (asyncStatus is not (AsyncStatus.Completed or AsyncStatus.Canceled or AsyncStatus.Error))
             {
                 Debug.Fail("The async operation should be in a terminal state.");
+
                 throw new InvalidOperationException("The asynchronous operation could not be completed.");
             }
 
-            TResult result = default(TResult);
-            Exception error = null;
+            TResult? result = default;
+            Exception? error = null;
+
+            // Retrieve the exception, if the async object is in the error state
             if (asyncStatus == AsyncStatus.Error)
             {
                 error = asyncInfo.ErrorCode;
 
-                // Defend against a faulty IAsyncInfo implementation
+                // Defend against a faulty 'IAsyncInfo' implementation
                 if (error is null)
                 {
-                    Debug.Fail("IAsyncInfo.Status == Error, but ErrorCode returns a null Exception (implying S_OK).");
+                    Debug.Fail("'IAsyncInfo.Status == Error', but 'ErrorCode' returns 'null' (implying 'S_OK').");
+
                     error = new InvalidOperationException("The asynchronous operation could not be completed.");
                 }
             }
             else if (asyncStatus == AsyncStatus.Completed)
             {
+                // Callers of this method are validating that the 'TProgress'
+                // value being used is correct for the interface type in use.
+                // So here we can avoid the interface casts to reduce overhead.
                 try
                 {
                     result = typeof(TProgress) == typeof(VoidValueTypeParameter)
                         ? Unsafe.As<IAsyncOperation<TResult>>(asyncInfo).GetResults()
                         : Unsafe.As<IAsyncOperationWithProgress<TResult, TProgress>>(asyncInfo).GetResults();
                 }
-                catch (Exception resultsEx)
+                catch (Exception e)
                 {
-                    // According to the WinRT team, this can happen in some egde cases, such as marshalling errors in GetResults.
-                    error = resultsEx;
+                    // According to the WinRT team, this can happen in some egde cases,
+                    // such as marshalling errors in calls to native 'GetResults()' methods.
+                    error = e;
                     asyncStatus = AsyncStatus.Error;
                 }
             }
 
-            // Complete the task based on the previously retrieved results:
             bool success = false;
+
+            // Complete the task based on the previously retrieved results
             switch (asyncStatus)
             {
                 case AsyncStatus.Completed:
-                    success = base.TrySetResult(result);
+                    success = TrySetResult(result!);
                     break;
-
                 case AsyncStatus.Error:
-                    Debug.Assert(error != null, "The error should have been retrieved previously.");
-                    success = base.TrySetException(error);
+                    success = TrySetException(error!);
                     break;
-
                 case AsyncStatus.Canceled:
-                    success = base.TrySetCanceled(_cancellationToken.IsCancellationRequested ? _cancellationToken : new CancellationToken(true));
+                    success = TrySetCanceled(_cancellationToken.IsCancellationRequested ? _cancellationToken : new CancellationToken(true));
                     break;
             }
 
+            // Dispose the registrations, if we succeeded in completing the task
             if (success)
             {
                 Dispose();
@@ -157,17 +174,17 @@ internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletion
         }
         catch (Exception e)
         {
-            Debug.Fail($"Unexpected exception in Complete: {e}");
+            Debug.Fail($"Unexpected exception in 'CompleteCore': '{e}'.");
 
-            if (!base.TrySetException(e))
+            // If we can't set the exception, we just re-throw it from here
+            if (!TrySetException(e))
             {
                 Debug.Fail("The task was already completed and thus the exception couldn't be stored.");
+
                 throw;
             }
-            else
-            {
-                Dispose();
-            }
+
+            Dispose();
         }
     }
 
