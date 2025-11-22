@@ -3,6 +3,7 @@
 
 namespace System;
 
+using System.Runtime.Versioning;
 using global::System.Diagnostics;
 using global::System.Runtime.CompilerServices;
 using global::System.Runtime.InteropServices;
@@ -21,6 +22,11 @@ public
 #endif
 static class WindowsRuntimeSystemExtensions
 {
+    public static Task AsTask(this IAsyncAction source)
+    {
+        return AsTask(source, CancellationToken.None);
+    }
+
     public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -36,22 +42,17 @@ static class WindowsRuntimeSystemExtensions
         {
             case AsyncStatus.Completed:
                 return Task.CompletedTask;
-
             case AsyncStatus.Error:
-                return Task.FromException(source.ErrorCode);
-
+                return Task.FromException(source.ErrorCode!);
             case AsyncStatus.Canceled:
                 return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        var bridge = new AsyncInfoToTaskBridge<VoidValueTypeParameter, VoidValueTypeParameter>(source, cancellationToken);
-        source.Completed = new AsyncActionCompletedHandler(bridge.CompleteFromAsyncAction);
-        return bridge.Task;
-    }
+        AsyncInfoToTaskBridge<VoidValueTypeParameter> bridge = new(source, cancellationToken);
 
-    public static Task AsTask(this IAsyncAction source)
-    {
-        return AsTask(source, CancellationToken.None);
+        source.Completed = bridge.Complete;
+
+        return bridge.Task;
     }
 
     public static TaskAwaiter GetAwaiter(this IAsyncAction source)
@@ -62,6 +63,11 @@ static class WindowsRuntimeSystemExtensions
     public static void Wait(this IAsyncAction source)
     {
         AsTask(source).Wait();
+    }
+
+    public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source)
+    {
+        return AsTask(source, CancellationToken.None);
     }
 
     public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
@@ -79,22 +85,17 @@ static class WindowsRuntimeSystemExtensions
         {
             case AsyncStatus.Completed:
                 return Task.FromResult(source.GetResults());
-
             case AsyncStatus.Error:
-                return Task.FromException<TResult>(source.ErrorCode);
-
+                return Task.FromException<TResult>(source.ErrorCode!);
             case AsyncStatus.Canceled:
                 return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        var bridge = new AsyncInfoToTaskBridge<TResult, VoidValueTypeParameter>(source, cancellationToken);
-        source.Completed = new AsyncOperationCompletedHandler<TResult>(bridge.CompleteFromAsyncOperation);
-        return bridge.Task;
-    }
+        AsyncInfoToTaskBridge<TResult, VoidValueTypeParameter> bridge = new(source, cancellationToken);
 
-    public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source)
-    {
-        return AsTask(source, CancellationToken.None);
+        source.Completed = bridge.Complete;
+
+        return bridge.Task;
     }
 
     public static TaskAwaiter<TResult> GetAwaiter<TResult>(this IAsyncOperation<TResult> source)
@@ -105,11 +106,6 @@ static class WindowsRuntimeSystemExtensions
     public static void Wait<TResult>(this IAsyncOperation<TResult> source)
     {
         AsTask(source).Wait();
-    }
-
-    public static TResult Get<TResult>(this IAsyncOperation<TResult> source)
-    {
-        return AsTask(source).Result;
     }
 
     public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
@@ -141,8 +137,8 @@ static class WindowsRuntimeSystemExtensions
             SetProgress(source, progress);
         }
 
-        var bridge = new AsyncInfoToTaskBridge<VoidValueTypeParameter, TProgress>(source, cancellationToken);
-        source.Completed = new AsyncActionWithProgressCompletedHandler<TProgress>(bridge.CompleteFromAsyncActionWithProgress);
+        var bridge = new AsyncInfoToTaskBridge<TProgress>(source, cancellationToken);
+        source.Completed = bridge.Complete;
         return bridge.Task;
     }
 
@@ -207,7 +203,7 @@ static class WindowsRuntimeSystemExtensions
         }
 
         var bridge = new AsyncInfoToTaskBridge<TResult, TProgress>(source, cancellationToken);
-        source.Completed = new AsyncOperationWithProgressCompletedHandler<TResult, TProgress>(bridge.CompleteFromAsyncOperationWithProgress);
+        source.Completed = bridge.Complete;
         return bridge.Task;
     }
 
@@ -242,11 +238,6 @@ static class WindowsRuntimeSystemExtensions
         AsTask(source).Wait();
     }
 
-    public static TResult Get<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
-    {
-        return AsTask(source).Result;
-    }
-
     public static IAsyncAction AsAsyncAction(this Task source)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -270,31 +261,207 @@ struct VoidValueTypeParameter { }
 /// using <code>VoidValueTypeParameter</code> offers better performance.</summary>
 internal class VoidReferenceTypeParameter { }
 
-#if NET
-[global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-#endif
-sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
+/// <summary>
+/// A <see cref="TaskCompletionSource"/> implementation backed by an <see cref="IAsyncInfo"/> object.
+/// </summary>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
 {
-    private readonly CancellationToken _ct;
-    private readonly CancellationTokenRegistration _asyncInfoRegistration;
+    /// <summary>
+    /// The input <see cref="CancellationToken"/> value.
+    /// </summary>
+    private readonly CancellationToken _cancellationToken;
+
+    /// <summary>
+    /// The cancellation registration from <see cref="_cancellationToken"/> canceling this <see cref="TaskCompletionSource"/> instance.
+    /// </summary>
     private readonly CancellationTokenRegistration _registration;
 
-    internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+    /// <summary>
+    /// The cancellation registration from <see cref="_cancellationToken"/> canceling the input <see cref="IAsyncInfo"/> instance.
+    /// </summary>
+    private readonly CancellationTokenRegistration _asyncInfoRegistration;
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncInfoToTaskBridge{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
+    /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
+    public AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+    {
+        _cancellationToken = cancellationToken;
+
+        if (_cancellationToken.CanBeCanceled)
+        {
+            // Register the cancellation from the input cancellation token
+            _registration = _cancellationToken.Register(
+                callback: static (@this, ct) => Unsafe.As<TaskCompletionSource>(@this!).TrySetCanceled(ct),
+                state: this);
+
+            // Register the cancellation from the async object as well
+            try
+            {
+                _asyncInfoRegistration = _cancellationToken.Register(
+                    callback: static asyncInfo => Unsafe.As<IAsyncInfo>(asyncInfo!).Cancel(),
+                    state: asyncInfo);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions from 'Cancel' if the token is already canceled
+                if (!Task.IsFaulted)
+                {
+                    Debug.Fail($"Expected base task to already be faulted, but found it in state '{Task.Status}'.");
+
+                    _ = TrySetException(ex);
+                }
+            }
+        }
+
+        // If we're already completed, unregister everything again.
+        // The unregistration we perform is idempotent and thread-safe.
+        if (Task.IsCompleted)
+        {
+            Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Marks the current instance as completed.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncAction"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncAction.Completed"/>).</param>
+    public void Complete(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
+    {
+        CompleteCore(asyncInfo, asyncStatus);
+    }
+
+    /// <summary>
+    /// Marks the current instance as completed.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncActionWithProgress{TProgress}"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncActionWithProgress{TProgress}.Completed"/>).</param>
+    public void Complete(IAsyncActionWithProgress<TProgress> asyncInfo, AsyncStatus asyncStatus)
+    {
+        CompleteCore(asyncInfo, asyncStatus);
+    }
+
+    /// <summary>
+    /// Marks the current instance as completed.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (from some completion handler).</param>
+    private void CompleteCore(IAsyncInfo asyncInfo, AsyncStatus asyncStatus)
     {
         ArgumentNullException.ThrowIfNull(asyncInfo);
 
-        this._ct = cancellationToken;
-        if (this._ct.CanBeCanceled)
+        try
         {
-#if NET
-            _registration = this._ct.Register(static (b, ct) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(ct), this);
-#else
-            _registration = this._ct.Register((b) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(this._ct), this);
-#endif
+            Debug.Assert(asyncInfo.Status == asyncStatus, "The input async status doesn't match what 'IAsyncInfo' is reporting.");
+
+            // Validate that the async status is valid for this call
+            if (asyncStatus is not (AsyncStatus.Completed or AsyncStatus.Canceled or AsyncStatus.Error))
+            {
+                Debug.Fail("The async operation should be in a terminal state.");
+
+                throw new InvalidOperationException("The asynchronous operation could not be completed.");
+            }
+
+            Exception? error = null;
+
+            // Retrieve the exception, if the async object is in the error state
+            if (asyncStatus == AsyncStatus.Error)
+            {
+                error = asyncInfo.ErrorCode;
+
+                // Defend against a faulty 'IAsyncInfo' implementation
+                if (error is null)
+                {
+                    Debug.Fail("'IAsyncInfo.Status == Error', but 'ErrorCode' returns 'null' (implying 'S_OK').");
+
+                    error = new InvalidOperationException("The asynchronous operation could not be completed.");
+                }
+            }
+
+            bool success = false;
+
+            // Complete the task based on the previously retrieved results
+            switch (asyncStatus)
+            {
+                case AsyncStatus.Completed:
+                    success = TrySetResult();
+                    break;
+                case AsyncStatus.Error:
+                    success = TrySetException(error!);
+                    break;
+                case AsyncStatus.Canceled:
+                    success = TrySetCanceled(_cancellationToken.IsCancellationRequested ? _cancellationToken : new CancellationToken(true));
+                    break;
+            }
+
+            // Dispose the registrations, if we succeeded in completing the task
+            if (success)
+            {
+                Dispose();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Fail($"Unexpected exception in 'CompleteCore': '{e}'.");
+
+            // If we can't set the exception, we just re-throw it from here
+            if (!TrySetException(e))
+            {
+                Debug.Fail("The task was already completed and thus the exception couldn't be stored.");
+
+                throw;
+            }
+
+            Dispose();
+        }
+    }
+
+    /// <inheritdoc cref="IDisposable.Dispose"/>
+    private void Dispose()
+    {
+        _registration.Dispose();
+        _asyncInfoRegistration.Dispose();
+    }
+}
+
+/// <summary>
+/// A <see cref="TaskCompletionSource{TResult}"/> implementation backed by an <see cref="IAsyncInfo"/> object.
+/// </summary>
+/// <typeparam name="TResult">The result type.</typeparam>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
+{
+    /// <inheritdoc cref="AsyncInfoToTaskBridge{TProgress}._cancellationToken"/>
+    private readonly CancellationToken _cancellationToken;
+
+    /// <inheritdoc cref="AsyncInfoToTaskBridge{TProgress}._registration"/>
+    private readonly CancellationTokenRegistration _registration;
+
+    /// <inheritdoc cref="AsyncInfoToTaskBridge{TProgress}._asyncInfoRegistration"/>
+    private readonly CancellationTokenRegistration _asyncInfoRegistration;
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncInfoToTaskBridge{TResult, TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
+    /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
+    public AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+    {
+        _cancellationToken = cancellationToken;
+        if (_cancellationToken.CanBeCanceled)
+        {
+            _registration = _cancellationToken.Register(static (b, ct) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(ct), this);
+
             // Handle Exception from Cancel() if the token is already canceled.
             try
             {
-                _asyncInfoRegistration = this._ct.Register(static ai => ((IAsyncInfo)ai).Cancel(), asyncInfo);
+                _asyncInfoRegistration = _cancellationToken.Register(static ai => ((IAsyncInfo)ai).Cancel(), asyncInfo);
             }
             catch (Exception ex)
             {
@@ -309,30 +476,36 @@ sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TR
         // If we're already completed, unregister everything again.  Unregistration is idempotent and thread-safe.
         if (Task.IsCompleted)
         {
-            this.Cleanup();
+            Dispose();
         }
     }
-    internal void CompleteFromAsyncAction(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
+
+    /// <summary>
+    /// Marks the current instance as completed.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncOperation{TResult}"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperation{TResult}.Completed"/>).</param>
+    internal void Complete(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus)
     {
-        Complete(asyncInfo, null, asyncStatus);
+        Debug.Assert(typeof(TProgress) == typeof(VoidValueTypeParameter));
+
+        CompleteCore(asyncInfo, asyncStatus);
     }
 
-    internal void CompleteFromAsyncActionWithProgress(IAsyncActionWithProgress<TProgress> asyncInfo, AsyncStatus asyncStatus)
+    /// <summary>
+    /// Marks the current instance as completed.
+    /// </summary>
+    /// <param name="asyncInfo">The <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperationWithProgress{TResult, TProgress}.Completed"/>).</param>
+    internal void Complete(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, AsyncStatus asyncStatus)
     {
-        Complete(asyncInfo, null, asyncStatus);
+        Debug.Assert(typeof(TProgress) != typeof(VoidValueTypeParameter));
+
+        CompleteCore(asyncInfo, asyncStatus);
     }
 
-    internal void CompleteFromAsyncOperation(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus)
-    {
-        Complete(asyncInfo, ai => ((IAsyncOperation<TResult>)ai).GetResults(), asyncStatus);
-    }
-
-    internal void CompleteFromAsyncOperationWithProgress(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, AsyncStatus asyncStatus)
-    {
-        Complete(asyncInfo, ai => ((IAsyncOperationWithProgress<TResult, TProgress>)ai).GetResults(), asyncStatus);
-    }
-
-    private void Complete(IAsyncInfo asyncInfo, Func<IAsyncInfo, TResult> getResultsFunction, AsyncStatus asyncStatus)
+    /// <inheritdoc cref="AsyncInfoToTaskBridge{TProgress}.CompleteCore"/>
+    private void CompleteCore(IAsyncInfo asyncInfo, AsyncStatus asyncStatus)
     {
         ArgumentNullException.ThrowIfNull(asyncInfo);
 
@@ -359,11 +532,13 @@ sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TR
                     error = new InvalidOperationException("The asynchronous operation could not be completed.");
                 }
             }
-            else if (asyncStatus == AsyncStatus.Completed && getResultsFunction != null)
+            else if (asyncStatus == AsyncStatus.Completed)
             {
                 try
                 {
-                    result = getResultsFunction(asyncInfo);
+                    result = typeof(TProgress) == typeof(VoidValueTypeParameter)
+                        ? Unsafe.As<IAsyncOperation<TResult>>(asyncInfo).GetResults()
+                        : Unsafe.As<IAsyncOperationWithProgress<TResult, TProgress>>(asyncInfo).GetResults();
                 }
                 catch (Exception resultsEx)
                 {
@@ -387,32 +562,33 @@ sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TR
                     break;
 
                 case AsyncStatus.Canceled:
-                    success = base.TrySetCanceled(this._ct.IsCancellationRequested ? this._ct : new CancellationToken(true));
+                    success = base.TrySetCanceled(_cancellationToken.IsCancellationRequested ? _cancellationToken : new CancellationToken(true));
                     break;
             }
 
             if (success)
             {
-                Cleanup();
+                Dispose();
             }
         }
-        catch (Exception exc)
+        catch (Exception e)
         {
-            Debug.Fail($"Unexpected exception in Complete: {exc}");
+            Debug.Fail($"Unexpected exception in Complete: {e}");
 
-            if (!base.TrySetException(exc))
+            if (!base.TrySetException(e))
             {
                 Debug.Fail("The task was already completed and thus the exception couldn't be stored.");
                 throw;
             }
             else
             {
-                Cleanup();
+                Dispose();
             }
         }
     }
 
-    private void Cleanup()
+    /// <inheritdoc cref="IDisposable.Dispose"/>
+    private void Dispose()
     {
         _registration.Dispose();
         _asyncInfoRegistration.Dispose();
