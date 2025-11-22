@@ -14,36 +14,32 @@ using Windows.Foundation;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A <see cref="TaskCompletionSource"/> implementation backed by an <see cref="IAsyncInfo"/> object.
+/// A <see cref="TaskCompletionSource{TResult}"/> implementation backed by an <see cref="IAsyncInfo"/> object.
 /// </summary>
+/// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
+internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCompletionSource<TResult>
 {
-    /// <summary>
-    /// The input <see cref="CancellationToken"/> value.
-    /// </summary>
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._cancellationToken"/>
     private readonly CancellationToken _cancellationToken;
 
-    /// <summary>
-    /// The cancellation registration from <see cref="_cancellationToken"/> canceling this <see cref="TaskCompletionSource"/> instance.
-    /// </summary>
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._registration"/>
     private readonly CancellationTokenRegistration _registration;
 
-    /// <summary>
-    /// The cancellation registration from <see cref="_cancellationToken"/> canceling the input <see cref="IAsyncInfo"/> instance.
-    /// </summary>
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._asyncInfoRegistration"/>
     private readonly CancellationTokenRegistration _asyncInfoRegistration;
 
     /// <summary>
-    /// Creates a new <see cref="AsyncInfoToTaskBridge{TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="AsyncInfoTaskCompletionSource{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
     /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
-    public AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+    public AsyncInfoTaskCompletionSource(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
     {
         _cancellationToken = cancellationToken;
 
+        // The logic for this constructor should be kept in sync with the one without 'TResult'
         if (_cancellationToken.CanBeCanceled)
         {
             // Register the cancellation from the input cancellation token
@@ -70,8 +66,7 @@ internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
             }
         }
 
-        // If we're already completed, unregister everything again.
-        // The unregistration we perform is idempotent and thread-safe.
+        // If we're already completed, unregister everything again
         if (Task.IsCompleted)
         {
             Dispose();
@@ -81,28 +76,28 @@ internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
     /// <summary>
     /// Marks the current instance as completed.
     /// </summary>
-    /// <param name="asyncInfo">The <see cref="IAsyncAction"/> instance that completed.</param>
-    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncAction.Completed"/>).</param>
-    public void Complete(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
+    /// <param name="asyncInfo">The <see cref="IAsyncOperation{TResult}"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperation{TResult}.Completed"/>).</param>
+    internal void Complete(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus)
     {
+        Debug.Assert(typeof(TProgress) == typeof(ValueTypePlaceholder));
+
         CompleteCore(asyncInfo, asyncStatus);
     }
 
     /// <summary>
     /// Marks the current instance as completed.
     /// </summary>
-    /// <param name="asyncInfo">The <see cref="IAsyncActionWithProgress{TProgress}"/> instance that completed.</param>
-    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncActionWithProgress{TProgress}.Completed"/>).</param>
-    public void Complete(IAsyncActionWithProgress<TProgress> asyncInfo, AsyncStatus asyncStatus)
+    /// <param name="asyncInfo">The <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance that completed.</param>
+    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (reported by <see cref="IAsyncOperationWithProgress{TResult, TProgress}.Completed"/>).</param>
+    internal void Complete(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, AsyncStatus asyncStatus)
     {
+        Debug.Assert(typeof(TProgress) != typeof(ValueTypePlaceholder));
+
         CompleteCore(asyncInfo, asyncStatus);
     }
 
-    /// <summary>
-    /// Marks the current instance as completed.
-    /// </summary>
-    /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance that completed.</param>
-    /// <param name="asyncStatus">The current <see cref="AsyncStatus"/> value (from some completion handler).</param>
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}.CompleteCore"/>
     private void CompleteCore(IAsyncInfo asyncInfo, AsyncStatus asyncStatus)
     {
         ArgumentNullException.ThrowIfNull(asyncInfo);
@@ -119,6 +114,7 @@ internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
                 throw new InvalidOperationException("The asynchronous operation could not be completed.");
             }
 
+            TResult? result = default;
             Exception? error = null;
 
             // Retrieve the exception, if the async object is in the error state
@@ -134,6 +130,25 @@ internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
                     error = new InvalidOperationException("The asynchronous operation could not be completed.");
                 }
             }
+            else if (asyncStatus == AsyncStatus.Completed)
+            {
+                // Callers of this method are validating that the 'TProgress'
+                // value being used is correct for the interface type in use.
+                // So here we can avoid the interface casts to reduce overhead.
+                try
+                {
+                    result = typeof(TProgress) == typeof(ValueTypePlaceholder)
+                        ? Unsafe.As<IAsyncOperation<TResult>>(asyncInfo).GetResults()
+                        : Unsafe.As<IAsyncOperationWithProgress<TResult, TProgress>>(asyncInfo).GetResults();
+                }
+                catch (Exception e)
+                {
+                    // According to the WinRT team, this can happen in some egde cases,
+                    // such as marshalling errors in calls to native 'GetResults()' methods.
+                    error = e;
+                    asyncStatus = AsyncStatus.Error;
+                }
+            }
 
             bool success = false;
 
@@ -141,7 +156,7 @@ internal sealed class AsyncInfoToTaskBridge<TProgress> : TaskCompletionSource
             switch (asyncStatus)
             {
                 case AsyncStatus.Completed:
-                    success = TrySetResult();
+                    success = TrySetResult(result!);
                     break;
                 case AsyncStatus.Error:
                     success = TrySetException(error!);

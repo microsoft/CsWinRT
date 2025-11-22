@@ -60,7 +60,7 @@ public static class WindowsRuntimeSystemExtensions
         }
 
         // The input async object is in progress, so create a bridge to represent it as a 'Task' instance
-        AsyncInfoToTaskBridge<ValueTypePlaceholder> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<ValueTypePlaceholder> bridge = new(source, cancellationToken);
 
         // Assign a completion handler to notify our bridge object of completion.
         // This will complete the 'Task' instance that we're returning to callers.
@@ -119,7 +119,7 @@ public static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        AsyncInfoToTaskBridge<TResult, ValueTypePlaceholder> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<TResult, ValueTypePlaceholder> bridge = new(source, cancellationToken);
 
         source.Completed = bridge.Complete;
 
@@ -177,7 +177,7 @@ public static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        AsyncInfoToTaskBridge<TProgress> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<TProgress> bridge = new(source, cancellationToken);
 
         source.Completed = bridge.Complete;
 
@@ -224,7 +224,7 @@ public static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        AsyncInfoToTaskBridge<TProgress> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<TProgress> bridge = new(source, cancellationToken);
 
         source.Progress = new AsyncActionProgressHandler<TProgress>((_, info) => progress.Report(info));
         source.Completed = bridge.Complete;
@@ -285,7 +285,7 @@ public static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        AsyncInfoToTaskBridge<TResult, TProgress> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<TResult, TProgress> bridge = new(source, cancellationToken);
 
         source.Completed = bridge.Complete;
 
@@ -334,7 +334,7 @@ public static class WindowsRuntimeSystemExtensions
                 return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
         }
 
-        AsyncInfoToTaskBridge<TResult, TProgress> bridge = new(source, cancellationToken);
+        AsyncInfoTaskCompletionSource<TResult, TProgress> bridge = new(source, cancellationToken);
 
         source.Progress = new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => progress.Report(info));
         source.Completed = bridge.Complete;
