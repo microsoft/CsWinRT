@@ -11,8 +11,8 @@ using Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <inheritdoc cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/>
-internal partial class TaskToAsyncInfoAdapter<
+/// <inheritdoc cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/>
+internal partial class UniversalTaskAdapter<
     TResult,
     TProgress,
     TCompletedHandler,

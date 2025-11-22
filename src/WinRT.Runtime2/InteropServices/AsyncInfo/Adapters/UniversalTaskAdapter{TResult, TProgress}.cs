@@ -22,11 +22,11 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TCompletedHandler">The type of completed handler (e.g. for <see cref="IAsyncAction.Completed"/>).</typeparam>
 /// <typeparam name="TProgressHandler">The type of progress handler (e.g. for <see cref="IAsyncActionWithProgress{TProgress}.Progress"/>).</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal abstract partial class TaskToAsyncInfoAdapter<
+internal abstract partial class UniversalTaskAdapter<
     TResult,
     TProgress,
     TCompletedHandler,
-    TProgressHandler> : AsyncInfoAdapter,
+    TProgressHandler> : UniversalTaskAdapter,
     IAsyncInfo,
     IProgress<TProgress>
     where TCompletedHandler : class
@@ -66,10 +66,10 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     private volatile TProgressHandler? _progressHandler;
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// Creates a new <see cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task"/> instance to wrap.</param>
-    protected TaskToAsyncInfoAdapter(Delegate factory)
+    protected UniversalTaskAdapter(Delegate factory)
     {
         Debug.Assert(factory is
             Func<Task> or
@@ -95,7 +95,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<
 
         // Set the completion routine and let the task run
         _ = task.ContinueWith(
-            continuationAction: static (_, @this) => Unsafe.As<TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
+            continuationAction: static (_, @this) => Unsafe.As<UniversalTaskAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
             state: this,
             cancellationToken: CancellationToken.None,
             continuationOptions: TaskContinuationOptions.ExecuteSynchronously,
@@ -103,12 +103,12 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// Creates a new <see cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="task">The <see cref="Task"/> instance to wrap.</param>
     /// <param name="cancellationTokenSource">The <see cref="CancellationTokenSource"/> instance to use for cancellation.</param>
     /// <param name="progress">The <see cref="Progress{T}"/> instance to use to receive progress notifications from <paramref name="task"/>.</param>
-    protected TaskToAsyncInfoAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
+    protected UniversalTaskAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
         // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
         if (task.Status == TaskStatus.Created)
@@ -130,7 +130,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<
 
         // Set the completion routine and let the task run
         _ = task.ContinueWith(
-            continuationAction: static (_, @this) => Unsafe.As<TaskToAsyncInfoAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
+            continuationAction: static (_, @this) => Unsafe.As<UniversalTaskAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
             state: this,
             cancellationToken: CancellationToken.None,
             continuationOptions: TaskContinuationOptions.ExecuteSynchronously,
@@ -139,10 +139,10 @@ internal abstract partial class TaskToAsyncInfoAdapter<
 
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// Creates a new <see cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
-    protected TaskToAsyncInfoAdapter(TResult result)
+    protected UniversalTaskAdapter(TResult result)
     {
         // Set the synchronous result
         _dataContainer = result;
@@ -156,10 +156,10 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// Creates a new <see cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
-    protected TaskToAsyncInfoAdapter(CanceledTaskPlaceholder _)
+    protected UniversalTaskAdapter(CanceledTaskPlaceholder _)
     {
         _dataContainer = null;
         _error = null;
@@ -173,10 +173,10 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     }
 
     /// <summary>
-    /// Creates a new <see cref="TaskToAsyncInfoAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
+    /// Creates a new <see cref="UniversalTaskAdapter{TResult, TProgress, TCompletedHandler, TProgressHandler}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
-    protected TaskToAsyncInfoAdapter(Exception exception)
+    protected UniversalTaskAdapter(Exception exception)
     {
         _dataContainer = null;
         _error = exception;
@@ -192,7 +192,7 @@ internal abstract partial class TaskToAsyncInfoAdapter<
     /// <summary>
     /// Finalizes the current instance.
     /// </summary>
-    ~TaskToAsyncInfoAdapter()
+    ~UniversalTaskAdapter()
     {
         TransitionToClosed();
     }

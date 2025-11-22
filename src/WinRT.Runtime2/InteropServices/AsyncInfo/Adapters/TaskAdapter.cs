@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// Implements the Windows Runtime <see cref="IAsyncAction"/> interface by wrapping a <see cref="Task"/> instance.
 /// </summary>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
+internal sealed class TaskAdapter : UniversalTaskAdapter<
     ValueTypePlaceholder,
     ValueTypePlaceholder,
     AsyncActionCompletedHandler,
@@ -21,47 +21,47 @@ internal sealed class AsyncActionAdapter : TaskToAsyncInfoAdapter<
     IAsyncAction
 {
     /// <summary>
-    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task"/> instance to wrap.</param>
-    public AsyncActionAdapter(Func<CancellationToken, Task> factory)
+    public TaskAdapter(Func<CancellationToken, Task> factory)
         : base(factory)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="task">The <see cref="Task"/> instance to wrap.</param>
     /// <param name="cancellationTokenSource">The <see cref="CancellationTokenSource"/> instance to use for cancellation.</param>
-    public AsyncActionAdapter(Task task, CancellationTokenSource? cancellationTokenSource)
+    public TaskAdapter(Task task, CancellationTokenSource? cancellationTokenSource)
         : base(task, cancellationTokenSource, progress: null)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="_">The <see cref="CompletedTaskPlaceholder"/> value to select this overload.</param>
-    public AsyncActionAdapter(CompletedTaskPlaceholder _)
+    public TaskAdapter(CompletedTaskPlaceholder _)
         : base(default(ValueTypePlaceholder))
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
-    public AsyncActionAdapter(CanceledTaskPlaceholder _)
+    public TaskAdapter(CanceledTaskPlaceholder _)
         : base(default(CanceledTaskPlaceholder))
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncActionAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
-    public AsyncActionAdapter(Exception exception)
+    public TaskAdapter(Exception exception)
         : base(exception)
     {
     }

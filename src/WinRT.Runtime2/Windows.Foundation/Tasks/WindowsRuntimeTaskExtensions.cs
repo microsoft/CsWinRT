@@ -41,7 +41,7 @@ public static class WindowsRuntimeSystemExtensions
         ArgumentNullException.ThrowIfNull(source);
 
         // If the source is already an adapter over a 'Task', return the underlying 'Task' directly
-        if (source is AsyncInfoAdapter { Task: Task task })
+        if (source is UniversalTaskAdapter { Task: Task task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -102,7 +102,7 @@ public static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        if (source is AsyncInfoAdapter { Task: Task<TResult> task })
+        if (source is UniversalTaskAdapter { Task: Task<TResult> task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -160,7 +160,7 @@ public static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        if (source is AsyncInfoAdapter { Task: Task task })
+        if (source is UniversalTaskAdapter { Task: Task task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -268,7 +268,7 @@ public static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        if (source is AsyncInfoAdapter { Task: Task<TResult> task })
+        if (source is UniversalTaskAdapter { Task: Task<TResult> task })
         {
             return cancellationToken.CanBeCanceled ?
                 task.WaitAsync(cancellationToken) :
@@ -363,7 +363,7 @@ public static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        return new AsyncActionAdapter(source, cancellationTokenSource: null);
+        return new TaskAdapter(source, cancellationTokenSource: null);
     }
 
     /// <summary>
@@ -377,6 +377,6 @@ public static class WindowsRuntimeSystemExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        return new AsyncOperationAdapter<TResult>(source, cancellationTokenSource: null);
+        return new TaskAdapter<TResult>(source, cancellationTokenSource: null);
     }
 }

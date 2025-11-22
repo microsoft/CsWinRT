@@ -43,7 +43,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new AsyncActionAdapter(factory);
+        return new TaskAdapter(factory);
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new AsyncActionWithProgressAdapter<TProgress>(factory);
+        return new TaskWithProgressAdapter<TProgress>(factory);
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new AsyncOperationAdapter<TResult>(factory);
+        return new TaskAdapter<TResult>(factory);
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(factory);
+        return new TaskWithProgressAdapter<TResult, TProgress>(factory);
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CompletedAction()
     {
-        return new AsyncActionAdapter(default(CompletedTaskPlaceholder));
+        return new TaskAdapter(default(CompletedTaskPlaceholder));
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
     {
-        return new AsyncActionWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
+        return new TaskWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> FromResult<TResult>(TResult result)
     {
-        return new AsyncOperationAdapter<TResult>(result);
+        return new TaskAdapter<TResult>(result);
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult result)
     {
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(result);
+        return new TaskWithProgressAdapter<TResult, TProgress>(result);
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return new AsyncActionAdapter(exception);
+        return new TaskAdapter(exception);
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return new AsyncActionWithProgressAdapter<TProgress>(exception);
+        return new TaskWithProgressAdapter<TProgress>(exception);
     }
 
     /// <summary>
@@ -221,7 +221,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return new AsyncOperationAdapter<TResult>(exception);
+        return new TaskAdapter<TResult>(exception);
     }
 
     /// <summary>
@@ -235,7 +235,7 @@ public static class AsyncInfo
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(exception);
+        return new TaskWithProgressAdapter<TResult, TProgress>(exception);
     }
 
     /// <summary>
@@ -244,7 +244,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CanceledAction()
     {
-        return new AsyncActionAdapter(default(CanceledTaskPlaceholder));
+        return new TaskAdapter(default(CanceledTaskPlaceholder));
     }
 
     /// <summary>
@@ -254,7 +254,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()
     {
-        return new AsyncActionWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
+        return new TaskWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> CanceledOperation<TResult>()
     {
-        return new AsyncOperationAdapter<TResult>(default(CanceledTaskPlaceholder));
+        return new TaskAdapter<TResult>(default(CanceledTaskPlaceholder));
     }
 
     /// <summary>
@@ -275,6 +275,6 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()
     {
-        return new AsyncOperationProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
+        return new TaskWithProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
     }
 }

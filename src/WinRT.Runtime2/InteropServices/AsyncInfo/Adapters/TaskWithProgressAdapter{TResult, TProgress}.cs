@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 [SupportedOSPlatform("windows10.0.10240.0")]
-internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskToAsyncInfoAdapter<
+internal sealed class TaskWithProgressAdapter<TResult, TProgress> : UniversalTaskAdapter<
     TResult,
     TProgress,
     AsyncOperationWithProgressCompletedHandler<TResult, TProgress>,
@@ -23,38 +23,38 @@ internal sealed class AsyncOperationProgressAdapter<TResult, TProgress> : TaskTo
     IAsyncOperationWithProgress<TResult, TProgress>
 {
     /// <summary>
-    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
-    public AsyncOperationProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
+    public TaskWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
 
          : base(factory)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="result">The result to wrap (which assumes the operation completed synchronously).</param>
-    public AsyncOperationProgressAdapter(TResult result)
+    public TaskWithProgressAdapter(TResult result)
         : base(result)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
-    public AsyncOperationProgressAdapter(CanceledTaskPlaceholder _)
+    public TaskWithProgressAdapter(CanceledTaskPlaceholder _)
         : base(default(CanceledTaskPlaceholder))
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncOperationProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
+    /// Creates a new <see cref="TaskWithProgressAdapter{TResult, TProgress}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
-    public AsyncOperationProgressAdapter(Exception exception)
+    public TaskWithProgressAdapter(Exception exception)
         : base(exception)
     {
     }
