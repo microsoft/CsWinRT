@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
-namespace System.Runtime.InteropServices.WindowsRuntime;
+namespace Windows.Foundation.Tasks;
 
 /// <summary>
 /// Provides factory methods to construct Windows Runtime representations of asynchronous operations.
@@ -19,6 +19,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime;
 /// the specified <see cref="Task"/>-provider delegate will be invoked to create the resulting instant
 /// that will be wrapped by the returned Windows Runtime adapter.
 /// </remarks>
+/// <seealso cref="IAsyncInfo"/>
 [SupportedOSPlatform("windows10.0.10240.0")]
 public static class AsyncInfo
 {

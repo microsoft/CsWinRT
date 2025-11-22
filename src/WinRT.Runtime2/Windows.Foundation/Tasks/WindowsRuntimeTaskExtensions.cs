@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0010
 
-namespace System;
+namespace Windows.Foundation.Tasks;
 
 /// <summary>
 /// Provides extensions for <see cref="IAsyncInfo"/> types to interoperate with <see cref="Task"/> types.
