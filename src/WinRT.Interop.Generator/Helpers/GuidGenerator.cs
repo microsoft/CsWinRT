@@ -149,6 +149,10 @@ internal static class GuidGenerator
             case ElementType.Class when typeDefinition.IsInterface: // interface case without generic parameters
                 return "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}";
 
+            case ElementType.Boxed:
+                BoxedTypeSignature boxedTypeSignature = (BoxedTypeSignature)type;
+
+                return "pinterface({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(interopReferences.Nullable1, interopReferences) + "};" + GetSignature(boxedTypeSignature.BaseType, interopReferences, useWindowsUIXamlProjections) + ")";
             case ElementType.SzArray:
                 SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)type;
 
