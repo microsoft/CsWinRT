@@ -56,7 +56,8 @@ internal abstract partial class UniversalTaskAdapter<
     /// Since we always know which of the above is the case, we can always cast this field to TResult in the former case
     /// or to one of Task or Task{TResult} in the latter case. This approach allows us to save a field on all IAsyncInfos.
     /// Notably, this makes us pay the added cost of boxing for synchronously completing IAsyncInfos where TResult is a
-    /// value type, however, this is expected to occur rather rare compared to non-synchronously completed user-IAsyncInfos.</summary>
+    /// value type, however, this is expected to occur rather rare compared to non-synchronously completed user-IAsyncInfos.
+    /// </summary>
     private volatile object? _dataContainer;
 
     /// <summary>The registered completed handler.</summary>
