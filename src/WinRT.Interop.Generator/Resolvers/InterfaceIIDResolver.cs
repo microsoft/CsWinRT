@@ -24,24 +24,35 @@ internal static class InterfaceIIDResolver
     /// <returns>The IID for <paramref name="type"/>.</returns>
     public static Guid GetIID(TypeDefinition type)
     {
+        // The IID of projected types that have a fixed one (e.g. interfaces, delegates, etc.)
+        // is always in an 'IID_<INTERFACE_NAME>' property in the 'ABI.InterfaceIIDs' type.
         TypeDefinition interfaceIIDsType = type.DeclaringModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
 
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
+        // Prepare the name of the property accessor method that we need to analyze
         handler.AppendLiteral("get_IID_");
         handler.AppendLiteral(type.FullName);
 
+        // Replace all '.' characters with '_' to match the generated naming convention
         handler.Text.AsSpanUnsafe().Replace('.', '_');
 
         int maxByteCount = Encoding.UTF8.GetMaxByteCount(handler.Text.Length);
 
+        // Allocate a buffer for the UTF8-encoded method name
         byte[]? arrayFromPool = null;
         Span<byte> utf8Bytes = maxByteCount <= 256
             ? stackalloc byte[256]
             : (arrayFromPool = ArrayPool<byte>.Shared.Rent(maxByteCount));
 
+        // Transcode the get property accessor method name to UTF8.
+        // We do it here so we can avoid the 'Utf8String' allocations.
         int writtenBytes = Encoding.UTF8.GetBytes(handler.Text, utf8Bytes);
 
+        // We won't need the interpolated handler anymore, so we can clear it
+        handler.Clear();
+
+        // This method should always exist, just like the 'InterfaceIID' type itself we got earlier
         MethodDefinition get_IIDMethod = interfaceIIDsType.GetMethod(utf8Bytes[..writtenBytes]);
 
         if (arrayFromPool is not null)
