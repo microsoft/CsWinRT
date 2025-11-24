@@ -17,6 +17,11 @@ namespace WindowsRuntime.InteropGenerator.Resolvers;
 /// </summary>
 internal static class InterfaceIIDResolver
 {
+    /// <summary>
+    /// Gets the IID of a given type from the generated <c>ABI.InterfaceIIDs</c> type in its declaring module.
+    /// </summary>
+    /// <param name="type">The input type to get the IID for.</param>
+    /// <returns>The IID for <paramref name="type"/>.</returns>
     public static Guid GetIID(TypeDefinition type)
     {
         TypeDefinition interfaceIIDsType = type.DeclaringModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
@@ -56,6 +61,7 @@ internal static class InterfaceIIDResolver
             // The 'ldsflda' instruction always has a 'FieldDefinition' operand
             FieldDefinition rvaField = (FieldDefinition)instruction.Operand!;
 
+            // Serialize the bytes of the RVA field into an array, from which we can read the IID value
             byte[] iidBytes = rvaField.FieldRva!.WriteIntoArray();
 
             return new(iidBytes);

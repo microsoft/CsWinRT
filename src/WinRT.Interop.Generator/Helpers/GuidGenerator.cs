@@ -13,6 +13,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 
 #pragma warning disable IDE0010
 
@@ -193,10 +194,20 @@ internal static class GuidGenerator
             return result;
         }
 
-        // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
-        if (type.Resolve() is TypeDefinition typeDefinition && TryGetGuidFromAttribute(typeDefinition, interopReferences, out result))
+        if (type.Resolve() is TypeDefinition typeDefinition)
         {
-            return result;
+            // For delegate types, we resolve the IID from their generated RVA field.
+            // Only interface types have the '[Guid]' attribute on them, not delegates.
+            if (typeDefinition.IsClass && typeDefinition.IsDelegate)
+            {
+                return InterfaceIIDResolver.GetIID(typeDefinition);
+            }
+
+            // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
+            if (TryGetGuidFromAttribute(typeDefinition, interopReferences, out result))
+            {
+                return result;
+            }
         }
 
         return Guid.Empty; // TODO: don'turn empty guid but throw instead like below. Currently, not all the types we need to be filtered are not filtered out such as System.Reflection.* types.
