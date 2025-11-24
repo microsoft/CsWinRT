@@ -3,19 +3,14 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
-
-#pragma warning disable IDE0010
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -39,159 +34,26 @@ internal static class GuidGenerator
     /// <returns>The resulting IID for <paramref name="type"/>.</returns>
     public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
-        string signature = GetSignature(type, interopReferences, useWindowsUIXamlProjections);
+        string signature = SignatureGenerator.GetSignature(type, interopReferences, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
 
         return guid;
     }
 
     /// <summary>
-    /// Generates the Windows Runtime signature for the specified type.
+    /// Tries to resolve the IID for the specified type signature by checking well-known Windows Runtime
+    /// interfaces and, if necessary, the type's <see cref="System.Runtime.InteropServices.GuidAttribute"/>.
     /// </summary>
-    /// <param name="type">The <see cref="TypeSignature"/> to generate the signature for.</param>
-    /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    /// <returns>The resulting signature for <paramref name="type"/>.</returns>
-    private static string GetSignature(
-        TypeSignature type,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
-    {
-        if (TypeMapping.TryFindMappedTypeSignature(type.FullName, useWindowsUIXamlProjections, out string? mappedSignature))
-        {
-            return mappedSignature;
-        }
-
-        TypeDefinition? typeDefinition = type.Resolve()! ?? throw new ArgumentException("TypeDefinition could not be resolved for type signature: " + type.FullName);
-        string typeFullName = TypeMapping.TryFindMappedTypeName(typeDefinition.FullName, useWindowsUIXamlProjections, out string? typeFullNameMapped) ? typeFullNameMapped : typeDefinition.FullName;
-
-        switch (type.ElementType)
-        {
-            // value types
-            case ElementType.I1:
-                return "i1";
-            case ElementType.U1:
-                return "u1";
-            case ElementType.I2:
-                return "i2";
-            case ElementType.U2:
-                return "u2";
-            case ElementType.I4:
-                return "i4";
-            case ElementType.U4:
-                return "u4";
-            case ElementType.I8:
-                return "i8";
-            case ElementType.U8:
-                return "u8";
-            case ElementType.R4:
-                return "f4";
-            case ElementType.R8:
-                return "f8";
-            case ElementType.Boolean:
-                return "b1";
-            case ElementType.Char:
-                return "c2";
-            case ElementType.Object:
-                return "cinterface(IInspectable)";
-            case ElementType.String:
-                return "string";
-            case ElementType.Type:
-                return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
-
-            case ElementType.GenericInst:
-                GenericInstanceTypeSignature genericTypeSignature = (GenericInstanceTypeSignature)type;
-                TypeDefinition? genericTypeDefinition = genericTypeSignature.GenericType.Resolve();
-
-                if (genericTypeDefinition is not null)
-                {
-                    IList<TypeSignature> typeArugmentList = genericTypeSignature.TypeArguments;
-                    String[] typeArgumentSignatures = new String[typeArugmentList.Count];
-
-                    for (int i = 0; i < typeArugmentList.Count; i++)
-                    {
-                        typeArgumentSignatures[i] = GetSignature(typeArugmentList[i], interopReferences, useWindowsUIXamlProjections);
-                    }
-
-                    return "pinterface({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(genericTypeSignature.GenericType, interopReferences) + "};" + string.Join(";", typeArgumentSignatures) + ")";
-                }
-                throw new ArgumentException("Invalid ElementType.GenericInst");
-
-            case ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum:
-                bool isFlags = typeDefinition.HasCustomAttribute("System", "FlagsAttribute");
-                return "enum(" + typeFullName + ";" + (isFlags ? "u4" : "i4") + ")";
-
-            case ElementType.ValueType when typeDefinition.IsClass && type.IsGuidType(interopReferences):
-                return "g16";
-
-            case ElementType.ValueType when typeDefinition.IsClass: // Struct case
-                IList<FieldDefinition> fieldDefinition = typeDefinition.Fields;
-                List<string> enumFieldSignatures = [];
-
-                for (int i = 0; i < fieldDefinition.Count; i++)
-                {
-                    if (!fieldDefinition[i].IsStatic)
-                    {
-                        FieldSignature? fieldSignature = fieldDefinition[i].Signature ?? throw new ArgumentException("FieldSignature is missing");
-                        enumFieldSignatures.Add(GetSignature(fieldSignature.FieldType, interopReferences, useWindowsUIXamlProjections));
-                    }
-                }
-
-                return "struct(" + typeFullName + ";" + string.Join(";", enumFieldSignatures) + ")";
-
-            case ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate: // delegate case
-                return "delegate({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "})";
-
-            case ElementType.Class when typeDefinition.IsClass: // class case
-                return TryGetDefaultInterfaceSignatureFromAttribute(typeDefinition, interopReferences, out TypeSignature? defaultInterfaceSig) ?
-                    "rc(" + typeFullName + ";" + GetSignature(defaultInterfaceSig, interopReferences, useWindowsUIXamlProjections) + ")" : // Class case with default interface
-                    "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}"; // Class case without default interface
-
-            case ElementType.Class when typeDefinition.IsInterface: // interface case without generic parameters
-                return "{" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences) + "}";
-
-            case ElementType.Boxed:
-                BoxedTypeSignature boxedTypeSignature = (BoxedTypeSignature)type;
-
-                return "pinterface({" + GetGuidFromWellKnownInterfaceIIDsOrAttribute(interopReferences.Nullable1, interopReferences) + "};" + GetSignature(boxedTypeSignature.BaseType, interopReferences, useWindowsUIXamlProjections) + ")";
-            case ElementType.SzArray:
-                SzArrayTypeSignature arrayTypeSignature = (SzArrayTypeSignature)type;
-
-                if (arrayTypeSignature != null)
-                {
-                    return "pinterface({61c17707-2d65-11e0-9ae8-d48564015472};" + GetSignature(arrayTypeSignature.BaseType, interopReferences, useWindowsUIXamlProjections) + ")";
-                }
-
-                throw new ArgumentException("Invalid ElementType.SzArray");
-
-            default:
-                // TODO: when all the type signatures are coming in are all properly filter out, for example: System.Void* or System.Reflection.* types,
-                // we can uncomment the below line to throw exception for unsupported types.
-                // throw new ArgumentException("Unsupported ElementType: " + typeSignature.ElementType + " : " + typeSignature.FullName);
-                return type.FullName;
-        }
-    }
-
-    /// <summary>
-    /// Resolves a GUID for the specified type signature by checking well-known WinRT interfaces
-    /// and, if necessary, the type's <c>System.Runtime.InteropServices.GuidAttribute</c>.
-    /// </summary>
-    /// <param name="type">
-    /// The <see cref="ITypeDefOrRef"/> to resolve to a GUID.
-    /// </param>
-    /// <param name="interopReferences">
-    /// The <see cref="InteropReferences"/> instance to use.
-    /// </param>
-    /// <returns>
-    /// The resolved <see cref="Guid"/> if found.
-    /// </returns>
-    /// <exception cref="ArgumentException">Thrown when the type has no GUID.</exception>
-    private static Guid GetGuidFromWellKnownInterfaceIIDsOrAttribute(ITypeDescriptor type, InteropReferences interopReferences)
+    /// <param name="type">The type descriptor to try to get the IID for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+    /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(ITypeDescriptor type, InteropReferences interopReferences, out Guid iid)
     {
         // First try to get the IID from the custom-mapped types mapping
-        if (WellKnownInterfaceIIDs.TryGetGUID(type, interopReferences, out Guid result))
+        if (WellKnownInterfaceIIDs.TryGetGUID(type, interopReferences, out iid))
         {
-            return result;
+            return true;
         }
 
         if (type.Resolve() is TypeDefinition typeDefinition)
@@ -200,18 +62,21 @@ internal static class GuidGenerator
             // Only interface types have the '[Guid]' attribute on them, not delegates.
             if (typeDefinition.IsClass && typeDefinition.IsDelegate)
             {
-                return InterfaceIIDResolver.GetIID(typeDefinition);
+                iid = InterfaceIIDResolver.GetIID(typeDefinition);
+
+                return true;
             }
 
             // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
-            if (TryGetGuidFromAttribute(typeDefinition, interopReferences, out result))
+            if (TryGetIIDFromAttribute(typeDefinition, interopReferences, out iid))
             {
-                return result;
+                return true;
             }
         }
 
-        return Guid.Empty; // TODO: don'turn empty guid but throw instead like below. Currently, not all the types we need to be filtered are not filtered out such as System.Reflection.* types.
-        //throw new ArgumentException("Type does not have a Guid attribute");
+        iid = Guid.Empty;
+
+        return false;
     }
 
     /// <summary>
@@ -219,47 +84,19 @@ internal static class GuidGenerator
     /// </summary>
     /// <param name="type">The type definition to inspect for <see cref="System.Runtime.InteropServices.GuidAttribute"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="guid">The resulting <see cref="Guid"/> value, if found.</param>
-    /// <returns>Whether <paramref name="guid"/> was succesfully retrieved.</returns>
-    private static bool TryGetGuidFromAttribute(TypeDefinition type, InteropReferences interopReferences, out Guid guid)
+    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+    /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+    private static bool TryGetIIDFromAttribute(TypeDefinition type, InteropReferences interopReferences, out Guid iid)
     {
         if (type.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
             {
-                return Guid.TryParse(guidString.Value, out guid);
+                return Guid.TryParse(guidString.Value, out iid);
             }
         }
 
-        guid = Guid.Empty;
-
-        return false;
-    }
-
-    /// <summary>
-    /// Attempts to retrieve the default interface signature from the <c>[WindowsRuntimeDefaultInterface]</c>
-    /// attribute applied to the specified type, which is assumed to be some projected Windows Runtime class.
-    /// </summary>
-    /// <param name="type">The type definition to inspect for the default interface attribute.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
-    /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
-    private static bool TryGetDefaultInterfaceSignatureFromAttribute(
-        TypeDefinition type,
-        InteropReferences interopReferences,
-        [NotNullWhen(true)] out TypeSignature? defaultInterface)
-    {
-        if (type.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
-        {
-            if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
-            {
-                defaultInterface = signature;
-
-                return true;
-            }
-        }
-
-        defaultInterface = null;
+        iid = Guid.Empty;
 
         return false;
     }

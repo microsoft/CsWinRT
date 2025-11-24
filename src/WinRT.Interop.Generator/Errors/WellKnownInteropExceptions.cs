@@ -460,6 +460,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate the signature of some Windows Runtime type.
+    /// </summary>
+    public static Exception TypeSignatureGenerationError(TypeSignature type)
+    {
+        return Exception(53, $"Failed to generate the type signature for type '{type}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
