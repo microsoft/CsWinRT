@@ -42,6 +42,7 @@ internal static class ModuleDefinitionExtensions
     /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="assemblyName">The name of the assembly to check for references to.</param>
     /// <returns>Whether the module references the Windows Runtime assembly.</returns>
     public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
     {

@@ -1,15 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Buffers;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Unicode;
 using AsmResolver;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
 
