@@ -17,7 +17,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IDE0008, IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
@@ -130,7 +130,7 @@ public static unsafe class TypeMarshaller
         // returned implementation will just throw an exception for all unsupported operations on it.
         if (type is null && value.Kind is TypeKind.Metadata)
         {
-            return NoMetadataTypeInfo.GetOrCreate(typeName.ToString());
+            return NoMetadataTypeInfo.GetOrCreate(typeName);
         }
 
         // Return whatever result we managed to get from the cache
@@ -346,7 +346,17 @@ file static unsafe class TypeReferenceImpl
 /// </summary>
 file sealed class NoMetadataTypeInfo : TypeInfo
 {
-    private static readonly ConcurrentDictionary<string, NoMetadataTypeInfo> FakeMetadataTypeCache = new(StringComparer.Ordinal);
+    /// <summary>
+    /// The cache of <see cref="NoMetadataTypeInfo"/> instances.
+    /// </summary>
+    /// <remarks>
+    /// This cache is mostly only used by XAML, meaning it should pretty much always be accessed from the UI thread.
+    /// Because of this, we can set the concurrency level to just '1', to reduce the memory use from this dictionary.
+    /// </remarks>
+    private static readonly ConcurrentDictionary<string, NoMetadataTypeInfo> NoMetadataTypeCache = new(
+        concurrencyLevel: 1,
+        capacity: 32,
+        comparer: StringComparer.Ordinal);
 
     /// <summary>
     /// The full name of the type missing metadata information.
@@ -367,9 +377,20 @@ file sealed class NoMetadataTypeInfo : TypeInfo
     /// </summary>
     /// <param name="fullName">The full name of the type missing metadata information.</param>
     /// <returns>The resulting <see cref="NoMetadataTypeInfo"/> instance.</returns>
-    public static NoMetadataTypeInfo GetOrCreate(string fullName)
+    public static NoMetadataTypeInfo GetOrCreate(ReadOnlySpan<char> fullName)
     {
-        return FakeMetadataTypeCache.GetOrAdd(fullName, static (name) => new NoMetadataTypeInfo(name));
+        // Try to lookup an existing instance first, to skip allocating a 'string' if we can
+        if (NoMetadataTypeCache.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out NoMetadataTypeInfo? existing))
+        {
+            return existing;
+        }
+
+        NoMetadataTypeInfo typeInfo = new(fullName.ToString());
+
+        // The type instance was not in the cache, so try to add it now. We perform this lookup
+        // with the 'string' instance we created to initialize the new 'NoMetadataTypeInfo' value
+        // we'trying to add to the cache, so that if we win the race, we only allocate it once.
+        return NoMetadataTypeCache.GetOrAdd(typeInfo._fullName, typeInfo);
     }
 
     /// <inheritdoc/>
