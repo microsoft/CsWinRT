@@ -122,7 +122,11 @@ public static unsafe class TypeMarshaller
             return global::System.Type.GetType(typeName.ToString());
         }
 
-        global::System.Type? type = null; // TODO
+        global::System.Type? type = null;
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeName, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        {
+            type = marshallingInfo.PublicType;
+        }
 
         // If the target type is a projected type that has been trimmed, we can return a special type.
         // This is mostly used by the XAML metadata provider. The type itself should never actually be
