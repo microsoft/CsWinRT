@@ -8,7 +8,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -20,32 +19,6 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IAsyncOperation1
     {
-        /// <summary>
-        /// Creates the 'IID' property for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
-        /// </summary>
-        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="operationType"/>.</param>
-        public static void IID(
-            GenericInstanceTypeSignature operationType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(operationType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(operationType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
         /// <summary>
         /// Creates a new type definition for the methods for some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
         /// </summary>

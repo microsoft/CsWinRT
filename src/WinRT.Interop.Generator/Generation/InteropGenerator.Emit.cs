@@ -415,8 +415,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IEnumerator1.IID(
-                    enumeratorType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -521,8 +521,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IEnumerable1.IID(
-                    enumerableType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -643,8 +643,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IReadOnlyList1.IID(
-                    readOnlyListType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -766,8 +766,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IList1.IID(
-                    listType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -897,8 +897,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IID(
-                    readOnlyDictionaryType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1019,8 +1019,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IDictionary2.IID(
-                    dictionaryType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1149,8 +1149,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.KeyValuePair.IID(
-                    keyValuePairType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1203,8 +1203,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.IID(
-                    argsType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1309,8 +1309,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IObservableVector1.IID(
-                    vectorType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1425,8 +1425,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IObservableMap2.IID(
-                    mapType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1541,8 +1541,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.IID(
-                    actionType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1647,8 +1647,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IAsyncOperation1.IID(
-                    operationType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1753,8 +1753,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.IID(
-                    operationType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -1857,8 +1857,8 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.SzArray.IID(
-                    arrayType: typeSignature,
+                InteropTypeDefinitionBuilder.IID(
+                    interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
