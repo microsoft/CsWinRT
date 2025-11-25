@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.IO;
 using AsmResolver;
 using AsmResolver.IO;
 
@@ -19,9 +18,16 @@ internal static class ISegmentExtensions
     /// <param name="segment">The segment to read data from.</param>
     /// <param name="span">The destination span to write data to.</param>
     /// <returns>Whether enough data from <paramref name="segment"/> was written into <paramref name="span"/>.</returns>
-    public static unsafe bool TryWriteExactly(this ISegment segment, Span<byte> span)
+    public static bool TryReadExactly(this ISegment segment, Span<byte> span)
     {
-        // If the segment is readable, we can just read from it directly, which is more efficient
+        // Validate that the segment has exactly enough data to fill the target span
+        if (segment.GetPhysicalSize() != (ulong)span.Length)
+        {
+            return false;
+        }
+
+        // If the segment is readable, we can just read from it directly, which is more efficient.
+        // This is actually guaranteed to be the case for RVA segments of .dll-s we read from disk.
         if (segment is IReadableSegment readableSegment)
         {
             int bytesWritten = readableSegment.CreateReader().ReadBytes(span);
@@ -29,18 +35,17 @@ internal static class ISegmentExtensions
             return bytesWritten == span.Length;
         }
 
-        // Otherwise, write the segment data to the target span via a wrapper stream and writer
-        fixed (byte* spanPtr = span)
+        // Less efficient fallback path (this should never be hit)
+        byte[] data = segment.WriteIntoArray();
+
+        // Validate again that the effective length matches, same as above
+        if (data.Length == span.Length)
         {
-            using UnmanagedMemoryStream stream = new(
-                pointer: spanPtr,
-                length: span.Length,
-                capacity: span.Length,
-                access: FileAccess.Write);
+            data.CopyTo(span);
 
-            segment.Write(new BinaryStreamWriter(stream));
-
-            return stream.Position == span.Length;
+            return true;
         }
+
+        return false;
     }
 }
