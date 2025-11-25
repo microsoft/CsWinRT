@@ -29,7 +29,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         public static void IIDs(
@@ -50,13 +50,18 @@ internal partial class InteropTypeDefinitionBuilder
                 iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
-            // 'IReference<T>' IID
+            // 'IReference<T>' IID, which uses a boxed type signature to represent it.
+            // This is not technically a valid type signature (since you can't have a
+            // boxed reference type), however we're only using this to signal to the
+            // IID generation logic that the delegate type is being used in the boxing
+            // scenario. This is different than boxed value type, which instead are
+            // just always projected as and using 'Nullable<T>' to represent this.
             IID(
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopReferences, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
 
