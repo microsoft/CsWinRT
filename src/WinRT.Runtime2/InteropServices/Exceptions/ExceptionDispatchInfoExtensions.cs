@@ -35,7 +35,7 @@ internal static class ExceptionDispatchInfoExtensions
             // in the other process.
             if (exception is COMException { HResult:
                 WellKnownErrorCodes.RPC_E_DISCONNECTED or
-                WellKnownErrorCodes.RPC_E_DISCONNECTED or
+                WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
                 WellKnownErrorCodes.JSCRIPT_E_CANTEXECUTE })
             {
                 return;

@@ -16,7 +16,7 @@ namespace Windows.Foundation.Tasks;
 /// The factory methods take as inputs functions (delegates) that provide managed <see cref="Task"/> objects.
 /// Different factory methods return different <see cref="IAsyncInfo"/>-derived interface instantiations.
 /// When an asynchronous operation created by this factory is started (which happens right at construction),
-/// the specified <see cref="Task"/>-provider delegate will be invoked to create the resulting instant
+/// the specified <see cref="Task"/>-provider delegate will be invoked to create the resulting instance
 /// that will be wrapped by the returned Windows Runtime adapter.
 /// </remarks>
 /// <seealso cref="IAsyncInfo"/>

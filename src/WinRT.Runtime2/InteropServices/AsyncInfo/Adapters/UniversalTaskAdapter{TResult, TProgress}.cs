@@ -111,20 +111,20 @@ internal abstract partial class UniversalTaskAdapter<
     /// <param name="progress">The <see cref="Progress{T}"/> instance to use to receive progress notifications from <paramref name="task"/>.</param>
     protected UniversalTaskAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
-        // Throw InvalidOperation and not Argument for parity with the constructor that takes Delegate taskProvider:
+        // Throw 'InvalidOperation' and not 'ArgumentException' for parity with the constructor that takes a factory
         if (task.Status == TaskStatus.Created)
         {
             throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
         }
 
-        // We do not need to invoke any delegates to get the task, it is provided for us:
+        // We do not need to invoke any delegates to get the task, it is provided for us
         _dataContainer = task;
 
-        // This must be the cancellation source for the token that the specified underlyingTask observes for cancellation:
-        // (it may also be null in cases where the specified underlyingTask does nto support cancellation)
+        // This must be the cancellation source for the token that the specified underlying task observes for cancellation.
+        // It may also be 'null' in cases where the specified underlying task does not support cancellation.
         _cancelTokenSource = cancellationTokenSource;
 
-        // Iff the specified underlyingTask reports progress, chain the reports to this IAsyncInfo's reporting method:
+        // If the specified underlying task reports progress, chain the reports to this async object's reporting method
         progress?.ProgressChanged += OnReportChainedProgress;
 
         _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;

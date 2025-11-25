@@ -217,7 +217,7 @@ internal partial class UniversalTaskAdapter<
         {
             EnsureNotClosed();
 
-            Interlocked.Write(ref _progressHandler, null);
+            Interlocked.Write(ref _progressHandler, value);
 
             // If we transitioned into the closed state after the above check, we will need to reset the handler
             if (IsInClosedState)

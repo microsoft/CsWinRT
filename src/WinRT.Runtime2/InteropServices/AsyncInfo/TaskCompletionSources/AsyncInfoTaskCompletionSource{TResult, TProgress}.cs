@@ -143,7 +143,7 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
                 }
                 catch (Exception e)
                 {
-                    // According to the WinRT team, this can happen in some egde cases,
+                    // According to the WinRT team, this can happen in some edge cases,
                     // such as marshalling errors in calls to native 'GetResults()' methods.
                     error = e;
                     asyncStatus = AsyncStatus.Error;

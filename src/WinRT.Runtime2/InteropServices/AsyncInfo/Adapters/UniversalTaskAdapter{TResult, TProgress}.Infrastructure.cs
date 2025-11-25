@@ -200,7 +200,7 @@ internal partial class UniversalTaskAdapter<
         // If the user callback throws an exception, it will bubble up through here. If we let
         // it though, it will be caught and swallowed by the 'Task' subsystem, which is just
         // below us on the stack. Instead we follow the same pattern as 'Task' and other parallel
-        // libs and re-throw the excpetion on the thread pool to ensure a diagnostic message and
+        // libs and re-throw the exception on the thread pool to ensure a diagnostic message and
         // a fail-fast-like teardown.
         try
         {
@@ -237,14 +237,14 @@ internal partial class UniversalTaskAdapter<
             // The handler may have been set concurrently before we managed to call 'SetState', so check for it again
             handler = _completedHandler;
 
-            // If handler was not set cuncurrently after all, then no worries
+            // If handler was not set concurrently after all, then no worries
             if (handler is null)
             {
                 return;
             }
         }
 
-        // This method might be running cuncurrently. Create a block by emulating an interlocked reset of the
+        // This method might be running concurrently. Create a block by emulating an interlocked reset of the
         // 'STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED' flag in the '_state' field. Only the thread that wins
         // the race for unsetting this bit, wins, others give up.
         _ = SetState(
