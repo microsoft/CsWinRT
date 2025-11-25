@@ -24,7 +24,9 @@ public static class TypeExtensions
 
     private static bool IsTypeWindowsRuntimeTypeNoArray(this global::System.Type systemType)
     {
-        // We might not need to handle Generic Types because WindowsRuntimeMarshallingInfo should have all the possible generic types with types from CSWinRTGen 
+        // We might not need to handle Generic Types because WindowsRuntimeMarshallingInfo should have all the possible generic types with types from CSWinRTGen
+        // But uncomment these lines if we need to handle them in the future
+        // TODO: Confirm we don't need to handle Generic Types here and remove all these comments
         //if (systemType.IsConstructedGenericType)
         //{
         //    if (IsTypeWindowsRuntimeTypeNoArray(systemType.GetGenericTypeDefinition()))
@@ -40,6 +42,7 @@ public static class TypeExtensions
         //    }
         //    return false;
         //}
+
         return systemType.IsPrimitive
             || systemType == typeof(string)
             || systemType == typeof(object)
