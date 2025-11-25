@@ -80,7 +80,7 @@ internal static class InterfaceIIDResolver
             Span<byte> iidBytes = stackalloc byte[16];
 
             // Read the IID data from the RVA field (we expect to always be able to do this)
-            if (!rvaField.FieldRva!.TryWriteExactly(iidBytes))
+            if (!rvaField.FieldRva!.TryReadExactly(iidBytes))
             {
                 throw WellKnownInteropExceptions.TypeIIDInvalidDataError(type);
             }
