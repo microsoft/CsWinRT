@@ -91,11 +91,28 @@ public static unsafe class TypeMarshaller
     public static void ConvertToUnmanagedUnsafe(global::System.Type value, out TypeReference reference)
     {
         ArgumentNullException.ThrowIfNull(value);
+        reference = default;
+        if (value is NoMetadataTypeInfo noMetadataTypeInfo)
+        {
+            reference = new TypeReference { Name = noMetadataTypeInfo.FullName, Kind = TypeKind.Metadata };
+            return;
+        }
 
-        string abiName = ""; // TODO
-        TypeKind kind = default; // TODO
+        if (value is not null)
+        {
+            if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+            {
+                TypeKind kind = TypeKind.Metadata;
+                if (value.IsPrimitive)
+                {
+                    kind = TypeKind.Primitive;
+                }
+                reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
+                return;
+            }
 
-        reference = new TypeReference { Name = abiName, Kind = kind };
+            reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
+        }
     }
 
     /// <summary>
