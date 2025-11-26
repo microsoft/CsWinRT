@@ -1,0 +1,77 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Runtime.Versioning;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Foundation;
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// Implements the Windows Runtime <see cref="IAsyncActionWithProgress{TProgress}"/> interface by wrapping a <see cref="Task"/> instance.
+/// </summary>
+/// <typeparam name="TProgress">The type of progress information.</typeparam>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal sealed class TaskWithProgressAdapter<TProgress> : UniversalTaskAdapter<
+    ValueTypePlaceholder,
+    TProgress,
+    AsyncActionWithProgressCompletedHandler<TProgress>,
+    AsyncActionProgressHandler<TProgress>>,
+    IAsyncActionWithProgress<TProgress>
+{
+    /// <summary>
+    /// Creates a new <see cref="TaskWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="factory">The function to invoke to create the <see cref="Task"/> instance to wrap.</param>
+    public TaskWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task> factory)
+         : base(factory)
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TaskWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="_">The <see cref="CompletedTaskPlaceholder"/> value to select this overload.</param>
+    public TaskWithProgressAdapter(CompletedTaskPlaceholder _)
+        : base(default(ValueTypePlaceholder))
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TaskWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="_">The <see cref="CanceledTaskPlaceholder"/> value to select this overload.</param>
+    public TaskWithProgressAdapter(CanceledTaskPlaceholder _)
+        : base(default(CanceledTaskPlaceholder))
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TaskWithProgressAdapter{TProgress}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="exception">The <see cref="Exception"/> to use to set the error state for the resulting instance.</param>
+    public TaskWithProgressAdapter(Exception exception)
+        : base(exception)
+    {
+    }
+
+    /// <inheritdoc/>
+    public void GetResults()
+    {
+        _ = GetResultsCore();
+    }
+
+    /// <inheritdoc/>
+    protected override void OnCompleted(AsyncActionWithProgressCompletedHandler<TProgress> handler, AsyncStatus asyncStatus)
+    {
+        handler(this, asyncStatus);
+    }
+
+    /// <inheritdoc/>
+    protected override void OnProgress(AsyncActionProgressHandler<TProgress> handler, TProgress progressInfo)
+    {
+        handler(this, progressInfo);
+    }
+}
