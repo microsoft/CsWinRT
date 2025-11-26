@@ -464,6 +464,26 @@ internal sealed class InteropReferences
     public TypeReference AbiDateTimeOffset => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffset"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// </summary>
+    public TypeReference TypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TypeMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// </summary>
+    public TypeReference ExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "ExceptionMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpanMarshaller</c>.
+    /// </summary>
+    public TypeReference TimeSpanMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpanMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffsetMarshaller</c>.
+    /// </summary>
+    public TypeReference DateTimeOffsetMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffsetMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
@@ -1568,6 +1588,30 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [_corLibTypeFactory.Object]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerConvertToManaged => field ??= TypeMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: Type.ToReferenceTypeSignature(),
+            parameterTypes: [AbiType.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.Dispose</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerDispose => field ??= TypeMarshaller
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [AbiType.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.ExceptionMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference ExceptionMarshallerConvertToManaged => field ??= ExceptionMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: Exception.ToReferenceTypeSignature(),
+            parameterTypes: [AbiException.ToValueTypeSignature()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
