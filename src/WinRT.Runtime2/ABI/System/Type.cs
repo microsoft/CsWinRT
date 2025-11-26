@@ -100,20 +100,36 @@ public static unsafe class TypeMarshaller
 
         if (value is not null)
         {
+            TypeKind kind = TypeKind.Metadata;
+            if (value.IsPrimitive)
+            {
+                kind = TypeKind.Primitive;
+            }
             if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
             {
-                TypeKind kind = TypeKind.Metadata;
-                if (value.IsPrimitive)
-                {
-                    kind = TypeKind.Primitive;
-                }
-                reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
+                reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
                 return;
             }
 
             reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
         }
     }
+
+
+    private static string ExtractTypeName(string runtimeClassName)
+    {
+        const string prefix = "Windows.Foundation.IReference<";
+        ReadOnlySpan<char> span = runtimeClassName;
+
+        if (span.StartsWith(prefix))
+        {
+            // Slice directly without reassigning unnecessarily
+            return span.Slice(prefix.Length, span.Length - prefix.Length - 1).ToString();
+        }
+
+        return runtimeClassName; // Fallback if format doesn't match
+    }
+
 
     /// <summary>
     /// Converts an unmanaged <see cref="Type"/> to a managed <see cref="global::System.Type"/>.
