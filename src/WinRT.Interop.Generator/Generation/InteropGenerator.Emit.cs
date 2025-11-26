@@ -385,9 +385,9 @@ internal partial class InteropGenerator
                     emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
                 }
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e);
+                WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
     }
@@ -491,9 +491,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IEnumerator1TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IEnumerator1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -613,9 +613,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IEnumerable1TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IEnumerable1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -736,9 +736,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -867,9 +867,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -989,9 +989,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IReadOnlyDictionary2TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IReadOnlyDictionary2TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1121,9 +1121,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IDictionary2TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IDictionary2TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1173,9 +1173,9 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e);
+                WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1279,9 +1279,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IMapChangedEventArgs1TypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IMapChangedEventArgs1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1395,9 +1395,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IObservableVectorTypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IObservableVectorTypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1511,9 +1511,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IObservableMapTypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IObservableMapTypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1617,9 +1617,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IAsyncActionWithProgressTypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IAsyncActionWithProgressTypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1723,9 +1723,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IAsyncOperationTypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IAsyncOperationTypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1829,9 +1829,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.IAsyncOperationWithProgressTypeCodeGenerationError(typeSignature, e);
+                WellKnownInteropExceptions.IAsyncOperationWithProgressTypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1918,9 +1918,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.SzArrayTypeCodeGenerationError(typeSignature.Name, e);
+                WellKnownInteropExceptions.SzArrayTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
     }
@@ -1981,9 +1981,9 @@ internal partial class InteropGenerator
                 // Track the marshaller attribute for later
                 marshallerAttributeMap.Add(vtableTypes, comWrappersMarshallerType);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.UserDefinedVtableTypeCodeGenerationError(typeSignature?.Name, e);
+                WellKnownInteropExceptions.UserDefinedVtableTypeCodeGenerationError(typeSignature?.Name, e).ThrowOrAttach(e);
             }
         }
 
@@ -2007,9 +2007,9 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module);
             }
-            catch (Exception e) when (!e.IsWellKnown)
+            catch (Exception e)
             {
-                throw WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e);
+                WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
     }
@@ -2050,9 +2050,9 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DefaultImplementationDetailTypeCodeGenerationError(e);
+            WellKnownInteropExceptions.DefaultImplementationDetailTypeCodeGenerationError(e).ThrowOrAttach(e);
         }
     }
 
@@ -2071,9 +2071,9 @@ internal partial class InteropGenerator
                 module.TopLevelTypes.Add(typeDefinition);
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DynamicImplementationDetailTypeCodeGenerationError(e);
+            WellKnownInteropExceptions.DynamicImplementationDetailTypeCodeGenerationError(e).ThrowOrAttach(e);
         }
     }
 
@@ -2095,9 +2095,9 @@ internal partial class InteropGenerator
                 interopReferences: interopReferences,
                 module: module);
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e);
+            WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e).ThrowOrAttach(e);
         }
     }
 
@@ -2120,9 +2120,9 @@ internal partial class InteropGenerator
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
             IgnoresAccessChecksToBuilder.AssemblyAttributes(discoveryState.ModuleDefinitions.Values, interopDefinitions, module);
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e);
+            WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e).ThrowOrAttach(e);
         }
     }
 
@@ -2141,7 +2141,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e)
         {
-            throw WellKnownInteropExceptions.EmitDllError(e);
+            WellKnownInteropExceptions.EmitDllError(e).ThrowOrAttach(e);
         }
     }
 }
