@@ -40,7 +40,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
             // Same logic as with 'IList1.Vftbl' (i.e. share for all reference types)
-            if (!elementType.IsValueType || elementType.IsKeyValuePairType(interopReferences))
+            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyList1Vftbl;
 

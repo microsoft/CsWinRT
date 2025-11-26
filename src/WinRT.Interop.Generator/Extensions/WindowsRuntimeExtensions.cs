@@ -26,7 +26,16 @@ internal static class WindowsRuntimeExtensions
     extension(ITypeDescriptor type)
     {
         /// <summary>
-        /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Guid"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
+        public bool IsGuidType(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the input type is a fundamental Windows Runtime type.</returns>
@@ -89,12 +98,31 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic delegate type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a custom-mapped Windows Runtime non-generic delegate type.</returns>
+        public bool IsCustomMappedWindowsRuntimeNonGenericDelegateType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventHandler) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventHandler) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler);
+        }
+
+        /// <summary>
         /// Checks whether a given type is blittable.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type is blittable.</returns>
         public bool IsBlittable(InteropReferences interopReferences)
         {
+            // Only value types are possibly blittable
+            if (!type.IsValueType)
+            {
+                return false;
+            }
+
             // Generic instantiations can never be blittable (as they're pointers at the ABI level)
             if (type is GenericInstanceTypeSignature)
             {
@@ -107,12 +135,6 @@ internal static class WindowsRuntimeExtensions
             if (typeDefinition.IsEnum)
             {
                 return true;
-            }
-
-            // Only value types are possibly blittable
-            if (!typeDefinition.IsValueType)
-            {
-                return false;
             }
 
             // All fundamental types are blittable (i.e. primitive types)
@@ -145,6 +167,69 @@ internal static class WindowsRuntimeExtensions
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks whether a given type is managed (i.e. it requires disposal)..
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is a managed value type.</returns>
+        public bool IsManagedValueType(InteropReferences interopReferences)
+        {
+            if (!type.IsValueType)
+            {
+                return false;
+            }
+
+            // Generic instantiations (i.e. 'Nullable<T>' or 'KeyValuePair<,>') need disposal
+            if (type is GenericInstanceTypeSignature)
+            {
+                return true;
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            // Enum types are always blittable
+            if (typeDefinition.IsEnum)
+            {
+                return false;
+            }
+
+            // All fundamental types are blittable (i.e. primitive types)
+            if (IsFundamentalWindowsRuntimeType(type, interopReferences))
+            {
+                return false;
+            }
+
+            // The 'TimeSpan' and 'DateTimeOffset' are not blittable, but don't need disposal
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            {
+                return false;
+            }
+
+            // For complex struct types, crawl all fields (same as in 'IsBlittable')
+            foreach (FieldDefinition fieldDefinition in typeDefinition.Fields)
+            {
+                if (fieldDefinition.IsStatic || fieldDefinition.IsLiteral)
+                {
+                    continue;
+                }
+
+                // If any fields are reference types, then the containing type needs disposal
+                if (fieldDefinition.Signature!.FieldType.IsValueType)
+                {
+                    return true;
+                }
+
+                // If any fields are managed, then the containing type needs disposal too
+                if (fieldDefinition.Signature!.FieldType.IsManagedValueType(interopReferences))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -288,18 +373,18 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</returns>
-        public bool IsKeyValuePairType(InteropReferences interopReferences)
+        public bool IsConstructedKeyValuePairType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
         }
 
         /// <summary>
-        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Guid"/> type.
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Nullable{T}"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
-        public bool IsGuidType(InteropReferences interopReferences)
+        /// <returns>Whether the type is some <see cref="System.Nullable{T}"/> type.</returns>
+        public bool IsConstructedNullableValueType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.Guid);
+            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
         }
 
         /// <summary>
@@ -327,7 +412,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The only non-generic custom-mapped delegate type is 'EventHandler'
-            return SignatureComparer.IgnoreVersion.Equals(signature, interopReferences.EventHandler);
+            return signature.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences);
         }
 
         /// <summary>

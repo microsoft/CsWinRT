@@ -88,7 +88,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
             // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
-            if (!elementType.IsValueType || elementType.IsKeyValuePairType(interopReferences))
+            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 
