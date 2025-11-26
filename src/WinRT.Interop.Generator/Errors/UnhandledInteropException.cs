@@ -31,7 +31,7 @@ internal sealed class UnhandledInteropException : Exception
     {
         return
             $"""error {WellKnownInteropExceptions.ErrorPrefix}9999: The CsWinRT interop generator failed with an unhandled exception """ +
-            $"""('{InnerException!.GetType().Name}': '{InnerException!.Message}') during the {_phase} phase. This might be due to an invalid """ +
+            $"""('{InnerException!.GetType().Name}': '{InnerException!.Message}') during the '{_phase}' phase. This might be due to an invalid """ +
             $"""configuration in the current project, but the generator should still correctly identify that and fail gracefully. Please open an """ +
             $"""issue at https://github.com/microsoft/CsWinRT and provide a minimal repro, if possible.""";
     }

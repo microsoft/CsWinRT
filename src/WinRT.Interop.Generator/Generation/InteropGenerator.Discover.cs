@@ -174,9 +174,9 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -273,9 +273,9 @@ internal partial class InteropGenerator
                 discoveryState.TrackUserDefinedType(type.ToTypeSignature(), interfaces.ToEquatableSet());
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -351,9 +351,9 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -393,9 +393,9 @@ internal partial class InteropGenerator
                 discoveryState.TrackSzArrayType(typeSignature);
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 

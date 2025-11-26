@@ -22,7 +22,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// A runtime class name is too long.
     /// </summary>
-    public static Exception RuntimeClassNameTooLong(string name)
+    public static WellKnownInteropException RuntimeClassNameTooLong(string name)
     {
         return Exception(1, $"The runtime class name '{name}' is too long. The maximum length is {ushort.MaxValue} characters.");
     }
@@ -30,7 +30,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// There are too many runtime class names to build the lookup.
     /// </summary>
-    public static Exception RuntimeClassNameLookupSizeLimitExceeded()
+    public static WellKnownInteropException RuntimeClassNameLookupSizeLimitExceeded()
     {
         return Exception(2, "The runtime class name lookup size limit was exceeded.");
     }
@@ -38,7 +38,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The assembly module was not found.
     /// </summary>
-    public static Exception AssemblyModuleNotFound()
+    public static WellKnownInteropException AssemblyModuleNotFound()
     {
         return Exception(3, "The assembly module was not found (this might mean that its path was not valid, or that it failed to load).");
     }
@@ -46,7 +46,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The WinRT runtime module was not found.
     /// </summary>
-    public static Exception WinRTRuntimeModuleNotFound()
+    public static WellKnownInteropException WinRTRuntimeModuleNotFound()
     {
         return Exception(4, "The WinRT runtime module (i.e. 'WinRT.Runtime.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
     }
@@ -54,7 +54,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when emitting the 'Values' RVA field.
     /// </summary>
-    public static Exception TypeHierarchyValuesRvaError(Exception exception)
+    public static WellKnownInteropException TypeHierarchyValuesRvaError(Exception exception)
     {
         return Exception(5, "Failed to generate data for the 'Values' RVA field for the type hierarchy lookup.", exception);
     }
@@ -62,7 +62,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when emitting the 'Keys' RVA field.
     /// </summary>
-    public static Exception TypeHierarchyKeysRvaError(Exception exception)
+    public static WellKnownInteropException TypeHierarchyKeysRvaError(Exception exception)
     {
         return Exception(6, "Failed to generate data for the 'Keys' RVA field for the type hierarchy lookup.", exception);
     }
@@ -70,7 +70,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when emitting the 'Buckets' RVA field.
     /// </summary>
-    public static Exception TypeHierarchyBucketsRvaError(Exception exception)
+    public static WellKnownInteropException TypeHierarchyBucketsRvaError(Exception exception)
     {
         return Exception(7, "Failed to generate data for the 'Buckets' RVA field for the type hierarchy lookup.", exception);
     }
@@ -78,7 +78,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when emitting the type hierarchy implementation.
     /// </summary>
-    public static Exception TypeHierarchyImplementationError(Exception exception)
+    public static WellKnownInteropException TypeHierarchyImplementationError(Exception exception)
     {
         return Exception(8, "Failed to generate the method implementations for the type hierarchy lookup.", exception);
     }
@@ -86,7 +86,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when emitting the interop .dll to disk.
     /// </summary>
-    public static Exception EmitDllError(Exception exception)
+    public static WellKnownInteropException EmitDllError(Exception exception)
     {
         return Exception(9, "Failed to emit the interop .dll to disk.", exception);
     }
@@ -94,7 +94,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The state was changed after making it readonly.
     /// </summary>
-    public static Exception StateChangeAfterMakeReadOnly()
+    public static WellKnownInteropException StateChangeAfterMakeReadOnly()
     {
         return Exception(10, "An attempt was made to mutate the generator state after it was made readonly (in the emit phase).");
     }
@@ -102,7 +102,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a delegate type.
     /// </summary>
-    public static Exception DelegateTypeCodeGenerationError(string? delegateType, Exception exception)
+    public static WellKnownInteropException DelegateTypeCodeGenerationError(string? delegateType, Exception exception)
     {
         return Exception(11, $"Failed to generate marshalling code for delegate type '{delegateType}'.", exception);
     }
@@ -110,7 +110,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a <see cref="KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    public static Exception KeyValuePairTypeCodeGenerationError(string? keyValuePairType, Exception exception)
+    public static WellKnownInteropException KeyValuePairTypeCodeGenerationError(string? keyValuePairType, Exception exception)
     {
         return Exception(12, $"Failed to generate marshalling code for 'KeyValuePair<,>' type '{keyValuePairType}'.", exception);
     }
@@ -118,7 +118,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a default implementation detail type.
     /// </summary>
-    public static Exception DefaultImplementationDetailTypeCodeGenerationError(Exception exception)
+    public static WellKnownInteropException DefaultImplementationDetailTypeCodeGenerationError(Exception exception)
     {
         return Exception(13, $"Failed to generate marshalling code for some default implementation detail type.", exception);
     }
@@ -126,7 +126,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover type hierarchy types.
     /// </summary>
-    public static Exception DiscoverTypeHierarchyTypesError(string? name, Exception exception)
+    public static WellKnownInteropException DiscoverTypeHierarchyTypesError(string? name, Exception exception)
     {
         return Exception(14, $"Failed to discover type hierarchy types for module '{name}'.", exception);
     }
@@ -134,7 +134,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover generic type instantiations.
     /// </summary>
-    public static Exception DiscoverGenericTypeInstantiationsError(string? name, Exception exception)
+    public static WellKnownInteropException DiscoverGenericTypeInstantiationsError(string? name, Exception exception)
     {
         return Exception(15, $"Failed to discover generic type instantiations for module '{name}'.", exception);
     }
@@ -142,7 +142,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover generic type instantiations.
     /// </summary>
-    public static Exception LoadAndDiscoverModulesLoopDidNotComplete()
+    public static WellKnownInteropException LoadAndDiscoverModulesLoopDidNotComplete()
     {
         return Exception(16, "Failed to complete processing all input modules.");
     }
@@ -150,7 +150,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover generic type instantiations.
     /// </summary>
-    public static Exception LoadAndDiscoverModulesLoopError(Exception exception)
+    public static WellKnownInteropException LoadAndDiscoverModulesLoopError(Exception exception)
     {
         return Exception(17, "Failed to load and process all input modules.", exception);
     }
@@ -158,7 +158,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to define the interop assembly.
     /// </summary>
-    public static Exception DefineInteropAssemblyError(Exception exception)
+    public static WellKnownInteropException DefineInteropAssemblyError(Exception exception)
     {
         return Exception(18, "Failed to define the interop module and assembly.", exception);
     }
@@ -166,7 +166,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes
     /// </summary>
-    public static Exception DefineIgnoresAccessChecksToAttributesError(Exception exception)
+    public static WellKnownInteropException DefineIgnoresAccessChecksToAttributesError(Exception exception)
     {
         return Exception(19, "Failed to generate the '[IgnoresAccessChecksTo]' attribute definition and annotations.", exception);
     }
@@ -174,7 +174,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IEnumerator{T}"/> type.
     /// </summary>
-    public static Exception IEnumerator1TypeCodeGenerationError(TypeSignature enumeratorType, Exception exception)
+    public static WellKnownInteropException IEnumerator1TypeCodeGenerationError(TypeSignature enumeratorType, Exception exception)
     {
         return Exception(20, $"Failed to generate marshalling code for 'IEnumerator<T>' type '{enumeratorType}'.", exception);
     }
@@ -182,7 +182,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IEnumerable{T}"/> type.
     /// </summary>
-    public static Exception IEnumerable1TypeCodeGenerationError(TypeSignature enumerableType, Exception exception)
+    public static WellKnownInteropException IEnumerable1TypeCodeGenerationError(TypeSignature enumerableType, Exception exception)
     {
         return Exception(21, $"Failed to generate marshalling code for 'IEnumerable<T>' type '{enumerableType}'.", exception);
     }
@@ -190,7 +190,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IReadOnlyList{T}"/> type.
     /// </summary>
-    public static Exception IReadOnlyList1TypeCodeGenerationError(TypeSignature readOnlyListType, Exception exception)
+    public static WellKnownInteropException IReadOnlyList1TypeCodeGenerationError(TypeSignature readOnlyListType, Exception exception)
     {
         return Exception(22, $"Failed to generate marshalling code for 'IReadOnlyList<T>' type '{readOnlyListType}'.", exception);
     }
@@ -200,7 +200,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     /// <param name="typeSignature">The type signature.</param>
     /// <param name="key">The key.</param>
-    public static Exception AddingDuplicateTrackedTypeDefinition(TypeSignature typeSignature, string key)
+    public static WellKnownInteropException AddingDuplicateTrackedTypeDefinition(TypeSignature typeSignature, string key)
     {
         return Exception(23, $"Duplicate tracked type definition for signature '{typeSignature}' and key '{key}'.");
     }
@@ -210,7 +210,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     /// <param name="typeSignature">The type signature.</param>
     /// <param name="key">The key.</param>
-    public static Exception TrackedTypeDefinitionLookupError(TypeSignature typeSignature, string key)
+    public static WellKnownInteropException TrackedTypeDefinitionLookupError(TypeSignature typeSignature, string key)
     {
         return Exception(24, $"Failed to find a tracked type definition for signature '{typeSignature}' and key '{key}'.");
     }
@@ -218,7 +218,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IList{T}"/> type.
     /// </summary>
-    public static Exception IList1TypeCodeGenerationError(TypeSignature listType, Exception exception)
+    public static WellKnownInteropException IList1TypeCodeGenerationError(TypeSignature listType, Exception exception)
     {
         return Exception(25, $"Failed to generate marshalling code for 'IList<T>' type '{listType}'.", exception);
     }
@@ -226,7 +226,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IReadOnlyDictionary{TKey, TValue}"/> type.
     /// </summary>
-    public static Exception IReadOnlyDictionary2TypeCodeGenerationError(TypeSignature readOnlyDictionaryType, Exception exception)
+    public static WellKnownInteropException IReadOnlyDictionary2TypeCodeGenerationError(TypeSignature readOnlyDictionaryType, Exception exception)
     {
         return Exception(26, $"Failed to generate marshalling code for 'IReadOnlyDictionary<TKey, TValue>' type '{readOnlyDictionaryType}'.", exception);
     }
@@ -234,7 +234,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="IDictionary{TKey, TValue}"/> type.
     /// </summary>
-    public static Exception IDictionary2TypeCodeGenerationError(TypeSignature dictionaryType, Exception exception)
+    public static WellKnownInteropException IDictionary2TypeCodeGenerationError(TypeSignature dictionaryType, Exception exception)
     {
         return Exception(27, $"Failed to generate marshalling code for 'IDictionary<TKey, TValue>' type '{dictionaryType}'.", exception);
     }
@@ -242,7 +242,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Some exception was thrown when trying to read the response file.
     /// </summary>
-    public static Exception ResponseFileReadError(Exception exception)
+    public static WellKnownInteropException ResponseFileReadError(Exception exception)
     {
         return Exception(28, "Failed to read the response file to run 'cswinrtgen'.", exception);
     }
@@ -250,7 +250,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to parse an argument from the response file.
     /// </summary>
-    public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
+    public static WellKnownInteropException ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
     {
         return Exception(29, $"Failed to parse argument '{argumentName}' from response file.", exception);
     }
@@ -258,7 +258,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The input response file is malformed.
     /// </summary>
-    public static Exception MalformedResponseFile()
+    public static WellKnownInteropException MalformedResponseFile()
     {
         return Exception(30, "The response file is malformed and contains invalid content.");
     }
@@ -266,7 +266,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The debug repro directory does not exist.
     /// </summary>
-    public static Exception DebugReproDirectoryDoesNotExist(string path)
+    public static WellKnownInteropException DebugReproDirectoryDoesNotExist(string path)
     {
         return Exception(31, $"The debug repro directory '{path}' does not exist.");
     }
@@ -274,7 +274,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The debug repro directory does not exist.
     /// </summary>
-    public static Exception WinRTRuntimeAssemblyVersionMismatch(
+    public static WellKnownInteropException WinRTRuntimeAssemblyVersionMismatch(
         Version? winRTRuntimeAssemblyVersion,
         Version? cswinrtgenAssemblyVersion)
     {
@@ -286,7 +286,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover SZ array types.
     /// </summary>
-    public static Exception DiscoverSzArrayTypesError(string? name, Exception exception)
+    public static WellKnownInteropException DiscoverSzArrayTypesError(string? name, Exception exception)
     {
         return Exception(33, $"Failed to discover SZ array type for module '{name}'.", exception);
     }
@@ -294,7 +294,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a SZ array type.
     /// </summary>
-    public static Exception SzArrayTypeCodeGenerationError(string? arrayType, Exception exception)
+    public static WellKnownInteropException SzArrayTypeCodeGenerationError(string? arrayType, Exception exception)
     {
         return Exception(34, $"Failed to generate marshalling code for SZ array type '{arrayType}'.", exception);
     }
@@ -302,7 +302,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover SZ array types.
     /// </summary>
-    public static Exception WinRTRuntimeDllVersion2References(IEnumerable<string> names)
+    public static WellKnownInteropException WinRTRuntimeDllVersion2References(IEnumerable<string> names)
     {
         string combinedNames = string.Join(", ", names.Select(static name => $"'{name}'"));
 
@@ -315,7 +315,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Exception when no type hierarchy key-value pairs were discovered.
     /// </summary>
-    public static Exception TypeHierarchyNoDiscoveredKeyValuePairs()
+    public static WellKnownInteropException TypeHierarchyNoDiscoveredKeyValuePairs()
     {
         return Exception(36,
             "No type hierarchy key-value pairs were discovered across referenced assemblies. This should never happen, and it indicates that either " +
@@ -326,7 +326,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to discover exposed user-defined types.
     /// </summary>
-    public static Exception DiscoverExposedUserDefinedTypesError(string? name, Exception exception)
+    public static WellKnownInteropException DiscoverExposedUserDefinedTypesError(string? name, Exception exception)
     {
         return Exception(37, $"Failed to discover (non-generic) exposed user-defined types for module '{name}'.", exception);
     }
@@ -334,7 +334,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a user-defined type.
     /// </summary>
-    public static Exception UserDefinedTypeCodeGenerationError(string? userDefinedType, Exception exception)
+    public static WellKnownInteropException UserDefinedTypeCodeGenerationError(string? userDefinedType, Exception exception)
     {
         return Exception(38, $"Failed to generate marshalling code for user-defined type '{userDefinedType}'.", exception);
     }
@@ -342,7 +342,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a user-defined vtable type.
     /// </summary>
-    public static Exception UserDefinedVtableTypeCodeGenerationError(string? userDefinedType, Exception exception)
+    public static WellKnownInteropException UserDefinedVtableTypeCodeGenerationError(string? userDefinedType, Exception exception)
     {
         return Exception(39, $"Failed to generate marshalling code for user-defined vtable type '{userDefinedType}'.", exception);
     }
@@ -350,7 +350,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The Windows SDK projection module was not found.
     /// </summary>
-    public static Exception WindowsSdkProjectionModuleNotFound()
+    public static WellKnownInteropException WindowsSdkProjectionModuleNotFound()
     {
         return Exception(40, "The Windows SDK projection module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
     }
@@ -358,7 +358,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> type.
     /// </summary>
-    public static Exception IMapChangedEventArgs1TypeCodeGenerationError(TypeSignature argsType, Exception exception)
+    public static WellKnownInteropException IMapChangedEventArgs1TypeCodeGenerationError(TypeSignature argsType, Exception exception)
     {
         return Exception(41, $"Failed to generate marshalling code for 'IMapChangedEventArgs<K>' type '{argsType}'.", exception);
     }
@@ -366,7 +366,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> type.
     /// </summary>
-    public static Exception IObservableVectorTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    public static WellKnownInteropException IObservableVectorTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
         return Exception(41, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
     }
@@ -374,7 +374,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> type.
     /// </summary>
-    public static Exception IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
+    public static WellKnownInteropException IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
         return Exception(42, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
     }
@@ -382,7 +382,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a dynamic implementation detail type.
     /// </summary>
-    public static Exception DynamicImplementationDetailTypeCodeGenerationError(Exception exception)
+    public static WellKnownInteropException DynamicImplementationDetailTypeCodeGenerationError(Exception exception)
     {
         return Exception(43, $"Failed to generate marshalling code for some dynamic implementation detail type.", exception);
     }
@@ -390,7 +390,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
+    public static WellKnownInteropException IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
     {
         return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
     }
@@ -398,7 +398,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncOperationTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    public static WellKnownInteropException IAsyncOperationTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
         return Exception(45, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{operationType}'.", exception);
     }
@@ -406,7 +406,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> type.
     /// </summary>
-    public static Exception IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    public static WellKnownInteropException IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
         return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
     }
@@ -414,7 +414,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a dynamic implementation detail type.
     /// </summary>
-    public static Exception DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
+    public static WellKnownInteropException DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
     {
         return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
     }
@@ -422,7 +422,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the associated <c>ComWrappersMarshallerAttribute</c> type for a custom-mapped type.
     /// </summary>
-    public static Exception CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
+    public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
     {
         return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
@@ -446,7 +446,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Invalid custom-mapped type used to get an IID.
     /// </summary>
-    public static Exception InvalidCustomMappedTypeForWellKnownInterfaceIIDs(ITypeDescriptor interfaceType)
+    public static WellKnownInteropException InvalidCustomMappedTypeForWellKnownInterfaceIIDs(ITypeDescriptor interfaceType)
     {
         return Exception(51, $"Type '{interfaceType}' is not a valid well-known custom-mapped interface type: its IID could not be retrieved.");
     }
@@ -474,9 +474,9 @@ internal static class WellKnownInteropExceptions
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
     /// <returns>The resulting exception.</returns>
-    private static Exception Exception(int id, string message, Exception? innerException = null)
+    private static WellKnownInteropException Exception(int id, string message, Exception? innerException = null)
     {
-        return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message, innerException);
+        return new($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 
     /// <summary>
