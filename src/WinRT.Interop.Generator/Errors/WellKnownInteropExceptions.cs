@@ -460,11 +460,19 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve the IID for some Windows Runtime type.
+    /// </summary>
+    public static Exception TypeIIDInvalidDataError(TypeDefinition type)
+    {
+        return Exception(53, $"The IID data for projected type '{type}' is invalid.");
+    }
+
+    /// <summary>
     /// Failed to generate the signature of some Windows Runtime type.
     /// </summary>
     public static Exception TypeSignatureGenerationError(TypeSignature type)
     {
-        return Exception(53, $"Failed to generate the type signature for type '{type}'.");
+        return Exception(54, $"Failed to generate the type signature for type '{type}'.");
     }
 
     /// <summary>

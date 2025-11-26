@@ -5,7 +5,6 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -72,9 +71,23 @@ internal static class InterfaceIIDResolver
             // The 'ldsflda' instruction always has a 'FieldDefinition' operand
             FieldDefinition rvaField = (FieldDefinition)instruction.Operand!;
 
-            // Serialize the bytes of the RVA field into an array, from which we can read the IID value
-            byte[] iidBytes = rvaField.FieldRva!.WriteIntoArray();
+            // Validate that the target field does in fact have RVA data
+            if (!rvaField.HasFieldRva)
+            {
+                break;
+            }
 
+            Span<byte> iidBytes = stackalloc byte[16];
+
+            // Read the IID data from the RVA field (we expect to always be able to do this)
+            if (!rvaField.FieldRva!.TryReadExactly(iidBytes))
+            {
+                throw WellKnownInteropExceptions.TypeIIDInvalidDataError(type);
+            }
+
+            // Construct the actual IID. Endianness doesn't matter here, because the data
+            // from RVA fields will always be written for little-endian architectures, and
+            // we will never be running on big-endian architectures anyway.
             return new(iidBytes);
         }
 
