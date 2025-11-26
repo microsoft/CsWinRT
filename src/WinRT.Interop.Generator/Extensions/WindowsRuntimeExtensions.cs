@@ -29,9 +29,27 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Guid"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
-        public bool IsGuidType(InteropReferences interopReferences)
+        public bool IsTypeOfGuid(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Type"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="System.Type"/> type.</returns>
+        public bool IsTypeOfType(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Exception"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="System.Exception"/> type.</returns>
+        public bool IsTypeOfException(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception);
         }
 
         /// <summary>
