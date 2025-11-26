@@ -68,6 +68,12 @@ file static class ObjectInterfaceEntriesImpl
 file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
+    public override void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+    }
+
+    /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         count = sizeof(ObjectInterfaceEntries) / sizeof(ComInterfaceEntry);
