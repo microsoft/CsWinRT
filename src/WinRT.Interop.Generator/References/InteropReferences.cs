@@ -449,6 +449,21 @@ internal sealed class InteropReferences
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Exception</c>.
+    /// </summary>
+    public TypeReference AbiException => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Exception"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpan</c>.
+    /// </summary>
+    public TypeReference AbiTimeSpan => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpan"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffset</c>.
+    /// </summary>
+    public TypeReference AbiDateTimeOffset => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffset"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
