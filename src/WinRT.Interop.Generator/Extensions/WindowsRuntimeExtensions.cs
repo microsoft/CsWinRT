@@ -171,10 +171,38 @@ internal static class WindowsRuntimeExtensions
                     return type.ToTypeDefOrRef().ToValueTypeSignature();
                 }
 
+                // 'TimeSpan' is custom-mapped and not blittable
+                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan))
+                {
+                    return interopReferences.AbiTimeSpan.ToValueTypeSignature();
+                }
+
+                // 'DateTimeOffset' also is custom-mapped and not blittable
+                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+                {
+                    return interopReferences.AbiDateTimeOffset.ToValueTypeSignature();
+                }
+
                 // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
                 return typeDefinition.DeclaringModule!.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
+            }
+
+            // We have a few special cases to handle for custom-mapped types that are reference types in C#
+            if (typeDefinition.IsClass)
+            {
+                // 'Type' is a class, but is custom-mapped to the 'TypeName' struct type
+                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type))
+                {
+                    return interopReferences.AbiType.ToValueTypeSignature();
+                }
+
+                // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
+                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
+                {
+                    return interopReferences.AbiException.ToValueTypeSignature();
+                }
             }
 
             // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
