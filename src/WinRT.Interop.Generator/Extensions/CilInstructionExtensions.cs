@@ -29,5 +29,24 @@ internal static class CilInstructionExtensions
                 _ => new CilInstruction(CilOpCodes.Ldarg, index)
             };
         }
+
+        /// <summary>
+        /// Create a new instruction storing a local from a given method, using the smallest possible operation code and operand size.
+        /// </summary>
+        /// <param name="local">The local to store.</param>
+        /// <param name="method">The containing method body.</param>
+        /// <returns>The instruction.</returns>
+        public static CilInstruction CreateStloc(CilLocalVariable local, CilMethodBody method)
+        {
+            return method.LocalVariables.IndexOf(local) switch
+            {
+                0 => new CilInstruction(Stloc_0),
+                1 => new CilInstruction(Stloc_1),
+                2 => new CilInstruction(Stloc_2),
+                3 => new CilInstruction(Stloc_3),
+                < 256 and int i => new CilInstruction(Stloc_S, (byte)i),
+                int i => new CilInstruction(Stloc, i)
+            };
+        }
     }
 }
