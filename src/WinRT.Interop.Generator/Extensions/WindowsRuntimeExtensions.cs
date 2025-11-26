@@ -198,7 +198,7 @@ internal static class WindowsRuntimeExtensions
                     return interopReferences.AbiType.ToValueTypeSignature();
                 }
 
-                // 'Exception' is also a class, but is custom-mapped to the 'HResult' struc type
+                // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
                 if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
                 {
                     return interopReferences.AbiException.ToValueTypeSignature();
