@@ -16,6 +16,7 @@
         <UseWinUI>true</UseWinUI>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <UseRidGraph>true</UseRidGraph>
+        <AppxIncludeWindowsMetadataReferenceFromProjectReferences>false</AppxIncludeWindowsMetadataReferenceFromProjectReferences>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
@@ -68,9 +69,12 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="Microsoft.WindowsAppSDK" GeneratePathProperty="true">
+        <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
-    </ItemGroup>
+        <PackageReference Include="Microsoft.Web.WebView2">
+            <ExcludeAssets>all</ExcludeAssets>
+        </PackageReference>
+	</ItemGroup>
    
 </Project>

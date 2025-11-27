@@ -20,12 +20,15 @@
   <PropertyGroup>
     <CsWinRTIncludes>TestComponentCSharp.TestPublicExclusiveTo;</CsWinRTIncludes>
     <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
-    <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
+    <!--PkgMicrosoft_WindowsAppSDK* is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+    <PkgMicrosoft_WindowsAppSDK_Foundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.foundation', '$(MicrosoftWinAppSDKFoundationVersion)'))</PkgMicrosoft_WindowsAppSDK_Foundation>
+    <PkgMicrosoft_WindowsAppSDK_Ixp>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.interactiveexperiences', '$(MicrosoftWinAppSDKIxpVersion)'))</PkgMicrosoft_WindowsAppSDK_Ixp>
+    <PkgMicrosoft_WindowsAppSDK_WinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.winui', '$(MicrosoftWinAppSDKWinUIVersion)'))</PkgMicrosoft_WindowsAppSDK_WinUI>
   </PropertyGroup>
   <ItemGroup>
-    <!--Explicitly reference WinAppSDK winmds from TFM uap10.0-->
-    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK)/**/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Foundation)/metadata/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Ixp)/metadata/10.0.18362.0/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_WinUI)/metadata/*.winmd" />
   </ItemGroup>
 
 </Project>

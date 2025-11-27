@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" VersionOverride="1.3.5" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" />
   </ItemGroup>
 
   <!--CsWinRT properties-->

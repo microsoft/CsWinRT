@@ -11,7 +11,7 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
@@ -35,14 +35,21 @@
       -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
       -include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
       -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
+      -exclude Microsoft.UI.Xaml.Controls.WebView2
+      -exclude Microsoft.UI.Xaml.Controls.IWebView
+      -exclude Microsoft.UI.Xaml.Automation.Peers.IWebView
+      -exclude Microsoft.UI.Xaml.Automation.Peers.WebView
       -addition_exclude Windows.UI.Xaml.Media.Animation
     </CsWinRTFilters>
-    <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>
+    <!--PkgMicrosoft_WindowsAppSDK* is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+    <PkgMicrosoft_WindowsAppSDK_Foundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.foundation', '$(MicrosoftWinAppSDKFoundationVersion)'))</PkgMicrosoft_WindowsAppSDK_Foundation>
+    <PkgMicrosoft_WindowsAppSDK_Ixp>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.interactiveexperiences', '$(MicrosoftWinAppSDKIxpVersion)'))</PkgMicrosoft_WindowsAppSDK_Ixp>
+    <PkgMicrosoft_WindowsAppSDK_WinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.winui', '$(MicrosoftWinAppSDKWinUIVersion)'))</PkgMicrosoft_WindowsAppSDK_WinUI>
   </PropertyGroup>
   <ItemGroup>
-    <!--Explicitly reference WinAppSDK winmds from TFM uap10.0-->
-    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK)/**/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Foundation)/metadata/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Ixp)/metadata/10.0.18362.0/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_WinUI)/metadata/*.winmd" />
   </ItemGroup>
 
 </Project>

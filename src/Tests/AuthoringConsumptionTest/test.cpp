@@ -522,9 +522,6 @@ TEST(AuthoringTest, XamlMappings)
     first.Current().as<DisposableClass>().Close();
     EXPECT_TRUE(first.Current().as<DisposableClass>().IsDisposed());
     EXPECT_FALSE(vector.GetAt(1).as<DisposableClass>().IsDisposed());
-    for (auto obj : vector.GetView())
-    {
-    }
 
     vector.RemoveAt(0);
     EXPECT_EQ(vector.Size(), 2);
