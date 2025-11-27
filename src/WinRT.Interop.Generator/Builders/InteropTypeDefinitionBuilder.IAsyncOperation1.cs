@@ -91,6 +91,7 @@ internal partial class InteropTypeDefinitionBuilder
                 resultType: resultType,
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("GetResults"u8),
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             operationMethodsType.AddMethodImplementation(

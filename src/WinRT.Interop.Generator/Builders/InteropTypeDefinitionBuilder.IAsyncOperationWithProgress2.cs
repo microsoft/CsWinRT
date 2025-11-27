@@ -8,7 +8,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -128,22 +127,13 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Completed(resultType, progressType).Import(module),
                 method: set_CompletedMethod);
 
-            // Define the 'GetResults' method as follows:
-            //
-            // public static <RESULT_TYPE> GetResults(WindowsRuntimeObjectReference thisReference)
-            MethodDefinition getResultsMethod = new(
-                name: "GetResults"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: resultType.Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
-            {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+            // Define the 'GetResults' method:
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.GetResults(
+                resultType: resultType,
+                vftblField: interopDefinitions.IAsyncOperationWithProgressVftbl.GetField("GetResults"u8),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2GetResults(resultType, progressType).Import(module),

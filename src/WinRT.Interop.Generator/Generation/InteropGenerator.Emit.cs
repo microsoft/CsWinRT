@@ -719,6 +719,7 @@ internal partial class InteropGenerator
                     readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 

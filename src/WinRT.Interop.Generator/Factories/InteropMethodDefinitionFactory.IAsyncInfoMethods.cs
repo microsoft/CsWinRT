@@ -7,6 +7,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -252,11 +253,13 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetResults(
             TypeSignature resultType,
             FieldDefinition vftblField,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             // Define the 'GetResults' get method as follows:
@@ -270,15 +273,71 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             { NoInlining = true };
 
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
+            //   [1]: 'void*' (for 'thisPtr')
+            //   [2]: '<ABI_RESULT_TYPE>' (the ABI type for the type argument)
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_resultNative = new(resultType.GetAbiType(interopReferences).Import(module));
+
+            // Jump labels
+            CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
+            CilInstruction ldloca_s_0_finallyStart = new(Ldloca_S, loc_0_thisValue);
+            CilInstruction nop_finallyEnd = new(Nop);
+            CilInstruction nop_returnValueRewrite = new(Nop);
+
             // Create a method body for the 'GetResults' method
             getResultsMethod.CilMethodBody = new CilMethodBody()
             {
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_resultNative },
                 Instructions =
                 {
-                    { Ldnull }, // TODO
-                    { Throw }
+                    // Initialize 'thisValue'
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Stloc_0 },
+
+                    // '.try' code
+                    { ldloca_s_0_tryStart },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Stloc_1 },
+                    { Ldloc_1 },
+                    { Ldarg_1 },
+                    { Ldloca_S, loc_2_resultNative },
+                    { Ldloc_1 },
+                    { Ldind_I },
+                    { Ldfld, vftblField },
+                    { Calli, WellKnownTypeSignatureFactory.get_TypedRetVal(resultType.GetAbiType(interopReferences).MakePointerType(), interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Leave_S, nop_finallyEnd.CreateLabel() },
+
+                    // '.finally' code
+                    { ldloca_s_0_finallyStart },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+                    { nop_finallyEnd },
+                    { nop_returnValueRewrite }
                 },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = ldloca_s_0_tryStart.CreateLabel(),
+                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerEnd = nop_finallyEnd.CreateLabel()
+                    }
+                }
             };
+
+            // Track rewriting the return value for this method
+            emitState.TrackReturnValueMethodRewrite(
+                returnType: resultType,
+                method: getResultsMethod,
+                marker: nop_returnValueRewrite,
+                source: loc_2_resultNative);
 
             return getResultsMethod;
         }
