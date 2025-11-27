@@ -53,6 +53,24 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="string"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="string"/> type.</returns>
+        public bool IsTypeOfString(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="object"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="object"/> type.</returns>
+        public bool IsTypeOfObject(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
