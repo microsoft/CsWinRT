@@ -554,6 +554,67 @@ namespace UnitTest
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
+        [Fact]
+        public void TestTypePropertyWithGuidType()
+        {
+            TestObject.TypeProperty = typeof(System.Guid);
+            Assert.Equal("Guid", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithObjectType()
+        {
+            TestObject.TypeProperty = typeof(System.Object);
+            Assert.Equal("Object", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithStringType()
+        {
+            TestObject.TypeProperty = typeof(System.String);
+            Assert.Equal("String", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithPrimitiveType()
+        {
+            TestObject.TypeProperty = typeof(System.Int64);
+            Assert.Equal("Int64", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.Int32);
+            Assert.Equal("Int32", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.Int16);
+            Assert.Equal("Int16", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.UInt64);
+            Assert.Equal("UInt64", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.UInt32);
+            Assert.Equal("UInt32", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.UInt16);
+            Assert.Equal("UInt16", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.Byte);
+            Assert.Equal("Byte", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(System.Byte);
+            Assert.Equal("Byte", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+        }
+
+
         class CustomDictionary : Dictionary<string, string> { }
 
         [Fact]

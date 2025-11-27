@@ -111,23 +111,26 @@ public static unsafe class TypeMarshaller
                 return;
             }
 
-            reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
+            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Custom };
         }
     }
 
 
+    /// <summary>
+    /// Private method to extracts the generic type argument from a runtime class name that follows
+    /// the pattern <c>Windows.Foundation.IReference&lt;T&gt;</c>.
+    /// </summary>
+    /// <param name="runtimeClassName">
+    /// The full runtime class name, e.g., <c>Windows.Foundation.IReference&lt;System.Int32&gt;</c>.
+    /// </param>
+    /// <returns>
+    /// The inner type name if the input matches the expected pattern; otherwise, the original string.
+    /// </returns>
     private static string ExtractTypeName(string runtimeClassName)
     {
         const string prefix = "Windows.Foundation.IReference<";
         ReadOnlySpan<char> span = runtimeClassName;
-
-        if (span.StartsWith(prefix))
-        {
-            // Slice directly without reassigning unnecessarily
-            return span.Slice(prefix.Length, span.Length - prefix.Length - 1).ToString();
-        }
-
-        return runtimeClassName; // Fallback if format doesn't match
+        return span.StartsWith(prefix) ? span.Slice(prefix.Length, span.Length - prefix.Length - 1).ToString() : runtimeClassName;
     }
 
 
