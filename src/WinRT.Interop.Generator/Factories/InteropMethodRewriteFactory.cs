@@ -65,12 +65,6 @@ internal partial class InteropMethodRewriteFactory
             }
             else if (returnType.IsConstructedKeyValuePairType(interopReferences))
             {
-                body.Instructions.ReplaceRange(marker, [
-                    CilInstruction.CreateLdloc(source, body),
-                    new CilInstruction(Ret)]);
-
-                return; // TODO: Remove this line when implementing 'KeyValuePair<,>' marshalling
-
                 CilLocalVariable loc_returnValue = new(returnType.Import(module));
 
                 body.LocalVariables.Add(loc_returnValue);
@@ -83,7 +77,8 @@ internal partial class InteropMethodRewriteFactory
                 // So here we first marshal the managed value, then release the original interface pointer.
                 body.Instructions.ReplaceRange(marker, [
                     ldloc_tryStart,
-                    new CilInstruction(Call, emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged")),
+                    // TODO: Uncomment the line below when implementing 'KeyValuePair<,>' marshalling
+                    // new CilInstruction(Call, emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged")),
                     CilInstruction.CreateStloc(loc_returnValue, body),
                     new CilInstruction(Leave_S, ldloc_finallyEnd.CreateLabel()),
                     ldloc_finallyStart,
