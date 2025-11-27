@@ -204,6 +204,26 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the get accessor for some property returning a typed value.
+    /// </summary>
+    /// <param name="returnValue">The type of return value.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature get_TypedRetVal(TypeSignature returnValue, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <RETURN_VALUE>*, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                returnValue.MakePointerType()]);
+    }
+
+    /// <summary>
     /// Creates a type signature for the get accessor for some property returning an untyped value (any type).
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
