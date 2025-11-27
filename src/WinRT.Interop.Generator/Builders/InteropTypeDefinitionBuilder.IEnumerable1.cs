@@ -349,6 +349,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -356,6 +357,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition enumerableComWrappersCallbackType,
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -366,6 +368,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, enumerableType, "Marshaller");
         }
 
         /// <summary>

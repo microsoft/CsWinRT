@@ -424,7 +424,7 @@ internal sealed class InteropGeneratorDiscoveryState
     {
         if (_isReadOnly)
         {
-            throw WellKnownInteropExceptions.StateChangeAfterMakeReadOnly();
+            throw WellKnownInteropExceptions.DiscoveryStateChangeAfterMakeReadOnly();
         }
     }
 }

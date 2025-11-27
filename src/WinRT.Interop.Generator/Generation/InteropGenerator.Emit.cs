@@ -9,6 +9,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -133,6 +134,11 @@ internal partial class InteropGenerator
 
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Rewrite the IL methods of marshalling stubs needing two-pass generation
+        RewriteMethodDefinitions(args, emitState, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -435,6 +441,7 @@ internal partial class InteropGenerator
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     iteratorMethodsType: out TypeDefinition iteratorMethodsType);
 
@@ -589,6 +596,7 @@ internal partial class InteropGenerator
                     enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -842,6 +850,7 @@ internal partial class InteropGenerator
                     listComWrappersCallbackType: listComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -965,6 +974,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1097,6 +1107,7 @@ internal partial class InteropGenerator
                     dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1921,6 +1932,41 @@ internal partial class InteropGenerator
             catch (Exception e)
             {
                 WellKnownInteropExceptions.SzArrayTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for SZ array types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void RewriteMethodDefinitions(
+        InteropGeneratorArgs args,
+        InteropGeneratorEmitState emitState,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (ReturnTypeMethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropMethodRewriteFactory.Return(
+                    returnType: rewriteInfo.ReturnType,
+                    method: rewriteInfo.Method,
+                    marker: rewriteInfo.Marker,
+                    source: rewriteInfo.Source,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+            }
+            catch (Exception e)
+            {
+                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.ReturnType, rewriteInfo.Method, e).ThrowOrAttach(e);
             }
         }
     }

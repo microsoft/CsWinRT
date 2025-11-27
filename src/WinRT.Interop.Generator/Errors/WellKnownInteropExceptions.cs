@@ -92,11 +92,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// The state was changed after making it readonly.
+    /// The discovery state was changed after making it readonly.
     /// </summary>
-    public static WellKnownInteropException StateChangeAfterMakeReadOnly()
+    public static WellKnownInteropException DiscoveryStateChangeAfterMakeReadOnly()
     {
-        return Exception(10, "An attempt was made to mutate the generator state after it was made readonly (in the emit phase).");
+        return Exception(10, "An attempt was made to mutate the generator discovery state after it was made readonly (in the emit phase).");
     }
 
     /// <summary>
@@ -473,6 +473,22 @@ internal static class WellKnownInteropExceptions
     public static Exception TypeSignatureGenerationError(TypeSignature type)
     {
         return Exception(54, $"Failed to generate the type signature for type '{type}'.");
+    }
+
+    /// <summary>
+    /// The emit state was changed after making it readonly.
+    /// </summary>
+    public static WellKnownInteropException EmitStateChangeAfterMakeReadOnly()
+    {
+        return Exception(55, "An attempt was made to mutate the generator emit state after it was made readonly.");
+    }
+
+    /// <summary>
+    /// Failed to perform two-pass rewrite of a marshalling method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteError(TypeSignature type, MethodDefinition method, Exception exception)
+    {
+        return Exception(56, $"Failed to perform two-pass rewrite of method '{method}' to marshal type '{type}'.", exception);
     }
 
     /// <summary>
