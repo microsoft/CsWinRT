@@ -617,9 +617,21 @@ namespace cswinrt
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
-                w.write("%<%>",
-                    bind<write_projection_type_for_name_type>(type.generic_type, nameType),
-                    bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
+
+                bool isIReference =
+                    type.generic_type.TypeName() == "IReference`1" &&
+                    type.generic_type.TypeNamespace() == "Windows.Foundation";
+
+                if (!isIReference)
+                {
+                    w.write("%<%>",
+                        bind<write_projection_type_for_name_type>(type.generic_type, nameType),
+                        bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
+                }
+                else
+                {
+                    w.write("%?", bind<write_projection_type_for_name_type>(type.generic_args[0], nameType));
+                }
             },
             [&](generic_type_param const& param) { w.write(param.Name()); },
             [&](fundamental_type const& type)
