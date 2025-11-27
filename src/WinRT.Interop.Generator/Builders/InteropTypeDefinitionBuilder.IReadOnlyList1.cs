@@ -116,18 +116,18 @@ internal partial class InteropTypeDefinitionBuilder
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_result = new(elementType.GetAbiType(interopReferences).Import(module));
+            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences).Import(module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ldloca_s_0_finallyStart = new(Ldloca_S, loc_0_thisValue);
             CilInstruction nop_finallyEnd = new(Nop);
-            CilInstruction nop_implementation = new(Nop);
+            CilInstruction nop_returnValueRewrite = new(Nop);
 
             // Create a method body for the 'GetAt' method
             getAtMethod.CilMethodBody = new CilMethodBody()
             {
-                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_result },
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_resultNative },
                 Instructions =
                 {
                     // Initialize 'thisValue'
@@ -141,7 +141,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldarg_1 },
-                    { Ldloca_S, loc_2_result },
+                    { Ldloca_S, loc_2_resultNative },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField("GetAt"u8) },
@@ -154,9 +154,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
                     { Endfinally },
                     { nop_finallyEnd },
-
-                    // Implementation to return the marshalled result
-                    { nop_implementation }
+                    { nop_returnValueRewrite }
                 },
                 ExceptionHandlers =
                 {
@@ -171,48 +169,12 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // If the value is blittable, return it directly
-            if (elementType.IsValueType) // TODO, share with all methods returning a value (eg. 'Current')
-            {
-                getAtMethod.CilMethodBody.Instructions.ReplaceRange(nop_implementation, [
-                    new CilInstruction(Ldloc_2),
-                    new CilInstruction(Ret)]);
-            }
-            else
-            {
-                // Declare an additional variable:
-                //   [3]: '<TYPE_ARGUMENT>' (for the marshalled value)
-                CilLocalVariable loc_3_current = new(elementType.Import(module));
-
-                getAtMethod.CilMethodBody.LocalVariables.Add(loc_3_current);
-
-                // Jump labels for the 'try/finally' blocks
-                CilInstruction ldloc_2_tryStart = new(Ldloc_2);
-                CilInstruction ldloc_2_finallyStart = new(Ldloc_2);
-                CilInstruction ldloc_3_finallyEnd = new(Ldloc_3);
-
-                // We need to marshal the native value to a managed object
-                getAtMethod.CilMethodBody.Instructions.ReplaceRange(nop_implementation, [
-                    ldloc_2_tryStart,
-                    new(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module)),
-                    new(Stloc_3),
-                    new(Leave_S, ldloc_3_finallyEnd.CreateLabel()),
-                    ldloc_2_finallyStart,
-                    new(Call, interopReferences.HStringMarshallerFree.Import(module)),
-                    new(Endfinally),
-                    ldloc_3_finallyEnd,
-                    new(Ret)]);
-
-                // Register the 'try/finally'
-                getAtMethod.CilMethodBody.ExceptionHandlers.Add(new CilExceptionHandler
-                {
-                    HandlerType = CilExceptionHandlerType.Finally,
-                    TryStart = ldloc_2_tryStart.CreateLabel(),
-                    TryEnd = ldloc_2_finallyStart.CreateLabel(),
-                    HandlerStart = ldloc_2_finallyStart.CreateLabel(),
-                    HandlerEnd = ldloc_3_finallyEnd.CreateLabel()
-                });
-            }
+            // Track rewriting the return value for this method
+            emitState.TrackReturnValueMethodRewrite(
+                returnType: elementType,
+                method: getAtMethod,
+                marker: nop_returnValueRewrite,
+                source: loc_2_resultNative);
         }
 
         /// <summary>
