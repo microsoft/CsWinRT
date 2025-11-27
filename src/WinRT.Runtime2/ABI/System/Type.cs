@@ -111,7 +111,7 @@ public static unsafe class TypeMarshaller
                 return;
             }
 
-            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Custom };
+            reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
         }
     }
 
