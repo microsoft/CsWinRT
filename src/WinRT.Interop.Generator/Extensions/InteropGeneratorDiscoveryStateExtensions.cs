@@ -48,10 +48,19 @@ internal static class InteropGeneratorDiscoveryStateExtensions
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
         {
             discoveryState.TrackIDictionary2Type(typeSignature);
+
+            // When discovering dictionary types, make sure to also track 'KeyValuePair<TKey, TValue>' types. Those will
+            // be needed when generating code for 'IEnumerator<KeyValuePair<TKey, TValue>>' types, which will be discovered
+            // automatically. However, the same is not true the constructed 'KeyValuePair<TKey, TValue>' types themselves.
+            // This is for the same reason why we need the other special cases in this method: members are not analyzed.
+            discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
         {
             discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
+
+            // Same handling as above for constructed 'KeyValuePair<TKey, TValue>' types
+            discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
         {
