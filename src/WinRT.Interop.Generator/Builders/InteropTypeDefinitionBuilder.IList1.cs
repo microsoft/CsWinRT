@@ -140,29 +140,18 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it's needed by 'IObservableVector<T>')
             emitState.TrackTypeDefinition(vectorMethodsType, listType, "IVectorMethods");
 
-            // Define the 'GetAt' method as follows:
-            //
-            // public static <TYPE_ARGUMENT> GetAt(WindowsRuntimeObjectReference thisReference, uint index)
-            MethodDefinition getAtMethod = new(
-                name: "GetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32]))
-            { NoInlining = true };
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IVectorViewMethods.GetAt(
+                readOnlyListType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'GetAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
                 method: getAtMethod);
-
-            // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
 
             // Define the 'SetAt' method as follows:
             //

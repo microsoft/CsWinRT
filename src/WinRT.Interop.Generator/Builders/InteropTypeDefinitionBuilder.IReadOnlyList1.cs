@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
@@ -92,89 +91,18 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type
             emitState.TrackTypeDefinition(vectorViewMethodsType, readOnlyListType, "IVectorViewMethods");
 
-            // Define the 'GetAt' method as follows:
-            //
-            // public static <TYPE_ARGUMENT> GetAt(WindowsRuntimeObjectReference thisReference, uint index)
-            MethodDefinition getAtMethod = new(
-                name: "GetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32]))
-            { NoInlining = true };
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IVectorViewMethods.GetAt(
+                readOnlyListType: readOnlyListType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'GetAt' method
             vectorViewMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorViewMethods1GetAt(elementType).Import(module),
                 method: getAtMethod);
-
-            // Declare the local variables:
-            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
-            //   [1]: 'void*' (for 'thisPtr')
-            //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences).Import(module));
-
-            // Jump labels
-            CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
-            CilInstruction ldloca_s_0_finallyStart = new(Ldloca_S, loc_0_thisValue);
-            CilInstruction nop_finallyEnd = new(Nop);
-            CilInstruction nop_returnValueRewrite = new(Nop);
-
-            // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_resultNative },
-                Instructions =
-                {
-                    // Initialize 'thisValue'
-                    { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
-                    { Stloc_0 },
-
-                    // '.try' code
-                    { ldloca_s_0_tryStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
-                    { Stloc_1 },
-                    { Ldloc_1 },
-                    { Ldarg_1 },
-                    { Ldloca_S, loc_2_resultNative },
-                    { Ldloc_1 },
-                    { Ldind_I },
-                    { Ldfld, vftblType.GetField("GetAt"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementType, interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
-                    { Leave_S, nop_finallyEnd.CreateLabel() },
-
-                    // '.finally' code
-                    { ldloca_s_0_finallyStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
-                    { Endfinally },
-                    { nop_finallyEnd },
-                    { nop_returnValueRewrite }
-                },
-                ExceptionHandlers =
-                {
-                    new CilExceptionHandler
-                    {
-                        HandlerType = CilExceptionHandlerType.Finally,
-                        TryStart = ldloca_s_0_tryStart.CreateLabel(),
-                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerEnd = nop_finallyEnd.CreateLabel()
-                    }
-                }
-            };
-
-            // Track rewriting the return value for this method
-            emitState.TrackReturnValueMethodRewrite(
-                returnType: elementType,
-                method: getAtMethod,
-                marker: nop_returnValueRewrite,
-                source: loc_2_resultNative);
         }
 
         /// <summary>
