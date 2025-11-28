@@ -215,7 +215,7 @@ internal partial class InteropMethodRewriteFactory
                     new CilInstruction(Ret)]);
             }
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(returnType, module.CorLibTypeFactory.String))
+        else if (returnType.IsTypeOfString(interopReferences))
         {
             CilLocalVariable loc_returnValue = new(returnType.Import(module));
 
@@ -247,7 +247,7 @@ internal partial class InteropMethodRewriteFactory
                 HandlerEnd = ldloc_finallyEnd.CreateLabel()
             });
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(returnType, interopReferences.Type))
+        else if (returnType.IsTypeOfType(interopReferences))
         {
             CilLocalVariable loc_returnValue = new(returnType.Import(module));
 
@@ -279,7 +279,7 @@ internal partial class InteropMethodRewriteFactory
                 HandlerEnd = ldloc_finallyEnd.CreateLabel()
             });
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(returnType, interopReferences.Exception))
+        else if (returnType.IsTypeOfException(interopReferences))
         {
             // 'Exception' is also special, though it's simple: the ABI type is an unmanaged value type
             body.Instructions.ReplaceRange(marker, [
