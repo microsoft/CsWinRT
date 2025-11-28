@@ -469,7 +469,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition implType)
         {
             // Define the 'Current' method
-            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.Current(
+            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_Current(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
