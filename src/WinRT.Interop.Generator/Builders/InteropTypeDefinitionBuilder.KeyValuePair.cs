@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -25,12 +26,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             TypeSignature keyValuePairType,
+            MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -52,6 +55,11 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature typeSignature2 = keyValuePairType.Import(module);
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
 
+            // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
+            CreateComInterfaceFlags flags = keyValuePairType.IsTrackerSupportRequired(interopReferences)
+                ? CreateComInterfaceFlags.TrackerSupport
+                : CreateComInterfaceFlags.None;
+
             // Define the 'ConvertToUnmanaged' method as follows:
             //
             // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<KEY_VALUE_PAIR_TYPE> value)
@@ -64,8 +72,12 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw } // TODO
+                    { Ldarg_0 },
+                    { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { CilInstruction.CreateLdcI4((int)flags) },
+                    { Call, get_IidMethod },
+                    { Call, interopReferences.WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
+                    { Ret }
                 }
             };
 
