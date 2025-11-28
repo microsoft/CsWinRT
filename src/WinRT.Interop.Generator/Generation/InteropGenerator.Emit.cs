@@ -1189,6 +1189,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.Marshaller(
                     keyValuePairType: typeSignature,
+                    get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
