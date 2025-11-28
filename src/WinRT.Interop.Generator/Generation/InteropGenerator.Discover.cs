@@ -311,6 +311,14 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Gather all 'KeyValuePair<,>' instances
+                if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
+                {
+                    discoveryState.TrackKeyValuePairType(typeSignature);
+
+                    continue;
+                }
+
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
@@ -323,15 +331,6 @@ internal partial class InteropGenerator
                      typeDefinition.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
-
-                    continue;
-                }
-
-                // Gather all 'KeyValuePair<,>' instances
-                if (typeDefinition.IsValueType &&
-                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2))
-                {
-                    discoveryState.TrackKeyValuePairType(typeSignature);
 
                     continue;
                 }
