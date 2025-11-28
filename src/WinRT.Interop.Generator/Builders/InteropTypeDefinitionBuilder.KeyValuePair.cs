@@ -7,6 +7,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -20,6 +21,76 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class KeyValuePair
     {
+        /// <summary>
+        /// Creates a new type definition for the marshaller for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            TypeSignature keyValuePairType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal static class' type
+            marshallerType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, "Marshaller"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
+
+            // Prepare the external types we need in the implemented methods
+            TypeSignature typeSignature2 = keyValuePairType.Import(module);
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
+
+            // Define the 'ConvertToUnmanaged' method as follows:
+            //
+            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<KEY_VALUE_PAIR_TYPE> value)
+            MethodDefinition convertToUnmanagedMethod = new(
+                name: "ConvertToUnmanaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: windowsRuntimeObjectReferenceValueType,
+                    parameterTypes: [typeSignature2]))
+            {
+                CilInstructions =
+                {
+                    { Ldnull },
+                    { Throw } // TODO
+                }
+            };
+
+            marshallerType.Methods.Add(convertToUnmanagedMethod);
+
+            // Define the 'ConvertToManaged' method as follows:
+            //
+            // public static <KEY_VALUE_PAIR_TYPE> ConvertToManaged(void* value)
+            MethodDefinition convertToManagedMethod = new(
+                name: "ConvertToManaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: typeSignature2,
+                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+            {
+                CilInstructions =
+                {
+                    { Ldnull },
+                    { Throw } // TODO
+                }
+            };
+
+            marshallerType.Methods.Add(convertToManagedMethod);
+        }
+
         /// <summary>
         /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
         /// </summary>
