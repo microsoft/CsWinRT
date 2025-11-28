@@ -452,7 +452,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Set the 'wrapperFlags' to 'CreatedWrapperFlags.NonWrapping'
                     { Ldarg_2 },
-                    { Ldc_I4_2 },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.NonWrapping) },
                     { Stind_I4 },
 
                     // Forward to 'WindowsRuntimeArrayMarshaller'
