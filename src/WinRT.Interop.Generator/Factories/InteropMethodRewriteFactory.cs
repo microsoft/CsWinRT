@@ -365,6 +365,13 @@ internal partial class InteropMethodRewriteFactory
         }
     }
 
+    /// <summary>
+    /// Get the marshaller type for a specified value type.
+    /// </summary>
+    /// <param name="type">The value type to get the marshaller type for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <returns>The marshaller type for <paramref name="type"/>.</returns>
     private static ITypeDefOrRef GetValueTypeMarshallerType(
         TypeSignature type,
         InteropReferences interopReferences,
@@ -404,6 +411,13 @@ internal partial class InteropMethodRewriteFactory
             name: $"{type.Name}Marshaller");
     }
 
+    /// <summary>
+    /// Get the marshaller type for a specified reference type.
+    /// </summary>
+    /// <param name="type">The reference type to get the marshaller type for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <returns>The marshaller type for <paramref name="type"/>.</returns>
     private static ITypeDefOrRef GetReferenceTypeMarshallerType(
         TypeSignature type,
         InteropReferences interopReferences,
