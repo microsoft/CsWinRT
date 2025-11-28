@@ -246,11 +246,10 @@ internal partial class InteropMethodDefinitionFactory
             return handlerMethod;
         }
 
-#pragma warning disable CS1573, IDE0017 // TODO
-
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetResults</c> method of some async operation type.
         /// </summary>
+        /// <param name="resultType">The result type for the async operation type.</param>
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
