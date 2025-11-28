@@ -315,9 +315,14 @@ internal static class WindowsRuntimeExtensions
                     return false;
                 }
 
-                // For all other cases, we assume tracker support is required, to be safe.
-                // This logic can be further refined to also handle specific types of arrays,
-                // in case doing so could result in a visible change where this method is used.
+                // For array types, tracker support is required if the element type requires it.
+                // E.g. an 'int[]' or a 'string[]' array doesn't need it, but 'object[]' does.
+                if (type is SzArrayTypeSignature arrayType)
+                {
+                    return arrayType.BaseType.IsTrackerSupportRequired(interopReferences);
+                }
+
+                // For all other cases, we assume tracker support is required, to be safe
                 return true;
             }
 
