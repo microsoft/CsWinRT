@@ -1947,7 +1947,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Defines the interop types for SZ array types.
+    /// Rewrites IL method bodies for marshalling stubs as part of two-pass IL generation.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
