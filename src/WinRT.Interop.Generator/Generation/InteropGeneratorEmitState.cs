@@ -180,7 +180,7 @@ internal sealed class InteropGeneratorEmitState
     {
         if (_isReadOnly)
         {
-            throw WellKnownInteropExceptions.EmitStateChangeAfterMakeReadOnly();
+            throw WellKnownInteropExceptions.EmitStateChangeAfterMakeReadOnlyError();
         }
     }
 }

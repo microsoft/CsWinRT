@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -43,20 +44,20 @@ internal partial class InteropMethodRewriteFactory
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
             {
-                throw null;
+                throw WellKnownInteropExceptions.MethodRewriteMissingBodyError(method);
             }
 
             // If we didn't find the marker, it means the target method is either invalid, or the
             // supplied marker was incorrect (or the caller forgot to add it to the method body).
             if (!body.Instructions.Contains(marker))
             {
-                throw null;
+                throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }
 
             // Also validate that the target local variable is also actually part of the method
             if (!body.LocalVariables.Contains(source))
             {
-                throw null;
+                throw WellKnownInteropExceptions.MethodRewriteSourceLocalNotFoundError(source, method);
             }
 
             if (returnType.IsValueType)
