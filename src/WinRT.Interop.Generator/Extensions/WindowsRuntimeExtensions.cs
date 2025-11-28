@@ -252,10 +252,12 @@ internal static class WindowsRuntimeExtensions
                     continue;
                 }
 
-                // If any fields are reference types, then the containing type needs disposal
-                if (fieldDefinition.Signature!.FieldType.IsValueType)
+                // If any fields are reference types, then the containing type needs disposal.
+                // The only special case is for fields of type 'Exception', as the ABI type
+                // for it is actually an unmanaged value type, which doesn't need disposal.
+                if (!fieldDefinition.Signature!.FieldType.IsValueType)
                 {
-                    return true;
+                    return !fieldDefinition.Signature.FieldType.IsTypeOfException(interopReferences);
                 }
 
                 // If any fields are managed, then the containing type needs disposal too
