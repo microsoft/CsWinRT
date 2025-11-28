@@ -206,7 +206,7 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Checks whether a given type is managed (i.e. it requires disposal)..
+        /// Checks whether a given type is managed (i.e. it requires disposal).
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type is a managed value type.</returns>
