@@ -77,8 +77,7 @@ internal partial class InteropMethodRewriteFactory
                 // So here we first marshal the managed value, then release the original interface pointer.
                 body.Instructions.ReplaceRange(marker, [
                     ldloc_tryStart,
-                    // TODO: Uncomment the line below when implementing 'KeyValuePair<,>' marshalling
-                    // new CilInstruction(Call, emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged")),
+                    new CilInstruction(Call, emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged")),
                     CilInstruction.CreateStloc(loc_returnValue, body),
                     new CilInstruction(Leave_S, ldloc_finallyEnd.CreateLabel()),
                     ldloc_finallyStart,
