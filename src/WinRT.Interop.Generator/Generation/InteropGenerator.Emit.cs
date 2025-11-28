@@ -1965,7 +1965,7 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropMethodRewriteFactory.Return(
+                InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
                     returnType: rewriteInfo.ReturnType,
                     method: rewriteInfo.Method,
                     marker: rewriteInfo.Marker,

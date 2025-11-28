@@ -11,18 +11,18 @@ namespace WindowsRuntime.InteropGenerator.Models;
 /// <summary>
 /// Contains info for a target method for two-pass IL generation.
 /// </summary>
-/// <see cref="Factories.InteropMethodRewriteFactory.Return"/>
+/// <see cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod"/>
 internal sealed class ReturnTypeMethodRewriteInfo
 {
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.Return" path="/param[@name='returnType']/node()"/></summary>
+    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='returnType']/node()"/></summary>
     public required TypeSignature ReturnType { get; init; }
 
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.Return" path="/param[@name='method']/node()"/></summary>
+    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='method']/node()"/></summary>
     public required MethodDefinition Method { get; init; }
 
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.Return" path="/param[@name='marker']/node()"/></summary>
+    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='marker']/node()"/></summary>
     public required CilInstruction Marker { get; init; }
 
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.Return" path="/param[@name='source']/node()"/></summary>
+    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='source']/node()"/></summary>
     public required CilLocalVariable Source { get; init; }
 }
