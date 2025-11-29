@@ -487,13 +487,20 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type represents a Windows Runtime type.</returns>
         public bool IsWindowsRuntimeType(InteropReferences interopReferences)
         {
-            // Check constructed generics first, as they can only be a handful of well-known cases
+            // Check SZ arrays first, as that's the simplest case to handle.
+            // Arrays are Windows Runtime types if the element type is one.
+            if (signature is SzArrayTypeSignature arrayType)
+            {
+                return arrayType.BaseType.IsWindowsRuntimeType(interopReferences);
+            }
+
+            // Check constructed generics next, as they can only be a handful of well-known cases
             if (signature is GenericInstanceTypeSignature genericInstance)
             {
                 // For constructed generics, check if it's one of the custom-mapped Windows Runtime generic types.
                 // No other generic instantiations are valid (and 3rd party components can't define generic types).
-                if (!genericInstance.IsCustomMappedWindowsRuntimeGenericDelegateType(interopReferences) &&
-                    !genericInstance.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                if (!genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericDelegateType(interopReferences) &&
+                    !genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
                     !genericInstance.IsConstructedKeyValuePairType(interopReferences) &&
                     !genericInstance.IsConstructedNullableValueType(interopReferences))
                 {
