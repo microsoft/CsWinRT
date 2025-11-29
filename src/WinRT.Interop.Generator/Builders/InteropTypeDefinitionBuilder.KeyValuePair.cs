@@ -27,14 +27,18 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the <c>KeyValuePairMethods</c> type to contain shared accessor
         /// methods for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="methodsType">The resulting methods type.</param>
-        public static void Methods(ModuleDefinition module, out TypeDefinition methodsType)
+        public static void Methods(
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition methodsType)
         {
             // We're declaring an 'internal static class' type
             methodsType = new TypeDefinition(
-                ns: "System.Collections.Generic"u8,
-                name: "KeyValuePairMethods"u8,
+                ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature()),
+                name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
