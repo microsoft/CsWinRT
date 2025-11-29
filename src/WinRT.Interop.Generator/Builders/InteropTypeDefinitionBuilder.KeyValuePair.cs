@@ -111,6 +111,8 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
+        /// <param name="keyAccessorMethod">The accessor method for the key.</param>
+        /// <param name="valueAccessorMethod">The accessor method for the value.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -118,6 +120,8 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Marshaller(
             TypeSignature keyValuePairType,
             MethodDefinition get_IidMethod,
+            MethodDefinition keyAccessorMethod,
+            MethodDefinition valueAccessorMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -167,6 +171,13 @@ internal partial class InteropTypeDefinitionBuilder
 
             marshallerType.Methods.Add(convertToUnmanagedMethod);
 
+            // Declare the local variables:
+            //   [0]: '<KEY_VALUE_PAIR_TYPE>' (for the failure path, initialized to 'default')
+            CilLocalVariable loc_0_default = new(keyValuePairType.Import(module));
+
+            // Jump labels
+            CilInstruction ldarg_0_marshal = new(Ldarg_0);
+
             // Define the 'ConvertToManaged' method as follows:
             //
             // public static <KEY_VALUE_PAIR_TYPE> ConvertToManaged(void* value)
@@ -177,10 +188,28 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: typeSignature2,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
+                CilLocalVariables = { loc_0_default },
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw } // TODO
+                    // if (value is null)
+                    { Ldarg_0 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, ldarg_0_marshal.CreateLabel() },
+
+                    // return default
+                    { Ldloca_S, loc_0_default },
+                    { Initobj, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Ldloc_0 },
+                    { Ret },
+
+                    // Marshal the 'KeyValuePair<,>' value
+                    { ldarg_0_marshal },
+                    { Call, keyAccessorMethod },
+                    { Ldarg_0 },
+                    { Call, valueAccessorMethod },
+                    { Newobj, interopReferences.KeyValuePair2_ctor(keyValuePairType).Import(module) },
+                    { Ret }
                 }
             };
 
