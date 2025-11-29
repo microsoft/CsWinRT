@@ -1952,6 +1952,21 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="keyValuePairType">The input <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+    public MemberReference KeyValuePair2_ctor(TypeSignature keyValuePairType)
+    {
+        return keyValuePairType
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}.Current"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
