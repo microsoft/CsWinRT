@@ -510,6 +510,14 @@ internal static class WindowsRuntimeExtensions
                 // Check whether all type arguments are also Windows Runtime type (otherwise the whole type is not)
                 foreach (TypeSignature typeArgument in genericInstance.TypeArguments)
                 {
+                    // While arrays can be Windows Runtime types, they are not allowed to be used
+                    // as type arguments for generic type instantiations, so we check for that.
+                    if (typeArgument is SzArrayTypeSignature)
+                    {
+                        return false;
+                    }
+
+                    // Otherwise, do the usual validation for all type arguments
                     if (!typeArgument.IsWindowsRuntimeType(interopReferences))
                     {
                         return false;
