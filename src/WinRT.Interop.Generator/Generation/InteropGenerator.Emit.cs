@@ -1163,6 +1163,7 @@ internal partial class InteropGenerator
         try
         {
             InteropTypeDefinitionBuilder.KeyValuePair.Methods(
+                interopReferences: interopReferences,
                 module: module,
                 methodsType: out methodsType);
         }
