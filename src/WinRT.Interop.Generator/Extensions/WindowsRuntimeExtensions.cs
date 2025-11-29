@@ -300,7 +300,7 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Checks whether a given type is needs tracker support (when marshalled as a CCW).
+        /// Checks whether a given type needs tracker support (when marshalled as a CCW).
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type requires tracker support.</returns>
@@ -355,7 +355,7 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            // The 'TimeSpan' and 'DateTimeOffset' are not blittable, but they're also unmanaged
+            // The 'TimeSpan' and 'DateTimeOffset' types are not blittable, but they're also unmanaged
             if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
             {
