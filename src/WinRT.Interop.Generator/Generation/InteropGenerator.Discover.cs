@@ -309,6 +309,14 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Ignore generic instantiations that are not Windows Runtime types. That is, those that
+                // have a generic type definition that's not a Windows Runtime type, or that have any type
+                // arguments that are not Windows Runtime types.
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                {
+                    continue;
+                }
+
                 // Gather all 'KeyValuePair<,>' instances
                 if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
                 {
@@ -382,6 +390,12 @@ internal partial class InteropGenerator
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
                 if (!typeSignature.IsFullyResolvable)
+                {
+                    continue;
+                }
+
+                // Ignore array types that are not Winodws Runtime types
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
                 {
                     continue;
                 }
