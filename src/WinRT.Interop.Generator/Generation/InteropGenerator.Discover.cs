@@ -220,9 +220,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                for (TypeDefinition? currentType = type;
-                    currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
-                    currentType = currentType.BaseType?.Resolve())
+                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {

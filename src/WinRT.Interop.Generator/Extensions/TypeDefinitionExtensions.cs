@@ -29,10 +29,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
         public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
         {
-            for (
-                TypeDefinition? currentType = type;
-                currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, corLibTypeFactory.Object);
-                currentType = currentType.BaseType?.Resolve())
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -148,6 +145,23 @@ internal static class TypeDefinitionExtensions
         {
             type.Methods.Add(method);
             type.MethodImplementations.Add(new MethodImplementation(declaration, method));
+        }
+
+        /// <summary>
+        /// Enumerates all base types of the specified type, including itself.
+        /// </summary>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+        /// <returns>The sequence of base types for the input type, including itself.</returns>
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(CorLibTypeFactory corLibTypeFactory)
+        {
+            yield return type;
+
+            for (TypeDefinition? baseType = type.BaseType?.Resolve();
+                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, corLibTypeFactory.Object);
+                baseType = baseType.BaseType?.Resolve())
+            {
+                yield return baseType;
+            }
         }
 
         /// <summary>
