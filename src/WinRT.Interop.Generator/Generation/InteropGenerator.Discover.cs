@@ -394,7 +394,7 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Ignore array types that are not Winodws Runtime types
+                // Ignore array types that are not Windows Runtime types
                 if (!typeSignature.IsWindowsRuntimeType(interopReferences))
                 {
                     continue;
