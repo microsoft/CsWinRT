@@ -28,9 +28,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <Manifest Include="CppConsoleApp.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="CppConsoleApp.exe.manifest" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

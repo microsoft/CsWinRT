@@ -4910,7 +4910,7 @@ public unsafe %% %(%)
 {
 %}
 )",
-            method.Name() == "ToString"sv ? "override " : "",
+            method.Name() == "ToString"sv && signature.params().empty() ? "override " : "",
             bind<write_projection_return_type>(signature),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),

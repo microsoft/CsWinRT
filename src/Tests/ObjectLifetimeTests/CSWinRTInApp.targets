@@ -8,7 +8,7 @@
         BeforeTargets="_ComputeAppxPackagePayload"
         DependsOnTargets="_CalculateAppxBundleProperties" >
         <ItemGroup>
-            <PackagingOutputs Remove="$([MSBuild]::NormalizeDirectory('$(PkgMicrosoft_WindowsAppSDK)'))\lib\*\Microsoft.WinUI.dll" />
+            <PackagingOutputs Remove="$([MSBuild]::NormalizeDirectory('$(PkgMicrosoft_WindowsAppSDK_WinUI)'))\lib\*\Microsoft.WinUI.dll" />
         </ItemGroup>
     </Target>
 

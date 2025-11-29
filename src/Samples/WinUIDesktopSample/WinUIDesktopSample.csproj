@@ -31,8 +31,11 @@
       Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
       since we are building our own in our WinAppSDK projection project
     -->
-    <PackageReference Include="Microsoft.WindowsAppSDK" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
       <ExcludeAssets>compile; runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <ExcludeAssets>all</ExcludeAssets>		  
     </PackageReference>
   </ItemGroup>
 

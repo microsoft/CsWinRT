@@ -25,7 +25,7 @@
 
   <Target Name="CsWinRTNet5EOL" />
 
-  <Target Name="CsWinRTCheckDependencies" BeforeTargets="PrepareForBuild">
+  <Target Name="CsWinRTCheckDependencies" BeforeTargets="PrepareForBuild" Condition="'$(IsDotnetBuild)' != 'true'">
     <Error Condition="!Exists('$(SolutionDir)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
   </Target>
 
