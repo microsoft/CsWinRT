@@ -518,6 +518,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for a <see cref="KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    public static WellKnownInteropException KeyValuePairTypeSharedCodeGenerationError(Exception exception)
+    {
+        return Exception(60, $"Failed to generate shared marshalling code for 'KeyValuePair<,>' types.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
