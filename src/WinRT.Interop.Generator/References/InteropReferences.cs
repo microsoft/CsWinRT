@@ -1598,6 +1598,14 @@ internal sealed class InteropReferences
             parameterTypes: [AbiType.ToValueTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerConvertToUnmanaged => field ??= TypeMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: AbiType.ToValueTypeSignature(),
+            parameterTypes: [Type.ToReferenceTypeSignature()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.Dispose</c>.
     /// </summary>
     public MemberReference TypeMarshallerDispose => field ??= TypeMarshaller
@@ -1612,6 +1620,14 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: Exception.ToReferenceTypeSignature(),
             parameterTypes: [AbiException.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.ExceptionMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference ExceptionMarshallerConvertToUnmanaged => field ??= ExceptionMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: AbiException.ToValueTypeSignature(),
+            parameterTypes: [Exception.ToReferenceTypeSignature()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
