@@ -94,9 +94,12 @@ internal partial class InteropMethodRewriteFactory
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
                     // If the type is some constructed 'KeyValuePair<,>' type, we use the generated marshaller
-                    body.Instructions.ReplaceRange(marker, [
-                        new CilInstruction(Call, emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged")),
-                        new CilInstruction(Stind_I)]);
+                    RewriteBody(
+                        body: body,
+                        marker: marker,
+                        marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
+                        interopReferences: interopReferences,
+                        module: module);
                 }
                 else if (retValType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -114,9 +117,12 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
-                    body.Instructions.ReplaceRange(marker, [
-                        new CilInstruction(Call, marshallerMethod),
-                        new CilInstruction(Stind_I)]);
+                    RewriteBody(
+                        body: body,
+                        marker: marker,
+                        marshallerMethod: marshallerMethod,
+                        interopReferences: interopReferences,
+                        module: module);
                 }
                 else
                 {
@@ -160,9 +166,12 @@ internal partial class InteropMethodRewriteFactory
             else if (retValType is GenericInstanceTypeSignature)
             {
                 // For all other generic type instantiations, we use the marshaller in 'WinRT.Interop.dll'
-                body.Instructions.ReplaceRange(marker, [
-                    new CilInstruction(Call, emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToManaged")),
-                    new CilInstruction(Stind_I)]);
+                RewriteBody(
+                    body: body,
+                    marker: marker,
+                    marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToManaged"),
+                    interopReferences: interopReferences,
+                    module: module);
             }
             else
             {
@@ -177,58 +186,39 @@ internal partial class InteropMethodRewriteFactory
                         parameterTypes: [retValType]));
 
                 // Marshal the value and assign it to the target location
-                body.Instructions.ReplaceRange(marker, [
-                    new CilInstruction(Call, marshallerMethod.Import(module)),
-                    new CilInstruction(Stind_I)]);
+                RewriteBody(
+                    body: body,
+                    marker: marker,
+                    marshallerMethod: marshallerMethod,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
         /// <param name="body">The target body to perform two-pass code generation on.</param>
-        /// <param name="marshallerMethod">The method to invoke to marshal the managed value.</param>
-        /// <param name="releaseOrDisposeMethod">The method to invoke to release or dispose the original ABI value.</param>
+        /// <param name="marshallerMethod">The method to invoke to marshal the unmanaged value.</param>
         private static void RewriteBody(
-            TypeSignature returnType,
             CilMethodBody body,
             CilInstruction marker,
-            CilLocalVariable source,
             IMethodDefOrRef marshallerMethod,
-            IMethodDefOrRef releaseOrDisposeMethod,
+            InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            // Add a new local for the marshalled return value. We need this because it will be
-            // assigned from inside a protected region (a 'try') block, so we can't return the
-            // value directly. Instead, we'll load and return the local after the handler code.
-            CilLocalVariable loc_returnValue = new(returnType.Import(module));
+            // We need a new local for the 'WindowsRuntimeObjectReferenceValue' returned from the
+            // marshalling methods that the code will invoke. This is because we are going to call
+            // the 'DetachThisPtrUnsafe()' method on it, which needs 'this' by reference.
+            CilLocalVariable loc_returnValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature());
 
             body.LocalVariables.Add(loc_returnValue);
 
-            // Setup the target instructions to be either jump labels or targets for the handler
-            CilInstruction ldloc_tryStart = CilInstruction.CreateLdloc(source, body);
-            CilInstruction ldloc_finallyStart = CilInstruction.CreateLdloc(source, body);
-            CilInstruction ldloc_finallyEnd = CilInstruction.CreateLdloc(loc_returnValue, body);
-
-            // Marshal the value and release the original interface pointer, or dispose the ABI value
+            // Marshal the value and detach its native pointer before assigning it to the target location
             body.Instructions.ReplaceRange(marker, [
-                ldloc_tryStart,
                 new CilInstruction(Call, marshallerMethod.Import(module)),
                 CilInstruction.CreateStloc(loc_returnValue, body),
-                new CilInstruction(Leave_S, ldloc_finallyEnd.CreateLabel()),
-                ldloc_finallyStart,
-                new CilInstruction(Call, releaseOrDisposeMethod.Import(module)),
-                new CilInstruction(Endfinally),
-                ldloc_finallyEnd,
-                new CilInstruction(Ret)]);
-
-            // Setup the protected region to call the release or dispose method in a 'finally' block
-            body.ExceptionHandlers.Add(new CilExceptionHandler
-            {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = ldloc_tryStart.CreateLabel(),
-                TryEnd = ldloc_finallyStart.CreateLabel(),
-                HandlerStart = ldloc_finallyStart.CreateLabel(),
-                HandlerEnd = ldloc_finallyEnd.CreateLabel()
-            });
+                new CilInstruction(Ldloca_S, loc_returnValue),
+                new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module)),
+                new CilInstruction(Stind_I)]);
         }
     }
 }
