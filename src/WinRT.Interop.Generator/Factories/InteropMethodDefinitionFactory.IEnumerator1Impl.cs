@@ -7,6 +7,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -29,10 +30,12 @@ internal static partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Current(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
@@ -111,21 +114,11 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
-            // Marshal the managed value to the target address
-            if (SignatureComparer.IgnoreVersion.Equals(elementType, module.CorLibTypeFactory.String))
-            {
-                currentMethod.CilMethodBody!.Instructions.ReplaceRange(nop_convertToUnmanaged, [
-                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stind_I)]);
-            }
-            else
-            {
-                // TODO
-                currentMethod.CilMethodBody!.Instructions.ReplaceRange(nop_convertToUnmanaged, [
-                    new CilInstruction(Pop),
-                    new CilInstruction(Pop)]);
-            }
+            // Track the method for rewrite to marshal the result value
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: elementType,
+                method: currentMethod,
+                marker: nop_convertToUnmanaged);
 
             return currentMethod;
         }

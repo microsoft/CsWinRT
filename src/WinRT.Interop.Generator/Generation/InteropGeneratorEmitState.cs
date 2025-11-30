@@ -85,7 +85,7 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// Tracks a method rewrite that involves returning a value from the specified method at a given marker instruction.
     /// </summary>
-    /// <param name="returnType"><inheritdoc cref="ReturnTypeMethodRewriteInfo.ReturnType" path="/node()"/></param>
+    /// <param name="returnType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
     /// <param name="source"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Source" path="/node()"/></param>
@@ -99,7 +99,7 @@ internal sealed class InteropGeneratorEmitState
 
         _methodRewriteInfos.Add(new ReturnTypeMethodRewriteInfo
         {
-            ReturnType = returnType,
+            Type = returnType,
             Method = method,
             Marker = marker,
             Source = source
@@ -109,7 +109,7 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// Tracks a method rewrite that involves returning a native value from the specified method.
     /// </summary>
-    /// <param name="retValType"><inheritdoc cref="RetValTypeMethodRewriteInfo.RetValType" path="/node()"/></param>
+    /// <param name="retValType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
     public void TrackRetValValueMethodRewrite(
@@ -121,7 +121,7 @@ internal sealed class InteropGeneratorEmitState
 
         _methodRewriteInfos.Add(new RetValTypeMethodRewriteInfo
         {
-            RetValType = retValType,
+            Type = retValType,
             Method = method,
             Marker = marker
         });
