@@ -470,6 +470,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition firstMethod = InteropMethodDefinitionFactory.IEnumerable1Impl.First(
                 enumerableType: enumerableType,
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             Impl(
