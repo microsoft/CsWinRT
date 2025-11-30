@@ -544,15 +544,15 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.</returns>
         public bool IsConstructedSpanOrReadOnlySpanType(InteropReferences interopReferences)
         {
-            if (signature is not GenericInstanceTypeSignature genericSignasture)
+            if (signature is not GenericInstanceTypeSignature genericSignature)
             {
                 return false;
             }
 
             // Check for both 'Span<T>' and 'ReadOnlySpan<T>'
             return
-                SignatureComparer.IgnoreVersion.Equals(genericSignasture.GenericType, interopReferences.Span1) ||
-                SignatureComparer.IgnoreVersion.Equals(genericSignasture.GenericType, interopReferences.ReadOnlySpan1);
+                SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Span1) ||
+                SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.ReadOnlySpan1);
         }
 
         /// <summary>
