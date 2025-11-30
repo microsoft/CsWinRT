@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
-using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 
 namespace WindowsRuntime.InteropGenerator.Models;
 
@@ -12,17 +9,8 @@ namespace WindowsRuntime.InteropGenerator.Models;
 /// Contains info for a target method for two-pass IL generation, for a managed return value.
 /// </summary>
 /// <see cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod"/>
-internal sealed class ReturnTypeMethodRewriteInfo
+internal sealed class ReturnTypeMethodRewriteInfo : MethodRewriteInfo
 {
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='returnType']/node()"/></summary>
-    public required TypeSignature ReturnType { get; init; }
-
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='method']/node()"/></summary>
-    public required MethodDefinition Method { get; init; }
-
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='marker']/node()"/></summary>
-    public required CilInstruction Marker { get; init; }
-
     /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='source']/node()"/></summary>
     public required CilLocalVariable Source { get; init; }
 }
