@@ -231,7 +231,7 @@ internal partial class InteropMethodRewriteFactory
             }
         }
 
-        /// <inheritdoc cref="RewriteMethod(TypeSignature, MethodDefinition, CilInstruction, CilLocalVariable, InteropReferences, InteropGeneratorEmitState, ModuleDefinition)"/>
+        /// <inheritdoc cref="RewriteMethod"/>
         /// <param name="body">The target body to perform two-pass code generation on.</param>
         /// <param name="marshallerMethod">The method to invoke to marshal the managed value.</param>
         /// <param name="releaseOrDisposeMethod">The method to invoke to release or dispose the original ABI value.</param>
