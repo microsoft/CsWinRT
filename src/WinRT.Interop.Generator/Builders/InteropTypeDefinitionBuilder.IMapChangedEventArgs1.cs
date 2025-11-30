@@ -326,6 +326,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition keyMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.Key(
                 argsType: argsType,
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             Impl(
