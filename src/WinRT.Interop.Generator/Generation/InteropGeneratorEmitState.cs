@@ -28,7 +28,7 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// The collection of method rewrite infos to process for two-pass code generation.
     /// </summary>
-    private readonly ConcurrentBag<ReturnTypeMethodRewriteInfo> _methodRewriteInfos = [];
+    private readonly ConcurrentBag<MethodRewriteInfo> _methodRewriteInfos = [];
 
     /// <summary>
     /// A map to allow reusing vtable types for applicable <c>IMapView&lt;K, V&gt;</c> interfaces.
@@ -86,8 +86,8 @@ internal sealed class InteropGeneratorEmitState
     /// Tracks a method rewrite that involves returning a value from the specified method at a given marker instruction.
     /// </summary>
     /// <param name="returnType"><inheritdoc cref="ReturnTypeMethodRewriteInfo.ReturnType" path="/node()"/></param>
-    /// <param name="method"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Method" path="/node()"/></param>
-    /// <param name="marker"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Marker" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
     /// <param name="source"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Source" path="/node()"/></param>
     public void TrackReturnValueMethodRewrite(
         TypeSignature returnType,
@@ -102,15 +102,36 @@ internal sealed class InteropGeneratorEmitState
             ReturnType = returnType,
             Method = method,
             Marker = marker,
-            Source = source,
+            Source = source
         });
     }
 
     /// <summary>
-    /// Enumerates all <see cref="ReturnTypeMethodRewriteInfo"/> instances with info on two-pass code generation steps to perform.
+    /// Tracks a method rewrite that involves returning a native value from the specified method.
     /// </summary>
-    /// <returns>The <see cref="ReturnTypeMethodRewriteInfo"/> instances to process.</returns>
-    public IEnumerable<ReturnTypeMethodRewriteInfo> EnumerateMethodRewriteInfos()
+    /// <param name="retValType"><inheritdoc cref="RetValTypeMethodRewriteInfo.RetValType" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    public void TrackRetValValueMethodRewrite(
+        TypeSignature retValType,
+        MethodDefinition method,
+        CilInstruction marker)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new RetValTypeMethodRewriteInfo
+        {
+            RetValType = retValType,
+            Method = method,
+            Marker = marker
+        });
+    }
+
+    /// <summary>
+    /// Enumerates all <see cref="MethodRewriteInfo"/> instances with info on two-pass code generation steps to perform.
+    /// </summary>
+    /// <returns>The <see cref="MethodRewriteInfo"/> instances to process.</returns>
+    public IEnumerable<MethodRewriteInfo> EnumerateMethodRewriteInfos()
     {
         return _methodRewriteInfos;
     }

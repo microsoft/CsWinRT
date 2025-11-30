@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
@@ -1959,24 +1960,42 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (ReturnTypeMethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
+        foreach (MethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
         {
             args.Token.ThrowIfCancellationRequested();
 
             try
             {
-                InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
-                    returnType: rewriteInfo.ReturnType,
-                    method: rewriteInfo.Method,
-                    marker: rewriteInfo.Marker,
-                    source: rewriteInfo.Source,
-                    interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                switch (rewriteInfo)
+                {
+                    // Rewrite return values for managed types
+                    case ReturnTypeMethodRewriteInfo returnTypeInfo:
+                        InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
+                            returnType: returnTypeInfo.Type,
+                            method: returnTypeInfo.Method,
+                            marker: returnTypeInfo.Marker,
+                            source: returnTypeInfo.Source,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
+                    // Rewrite return values for native types
+                    case RetValTypeMethodRewriteInfo retValTypeInfo:
+                        InteropMethodRewriteFactory.RetVal.RewriteMethod(
+                            retValType: retValTypeInfo.Type,
+                            method: retValTypeInfo.Method,
+                            marker: retValTypeInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+                    default: throw new UnreachableException();
+                }
             }
             catch (Exception e)
             {
-                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.ReturnType, rewriteInfo.Method, e).ThrowOrAttach(e);
+                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
             }
         }
     }
