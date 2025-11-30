@@ -1192,6 +1192,7 @@ internal partial class InteropGenerator
                     keyValuePairType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out TypeDefinition keyValuePairTypeImplType);
 
