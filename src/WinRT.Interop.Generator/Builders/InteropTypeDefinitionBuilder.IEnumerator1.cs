@@ -472,6 +472,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_Current(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             // Define the 'get_HasCurrent' method
