@@ -538,6 +538,24 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.</returns>
+        public bool IsConstructedSpanOrReadOnlySpanType(InteropReferences interopReferences)
+        {
+            if (signature is not GenericInstanceTypeSignature genericSignasture)
+            {
+                return false;
+            }
+
+            // Check for both 'Span<T>' and 'ReadOnlySpan<T>'
+            return
+                SignatureComparer.IgnoreVersion.Equals(genericSignasture.GenericType, interopReferences.Span1) ||
+                SignatureComparer.IgnoreVersion.Equals(genericSignasture.GenericType, interopReferences.ReadOnlySpan1);
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeSignature"/> represents a custom-mapped Windows Runtime interface type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
