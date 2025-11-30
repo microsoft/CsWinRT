@@ -86,7 +86,7 @@ internal partial class InteropMethodRewriteFactory
                         ElementType.R4 => new CilInstruction(Stind_R4),
                         ElementType.R8 => new CilInstruction(Stind_R8),
                         ElementType.ValueType when retValType.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
-                        _ => new CilInstruction(Stobj, retValType.Import(module)),
+                        _ => new CilInstruction(Stobj, retValType.Import(module).ToTypeDefOrRef()),
                     };
 
                     body.Instructions.ReplaceRange(marker, storeInstruction);
@@ -139,7 +139,7 @@ internal partial class InteropMethodRewriteFactory
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReplaceRange(marker, [
                         new CilInstruction(Call, marshallerMethod.Import(module)),
-                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module))]);
+                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
                 }
             }
             else if (retValType.IsTypeOfString(interopReferences))
@@ -154,14 +154,14 @@ internal partial class InteropMethodRewriteFactory
                 // 'Type' values also need their own specialized marshaller
                 body.Instructions.ReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiType.Import(module))]);
+                    new CilInstruction(Stobj, interopReferences.AbiType.Import(module).ToTypeDefOrRef())]);
             }
             else if (retValType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, and needs its own specialized marshaller
                 body.Instructions.ReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiException.Import(module))]);
+                    new CilInstruction(Stobj, interopReferences.AbiException.Import(module).ToTypeDefOrRef())]);
             }
             else if (retValType is GenericInstanceTypeSignature)
             {
