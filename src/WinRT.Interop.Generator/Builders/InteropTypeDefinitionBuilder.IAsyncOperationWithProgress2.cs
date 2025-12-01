@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType(resultType, progressType).ToTypeDefOrRef()) }
             };
@@ -313,7 +313,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.set_Progress",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [asyncOperationProgressHandlerType]));
 
             // Add and implement the 'set_Progress' method
@@ -366,7 +366,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.set_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [asyncOperationWithProgressCompletedHandlerType]));
 
             // Add and implement the 'set_Completed' method

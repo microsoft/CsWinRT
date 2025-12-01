@@ -92,9 +92,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         keyOrValueType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -112,7 +112,7 @@ internal partial class InteropMethodDefinitionFactory
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'KeyValuePair<,>' (the boxed object to get values from)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_keyValuePair = new(keyValuePairType);
 
             // Labels for jumps
@@ -140,7 +140,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(module.CorLibTypeFactory.Object) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(interopReferences.Object) },
                     { Unbox_Any, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Ldarg_1 },

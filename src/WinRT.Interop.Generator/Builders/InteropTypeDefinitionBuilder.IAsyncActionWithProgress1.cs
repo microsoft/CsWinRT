@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
                 name: InteropUtf8NameFactory.TypeName(actionType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncActionWithProgressMethodsImpl1.MakeGenericReferenceType(progressType).ToTypeDefOrRef()) }
             };
@@ -130,7 +130,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetResults"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -313,7 +313,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncActionWithProgress<{progressType.FullName}>.set_Progress",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType(progressType)]));
 
             // Add and implement the 'set_Progress' method
@@ -366,7 +366,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncActionWithProgress<{progressType.FullName}>.set_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType)]));
 
             // Add and implement the 'set_Completed' method
@@ -397,7 +397,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getResultsMethod = new(
                 name: $"Windows.Foundation.IAsyncActionWithProgress<{progressType.FullName}>.GetResults",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                signature: MethodSignature.CreateInstance(interopReferences.Void));
 
             // Add and implement the 'GetResults' method
             interfaceImplType.AddMethodImplementation(

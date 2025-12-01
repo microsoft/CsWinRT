@@ -40,8 +40,8 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetResults"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -53,7 +53,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'get_Current' method
             getResultsMethod.CilMethodBody = new CilMethodBody()

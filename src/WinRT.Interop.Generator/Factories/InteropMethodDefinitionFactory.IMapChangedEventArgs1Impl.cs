@@ -41,9 +41,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "get_CollectionChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.CollectionChange.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -60,7 +60,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -131,9 +131,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "get_Key"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         keyType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -151,7 +151,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'

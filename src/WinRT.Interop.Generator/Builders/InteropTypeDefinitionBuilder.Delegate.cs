@@ -84,11 +84,11 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Invoke"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -103,7 +103,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // '.try' code
@@ -178,10 +178,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "get_Value"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -195,7 +195,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Declare 2 local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Value' method
@@ -325,7 +325,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeObjectComWrappersCallback) }
             };
@@ -339,9 +339,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Object,
+                    returnType: interopReferences.Object,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
@@ -388,7 +388,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "NativeDelegate"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(nativeDelegateType);
 
@@ -402,7 +402,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Invoke"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         invokeSignature.ParameterTypes[0],
@@ -426,7 +426,7 @@ internal partial class InteropTypeDefinitionBuilder
             invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
             invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
             invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Void.MakePointerType()));
+            invokeBody.LocalVariables.Add(new CilLocalVariable(interopReferences.Void.MakePointerType()));
 
             CilInstruction ret = new(Ret);
 
@@ -558,7 +558,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                    parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
                 CilInstructions =
@@ -587,9 +587,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Object,
+                    returnType: interopReferences.Object,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
@@ -635,7 +635,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -677,7 +677,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: delegateType2,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {
@@ -724,7 +724,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: delegateType2,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {

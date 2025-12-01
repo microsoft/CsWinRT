@@ -80,7 +80,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IVectorViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -126,7 +126,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
 
@@ -140,7 +140,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: elementType,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
 
@@ -163,7 +163,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             readOnlyListMethodsType.Methods.Add(countMethod);
@@ -341,7 +341,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType, module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
@@ -368,7 +368,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(

@@ -38,9 +38,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Free"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType()]));
 
             // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'

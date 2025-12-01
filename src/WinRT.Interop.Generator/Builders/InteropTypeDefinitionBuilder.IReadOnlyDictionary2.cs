@@ -61,14 +61,14 @@ internal partial class InteropTypeDefinitionBuilder
             // the namespace and type name for the shared vtable type ('object' is a placeholder).
             TypeSignature sharedReadOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(
                 keyType,
-                module.CorLibTypeFactory.Object);
+                interopReferences.Object);
 
             // Otherwise, we must construct a new specialized vtable type
             TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
                 name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
                 keyType: keyType,
-                valueType: module.CorLibTypeFactory.Void,
+                valueType: interopReferences.Void,
                 interopReferences: interopReferences);
 
             // Go through the lookup so that we can reuse the vtable later
@@ -104,7 +104,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IMapViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IMapViewMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
@@ -118,7 +118,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "HasKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -183,7 +183,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IReadOnlyDictionaryMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyDictionaryMethodsType);
 
@@ -220,7 +220,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             readOnlyDictionaryMethodsType.Methods.Add(countMethod);
@@ -243,7 +243,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ContainsKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]));
@@ -269,7 +269,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "TryGetValue"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -545,7 +545,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.ContainsKey",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyType]));
 
             // Add and implement the 'ContainsKey' method
@@ -565,7 +565,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.TryGetValue",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyType, valueType.MakeByReferenceType()]))
             { CilOutParameterIndices = [2] };
 
@@ -585,7 +585,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(

@@ -135,7 +135,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            baseType: interopReferences.Object.ToTypeDefOrRef())
         {
             Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback) }
         };
@@ -153,11 +153,11 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "TryCreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Boolean,
+                returnType: interopReferences.Boolean,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.Void.MakePointerType(),
                     interopReferences.ReadOnlySpanChar,
-                    module.CorLibTypeFactory.Object.MakeByReferenceType(),
+                    interopReferences.Object.MakeByReferenceType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         { CilOutParameterIndices = [3, 4] };
 
@@ -255,9 +255,9 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "CreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
             signature: MethodSignature.CreateInstance(
-                returnType: module.CorLibTypeFactory.Object,
+                returnType: interopReferences.Object,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.Void.MakePointerType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
@@ -299,7 +299,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(marshallerType);
 
@@ -344,7 +344,7 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
                 returnType: typeSignature2,
-                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                parameterTypes: [interopReferences.Void.MakePointerType()]))
         {
             CilInstructions =
             {
@@ -386,7 +386,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -576,7 +576,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -689,22 +689,22 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(marshallerType);
 
         // Get the constructor for '[WindowsRuntimeClassName]'
         MemberReference windowsRuntimeClassNameAttributeCtor = interopReferences.WindowsRuntimeClassNameAttribute
             .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                returnType: module.CorLibTypeFactory.Void,
-                parameterTypes: [module.CorLibTypeFactory.String]))
+                returnType: interopReferences.Void,
+                parameterTypes: [interopReferences.String]))
             ;
 
         // Add the attribute with the name of the runtime class
         marshallerType.CustomAttributes.Add(new CustomAttribute(
             constructor: windowsRuntimeClassNameAttributeCtor,
             signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                argumentType: module.CorLibTypeFactory.String,
+                argumentType: interopReferences.String,
                 value: runtimeClassName))));
 
         // Add the generated marshaller attribute

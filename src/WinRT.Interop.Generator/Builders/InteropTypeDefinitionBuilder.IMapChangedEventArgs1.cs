@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
                 name: InteropUtf8NameFactory.TypeName(argsType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };

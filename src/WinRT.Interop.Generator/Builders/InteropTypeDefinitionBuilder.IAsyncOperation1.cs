@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).ToTypeDefOrRef()) }
             };
@@ -266,7 +266,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.set_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)]));
 
             // Add and implement the 'set_Completed' method

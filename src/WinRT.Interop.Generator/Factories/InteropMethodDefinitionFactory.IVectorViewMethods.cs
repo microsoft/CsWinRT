@@ -50,7 +50,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: elementType,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32]))
+                        interopReferences.UInt32]))
             { NoInlining = true };
 
             // Declare the local variables:
@@ -58,7 +58,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences));
 
             // Jump labels

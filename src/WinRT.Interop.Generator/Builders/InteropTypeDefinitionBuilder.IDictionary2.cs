@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface) }
             };
@@ -159,9 +159,9 @@ internal partial class InteropTypeDefinitionBuilder
             if (isKeyReferenceType)
             {
                 GetOrCreateVftbl(
-                    keyType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    keyType: interopReferences.Void.MakePointerType(),
                     valueType: valueType,
-                    displayKeyType: module.CorLibTypeFactory.Object,
+                    displayKeyType: interopReferences.Object,
                     displayValueType: valueType,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -172,9 +172,9 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 GetOrCreateVftbl(
                     keyType: keyType,
-                    valueType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    valueType: interopReferences.Void.MakePointerType(),
                     displayKeyType: keyType,
-                    displayValueType: module.CorLibTypeFactory.Object,
+                    displayValueType: interopReferences.Object,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -207,7 +207,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "IMapMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
@@ -224,7 +224,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "HasKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -272,7 +272,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Insert"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -297,7 +297,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -340,7 +340,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "IDictionaryMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(dictionaryMethodsType);
 
@@ -374,7 +374,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -399,7 +399,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Add"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -424,7 +424,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -447,7 +447,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -467,7 +467,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ContainsKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -490,7 +490,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "TryGetValue"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -516,7 +516,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Add"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
@@ -539,7 +539,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
@@ -562,7 +562,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Clear"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -582,7 +582,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Contains"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
@@ -614,12 +614,12 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CopyTo"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]))
+                        interopReferences.Int32]))
             {
                 CilInstructions =
                 {
@@ -823,7 +823,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.set_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [keyType, valueType]));
 
             // Add and implement the 'set_Item' method
@@ -911,7 +911,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.ContainsKey",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyType]));
 
             // Add and implement the 'ContainsKey' method
@@ -931,7 +931,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.TryGetValue",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyType, valueType.MakeByReferenceType()]))
             { CilOutParameterIndices = [2] };
 
@@ -957,7 +957,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.Add",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [keyType, valueType]));
 
             // Add and implement the 'Add' method
@@ -977,7 +977,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.Remove",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyType]));
 
             // Add and implement the 'Remove' method
@@ -997,7 +997,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Add",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Add' ('KeyValuePair<,>') method
@@ -1017,7 +1017,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Remove",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Remove' ('KeyValuePair<,>') method
@@ -1037,7 +1037,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Contains",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Contains' method
@@ -1057,10 +1057,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.CopyTo",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         keyValuePairType.MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]))
+                        interopReferences.Int32]))
             {
                 // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
                 // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
@@ -1097,7 +1097,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
@@ -1124,7 +1124,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IsReadOnlyMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_IsReadOnly",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean))
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean))
             {
                 CilInstructions =
                 {

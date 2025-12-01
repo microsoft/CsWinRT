@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(factoryType);
 
@@ -134,7 +134,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
@@ -372,7 +372,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.add_MapChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -393,7 +393,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.remove_MapChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(

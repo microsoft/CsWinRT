@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(factoryType);
 
@@ -132,7 +132,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -360,7 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.add_VectorChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -381,7 +381,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.remove_VectorChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(

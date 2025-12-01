@@ -40,7 +40,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -78,7 +78,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: typeSignature2,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {

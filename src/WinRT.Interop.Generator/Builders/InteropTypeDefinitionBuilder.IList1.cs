@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface) }
             };
@@ -128,7 +128,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "IVectorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -158,10 +158,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "SetAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.UInt32,
                         elementType]))
             { NoInlining = true };
 
@@ -183,7 +183,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Append"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType]))
@@ -207,11 +207,11 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType,
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
+                        interopReferences.UInt32.MakeByReferenceType()]))
             {
                 NoInlining = true,
                 CilOutParameterIndices = [3]
@@ -235,10 +235,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "InsertAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.UInt32,
                         elementType]))
             { NoInlining = true };
 
@@ -276,7 +276,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "IListMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(listMethodsType);
 
@@ -290,7 +290,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: elementType,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             listMethodsType.Methods.Add(get_ItemMethod);
 
@@ -313,10 +313,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32,
+                        interopReferences.Int32,
                         elementType]));
 
             listMethodsType.Methods.Add(set_ItemMethod);
@@ -341,7 +341,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             listMethodsType.Methods.Add(countMethod);
@@ -364,7 +364,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Add"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType]));
@@ -390,7 +390,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Contains"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType]));
@@ -416,11 +416,11 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CopyTo"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType.MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             listMethodsType.Methods.Add(copyToMethod);
 
@@ -444,7 +444,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType]));
@@ -470,10 +470,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "RemoveAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             listMethodsType.Methods.Add(removeAtMethod);
 
@@ -496,7 +496,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType]));
@@ -522,10 +522,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Insert"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32,
+                        interopReferences.Int32,
                         elementType]));
 
             listMethodsType.Methods.Add(insertMethod);
@@ -550,7 +550,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Clear"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             listMethodsType.Methods.Add(clearMethod);
@@ -733,7 +733,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType, module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
@@ -752,9 +752,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.set_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Int32,
+                        interopReferences.Int32,
                         elementType]));
 
             // Add and implement the 'set_Item' method
@@ -785,7 +785,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition indexOfMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.IndexOf",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32, elementType));
 
             // Add and implement the 'IndexOf' method
             interfaceImplType.AddMethodImplementation(
@@ -804,9 +804,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.Insert",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Int32,
+                        interopReferences.Int32,
                         elementType]));
 
             // Add and implement the 'Insert' method
@@ -825,7 +825,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition removeAtMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.RemoveAt",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Void, interopReferences.Int32));
 
             // Add and implement the 'RemoveAt' method
             interfaceImplType.AddMethodImplementation(
@@ -843,7 +843,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
@@ -870,7 +870,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IsReadOnlyMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean));
 
             // Add and implement the 'get_IsReadOnly' method
             interfaceImplType.AddMethodImplementation(
@@ -900,7 +900,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition addMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Void, elementType));
 
             // Add and implement the 'Add' method
             interfaceImplType.AddMethodImplementation(
@@ -918,7 +918,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition clearMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                signature: MethodSignature.CreateInstance(interopReferences.Void));
 
             // Add and implement the 'Clear' method
             interfaceImplType.AddMethodImplementation(
@@ -936,7 +936,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition containsMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
 
             // Add and implement the 'Contains' method
             interfaceImplType.AddMethodImplementation(
@@ -955,10 +955,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         elementType.MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             // Add and implement the 'CopyTo' method
             interfaceImplType.AddMethodImplementation(
@@ -976,7 +976,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition removeMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
 
             // Add and implement the 'Remove' method
             interfaceImplType.AddMethodImplementation(

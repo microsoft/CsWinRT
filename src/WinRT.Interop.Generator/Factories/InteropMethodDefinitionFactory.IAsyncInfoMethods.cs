@@ -57,8 +57,8 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'void*' (the handler pointer that was retrieved)
             //   [3]: '<HANDLER_TYPE>' (the marshalled handler)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_handlerPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
+            CilLocalVariable loc_2_handlerPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_3_handler = new(handlerType);
 
             // Jump labels
@@ -158,7 +158,7 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         handlerType]))
@@ -170,7 +170,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'void*' (for 'thisPtr')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_2_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_thisPtr = new(interopReferences.Void.MakePointerType());
 
             // Jump labels
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
@@ -277,7 +277,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_RESULT_TYPE>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_resultNative = new(resultType.GetAbiType(interopReferences));
 
             // Jump labels

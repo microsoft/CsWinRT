@@ -48,9 +48,9 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "get_Current"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         elementType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -68,7 +68,7 @@ internal static partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -146,10 +146,10 @@ internal static partial class InteropMethodDefinitionFactory
                 name: nameUtf8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Boolean.MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Boolean.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -170,7 +170,7 @@ internal static partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -240,12 +240,12 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+                        interopReferences.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -266,7 +266,7 @@ internal static partial class InteropMethodDefinitionFactory
                 //   [1]: 'IEnumeratorAdapter<<ELEMENT_TYPE>>' (the adapter instance)
                 LocalVariables =
                 {
-                    new CilLocalVariable(module.CorLibTypeFactory.Int32),
+                    new CilLocalVariable(interopReferences.Int32),
                     new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType(elementType))
                 },
                 Instructions =

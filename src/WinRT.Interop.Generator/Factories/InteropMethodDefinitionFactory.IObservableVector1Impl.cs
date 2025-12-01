@@ -56,10 +56,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "add_VectorChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.EventRegistrationToken.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -78,7 +78,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_unboxedValue = new(vectorType);
             CilLocalVariable loc_1_managedHandler = new(eventHandlerType);
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'add_VectorChanged' method
             add_VectorChangedMethod.CilMethodBody = new CilMethodBody()
@@ -182,9 +182,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "remove_VectorChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.EventRegistrationToken.ToValueTypeSignature()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -204,7 +204,7 @@ internal partial class InteropMethodDefinitionFactory
             CilLocalVariable loc_0_unboxedValue = new(vectorType);
             CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType);
             CilLocalVariable loc_2_managedHandler = new(eventHandlerType);
-            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_3_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'remove_VectorChanged' method
             remove_VectorChangedMethod.CilMethodBody = new CilMethodBody()

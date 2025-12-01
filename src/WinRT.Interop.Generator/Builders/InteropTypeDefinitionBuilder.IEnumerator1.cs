@@ -46,7 +46,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "IIteratorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IIteratorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -74,7 +74,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_ELEMENT_TYPE>' (the native value that was retrieved)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences));
 
             // Jump labels
@@ -141,7 +141,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "HasCurrent"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -161,7 +161,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "MoveNext"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -355,7 +355,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IEnumeratorCurrentMethod = new(
                 name: "System.Collections.IEnumerator.get_Current"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Object));
+                signature: MethodSignature.CreateInstance(interopReferences.Object));
 
             // Add and implement the 'IEnumerator.Current' get accessor method
             interfaceImplType.AddMethodImplementation(
@@ -396,7 +396,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition moveNextMethod = new(
                 name: "System.IEnumerator.MoveNext"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean));
 
             // Add and implement the 'MoveNext' method
             interfaceImplType.AddMethodImplementation(
@@ -414,7 +414,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition resetMethod = new(
                 name: "System.IEnumerator.Reset"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                signature: MethodSignature.CreateInstance(interopReferences.Void));
 
             // Add and implement the 'Reset' method
             interfaceImplType.AddMethodImplementation(
@@ -435,7 +435,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition disposeMethod = new(
                 name: "System.IDisposable.Dispose"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                signature: MethodSignature.CreateInstance(interopReferences.Void));
 
             // And and implement the 'Dispose' method
             interfaceImplType.AddMethodImplementation(
