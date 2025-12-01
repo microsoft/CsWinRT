@@ -254,8 +254,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: argsType,
                 implementationMethod: get_CollectionChangeMethod,
                 forwardedMethod: argsMethodsType.GetMethod("CollectionChange"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'CollectionChange' property
             PropertyDefinition collectionChangeProperty = new(
@@ -284,8 +283,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: argsType,
                 implementationMethod: get_KeyMethod,
                 forwardedMethod: argsMethodsType.GetMethod("Key"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Key' property
             PropertyDefinition keyProperty = new(

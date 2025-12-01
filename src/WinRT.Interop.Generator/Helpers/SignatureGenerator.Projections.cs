@@ -54,13 +54,11 @@ internal partial class SignatureGenerator
     /// <param name="typeFullName">The full name of the enum type.</param>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
-    /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
     private static string? Enum(
         string typeFullName,
         TypeDefinition typeDefinition,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
+        InteropReferences interopReferences)
     {
         // For '[Flags]' enum types, the underlying types is always 'uint', otherwise 'int'
         string underlyingTypeSignature = typeDefinition.HasCustomAttribute(interopReferences.FlagsAttribute)
@@ -125,8 +123,7 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
-    /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Delegate(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Delegate(TypeDefinition typeDefinition, InteropReferences interopReferences)
     {
         // Just like for generic instantiations, we need to resolve the IID for the type first
         if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
@@ -172,8 +169,7 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
-    /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Interface(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Interface(TypeDefinition typeDefinition, InteropReferences interopReferences)
     {
         // For all interface types, we should always be able to resolve their IID
         if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))

@@ -65,7 +65,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 sortedTypeHierarchyEntries,
                 interopDefinitions,
                 interopReferences,
-                module,
                 out typeHierarchyValues,
                 out valuesRvaField);
         }
@@ -88,7 +87,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 typeHierarchyValues,
                 interopDefinitions,
                 interopReferences,
-                module,
                 out bucketSize,
                 out chainOffsets,
                 out keysRvaField);
@@ -110,7 +108,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 chainOffsets,
                 interopDefinitions,
                 interopReferences,
-                module,
                 out bucketsRvaField);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -144,14 +141,12 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
     /// <param name="valuesRvaField">The resulting 'Values' RVA field.</param>
     private static void ValuesRva(
         SortedDictionary<string, string> typeHierarchyEntries,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         out SortedDictionary<string, ValueInfo> typeHierarchyValues,
         out FieldDefinition valuesRvaField)
     {
@@ -252,7 +247,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <param name="bucketSize">The resulting bucket size.</param>
     /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
     /// <param name="keysRvaField">The resulting 'Keys' RVA field.</param>
@@ -261,7 +255,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         SortedDictionary<string, ValueInfo> typeHierarchyValues,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         out int bucketSize,
         out Dictionary<int, int> chainOffsets,
         out FieldDefinition keysRvaField)
@@ -407,14 +400,12 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <param name="bucketsRvaField">The resulting 'Buckets' RVA field.</param>
     private static void BucketsRva(
         int bucketSize,
         Dictionary<int, int> chainOffsets,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         out FieldDefinition bucketsRvaField)
     {
         using ArrayPoolBufferWriter<byte> bucketsRvaBuffer = new(initialCapacity: bucketSize);

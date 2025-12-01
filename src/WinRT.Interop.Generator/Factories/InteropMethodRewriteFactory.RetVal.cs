@@ -31,7 +31,6 @@ internal partial class InteropMethodRewriteFactory
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// <para>
         /// This method assumes the evaluation stack already has two values on its top:
@@ -49,8 +48,7 @@ internal partial class InteropMethodRewriteFactory
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -98,8 +96,7 @@ internal partial class InteropMethodRewriteFactory
                         body: body,
                         marker: marker,
                         marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (retValType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -114,15 +111,14 @@ internal partial class InteropMethodRewriteFactory
                         name: "BoxToManaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: retValType,
-                            parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+                            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]));
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
                     RewriteBody(
                         body: body,
                         marker: marker,
                         marshallerMethod: marshallerMethod,
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else
                 {
@@ -170,8 +166,7 @@ internal partial class InteropMethodRewriteFactory
                     body: body,
                     marker: marker,
                     marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
             else
             {
@@ -190,8 +185,7 @@ internal partial class InteropMethodRewriteFactory
                     body: body,
                     marker: marker,
                     marshallerMethod: marshallerMethod,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
@@ -202,8 +196,7 @@ internal partial class InteropMethodRewriteFactory
             CilMethodBody body,
             CilInstruction marker,
             IMethodDefOrRef marshallerMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // We need a new local for the 'WindowsRuntimeObjectReferenceValue' returned from the
             // marshalling methods that the code will invoke. This is because we are going to call

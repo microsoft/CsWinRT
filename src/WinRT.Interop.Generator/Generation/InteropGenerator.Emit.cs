@@ -139,7 +139,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Rewrite the IL methods of marshalling stubs needing two-pass generation
-        RewriteMethodDefinitions(args, emitState, interopReferences, module);
+        RewriteMethodDefinitions(args, emitState, interopReferences);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -689,7 +689,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.NativeObject(
                     readOnlyListType: typeSignature,
-                    readOnlyListMethodsType: readOnlyListMethodsType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1340,7 +1339,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
                     vectorType: typeSignature,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1349,9 +1347,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableVector1.Methods(
                     vectorType: typeSignature,
                     eventSourceFactoryType: factoryType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
@@ -1455,7 +1451,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
                     mapType: typeSignature,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1464,9 +1459,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableMap2.Methods(
                     mapType: typeSignature,
                     eventSourceFactoryType: factoryType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
@@ -1939,12 +1932,10 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     private static void RewriteMethodDefinitions(
         InteropGeneratorArgs args,
         InteropGeneratorEmitState emitState,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         foreach (MethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
         {
@@ -1962,8 +1953,7 @@ internal partial class InteropGenerator
                             marker: returnTypeInfo.Marker,
                             source: returnTypeInfo.Source,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite return values for native types
@@ -1973,8 +1963,7 @@ internal partial class InteropGenerator
                             method: retValTypeInfo.Method,
                             marker: retValTypeInfo.Marker,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
                     default: throw new UnreachableException();
                 }

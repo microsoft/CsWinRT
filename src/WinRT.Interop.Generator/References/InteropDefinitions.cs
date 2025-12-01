@@ -51,7 +51,7 @@ internal sealed class InteropDefinitions
     /// <remarks>
     /// This type has exactly one nested type, for RVA fields of size 16 (ie. <see cref="System.Guid"/>).
     /// </remarks>
-    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences, _interopModule);
+    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
@@ -61,112 +61,112 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
     /// </summary>
-    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopModule);
+    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
     /// </summary>
-    public TypeDefinition IUnknownVftbl => field ??= WellKnownTypeDefinitionFactory.IUnknownVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IUnknownVftbl => field ??= WellKnownTypeDefinitionFactory.IUnknownVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IInspectableVftbl</c> type.
     /// </summary>
-    public TypeDefinition IInspectableVftbl => field ??= WellKnownTypeDefinitionFactory.IInspectableVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IInspectableVftbl => field ??= WellKnownTypeDefinitionFactory.IInspectableVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateVftbl</c> type.
     /// </summary>
-    public TypeDefinition DelegateVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateVftbl(_interopReferences, _interopModule);
+    public TypeDefinition DelegateVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateReferenceVftbl</c> type.
     /// </summary>
-    public TypeDefinition DelegateReferenceVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateReferenceVftbl(_interopReferences, _interopModule);
+    public TypeDefinition DelegateReferenceVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateReferenceVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences, _interopModule);
+    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerator1Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IEnumerator1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerator1Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IEnumerator1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerator1Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerable1Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IEnumerable1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerable1Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IEnumerable1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerable1Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReadOnlyList1Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IReadOnlyList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IReadOnlyList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IList1Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IList1Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IList1Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReadOnlyDictionary2Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IReadOnlyDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IReadOnlyDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IDictionary2Vftbl</c> type.
     /// </summary>
-    public TypeDefinition IDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IDictionary2Vftbl(_interopReferences, _interopModule);
+    public TypeDefinition IDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IDictionary2Vftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.
     /// </summary>
-    public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences, _interopModule);
+    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IMapChangedEventArgsVftbl</c> type.
     /// </summary>
-    public TypeDefinition IMapChangedEventArgsVftbl => field ??= WellKnownTypeDefinitionFactory.IMapChangedEventArgsVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IMapChangedEventArgsVftbl => field ??= WellKnownTypeDefinitionFactory.IMapChangedEventArgsVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IObservableVectorVftbl</c> type.
     /// </summary>
-    public TypeDefinition IObservableVectorVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableVectorVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IObservableVectorVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableVectorVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IObservableMapVftbl</c> type.
     /// </summary>
-    public TypeDefinition IObservableMapVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableMapVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IObservableMapVftbl => field ??= WellKnownTypeDefinitionFactory.IObservableMapVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IAsyncActionWithProgressVftbl</c> type.
     /// </summary>
-    public TypeDefinition IAsyncActionWithProgressVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncActionWithProgressVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IAsyncActionWithProgressVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncActionWithProgressVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IAsyncOperationVftbl</c> type.
     /// </summary>
-    public TypeDefinition IAsyncOperationVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IAsyncOperationVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IAsyncOperationWithProgressVftbl</c> type.
     /// </summary>
-    public TypeDefinition IAsyncOperationWithProgressVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationWithProgressVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IAsyncOperationWithProgressVftbl => field ??= WellKnownTypeDefinitionFactory.IAsyncOperationWithProgressVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
     /// </summary>
-    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences, _interopModule);
+    public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences);
 
     /// <summary>
     /// Enumerates all necessary COM interface entries types.
@@ -189,6 +189,6 @@ internal sealed class InteropDefinitions
     {
         return _userDefinedInterfaceEntries.GetOrAdd(
             key: numberOfEntries,
-            valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences, _interopModule));
+            valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences));
     }
 }

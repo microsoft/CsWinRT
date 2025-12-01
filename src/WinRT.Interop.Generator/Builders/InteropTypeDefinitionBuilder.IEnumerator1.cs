@@ -338,8 +338,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: get_IEnumerator1CurrentMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("Current"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerator<T>.Current' property
             PropertyDefinition enumerator1CurrentProperty = new(
@@ -409,8 +408,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: moveNextMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("MoveNext"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'System.IEnumerator.Reset' method
             MethodDefinition resetMethod = new(

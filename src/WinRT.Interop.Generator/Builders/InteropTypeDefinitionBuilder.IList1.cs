@@ -99,8 +99,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             module.TopLevelTypes.Add(vftblType);
         }
@@ -746,8 +745,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: itemMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Item' getter method
             MethodDefinition set_ItemMethod = new(
@@ -769,8 +767,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: set_ItemMethod,
                 forwardedMethod: itemMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -800,8 +797,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: indexOfMethod,
                 forwardedMethod: listMethodsType.GetMethod("IndexOf"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Insert' method
             MethodDefinition insertMethod = new(
@@ -823,8 +819,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: insertMethod,
                 forwardedMethod: listMethodsType.GetMethod("Insert"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'RemoveAt' method
             MethodDefinition removeAtMethod = new(
@@ -842,8 +837,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: removeAtMethod,
                 forwardedMethod: listMethodsType.GetMethod("RemoveAt"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
@@ -861,8 +855,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: get_CountMethod,
                 forwardedMethod: listMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(
@@ -919,8 +912,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: addMethod,
                 forwardedMethod: listMethodsType.GetMethod("Add"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Clear' method
             MethodDefinition clearMethod = new(
@@ -938,8 +930,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: clearMethod,
                 forwardedMethod: listMethodsType.GetMethod("Clear"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Contains' method
             MethodDefinition containsMethod = new(
@@ -957,8 +948,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: containsMethod,
                 forwardedMethod: listMethodsType.GetMethod("Contains"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'CopyTo' method
             MethodDefinition copyToMethod = new(
@@ -980,8 +970,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: copyToMethod,
                 forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Remove' method
             MethodDefinition removeMethod = new(
@@ -999,8 +988,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: removeMethod,
                 forwardedMethod: listMethodsType.GetMethod("Remove"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerable<T>.GetEnumerator' method
             MethodDefinition enumerable1GetEnumeratorMethod = new(
@@ -1018,8 +1006,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumerableType,
                 implementationMethod: enumerable1GetEnumeratorMethod,
                 forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(

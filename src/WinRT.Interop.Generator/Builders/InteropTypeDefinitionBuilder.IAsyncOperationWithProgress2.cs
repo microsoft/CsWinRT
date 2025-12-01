@@ -306,8 +306,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: get_ProgressMethod,
                 forwardedMethod: progressMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Progress' getter method
             MethodDefinition set_ProgressMethod = new(
@@ -327,8 +326,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: set_ProgressMethod,
                 forwardedMethod: progressMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Progress' property
             PropertyDefinition progressProperty = new(
@@ -361,8 +359,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: get_CompletedMethod,
                 forwardedMethod: completedMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Completed' getter method
             MethodDefinition set_CompletedMethod = new(
@@ -382,8 +379,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: set_CompletedMethod,
                 forwardedMethod: completedMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Completed' property
             PropertyDefinition completedProperty = new(
@@ -413,8 +409,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: getResultsMethod,
                 forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>

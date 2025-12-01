@@ -24,14 +24,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the cached factory type for the property for the event args for the vector.
         /// </summary>
         /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="factoryType">The resulting factory type.</param>
         public static void EventSourceFactory(
             GenericInstanceTypeSignature vectorType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -117,17 +115,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
         /// <param name="eventSourceFactoryType">The type returned by <see cref="EventSourceFactory"/>.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="methodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature vectorType,
             TypeDefinition eventSourceFactoryType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition methodsType)
         {
@@ -374,8 +368,7 @@ internal partial class InteropTypeDefinitionBuilder
                     handlerType: handlerType,
                     eventMethod: vectorMethodsType.GetMethod("VectorChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' add accessor method
@@ -396,8 +389,7 @@ internal partial class InteropTypeDefinitionBuilder
                     handlerType: handlerType,
                     eventMethod: vectorMethodsType.GetMethod("VectorChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' remove accessor method
