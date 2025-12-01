@@ -102,6 +102,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Reference the 'KeyValuePair<,>' accessor method
             MemberReference get_KeyOrValueAccessorMethod = keyValuePairType
+                .Import(module)
                 .ToTypeDefOrRef()
                 .CreateMemberReference(
                     memberName: methodName,
