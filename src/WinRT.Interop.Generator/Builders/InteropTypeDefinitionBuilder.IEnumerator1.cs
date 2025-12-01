@@ -470,28 +470,24 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_Current(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'get_HasCurrent' method
             MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
                 nameUtf8: "get_HasCurrent"u8,
                 enumeratorType: enumeratorType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'MoveNext' method
             MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
                 nameUtf8: "MoveNext"u8,
                 enumeratorType: enumeratorType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'GetMany' method
             MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.GetMany(
                 enumeratorType: enumeratorType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

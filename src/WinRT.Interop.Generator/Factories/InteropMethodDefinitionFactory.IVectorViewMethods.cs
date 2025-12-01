@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>GetAt</c> method for <c>IVector&lt;T&gt;</c> interfaces.
         /// </remarks>
@@ -35,8 +34,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 

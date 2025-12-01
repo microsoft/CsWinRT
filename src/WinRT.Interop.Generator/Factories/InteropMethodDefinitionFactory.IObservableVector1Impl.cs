@@ -29,13 +29,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_VectorChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition add_VectorChanged(
             GenericInstanceTypeSignature vectorType,
             MethodDefinition get_VectorChangedTableMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = vectorType.TypeArguments[0];
 
@@ -156,12 +154,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vectorType">The <see cref="TypeSignature"/> for the vector type.</param>
         /// <param name="get_VectorChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition remove_VectorChanged(
             GenericInstanceTypeSignature vectorType,
             MethodDefinition get_VectorChangedTableMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = vectorType.TypeArguments[0];
 

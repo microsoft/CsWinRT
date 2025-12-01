@@ -61,8 +61,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("get_Completed"u8),
                 convertToManagedMethod: convertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType),
@@ -79,8 +78,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("set_Completed"u8),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType),
@@ -91,8 +89,7 @@ internal partial class InteropTypeDefinitionBuilder
                 resultType: resultType,
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("GetResults"u8),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType),
@@ -345,8 +342,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncOperationCompletedHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncOperation1get_Completed(resultType),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
@@ -359,8 +355,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncOperationCompletedHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncOperation1set_Completed(resultType),
                 convertToManagedMethod: convertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // TODO
 

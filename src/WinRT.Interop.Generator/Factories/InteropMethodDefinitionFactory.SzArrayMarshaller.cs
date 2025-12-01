@@ -23,11 +23,7 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static MethodDefinition Free(
-            SzArrayTypeSignature arrayType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition Free(SzArrayTypeSignature arrayType, InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
 

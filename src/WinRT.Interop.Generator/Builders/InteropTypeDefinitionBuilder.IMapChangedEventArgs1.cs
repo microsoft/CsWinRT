@@ -317,15 +317,13 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'get_CollectionChange' method
             MethodDefinition collectionChangeMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.CollectionChanged(
                 argsType: argsType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'get_Key' method
             MethodDefinition keyMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.Key(
                 argsType: argsType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

@@ -24,11 +24,7 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="actionType">The <see cref="TypeSignature"/> for the async action type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition GetResults(
-            GenericInstanceTypeSignature actionType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition GetResults(GenericInstanceTypeSignature actionType, InteropReferences interopReferences)
         {
             TypeSignature progressType = actionType.TypeArguments[0];
 

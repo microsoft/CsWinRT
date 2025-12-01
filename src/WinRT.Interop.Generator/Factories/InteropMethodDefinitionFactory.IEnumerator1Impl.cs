@@ -31,12 +31,10 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Current(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -129,12 +127,10 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="nameUtf8">The name of the method to generate.</param>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition HasCurrentOrMoveNext(
             ReadOnlySpan<byte> nameUtf8,
             GenericInstanceTypeSignature enumeratorType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -224,11 +220,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition GetMany(
-            GenericInstanceTypeSignature enumeratorType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition GetMany(GenericInstanceTypeSignature enumeratorType, InteropReferences interopReferences)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 

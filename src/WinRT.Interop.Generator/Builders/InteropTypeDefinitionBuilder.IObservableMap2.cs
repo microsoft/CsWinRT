@@ -466,14 +466,12 @@ internal partial class InteropTypeDefinitionBuilder
                 mapType: mapType,
                 get_MapChangedTableMethod: get_MapChangedTableMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             MethodDefinition remove_MapChangedMethod = InteropMethodDefinitionFactory.IObservableMap2Impl.remove_MapChanged(
                 mapType: mapType,
                 get_MapChangedTableMethod: get_MapChangedTableMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

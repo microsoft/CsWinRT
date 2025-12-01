@@ -95,8 +95,7 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyListType: readOnlyListType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'GetAt' method
             vectorViewMethodsType.AddMethodImplementation(

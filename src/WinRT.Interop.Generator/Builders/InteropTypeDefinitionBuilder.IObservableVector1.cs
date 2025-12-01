@@ -453,14 +453,12 @@ internal partial class InteropTypeDefinitionBuilder
                 vectorType: vectorType,
                 get_VectorChangedTableMethod: get_VectorChangedTableMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             MethodDefinition remove_VectorChangedMethod = InteropMethodDefinitionFactory.IObservableVector1Impl.remove_VectorChanged(
                 vectorType: vectorType,
                 get_VectorChangedTableMethod: get_VectorChangedTableMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

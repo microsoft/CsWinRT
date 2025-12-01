@@ -29,13 +29,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition add_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
@@ -157,12 +155,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="mapType">The <see cref="TypeSignature"/> for the map type.</param>
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition remove_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];

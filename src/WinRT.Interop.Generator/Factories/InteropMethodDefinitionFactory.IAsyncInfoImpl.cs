@@ -31,15 +31,13 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToUnmanagedMethod">The method to use to convert the handler to unmanaged.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
             TypeSignature handlerType,
             MemberReference get_HandlerMethod,
             MethodDefinition convertToUnmanagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'get_Handler' get method as follows:
             //
@@ -133,15 +131,13 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="set_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToManagedMethod">The method to use to convert the handler to a managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
             TypeSignature handlerType,
             MemberReference set_HandlerMethod,
             MethodDefinition convertToManagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'set_Handler' get method as follows:
             //

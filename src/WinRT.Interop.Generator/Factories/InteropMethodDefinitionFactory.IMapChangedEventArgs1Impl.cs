@@ -25,11 +25,7 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="argsType">The <see cref="TypeSignature"/> for the args type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition CollectionChanged(
-            GenericInstanceTypeSignature argsType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition CollectionChanged(GenericInstanceTypeSignature argsType, InteropReferences interopReferences)
         {
             TypeSignature elementType = argsType.TypeArguments[0];
 
@@ -114,12 +110,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="argsType">The <see cref="TypeSignature"/> for the args type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Key(
             GenericInstanceTypeSignature argsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = argsType.TypeArguments[0];
 

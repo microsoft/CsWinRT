@@ -135,10 +135,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(copyToUnmanagedMethod);
 
             // Define the 'Free' method
-            MethodDefinition freeMethod = InteropMethodDefinitionFactory.SzArrayMarshaller.Free(
-                arrayType,
-                interopReferences,
-                module);
+            MethodDefinition freeMethod = InteropMethodDefinitionFactory.SzArrayMarshaller.Free(arrayType, interopReferences);
 
             marshallerType.Methods.Add(freeMethod);
         }

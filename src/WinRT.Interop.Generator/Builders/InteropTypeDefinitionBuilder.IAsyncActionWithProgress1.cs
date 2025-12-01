@@ -62,8 +62,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType(progressType),
                 vftblField: interopDefinitions.IAsyncActionWithProgressVftbl.GetField("get_Progress"u8),
                 convertToManagedMethod: progressConvertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             actionMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1get_Progress(progressType),
@@ -80,8 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType(progressType),
                 vftblField: interopDefinitions.IAsyncActionWithProgressVftbl.GetField("set_Progress"u8),
                 convertToUnmanagedMethod: progressConvertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             actionMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1set_Progress(progressType),
@@ -98,8 +96,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType),
                 vftblField: interopDefinitions.IAsyncActionWithProgressVftbl.GetField("get_Completed"u8),
                 convertToManagedMethod: completedConvertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             actionMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1get_Completed(progressType),
@@ -116,8 +113,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType),
                 vftblField: interopDefinitions.IAsyncActionWithProgressVftbl.GetField("set_Completed"u8),
                 convertToUnmanagedMethod: completedConvertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             actionMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncActionWithProgressMethodsImpl1set_Completed(progressType),
@@ -445,8 +441,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncActionProgressHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Progress(progressType),
                 convertToUnmanagedMethod: progressConvertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationProgressHandler<T>' instance to managed
             MethodDefinition progressConvertToManagedMethod = emitState.LookupTypeDefinition(
@@ -459,8 +454,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncActionProgressHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Progress(progressType),
                 convertToManagedMethod: progressConvertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Prepare the 'AsyncActionWithProgressCompletedHandler<<PROGRESS_TYPE>>' signature
             TypeSignature asyncActionWithProgressCompletedHandlerType = interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType(progressType);
@@ -476,8 +470,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncActionWithProgressCompletedHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Completed(progressType),
                 convertToUnmanagedMethod: completedConvertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncActionWithProgressCompletedHandler<T>' instance to managed
             MethodDefinition completedConvertToManagedMethod = emitState.LookupTypeDefinition(
@@ -490,13 +483,11 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: asyncActionWithProgressCompletedHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Completed(progressType),
                 convertToManagedMethod: completedConvertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncActionWithProgress1Impl.GetResults(
                 actionType: actionType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

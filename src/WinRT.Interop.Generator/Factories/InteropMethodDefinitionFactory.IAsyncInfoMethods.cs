@@ -31,14 +31,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="convertToManagedMethod">The marshalling method to convert the handler delegate native pointer.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature handlerType,
             FieldDefinition vftblField,
             MethodDefinition convertToManagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'Handler' get method as follows:
             //
@@ -142,14 +140,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="convertToUnmanagedMethod">The marshalling method to convert the handler delegate managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature handlerType,
             FieldDefinition vftblField,
             MethodDefinition convertToUnmanagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'Handler' set method as follows:
             //
@@ -253,13 +249,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetResults(
             TypeSignature resultType,
             FieldDefinition vftblField,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Define the 'GetResults' get method as follows:
             //

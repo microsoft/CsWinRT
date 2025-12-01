@@ -29,20 +29,17 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Key(
             GenericInstanceTypeSignature keyValuePairType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             return get_KeyOrValue(
                 keyValuePairType: keyValuePairType,
                 keyOrValueType: keyValuePairType.TypeArguments[0],
                 methodName: "get_Key"u8,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -51,20 +48,17 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Value(
             GenericInstanceTypeSignature keyValuePairType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             return get_KeyOrValue(
                 keyValuePairType: keyValuePairType,
                 keyOrValueType: keyValuePairType.TypeArguments[1],
                 methodName: "get_Value"u8,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -75,14 +69,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="methodName">The name of the method to generate.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition get_KeyOrValue(
             GenericInstanceTypeSignature keyValuePairType,
             TypeSignature keyOrValueType,
             Utf8String methodName,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Define the method as follows:
             //
