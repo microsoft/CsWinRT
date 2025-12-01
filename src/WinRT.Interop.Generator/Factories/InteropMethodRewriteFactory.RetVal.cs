@@ -169,7 +169,7 @@ internal partial class InteropMethodRewriteFactory
                 RewriteBody(
                     body: body,
                     marker: marker,
-                    marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToManaged"),
+                    marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
                     interopReferences: interopReferences,
                     module: module);
             }
