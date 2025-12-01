@@ -68,7 +68,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Get the constructor for the generic event source type
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
                 comparer: SignatureComparer.IgnoreVersion,
-                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.CorLibTypeFactory.Int32])!;
+                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.Int32])!;
 
             // Define the 'Callback' method as follows:
             //

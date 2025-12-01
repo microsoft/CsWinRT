@@ -111,7 +111,7 @@ internal partial class InteropMethodRewriteFactory
                         name: "BoxToManaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: retValType,
-                            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]));
+                            parameterTypes: [interopReferences.Void.MakePointerType()]));
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
                     RewriteBody(

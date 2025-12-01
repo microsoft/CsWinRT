@@ -62,9 +62,9 @@ internal static class InteropCustomAttributeFactory
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Property,
                 memberName: "AllowMultiple"u8,
-                argumentType: interopReferences.CorLibTypeFactory.Boolean,
+                argumentType: interopReferences.Boolean,
                 argument: new CustomAttributeArgument(
-                    argumentType: interopReferences.CorLibTypeFactory.Boolean,
+                    argumentType: interopReferences.Boolean,
                     value: allowMultiple))]));
     }
 
@@ -81,13 +81,13 @@ internal static class InteropCustomAttributeFactory
         InteropReferences interopReferences)
     {
         // Get the constructor taking 'assemblyName' as a string argument
-        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(interopReferences.CorLibTypeFactory.String)!;
+        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(interopReferences.String)!;
 
         // Create the following attribute:
         //
         // [IgnoresAccessChecksTo(<assemblyName>)]
         return new(ctor, new CustomAttributeSignature(new CustomAttributeArgument(
-            argumentType: interopReferences.CorLibTypeFactory.String,
+            argumentType: interopReferences.String,
             value: assemblyName)));
     }
 
@@ -111,7 +111,7 @@ internal static class InteropCustomAttributeFactory
         return new(interopReferences.TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: value),
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.ToReferenceTypeSignature(),

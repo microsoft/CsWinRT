@@ -86,7 +86,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // For (non-generic) custom mapped types, their ABI types are in 'WinRT.Runtime.dll', so we use those directly
                     TypeReference typeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
-                    MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+                    MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr));
 
                     // For custom-mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
                     MemberReference get_IIDMethod = WellKnownInterfaceIIDs.get_IID(
@@ -119,7 +119,7 @@ internal partial class InteropTypeDefinitionBuilder
                         // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types. In this
                         // case, the marshalling code will just be in the declaring assembly of each of these projected interface types.
                         TypeReference ImplTypeReference = interfaceType.DeclaringModule!.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
-                        MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+                        MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr));
 
                         // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the containing assembly
                         string get_IIDMethodName = $"get_IID_{typeSignature.FullName.Replace('.', '_')}";

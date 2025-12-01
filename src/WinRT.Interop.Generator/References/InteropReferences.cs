@@ -61,6 +61,51 @@ internal sealed class InteropReferences
     /// </summary>
     public IResolutionScope WindowsFoundationModule => _windowsSdkProjectionModule;
 
+    /// <inheritdoc cref="CorLibTypeFactory.Object"/>
+    public CorLibTypeSignature Object => _corLibTypeFactory.Object;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Void"/>
+    public CorLibTypeSignature Void => _corLibTypeFactory.Void;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Boolean"/>
+    public CorLibTypeSignature Boolean => _corLibTypeFactory.Boolean;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Byte"/>
+    public CorLibTypeSignature Byte => _corLibTypeFactory.Byte;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Char"/>
+    public CorLibTypeSignature Char => _corLibTypeFactory.Char;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int16"/>
+    public CorLibTypeSignature Int16 => _corLibTypeFactory.Int16;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt16"/>
+    public CorLibTypeSignature UInt16 => _corLibTypeFactory.UInt16;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int32"/>
+    public CorLibTypeSignature Int32 => _corLibTypeFactory.Int32;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt32"/>
+    public CorLibTypeSignature UInt32 => _corLibTypeFactory.UInt32;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int64"/>
+    public CorLibTypeSignature Int64 => _corLibTypeFactory.Int64;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt64"/>
+    public CorLibTypeSignature UInt64 => _corLibTypeFactory.UInt64;
+
+    /// <inheritdoc cref="CorLibTypeFactory.IntPtr"/>
+    public CorLibTypeSignature IntPtr => _corLibTypeFactory.IntPtr;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Single"/>
+    public CorLibTypeSignature Single => _corLibTypeFactory.Single;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Double"/>
+    public CorLibTypeSignature Double => _corLibTypeFactory.Double;
+
+    /// <inheritdoc cref="CorLibTypeFactory.String"/>
+    public CorLibTypeSignature String => _corLibTypeFactory.String;
+
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
     /// </summary>
@@ -1202,7 +1247,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IIUnknownInterfaceTypeget_ManagedVirtualMethodTable => field ??= IIUnknownInterfaceType
         .CreateMemberReference("get_ManagedVirtualMethodTable"u8, MethodSignature.CreateStatic(
-            returnType: CorLibTypeFactory.Void.MakePointerType().MakePointerType()));
+            returnType: Void.MakePointerType().MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IUnknown()</c>.

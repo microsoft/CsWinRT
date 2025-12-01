@@ -45,7 +45,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
             // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
-            if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.CorLibTypeFactory.String))
+            if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.String))
             {
                 freeMethod.CilMethodBody = new CilMethodBody
                 {

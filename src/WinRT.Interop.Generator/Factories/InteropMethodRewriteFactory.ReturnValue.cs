@@ -95,7 +95,7 @@ internal partial class InteropMethodRewriteFactory
                         name: "UnboxToManaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: returnType,
-                            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]));
+                            parameterTypes: [interopReferences.Void.MakePointerType()]));
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
                     RewriteBody(
@@ -124,7 +124,7 @@ internal partial class InteropMethodRewriteFactory
                     IMethodDefOrRef disposeMethod = marshallerType.GetMethodDefOrRef(
                         name: "Dispose"u8,
                         signature: MethodSignature.CreateStatic(
-                            returnType: interopReferences.CorLibTypeFactory.Void,
+                            returnType: interopReferences.Void,
                             parameterTypes: [returnType.GetAbiType(interopReferences)]));
 
                     // Emit code similar to the cases above, but calling 'Dispose' on the ABI type instead of releasing it
@@ -209,7 +209,7 @@ internal partial class InteropMethodRewriteFactory
                     name: "ConvertToManaged"u8,
                     signature: MethodSignature.CreateStatic(
                         returnType: returnType,
-                        parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]));
+                        parameterTypes: [interopReferences.Void.MakePointerType()]));
 
                 // Marshal the value and release the original interface pointer
                 RewriteBody(

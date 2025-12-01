@@ -27,11 +27,11 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 interopReferences.Guid.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -47,8 +47,8 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.UInt32),
-            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                baseType: interopReferences.UInt32),
+            parameterTypes: [interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -64,8 +64,8 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.UInt32),
-            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                baseType: interopReferences.UInt32),
+            parameterTypes: [interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -81,10 +81,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType(),
                 interopReferences.Guid.MakePointerType().MakePointerType()]);
     }
 
@@ -101,10 +101,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -120,10 +120,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Int32.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Int32.MakePointerType()]);
     }
 
     /// <summary>
@@ -139,10 +139,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 interopReferences.EventRegistrationToken.MakePointerType()]);
     }
 
@@ -159,9 +159,9 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 interopReferences.EventRegistrationToken.ToValueTypeSignature()]);
     }
 
@@ -178,10 +178,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -197,10 +197,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -217,9 +217,9 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 returnValue.MakePointerType()]);
     }
 
@@ -236,10 +236,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -255,11 +255,11 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -275,10 +275,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -294,10 +294,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Boolean.MakePointerType()]);
     }
 
     /// <summary>
@@ -313,12 +313,12 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType()]);
     }
 
     /// <summary>
@@ -334,10 +334,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -354,10 +354,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
                 elementType.MakePointerType()]);
     }
 
@@ -374,10 +374,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType()]);
     }
 
     /// <summary>
@@ -394,11 +394,11 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 elementType,
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
+                interopReferences.UInt32.MakePointerType()]);
     }
 
     /// <summary>
@@ -415,13 +415,13 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
-                interopReferences.CorLibTypeFactory.UInt32,
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
+                interopReferences.UInt32,
                 elementType.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
+                interopReferences.UInt32.MakePointerType()]);
     }
 
     /// <summary>
@@ -460,10 +460,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -480,12 +480,12 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 elementType,
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+                interopReferences.UInt32.MakePointerType(),
+                interopReferences.Boolean.MakePointerType()]);
     }
 
     /// <summary>
@@ -502,10 +502,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
                 elementType]);
     }
 
@@ -535,10 +535,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32]);
     }
 
     /// <summary>
@@ -555,9 +555,9 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 elementType]);
     }
 
@@ -574,8 +574,8 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
-            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                baseType: interopReferences.Int32),
+            parameterTypes: [interopReferences.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -617,10 +617,10 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
                 elementType.MakePointerType()]);
     }
 
@@ -642,9 +642,9 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 keyType,
                 valueType.MakePointerType()]);
     }
@@ -674,11 +674,11 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 keyType,
-                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+                interopReferences.Boolean.MakePointerType()]);
     }
 
     /// <summary>
@@ -694,11 +694,11 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -767,12 +767,12 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 keyType,
                 valueType,
-                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+                interopReferences.Boolean.MakePointerType()]);
     }
 
     /// <summary>
@@ -789,9 +789,9 @@ internal static class WellKnownTypeSignatureFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 keyType]);
     }
 

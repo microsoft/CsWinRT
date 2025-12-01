@@ -154,10 +154,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReference`1<T>' looks like this:
         //
@@ -334,7 +334,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IReadOnlyList1Vftbl(
             ns: null,
             name: "<IReadOnlyList1Vftbl>"u8,
-            elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            elementType: interopReferences.Void.MakePointerType(),
             interopReferences: interopReferences);
     }
 
@@ -414,7 +414,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IList1Vftbl(
             ns: null,
             name: "<IList1Vftbl>"u8,
-            elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            elementType: interopReferences.Void.MakePointerType(),
             interopReferences: interopReferences);
     }
 
@@ -519,8 +519,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IReadOnlyDictionary2Vftbl(
             ns: null,
             name: "<IReadOnlyDictionary2Vftbl>"u8,
-            keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            keyType: interopReferences.Void.MakePointerType(),
+            valueType: interopReferences.Void.MakePointerType(),
             interopReferences: interopReferences);
     }
 
@@ -602,8 +602,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IDictionary2Vftbl(
             ns: null,
             name: "<IDictionary2Vftbl>"u8,
-            keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            keyType: interopReferences.Void.MakePointerType(),
+            valueType: interopReferences.Void.MakePointerType(),
             interopReferences: interopReferences);
     }
 
@@ -709,10 +709,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
 
         // The vtable layout for 'IKeyValuePair`2<Key, Value>' looks like this:
         //
@@ -801,9 +801,9 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType(),
                 interopReferences.CollectionChange.MakePointerType()]);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
@@ -812,10 +812,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.Void.MakePointerType()]);
 
         // The vtable layout for 'IMapChangedEventArgs`1<K>' looks like this:
         //
@@ -974,8 +974,8 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
-            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                baseType: interopReferences.Int32),
+            parameterTypes: [interopReferences.Void.MakePointerType()]);
 
         // The vtable layout for 'IAsyncActionWithProgress`1<TProgress>' looks like this:
         //
@@ -1150,11 +1150,11 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReferenceArray`1<T>' looks like this:
         //
@@ -1255,7 +1255,7 @@ internal static partial class WellKnownTypeDefinitionFactory
             ns: null,
             name: "<RvaFields>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: interopReferences.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
@@ -1285,6 +1285,6 @@ internal static partial class WellKnownTypeDefinitionFactory
             ns: null,
             name: "<InterfaceIIDs>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
     }
 }

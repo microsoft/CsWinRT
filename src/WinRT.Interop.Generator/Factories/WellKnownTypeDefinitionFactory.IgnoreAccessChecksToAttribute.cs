@@ -33,12 +33,12 @@ internal partial class WellKnownTypeDefinitionFactory
         FieldDefinition assemblyNameField = new(
             name: "_assemblyName"u8,
             attributes: FieldAttributes.Private | FieldAttributes.InitOnly,
-            fieldType: interopReferences.CorLibTypeFactory.String);
+            fieldType: interopReferences.String);
 
         IgnoresAccessChecksToType.Fields.Add(assemblyNameField);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.CorLibTypeFactory.String);
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.String);
 
         IgnoresAccessChecksToType.Methods.Add(ctor);
 
@@ -52,7 +52,7 @@ internal partial class WellKnownTypeDefinitionFactory
         MethodDefinition get_AssemblyNameMethod = new(
             name: "get_AssemblyName"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName,
-            signature: MethodSignature.CreateInstance(interopReferences.CorLibTypeFactory.String));
+            signature: MethodSignature.CreateInstance(interopReferences.String));
 
         // Create the 'AssemblyName' property
         PropertyDefinition assemblyNameProperty = new(

@@ -58,7 +58,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="string"/> type.</returns>
         public bool IsTypeOfString(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String);
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.String);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="object"/> type.</returns>
         public bool IsTypeOfObject(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object);
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Object);
         }
 
         /// <summary>
@@ -78,19 +78,19 @@ internal static class WindowsRuntimeExtensions
         public bool IsFundamentalWindowsRuntimeType(InteropReferences interopReferences)
         {
             // Check all fundamental primitive types
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Boolean) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Single) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Double) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Char) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Byte) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object))
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Boolean) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.String) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Single) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Double) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Char) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Byte) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Object))
             {
                 return true;
             }
@@ -310,7 +310,7 @@ internal static class WindowsRuntimeExtensions
             // types, as well as 'KeyValuePair<,>', which also maps to 'void*', since it's an interface.
             if (type is GenericInstanceTypeSignature)
             {
-                return interopReferences.CorLibTypeFactory.Void.MakePointerType();
+                return interopReferences.Void.MakePointerType();
             }
 
             TypeDefinition typeDefinition = type.Resolve()!;
@@ -358,7 +358,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
-            return interopReferences.CorLibTypeFactory.Void.MakePointerType();
+            return interopReferences.Void.MakePointerType();
         }
     }
 
