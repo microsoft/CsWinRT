@@ -89,7 +89,7 @@ internal partial class InteropMethodRewriteFactory
                         _ => new CilInstruction(Stobj, retValType.Import(module).ToTypeDefOrRef()),
                     };
 
-                    body.Instructions.ReplaceRange(marker, storeInstruction);
+                    body.Instructions.ReplaceRange(marker, [storeInstruction]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
