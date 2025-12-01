@@ -152,6 +152,19 @@ namespace TestComponentCSharp
         static ISingleton Instance;
     }
 
+    [default_interface]
+    runtimeclass SetTypeProperties
+    {
+        SetTypeProperties();
+        String SetProperty();
+    }
+
+    // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario in the TypeHandling project
+    runtimeclass TestType1
+    {
+        void f();
+    }
+
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable

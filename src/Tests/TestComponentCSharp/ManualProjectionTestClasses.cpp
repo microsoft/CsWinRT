@@ -5,9 +5,23 @@
 #include "CustomBindableVectorTest.g.cpp"
 #include "CustomBindableObservableVectorTest.g.cpp"
 #include "CustomIteratorTest.g.cpp"
+#include "SetTypeProperties.g.cpp"
+#include <winrt/Windows.UI.Xaml.Interop.h>
 
 namespace winrt::TestComponentCSharp::implementation
 {
+    SetTypeProperties::SetTypeProperties()
+    {
+
+    }
+
+    winrt::hstring SetTypeProperties::SetProperty()
+    {
+        TestComponentCSharp::Class TestObject;
+        TestObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestType1>());
+        return TestObject.GetTypePropertyAbiName() + L" " + TestObject.GetTypePropertyKind();
+    }
+
 	CustomBindableIteratorTest::CustomBindableIteratorTest()
 	{
 		

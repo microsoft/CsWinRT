@@ -4,9 +4,16 @@
 #include "CustomBindableVectorTest.g.h"
 #include "CustomBindableObservableVectorTest.g.h"
 #include "CustomIteratorTest.g.h"
+#include "SetTypeProperties.g.h"
 
 namespace winrt::TestComponentCSharp::implementation
 {
+    struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties>
+    {
+        SetTypeProperties();
+        winrt::hstring SetProperty();
+    };
+
 	struct CustomBindableIteratorTest : CustomBindableIteratorTestT<CustomBindableIteratorTest>
 	{
 		CustomBindableIteratorTest();
@@ -72,6 +79,11 @@ namespace winrt::TestComponentCSharp::implementation
 
 namespace winrt::TestComponentCSharp::factory_implementation
 {
+    struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties, implementation::SetTypeProperties>
+    {
+
+    };
+
 	struct CustomBindableIteratorTest : CustomBindableIteratorTestT<CustomBindableIteratorTest, implementation::CustomBindableIteratorTest>
 	{
 
