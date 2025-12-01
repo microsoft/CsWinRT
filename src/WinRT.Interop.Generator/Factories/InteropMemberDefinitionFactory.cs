@@ -43,7 +43,7 @@ internal static class InteropMemberDefinitionFactory
         backingField = new FieldDefinition(
             name: $"<{propertyName}>k__BackingField",
             attributes: FieldAttributes.Private | FieldAttributes.Static,
-            fieldType: propertyType.Import(module));
+            fieldType: propertyType);
 
         // Define the factory method as follows:
         //
@@ -52,16 +52,16 @@ internal static class InteropMemberDefinitionFactory
         factoryMethod = new MethodDefinition(
             name: $"<get_{propertyName}>g__CreateValue|{index}_0",
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(propertyType.Import(module)))
+            signature: MethodSignature.CreateStatic(propertyType))
         {
             NoInlining = true,
             CilInstructions =
             {
                 // _ = Interlocked.CompareExchange(ref <BACKING_FIELD>, value: new(), comparand: null);
                 { Ldsflda, backingField },
-                { Newobj, propertyType.ToTypeDefOrRef().CreateConstructorReference(module.CorLibTypeFactory).Import(module) },
+                { Newobj, propertyType.ToTypeDefOrRef().CreateConstructorReference(module.CorLibTypeFactory) },
                 { Ldnull },
-                { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(propertyType).Import(module) },
+                { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(propertyType) },
                 { Pop },
 
                 // return <BACKING_FIELD>;
@@ -77,7 +77,7 @@ internal static class InteropMemberDefinitionFactory
         getAccessorMethod = new MethodDefinition(
             name: $"get_{propertyName}",
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(propertyType.Import(module)))
+            signature: MethodSignature.CreateStatic(propertyType))
         {
             IsAggressiveInlining = true,
             CilInstructions =

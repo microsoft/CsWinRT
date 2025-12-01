@@ -48,8 +48,8 @@ internal partial class InteropTypeDefinitionBuilder
             emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature typeSignature2 = keyValuePairType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
+            TypeSignature typeSignature2 = keyValuePairType;
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //

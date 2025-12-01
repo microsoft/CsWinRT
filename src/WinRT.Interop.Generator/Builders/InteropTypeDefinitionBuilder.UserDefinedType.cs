@@ -176,7 +176,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -186,10 +186,10 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(ctor);
 
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
 
             // Retrieve the cached COM interface entries type, as we need the number of fields
             TypeDefinition interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count);
@@ -232,7 +232,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { Ldc_I4_2 },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };
@@ -301,14 +301,14 @@ internal partial class InteropTypeDefinitionBuilder
             /// <inheritdoc/>
             public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
-                _ = instructions.Add(Call, get_IID.Import(module));
-                _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
+                _ = instructions.Add(Call, get_IID);
+                _ = instructions.Add(Ldobj, interopReferences.Guid);
             }
 
             /// <inheritdoc/>
             public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
-                _ = instructions.Add(Call, get_Vtable.Import(module));
+                _ = instructions.Add(Call, get_Vtable);
             }
         }
 
@@ -321,15 +321,15 @@ internal partial class InteropTypeDefinitionBuilder
             /// <inheritdoc/>
             public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
-                _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
+                _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid);
             }
 
             /// <inheritdoc/>
             public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
             {
-                _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
+                _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable);
             }
         }
     }

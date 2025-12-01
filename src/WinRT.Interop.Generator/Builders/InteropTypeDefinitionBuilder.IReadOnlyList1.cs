@@ -83,7 +83,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorViewMethodsType);
@@ -101,7 +101,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'GetAt' method
             vectorViewMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IVectorViewMethods1GetAt(elementType).Import(module),
+                declaration: interopReferences.IVectorViewMethods1GetAt(elementType),
                 method: getAtMethod);
         }
 
@@ -138,9 +138,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
+                    returnType: elementType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32]));
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
@@ -152,7 +152,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IReadOnlyListMethods1get_Item(elementType, vectorViewMethodsType).Import(module) },
+                    { Call, interopReferences.IReadOnlyListMethods1get_Item(elementType, vectorViewMethodsType) },
                     { Ret }
                 }
             };
@@ -165,7 +165,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             readOnlyListMethodsType.Methods.Add(countMethod);
 
@@ -175,7 +175,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IReadOnlyListMethodsCount.Import(module) },
+                    { Call, interopReferences.IReadOnlyListMethodsCount },
                     { Ret }
                 }
             };
@@ -328,13 +328,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor) },
                 Interfaces =
                 {
-                    new InterfaceImplementation(readOnlyListType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                    new InterfaceImplementation(readOnlyListType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(readOnlyCollectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -344,11 +344,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(elementType, module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyList1get_Item(elementType).Import(module),
+                declaration: interopReferences.IReadOnlyList1get_Item(elementType),
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
@@ -376,7 +376,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
+                declaration: interopReferences.IReadOnlyCollection1get_Count(elementType),
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
@@ -400,11 +400,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType)));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
+                declaration: interopReferences.IEnumerable1GetEnumerator(elementType),
                 method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
@@ -419,11 +419,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerableGetEnumeratorMethod = new(
                 name: "System.Collections.IEnumerable.GetEnumerator"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.ToReferenceTypeSignature()));
 
             // Add and implement the 'IEnumerable.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
+                declaration: interopReferences.IEnumerableGetEnumerator,
                 method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
@@ -432,7 +432,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
+                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType) },
                     { Ret }
                 }
             };

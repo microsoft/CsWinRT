@@ -259,7 +259,6 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
@@ -426,7 +425,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -533,7 +531,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -656,7 +653,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -780,7 +776,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -912,7 +907,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1035,7 +1029,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1168,7 +1161,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1230,7 +1222,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1336,7 +1327,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1452,7 +1442,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1568,7 +1557,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1674,7 +1662,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1780,7 +1767,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1884,7 +1870,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
