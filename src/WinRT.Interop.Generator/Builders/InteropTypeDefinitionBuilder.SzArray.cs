@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
                         arrayType.BaseType.GetAbiType(interopReferences).MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels

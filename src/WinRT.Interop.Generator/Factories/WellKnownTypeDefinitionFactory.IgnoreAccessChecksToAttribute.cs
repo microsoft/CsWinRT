@@ -81,8 +81,7 @@ internal partial class WellKnownTypeDefinitionFactory
         IgnoresAccessChecksToType.CustomAttributes.Add(InteropCustomAttributeFactory.AttributeUsage(
             attributeTargets: AttributeTargets.Assembly,
             allowMultiple: true,
-            interopReferences: interopReferences,
-            module: module));
+            interopReferences: interopReferences));
 
         return IgnoresAccessChecksToType;
     }

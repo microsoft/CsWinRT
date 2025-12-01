@@ -742,8 +742,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 value: runtimeClassName,
                 target: externalTypeMapTargetType!,
                 trimTarget: externalTypeMapTrimTargetType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMapAssociation]' attribute for the proxy type map.
@@ -753,8 +752,7 @@ internal static partial class InteropTypeDefinitionBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
                 source: proxyTypeMapSourceType,
                 proxy: proxyTypeMapProxyType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMapAssociation]' attribute for 'IDynamicInterfaceCastable' scenarios.
@@ -764,8 +762,7 @@ internal static partial class InteropTypeDefinitionBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationDynamicInterfaceCastableImplementationTypeMapGroup(
                 source: interfaceTypeMapSourceType,
                 proxy: interfaceTypeMapProxyType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
     }
 

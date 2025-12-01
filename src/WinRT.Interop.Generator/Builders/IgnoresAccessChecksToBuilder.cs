@@ -19,10 +19,12 @@ internal static partial class IgnoresAccessChecksToBuilder
     /// </summary>
     /// <param name="referencePathModules">The input set of reference path modules.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     public static void AssemblyAttributes(
         IEnumerable<ModuleDefinition> referencePathModules,
         InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module)
     {
         foreach (ModuleDefinition assemblyModule in referencePathModules)
@@ -38,7 +40,7 @@ internal static partial class IgnoresAccessChecksToBuilder
             string assemblyName = Path.GetFileNameWithoutExtension(assemblyModule.Name!);
 
             // Create the attribute and add it to the assembly
-            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, module));
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, interopReferences));
         }
     }
 }

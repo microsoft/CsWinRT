@@ -122,8 +122,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             value: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
             target: target,
             trimTarget: trimTarget,
-            interopReferences: interopReferences,
-            module: module));
+            interopReferences: interopReferences));
     }
 
     /// <summary>
@@ -172,7 +171,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             value: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
             target: proxyType.ToTypeSignature(),
             trimTarget: trimTarget,
-            interopReferences: interopReferences,
-            module: module));
+            interopReferences: interopReferences));
     }
 }
