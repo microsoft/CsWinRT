@@ -24,7 +24,7 @@ internal partial class InteropMethodRewriteFactory
     public static class RetVal
     {
         /// <summary>
-        /// Performs two-pass code generation on a target method to marshal an managed <c>[retval]</c> value.
+        /// Performs two-pass code generation on a target method to marshal a managed <c>[retval]</c> value.
         /// </summary>
         /// <param name="retValType">The <c>[retval]</c> type that needs to be marshalled.</param>
         /// <param name="method">The target method to perform two-pass code generation on.</param>
