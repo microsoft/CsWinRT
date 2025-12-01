@@ -32,5 +32,32 @@
   <Target Name="CleanIntermediateDirs" Condition="'$(CleanIntermediateDirs)'=='true'" AfterTargets="Build">
     <RemoveDir Directories="$(IntDir)" />
   </Target>
-	
+
+  <!-- For C# projects, we use embedded pdbs, but we still need to submit symbols to the symbol server,
+       so we extract the pdb to submit. -->
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" PrivateAssets="All" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <Target Name="CopyEmbeddedSymbols" 
+          AfterTargets="Build" 
+          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != ''"
+          Inputs="$(TargetPath)"
+          Outputs="$(OutputPath)$(AssemblyName).pdb">
+    <PropertyGroup>
+      <_Pdb2PdbPath>$(PkgMicrosoft_DiaSymReader_Pdb2Pdb)\tools\Pdb2Pdb.exe</_Pdb2PdbPath>
+      <_OutputPdbPath>$(OutputPath)$(AssemblyName).pdb</_OutputPdbPath>
+      <_Pdb2PdbCommandLine>"$(TargetPath)" /out "$(_OutputPdbPath)" /extract</_Pdb2PdbCommandLine>
+    </PropertyGroup>
+
+    <!-- Delete existing extracted PDB to allow overwrite -->
+    <Delete Files="$(_OutputPdbPath)" Condition="Exists('$(_OutputPdbPath)')" />
+
+    <Exec Command="&quot;$(_Pdb2PdbPath)&quot; $(_Pdb2PdbCommandLine)" IgnoreExitCode="false" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_OutputPdbPath)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
