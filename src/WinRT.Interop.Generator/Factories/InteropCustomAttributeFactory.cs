@@ -25,12 +25,12 @@ internal static class InteropCustomAttributeFactory
     public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences, ModuleDefinition module)
     {
         // Get the 'Type[]' signature and reuse it (we need it for both the argument and the element)
-        TypeSignature typeArraySignature = interopReferences.Type.Import(module).MakeSzArrayType();
+        TypeSignature typeArraySignature = interopReferences.Type.MakeSzArrayType();
 
         // Create the following attribute:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        return new(interopReferences.UnmanagedCallersOnlyAttribute_ctor.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.UnmanagedCallersOnlyAttribute_ctor, new CustomAttributeSignature(
             fixedArguments: [],
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Field,
@@ -38,7 +38,7 @@ internal static class InteropCustomAttributeFactory
                 argumentType: typeArraySignature,
                 argument: new CustomAttributeArgument(
                     argumentType: typeArraySignature,
-                    elements: interopReferences.CallConvMemberFunction.Import(module).ToReferenceTypeSignature()))]));
+                    elements: interopReferences.CallConvMemberFunction.ToReferenceTypeSignature()))]));
     }
 
     /// <summary>
@@ -58,9 +58,9 @@ internal static class InteropCustomAttributeFactory
         // Create the following attribute:
         //
         // [AttributeUsage(<attributeTargets>, AllowMultiple = <allowMultiple>)]
-        return new(interopReferences.AttributeUsageAttribute_ctor_AttributeTargets.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.AttributeUsageAttribute_ctor_AttributeTargets, new CustomAttributeSignature(
             fixedArguments: [new CustomAttributeArgument(
-                argumentType: interopReferences.AttributeTargets.Import(module).ToValueTypeSignature(),
+                argumentType: interopReferences.AttributeTargets.ToValueTypeSignature(),
                 value: (int)attributeTargets)],
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Property,
@@ -113,17 +113,17 @@ internal static class InteropCustomAttributeFactory
         // Create the following attribute:
         //
         // [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(<VALUE>, <TARGET>, <TRIM_TARGET>)]
-        return new(interopReferences.TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: value),
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: target.Import(module)),
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: target),
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: trimTarget.Import(module))]));
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: trimTarget)]));
     }
 
     /// <summary>
@@ -143,14 +143,14 @@ internal static class InteropCustomAttributeFactory
         // Create the following attribute:
         //
         // [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(<SOURCE>, <PROXY>)]
-        return new(interopReferences.TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: source.Import(module)),
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: source),
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: proxy.Import(module))]));
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: proxy)]));
     }
 
     /// <summary>
@@ -170,13 +170,13 @@ internal static class InteropCustomAttributeFactory
         // Create the following attribute:
         //
         // [TypeMap<DynamicInterfaceCastableImplementationTypeMapGroup>(<SOURCE>, <PROXY>)]
-        return new(interopReferences.TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: source.Import(module)),
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: source),
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: proxy.Import(module))]));
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: proxy)]));
     }
 }

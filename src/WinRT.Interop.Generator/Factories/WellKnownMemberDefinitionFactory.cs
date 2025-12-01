@@ -23,7 +23,6 @@ internal static class WellKnownMemberDefinitionFactory
     /// <param name="iidRvaFieldName">The name to use for <paramref name="iidRvaField"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="iid">The <see cref="Guid"/> value to use for the RVA field.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <param name="get_IidMethod">The resulting 'IID' getter method.</param>
@@ -33,7 +32,6 @@ internal static class WellKnownMemberDefinitionFactory
         Utf8String iidRvaFieldName,
         TypeDefinition iidRvaDataType,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         in Guid iid,
         out FieldDefinition iidRvaField,
         out MethodDefinition get_IidMethod,
@@ -49,7 +47,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
 
         // Select the property and accessor name based on 'propertyName'
         Utf8String effectivePropertyName = $"IID_{propertyName}";
@@ -74,7 +72,7 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
+            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor) },
             GetMethod = get_IidMethod
         };
     }
@@ -84,18 +82,16 @@ internal static class WellKnownMemberDefinitionFactory
     /// </summary>
     /// <param name="forwardedIidMethod">The <see cref="MethodDefinition"/> to forward calls to.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="get_IidMethod">The resulting 'IID' getter method.</param>
     /// <param name="iidProperty">The resulting 'IID' property.</param>
     public static void IID(
         MethodDefinition forwardedIidMethod,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         out MethodDefinition get_IidMethod,
         out PropertyDefinition iidProperty)
     {
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
 
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(
@@ -117,7 +113,7 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
+            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor) },
             GetMethod = get_IidMethod
         };
     }
