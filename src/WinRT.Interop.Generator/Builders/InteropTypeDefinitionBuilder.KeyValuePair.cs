@@ -139,10 +139,6 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it may be needed to marshal parameters or return values)
             emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
 
-            // Prepare the external types we need in the implemented methods
-            TypeSignature typeSignature2 = keyValuePairType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
-
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
             CreateComInterfaceFlags flags = keyValuePairType.IsTrackerSupportRequired(interopReferences)
                 ? CreateComInterfaceFlags.TrackerSupport
@@ -155,16 +151,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [typeSignature2]))
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                    parameterTypes: [keyValuePairType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Box, keyValuePairType.ToTypeDefOrRef() },
                     { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe },
                     { Ret }
                 }
             };
@@ -173,7 +169,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Declare the local variables:
             //   [0]: '<KEY_VALUE_PAIR_TYPE>' (for the failure path, initialized to 'default')
-            CilLocalVariable loc_0_default = new(keyValuePairType.Import(module));
+            CilLocalVariable loc_0_default = new(keyValuePairType);
 
             // Jump labels
             CilInstruction ldarg_0_marshal = new(Ldarg_0);
@@ -185,7 +181,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: typeSignature2,
+                    returnType: keyValuePairType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilLocalVariables = { loc_0_default },
@@ -199,7 +195,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // return default
                     { Ldloca_S, loc_0_default },
-                    { Initobj, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Initobj, keyValuePairType.ToTypeDefOrRef() },
                     { Ldloc_0 },
                     { Ret },
 
@@ -208,7 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, keyAccessorMethod },
                     { Ldarg_0 },
                     { Call, valueAccessorMethod },
-                    { Newobj, interopReferences.KeyValuePair2_ctor(keyValuePairType).Import(module) },
+                    { Newobj, interopReferences.KeyValuePair2_ctor(keyValuePairType) },
                     { Ret }
                 }
             };

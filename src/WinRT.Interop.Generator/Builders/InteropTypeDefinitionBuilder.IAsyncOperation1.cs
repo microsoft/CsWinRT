@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(operationMethodsType);
@@ -65,7 +65,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType),
                 method: get_CompletedMethod);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
@@ -83,7 +83,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType),
                 method: set_CompletedMethod);
 
             // Define the 'GetResults' method:
@@ -95,7 +95,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType),
                 method: getResultsMethod);
         }
 
@@ -230,11 +230,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor) },
                 Interfaces =
                 {
-                    new InterfaceImplementation(operationType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IAsyncInfo.Import(module))
+                    new InterfaceImplementation(operationType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IAsyncInfo)
                 }
             };
 
@@ -247,11 +247,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CompletedMethod = new(
                 name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.get_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType).Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)));
 
             // Add and implement the 'get_Completed' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperation1get_Completed(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperation1get_Completed(resultType),
                 method: get_CompletedMethod);
 
             // Create a body for the 'get_Completed' method
@@ -268,11 +268,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType).Import(module)]));
+                    parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)]));
 
             // Add and implement the 'set_Completed' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperation1set_Completed(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperation1set_Completed(resultType),
                 method: set_CompletedMethod);
 
             // Create a body for the 'set_Completed' method
@@ -299,11 +299,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getResultsMethod = new(
                 name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.GetResults",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(resultType.Import(module)));
+                signature: MethodSignature.CreateInstance(resultType));
 
             // Add and implement the 'GetResults' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperation1GetResults(resultType).Import(module),
+                declaration: interopReferences.IAsyncOperation1GetResults(resultType),
                 method: getResultsMethod);
 
             // Create a body for the 'GetResults' method
