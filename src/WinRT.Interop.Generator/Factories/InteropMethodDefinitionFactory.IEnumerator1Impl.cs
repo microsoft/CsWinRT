@@ -10,6 +10,8 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
+#pragma warning disable IDE1006
+
 namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <summary>
@@ -28,7 +30,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition Current(
+        public static MethodDefinition get_Current(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             ModuleDefinition module)

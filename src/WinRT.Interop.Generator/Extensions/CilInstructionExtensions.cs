@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -21,12 +23,50 @@ internal static class CilInstructionExtensions
         {
             return index switch
             {
-                0 => new CilInstruction(CilOpCodes.Ldarg_0),
-                1 => new CilInstruction(CilOpCodes.Ldarg_1),
-                2 => new CilInstruction(CilOpCodes.Ldarg_2),
-                3 => new CilInstruction(CilOpCodes.Ldarg_3),
-                _ when index < 256 => new CilInstruction(CilOpCodes.Ldarg_S, (byte)index),
-                _ => new CilInstruction(CilOpCodes.Ldarg, index)
+                0 => new CilInstruction(Ldarg_0),
+                1 => new CilInstruction(Ldarg_1),
+                2 => new CilInstruction(Ldarg_2),
+                3 => new CilInstruction(Ldarg_3),
+                < 256 => new CilInstruction(Ldarg_S, (byte)index),
+                _ => new CilInstruction(Ldarg, index)
+            };
+        }
+
+        /// <summary>
+        /// Create a new instruction storing a local from a given method, using the smallest possible operation code and operand size.
+        /// </summary>
+        /// <param name="local">The local to store.</param>
+        /// <param name="method">The containing method body.</param>
+        /// <returns>The instruction.</returns>
+        public static CilInstruction CreateStloc(CilLocalVariable local, CilMethodBody method)
+        {
+            return method.LocalVariables.IndexOf(local) switch
+            {
+                0 => new CilInstruction(Stloc_0),
+                1 => new CilInstruction(Stloc_1),
+                2 => new CilInstruction(Stloc_2),
+                3 => new CilInstruction(Stloc_3),
+                < 256 and int i => new CilInstruction(Stloc_S, (byte)i),
+                int i => new CilInstruction(Stloc, i)
+            };
+        }
+
+        /// <summary>
+        /// Create a new instruction loading a local from a given method, using the smallest possible operation code and operand size.
+        /// </summary>
+        /// <param name="local">The local to load.</param>
+        /// <param name="method">The containing method body.</param>
+        /// <returns>The instruction.</returns>
+        public static CilInstruction CreateLdloc(CilLocalVariable local, CilMethodBody method)
+        {
+            return method.LocalVariables.IndexOf(local) switch
+            {
+                0 => new CilInstruction(Ldloc_0),
+                1 => new CilInstruction(Ldloc_1),
+                2 => new CilInstruction(Ldloc_2),
+                3 => new CilInstruction(Ldloc_3),
+                < 256 and int i => new CilInstruction(Ldloc_S, (byte)i),
+                int i => new CilInstruction(Ldloc, i)
             };
         }
     }

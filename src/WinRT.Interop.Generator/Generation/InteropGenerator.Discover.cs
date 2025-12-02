@@ -220,9 +220,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                for (TypeDefinition? currentType = type;
-                    currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
-                    currentType = currentType.BaseType?.Resolve())
+                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {
@@ -311,6 +309,22 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Ignore generic instantiations that are not Windows Runtime types. That is, those that
+                // have a generic type definition that's not a Windows Runtime type, or that have any type
+                // arguments that are not Windows Runtime types.
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                {
+                    continue;
+                }
+
+                // Gather all 'KeyValuePair<,>' instances
+                if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
+                {
+                    discoveryState.TrackKeyValuePairType(typeSignature);
+
+                    continue;
+                }
+
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
@@ -323,15 +337,6 @@ internal partial class InteropGenerator
                      typeDefinition.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
-
-                    continue;
-                }
-
-                // Gather all 'KeyValuePair<,>' instances
-                if (typeDefinition.IsValueType &&
-                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2))
-                {
-                    discoveryState.TrackKeyValuePairType(typeSignature);
 
                     continue;
                 }
@@ -385,6 +390,12 @@ internal partial class InteropGenerator
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
                 if (!typeSignature.IsFullyResolvable)
+                {
+                    continue;
+                }
+
+                // Ignore array types that are not Windows Runtime types
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
                 {
                     continue;
                 }

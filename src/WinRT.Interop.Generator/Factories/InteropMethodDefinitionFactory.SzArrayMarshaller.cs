@@ -71,7 +71,7 @@ internal partial class InteropMethodDefinitionFactory
                     }
                 };
             }
-            else if (!elementType.Resolve()!.IsValueType || elementType.IsKeyValuePairType(interopReferences))
+            else if (!elementType.Resolve()!.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 freeMethod.CilMethodBody = new CilMethodBody
                 {

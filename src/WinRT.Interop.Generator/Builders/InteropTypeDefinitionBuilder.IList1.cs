@@ -88,7 +88,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
             // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
-            if (!elementType.IsValueType || elementType.IsKeyValuePairType(interopReferences))
+            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 
@@ -140,29 +140,18 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it's needed by 'IObservableVector<T>')
             emitState.TrackTypeDefinition(vectorMethodsType, listType, "IVectorMethods");
 
-            // Define the 'GetAt' method as follows:
-            //
-            // public static <TYPE_ARGUMENT> GetAt(WindowsRuntimeObjectReference thisReference, uint index)
-            MethodDefinition getAtMethod = new(
-                name: "GetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32]))
-            { NoInlining = true };
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IVectorViewMethods.GetAt(
+                readOnlyListType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'GetAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
                 method: getAtMethod);
-
-            // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
 
             // Define the 'SetAt' method as follows:
             //
@@ -675,6 +664,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -682,6 +672,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition listComWrappersCallbackType,
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -692,6 +683,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, listType, "Marshaller");
         }
 
         /// <summary>

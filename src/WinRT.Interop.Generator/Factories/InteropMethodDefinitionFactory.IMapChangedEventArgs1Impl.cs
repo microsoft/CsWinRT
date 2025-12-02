@@ -12,7 +12,7 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <inheritdoc cref="InteropMethodDefinitionFactory"/>
-internal static partial class InteropMethodDefinitionFactory
+internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
     /// Helpers for impl types for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> interfaces.

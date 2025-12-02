@@ -9,6 +9,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -97,7 +98,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'KeyValuePair<TKey, TValue>' types
-        DefineKeyValuePairTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineKeyValuePairTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -133,6 +134,11 @@ internal partial class InteropGenerator
 
         // Emit interop types for SZ array types
         DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Rewrite the IL methods of marshalling stubs needing two-pass generation
+        RewriteMethodDefinitions(args, emitState, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -435,6 +441,7 @@ internal partial class InteropGenerator
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     iteratorMethodsType: out TypeDefinition iteratorMethodsType);
 
@@ -589,6 +596,7 @@ internal partial class InteropGenerator
                     enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -711,6 +719,7 @@ internal partial class InteropGenerator
                     readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -842,6 +851,7 @@ internal partial class InteropGenerator
                     listComWrappersCallbackType: listComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -965,6 +975,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1097,6 +1108,7 @@ internal partial class InteropGenerator
                     dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1133,12 +1145,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineKeyValuePairTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -1172,6 +1186,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     implType: out _);
+
+                InteropTypeDefinitionBuilder.KeyValuePair.Marshaller(
+                    keyValuePairType: typeSignature,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e)
             {
@@ -1921,6 +1942,41 @@ internal partial class InteropGenerator
             catch (Exception e)
             {
                 WellKnownInteropExceptions.SzArrayTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Rewrites IL method bodies for marshalling stubs as part of two-pass IL generation.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void RewriteMethodDefinitions(
+        InteropGeneratorArgs args,
+        InteropGeneratorEmitState emitState,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (ReturnTypeMethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
+                    returnType: rewriteInfo.ReturnType,
+                    method: rewriteInfo.Method,
+                    marker: rewriteInfo.Marker,
+                    source: rewriteInfo.Source,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+            }
+            catch (Exception e)
+            {
+                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.ReturnType, rewriteInfo.Method, e).ThrowOrAttach(e);
             }
         }
     }

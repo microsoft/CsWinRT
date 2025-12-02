@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
@@ -92,11 +94,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// The state was changed after making it readonly.
+    /// The discovery state was changed after making it readonly.
     /// </summary>
-    public static WellKnownInteropException StateChangeAfterMakeReadOnly()
+    public static WellKnownInteropException DiscoveryStateChangeAfterMakeReadOnlyError()
     {
-        return Exception(10, "An attempt was made to mutate the generator state after it was made readonly (in the emit phase).");
+        return Exception(10, "An attempt was made to mutate the generator discovery state after it was made readonly (in the emit phase).");
     }
 
     /// <summary>
@@ -473,6 +475,46 @@ internal static class WellKnownInteropExceptions
     public static Exception TypeSignatureGenerationError(TypeSignature type)
     {
         return Exception(54, $"Failed to generate the type signature for type '{type}'.");
+    }
+
+    /// <summary>
+    /// The emit state was changed after making it readonly.
+    /// </summary>
+    public static WellKnownInteropException EmitStateChangeAfterMakeReadOnlyError()
+    {
+        return Exception(55, "An attempt was made to mutate the generator emit state after it was made readonly.");
+    }
+
+    /// <summary>
+    /// Failed to perform two-pass rewrite of a marshalling method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteError(TypeSignature type, MethodDefinition method, Exception exception)
+    {
+        return Exception(56, $"Failed to perform two-pass rewrite of method '{method}' to marshal type '{type}'.", exception);
+    }
+
+    /// <summary>
+    /// A generated interop method is missing an IL method body.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteMissingBodyError(MethodDefinition method)
+    {
+        return Exception(57, $"Generated interop method '{method}' is missing an IL method body.");
+    }
+
+    /// <summary>
+    /// A marker instruction was not found in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteMarkerInstructionNotFoundError(CilInstruction marker, MethodDefinition method)
+    {
+        return Exception(58, $"Marker instruction '{marker.OpCode.Code}' not found in generated interop method '{method}'.");
+    }
+
+    /// <summary>
+    /// A source local variable was not found in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteSourceLocalNotFoundError(CilLocalVariable source, MethodDefinition method)
+    {
+        return Exception(59, $"Local variable of type '{source.VariableType}' not found in generated interop method '{method}'.");
     }
 
     /// <summary>

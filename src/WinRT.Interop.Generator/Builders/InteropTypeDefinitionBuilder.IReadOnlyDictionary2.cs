@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
             // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
             // The 'IMapView<K, V>' interface doesn't use 'V' as a by-value parameter anywhere in the vtable,
             // so we can aggressively share vtable types for all cases where 'K' is a reference type.
-            if (!keyType.IsValueType || keyType.IsKeyValuePairType(interopReferences))
+            if (!keyType.IsValueType || keyType.IsConstructedKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyDictionary2Vftbl;
 
@@ -391,6 +391,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyDictionaryComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -398,6 +399,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition readOnlyDictionaryComWrappersCallbackType,
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -408,6 +410,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, readOnlyDictionaryType, "Marshaller");
         }
 
         /// <summary>
