@@ -98,9 +98,9 @@ public static unsafe class TypeMarshaller
             return;
         }
 
+        TypeKind kind = TypeKind.Metadata;
         if (value is not null)
         {
-            TypeKind kind = TypeKind.Metadata;
             if (value.IsPrimitive)
             {
                 kind = TypeKind.Primitive;
@@ -109,13 +109,13 @@ public static unsafe class TypeMarshaller
             {
                 if (marshallingInfo.GetIsProxyType())
                 {
-                    reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
-                    return;
+                    goto CustomTypeReference;
                 }
                 reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
                 return;
             }
 
+        CustomTypeReference:
             reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
         }
     }
