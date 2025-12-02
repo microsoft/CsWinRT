@@ -1157,6 +1157,22 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        TypeDefinition? methodsType = null;
+
+        // Generate shared code for helpers needed by instantiated 'KeyValuePair<,>' types
+        try
+        {
+            InteropTypeDefinitionBuilder.KeyValuePair.Methods(
+                interopReferences: interopReferences,
+                module: module,
+                methodsType: out methodsType);
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.KeyValuePairTypeSharedCodeGenerationError(e).ThrowOrAttach(e);
+        }
+
+        // Generate specialized code for all discovered instantiations
         foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes)
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1187,8 +1203,21 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
+                InteropTypeDefinitionBuilder.KeyValuePair.Accessors(
+                    keyValuePairType: typeSignature,
+                    methodsType: methodsType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    keyAccessorMethod: out MethodDefinition keyAccessorMethod,
+                    valueAccessorMethod: out MethodDefinition valueAccessorMethod);
+
                 InteropTypeDefinitionBuilder.KeyValuePair.Marshaller(
                     keyValuePairType: typeSignature,
+                    get_IidMethod: get_IidMethod,
+                    keyAccessorMethod: keyAccessorMethod,
+                    valueAccessorMethod: valueAccessorMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,

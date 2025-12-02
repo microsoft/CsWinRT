@@ -300,6 +300,87 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a given type needs tracker support (when marshalled as a CCW).
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type requires tracker support.</returns>
+        public bool IsTrackerSupportRequired(InteropReferences interopReferences)
+        {
+            // Check reference types first, as there's fewer special cases to handle
+            if (!type.IsValueType)
+            {
+                // 'string' objects don't need tracker support, as they can't reference anything
+                if (type.IsTypeOfString(interopReferences))
+                {
+                    return false;
+                }
+
+                // For array types, tracker support is required if the element type requires it.
+                // E.g. an 'int[]' or a 'string[]' array doesn't need it, but 'object[]' does.
+                if (type is SzArrayTypeSignature arrayType)
+                {
+                    return arrayType.BaseType.IsTrackerSupportRequired(interopReferences);
+                }
+
+                // For all other cases, we assume tracker support is required, to be safe
+                return true;
+            }
+
+            // For generic value types (i.e. 'Nullable<T>' or 'KeyValuePair<,>'), we only need
+            // tracker support if any of the type arguments actually requires tracker support.
+            if (type is GenericInstanceTypeSignature genericType)
+            {
+                foreach (TypeSignature typeArgument in genericType.TypeArguments)
+                {
+                    if (typeArgument.IsTrackerSupportRequired(interopReferences))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            TypeDefinition typeDefinition = type.Resolve()!;
+
+            // Enum types are blittable, so they never need tracker support
+            if (typeDefinition.IsEnum)
+            {
+                return false;
+            }
+
+            // All fundamental types are blittable, so same as for enum types
+            if (IsFundamentalWindowsRuntimeType(type, interopReferences))
+            {
+                return false;
+            }
+
+            // The 'TimeSpan' and 'DateTimeOffset' types are not blittable, but they're also unmanaged
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            {
+                return false;
+            }
+
+            // For complex struct types, crawl all fields (same as the methods above)
+            foreach (FieldDefinition fieldDefinition in typeDefinition.Fields)
+            {
+                if (fieldDefinition.IsStatic || fieldDefinition.IsLiteral)
+                {
+                    continue;
+                }
+
+                // If any fields need tracker support, then the containing type needs it too
+                if (fieldDefinition.Signature!.FieldType.IsTrackerSupportRequired(interopReferences))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the ABI type for a given type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

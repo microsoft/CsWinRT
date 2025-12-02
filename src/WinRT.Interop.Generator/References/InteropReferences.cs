@@ -324,6 +324,11 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyDictionary2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyDictionary`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair"/>.
+    /// </summary>
+    public TypeReference KeyValuePair => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
     /// </summary>
     public TypeReference KeyValuePair2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
@@ -837,6 +842,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeValueTypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeValueTypeMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
@@ -1691,6 +1701,17 @@ internal sealed class InteropReferences
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe => field ??= WindowsRuntimeValueTypeMarshaller
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+            parameterTypes: [
+                _corLibTypeFactory.Object,
+                CreateComInterfaceFlags.ToValueTypeSignature(),
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
     /// </summary>
     public MemberReference HStringMarshallerConvertToUnmanaged => field ??= HStringMarshaller
@@ -1928,6 +1949,21 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
                     new GenericParameterSignature(GenericParameterType.Method, 0)]))
             .MakeGenericInstanceMethod(argType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="keyValuePairType">The input <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+    public MemberReference KeyValuePair2_ctor(TypeSignature keyValuePairType)
+    {
+        return keyValuePairType
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]);
     }
 
     /// <summary>

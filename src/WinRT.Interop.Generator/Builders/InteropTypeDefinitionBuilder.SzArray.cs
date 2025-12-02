@@ -384,6 +384,11 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
+            // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
+            CreateComInterfaceFlags flags = arrayType.IsTrackerSupportRequired(interopReferences)
+                ? CreateComInterfaceFlags.TrackerSupport
+                : CreateComInterfaceFlags.None;
+
             // Define the 'GetOrCreateComInterfaceForObject' method as follows:
             //
             // public static void* GetOrCreateComInterfaceForObject(object value)
@@ -397,7 +402,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_1 },
-                    { Ldc_I4_2 }, // TODO
+                    { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
                     { Ret }
                 }
@@ -452,7 +457,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Set the 'wrapperFlags' to 'CreatedWrapperFlags.NonWrapping'
                     { Ldarg_2 },
-                    { Ldc_I4_2 },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.NonWrapping) },
                     { Stind_I4 },
 
                     // Forward to 'WindowsRuntimeArrayMarshaller'
