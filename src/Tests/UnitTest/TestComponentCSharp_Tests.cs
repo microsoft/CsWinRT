@@ -581,32 +581,48 @@ namespace UnitTest
         [Fact]
         public void TestTypePropertyWithPrimitiveType()
         {
-            TestObject.TypeProperty = typeof(System.Int64);
+            TestObject.TypeProperty = typeof(long);
             Assert.Equal("Int64", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.Int32);
+            TestObject.TypeProperty = typeof(int);
             Assert.Equal("Int32", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.Int16);
+            TestObject.TypeProperty = typeof(short);
             Assert.Equal("Int16", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.UInt64);
+            TestObject.TypeProperty = typeof(ulong);
             Assert.Equal("UInt64", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.UInt32);
+            TestObject.TypeProperty = typeof(uint);
             Assert.Equal("UInt32", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.UInt16);
+            TestObject.TypeProperty = typeof(ushort);
             Assert.Equal("UInt16", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
-            TestObject.TypeProperty = typeof(System.Byte);
+            TestObject.TypeProperty = typeof(byte);
             Assert.Equal("UInt8", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(char);
+            Assert.Equal("Char16", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(float);
+            Assert.Equal("Single", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(double);
+            Assert.Equal("Double", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(bool);
+            Assert.Equal("Boolean", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
         }
 
