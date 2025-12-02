@@ -309,6 +309,20 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Check for all '[ReadOnly]Span<T>' types in particular, and track them as SZ array types.
+                // This is because "pass-array" and "fill-array" parameters are projected using spans, but
+                // those projections require the marshalling code produced when discovering SZ array types.
+                // So if we see any of these spans where the element type is a Windows Runtime type, we
+                // manually construct an SZ array type for it and add it to the set of tracked array types.
+                if (typeSignature.IsValueType &&
+                    typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
+                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
+                {
+                    discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
+
+                    continue;
+                }
+
                 // Ignore generic instantiations that are not Windows Runtime types. That is, those that
                 // have a generic type definition that's not a Windows Runtime type, or that have any type
                 // arguments that are not Windows Runtime types.
