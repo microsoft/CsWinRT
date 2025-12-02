@@ -116,7 +116,7 @@ public static unsafe class TypeMarshaller
                 {
                     goto CustomTypeReference;
                 }
-                reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
+                reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName().AsSpan()).ToString(), Kind = kind };
                 return;
             }
 
@@ -136,11 +136,10 @@ public static unsafe class TypeMarshaller
     /// <returns>
     /// The inner type name if the input matches the expected pattern; otherwise, the original string.
     /// </returns>
-    private static string ExtractTypeName(string runtimeClassName)
+    private static ReadOnlySpan<char> ExtractTypeName(ReadOnlySpan<char> runtimeClassName)
     {
         const string prefix = "Windows.Foundation.IReference<";
-        ReadOnlySpan<char> span = runtimeClassName;
-        return span.StartsWith(prefix) ? span.Slice(prefix.Length, span.Length - prefix.Length - 1).ToString() : runtimeClassName;
+        return runtimeClassName.StartsWith(prefix, StringComparison.Ordinal) ? runtimeClassName.Slice(prefix.Length, runtimeClassName.Length - prefix.Length - 1) : runtimeClassName;
     }
 
 
