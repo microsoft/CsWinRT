@@ -606,11 +606,7 @@ namespace UnitTest
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
 
             TestObject.TypeProperty = typeof(System.Byte);
-            Assert.Equal("Byte", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(System.Byte);
-            Assert.Equal("Byte", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("UInt8", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
         }
 

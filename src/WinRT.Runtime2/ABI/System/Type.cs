@@ -107,7 +107,12 @@ public static unsafe class TypeMarshaller
             }
             if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
             {
-                if (marshallingInfo.GetIsProxyType())
+                if (marshallingInfo.GetIsProxyType()
+                        && !value.IsPrimitive
+                        && value != typeof(object)
+                        && value != typeof(string)
+                        && value != typeof(Guid)
+                        && value != typeof(global::System.Type))
                 {
                     goto CustomTypeReference;
                 }
