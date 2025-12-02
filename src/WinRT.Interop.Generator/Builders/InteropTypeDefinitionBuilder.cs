@@ -303,13 +303,6 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(marshallerType);
 
-        // Prepare the external types we need in the implemented methods
-        TypeSignature typeSignature2 = typeSignature;
-        TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
-
-        // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
-        MemberReference windowsRuntimeInterfaceMarshallerConvertToUnmanaged = interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged(typeSignature);
-
         // Define the 'ConvertToUnmanaged' method as follows:
         //
         // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<INTERFACE_TYPE> value)
@@ -317,14 +310,14 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "ConvertToUnmanaged"u8,
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
-                returnType: windowsRuntimeObjectReferenceValueType,
-                parameterTypes: [typeSignature2]))
+                returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [typeSignature]))
         {
             CilInstructions =
             {
                 { Ldarg_0 },
                 { Call, get_IidMethod },
-                { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged },
+                { Call, interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged(typeSignature) },
                 { Ret }
             }
         };
@@ -343,14 +336,14 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "ConvertToManaged"u8,
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
-                returnType: typeSignature2,
+                returnType: typeSignature,
                 parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
         {
             CilInstructions =
             {
                 { Ldarg_0 },
                 { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
-                { Castclass, typeSignature2.ToTypeDefOrRef() },
+                { Castclass, typeSignature.ToTypeDefOrRef() },
                 { Ret }
             }
         };
@@ -596,12 +589,6 @@ internal static partial class InteropTypeDefinitionBuilder
         // Create the static constructor to initialize the interface entries
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
-        // Import the target fields (they have to be in the module, or the resulting assembly won't be valid):
-        //   - [0]: Guid IID
-        //   - [1]: nint Vtable
-        IFieldDescriptor comInterfaceEntryIIDField = interopReferences.ComInterfaceEntryIID;
-        IFieldDescriptor comInterfaceEntryVtableField = interopReferences.ComInterfaceEntryVtable;
-
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CilMethodBody!.Instructions;
 
@@ -622,14 +609,14 @@ internal static partial class InteropTypeDefinitionBuilder
             // Invoke the callback to emit code to load 'IID' on the evaluation stack
             get_IID(implTypes[i], cctorInstructions, interopReferences, module);
 
-            _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
+            _ = cctorInstructions.Add(Stfld, interopReferences.ComInterfaceEntryIID);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
             // Same as above, but to get the vtable pointer on the stack
             get_Vtable(implTypes[i], cctorInstructions, interopReferences, module);
 
-            _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
+            _ = cctorInstructions.Add(Stfld, interopReferences.ComInterfaceEntryVtable);
         }
 
         _ = cctorInstructions.Add(Ret);

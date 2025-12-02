@@ -139,10 +139,6 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it may be needed to marshal parameters or return values)
             emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
 
-            // Prepare the external types we need in the implemented methods
-            TypeSignature typeSignature2 = keyValuePairType;
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
-
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
             CreateComInterfaceFlags flags = keyValuePairType.IsTrackerSupportRequired(interopReferences)
                 ? CreateComInterfaceFlags.TrackerSupport
@@ -155,8 +151,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [typeSignature2]))
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                    parameterTypes: [keyValuePairType]))
             {
                 CilInstructions =
                 {
@@ -185,7 +181,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: typeSignature2,
+                    returnType: keyValuePairType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilLocalVariables = { loc_0_default },
