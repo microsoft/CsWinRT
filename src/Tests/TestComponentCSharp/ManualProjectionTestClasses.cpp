@@ -15,10 +15,17 @@ namespace winrt::TestComponentCSharp::implementation
 
     }
 
-    winrt::hstring SetTypeProperties::SetProperty()
+    winrt::hstring SetTypeProperties::GetPropertyInfo()
     {
         TestComponentCSharp::Class TestObject;
         TestObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestType1>());
+        return TestObject.GetTypePropertyAbiName() + L" " + TestObject.GetTypePropertyKind();
+    }
+
+    winrt::hstring SetTypeProperties::GetPropertyInfoFromCustomType(winrt::Windows::UI::Xaml::Interop::TypeName typeName)
+    {
+        TestComponentCSharp::Class TestObject;
+        TestObject.TypeProperty(typeName);
         return TestObject.GetTypePropertyAbiName() + L" " + TestObject.GetTypePropertyKind();
     }
 

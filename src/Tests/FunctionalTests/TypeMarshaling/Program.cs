@@ -6,8 +6,11 @@ using TestComponentCSharp;
 
 // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario
 SetTypeProperties setTypeProperties = new();
-return setTypeProperties.SetProperty().Equals("TestComponentCSharp.TestType1 Metadata") ? 100 : 101;
+Console.WriteLine(setTypeProperties.GetPropertyInfo());/*.Equals("TestComponentCSharp.TestType1 Metadata");*/
 
-//TestComponentCSharp.Class TestObject = new();
-//TestObject.TypeProperty = typeof(System.Type);
-//Console.WriteLine(TestObject.GetTypePropertyAbiName());
+SetTypeProperties customSetTypeProperties = new();
+Console.WriteLine(customSetTypeProperties.GetPropertyInfoFromCustomType(typeof(CustomTestType)));
+
+sealed class CustomTestType : Composable
+{
+}

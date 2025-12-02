@@ -114,6 +114,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private string? _runtimeClassName;
 
     /// <summary>
+    /// Whether the type is a proxy type and comes from ProxyTypeMapping
+    /// </summary>
+    private readonly bool _isProxyType;
+
+    /// <summary>
     /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
     /// </summary>
     /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
@@ -122,6 +127,19 @@ internal sealed class WindowsRuntimeMarshallingInfo
     {
         _metadataProviderType = metadataProviderType;
         _publicType = publicType;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
+    /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
+    /// <param name="isProxyType"><inheritdoc cref="_isProxyType" path="/summary/node()"/></param>
+    private WindowsRuntimeMarshallingInfo(Type metadataProviderType, Type? publicType, bool isProxyType = false)
+    {
+        _metadataProviderType = metadataProviderType;
+        _publicType = publicType;
+        _isProxyType = isProxyType;
     }
 
     /// <summary>
@@ -471,6 +489,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
         return _runtimeClassName ?? InitializeRuntimeClassName();
     }
 
+    public bool GetIsProxyType()
+    {
+        return _isProxyType;
+    }
+
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a specified metadata provider type.
     /// </summary>
@@ -506,7 +529,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // type. In this case, we don't need to query for '[WindowsRuntimeMappedType]'.
         if (ProxyTypeMapping.TryGetValue(managedType, out Type? proxyType))
         {
-            return new(proxyType, publicType: managedType);
+            return new(proxyType, publicType: managedType, isProxyType: true);
         }
 
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')

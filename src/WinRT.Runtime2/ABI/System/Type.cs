@@ -107,6 +107,11 @@ public static unsafe class TypeMarshaller
             }
             if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
             {
+                if (marshallingInfo.GetIsProxyType())
+                {
+                    reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
+                    return;
+                }
                 reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
                 return;
             }

@@ -5,13 +5,15 @@
 #include "CustomBindableObservableVectorTest.g.h"
 #include "CustomIteratorTest.g.h"
 #include "SetTypeProperties.g.h"
+#include <winrt/Windows.UI.Xaml.Interop.h>
 
 namespace winrt::TestComponentCSharp::implementation
 {
     struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties>
     {
         SetTypeProperties();
-        winrt::hstring SetProperty();
+        winrt::hstring GetPropertyInfo();
+        winrt::hstring GetPropertyInfoFromCustomType(winrt::Windows::UI::Xaml::Interop::TypeName typeName);
     };
 
 	struct CustomBindableIteratorTest : CustomBindableIteratorTestT<CustomBindableIteratorTest>

@@ -156,7 +156,8 @@ namespace TestComponentCSharp
     runtimeclass SetTypeProperties
     {
         SetTypeProperties();
-        String SetProperty();
+        String GetPropertyInfo();
+        String GetPropertyInfoFromCustomType(Windows.UI.Xaml.Interop.TypeName typeName);
     }
 
     // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario in the TypeHandling project
