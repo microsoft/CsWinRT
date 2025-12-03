@@ -175,9 +175,20 @@ public static unsafe class TypeMarshaller
         }
 
         global::System.Type? type = null;
+
+        // Try to retrieve the marshalling info for the input type name.
+        // This will work for both 'Primitive' and 'Metadata' types.
         if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeName, out WindowsRuntimeMarshallingInfo? marshallingInfo))
         {
             type = marshallingInfo.PublicType;
+        }
+
+        // Handle the case of C# primitive types that are not Windows Runtime types.
+        // For instance, 'System.SByte' could be passed, which would not be found
+        // in the previous lookup. We still want to be able to round-trip such values.
+        if (type is null && value.Kind is TypeKind.Primitive && typeName.StartsWith("System.", StringComparison.Ordinal))
+        {
+            return global::System.Type.GetType(typeName.ToString());
         }
 
         // If the target type is a projected type that has been trimmed, we can return a special type.
