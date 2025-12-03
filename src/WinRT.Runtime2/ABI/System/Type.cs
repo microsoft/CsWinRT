@@ -142,10 +142,12 @@ public static unsafe class TypeMarshaller
     /// </returns>
     private static ReadOnlySpan<char> ExtractTypeName(ReadOnlySpan<char> runtimeClassName)
     {
-        const string prefix = "Windows.Foundation.IReference<";
-        return runtimeClassName.StartsWith(prefix, StringComparison.Ordinal) ? runtimeClassName.Slice(prefix.Length, runtimeClassName.Length - prefix.Length - 1) : runtimeClassName;
-    }
+        const string IReferencePrefix = "Windows.Foundation.IReference<";
 
+        return runtimeClassName.StartsWith(IReferencePrefix, StringComparison.Ordinal)
+            ? runtimeClassName[IReferencePrefix.Length..^1]
+            : runtimeClassName;
+    }
 
     /// <summary>
     /// Converts an unmanaged <see cref="Type"/> to a managed <see cref="global::System.Type"/>.
