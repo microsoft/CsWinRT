@@ -28,6 +28,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
 [TimeSpanComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

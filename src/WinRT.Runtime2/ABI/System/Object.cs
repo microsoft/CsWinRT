@@ -14,6 +14,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="object"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Object")]
 [ObjectComWrappersMarshaller]
 file static class Object;

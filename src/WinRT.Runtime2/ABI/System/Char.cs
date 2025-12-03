@@ -27,6 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="char"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Char16>")]
 [CharComWrappersMarshaller]
 file static class Char;
