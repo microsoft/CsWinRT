@@ -11,7 +11,8 @@ SetTypeProperties setTypeProperties = new();
 // Metadata TypeKind test case
 // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario
 String expectedMetadataPropertyInfo = "TestComponentCSharp.TestType1 Metadata";
-if (setTypeProperties.GetPropertyInfo() != expectedMetadataPropertyInfo)
+CustomTestType customTestType = new();
+if (setTypeProperties.GetPropertyInfoWithIType(customTestType) != expectedMetadataPropertyInfo)
 {
     success = false;
 }
@@ -42,7 +43,8 @@ if (setTypeProperties.GetPropertyInfoFromCustomType(typeof(System.Int64)) != exp
 
 return success ? 100 : 101;
 
-sealed class CustomTestType : Composable
+sealed class CustomTestType : IType
 {
+    public System.Type TypeProperty { get; set; }
 }
 

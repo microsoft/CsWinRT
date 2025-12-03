@@ -12,7 +12,7 @@ namespace winrt::TestComponentCSharp::implementation
     struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties>
     {
         SetTypeProperties();
-        winrt::hstring GetPropertyInfo();
+        winrt::hstring GetPropertyInfoWithIType(IType testObject);
         winrt::hstring GetPropertyInfoFromCustomType(winrt::Windows::UI::Xaml::Interop::TypeName typeName);
     };
 

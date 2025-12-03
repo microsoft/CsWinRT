@@ -106,6 +106,11 @@ namespace TestComponentCSharp
         Int32 DrawTo();
     }
 
+    interface IType
+    {
+        Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
+    };
+
     interface IProperties1
     {
         Int32 ReadWriteProperty{ get; };
@@ -156,7 +161,7 @@ namespace TestComponentCSharp
     runtimeclass SetTypeProperties
     {
         SetTypeProperties();
-        String GetPropertyInfo();
+        String GetPropertyInfoWithIType(IType testObject);
         String GetPropertyInfoFromCustomType(Windows.UI.Xaml.Interop.TypeName typeName);
     }
 
