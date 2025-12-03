@@ -13,6 +13,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(IServiceProvider),
+    proxy: typeof(ABI.System.IServiceProviderInterfaceImpl))]
+
 namespace ABI.System;
 
 /// <summary>
@@ -159,6 +163,8 @@ public static unsafe class IServiceProviderImpl
 /// <summary>
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IServiceProvider"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeClassName("Microsoft.UI.Xaml.IXamlServiceProvider")]
 [DynamicInterfaceCastableImplementation]
 file interface IServiceProviderInterfaceImpl : IServiceProvider
 {

@@ -16,6 +16,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(INotifyDataErrorInfo),
+    proxy: typeof(ABI.System.ComponentModel.INotifyDataErrorInfoInterfaceImpl))]
+
 namespace ABI.System.ComponentModel;
 
 /// <summary>
@@ -306,6 +310,8 @@ public static unsafe class INotifyDataErrorInfoImpl
 /// <summary>
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyDataErrorInfo"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeClassName("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo")]
 [DynamicInterfaceCastableImplementation]
 file interface INotifyDataErrorInfoInterfaceImpl : INotifyDataErrorInfo
 {
