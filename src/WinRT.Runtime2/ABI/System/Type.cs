@@ -92,11 +92,13 @@ public static unsafe class TypeMarshaller
     {
         ArgumentNullException.ThrowIfNull(value);
         reference = default;
+
         if (value is NoMetadataTypeInfo noMetadataTypeInfo)
         {
             reference = new TypeReference { Name = noMetadataTypeInfo.FullName, Kind = TypeKind.Metadata };
             return;
         }
+
 
         TypeKind kind = TypeKind.Metadata;
         if (value is not null)
@@ -105,6 +107,7 @@ public static unsafe class TypeMarshaller
             {
                 kind = TypeKind.Primitive;
             }
+
             if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
             {
                 if (marshallingInfo.GetIsProxyType()
@@ -116,6 +119,7 @@ public static unsafe class TypeMarshaller
                 {
                     goto CustomTypeReference;
                 }
+
                 reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName().AsSpan()).ToString(), Kind = kind };
                 return;
             }

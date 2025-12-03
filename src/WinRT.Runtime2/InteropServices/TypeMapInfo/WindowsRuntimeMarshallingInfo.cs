@@ -116,6 +116,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <summary>
     /// Whether the type is a proxy type and comes from ProxyTypeMapping
     /// </summary>
+    /// <remarks>
+    /// This is in Type.cs to determine the correct way to marshal the type
+    /// </remarks>
     private readonly bool _isProxyType;
 
     /// <summary>
@@ -489,6 +492,10 @@ internal sealed class WindowsRuntimeMarshallingInfo
         return _runtimeClassName ?? InitializeRuntimeClassName();
     }
 
+    /// <summary>
+    /// Gets whether the type is a proxy type from ProxyTypeMapping
+    /// </summary>
+    /// <returns><see langword="true"/> if the type is a proxy type; otherwise, <see langword="false"/>.</returns>
     public bool GetIsProxyType()
     {
         return _isProxyType;
