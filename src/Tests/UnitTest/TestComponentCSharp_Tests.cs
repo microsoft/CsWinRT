@@ -626,6 +626,14 @@ namespace UnitTest
             Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
         }
 
+        [Fact]
+        public void TestTypePropertyWithIServiceProvider()
+        {
+            TestObject.TypeProperty = typeof(IServiceProvider);
+            Assert.Equal("Microsoft.UI.Xaml.IXamlServiceProvider", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
 
         class CustomDictionary : Dictionary<string, string> { }
 
