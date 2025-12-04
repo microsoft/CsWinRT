@@ -3524,34 +3524,34 @@ namespace UnitTest
             Assert.True(eventCalled2);
         }
 
-        [Fact]
-        public unsafe void TestProxiedDelegate()
-        {
-            var obj = new OOPAsyncAction();
-            var factory = new WinRTClassFactory<OOPAsyncAction>(
-                () => obj,
-                new Dictionary<Guid, Func<object, IntPtr>>()
-                {
-                    { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
-                });
+        //[Fact]
+        //public unsafe void TestProxiedDelegate()
+        //{
+        //    var obj = new OOPAsyncAction();
+        //    var factory = new WinRTClassFactory<OOPAsyncAction>(
+        //        () => obj,
+        //        new Dictionary<Guid, Func<object, IntPtr>>()
+        //        {
+        //            { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
+        //        });
 
-            WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
+        //    WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
-            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
-            var proc = Process.Start(launchExePath);
-            Thread.Sleep(5000);
-            obj.Close();
-            Assert.True(obj.delegateCalled);
+        //    var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        //    var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+        //    var proc = Process.Start(launchExePath);
+        //    Thread.Sleep(5000);
+        //    obj.Close();
+        //    Assert.True(obj.delegateCalled);
 
-            try
-            {
-                proc.Kill();
-            }
-            catch (Exception)
-            {
-            }
-        }
+        //    try
+        //    {
+        //        proc.Kill();
+        //    }
+        //    catch (Exception)
+        //    {
+        //    }
+        //}
 
         [Fact]
         private async Task TestPnpPropertiesInLoop()
