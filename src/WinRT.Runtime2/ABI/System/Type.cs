@@ -102,31 +102,35 @@ public static unsafe class TypeMarshaller
             return;
         }
 
-        // For primitive types, we always report 'TypeKind.Primitive'. This means that some
-        // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
-        // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
-        TypeKind kind = value.IsPrimitive
-            ? TypeKind.Primitive
-            : TypeKind.Metadata;
-
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        // Use the marshalling info lookup to detect projected or custom-mapped Windows Runtime types
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo) && marshallingInfo.IsMetadataType)
         {
-            if (marshallingInfo.GetIsProxyType()
-                && !value.IsPrimitive
-                && value != typeof(object)
-                && value != typeof(string)
-                && value != typeof(Guid)
-                && value != typeof(global::System.Type))
-            {
-                goto CustomTypeReference;
-            }
+            // For primitive types, we always report 'TypeKind.Primitive'. This means that some
+            // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
+            // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
+            TypeKind kind = value.IsPrimitive
+                ? TypeKind.Primitive
+                : TypeKind.Metadata;
 
             reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
 
             return;
         }
 
-    CustomTypeReference:
+        // For primitive types, we always report 'TypeKind.Primitive'. This means that some
+        // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
+        // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
+        // Note that all primitive types that are Windows Runtime types should have been handled
+        // by the case above already. This path just ensures the other ones are not treated as
+        // custom types, which they would be otherwise, since they don't have marshalling info.
+        if (value.IsPrimitive)
+        {
+            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Primitive };
+
+            return;
+        }
+
+        // All other cases are treated as custom types (e.g. user-defined types)
         reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
     }
 
