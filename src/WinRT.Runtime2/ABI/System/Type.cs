@@ -91,42 +91,42 @@ public static unsafe class TypeMarshaller
     public static void ConvertToUnmanagedUnsafe(global::System.Type value, out TypeReference reference)
     {
         ArgumentNullException.ThrowIfNull(value);
-        reference = default;
 
+        // Special case for 'NoMetadataTypeInfo' instances, which can only be obtained
+        // from previous calls to 'ConvertToManaged' for types that had been trimmed.
         if (value is NoMetadataTypeInfo noMetadataTypeInfo)
         {
             reference = new TypeReference { Name = noMetadataTypeInfo.FullName, Kind = TypeKind.Metadata };
+
             return;
         }
 
+        // For primitive types, we always report 'TypeKind.Primitive'. This means that some
+        // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
+        // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
+        TypeKind kind = value.IsPrimitive
+            ? TypeKind.Primitive
+            : TypeKind.Metadata;
 
-        TypeKind kind = TypeKind.Metadata;
-        if (value is not null)
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
         {
-            if (value.IsPrimitive)
+            if (marshallingInfo.GetIsProxyType()
+                && !value.IsPrimitive
+                && value != typeof(object)
+                && value != typeof(string)
+                && value != typeof(Guid)
+                && value != typeof(global::System.Type))
             {
-                kind = TypeKind.Primitive;
+                goto CustomTypeReference;
             }
 
-            if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
-            {
-                if (marshallingInfo.GetIsProxyType()
-                        && !value.IsPrimitive
-                        && value != typeof(object)
-                        && value != typeof(string)
-                        && value != typeof(Guid)
-                        && value != typeof(global::System.Type))
-                {
-                    goto CustomTypeReference;
-                }
+            reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
 
-                reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName().AsSpan()).ToString(), Kind = kind };
-                return;
-            }
-
-        CustomTypeReference:
-            reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
+            return;
         }
+
+    CustomTypeReference:
+        reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
     }
 
 
@@ -142,10 +142,12 @@ public static unsafe class TypeMarshaller
     /// </returns>
     private static ReadOnlySpan<char> ExtractTypeName(ReadOnlySpan<char> runtimeClassName)
     {
-        const string prefix = "Windows.Foundation.IReference<";
-        return runtimeClassName.StartsWith(prefix, StringComparison.Ordinal) ? runtimeClassName.Slice(prefix.Length, runtimeClassName.Length - prefix.Length - 1) : runtimeClassName;
-    }
+        const string IReferencePrefix = "Windows.Foundation.IReference<";
 
+        return runtimeClassName.StartsWith(IReferencePrefix, StringComparison.Ordinal)
+            ? runtimeClassName[IReferencePrefix.Length..^1]
+            : runtimeClassName;
+    }
 
     /// <summary>
     /// Converts an unmanaged <see cref="Type"/> to a managed <see cref="global::System.Type"/>.
