@@ -634,6 +634,22 @@ namespace UnitTest
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
+        [Fact]
+        public void TestTypePropertyWithIDisposable()
+        {
+            TestObject.TypeProperty = typeof(IDisposable);
+            Assert.Equal("Windows.Foundation.IClosable", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithTimespan()
+        {
+            TestObject.TypeProperty = typeof(TimeSpan);
+            Assert.Equal("TimeSpan", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
 
         class CustomDictionary : Dictionary<string, string> { }
 
