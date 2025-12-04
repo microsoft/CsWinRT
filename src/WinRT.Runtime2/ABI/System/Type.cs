@@ -120,7 +120,7 @@ public static unsafe class TypeMarshaller
                 goto CustomTypeReference;
             }
 
-            reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()), Kind = kind };
+            reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()).ToString(), Kind = kind };
 
             return;
         }
