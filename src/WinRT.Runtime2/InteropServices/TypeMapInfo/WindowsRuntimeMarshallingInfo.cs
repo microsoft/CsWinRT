@@ -111,15 +111,15 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// This is only used for managed types that are marshalled to native. For RCWs (ie. for Windows
     /// Runtime projected types), the runtime class name would just be provided by the native object.
     /// </remarks>
-    private string? _runtimeClassName;
+    private volatile string? _runtimeClassName;
 
     /// <summary>
-    /// Whether the type is a proxy type and comes from ProxyTypeMapping
+    /// A flag indicating whether the current type is a type defined in metadata (either projected or custom-mapped).
     /// </summary>
     /// <remarks>
-    /// This is in Type.cs to determine the correct way to marshal the type
+    /// A value of <c>-1</c> indicates a value that has not been computed yet.
     /// </remarks>
-    private readonly bool _isProxyType;
+    private volatile int _isMetadataType;
 
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
@@ -130,6 +130,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     {
         _metadataProviderType = metadataProviderType;
         _publicType = publicType;
+        _isMetadataType = -1;
     }
 
     /// <summary>
@@ -137,12 +138,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </summary>
     /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
     /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
-    /// <param name="isProxyType"><inheritdoc cref="_isProxyType" path="/summary/node()"/></param>
-    private WindowsRuntimeMarshallingInfo(Type metadataProviderType, Type? publicType, bool isProxyType = false)
+    /// <param name="isMetadataType"><inheritdoc cref="_isMetadataType" path="/summary/node()"/></param>
+    private WindowsRuntimeMarshallingInfo(Type metadataProviderType, Type? publicType, bool isMetadataType)
     {
         _metadataProviderType = metadataProviderType;
         _publicType = publicType;
-        _isProxyType = isProxyType;
+        _isMetadataType = isMetadataType ? 1 : 0;
     }
 
     /// <summary>
@@ -171,6 +172,38 @@ internal sealed class WindowsRuntimeMarshallingInfo
             }
 
             return _publicType ?? InitializePublicType();
+        }
+    }
+
+    /// <summary>
+    /// Gets whether or not the managed type for the current instance is a Windows Runtime type (either projected or custom-mapped).
+    /// </summary>
+    public bool IsMetadataType
+    {
+        get
+        {
+            // This fallback will only ever be triggered for custom-mapped types (e.g. 'System.Guid').
+            // We structure the code this way so this lookup on the proxy is only ever paid in those
+            // cases, and only if someone is actually trying to check the value of this property.
+            // In practice, this is only needed for 'TypeName' marshalling, which is exclusively a
+            // XAML scenario. So this code path should never be hit for any non-UI applications.
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            bool InitializeIsMetadataType()
+            {
+                bool isMetadataType = _metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false);
+
+                _isMetadataType = isMetadataType ? 1 : 0;
+
+                return isMetadataType;
+            }
+
+            // Convert the flag back to a boolean, or compute the deferred attribute lookup
+            return _isMetadataType switch
+            {
+                0 => false,
+                1 => true,
+                _ => InitializeIsMetadataType()
+            };
         }
     }
 
@@ -493,15 +526,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets whether the type is a proxy type from ProxyTypeMapping
-    /// </summary>
-    /// <returns><see langword="true"/> if the type is a proxy type; otherwise, <see langword="false"/>.</returns>
-    public bool GetIsProxyType()
-    {
-        return _isProxyType;
-    }
-
-    /// <summary>
     /// Creates a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a specified metadata provider type.
     /// </summary>
     /// <param name="metadataProviderType">The metadata provider type to wrap.</param>
@@ -513,8 +537,8 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // since we don't need that information right away, we can delay this to later to reduce the
         // overhead at startup. That value is only needed eg. when associating native memory for vtables.
         return metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false)
-            ? new(metadataProviderType, metadataProviderType)
-            : new(metadataProviderType, publicType: null);
+            ? new(metadataProviderType, metadataProviderType, isMetadataType: true)
+            : new(metadataProviderType, publicType: null, isMetadataType: false);
     }
 
     /// <summary>
@@ -524,11 +548,13 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if created successfully.</returns>
     private static WindowsRuntimeMarshallingInfo? GetMetadataProviderType(Type managedType)
     {
+        bool isMetadataType = managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false);
+
         // Same as above: if the type is a projected type, then it is also used as the metadata source.
         // We need to special-case generic types, as the marshalling code for them is also on proxies.
-        if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false) && !managedType.IsGenericType)
+        if (isMetadataType && !managedType.IsGenericType)
         {
-            return new(managedType, publicType: managedType);
+            return new(managedType, publicType: managedType, isMetadataType: true);
         }
 
         // Check if we have a mapped proxy type for this managed type. If we do, that type
@@ -536,7 +562,13 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // type. In this case, we don't need to query for '[WindowsRuntimeMappedType]'.
         if (ProxyTypeMapping.TryGetValue(managedType, out Type? proxyType))
         {
-            return new(proxyType, publicType: managedType, isProxyType: true);
+            // If the managed type is a metadata type, we have all the information we need.
+            // However, if the attribute wasn't present, we cannot be certain that the type
+            // is not in fact a metadata type, as it could also be a custom-mapped type. In
+            // that case, we defer this check to later, with a lookup on the proxy type.
+            return isMetadataType
+                ? new(proxyType, publicType: managedType, isMetadataType)
+                : new(proxyType, publicType: managedType);
         }
 
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
