@@ -161,6 +161,7 @@ public static unsafe class TypeMarshaller
     /// <param name="value">The unmanaged <see cref="Type"/> value.</param>
     /// <returns>The managed <see cref="global::System.Type"/> value</returns>
     [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
     public static global::System.Type? ConvertToManaged(Type value)
     {
         ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
