@@ -84,6 +84,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     ///     For other generated associations (eg. generic type instantiations), this would also
     ///     be the generated proxy type. This is because there would be no other way to link the
     ///     additional metadata required for marshalling to the original types otherwise.
+    ///     The same applies to custom-mapped types (e.g. fundamental types).
     ///   </item>
     /// </list>
     /// </remarks>
@@ -544,7 +545,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeMarshallingInfo"/> instance associated with a given managed type, if possible.
     /// </summary>
-    /// <param name="managedType">The managed type to create an instance for, if possible..</param>
+    /// <param name="managedType">The managed type to create an instance for, if possible.</param>
     /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance, if created successfully.</returns>
     private static WindowsRuntimeMarshallingInfo? GetMetadataProviderType(Type managedType)
     {
