@@ -547,6 +547,38 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestTypePropertyWithTestComponentNested()
+        {
+            TestObject.TypeProperty = typeof(TestComponent.Nested);
+            Assert.Equal("TestComponent.Nested", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithTestComponentParam10Handler()
+        {
+            TestObject.TypeProperty = typeof(TestComponent.Param10Handler);
+            Assert.Equal("TestComponent.Param10Handler", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithTestComponentCSharpEnumValue()
+        {
+            TestObject.TypeProperty = typeof(TestComponentCSharp.EnumValue);
+            Assert.Equal("TestComponentCSharp.EnumValue", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithTestComponentIComposable()
+        {
+            TestObject.TypeProperty = typeof(TestComponent.IComposable);
+            Assert.Equal("TestComponent.IComposable", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
         public void TestTypePropertyWithSystemType()
         {
             TestObject.TypeProperty = typeof(System.Type);
