@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -59,13 +60,12 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// </remarks>
     private readonly Type _metadataProviderType;
 
+    /// <inheritdoc cref="WindowsRuntimeMarshallingInfo._publicType"/>
+    private volatile Type? _publicType;
+
     /// <summary>
-    /// The cached runtime class name for the type.
+    /// The cached metadata type name for the type.
     /// </summary>
-    /// <remarks>
-    /// This is only used for managed types that are marshalled to native. For RCWs (ie. for Windows
-    /// Runtime projected types), the runtime class name would just be provided by the native object.
-    /// </remarks>
     private volatile string? _metadataTypeName;
 
     /// <summary>
@@ -75,6 +75,26 @@ internal sealed class WindowsRuntimeMetadataInfo
     private WindowsRuntimeMetadataInfo(Type metadataProviderType)
     {
         _metadataProviderType = metadataProviderType;
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeMarshallingInfo.PublicType"/>
+    public Type PublicType
+    {
+        get
+        {
+            // Same implementation as in 'WindowsRuntimeMarshallingInfo.PublicType', see notes there
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            Type InitializePublicType()
+            {
+                WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>(inherit: false)!;
+
+                Debug.Assert(mappedTypeAttribute is not null);
+
+                return _publicType ??= mappedTypeAttribute.PublicType;
+            }
+
+            return _publicType ?? InitializePublicType();
+        }
     }
 
     /// <summary>
