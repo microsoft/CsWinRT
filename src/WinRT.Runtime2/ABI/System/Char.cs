@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Char16",
+    target: typeof(ABI.System.Char),
+    trimTarget: typeof(char))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Char16>",
     target: typeof(ABI.System.Char),
@@ -29,6 +34,8 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Char16>")]
+[WindowsRuntimeMetadataTypeName("Char16")]
+[WindowsRuntimeReferenceType(typeof(char?))]
 [CharComWrappersMarshaller]
 file static class Char;
 

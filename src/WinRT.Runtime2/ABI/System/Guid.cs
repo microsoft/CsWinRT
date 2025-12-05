@@ -15,6 +15,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Guid",
+    target: typeof(ABI.System.Guid),
+    trimTarget: typeof(Guid))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Guid>",
     target: typeof(ABI.System.Guid),
     trimTarget: typeof(Guid))]
@@ -29,6 +34,8 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Guid>")]
+[WindowsRuntimeMetadataTypeName("Guid")]
+[WindowsRuntimeReferenceType(typeof(global::System.Guid?))]
 [GuidComWrappersMarshaller]
 file static class Guid;
 

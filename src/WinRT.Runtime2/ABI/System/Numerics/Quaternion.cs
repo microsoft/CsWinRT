@@ -16,6 +16,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.Numerics.Quaternion",
+    target: typeof(ABI.System.Numerics.Quaternion),
+    trimTarget: typeof(Quaternion))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>",
     target: typeof(ABI.System.Numerics.Quaternion),
     trimTarget: typeof(Quaternion))]
@@ -31,6 +36,8 @@ namespace ABI.System.Numerics;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Quaternion")]
+[WindowsRuntimeReferenceType(typeof(global::System.Numerics.Quaternion?))]
 [QuaternionComWrappersMarshaller]
 file static class Quaternion;
 
