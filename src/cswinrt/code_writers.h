@@ -4721,6 +4721,11 @@ R"(
             bind<write_type_name>(type, typedef_name_type::ABI, true));
     }
 
+    void write_winrt_reference_type_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
+    }
+
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
@@ -9182,13 +9187,14 @@ internal unsafe struct %Vftbl
 
         w.write(
 R"(
-%%%%% enum % : %
+%%%%%% enum % : %
 {
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         bind<write_winrt_metadata_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
         bind<write_comwrapper_marshaller_attribute>(type),
+        bind<write_winrt_reference_type_attribute>(type),
         (settings.internal) ? "internal" : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
@@ -9247,10 +9253,11 @@ R"(
         }
 
         // struct
-        w.write("%%%public% struct %: IEquatable<%>\n{\n",
+        w.write("%%%%public% struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_struct_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_winrt_reference_type_attribute>(type),
             has_addition_to_type(type) ? " partial" : "",
             type.TypeName(),
             type.TypeName());
