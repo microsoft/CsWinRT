@@ -177,6 +177,7 @@
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
+      <Build Project="false" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
       <Platform Solution="*|ARM" Project="ARM" />
