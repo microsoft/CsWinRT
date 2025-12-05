@@ -13,6 +13,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(IDisposable),
+    proxy: typeof(ABI.System.IDisposableInterfaceImpl))]
+
 namespace ABI.System;
 
 /// <summary>
@@ -127,6 +131,8 @@ public static unsafe class IDisposableImpl
 /// <summary>
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IDisposable"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeClassName("Windows.Foundation.IClosable")]
 [DynamicInterfaceCastableImplementation]
 file interface IDisposableInterfaceImpl : IDisposable
 {

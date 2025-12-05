@@ -28,6 +28,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
 [DateTimeOffsetComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

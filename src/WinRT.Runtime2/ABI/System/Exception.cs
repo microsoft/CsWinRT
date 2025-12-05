@@ -28,6 +28,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.HResult>")]
 [ExceptionComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

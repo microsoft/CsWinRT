@@ -34,6 +34,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Type"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
 [TypeComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -101,52 +102,57 @@ public static unsafe class TypeMarshaller
             return;
         }
 
-        // For primitive types, we always report 'TypeKind.Primitive'. This means that some
-        // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
-        // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
-        TypeKind kind = value.IsPrimitive
-            ? TypeKind.Primitive
-            : TypeKind.Metadata;
+        // We need special handling for 'Nullable<T>' values. If we have one, we want to use the underlying type
+        // for the lookup, because the nullable version would not have any entries in the type map. Additionally,
+        // we want to skip the metadata table lookup, as that would give us the actual metadata type name for the
+        // underlying type. Instead, for 'Nullable<T>' values we need the runtime class name, which in this case
+        // would be the 'IReference<T>' type name for boxed instances of this type.
+        global::System.Type? nullableUnderlyingType = Nullable.GetUnderlyingType(value);
 
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        // Use the metadata info lookup first to handle projected and custom-mapped Windows Runtime types.
+        // As mentioned above, we skip this lookup entirely if the input type is a nullable type.
+        if (nullableUnderlyingType is null && WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
         {
-            if (marshallingInfo.GetIsProxyType()
-                && !value.IsPrimitive
-                && value != typeof(object)
-                && value != typeof(string)
-                && value != typeof(Guid)
-                && value != typeof(global::System.Type))
-            {
-                goto CustomTypeReference;
-            }
+            // For primitive types, we always report 'TypeKind.Primitive'. This means that some
+            // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
+            // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
+            TypeKind kind = value.IsPrimitive
+                ? TypeKind.Primitive
+                : TypeKind.Metadata;
 
-            reference = new TypeReference { Name = ExtractTypeName(marshallingInfo.GetRuntimeClassName()).ToString(), Kind = kind };
+            reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = kind };
+            return;
+        }
+
+        global::System.Type typeOrUnderlyingType = nullableUnderlyingType ?? value;
+
+        // Use the marshalling info lookup to detect projected or custom-mapped Windows Runtime types.
+        // If we have an underlying nullable type, we use that for the lookup instead of the input type.
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeOrUnderlyingType, out WindowsRuntimeMarshallingInfo? marshallingInfo) && marshallingInfo.IsMetadataType)
+        {
+            // Same check as above to differentiate primitive types from metadata types
+            TypeKind kind = typeOrUnderlyingType.IsPrimitive ? TypeKind.Primitive : TypeKind.Metadata;
+
+            reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
 
             return;
         }
 
-    CustomTypeReference:
+        // For primitive types, we always report 'TypeKind.Primitive'. This means that some
+        // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
+        // they're not Windows Runtime types. This is expected, and matches C++/WinRT as well.
+        // Note that all primitive types that are Windows Runtime types should have been handled
+        // by the case above already. This path just ensures the other ones are not treated as
+        // custom types, which they would be otherwise, since they don't have marshalling info.
+        if (value.IsPrimitive)
+        {
+            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Primitive };
+
+            return;
+        }
+
+        // All other cases are treated as custom types (e.g. user-defined types)
         reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
-    }
-
-
-    /// <summary>
-    /// Private method to extracts the generic type argument from a runtime class name that follows
-    /// the pattern <c>Windows.Foundation.IReference&lt;T&gt;</c>.
-    /// </summary>
-    /// <param name="runtimeClassName">
-    /// The full runtime class name, e.g., <c>Windows.Foundation.IReference&lt;System.Int32&gt;</c>.
-    /// </param>
-    /// <returns>
-    /// The inner type name if the input matches the expected pattern; otherwise, the original string.
-    /// </returns>
-    private static ReadOnlySpan<char> ExtractTypeName(ReadOnlySpan<char> runtimeClassName)
-    {
-        const string IReferencePrefix = "Windows.Foundation.IReference<";
-
-        return runtimeClassName.StartsWith(IReferencePrefix, StringComparison.Ordinal)
-            ? runtimeClassName[IReferencePrefix.Length..^1]
-            : runtimeClassName;
     }
 
     /// <summary>
@@ -174,9 +180,30 @@ public static unsafe class TypeMarshaller
         }
 
         global::System.Type? type = null;
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeName, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+
+        // If the type was handled by the metadata lookup, get the public type from there
+        if (WindowsRuntimeMetadataInfo.TryGetInfo(typeName, out WindowsRuntimeMetadataInfo? metadataInfo))
         {
-            type = marshallingInfo.PublicType;
+            type = metadataInfo.PublicType;
+        }
+        else if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeName, out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        {
+            // Otherwise, try to retrieve the marshalling info for the input type name.
+            // This will work for both 'Primitive' and 'Metadata' types, same as above.
+            global::System.Type publicType = marshallingInfo.PublicType;
+
+            // TODO
+            type = publicType.IsValueType
+                ? typeof(Nullable<>).MakeGenericType(publicType)
+                : publicType;
+        }
+
+        // Handle the case of C# primitive types that are not Windows Runtime types.
+        // For instance, 'System.SByte' could be passed, which would not be found
+        // in the previous lookup. We still want to be able to round-trip such values.
+        if (type is null && value.Kind is TypeKind.Primitive && typeName.StartsWith("System.", StringComparison.Ordinal))
+        {
+            return global::System.Type.GetType(typeName.ToString());
         }
 
         // If the target type is a projected type that has been trimmed, we can return a special type.
