@@ -96,9 +96,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile Type? _publicType;
 
     /// <summary>
-    /// The reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
+    /// The cached <see cref="WindowsRuntimeReferenceTypeAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    private volatile Type? _referenceType;
+    private volatile WindowsRuntimeReferenceTypeAttribute? _referenceType;
 
     /// <summary>
     /// The cached <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance (possibly a placeholder).
@@ -178,45 +178,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
             }
 
             return _publicType ?? InitializePublicType();
-        }
-    }
-
-    /// <summary>
-    /// Gets the reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
-    /// </summary>
-    public Type ReferenceType
-    {
-        get
-        {
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            Type InitializeReferenceType()
-            {
-                // Try to get the attribute, which should always be present for value types
-                WindowsRuntimeReferenceTypeAttribute? referenceTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeReferenceTypeAttribute>(inherit: false);
-
-                // Analogous validation as for when retrieving the marshaller attribute
-                [DoesNotReturn]
-                [StackTraceHidden]
-                void ThrowNotSupportedException()
-                {
-                    throw new NotSupportedException(
-                        $"The metadata provider type '{_metadataProviderType}' does not have an associated reference type. " +
-                        $"This code path should have never been reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
-                }
-
-                // We expect this to always be present for value types. If the attribute is 'null', it means that
-                // either a value type was missing it, or that 'ReferenceType' was accessed for an invalid public
-                // type (e.g. some Windows Runtime class type). In both cases, this is a bug, and we should throw.
-                if (referenceTypeAttribute is null)
-                {
-                    ThrowNotSupportedException();
-                }
-
-                // Cache the reference type for later (no interlocked operations are needed, same as above)
-                return _referenceType ??= referenceTypeAttribute.ReferenceType;
-            }
-
-            return _referenceType ?? InitializeReferenceType();
         }
     }
 
@@ -571,6 +532,69 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Gets the reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Thrown if no reference type (a constructed <see cref="Nullable{T}"/> type) could be resolved.</exception>
+    public Type GetReferenceType()
+    {
+        if (!TryGetReferenceType(out Type? referenceType))
+        {
+            // Analogous validation as for when retrieving the marshaller attribute
+            [DoesNotReturn]
+            [StackTraceHidden]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The metadata provider type '{_metadataProviderType}' does not have an associated reference type. " +
+                    $"This code path should have never been reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return referenceType;
+    }
+
+    /// <summary>
+    /// Tries to get the reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
+    /// </summary>
+    /// <param name="referenceType">The resulting reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance, if available.</param>
+    /// <returns>Whether <paramref name="referenceType"/> was retrieved successfully.</returns>
+    public bool TryGetReferenceType([NotNullWhen(true)] out Type? referenceType)
+    {
+        // Initializes the reference type instance, if present
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        bool Load([NotNullWhen(true)] out Type? referenceType)
+        {
+            // Try to get the attribute, which should always be present for value types
+            WindowsRuntimeReferenceTypeAttribute? referenceTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeReferenceTypeAttribute>(inherit: false);
+
+            referenceTypeAttribute ??= PlaceholderWindowsRuntimeReferenceTypeAttribute.Instance;
+
+            _referenceType = referenceTypeAttribute;
+
+            referenceType = referenceTypeAttribute.ReferenceType;
+
+            return referenceType is not null;
+        }
+
+        WindowsRuntimeReferenceTypeAttribute? referenceTypeAttribute = _referenceType;
+
+        // We have a cached reference type, so return it immediately.
+        // The instance we have here could be the placeholder one that
+        // returns 'null', but it's still faster to do just do the check
+        // here than comparing the instance by accessing that static field.
+        if (referenceTypeAttribute is not null)
+        {
+            referenceType = referenceTypeAttribute.ReferenceType;
+
+            return referenceType is not null;
+        }
+
+        return Load(out referenceType);
+    }
+
+    /// <summary>
     /// Creates a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a specified metadata provider type.
     /// </summary>
     /// <param name="metadataProviderType">The metadata provider type to wrap.</param>
@@ -629,7 +653,7 @@ file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute
     /// <summary>
     /// The shared placeholder instance.
     /// </summary>
-    public static PlaceholderWindowsRuntimeComWrappersMarshallerAttribute Instance = new();
+    public static readonly PlaceholderWindowsRuntimeComWrappersMarshallerAttribute Instance = new();
 
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -652,4 +676,15 @@ file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute
 
         return null!;
     }
+}
+
+/// <summary>
+/// A placeholder <see cref="WindowsRuntimeReferenceTypeAttribute"/> type.
+/// </summary>
+file sealed class PlaceholderWindowsRuntimeReferenceTypeAttribute
+{
+    /// <summary>
+    /// The shared <see cref="WindowsRuntimeReferenceTypeAttribute"/> instance (it will return <see langword="null"/> for its reference type).
+    /// </summary>
+    public static readonly WindowsRuntimeReferenceTypeAttribute Instance = new(null!);
 }
