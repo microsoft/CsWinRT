@@ -263,9 +263,11 @@ Where <spec> is one or more of:
                                     continue;
                                 }
                             }
+
                             auto guard{ w.push_generic_params(type.GenericParam()) };
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
+                            write_pragma_disable_IL2026(w);
                             switch (get_category(type))
                             {
                             case category::class_type:
@@ -297,6 +299,7 @@ Where <spec> is one or more of:
                                 }
                                 break;
                             }
+                            write_pragma_restore_IL2026(w);
                         }
 
                         // Attributes need to be written at the start, so handling this addition separately.

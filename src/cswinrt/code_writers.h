@@ -4642,17 +4642,31 @@ R"(file static class %InterfaceEntriesImpl
     }
 
 
+    void write_pragma_restore_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning restore IL2026
+)");
+    }
+
+    void write_pragma_disable_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning disable IL2026
+)");
+    }
+
     void write_winrt_windowsmetadata_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
-        R"(#pragma warning disable IL2026
+R"(
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "%",
     target: typeof(%),
     trimTarget: typeof(%))]
-#pragma warning restore IL2026
-
 )",
             projection_name,
             projection_name,
@@ -4663,13 +4677,11 @@ R"(file static class %InterfaceEntriesImpl
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
-R"(#pragma warning disable IL2026
+R"(
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "%",
     target: typeof(%),
     trimTarget: typeof(%))]
-#pragma warning restore IL2026
-
 )",
         bind([&](writer& w) {
             if (is_value_type)
