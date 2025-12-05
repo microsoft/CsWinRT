@@ -4641,6 +4641,24 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
+
+    void write_winrt_windowsmetadata_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+        w.write(
+        R"(#pragma warning disable IL2026
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "%",
+    target: typeof(%),
+    trimTarget: typeof(%))]
+#pragma warning restore IL2026
+
+)",
+            projection_name,
+            projection_name,
+            projection_name);
+    }
+
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
