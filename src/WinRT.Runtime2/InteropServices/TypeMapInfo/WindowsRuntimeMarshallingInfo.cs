@@ -120,6 +120,14 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile string? _runtimeClassName;
 
     /// <summary>
+    /// The cached metadata type name for the type.
+    /// </summary>
+    /// <remarks>
+    /// This is only used for <see cref="Type"/> marshalling, and it will only be available for some types (e.g. value types).
+    /// </remarks>
+    private volatile string? _metadataTypeName;
+
+    /// <summary>
     /// A flag indicating whether the current type is a type defined in metadata (either projected or custom-mapped).
     /// </summary>
     /// <remarks>
@@ -529,6 +537,80 @@ internal sealed class WindowsRuntimeMarshallingInfo
         }
 
         return _runtimeClassName ?? InitializeRuntimeClassName();
+    }
+
+    /// <summary>
+    /// Gets the metadata type name for the public type associated with the current metadata provider type.
+    /// </summary>
+    /// <returns>The resulting metadata type name.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no metadata type name could be resolved.</exception>
+    public string GetMetadataTypeName()
+    {
+        if (!TryGetMetadataTypeName(out string? metadataTypeName))
+        {
+            // Analogous validation as for when retrieving the marshaller attribute
+            [DoesNotReturn]
+            [StackTraceHidden]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The metadata provider type '{_metadataProviderType}' does not have any metadata type name info. " +
+                    $"This path should never be reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return metadataTypeName;
+    }
+
+    /// <summary>
+    /// Tries to get the metadata type name for the public type associated with the current metadata provider type.
+    /// </summary>
+    /// <param name="metadataTypeName">The resulting metadata type name, if available.</param>
+    /// <returns>Whether <paramref name="metadataTypeName"/> was retrieved successfully.</returns>
+    public bool TryGetMetadataTypeName([NotNullWhen(true)] out string? metadataTypeName)
+    {
+        // Initializes the reference type instance, if present
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        bool Load([NotNullWhen(true)] out string? metadataTypeName)
+        {
+            WindowsRuntimeMetadataTypeNameAttribute? metadataTypeNameAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMetadataTypeNameAttribute>(inherit: false);
+
+            if (metadataTypeNameAttribute is null)
+            {
+                _metadataTypeName ??= "";
+
+                metadataTypeName = null;
+
+                return false;
+            }
+
+            _metadataTypeName = metadataTypeNameAttribute.MetadataTypeName;
+
+            metadataTypeName = metadataTypeNameAttribute.MetadataTypeName;
+
+            return true;
+        }
+
+        string? value = _metadataTypeName;
+
+        // We have a cached metadata type name, so return it immediately
+        if (value is not null)
+        {
+            if (value is "")
+            {
+                metadataTypeName = null;
+
+                return false;
+            }
+
+            metadataTypeName = value;
+
+            return true;
+        }
+
+        return Load(out metadataTypeName);
     }
 
     /// <summary>
