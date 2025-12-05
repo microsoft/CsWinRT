@@ -3,9 +3,7 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.UI.Xaml.Interop;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -20,7 +18,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 public unsafe ref struct TypeReference
 {
     /// <inheritdoc cref="ABI.System.Type.Name"/>
-    internal ReadOnlySpan<char> Name;
+    internal string? Name;
 
     /// <inheritdoc cref = "ABI.System.Type.Kind" />
     internal TypeKind Kind;
@@ -28,7 +26,7 @@ public unsafe ref struct TypeReference
     /// <summary>
     /// The <see cref="HStringReference"/> to use for marshalling.
     /// </summary>
-    private HStringReference NameReference;
+    private HStringReference NameRef;
 
     /// <summary>
     /// Converts the current <see cref="TypeReference"/> value into a <see cref="ABI.System.Type"/> value for marshalling.
@@ -53,11 +51,11 @@ public unsafe ref struct TypeReference
     public ABI.System.Type ConvertToUnmanagedUnsafe()
     {
         HStringMarshaller.ConvertToUnmanagedUnsafe(
-            value: (char*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(Name)),
-            length: Name.Length,
-            reference: out NameReference);
+            (char*)Unsafe.AsPointer(in Name!.GetPinnableReference()),
+            Name?.Length,
+            out NameRef);
 
-        return new() { Name = NameReference.HString, Kind = Kind };
+        return new() { Name = NameRef.HString, Kind = Kind };
     }
 
     /// <summary>
@@ -65,9 +63,8 @@ public unsafe ref struct TypeReference
     /// </summary>
     /// <returns>A pinnable reference for the current <see cref="TypeReference"/> value.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [UnscopedRef]
     public readonly ref byte GetPinnableReference()
     {
-        return ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(Name));
+        return ref Unsafe.As<char, byte>(ref Unsafe.AsRef(in Name!.GetPinnableReference()));
     }
 }

@@ -72,9 +72,11 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// Creates a new <see cref="WindowsRuntimeMetadataInfo"/> instance with the specified parameters.
     /// </summary>
     /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
-    private WindowsRuntimeMetadataInfo(Type metadataProviderType)
+    /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
+    private WindowsRuntimeMetadataInfo(Type metadataProviderType, Type? publicType)
     {
         _metadataProviderType = metadataProviderType;
+        _publicType = publicType;
     }
 
     /// <inheritdoc cref="WindowsRuntimeMarshallingInfo.PublicType"/>
@@ -183,7 +185,9 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// <returns>The resulting <see cref="WindowsRuntimeMetadataInfo"/> instance.</returns>
     private static WindowsRuntimeMetadataInfo CreateMetadataInfo(Type metadataProviderType)
     {
-        return new(metadataProviderType);
+        return metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false)
+            ? new(metadataProviderType, metadataProviderType)
+            : new(metadataProviderType, publicType: null);
     }
 
     /// <summary>
@@ -196,13 +200,13 @@ internal sealed class WindowsRuntimeMetadataInfo
         // Same as above: if the type is a projected type, then it is also used as the metadata source
         if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false) && !managedType.IsGenericType)
         {
-            return new(managedType);
+            return new(managedType, managedType);
         }
 
         // If we have a proxy type, then that will be the metadata provider
         if (ProxyTypeMapping.TryGetValue(managedType, out Type? proxyType))
         {
-            return new(proxyType);
+            return new(proxyType, managedType);
         }
 
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
