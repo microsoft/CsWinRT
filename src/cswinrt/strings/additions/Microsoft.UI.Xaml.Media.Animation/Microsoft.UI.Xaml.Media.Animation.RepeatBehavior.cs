@@ -5,7 +5,9 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
     [WindowsRuntimeMetadata("Microsoft.UI")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Animation.RepeatBehavior>")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [ABI.Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public struct RepeatBehavior : IFormattable, IEquatable<RepeatBehavior>
     {

@@ -245,7 +245,7 @@ internal static partial class ImplGenerator
             // We need an assembly reference for the merged projection .dll that will be generated.
             // The version doesn't matter here (as long as it's not '255.255.255.255'). The real .dll
             // will always have a version number equal or higher than this, so it will load correctly.
-            AssemblyReference projectionAssembly = new("WinRT.Projection.dll"u8, new Version(0, 0, 0, 0))
+            AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
             {
                 PublicKeyOrToken = ImplValues.PublicKeyData,
                 HasPublicKey = true
@@ -264,6 +264,19 @@ internal static partial class ImplGenerator
                     implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
+                {
+                    Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
+                });
+            }
+
+            TypeReference interfaceIIDsTypeReference = inputModule.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
+            if (interfaceIIDsTypeReference.Resolve() is TypeDefinition interfaceIIDsTypeDefinition)
+            {
+                // Forward the 'ABI.InterfaceIIDs' type as well, as it's used for IID resolution at runtime
+                implModule.ExportedTypes.Add(new ExportedType(
+                    implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
+                    ns: interfaceIIDsTypeDefinition.Namespace,
+                    name: interfaceIIDsTypeDefinition.Name)
                 {
                     Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
                 });

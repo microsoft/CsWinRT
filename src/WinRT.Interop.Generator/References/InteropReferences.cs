@@ -89,6 +89,15 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
+    /// </summary>
+    public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
+        name: "WinRT.Projection"u8,
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: default);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Attribute"/>.
     /// </summary>
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);

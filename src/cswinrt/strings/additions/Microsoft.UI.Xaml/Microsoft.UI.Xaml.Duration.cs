@@ -5,7 +5,9 @@ namespace Microsoft.UI.Xaml
 
     [WindowsRuntimeMetadata("Microsoft.UI")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Duration>")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Duration : IEquatable<Duration>
     {

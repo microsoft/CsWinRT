@@ -10,7 +10,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -58,15 +57,6 @@ internal static class GuidGenerator
 
         if (type.Resolve() is TypeDefinition typeDefinition)
         {
-            // For delegate types, we resolve the IID from their generated RVA field.
-            // Only interface types have the '[Guid]' attribute on them, not delegates.
-            if (typeDefinition.IsClass && typeDefinition.IsDelegate)
-            {
-                iid = InterfaceIIDResolver.GetIID(typeDefinition);
-
-                return true;
-            }
-
             // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
             if (TryGetIIDFromAttribute(typeDefinition, interopReferences, out iid))
             {

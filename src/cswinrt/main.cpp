@@ -43,6 +43,7 @@ namespace cswinrt
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
         { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
         { "partial_factory", 0, 0, {}, "Allows to provide an additional component activation factory (default is false)"},
+        { "reference_projection", 0, 0, {}, "Generates a projection to be used as a reference assembly (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -112,6 +113,7 @@ Where <spec> is one or more of:
         settings.public_exclusiveto = args.exists("public_exclusiveto");
         settings.idic_exclusiveto = args.exists("idic_exclusiveto");
         settings.partial_factory = args.exists("partial_factory");
+        settings.reference_projection = args.exists("reference_projection");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))
@@ -251,58 +253,62 @@ Where <spec> is one or more of:
                         writer w(ns);
                         writer helperWriter("WinRT");
                         w.write_begin();
-                        for (auto&& [name, type] : members.types)
-                        {
-                            currentType = name;
-                            if (!settings.filter.includes(type)) { continue; }
-                            if (distance(type.GenericParam()) != 0) { continue; }
-                            if (auto mapping = get_mapped_type(ns, name))
-                            {
-                                if (!mapping->emit_abi)
-                                {
-                                    continue;
-                                }
-                            }
-                            auto guard{ w.push_generic_params(type.GenericParam()) };
-                            auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
-                            switch (get_category(type))
+                        if (!settings.reference_projection)
+                        {
+                            for (auto&& [name, type] : members.types)
                             {
-                            case category::class_type:
-                                // For both static and attributes, we don't need to pass them across the ABI.
-                                if (!is_static(type) &&
-                                    !is_attribute_type(type))
+                                currentType = name;
+                                if (!settings.filter.includes(type)) { continue; }
+                                if (distance(type.GenericParam()) != 0) { continue; }
+                                if (auto mapping = get_mapped_type(ns, name))
                                 {
-                                    write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                    if (!mapping->emit_abi)
+                                    {
+                                        continue;
+                                    }
                                 }
-                                break;
-                            case category::delegate_type:
-                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
-                                break;
-                            case category::enum_type:
-                                write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
-                                break;
-                            case category::interface_type:
-                                write_winrt_idic_typemapgroup_assembly_attribute(w, type);
-                                break;
-                            case category::struct_type:
-                                // Similarly for API contracts, we don't expect them to be passed across the ABI.
-                                if (!is_api_contract_type(type))
+                                auto guard{ w.push_generic_params(type.GenericParam()) };
+                                auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
+
+                                switch (get_category(type))
                                 {
+                                case category::class_type:
+                                    // For both static and attributes, we don't need to pass them across the ABI.
+                                    if (!is_static(type) &&
+                                        !is_attribute_type(type))
+                                    {
+                                        write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                    }
+                                    break;
+                                case category::delegate_type:
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                    break;
+                                case category::enum_type:
+                                    write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                    break;
+                                case category::interface_type:
+                                    write_winrt_idic_typemapgroup_assembly_attribute(w, type);
+                                    break;
+                                case category::struct_type:
+                                    // Similarly for API contracts, we don't expect them to be passed across the ABI.
+                                    if (!is_api_contract_type(type))
+                                    {
+                                        write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                    }
+                                    break;
                                 }
-                                break;
                             }
-                        }
 
-                        // Attributes need to be written at the start, so handling this addition separately.
-                        if (ns == "Windows.Storage.Streams" && settings.addition_filter.includes(ns))
-                        {
-                            w.write(R"(
+                            // Attributes need to be written at the start, so handling this addition separately.
+                            if (ns == "Windows.Storage.Streams" && settings.addition_filter.includes(ns))
+                            {
+                                w.write(R"(
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(global::System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer),
     typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer))]
 )");
+                            }
                         }
 
                         currentType = "";
@@ -370,50 +376,54 @@ Where <spec> is one or more of:
                         if (written)
                         {
                             w.write_end_projected();
-                            w.write_begin_abi();
 
-                            for (auto&& [name, type] : members.types)
+                            if (!settings.reference_projection)
                             {
-                                currentType = name;
-                                if (!settings.filter.includes(type)) { continue; }
-                                if (distance(type.GenericParam()) != 0) { continue; }
-                                if (auto mapping = get_mapped_type(ns, name))
+                                w.write_begin_abi();
+
+                                for (auto&& [name, type] : members.types)
                                 {
-                                    if (!mapping->emit_abi)
+                                    currentType = name;
+                                    if (!settings.filter.includes(type)) { continue; }
+                                    if (distance(type.GenericParam()) != 0) { continue; }
+                                    if (auto mapping = get_mapped_type(ns, name))
                                     {
-                                        continue;
+                                        if (!mapping->emit_abi)
+                                        {
+                                            continue;
+                                        }
+                                    }
+
+                                    if (is_api_contract_type(type)) { continue; }
+                                    if (is_attribute_type(type)) { continue; }
+                                    auto guard{ w.push_generic_params(type.GenericParam()) };
+
+                                    switch (get_category(type))
+                                    {
+                                    case category::class_type:
+                                        write_abi_class(w, type);
+                                        if (settings.component && componentActivatableClasses.count(type) == 1)
+                                        {
+                                            write_winrt_exposed_type_class(w, type, true);
+                                        }
+                                        break;
+                                    case category::delegate_type:
+                                        write_abi_delegate(w, type);
+                                        write_temp_delegate_event_source_subclass(w, type);
+                                        break;
+                                    case category::enum_type:
+                                        write_abi_enum(w, type);
+                                        break;
+                                    case category::interface_type:
+                                        write_abi_interface(w, type);
+                                        break;
+                                    case category::struct_type:
+                                        write_abi_struct(w, type);
+                                        break;
                                     }
                                 }
-
-                                if (is_api_contract_type(type)) { continue; }
-                                if (is_attribute_type(type)) { continue; }
-                                auto guard{ w.push_generic_params(type.GenericParam()) };
-
-                                switch (get_category(type))
-                                {
-                                case category::class_type:
-                                    write_abi_class(w, type);
-                                    if (settings.component && componentActivatableClasses.count(type) == 1)
-                                    {
-                                        write_winrt_exposed_type_class(w, type, true);
-                                    }
-                                    break;
-                                case category::delegate_type:
-                                    write_abi_delegate(w, type);
-                                    write_temp_delegate_event_source_subclass(w, type);
-                                    break;
-                                case category::enum_type:
-                                    write_abi_enum(w, type);
-                                    break;
-                                case category::interface_type:
-                                    write_abi_interface(w, type);
-                                    break;
-                                case category::struct_type:
-                                    write_abi_struct(w, type);
-                                    break;
-                                }
+                                w.write_end_abi();
                             }
-                            w.write_end_abi();
 
                             currentType = "";
 
@@ -544,6 +554,25 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
                     }
                     writer ws;
                     write_file_header(ws);
+
+                    if (std::string(string.name) == "ComInteropHelpers")
+                    {
+                        // Determine which COM interop helpers to include by checking whether the newer
+                        // types used in the COM interop helpers are being projected or not.
+                        // The ComInteropHelpers file makes use of UAC_VERSION_* to conditionally
+                        // include the ones that are being projected.
+                        int uapContractversion = 7;  // default to 17763
+                        if (c.find("Windows.Graphics.Display.DisplayInformation"))
+                        {
+                            uapContractversion = 15;
+                        }
+
+                        ws.write(R"(
+#define UAC_VERSION_%
+)",
+                            uapContractversion);
+                    }
+
                     ws.write(string.value);
                     ws.flush_to_file(settings.output_folder / (std::string(string.name) + ".cs"));
                 }

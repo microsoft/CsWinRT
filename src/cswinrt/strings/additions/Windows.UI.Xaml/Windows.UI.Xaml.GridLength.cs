@@ -5,7 +5,9 @@ namespace Windows.UI.Xaml
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.GridLength>")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct GridLength : IEquatable<GridLength>
     {

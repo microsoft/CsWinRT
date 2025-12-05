@@ -4703,8 +4703,24 @@ R"(#pragma warning disable IL2026
             type.TypeNamespace(), type.TypeName());
     }
 
+    void write_class_winrt_classname_attribute(writer& w, TypeDef const& type)
+    {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
+        w.write("[WindowsRuntimeClassName(%.RuntimeClassName)]\n",
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
+    }
+
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         w.write("[ABI.%.%ComWrappersMarshaller]\n",
             type.TypeNamespace(), type.TypeName());
     }
@@ -8614,8 +8630,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(
-%[WindowsRuntimeClassName(%.RuntimeClassName)]
-%%%% %class %%
+%%%%%% %class %%
 {
 %
 
@@ -8632,7 +8647,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 }
 )",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_type_name>(type, typedef_name_type::ABI, false),
+            bind<write_class_winrt_classname_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             bind<write_comwrapper_marshaller_attribute>(type),
             bind<write_default_interface_attribute>(type),
@@ -8908,11 +8923,19 @@ return false;
     {
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(
-%%%% delegate % %(%);
+%%%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind([&](writer& w)
+            {
+                if (settings.reference_projection)
+                {
+                    write_guid_attribute(w, type);
+                    w.write("\n");
+                }
+            }),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),

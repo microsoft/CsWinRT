@@ -5,7 +5,9 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 
     [WindowsRuntimeMetadata("Microsoft.UI")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Matrix3D>")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3D : IFormattable, IEquatable<Matrix3D>
     {

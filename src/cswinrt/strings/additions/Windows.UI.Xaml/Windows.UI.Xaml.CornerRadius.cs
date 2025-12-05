@@ -5,7 +5,9 @@ namespace Windows.UI.Xaml
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.CornerRadius>")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public struct CornerRadius : IEquatable<CornerRadius>
     {

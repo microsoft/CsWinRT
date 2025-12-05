@@ -356,6 +356,7 @@
   </Project>
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+  <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
   <Project Path="WinRT.Runtime/WinRT.Runtime.csproj">
     <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
   </Project>
