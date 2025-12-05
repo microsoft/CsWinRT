@@ -193,10 +193,9 @@ public static unsafe class TypeMarshaller
             // This will work for both 'Primitive' and 'Metadata' types, same as above.
             global::System.Type publicType = marshallingInfo.PublicType;
 
-            // TODO
-            type = publicType.IsValueType
-                ? typeof(Nullable<>).MakeGenericType(publicType)
-                : publicType;
+            // For value types, we get the reference type (i.e. the constructed 'Nullable<T>' type)
+            // from the marshalling info. This will perform a lookup for '[WindowsRuntimeReferenceType]'.
+            type = publicType.IsValueType ? marshallingInfo.ReferenceType : publicType;
         }
 
         // Handle the case of C# primitive types that are not Windows Runtime types.
