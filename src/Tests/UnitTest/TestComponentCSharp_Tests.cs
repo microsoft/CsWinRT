@@ -555,10 +555,14 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestTypePropertyWithTestComponentParam10Handler()
+        public void TestTypePropertyWithTestComponentParamHandlers()
         {
-            TestObject.TypeProperty = typeof(TestComponent.Param10Handler);
-            Assert.Equal("TestComponent.Param10Handler", TestObject.GetTypePropertyAbiName());
+            TestObject.TypeProperty = typeof(TestComponent.Param6Handler);
+            Assert.Equal("TestComponent.Param6Handler", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+
+            TestObject.TypeProperty = typeof(TestComponent.Param7Handler);
+            Assert.Equal("TestComponent.Param7Handler", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
@@ -575,6 +579,14 @@ namespace UnitTest
         {
             TestObject.TypeProperty = typeof(TestComponent.IComposable);
             Assert.Equal("TestComponent.IComposable", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        [Fact]
+        public void TestTypePropertyWithTestComponentCSharpClass()
+        {
+            TestObject.TypeProperty = typeof(TestComponentCSharp.Class);
+            Assert.Equal("TestComponentCSharp.Class", TestObject.GetTypePropertyAbiName());
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
