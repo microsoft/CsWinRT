@@ -96,6 +96,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile Type? _publicType;
 
     /// <summary>
+    /// The reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
+    /// </summary>
+    private volatile Type? _referenceType;
+
+    /// <summary>
     /// The cached <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance (possibly a placeholder).
     /// </summary>
     private volatile WindowsRuntimeComWrappersMarshallerAttribute? _comWrappersMarshaller;
@@ -173,6 +178,45 @@ internal sealed class WindowsRuntimeMarshallingInfo
             }
 
             return _publicType ?? InitializePublicType();
+        }
+    }
+
+    /// <summary>
+    /// Gets the reference type (a constructed <see cref="Nullable{T}"/> type) for the current instance.
+    /// </summary>
+    public Type ReferenceType
+    {
+        get
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            Type InitializeReferenceType()
+            {
+                // Try to get the attribute, which should always be present for value types
+                WindowsRuntimeReferenceTypeAttribute? referenceTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeReferenceTypeAttribute>(inherit: false);
+
+                // Analogous validation as for when retrieving the marshaller attribute
+                [DoesNotReturn]
+                [StackTraceHidden]
+                void ThrowNotSupportedException()
+                {
+                    throw new NotSupportedException(
+                        $"The metadata provider type '{_metadataProviderType}' does not have an associated reference type. " +
+                        $"This code path should have never been reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
+                }
+
+                // We expect this to always be present for value types. If the attribute is 'null', it means that
+                // either a value type was missing it, or that 'ReferenceType' was accessed for an invalid public
+                // type (e.g. some Windows Runtime class type). In both cases, this is a bug, and we should throw.
+                if (referenceTypeAttribute is null)
+                {
+                    ThrowNotSupportedException();
+                }
+
+                // Cache the reference type for later (no interlocked operations are needed, same as above)
+                return _referenceType ??= referenceTypeAttribute.ReferenceType;
+            }
+
+            return _referenceType ?? InitializeReferenceType();
         }
     }
 
