@@ -477,11 +477,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
         {
             WindowsRuntimeComWrappersMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeComWrappersMarshallerAttribute>(inherit: false);
 
-            value ??= PlaceholderWindowsRuntimeComWrappersMarshallerAttribute.Instance;
+            value ??= WindowsRuntimeComWrappersMarshallerAttributePlaceholder.Instance;
 
             _comWrappersMarshaller = value;
 
-            if (value is not (null or PlaceholderWindowsRuntimeComWrappersMarshallerAttribute))
+            if (value is not (null or WindowsRuntimeComWrappersMarshallerAttributePlaceholder))
             {
                 marshaller = value;
 
@@ -498,7 +498,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // We have a cached marshaller, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderWindowsRuntimeComWrappersMarshallerAttribute)
+            if (value is WindowsRuntimeComWrappersMarshallerAttributePlaceholder)
             {
                 marshaller = null;
 
@@ -742,48 +742,4 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
         return null;
     }
-}
-
-/// <summary>
-/// A placeholder <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> type.
-/// </summary>
-file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static readonly PlaceholderWindowsRuntimeComWrappersMarshallerAttribute Instance = new();
-
-    /// <inheritdoc/>
-    public override void* GetOrCreateComInterfaceForObject(object value)
-    {
-        return null;
-    }
-
-    /// <inheritdoc/>
-    public override ComWrappers.ComInterfaceEntry* ComputeVtables(out int count)
-    {
-        count = 0;
-
-        return null;
-    }
-
-    /// <inheritdoc/>
-    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
-    {
-        wrapperFlags = CreatedWrapperFlags.None;
-
-        return null!;
-    }
-}
-
-/// <summary>
-/// A placeholder <see cref="WindowsRuntimeReferenceTypeAttribute"/> type.
-/// </summary>
-file sealed class PlaceholderWindowsRuntimeReferenceTypeAttribute
-{
-    /// <summary>
-    /// The shared <see cref="WindowsRuntimeReferenceTypeAttribute"/> instance (it will return <see langword="null"/> for its reference type).
-    /// </summary>
-    public static readonly WindowsRuntimeReferenceTypeAttribute Instance = new(null!);
 }
