@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Single",
+    target: typeof(ABI.System.Single),
+    trimTarget: typeof(float))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Single>",
     target: typeof(ABI.System.Single),
@@ -29,6 +34,8 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Single>")]
+[WindowsRuntimeMetadataTypeName("Single")]
+[WindowsRuntimeReferenceType(typeof(float?))]
 [SingleComWrappersMarshaller]
 file static class Single;
 

@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "UInt64",
+    target: typeof(ABI.System.UInt64),
+    trimTarget: typeof(ulong))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<UInt64>",
     target: typeof(ABI.System.UInt64),
@@ -29,6 +34,8 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<UInt64>")]
+[WindowsRuntimeMetadataTypeName("UInt64")]
+[WindowsRuntimeReferenceType(typeof(ulong?))]
 [UInt64ComWrappersMarshaller]
 file static class UInt64;
 

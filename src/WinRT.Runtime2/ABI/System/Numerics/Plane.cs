@@ -16,6 +16,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.Numerics.Plane",
+    target: typeof(ABI.System.Numerics.Plane),
+    trimTarget: typeof(Plane))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>",
     target: typeof(ABI.System.Numerics.Plane),
     trimTarget: typeof(Plane))]
@@ -31,6 +36,8 @@ namespace ABI.System.Numerics;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Plane")]
+[WindowsRuntimeReferenceType(typeof(global::System.Numerics.Plane?))]
 [PlaneComWrappersMarshaller]
 file static class Plane;
 

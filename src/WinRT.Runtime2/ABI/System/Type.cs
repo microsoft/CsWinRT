@@ -21,6 +21,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.UI.Xaml.Interop.TypeName",
+    target: typeof(ABI.System.Type),
+    trimTarget: typeof(Type))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>",
     target: typeof(ABI.System.Type),
     trimTarget: typeof(Type))]
@@ -36,6 +41,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
+[WindowsRuntimeMetadataTypeName("Windows.UI.Xaml.Interop.TypeName")]
 [TypeComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -108,10 +114,11 @@ public static unsafe class TypeMarshaller
         // underlying type. Instead, for 'Nullable<T>' values we need the runtime class name, which in this case
         // would be the 'IReference<T>' type name for boxed instances of this type.
         global::System.Type? nullableUnderlyingType = Nullable.GetUnderlyingType(value);
+        global::System.Type typeOrUnderlyingType = nullableUnderlyingType ?? value;
 
-        // Use the metadata info lookup first to handle projected and custom-mapped Windows Runtime types.
-        // As mentioned above, we skip this lookup entirely if the input type is a nullable type.
-        if (nullableUnderlyingType is null && WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
+        // Use the marshalling info lookup to detect projected or custom-mapped Windows Runtime types.
+        // If we have an underlying nullable type, we use that for the lookup instead of the input type.
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeOrUnderlyingType, out WindowsRuntimeMarshallingInfo? marshallingInfo) && marshallingInfo.IsMetadataType)
         {
             // For primitive types, we always report 'TypeKind.Primitive'. This means that some
             // types that are C# primitives (e.g. 'sbyte') will be reported as such, even though
@@ -120,20 +127,30 @@ public static unsafe class TypeMarshaller
                 ? TypeKind.Primitive
                 : TypeKind.Metadata;
 
-            reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = kind };
-            return;
-        }
+            // Special case primitive types that are of types that can be boxed. That is, if the input type is not
+            // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
+            // will ensure that e.g. 'typeof(int)' will report 'Int32', rather than 'Windows.Foundation.IReference<Int32>'.
+            if (nullableUnderlyingType is null && marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
+            {
+                reference = new TypeReference { Name = metadataTypeName, Kind = kind };
 
-        global::System.Type typeOrUnderlyingType = nullableUnderlyingType ?? value;
+                return;
+            }
 
-        // Use the marshalling info lookup to detect projected or custom-mapped Windows Runtime types.
-        // If we have an underlying nullable type, we use that for the lookup instead of the input type.
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(typeOrUnderlyingType, out WindowsRuntimeMarshallingInfo? marshallingInfo) && marshallingInfo.IsMetadataType)
-        {
-            // Same check as above to differentiate primitive types from metadata types
-            TypeKind kind = typeOrUnderlyingType.IsPrimitive ? TypeKind.Primitive : TypeKind.Metadata;
+            // If we don't have a metadata type name, try to get the runtime class name. This will handle
+            // cases such as constructed 'Nullable<T>' types, which will report their boxed type name.
+            if (marshallingInfo.TryGetRuntimeClassName(out string? runtimeClassName))
+            {
+                reference = new TypeReference { Name = runtimeClassName, Kind = kind };
 
-            reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
+                return;
+            }
+
+            // Otherwise, use the type name directly. This will handle all remaining cases, such as projected
+            // runtime classes and interface types. For all of those, the projected type name will be correct.
+            reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
+
+            // TODO: handle 'Nullable<KeyValuePair<,>>' here
 
             return;
         }
@@ -161,7 +178,6 @@ public static unsafe class TypeMarshaller
     /// <param name="value">The unmanaged <see cref="Type"/> value.</param>
     /// <returns>The managed <see cref="global::System.Type"/> value</returns>
     [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
     public static global::System.Type? ConvertToManaged(Type value)
     {
         ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
@@ -181,6 +197,9 @@ public static unsafe class TypeMarshaller
         }
 
         global::System.Type? type = null;
+
+        // TODO: handle 'IReference<HResult>', 'IReference<TypeName>' and 'IReference<DELEGATE_TYPE>'.
+        // Those should all be reported as 'NoMetadataTypeInfo', not as the custom-mapped C# type.
 
         // If the type was handled by the metadata lookup, get the public type from there
         if (WindowsRuntimeMetadataInfo.TryGetInfo(typeName, out WindowsRuntimeMetadataInfo? metadataInfo))

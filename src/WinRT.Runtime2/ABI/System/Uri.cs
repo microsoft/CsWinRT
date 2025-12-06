@@ -27,6 +27,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.uri"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeClassName("Windows.Foundation.Uri")]
 [UriComWrappersMarshaller]
 file static class Uri;
 

@@ -19,6 +19,8 @@ namespace Windows.Foundation.Collections;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.collectionchange"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Collections.CollectionChange>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.Collections.CollectionChange")]
+[WindowsRuntimeReferenceType(typeof(CollectionChange?))]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.Collections.CollectionChangeComWrappersMarshaller]
