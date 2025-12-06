@@ -21,6 +21,10 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(IVectorChangedEventArgs))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(IVectorChangedEventArgs),
+    proxy: typeof(ABI.Windows.Foundation.Collections.IVectorChangedEventArgs))]
+
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IVectorChangedEventArgs),
     proxy: typeof(ABI.Windows.Foundation.Collections.IVectorChangedEventArgs))]
