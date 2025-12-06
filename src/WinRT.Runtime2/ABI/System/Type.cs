@@ -137,9 +137,18 @@ public static unsafe class TypeMarshaller
                 return;
             }
 
-            // In all other cases, just use the runtime class name, which will always be present. This will also
-            // account for all constructed 'Nullable<T>' instantiations, which will report their boxed type name.
-            reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
+            // If we don't have a metadata type name, try to get the runtime class name. This will handle
+            // cases such as constructed 'Nullable<T>' types, which will report their boxed type name.
+            if (marshallingInfo.TryGetRuntimeClassName(out string? runtimeClassName))
+            {
+                reference = new TypeReference { Name = runtimeClassName, Kind = kind };
+
+                return;
+            }
+
+            // Otherwise, use the type name directly. This will handle all remaining cases, such as projected
+            // runtime classes and interface types. For all of those, the projected type name will be correct.
+            reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
 
             // TODO: handle 'Nullable<KeyValuePair<,>>' here
 

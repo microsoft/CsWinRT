@@ -550,8 +550,34 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <remarks>This method is only meant to be used on managed types passed to native.</remarks>
     public string GetRuntimeClassName()
     {
+        if (!TryGetRuntimeClassName(out string? runtimeClassName))
+        {
+            // Analogous validation as for when retrieving the marshaller attribute
+            [DoesNotReturn]
+            [StackTraceHidden]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The metadata provider type '{_metadataProviderType}' does not have any runtime class name info. " +
+                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return runtimeClassName;
+    }
+
+    /// <summary>
+    /// Tries to get the runtime class name for the public type associated with the current metadata provider type.
+    /// </summary>
+    /// <param name="runtimeClassName">The resulting runtime class name, if available.</param>
+    /// <returns>Whether <paramref name="runtimeClassName"/> was retrieved successfully.</returns>
+    public bool TryGetRuntimeClassName([NotNullWhen(true)] out string? runtimeClassName)
+    {
+        // Initializes the runtime class name, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
-        string InitializeRuntimeClassName()
+        bool Load([NotNullWhen(true)] out string? runtimeClassName)
         {
             WindowsRuntimeClassNameAttribute? runtimeClassNameAttribute =
                 _metadataProviderType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false)
@@ -559,23 +585,38 @@ internal sealed class WindowsRuntimeMarshallingInfo
 
             if (runtimeClassNameAttribute is null)
             {
-                // Analogous validation as for when retrieving the marshaller attribute
-                [DoesNotReturn]
-                [StackTraceHidden]
-                void ThrowNotSupportedException()
-                {
-                    throw new NotSupportedException(
-                        $"The metadata provider type '{_metadataProviderType}' does not have any runtime class name info. " +
-                        $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
-                }
+                _runtimeClassName ??= "";
 
-                ThrowNotSupportedException();
+                runtimeClassName = null;
+
+                return false;
             }
 
-            return _runtimeClassName ??= runtimeClassNameAttribute.RuntimeClassName;
+            _runtimeClassName = runtimeClassNameAttribute.RuntimeClassName;
+
+            runtimeClassName = runtimeClassNameAttribute.RuntimeClassName;
+
+            return true;
         }
 
-        return _runtimeClassName ?? InitializeRuntimeClassName();
+        string? value = _metadataTypeName;
+
+        // We have a cached runtime class name, so return it immediately
+        if (value is not null)
+        {
+            if (value is "")
+            {
+                runtimeClassName = null;
+
+                return false;
+            }
+
+            runtimeClassName = value;
+
+            return true;
+        }
+
+        return Load(out runtimeClassName);
     }
 
     /// <summary>
@@ -610,7 +651,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <returns>Whether <paramref name="metadataTypeName"/> was retrieved successfully.</returns>
     public bool TryGetMetadataTypeName([NotNullWhen(true)] out string? metadataTypeName)
     {
-        // Initializes the reference type instance, if present
+        // Initializes the metadata type name, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
         bool Load([NotNullWhen(true)] out string? metadataTypeName)
         {
