@@ -114,6 +114,17 @@ public static unsafe class TypeMarshaller
         // underlying type. Instead, for 'Nullable<T>' values we need the runtime class name, which in this case
         // would be the 'IReference<T>' type name for boxed instances of this type.
         global::System.Type? nullableUnderlyingType = Nullable.GetUnderlyingType(value);
+
+        // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
+        // type map entry for normal marshalling (because they're interfaces), and they would also not show up as
+        // being projected types from there. So we handle them here first to get the right metadata type name.
+        if (nullableUnderlyingType is null && WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
+        {
+            reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = TypeKind.Metadata };
+
+            return;
+        }
+
         global::System.Type typeOrUnderlyingType = nullableUnderlyingType ?? value;
 
         // Use the marshalling info lookup to detect projected or custom-mapped Windows Runtime types.
