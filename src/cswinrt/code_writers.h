@@ -1588,6 +1588,12 @@ namespace cswinrt
 
     void write_abi_static_method_call(writer& w, type_semantics const& iface, MethodDef const& method, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         method_signature signature{ method };
         w.write("%.%(%%%)", bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             method.Name(),
@@ -1598,6 +1604,12 @@ namespace cswinrt
 
     void write_unsafe_accessor_static_method_call(writer& w, std::string const& unsafeAccessorMethod, MethodDef const& method, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         method_signature signature{ method };
         w.write("%(null, %%%)",
             unsafeAccessorMethod,
@@ -1608,6 +1620,12 @@ namespace cswinrt
 
     void write_abi_get_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%.%(%)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
@@ -1616,6 +1634,12 @@ namespace cswinrt
 
     void write_abi_set_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%.%(%, value)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
@@ -1624,6 +1648,12 @@ namespace cswinrt
 
     void write_unsafe_accessor_property_static_method_call(writer& w, std::string const& unsafeAccessorMethod, std::string const& targetObjRef, bool get)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%(null, %%)",
             unsafeAccessorMethod,
             targetObjRef,
@@ -1632,6 +1662,12 @@ namespace cswinrt
 
     void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         bool is_unsafe_accessor_call = false;
         w.write("%(%, %).%(value)",
             bind([&](writer& w) {
@@ -2611,6 +2647,22 @@ private static % _% = new %("%.%", %.IID);
     void write_activation_factory_objref_definition(writer& w, TypeDef const& classType)
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
+        if (settings.reference_projection)
+        {
+            w.write(R"(
+private static WindowsRuntimeObjectReference %
+{
+    get
+    {
+        throw null;
+    }
+}
+)",
+            objrefname);
+            return;
+        }
+
+
         w.write(R"(
 private static WindowsRuntimeObjectReference %
 {
@@ -2636,6 +2688,22 @@ private static WindowsRuntimeObjectReference %
     void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
+        if (settings.reference_projection)
+        {
+            w.write(R"(
+private static WindowsRuntimeObjectReference %
+{
+    get
+    {
+        throw null;
+    }
+}
+)",
+            objrefname);
+            return;
+        }
+
+
         w.write(R"(
 private static WindowsRuntimeObjectReference %
 {
@@ -6235,19 +6303,31 @@ public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
-using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
-void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-
-%
 %
 }
 }
 )",
             callback_class,
             callback_class,
-            cache_object,
-            bind(write_constructor_params_as_variables, signature),
-            bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+            bind([&](writer& w) {
+                if (settings.reference_projection)
+                {
+                    w.write("throw null;");
+                }
+                else
+                {
+                    w.write(R"(
+using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
+void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+
+%
+%
+)",
+                        cache_object,
+                        bind(write_constructor_params_as_variables, signature),
+                        bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+                }
+            }));
     }
 
 
@@ -6307,20 +6387,31 @@ public override unsafe void Invoke(
   out void* innerInterface,
   out void* retval)
 {
-using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
-void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-
-%
 %
 }
 }
 )",
             callback_class,
             callback_class,
-            cache_object,
-            bind(write_composable_constructor_params_as_variables, signature),
-            bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
-);
+            bind([&](writer& w) {
+                if (settings.reference_projection)
+                {
+                    w.write("throw null;");
+                }
+                else
+                {
+                    w.write(R"(
+using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
+void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+
+%
+%
+)",
+                    cache_object,
+                    bind(write_composable_constructor_params_as_variables, signature),
+                    bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+                }
+            }));
     }
 
     void write_interface_members(writer& w, TypeDef const& type)

@@ -54,9 +54,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!--
       Default property values for `cswinrtimplgen`.
     -->
-    <CsWinRTGeneratorForwarderAssemblyDirectory Condition="'$(CsWinRTGeneratorForwarderAssemblyDirectory)' == ''">$(IntermediateOutputPath)\runtimes\</CsWinRTGeneratorForwarderAssemblyDirectory>
+    <CsWinRTGeneratorForwarderAssemblyDirectory Condition="'$(CsWinRTGeneratorForwarderAssemblyDirectory)' == ''">$(IntermediateOutputPath)\forwarder\</CsWinRTGeneratorForwarderAssemblyDirectory>
     <_CsWinRTGeneratorForwarderAssemblyPath>$(CsWinRTGeneratorForwarderAssemblyDirectory)$(AssemblyName).dll</_CsWinRTGeneratorForwarderAssemblyPath>
-    <_CsWinRTGeneratorForwarderOutputAssemblyPath>runtimes\$(AssemblyName).dll</_CsWinRTGeneratorForwarderOutputAssemblyPath>
+    <_CsWinRTGeneratorForwarderOutputAssemblyPath>forwarder\$(AssemblyName).dll</_CsWinRTGeneratorForwarderOutputAssemblyPath>
 
     <!--
       Default property values for `cswinrtprojectiongen`.
@@ -230,16 +230,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTForwarderImplGenerator"
     DependsOnTargets="Compile;_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"    
-    Inputs="@(ReferencePath);@(IntermediateAssembly)"
-    Outputs="$(_CsWinRTGeneratorForwarderAssemblyPath)"
+    Inputs="@(ReferencePath);@(IntermediateRefAssembly)"
+    Outputs="@(IntermediateAssembly);@(IntermediateRefAssembly);$(_CsWinRTGeneratorForwarderAssemblyPath);"
     Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
 
     <MakeDir Directories="$(CsWinRTGeneratorForwarderAssemblyDirectory)" />
-
+      
     <!-- Invoke 'cswinrtimplgen' -->
     <RunCsWinRTForwarderImplGenerator
       ReferenceAssemblyPaths="@(ReferencePath)"
-      OutputAssemblyPath="@(IntermediateAssembly)"
+      OutputAssemblyPath="@(IntermediateRefAssembly)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorForwarderAssemblyDirectory)"
       AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)"
       CsWinRTToolsDirectory="$(CsWinRTImplEffectiveToolsDirectory)"
@@ -250,33 +250,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
-    <!-- Set the metadata for the interop .dll item -->
-    <ItemGroup>
-      <CsWinRTGeneratorForwarderAssemblyPath Include="$(_CsWinRTGeneratorForwarderAssemblyPath)">
-        <AssemblyName>$(AssemblyName)</AssemblyName>
-        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
-        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
-        <Private>true</Private>
-        <MSBuildSourceTargetName>_RunCsWinRTForwarderImplGenerator</MSBuildSourceTargetName>
-        <Platforms>AnyCPU</Platforms>
-      </CsWinRTGeneratorForwarderAssemblyPath>
-    </ItemGroup>
+      <Copy SourceFiles="$(_CsWinRTGeneratorForwarderAssemblyPath)"
+            DestinationFiles="@(IntermediateAssembly)" />
 
-    <!-- Add the interop .dll to the required output groups -->
-    <ItemGroup>
-
-      <!-- '_SourceItemsToCopyToOutputDirectory' handles copying the interop .dll to the build output folder -->
-      <_SourceItemsToCopyToOutputDirectory
-        Include="@(CsWinRTGeneratorForwarderAssemblyPath)"
-        TargetPath="$(_CsWinRTGeneratorForwarderOutputAssemblyPath)" />
-        
-    </ItemGroup>
-
-    <!-- Append to 'FileWrites' so the forwarder .dll will be removed on clean -->
-    <ItemGroup>
-      <FileWrites Include="@(CsWinRTGeneratorForwarderAssemblyPath)"/>
-    </ItemGroup>
+      <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+      <ItemGroup>
+          <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
+      </ItemGroup>
   </Target>
 
   <Target
@@ -286,16 +266,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
       Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-      <!-- Clear the reference .dll and replace it with the forwarder dll. -->
-      <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
-
-      <TargetPathWithTargetPlatformMoniker Include="$([MSBuild]::NormalizePath('$(OutputPath)', '$(_CsWinRTGeneratorForwarderOutputAssemblyPath)'))">
-        <TargetPlatformMoniker>$(TargetPlatformMoniker)</TargetPlatformMoniker>
-        <TargetPlatformIdentifier>$(TargetPlatformIdentifier)</TargetPlatformIdentifier>
-        <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
-        <TargetFrameworkVersion>$(TargetFrameworkVersion.TrimStart('vV'))</TargetFrameworkVersion>
-        <ReferenceAssembly>$([MSBuild]::NormalizePath('$(OutputPath)', '$(AssemblyName).dll'))</ReferenceAssembly>
-        <CopyUpToDateMarker>@(CopyUpToDateMarker)</CopyUpToDateMarker>
+      <TargetPathWithTargetPlatformMoniker Update="@(TargetPathWithTargetPlatformMoniker)">
         <CsWinRTInputs>@(CsWinRTInputs)</CsWinRTInputs>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
