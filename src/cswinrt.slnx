@@ -175,8 +175,6 @@
     </Project>
     <Project Path="Tests/HostTest/HostTest.vcxproj" Id="b511b7c9-c8e2-47ed-a0d1-538c00747d30">
       <Platform Solution="*|ARM" Project="Win32" />
-      <Build Solution="*|ARM" Project="false" />
-      <Build Solution="*|ARM64" Project="false" />
       <Build Project="false" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
