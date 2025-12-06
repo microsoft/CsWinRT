@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Int16",
+    target: typeof(ABI.System.Int16),
+    trimTarget: typeof(short))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Int16>",
     target: typeof(ABI.System.Int16),
@@ -27,7 +32,10 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="short"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Int16>")]
+[WindowsRuntimeMetadataTypeName("Int16")]
+[WindowsRuntimeReferenceType(typeof(short?))]
 [Int16ComWrappersMarshaller]
 file static class Int16;
 

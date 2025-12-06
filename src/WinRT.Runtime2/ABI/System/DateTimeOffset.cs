@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Windows.Foundation.DateTime",
+    target: typeof(ABI.System.DateTimeOffset),
+    trimTarget: typeof(DateTimeOffset))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.DateTime>",
     target: typeof(ABI.System.DateTimeOffset),
@@ -28,7 +33,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.DateTime")]
+[WindowsRuntimeReferenceType(typeof(global::System.DateTimeOffset?))]
 [DateTimeOffsetComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

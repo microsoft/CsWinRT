@@ -7,6 +7,13 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Object",
+    target: typeof(ABI.System.Object),
+    trimTarget: typeof(object))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(object), typeof(ABI.System.Object))]
 
 namespace ABI.System;
@@ -14,7 +21,9 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="object"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Object")]
+[WindowsRuntimeMetadataTypeName("Object")]
 [ObjectComWrappersMarshaller]
 file static class Object;
 

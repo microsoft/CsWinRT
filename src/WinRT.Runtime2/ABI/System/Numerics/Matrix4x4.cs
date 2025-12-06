@@ -16,6 +16,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.Numerics.Matrix4x4",
+    target: typeof(ABI.System.Numerics.Matrix4x4),
+    trimTarget: typeof(Matrix4x4))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix4x4>",
     target: typeof(ABI.System.Numerics.Matrix4x4),
     trimTarget: typeof(Matrix4x4))]
@@ -29,7 +34,10 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Matrix4x4"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix4x4"/>
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix4x4>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Matrix4x4")]
+[WindowsRuntimeReferenceType(typeof(global::System.Numerics.Matrix4x4?))]
 [Matrix4x4ComWrappersMarshaller]
 file static class Matrix4x4;
 

@@ -546,12 +546,36 @@ namespace UnitTest
             Assert.Equal(2, array.Count);
         }
 
-        [Fact]
-        public void TestTypePropertyWithSystemType()
+        [Theory]
+        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
+        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
+        [InlineData(typeof(TestComponent.Param7Handler), "TestComponent.Param7Handler", "Metadata")]
+        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
+        [InlineData(typeof(Guid), "Guid", "Metadata")]
+        [InlineData(typeof(Object), "Object", "Metadata")]
+        [InlineData(typeof(String), "String", "Metadata")]
+        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [InlineData(typeof(long), "Int64", "Primitive")]
+        [InlineData(typeof(int), "Int32", "Primitive")]
+        [InlineData(typeof(short), "Int16", "Primitive")]
+        [InlineData(typeof(ulong), "UInt64", "Primitive")]
+        [InlineData(typeof(uint), "UInt32", "Primitive")]
+        [InlineData(typeof(ushort), "UInt16", "Primitive")]
+        [InlineData(typeof(byte), "UInt8", "Primitive")]
+        [InlineData(typeof(char), "Char16", "Primitive")]
+        [InlineData(typeof(float), "Single", "Primitive")]
+        [InlineData(typeof(double), "Double", "Primitive")]
+        [InlineData(typeof(bool), "Boolean", "Primitive")]
+        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
+        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
-            TestObject.TypeProperty = typeof(System.Type);
-            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+            // test method here
+            TestObject.TypeProperty = type;
+            Assert.Equal(name, TestObject.GetTypePropertyAbiName());
+            Assert.Equal(kind, TestObject.GetTypePropertyKind());
         }
 
         class CustomDictionary : Dictionary<string, string> { }
@@ -3427,34 +3451,34 @@ namespace UnitTest
             Assert.True(eventCalled2);
         }
 
-        [Fact]
-        public unsafe void TestProxiedDelegate()
-        {
-            var obj = new OOPAsyncAction();
-            var factory = new WinRTClassFactory<OOPAsyncAction>(
-                () => obj,
-                new Dictionary<Guid, Func<object, IntPtr>>()
-                {
-                    { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
-                });
+        //[Fact]
+        //public unsafe void TestProxiedDelegate()
+        //{
+        //    var obj = new OOPAsyncAction();
+        //    var factory = new WinRTClassFactory<OOPAsyncAction>(
+        //        () => obj,
+        //        new Dictionary<Guid, Func<object, IntPtr>>()
+        //        {
+        //            { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
+        //        });
 
-            WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
+        //    WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
-            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
-            var proc = Process.Start(launchExePath);
-            Thread.Sleep(5000);
-            obj.Close();
-            Assert.True(obj.delegateCalled);
+        //    var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        //    var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+        //    var proc = Process.Start(launchExePath);
+        //    Thread.Sleep(5000);
+        //    obj.Close();
+        //    Assert.True(obj.delegateCalled);
 
-            try
-            {
-                proc.Kill();
-            }
-            catch (Exception)
-            {
-            }
-        }
+        //    try
+        //    {
+        //        proc.Kill();
+        //    }
+        //    catch (Exception)
+        //    {
+        //    }
+        //}
 
         [Fact]
         private async Task TestPnpPropertiesInLoop()

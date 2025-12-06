@@ -15,6 +15,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+    value: "Windows.Foundation.Point",
+    target: typeof(Point),
+    trimTarget: typeof(Point))]
+
+[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Point>",
     target: typeof(Point),
     trimTarget: typeof(Point))]

@@ -4641,17 +4641,47 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
+
+    void write_pragma_restore_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning restore IL2026
+)");
+    }
+
+    void write_pragma_disable_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning disable IL2026
+)");
+    }
+
+    void write_winrt_windowsmetadata_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+        w.write(
+R"(
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "%",
+    target: typeof(%),
+    trimTarget: typeof(%))]
+)",
+            projection_name,
+            projection_name,
+            projection_name);
+    }
+
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
-R"(#pragma warning disable IL2026
+R"(
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "%",
     target: typeof(%),
     trimTarget: typeof(%))]
-#pragma warning restore IL2026
-
 )",
         bind([&](writer& w) {
             if (is_value_type)
@@ -4689,6 +4719,11 @@ R"(#pragma warning disable IL2026
 )",
             bind<write_type_name>(type, typedef_name_type::Projected, true),
             bind<write_type_name>(type, typedef_name_type::ABI, true));
+    }
+
+    void write_winrt_reference_type_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
@@ -9150,13 +9185,14 @@ internal unsafe struct %Vftbl
 
         w.write(
 R"(
-%%%%% enum % : %
+%%%%%% enum % : %
 {
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         bind<write_winrt_metadata_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
         bind<write_comwrapper_marshaller_attribute>(type),
+        bind<write_winrt_reference_type_attribute>(type),
         (settings.internal) ? "internal" : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
@@ -9215,10 +9251,11 @@ R"(
         }
 
         // struct
-        w.write("%%%public% struct %: IEquatable<%>\n{\n",
+        w.write("%%%%public% struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_struct_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_winrt_reference_type_attribute>(type),
             has_addition_to_type(type) ? " partial" : "",
             type.TypeName(),
             type.TypeName());

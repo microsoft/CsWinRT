@@ -263,6 +263,7 @@ Where <spec> is one or more of:
                                     continue;
                                 }
                             }
+
                             auto guard{ w.push_generic_params(type.GenericParam()) };
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
@@ -273,23 +274,37 @@ Where <spec> is one or more of:
                                 if (!is_static(type) &&
                                     !is_attribute_type(type))
                                 {
+                                    write_pragma_disable_IL2026(w);
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                    write_pragma_restore_IL2026(w);
                                 }
                                 break;
                             case category::delegate_type:
+                                write_pragma_disable_IL2026(w);
                                 write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
+                                write_pragma_restore_IL2026(w);
                                 break;
                             case category::enum_type:
+                                write_pragma_disable_IL2026(w);
                                 write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
+                                write_pragma_restore_IL2026(w);
                                 break;
                             case category::interface_type:
+                                write_pragma_disable_IL2026(w);
                                 write_winrt_idic_typemapgroup_assembly_attribute(w, type);
+                                write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
+                                write_pragma_restore_IL2026(w);
                                 break;
                             case category::struct_type:
                                 // Similarly for API contracts, we don't expect them to be passed across the ABI.
                                 if (!is_api_contract_type(type))
                                 {
+                                    write_pragma_disable_IL2026(w);
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
+                                    write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
+                                    write_pragma_restore_IL2026(w);
                                 }
                                 break;
                             }

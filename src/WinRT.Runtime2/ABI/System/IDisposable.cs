@@ -13,10 +13,32 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Windows.Foundation.IClosable",
+    target: typeof(ABI.System.IDisposable),
+    trimTarget: typeof(IDisposable))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(IDisposable),
+    proxy: typeof(ABI.System.IDisposable))]
+
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(IDisposable),
+    proxy: typeof(ABI.System.IDisposableInterfaceImpl))]
+
 namespace ABI.System;
 
 /// <summary>
-/// Marshaller for <see cref="IDisposable"/>.
+/// ABI type for <see cref="global::System.IDisposable"/>.
+/// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.IClosable")]
+file static class IDisposable;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -25,20 +47,20 @@ namespace ABI.System;
 public static unsafe class IDisposableMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IDisposable? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IDisposable? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IDisposable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IClosable);
+        return WindowsRuntimeInterfaceMarshaller<global::System.IDisposable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IClosable);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static IDisposable? ConvertToManaged(void* value)
+    public static global::System.IDisposable? ConvertToManaged(void* value)
     {
-        return (IDisposable?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::System.IDisposable?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="IDisposable"/>.
+/// Interop methods for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -46,7 +68,7 @@ public static unsafe class IDisposableMarshaller
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableMethods
 {
-    /// <see cref="IDisposable.Dispose"/>
+    /// <see cref="global::System.IDisposable.Dispose"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Dispose(WindowsRuntimeObjectReference thisReference)
     {
@@ -59,7 +81,7 @@ public static unsafe class IDisposableMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="IDisposable"/>.
+/// Binding type for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IDisposableVftbl
@@ -74,7 +96,7 @@ internal unsafe struct IDisposableVftbl
 }
 
 /// <summary>
-/// The <see cref="IDisposable"/> implementation.
+/// The <see cref="global::System.IDisposable"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -83,7 +105,7 @@ internal unsafe struct IDisposableVftbl
 public static unsafe class IDisposableImpl
 {
     /// <summary>
-    /// The <see cref="IDisposableVftbl"/> value for the managed <see cref="IDisposable"/> implementation.
+    /// The <see cref="IDisposableVftbl"/> value for the managed <see cref="global::System.IDisposable"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IDisposableVftbl Vftbl;
@@ -99,7 +121,7 @@ public static unsafe class IDisposableImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="IDisposable"/> implementation.
+    /// Gets a pointer to the managed <see cref="global::System.IDisposable"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -113,7 +135,7 @@ public static unsafe class IDisposableImpl
     {
         try
         {
-            ComInterfaceDispatch.GetInstance<IDisposable>((ComInterfaceDispatch*)thisPtr).Dispose();
+            ComInterfaceDispatch.GetInstance<global::System.IDisposable>((ComInterfaceDispatch*)thisPtr).Dispose();
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -125,15 +147,17 @@ public static unsafe class IDisposableImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IDisposable"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IDisposable"/>.
 /// </summary>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeClassName("Windows.Foundation.IClosable")]
 [DynamicInterfaceCastableImplementation]
-file interface IDisposableInterfaceImpl : IDisposable
+file interface IDisposableInterfaceImpl : global::System.IDisposable
 {
     /// <inheritdoc/>
-    void IDisposable.Dispose()
+    void global::System.IDisposable.Dispose()
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IDisposable).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.IDisposable).TypeHandle);
 
         IDisposableMethods.Dispose(thisReference);
     }

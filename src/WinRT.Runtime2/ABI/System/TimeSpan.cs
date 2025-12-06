@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Windows.Foundation.TimeSpan",
+    target: typeof(ABI.System.TimeSpan),
+    trimTarget: typeof(TimeSpan))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.TimeSpan>",
     target: typeof(ABI.System.TimeSpan),
@@ -28,7 +33,10 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
+[WindowsRuntimeMetadataTypeName("Windows.Foundation.TimeSpan")]
+[WindowsRuntimeReferenceType(typeof(global::System.TimeSpan?))]
 [TimeSpanComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

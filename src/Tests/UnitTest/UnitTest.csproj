@@ -11,11 +11,12 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
-    <ProjectReference Include="..\OOPExe\OOPExe.csproj" />
+    <!--<ProjectReference Include="..\OOPExe\OOPExe.csproj" />-->
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.VCRTForwarders.140" />
     <PackageReference Include="xunit" />
