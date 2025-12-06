@@ -546,154 +546,37 @@ namespace UnitTest
             Assert.Equal(2, array.Count);
         }
 
-        [Fact]
-        public void TestTypePropertyWithTestComponentNested()
+        [Theory]
+        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
+        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
+        [InlineData(typeof(TestComponent.Param7Handler), "TestComponent.Param7Handler", "Metadata")]
+        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        [InlineData(typeof(Type), "Type", "Metadata")]
+        [InlineData(typeof(Guid), "Guid", "Metadata")]
+        [InlineData(typeof(Object), "Object", "Metadata")]
+        [InlineData(typeof(String), "String", "Metadata")]
+        [InlineData(typeof(TimeSpan), "TimeSpan", "Metadata")]
+        [InlineData(typeof(long), "Int64", "Primitive")]
+        [InlineData(typeof(int), "Int32", "Primitive")]
+        [InlineData(typeof(short), "Int16", "Primitive")]
+        [InlineData(typeof(ulong), "UInt64", "Primitive")]
+        [InlineData(typeof(uint), "UInt32", "Primitive")]
+        [InlineData(typeof(ushort), "UInt16", "Primitive")]
+        [InlineData(typeof(byte), "UInt8", "Primitive")]
+        [InlineData(typeof(char), "Char16", "Primitive")]
+        [InlineData(typeof(float), "Single", "Primitive")]
+        [InlineData(typeof(double), "Double", "Primitive")]
+        [InlineData(typeof(bool), "Boolean", "Primitive")]
+        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
+        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
-            TestObject.TypeProperty = typeof(TestComponent.Nested);
-            Assert.Equal("TestComponent.Nested", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+            // test method here
+            TestObject.TypeProperty = type;
+            Assert.Equal(name, TestObject.GetTypePropertyAbiName());
+            Assert.Equal(kind, TestObject.GetTypePropertyKind());
         }
-
-        [Fact]
-        public void TestTypePropertyWithTestComponentParamHandlers()
-        {
-            TestObject.TypeProperty = typeof(TestComponent.Param6Handler);
-            Assert.Equal("TestComponent.Param6Handler", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(TestComponent.Param7Handler);
-            Assert.Equal("TestComponent.Param7Handler", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithTestComponentCSharpEnumValue()
-        {
-            TestObject.TypeProperty = typeof(TestComponentCSharp.EnumValue);
-            Assert.Equal("TestComponentCSharp.EnumValue", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithTestComponentIComposable()
-        {
-            TestObject.TypeProperty = typeof(TestComponent.IComposable);
-            Assert.Equal("TestComponent.IComposable", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithTestComponentCSharpClass()
-        {
-            TestObject.TypeProperty = typeof(TestComponentCSharp.Class);
-            Assert.Equal("TestComponentCSharp.Class", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithSystemType()
-        {
-            TestObject.TypeProperty = typeof(System.Type);
-            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithGuidType()
-        {
-            TestObject.TypeProperty = typeof(System.Guid);
-            Assert.Equal("Guid", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithObjectType()
-        {
-            TestObject.TypeProperty = typeof(System.Object);
-            Assert.Equal("Object", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithStringType()
-        {
-            TestObject.TypeProperty = typeof(System.String);
-            Assert.Equal("String", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithPrimitiveType()
-        {
-            TestObject.TypeProperty = typeof(long);
-            Assert.Equal("Int64", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(int);
-            Assert.Equal("Int32", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(short);
-            Assert.Equal("Int16", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(ulong);
-            Assert.Equal("UInt64", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(uint);
-            Assert.Equal("UInt32", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(ushort);
-            Assert.Equal("UInt16", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(byte);
-            Assert.Equal("UInt8", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(char);
-            Assert.Equal("Char16", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(float);
-            Assert.Equal("Single", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(double);
-            Assert.Equal("Double", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-
-            TestObject.TypeProperty = typeof(bool);
-            Assert.Equal("Boolean", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Primitive", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithIServiceProvider()
-        {
-            TestObject.TypeProperty = typeof(IServiceProvider);
-            Assert.Equal("Microsoft.UI.Xaml.IXamlServiceProvider", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithIDisposable()
-        {
-            TestObject.TypeProperty = typeof(IDisposable);
-            Assert.Equal("Windows.Foundation.IClosable", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
-        [Fact]
-        public void TestTypePropertyWithTimespan()
-        {
-            TestObject.TypeProperty = typeof(TimeSpan);
-            Assert.Equal("TimeSpan", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
-        }
-
 
         class CustomDictionary : Dictionary<string, string> { }
 
