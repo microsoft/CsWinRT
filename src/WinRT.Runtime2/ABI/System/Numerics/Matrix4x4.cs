@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Matrix4x4",
     target: typeof(ABI.System.Numerics.Matrix4x4),
     trimTarget: typeof(Matrix4x4))]
