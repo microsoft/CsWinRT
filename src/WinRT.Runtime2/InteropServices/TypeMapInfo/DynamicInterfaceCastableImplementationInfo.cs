@@ -127,11 +127,11 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
         {
             DynamicInterfaceCastableImplementationForwarderAttribute? value = ImplementationType.GetCustomAttribute<DynamicInterfaceCastableImplementationForwarderAttribute>(inherit: false);
 
-            value ??= PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute.Instance;
+            value ??= DynamicInterfaceCastableImplementationForwarderAttributePlaceholder.Instance;
 
             _implementationForwarder = value;
 
-            if (value is not (null or PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute))
+            if (value is not (null or DynamicInterfaceCastableImplementationForwarderAttributePlaceholder))
             {
                 forwarder = value;
 
@@ -148,7 +148,7 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
         // We have a cached forwarder, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute)
+            if (value is DynamicInterfaceCastableImplementationForwarderAttributePlaceholder)
             {
                 forwarder = null;
 
@@ -178,28 +178,5 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
 
         // There's no '[DynamicCastableImplementation]' info for the provided interface type
         return null;
-    }
-}
-
-/// <summary>
-/// A placeholder <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> type.
-/// </summary>
-file sealed class PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute : DynamicInterfaceCastableImplementationForwarderAttribute
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute Instance = new();
-
-    /// <inheritdoc/>
-    public override bool TryGetImplementationType(
-        WindowsRuntimeObjectReference thisReference,
-        [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference,
-        [NotNullWhen(true)] out Type? implementationType)
-    {
-        interfaceReference = null;
-        implementationType = null;
-
-        return false;
     }
 }
