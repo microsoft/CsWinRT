@@ -20,6 +20,10 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(IServiceProvider))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(IServiceProvider),
+    proxy: typeof(ABI.System.IServiceProvider))]
+
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IServiceProvider),
     proxy: typeof(ABI.System.IServiceProviderInterfaceImpl))]

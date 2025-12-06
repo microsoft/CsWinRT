@@ -20,6 +20,10 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(IAsyncInfo))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(IAsyncInfo),
+    proxy: typeof(ABI.Windows.Foundation.IAsyncInfo))]
+
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IAsyncInfo),
     proxy: typeof(ABI.Windows.Foundation.IAsyncInfoInterfaceImpl))]
