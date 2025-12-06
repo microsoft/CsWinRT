@@ -10,7 +10,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -24,43 +23,19 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IEnumerator1
     {
         /// <summary>
-        /// Creates the 'IID' property for some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="enumeratorType"/>.</param>
-        public static void IID(
-            GenericInstanceTypeSignature enumeratorType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(enumeratorType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
-        /// <summary>
         /// Creates a new type definition for the methods for an <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="iteratorMethodsType">The resulting methods type.</param>
         public static void IIteratorMethods(
             GenericInstanceTypeSignature enumeratorType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition iteratorMethodsType)
         {
@@ -97,15 +72,16 @@ internal partial class InteropTypeDefinitionBuilder
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
-            //   [2]: 'void*' (the native value that was retrieved)
+            //   [2]: '<ABI_ELEMENT_TYPE>' (the native value that was retrieved)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_currentNative = enumeratorType.TypeArguments[0].IsValueType ? new(enumeratorType.TypeArguments[0].Import(module)) : new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences).Import(module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ldloca_s_0_finallyStart = new(Ldloca_S, loc_0_thisValue);
             CilInstruction nop_finallyEnd = new(Nop);
+            CilInstruction nop_returnValueRewrite = new(Nop);
 
             // Create a method body for the 'Current' method
             currentMethod.CilMethodBody = new CilMethodBody()
@@ -135,7 +111,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { ldloca_s_0_finallyStart },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
                     { Endfinally },
-                    { nop_finallyEnd }
+                    { nop_finallyEnd },
+                    { nop_returnValueRewrite }
                 },
                 ExceptionHandlers =
                 {
@@ -150,48 +127,12 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // If the value is blittable, return it directly
-            if (enumeratorType.TypeArguments[0].IsValueType) // TODO
-            {
-                _ = currentMethod.CilMethodBody.Instructions.Add(Ldloc_2);
-                _ = currentMethod.CilMethodBody.Instructions.Add(Ret);
-            }
-            else
-            {
-                CilInstructionCollection instructions = currentMethod.CilMethodBody.Instructions;
-
-                // Declare an additional variable:
-                //   [3]: '<TYPE_ARGUMENT>' (for the marshalled value)
-                CilLocalVariable loc_3_current = new(enumeratorType.TypeArguments[0].Import(module));
-
-                currentMethod.CilMethodBody.LocalVariables.Add(loc_3_current);
-
-                // Jump labels for the 'try/finally' blocks
-                CilInstruction ldloc_2_tryStart = new(Ldloc_2);
-                CilInstruction ldloc_2_finallyStart = new(Ldloc_2);
-                CilInstruction ldloc_3_finallyEnd = new(Ldloc_3);
-
-                // We need to marshal the native value to a managed object
-                instructions.Add(ldloc_2_tryStart);
-                _ = instructions.Add(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module));
-                _ = instructions.Add(Stloc_3);
-                _ = instructions.Add(Leave_S, ldloc_3_finallyEnd.CreateLabel());
-                instructions.Add(ldloc_2_finallyStart);
-                _ = instructions.Add(Call, interopReferences.HStringMarshallerFree.Import(module));
-                _ = instructions.Add(Endfinally);
-                instructions.Add(ldloc_3_finallyEnd);
-                _ = instructions.Add(Ret);
-
-                // Register the 'try/finally'
-                currentMethod.CilMethodBody.ExceptionHandlers.Add(new CilExceptionHandler
-                {
-                    HandlerType = CilExceptionHandlerType.Finally,
-                    TryStart = ldloc_2_tryStart.CreateLabel(),
-                    TryEnd = ldloc_2_finallyStart.CreateLabel(),
-                    HandlerStart = ldloc_2_finallyStart.CreateLabel(),
-                    HandlerEnd = ldloc_3_finallyEnd.CreateLabel()
-                });
-            }
+            // Track rewriting the return value for this method
+            emitState.TrackReturnValueMethodRewrite(
+                returnType: elementType,
+                method: currentMethod,
+                marker: nop_returnValueRewrite,
+                source: loc_2_currentNative);
 
             // Define the 'HasCurrent' method as follows:
             //
@@ -528,9 +469,10 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition implType)
         {
             // Define the 'Current' method
-            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.Current(
+            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_Current(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             // Define the 'get_HasCurrent' method

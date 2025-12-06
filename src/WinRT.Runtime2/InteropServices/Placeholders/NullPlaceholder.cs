@@ -21,7 +21,7 @@ namespace WindowsRuntime.InteropServices;
 /// input object were some <c>IReference`1</c> wrapping such an error code. Instead, that marshaller can use <see cref="NullPlaceholder"/>.
 /// </para>
 /// </remarks>
-internal sealed unsafe class NullPlaceholder
+internal sealed class NullPlaceholder
 {
     /// <summary>
     /// The shared instance of <see cref="NullPlaceholder"/>.

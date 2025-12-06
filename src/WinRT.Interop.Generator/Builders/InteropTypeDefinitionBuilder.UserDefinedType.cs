@@ -231,7 +231,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_1 },
-                    { Ldc_I4_2 },
+                    { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
                     { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
                     { Ret }
                 }

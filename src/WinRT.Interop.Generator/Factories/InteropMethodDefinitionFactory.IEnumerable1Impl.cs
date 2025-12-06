@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -24,10 +25,12 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         public static MethodDefinition First(
             GenericInstanceTypeSignature enumerableType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
@@ -48,31 +51,21 @@ internal partial class InteropMethodDefinitionFactory
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
-            // Reference the generated 'ConvertToUnmanaged' method to marshal the 'IEnumerator<T>' instance to unmanaged
-            MemberReference convertToUnmanagedMethod = module
-                .CreateTypeReference(
-                    ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                    name: InteropUtf8NameFactory.TypeName(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType), "Marshaller"))
-                .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                    parameterTypes: [interopReferences.IEnumerator1.MakeGenericReferenceType(elementType)]));
-
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
+            CilInstruction nop_convertToUnmanaged = new(Nop);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
-            //   [1]: 'WindowsRuntimeObjectReferenceValue' (the marshalled 'IEnumerator<T>' instance)
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_enumeratorValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
 
             // Create a method body for the 'get_Current' method
             firstMethod.CilMethodBody = new CilMethodBody()
             {
-                LocalVariables = { loc_0_hresult, loc_1_enumeratorValue },
+                LocalVariables = { loc_0_hresult },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -89,11 +82,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumerableType).Import(module) },
                     { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
-                    { Call, convertToUnmanagedMethod.Import(module) },
-                    { Stloc_1 },
-                    { Ldloca_S, loc_1_enumeratorValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module) },
-                    { Stind_I },
+                    { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -120,6 +109,12 @@ internal partial class InteropMethodDefinitionFactory
                     }
                 }
             };
+
+            // Track the method for rewrite to marshal the result value
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType),
+                method: firstMethod,
+                marker: nop_convertToUnmanaged);
 
             return firstMethod;
         }

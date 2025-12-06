@@ -3,9 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -29,10 +32,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
         public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
         {
-            for (
-                TypeDefinition? currentType = type;
-                currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, corLibTypeFactory.Object);
-                currentType = currentType.BaseType?.Resolve())
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -51,12 +51,9 @@ internal static class TypeDefinitionExtensions
         /// <exception cref="ArgumentException">Thrown if the method couldn't be found.</exception>
         public MethodDefinition GetMethod(Utf8String name)
         {
-            foreach (MethodDefinition method in type.Methods)
+            if (type.TryGetMethod(name, out MethodDefinition? method))
             {
-                if (method.Name == name)
-                {
-                    return method;
-                }
+                return method;
             }
 
             throw new ArgumentException($"Method with name '{name}' not found.", nameof(name));
@@ -70,15 +67,58 @@ internal static class TypeDefinitionExtensions
         /// <exception cref="ArgumentException">Thrown if the method couldn't be found.</exception>
         public MethodDefinition GetMethod(ReadOnlySpan<byte> name)
         {
-            foreach (MethodDefinition method in type.Methods)
+            if (type.TryGetMethod(name, out MethodDefinition? method))
             {
-                if (method.Name?.AsSpan().SequenceEqual(name) is true)
-                {
-                    return method;
-                }
+                return method;
             }
 
             throw new ArgumentException($"Method with name '{new Utf8String(name)}' not found.", nameof(name));
+        }
+
+        /// <summary>
+        /// Tries to get the first method with a given name from the specified type.
+        /// </summary>
+        /// <param name="name">The name of the method to get.</param>
+        /// <param name="method">The resulting method, if found.</param>
+        /// <returns>Whether <paramref name="method"/> was successfully found.</returns>
+        public bool TryGetMethod(Utf8String name, [NotNullWhen(true)] out MethodDefinition? method)
+        {
+            foreach (MethodDefinition candidate in type.Methods)
+            {
+                if (candidate.Name == name)
+                {
+                    method = candidate;
+
+                    return true;
+                }
+            }
+
+            method = null;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the first method with a given name from the specified type.
+        /// </summary>
+        /// <param name="name">The name of the method to get.</param>
+        /// <param name="method">The resulting method, if found.</param>
+        /// <returns>Whether <paramref name="method"/> was successfully found.</returns>
+        public bool TryGetMethod(ReadOnlySpan<byte> name, [NotNullWhen(true)] out MethodDefinition? method)
+        {
+            foreach (MethodDefinition candidate in type.Methods)
+            {
+                if (candidate.Name?.AsSpan().SequenceEqual(name) is true)
+                {
+                    method = candidate;
+
+                    return true;
+                }
+            }
+
+            method = null;
+
+            return false;
         }
 
         /// <summary>
@@ -148,6 +188,23 @@ internal static class TypeDefinitionExtensions
         {
             type.Methods.Add(method);
             type.MethodImplementations.Add(new MethodImplementation(declaration, method));
+        }
+
+        /// <summary>
+        /// Enumerates all base types of the specified type, including itself.
+        /// </summary>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+        /// <returns>The sequence of base types for the input type, including itself.</returns>
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(CorLibTypeFactory corLibTypeFactory)
+        {
+            yield return type;
+
+            for (TypeDefinition? baseType = type.BaseType?.Resolve();
+                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, corLibTypeFactory.Object);
+                baseType = baseType.BaseType?.Resolve())
+            {
+                yield return baseType;
+            }
         }
 
         /// <summary>

@@ -9,7 +9,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -22,32 +21,6 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IDictionary2
     {
-        /// <summary>
-        /// Creates the 'IID' property for some <c>IMap&lt;K, V&gt;</c> interface.
-        /// </summary>
-        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="dictionaryType"/>.</param>
-        public static void IID(
-            GenericInstanceTypeSignature dictionaryType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(dictionaryType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(dictionaryType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
         /// <summary>
         /// Creates a new type definition for the interface type for some <c>IMap&lt;K, V&gt;</c> interface.
         /// </summary>
@@ -116,8 +89,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
 
-            bool isKeyReferenceType = !keyType.IsValueType || keyType.IsKeyValuePairType(interopReferences);
-            bool isValueReferenceType = !valueType.IsValueType || valueType.IsKeyValuePairType(interopReferences);
+            bool isKeyReferenceType = !keyType.IsValueType || keyType.IsConstructedKeyValuePairType(interopReferences);
+            bool isValueReferenceType = !valueType.IsValueType || valueType.IsConstructedKeyValuePairType(interopReferences);
 
             // We can share the vtable type for 'void*' when both key and value types are reference types
             if (isKeyReferenceType && isValueReferenceType)
@@ -763,6 +736,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -770,6 +744,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition dictionaryComWrappersCallbackType,
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -780,6 +755,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, dictionaryType, "Marshaller");
         }
 
         /// <summary>

@@ -159,6 +159,11 @@ internal sealed class InteropReferences
     public TypeReference ValueType => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ValueType"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.FlagsAttribute"/>.
+    /// </summary>
+    public TypeReference FlagsAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "FlagsAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="Span{T}"/>.
     /// </summary>
     public TypeReference Span1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Span`1"u8);
@@ -319,6 +324,11 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyDictionary2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyDictionary`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair"/>.
+    /// </summary>
+    public TypeReference KeyValuePair => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
     /// </summary>
     public TypeReference KeyValuePair2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
@@ -442,6 +452,41 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Exception</c>.
+    /// </summary>
+    public TypeReference AbiException => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Exception"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpan</c>.
+    /// </summary>
+    public TypeReference AbiTimeSpan => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpan"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffset</c>.
+    /// </summary>
+    public TypeReference AbiDateTimeOffset => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffset"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// </summary>
+    public TypeReference TypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TypeMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// </summary>
+    public TypeReference ExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "ExceptionMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpanMarshaller</c>.
+    /// </summary>
+    public TypeReference TimeSpanMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpanMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffsetMarshaller</c>.
+    /// </summary>
+    public TypeReference DateTimeOffsetMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffsetMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -797,6 +842,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeValueTypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeValueTypeMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
@@ -1550,6 +1600,46 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Object]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerConvertToManaged => field ??= TypeMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: Type.ToReferenceTypeSignature(),
+            parameterTypes: [AbiType.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerConvertToUnmanaged => field ??= TypeMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: AbiType.ToValueTypeSignature(),
+            parameterTypes: [Type.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.Dispose</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerDispose => field ??= TypeMarshaller
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [AbiType.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.ExceptionMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference ExceptionMarshallerConvertToManaged => field ??= ExceptionMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: Exception.ToReferenceTypeSignature(),
+            parameterTypes: [AbiException.ToValueTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.ExceptionMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference ExceptionMarshallerConvertToUnmanaged => field ??= ExceptionMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: AbiException.ToValueTypeSignature(),
+            parameterTypes: [Exception.ToReferenceTypeSignature()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
@@ -1624,6 +1714,17 @@ internal sealed class InteropReferences
             genericParameterCount: 1,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe => field ??= WindowsRuntimeValueTypeMarshaller
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+            parameterTypes: [
+                _corLibTypeFactory.Object,
+                CreateComInterfaceFlags.ToValueTypeSignature(),
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
@@ -1864,6 +1965,21 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
                     new GenericParameterSignature(GenericParameterType.Method, 0)]))
             .MakeGenericInstanceMethod(argType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="keyValuePairType">The input <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+    public MemberReference KeyValuePair2_ctor(TypeSignature keyValuePairType)
+    {
+        return keyValuePairType
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]);
     }
 
     /// <summary>

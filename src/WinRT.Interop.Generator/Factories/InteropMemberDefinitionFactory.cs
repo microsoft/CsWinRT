@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// <summary>
 /// A factory for interop member definitions.
 /// </summary>
-internal class InteropMemberDefinitionFactory
+internal static class InteropMemberDefinitionFactory
 {
     /// <summary>
     /// Creates a lazy, volatile, reference type, default constructor, read-only property with a backing field, factory method, and get accessor method.

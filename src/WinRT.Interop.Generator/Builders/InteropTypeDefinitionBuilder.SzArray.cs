@@ -9,7 +9,6 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -22,32 +21,6 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class SzArray
     {
-        /// <summary>
-        /// Creates the 'IID' property for some SZ array type.
-        /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="arrayType"/>.</param>
-        public static void IID(
-            SzArrayTypeSignature arrayType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(arrayType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(arrayType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
         /// <summary>
         /// Creates a new type definition for the marshaller for some SZ array type.
         /// </summary>
@@ -411,6 +384,11 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
+            // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
+            CreateComInterfaceFlags flags = arrayType.IsTrackerSupportRequired(interopReferences)
+                ? CreateComInterfaceFlags.TrackerSupport
+                : CreateComInterfaceFlags.None;
+
             // Define the 'GetOrCreateComInterfaceForObject' method as follows:
             //
             // public static void* GetOrCreateComInterfaceForObject(object value)
@@ -424,7 +402,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_1 },
-                    { Ldc_I4_2 }, // TODO
+                    { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
                     { Ret }
                 }
@@ -479,7 +457,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Set the 'wrapperFlags' to 'CreatedWrapperFlags.NonWrapping'
                     { Ldarg_2 },
-                    { Ldc_I4_2 },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.NonWrapping) },
                     { Stind_I4 },
 
                     // Forward to 'WindowsRuntimeArrayMarshaller'

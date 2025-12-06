@@ -8,7 +8,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -21,32 +20,6 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IObservableVector1
     {
-        /// <summary>
-        /// Creates the 'IID' property for some <c>IObservableVector&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="vectorType"/>.</param>
-        public static void IID(
-            GenericInstanceTypeSignature vectorType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(vectorType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(vectorType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
         /// <summary>
         /// Creates the cached factory type for the property for the event args for the vector.
         /// </summary>

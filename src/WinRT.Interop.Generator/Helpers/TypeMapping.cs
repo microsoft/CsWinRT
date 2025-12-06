@@ -8,29 +8,30 @@ using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
+/// <summary>
+/// Contains mappings from managed types to their Windows Runtime counterparts, for all custom-mapped types.
+/// </summary>
 internal static class TypeMapping
 {
     /// <summary>
-    /// Represents a mapping from a CLR/public type name to its Windows Runtime (ABI) counterpart,
-    /// optionally including the hardcoded WinRT type signature used for GUID generation and marshalling.
+    /// Represents a mapping from a managed type to its Windows Runtime counterpart, optionally including
+    /// the hardcoded Windows Runtime type signature used for IID generation and marshalling.
     /// </summary>
-    /// <variable name="WindowsRuntimeNamespace">The Windows Runtime namespace.</variable>
-    /// <variable name="WindowsRuntimeName">The Windows Runtime type name.</variable>
-    /// <variable name="Signature">Optional hardcoded WinRT type signature</variable>
+    /// <param name="WindowsRuntimeNamespace">The Windows Runtime namespace.</param>
+    /// <param name="WindowsRuntimeName">The Windows Runtime type name.</param>
+    /// <param name="Signature">The hardcoded Windows Runtime type signature, if available.</param>
     private readonly record struct MappedType(
          string WindowsRuntimeNamespace,
          string WindowsRuntimeName,
          string? Signature = null);
 
     /// <summary>
-    /// Immutable map from CLR fullnames to the set of CLR→Windows Runtime type mappings.
-    /// Keys are CLR fullnames (e.g., "System.String"), and values are the materialized mappings for types
-    /// within that namespace.
+    /// Mapping of custom-mapped or otherwise special managed types to their corresponding Windows Runtime types.
     /// </summary>
     /// <remarks>
-    /// This should be in sync with the mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
+    /// This should be in sync with the mapping from <c>cswinrt/helpers.h</c>.
     /// </remarks>
-    private static readonly FrozenDictionary<string, MappedType> WinRTToABITypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
+    private static readonly FrozenDictionary<string, MappedType> ProjectionTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
         new("System.IServiceProvider", new("Microsoft.UI.Xaml", "IXamlServiceProvider")),
         new("System.DateTimeOffset", new("Windows.Foundation", "DateTime", "struct(Windows.Foundation.DateTime;i8)")),
         new("System.EventHandler`1", new("Windows.Foundation", "EventHandler`1")),
@@ -82,13 +83,12 @@ internal static class TypeMapping
         new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")));
 
     /// <summary>
-    /// Immutable map from projected Microsoft.UI.Xaml type full names (keys) to their corresponding
-    /// Windows.UI.Xaml mapping descriptor (values).
+    /// Mapping of projected <c>Microsoft.UI.Xaml</c> types to their corresponding <c>Windows.UI.Xaml</c> types.
     /// </summary>
     /// <remarks>
-    /// If the type has a signature in WinRTToABITypeMapping, it should also have one here.
+    /// If an entry has a signature in <see cref="ProjectionTypeMapping"/>, it should also have one here.
     /// </remarks>
-    private static readonly FrozenDictionary<string, MappedType> WindowsUIXamlProjectionTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
+    private static readonly FrozenDictionary<string, MappedType> WindowsUIXamlTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})")),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
@@ -104,15 +104,18 @@ internal static class TypeMapping
         new("Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", new("Windows.UI.Xaml.Data", "PropertyChangedEventHandler")));
 
     /// <summary>
-    /// Returns the mapped WinRT full type name for a given CLR fullName.
+    /// Tries to get the mapped type name for a Windows Runtime type, from the full type of its corresponding managed type.
     /// </summary>
-    /// <param name="fullName">The fullName of the type.</param>
-    /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-    /// <param name="mappedName">Resulting string representing the mapped full name.</param>
-    /// <returns><c>true</c> if mapped name was found; otherwise, <c>false</c>.</returns>
-    public static bool TryFindMappedWinRTFullName(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string? mappedName)
+    /// <param name="fullName">The full name of the type.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="mappedName">The resulting mapped type name, if found.</param>
+    /// <returns>Whether <paramref name="mappedName"/> was retrieved successfully.</returns>
+    public static bool TryFindMappedTypeName(
+        ReadOnlySpan<char> fullName,
+        bool useWindowsUIXamlProjections,
+        [NotNullWhen(true)] out string? mappedName)
     {
-        if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
+        if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out MappedType result))
         {
             mappedName = null;
 
@@ -122,7 +125,7 @@ internal static class TypeMapping
         DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
 
         // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML name
-        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
+        if (useWindowsUIXamlProjections && WindowsUIXamlTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
         {
             handler.Clear();
 
@@ -137,21 +140,25 @@ internal static class TypeMapping
     }
 
     /// <summary>
-    /// Retrieves the WinRT signature string for a mapped CLR type.
+    /// Tries to get the mapped type signature for a Windows Runtime type, from the full type of its corresponding managed type.
     /// </summary>
-    /// <param name="fullName">The fullName of the type.</param>
-    /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-    /// <param name="signature">Resulting string represent the guid signature if found.</param>
-    /// <returns><c>true</c> if hardcoded GUID signature was found; otherwise, <c>false</c>.</returns>
-    public static bool TryFindGuidSignatureForMappedType(string fullName, bool useWindowsUIXamlProjections, [NotNullWhen(true)] out string? signature)
+    /// <param name="fullName">The full name of the type.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="signature">The resulting mapped type signatre, if found.</param>
+    /// <returns>Whether <paramref name="signature"/> was retrieved successfully.</returns>
+    public static bool TryFindMappedTypeSignature(
+        ReadOnlySpan<char> fullName,
+        bool useWindowsUIXamlProjections,
+        [NotNullWhen(true)] out string? signature)
     {
-        if (!WinRTToABITypeMapping.TryGetValue(fullName, out MappedType result))
+        if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out MappedType result))
         {
             signature = null;
 
             return false;
         }
 
+        // If the result doesn't have a signature in the lookup table, there's nothing else to do
         if (result.Signature is null)
         {
             signature = null;
@@ -162,7 +169,7 @@ internal static class TypeMapping
         DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
 
         // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML signature
-        if (useWindowsUIXamlProjections && WindowsUIXamlProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
+        if (useWindowsUIXamlProjections && WindowsUIXamlTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
         {
             handler.Clear();
 

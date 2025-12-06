@@ -16,6 +16,7 @@ var entries = new (string Name, uint Value, string Description)[]
     ("S_OK", 0x0, "Operation successful."),
     ("S_FALSE", 0x1, "Operation successful (false)."),
     ("E_ABORT", 0x80004004, "Operation aborted."),
+    ("E_FAIL", 0x80004005, "Unspecified error."),
     ("E_NOINTERFACE", 0x80004002, "No such interface supported."),
     ("E_POINTER", 0x80004003, "Pointer that is not valid."),
     ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered."),
@@ -52,7 +53,10 @@ var entries = new (string Name, uint Value, string Description)[]
     ("ERROR_STACK_OVERFLOW", 0x800703E9, "Stack overflow."),
     ("ERROR_BAD_FORMAT", 0x8007000B, "Invalid image format."),
     ("ERROR_CANCELLED", 0x800704C7, "The operation was canceled."),
-    ("ERROR_TIMEOUT", 0x800705B4, "This operation returned because the timeout period expired.")
+    ("ERROR_TIMEOUT", 0x800705B4, "This operation returned because the timeout period expired."),
+    ("RPC_E_DISCONNECTED", 0x80010108, "The object invoked has disconnected from its clients."),
+    ("RPC_S_SERVER_UNAVAILABLE", 0x800706BA, "The RPC server is unavailable."),
+    ("JSCRIPT_E_CANTEXECUTE", 0x89020001, "Cannot execute script.")
 };
 
 for (int i = 0; i < entries.Length; i++)

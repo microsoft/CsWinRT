@@ -174,9 +174,9 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -220,9 +220,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                for (TypeDefinition? currentType = type;
-                    currentType is not null && !SignatureComparer.IgnoreVersion.Equals(currentType, module.CorLibTypeFactory.Object);
-                    currentType = currentType.BaseType?.Resolve())
+                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {
@@ -273,9 +271,9 @@ internal partial class InteropGenerator
                 discoveryState.TrackUserDefinedType(type.ToTypeSignature(), interfaces.ToEquatableSet());
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -311,6 +309,36 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Check for all '[ReadOnly]Span<T>' types in particular, and track them as SZ array types.
+                // This is because "pass-array" and "fill-array" parameters are projected using spans, but
+                // those projections require the marshalling code produced when discovering SZ array types.
+                // So if we see any of these spans where the element type is a Windows Runtime type, we
+                // manually construct an SZ array type for it and add it to the set of tracked array types.
+                if (typeSignature.IsValueType &&
+                    typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
+                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
+                {
+                    discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
+
+                    continue;
+                }
+
+                // Ignore generic instantiations that are not Windows Runtime types. That is, those that
+                // have a generic type definition that's not a Windows Runtime type, or that have any type
+                // arguments that are not Windows Runtime types.
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                {
+                    continue;
+                }
+
+                // Gather all 'KeyValuePair<,>' instances
+                if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
+                {
+                    discoveryState.TrackKeyValuePairType(typeSignature);
+
+                    continue;
+                }
+
                 TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
@@ -323,15 +351,6 @@ internal partial class InteropGenerator
                      typeDefinition.IsProjectedWindowsRuntimeType))
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
-
-                    continue;
-                }
-
-                // Gather all 'KeyValuePair<,>' instances
-                if (typeDefinition.IsValueType &&
-                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair2))
-                {
-                    discoveryState.TrackKeyValuePairType(typeSignature);
 
                     continue;
                 }
@@ -351,9 +370,9 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e).ThrowOrAttach(e);
         }
     }
 
@@ -389,13 +408,19 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Ignore array types that are not Windows Runtime types
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                {
+                    continue;
+                }
+
                 // Track all SZ array types, as we'll need to emit marshalling code for them
                 discoveryState.TrackSzArrayType(typeSignature);
             }
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
-            throw WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e);
+            WellKnownInteropExceptions.DiscoverSzArrayTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 

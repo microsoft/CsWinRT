@@ -8,8 +8,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Helpers;
-using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -21,32 +19,6 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IAsyncOperationWithProgress2
     {
-        /// <summary>
-        /// Creates the 'IID' property for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
-        /// </summary>
-        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        /// <param name="useWindowsUIXamlProjections">True to apply Windows.UI.Xaml projection mappings if available.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="operationType"/>.</param>
-        public static void IID(
-            GenericInstanceTypeSignature operationType,
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out MethodDefinition get_IidMethod)
-        {
-            InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(operationType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                iid: GuidGenerator.CreateIID(operationType, interopReferences, useWindowsUIXamlProjections),
-                out get_IidMethod);
-        }
-
         /// <summary>
         /// Creates a new type definition for the methods for some <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> interface.
         /// </summary>
@@ -155,22 +127,13 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Completed(resultType, progressType).Import(module),
                 method: set_CompletedMethod);
 
-            // Define the 'GetResults' method as follows:
-            //
-            // public static <RESULT_TYPE> GetResults(WindowsRuntimeObjectReference thisReference)
-            MethodDefinition getResultsMethod = new(
-                name: "GetResults"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: resultType.Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
-            {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+            // Define the 'GetResults' method:
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.GetResults(
+                resultType: resultType,
+                vftblField: interopDefinitions.IAsyncOperationWithProgressVftbl.GetField("GetResults"u8),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2GetResults(resultType, progressType).Import(module),

@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -23,6 +24,32 @@ namespace WindowsRuntime.InteropGenerator.Builders;
 /// </summary>
 internal static partial class InteropTypeDefinitionBuilder
 {
+    /// <summary>
+    /// Creates an 'IID' property with the specified parameters.
+    /// </summary>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the interface type.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="interfaceType"/>.</param>
+    public static void IID(
+        TypeSignature interfaceType,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections,
+        out MethodDefinition get_IidMethod)
+    {
+        IID(
+            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            iid: GuidGenerator.CreateIID(interfaceType, interopReferences, useWindowsUIXamlProjections),
+            out get_IidMethod);
+    }
+
     /// <summary>
     /// Creates an 'IID' property with the specified parameters.
     /// </summary>

@@ -75,17 +75,6 @@
     <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
     <None Include="PreviousPlatforms.linq" />
-    <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
-    <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs" />
-    <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs" />
-    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs" />
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionAdapter.cs" />
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionWithProgressAdapter.cs" />
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncInfoAdapter.cs" />
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationAdapter.cs" />
-    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationWithProgressAdapter.cs" />
-    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs" />
-    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs" />
