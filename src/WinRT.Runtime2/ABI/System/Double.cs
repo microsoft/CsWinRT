@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="double"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Double>")]
 [WindowsRuntimeMetadataTypeName("Double")]
 [WindowsRuntimeMappedType(typeof(double))]

@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="global::System.Guid"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Guid>")]
 [WindowsRuntimeMetadataTypeName("Guid")]
 [WindowsRuntimeMappedType(typeof(global::System.Guid))]

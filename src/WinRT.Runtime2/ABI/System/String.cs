@@ -33,7 +33,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="string"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<String>")]
 [WindowsRuntimeMetadataTypeName("String")]
 [WindowsRuntimeMappedType(typeof(string))]

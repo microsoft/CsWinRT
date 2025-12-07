@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="byte"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
 [WindowsRuntimeMetadataTypeName("UInt8")]
 [WindowsRuntimeMappedType(typeof(byte))]

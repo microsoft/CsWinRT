@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="bool"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Boolean>")]
 [WindowsRuntimeMetadataTypeName("Boolean")]
 [WindowsRuntimeMappedType(typeof(bool))]

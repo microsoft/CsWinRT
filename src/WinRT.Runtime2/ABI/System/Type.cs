@@ -39,7 +39,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Type"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
 [WindowsRuntimeMetadataTypeName("Windows.UI.Xaml.Interop.TypeName")]
 [WindowsRuntimeMappedType(typeof(global::System.Type))]

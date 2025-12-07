@@ -21,7 +21,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="object"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Object")]
 [WindowsRuntimeMappedType(typeof(object))]
 [ObjectComWrappersMarshaller]
