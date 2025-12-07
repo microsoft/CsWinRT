@@ -13,7 +13,6 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.EventRegistrationToken>")]
-[WindowsRuntimeMetadataTypeName("Windows.Foundation.EventRegistrationToken")]
 [WindowsRuntimeReferenceType(typeof(EventRegistrationToken?))]
 [ABI.WindowsRuntime.InteropServices.EventRegistrationTokenComWrappersMarshaller]
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
