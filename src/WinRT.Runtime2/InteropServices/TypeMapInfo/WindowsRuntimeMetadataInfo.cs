@@ -36,7 +36,7 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// <remarks>
     /// This will only have non <see langword="null"/> values for types needing special metadata handling.
     /// </remarks>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMetadataInfo?> TypeToMarshallingInfoTable = [];
+    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMetadataInfo?> TypeToMetadataInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateMetadataInfo"/>.
@@ -133,7 +133,7 @@ internal sealed class WindowsRuntimeMetadataInfo
         // We found a mapped external type, return its associated marshalling info
         if (externalType is not null)
         {
-            info = TypeToMarshallingInfoTable.GetOrAdd(externalType, CreateMetadataInfoCallback)!;
+            info = TypeToMetadataInfoTable.GetOrAdd(externalType, CreateMetadataInfoCallback)!;
 
             return true;
         }
@@ -151,7 +151,7 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// <returns>Whether <paramref name="info"/> was retrieved successfully.</returns>
     public static bool TryGetInfo(Type managedType, [NotNullWhen(true)] out WindowsRuntimeMetadataInfo? info)
     {
-        WindowsRuntimeMetadataInfo? result = TypeToMarshallingInfoTable.GetOrAdd(managedType, GetMetadataProviderTypeCallback);
+        WindowsRuntimeMetadataInfo? result = TypeToMetadataInfoTable.GetOrAdd(managedType, GetMetadataProviderTypeCallback);
 
         info = result;
 
@@ -209,7 +209,7 @@ internal sealed class WindowsRuntimeMetadataInfo
             return new(proxyType, managedType);
         }
 
-        // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
+        // We don't have a metadata provider for the type
         return null;
     }
 }
