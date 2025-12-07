@@ -85,7 +85,7 @@ internal partial class ProjectionGenerator
                 }
                 else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
                 {
-                    // In additional to projecting the individual types, make sure
+                    // In addition to projecting the individual types, make sure
                     // the additions get included by including the namespace.
                     fileStream.WriteLine($"-include Microsoft.UI");
                 }
