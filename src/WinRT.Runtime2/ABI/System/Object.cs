@@ -23,6 +23,7 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Object")]
+[WindowsRuntimeMappedType(typeof(object))]
 [ObjectComWrappersMarshaller]
 file static class Object;
 

@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<UInt16>")]
 [WindowsRuntimeMetadataTypeName("UInt16")]
+[WindowsRuntimeMappedType(typeof(ushort))]
 [WindowsRuntimeReferenceType(typeof(ushort?))]
 [UInt16ComWrappersMarshaller]
 file static class UInt16;

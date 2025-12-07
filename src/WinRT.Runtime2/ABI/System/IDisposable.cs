@@ -35,6 +35,7 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.IClosable")]
+[WindowsRuntimeMappedType(typeof(global::System.IDisposable))]
 file static class IDisposable;
 
 /// <summary>

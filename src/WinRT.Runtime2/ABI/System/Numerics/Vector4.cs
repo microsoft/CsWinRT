@@ -37,6 +37,7 @@ namespace ABI.System.Numerics;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector4>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Vector4")]
+[WindowsRuntimeMappedType(typeof(global::System.Numerics.Vector4))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Vector4?))]
 [Vector4ComWrappersMarshaller]
 file static class Vector4;

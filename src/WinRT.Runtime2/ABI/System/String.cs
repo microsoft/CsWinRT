@@ -36,6 +36,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<String>")]
 [WindowsRuntimeMetadataTypeName("String")]
+[WindowsRuntimeMappedType(typeof(string))]
 [StringComWrappersMarshaller]
 file static class String;
 

@@ -35,6 +35,7 @@ namespace ABI.System;
 /// </summary>
 [WindowsRuntimeMetadata("Microsoft.UI.Xaml.WinUIContract")]
 [WindowsRuntimeMetadataTypeName("Microsoft.UI.Xaml.IXamlServiceProvider")]
+[WindowsRuntimeMappedType(typeof(global::System.IServiceProvider))]
 file static class IServiceProvider;
 
 /// <summary>

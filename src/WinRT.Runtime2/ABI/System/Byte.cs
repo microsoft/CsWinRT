@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
 [WindowsRuntimeMetadataTypeName("UInt8")]
+[WindowsRuntimeMappedType(typeof(byte))]
 [WindowsRuntimeReferenceType(typeof(byte?))]
 [ByteComWrappersMarshaller]
 file static class Byte;

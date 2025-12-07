@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Single>")]
 [WindowsRuntimeMetadataTypeName("Single")]
+[WindowsRuntimeMappedType(typeof(float))]
 [WindowsRuntimeReferenceType(typeof(float?))]
 [SingleComWrappersMarshaller]
 file static class Single;

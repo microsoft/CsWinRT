@@ -37,6 +37,7 @@ namespace ABI.System.Numerics;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Plane")]
+[WindowsRuntimeMappedType(typeof(global::System.Numerics.Plane))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Plane?))]
 [PlaneComWrappersMarshaller]
 file static class Plane;

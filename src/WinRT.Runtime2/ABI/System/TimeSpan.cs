@@ -36,6 +36,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.TimeSpan")]
+[WindowsRuntimeMappedType(typeof(global::System.TimeSpan))]
 [WindowsRuntimeReferenceType(typeof(global::System.TimeSpan?))]
 [TimeSpanComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

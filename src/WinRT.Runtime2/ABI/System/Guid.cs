@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Guid>")]
 [WindowsRuntimeMetadataTypeName("Guid")]
+[WindowsRuntimeMappedType(typeof(global::System.Guid))]
 [WindowsRuntimeReferenceType(typeof(global::System.Guid?))]
 [GuidComWrappersMarshaller]
 file static class Guid;

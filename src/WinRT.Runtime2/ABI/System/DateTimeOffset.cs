@@ -36,6 +36,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.DateTime")]
+[WindowsRuntimeMappedType(typeof(global::System.DateTimeOffset))]
 [WindowsRuntimeReferenceType(typeof(global::System.DateTimeOffset?))]
 [DateTimeOffsetComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Boolean>")]
 [WindowsRuntimeMetadataTypeName("Boolean")]
+[WindowsRuntimeMappedType(typeof(bool))]
 [WindowsRuntimeReferenceType(typeof(bool?))]
 [BooleanComWrappersMarshaller]
 file static class Boolean;

@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Int16>")]
 [WindowsRuntimeMetadataTypeName("Int16")]
+[WindowsRuntimeMappedType(typeof(short))]
 [WindowsRuntimeReferenceType(typeof(short?))]
 [Int16ComWrappersMarshaller]
 file static class Int16;

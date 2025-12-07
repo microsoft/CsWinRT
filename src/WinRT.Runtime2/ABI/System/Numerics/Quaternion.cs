@@ -37,6 +37,7 @@ namespace ABI.System.Numerics;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Quaternion")]
+[WindowsRuntimeMappedType(typeof(global::System.Numerics.Quaternion))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Quaternion?))]
 [QuaternionComWrappersMarshaller]
 file static class Quaternion;

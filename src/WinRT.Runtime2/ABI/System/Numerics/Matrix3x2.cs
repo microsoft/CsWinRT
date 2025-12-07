@@ -37,6 +37,7 @@ namespace ABI.System.Numerics;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Matrix3x2")]
+[WindowsRuntimeMappedType(typeof(global::System.Numerics.Matrix3x2))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Matrix3x2?))]
 [Matrix3x2ComWrappersMarshaller]
 file static class Matrix3x2;

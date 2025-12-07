@@ -38,6 +38,7 @@ namespace ABI.System.ComponentModel;
 /// </summary>
 [WindowsRuntimeMetadata("Microsoft.UI.Xaml.WinUIContract")]
 [WindowsRuntimeMetadataTypeName("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo")]
+[WindowsRuntimeMappedType(typeof(global::System.ComponentModel.INotifyDataErrorInfo))]
 file static class INotifyDataErrorInfo;
 
 /// <summary>

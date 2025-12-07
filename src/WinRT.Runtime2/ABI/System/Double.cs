@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Double>")]
 [WindowsRuntimeMetadataTypeName("Double")]
+[WindowsRuntimeMappedType(typeof(double))]
 [WindowsRuntimeReferenceType(typeof(double?))]
 [DoubleComWrappersMarshaller]
 file static class Double;

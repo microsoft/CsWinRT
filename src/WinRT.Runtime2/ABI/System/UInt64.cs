@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<UInt64>")]
 [WindowsRuntimeMetadataTypeName("UInt64")]
+[WindowsRuntimeMappedType(typeof(ulong))]
 [WindowsRuntimeReferenceType(typeof(ulong?))]
 [UInt64ComWrappersMarshaller]
 file static class UInt64;

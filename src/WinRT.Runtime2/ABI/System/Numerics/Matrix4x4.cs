@@ -37,6 +37,7 @@ namespace ABI.System.Numerics;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix4x4>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Matrix4x4")]
+[WindowsRuntimeMappedType(typeof(global::System.Numerics.Matrix4x4))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Matrix4x4?))]
 [Matrix4x4ComWrappersMarshaller]
 file static class Matrix4x4;

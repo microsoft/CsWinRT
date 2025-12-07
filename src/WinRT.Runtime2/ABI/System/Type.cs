@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE0008, IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.UI.Xaml.Interop.TypeName",
     target: typeof(ABI.System.Type),
     trimTarget: typeof(Type))]
@@ -42,6 +42,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
 [WindowsRuntimeMetadataTypeName("Windows.UI.Xaml.Interop.TypeName")]
+[WindowsRuntimeMappedType(typeof(global::System.Type))]
 [TypeComWrappersMarshaller]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,

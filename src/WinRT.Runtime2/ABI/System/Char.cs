@@ -35,6 +35,7 @@ namespace ABI.System;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Char16>")]
 [WindowsRuntimeMetadataTypeName("Char16")]
+[WindowsRuntimeMappedType(typeof(char))]
 [WindowsRuntimeReferenceType(typeof(char?))]
 [CharComWrappersMarshaller]
 file static class Char;
