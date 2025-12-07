@@ -224,21 +224,34 @@ internal partial class InteropGenerator
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {
+                        // If the current implementation has no valid interface, skip it.
+                        // This should never really happen for valid .NET assemblies.
+                        if (implementation.Interface?.ToReferenceTypeSignature() is not TypeSignature interfaceSignature)
+                        {
+                            continue;
+                        }
+
+                        bool isWindowsRuntimeInterface = interfaceSignature.IsWindowsRuntimeType(interopReferences);
+
+                        // Also make sure we can resolve the interface type fully. Only do this
+                        // check here for Windows Runtime types, which we just skip. For types
+                        // that are '[GeneratedComInterface]', we validate them separately.
+                        if (isWindowsRuntimeInterface && !interfaceSignature.IsFullyResolvable)
+                        {
+                            continue;
+                        }
+
                         // Check for projected Windows Runtime interfaces first
-                        if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
-                            implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
-                            (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
-                            genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
-                            genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
+                        if (isWindowsRuntimeInterface)
                         {
                             hasAnyProjectedWindowsRuntimeInterfaces = true;
 
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            interfaces.Add(interfaceSignature);
                         }
-                        else if (implementation.Interface?.IsGeneratedComInterfaceType is true)
+                        else if (implementation.Interface.IsGeneratedComInterfaceType)
                         {
                             // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                            if (implementation.Interface.Resolve() is not TypeDefinition interfaceType)
+                            if (implementation.Interface.Resolve() is not TypeDefinition interfaceDefinition)
                             {
                                 WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -249,9 +262,9 @@ internal partial class InteropGenerator
                             // If we can't find it, we can't add the interface to the list of interface entries. We
                             // should warn if that's the (unlikely) case, so users can at least know that something
                             // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
-                            if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out _))
+                            if (!interfaceDefinition.TryGetInterfaceInformationType(interopReferences, out _))
                             {
-                                WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
+                                WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceDefinition, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                                 continue;
                             }
@@ -259,15 +272,15 @@ internal partial class InteropGenerator
                             // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
                             // so we can check against some specific IID which might affect how we construct the COM
                             // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
-                            if (!interfaceType.TryGetGuidAttribute(interopReferences, out _))
+                            if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out _))
                             {
-                                WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
+                                WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceDefinition, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                                 continue;
                             }
 
                             // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            interfaces.Add(interfaceSignature);
                         }
                     }
                 }
