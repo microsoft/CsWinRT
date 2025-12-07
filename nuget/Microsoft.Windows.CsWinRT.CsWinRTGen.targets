@@ -275,7 +275,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
                         _RunCsWinRTMergedProjectionGenerator
 
-    Runs 'cswinrtimplgen' to produce the forwarders assembly.
+    Runs 'cswinrtprojectiongen' to produce the forwarders assembly.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
