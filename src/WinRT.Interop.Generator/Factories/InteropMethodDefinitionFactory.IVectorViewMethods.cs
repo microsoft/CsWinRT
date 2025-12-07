@@ -47,9 +47,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
+                    returnType: elementType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.UInt32]))
             { NoInlining = true };
 
@@ -57,9 +57,9 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences).Import(module));
+            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -75,12 +75,12 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
 
                     // '.try' code
                     { ldloca_s_0_tryStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldarg_1 },
@@ -91,13 +91,13 @@ internal partial class InteropMethodDefinitionFactory
 
                     // This 'calli' instruction is always using 'IReadOnlyList1GetAtImpl', but the signature for
                     // the vtable slot for 'GetAt' for 'IVector<T>' is identical, so doing so is safe in this case.
-                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementType, interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementType, interopReferences).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
                     // '.finally' code
                     { ldloca_s_0_finallyStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
                     { nop_finallyEnd },
                     { nop_returnValueRewrite }

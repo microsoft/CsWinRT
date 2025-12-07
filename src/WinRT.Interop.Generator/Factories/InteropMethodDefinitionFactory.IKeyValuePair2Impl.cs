@@ -95,14 +95,13 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        keyOrValueType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
+                        keyOrValueType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
             // Reference the 'KeyValuePair<,>' accessor method
             MemberReference get_KeyOrValueAccessorMethod = keyValuePairType
-                .Import(module)
                 .ToTypeDefOrRef()
                 .CreateMemberReference(
                     memberName: methodName,
@@ -114,13 +113,13 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'KeyValuePair<,>' (the boxed object to get values from)
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_keyValuePair = new(keyValuePairType.Import(module));
+            CilLocalVariable loc_1_keyValuePair = new(keyValuePairType);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the native export method
@@ -141,8 +140,8 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(module.CorLibTypeFactory.Object).Import(module) },
-                    { Unbox_Any, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(module.CorLibTypeFactory.Object) },
+                    { Unbox_Any, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Ldarg_1 },
                     { Ldloca_S, loc_1_keyValuePair },
@@ -170,7 +169,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
