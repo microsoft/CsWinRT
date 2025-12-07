@@ -243,7 +243,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
             [MethodImpl(MethodImplOptions.NoInlining)]
             bool InitializeIsMetadataType()
             {
-                bool isMetadataType = _metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false);
+                // We want to make sure that this code path is actually only triggered for proxy types, which
+                // are only for custom-mapped types. So '[WindowsRuntimeMetadata]' should not be defined here.
+                Debug.Assert(!_metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false));
+
+                bool isMetadataType = _metadataProviderType.IsDefined(typeof(WindowsRuntimeMappedMetadataAttribute), inherit: false);
 
                 _isMetadataType = isMetadataType ? 1 : 0;
 
@@ -703,10 +707,10 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // If '[WindowsRuntimeMetadata]' is defined, this is a projected type, so it's the public type too.
         // Otherwise, we don't know what the public type is at this point. We could look it up now, but
         // since we don't need that information right away, we can delay this to later to reduce the
-        // overhead at startup. That value is only needed eg. when associating native memory for vtables.
+        // overhead at startup. That value is only needed e.g. when associating native memory for vtables.
         return metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false)
             ? new(metadataProviderType, metadataProviderType, isMetadataType: true)
-            : new(metadataProviderType, publicType: null, isMetadataType: false);
+            : new(metadataProviderType, publicType: null);
     }
 
     /// <summary>
