@@ -208,6 +208,25 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Enumerates all interface types implementation by the specified type, including those implemented by base types.
+        /// </summary>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+        /// <returns>The sequence of interface types implemented by the input type.</returns>
+        /// <remarks>
+        /// This method might return the same interface types multiple times, if implemented by multiple types in the hierarchy.
+        /// </remarks>
+        public IEnumerable<InterfaceImplementation> EnumerateAllInterfaces(CorLibTypeFactory corLibTypeFactory)
+        {
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
+            {
+                foreach (InterfaceImplementation implementation in currentType.Interfaces)
+                {
+                    yield return implementation;
+                }
+            }
+        }
+
+        /// <summary>
         /// Enumerates all generic instance type signatures for base interfaces, from a given starting interface.
         /// </summary>
         /// <param name="typeSignature">The constructed signature for the interface type.</param>
