@@ -542,7 +542,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve the '[Guid]' attribute for a given interface type.
+    /// A '[GeneratedComInterface]' type is attempting to implement a reserved interface (e.g. 'IUnknown').
     /// </summary>
     public static WellKnownInteropException GeneratedComInterfaceReservedGuidError(TypeDefinition interfaceType, TypeDefinition type, Guid iid, string interfaceName)
     {
