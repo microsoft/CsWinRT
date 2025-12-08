@@ -9,6 +9,7 @@ using ConsoleAppFramework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.Text;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
@@ -25,8 +26,6 @@ internal partial class ProjectionGenerator
     private static void Emit(ProjectionGeneratorArgs args)
     {
         args.Token.ThrowIfCancellationRequested();
-
-        ConsoleApp.Log("Generating merged projection sources");
 
         string sourcesFolder = GenerateSources(args, out HashSet<string> projectionReferenceAssemblies);
 
@@ -52,7 +51,8 @@ internal partial class ProjectionGenerator
             List<SyntaxTree> syntaxTrees = [];
             foreach (string file in Directory.GetFiles(sourcesFolder, "*.cs"))
             {
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(file), path: file));
+                using Stream stream = File.OpenRead(file);
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
             }
 
             // Build references list
