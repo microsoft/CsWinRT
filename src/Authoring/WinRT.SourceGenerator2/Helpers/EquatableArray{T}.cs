@@ -75,19 +75,37 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
         get => AsImmutableArray().IsEmpty;
     }
 
-    /// <sinheritdoc/>
+    /// <summary>
+    /// Gets a value indicating whether the current array is default or empty.
+    /// </summary>
+    public bool IsDefaultOrEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => AsImmutableArray().IsDefaultOrEmpty;
+    }
+
+    /// <summary>
+    /// Gets the length of the current array.
+    /// </summary>
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => AsImmutableArray().Length;
+    }
+
+    /// <inheritdoc/>
     public bool Equals(EquatableArray<T> array)
     {
         return AsSpan().SequenceEqual(array.AsSpan());
     }
 
-    /// <sinheritdoc/>
+    /// <inheritdoc/>
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
         return obj is EquatableArray<T> array && Equals(array);
     }
 
-    /// <sinheritdoc/>
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         if (_array is not T[] array)
@@ -152,13 +170,13 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
         return AsImmutableArray().GetEnumerator();
     }
 
-    /// <sinheritdoc/>
+    /// <inheritdoc/>
     IEnumerator<T> IEnumerable<T>.GetEnumerator()
     {
         return ((IEnumerable<T>)AsImmutableArray()).GetEnumerator();
     }
 
-    /// <sinheritdoc/>
+    /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return ((IEnumerable)AsImmutableArray()).GetEnumerator();
