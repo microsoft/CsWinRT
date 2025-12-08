@@ -231,19 +231,18 @@ internal partial class InteropGenerator
                             continue;
                         }
 
-                        bool isWindowsRuntimeInterface = interfaceSignature.IsWindowsRuntimeType(interopReferences);
-
-                        // Also make sure we can resolve the interface type fully. Only do this
-                        // check here for Windows Runtime types, which we just skip. For types
-                        // that are '[GeneratedComInterface]', we validate them separately.
-                        if (isWindowsRuntimeInterface && !interfaceSignature.IsFullyResolvable)
-                        {
-                            continue;
-                        }
-
                         // Check for projected Windows Runtime interfaces first
-                        if (isWindowsRuntimeInterface)
+                        if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
                         {
+                            // Make sure we can resolve the interface type fully, which we should always be able to do.
+                            // This can really only fail for some constructed generics, for invalid type arguments.
+                            if (!interfaceSignature.IsFullyResolvable)
+                            {
+                                WellKnownInteropExceptions.WindowsRuntimeInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                                continue;
+                            }
+
                             hasAnyProjectedWindowsRuntimeInterfaces = true;
 
                             interfaces.Add(interfaceSignature);
@@ -253,7 +252,7 @@ internal partial class InteropGenerator
                             // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
                             if (implementation.Interface.Resolve() is not TypeDefinition interfaceDefinition)
                             {
-                                WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, type).LogOrThrow(args.TreatWarningsAsErrors);
+                                WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                                 continue;
                             }
