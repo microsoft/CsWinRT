@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -14,13 +15,34 @@ namespace WindowsRuntime.InteropGenerator;
 /// </summary>
 internal static class WindowsRuntimeExtensions
 {
-    extension(IHasCustomAttribute type)
+    extension(IHasCustomAttribute member)
     {
         /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+
+        /// <summary>
+        /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+        /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+        public bool TryGetGuidAttribute(InteropReferences interopReferences, out Guid iid)
+        {
+            if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
+            {
+                if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
+                {
+                    return Guid.TryParse(guidString.Value, out iid);
+                }
+            }
+
+            iid = Guid.Empty;
+
+            return false;
+        }
     }
 
     extension(ITypeDescriptor type)
