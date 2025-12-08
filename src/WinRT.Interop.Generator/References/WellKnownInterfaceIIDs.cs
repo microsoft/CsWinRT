@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -17,9 +19,44 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal static class WellKnownInterfaceIIDs
 {
     /// <summary>
+    /// Gets the IID for <c>IStringable</c> (96369F54-8EB6-48F0-ABCE-C1B211E627C3).
+    /// </summary>
+    public static Guid IID_IStringable { get; } = new("96369F54-8EB6-48F0-ABCE-C1B211E627C3");
+
+    /// <summary>
+    /// Gets the IID for <c>IWeakReferenceSource</c> (00000038-0000-0000-C000-000000000046).
+    /// </summary>
+    public static Guid IID_IWeakReferenceSource { get; } = new("00000038-0000-0000-C000-000000000046");
+
+    /// <summary>
     /// Gets the IID for <c>IMarshal</c> (00000003-0000-0000-C000-000000000046).
     /// </summary>
     public static Guid IID_IMarshal { get; } = new("00000003-0000-0000-C000-000000000046");
+
+    /// <summary>
+    /// Gets the IID for <c>IAgileObject</c> (94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90).
+    /// </summary>
+    public static Guid IID_IAgileObject { get; } = new("94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90");
+
+    /// <summary>
+    /// Gets the IID for <c>IInspectable</c> (AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90).
+    /// </summary>
+    public static Guid IID_IInspectable { get; } = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
+
+    /// <summary>
+    /// Gets the IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).
+    /// </summary>
+    public static Guid IID_IUnknown { get; } = new("00000000-0000-0000-C000-000000000046");
+
+    /// <summary>
+    /// Gets the mapping of IIDs to interface names, for reserved COM/WinRT interfaces that cannot be manually implemented.
+    /// </summary>
+    public static FrozenDictionary<Guid, string> ReservedIIDsMap { get; } = FrozenDictionary.Create(
+        new KeyValuePair<Guid, string>(IID_IStringable, nameof(IID_IStringable)[4..]),
+        new KeyValuePair<Guid, string>(IID_IWeakReferenceSource, nameof(IID_IWeakReferenceSource)[4..]),
+        new KeyValuePair<Guid, string>(IID_IAgileObject, nameof(IID_IAgileObject)[4..]),
+        new KeyValuePair<Guid, string>(IID_IInspectable, nameof(IID_IInspectable)[4..]),
+        new KeyValuePair<Guid, string>(IID_IUnknown, nameof(IID_IUnknown)[4..]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>get_IID_...</c> method corresponding to the specified <paramref name="interfaceType"/>.
