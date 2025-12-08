@@ -34,8 +34,8 @@ public partial class CustomPropertyProviderGenerator
                 return false;
             }
 
-            // If the type is static or abstract, we cannot implement 'ICustomPropertyProvider' on it
-            if (((MemberDeclarationSyntax)node).Modifiers.ContainsAny(SyntaxKind.StaticKeyword, SyntaxKind.AbstractKeyword))
+            // If the type is static, abstract, or 'ref', we cannot implement 'ICustomPropertyProvider' on it
+            if (((MemberDeclarationSyntax)node).Modifiers.ContainsAny(SyntaxKind.StaticKeyword, SyntaxKind.AbstractKeyword, SyntaxKind.RefKeyword))
             {
                 return false;
             }
