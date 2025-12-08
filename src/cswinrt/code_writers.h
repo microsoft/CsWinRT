@@ -8564,12 +8564,14 @@ public static nint Vtable
 
         w.write(R"(
 [DynamicInterfaceCastableImplementation]
+%
 file interface % : %
 {
 %
 %
 }
 )",
+            bind<write_guid_attribute>(type),
             type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_interface_members>(type),
