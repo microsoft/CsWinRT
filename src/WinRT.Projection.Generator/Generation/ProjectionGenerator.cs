@@ -37,6 +37,8 @@ internal static partial class ProjectionGenerator
 
         try
         {
+            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + 1} modules");
+
             Emit(args);
         }
         catch (Exception e) when (!e.IsWellKnown)

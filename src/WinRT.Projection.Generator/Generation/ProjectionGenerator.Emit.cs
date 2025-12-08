@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ConsoleAppFramework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -15,7 +16,7 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <inheritdoc cref="ProjectionGenerator"/>
 internal partial class ProjectionGenerator
 {
-    private static readonly string ProjectionAssemblyName = "WinRT.Projection";
+    private const string ProjectionAssemblyName = "WinRT.Projection";
 
     /// <summary>
     /// Runs the emit logic for the generator.
@@ -25,11 +26,15 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        ConsoleApp.Log("Generating merged projection sources");
+
         string sourcesFolder = GenerateSources(args, out HashSet<string> projectionReferenceAssemblies);
 
         args.Token.ThrowIfCancellationRequested();
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
+
+        ConsoleApp.Log("Compiling merged projection");
 
         CSharpCompilation compilation = CreateCompilationForProjection(sourcesFolder, referencesWithoutProjections);
 
