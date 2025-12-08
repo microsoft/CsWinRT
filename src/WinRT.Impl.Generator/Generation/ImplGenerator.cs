@@ -268,19 +268,6 @@ internal static partial class ImplGenerator
                     Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
                 });
             }
-
-            TypeReference interfaceIIDsTypeReference = inputModule.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
-            if (interfaceIIDsTypeReference.Resolve() is TypeDefinition interfaceIIDsTypeDefinition)
-            {
-                // Forward the 'ABI.InterfaceIIDs' type as well, as it's used for IID resolution at runtime
-                implModule.ExportedTypes.Add(new ExportedType(
-                    implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
-                    ns: interfaceIIDsTypeDefinition.Namespace,
-                    name: interfaceIIDsTypeDefinition.Name)
-                {
-                    Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
-                });
-            }
         }
         catch (Exception e)
         {
