@@ -432,7 +432,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve a '[GeneratedComInterface]' type.
     /// </summary>
-    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
     {
         return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
@@ -531,6 +531,14 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropWarning GeneratedComInterfaceGuidAttributeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
     {
         return Warning(61, $"Failed to resolve the '[Guid]' attribute for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a Windows Runtime interface type.
+    /// </summary>
+    public static WellKnownInteropWarning WindowsRuntimeInterfaceTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
+    {
+        return Warning(62, $"Failed to resolve the Windows Runtime interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>

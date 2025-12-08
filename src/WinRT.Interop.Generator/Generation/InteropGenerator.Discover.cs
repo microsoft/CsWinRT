@@ -202,6 +202,14 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
+                // Ignore all type definitions with generic parameters, because they would be
+                // unconstructed (by definition). We'll process instantiations that we can see
+                // separately in the discovery phase, same as we do for constructed interfaces.
+                if (type.HasGenericParameters)
+                {
+                    continue;
+                }
+
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
                 if (!type.IsPossiblyWindowsRuntimeExposedType ||
                     type.IsProjectedWindowsRuntimeType ||
@@ -220,55 +228,64 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
+                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces(module.CorLibTypeFactory))
                 {
-                    foreach (InterfaceImplementation implementation in currentType.Interfaces)
+                    // If the current implementation has no valid interface, skip it.
+                    // This should never really happen for valid .NET assemblies.
+                    if (implementation.Interface?.ToReferenceTypeSignature() is not TypeSignature interfaceSignature)
                     {
-                        // Check for projected Windows Runtime interfaces first
-                        if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
-                            implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
-                            (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
-                            genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
-                            genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
+                        continue;
+                    }
+
+                    // Check for projected Windows Runtime interfaces first
+                    if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
+                    {
+                        // Make sure we can resolve the interface type fully, which we should always be able to do.
+                        // This can really only fail for some constructed generics, for invalid type arguments.
+                        if (!interfaceSignature.IsFullyResolvable)
                         {
-                            hasAnyProjectedWindowsRuntimeInterfaces = true;
+                            WellKnownInteropExceptions.WindowsRuntimeInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            continue;
                         }
-                        else if (implementation.Interface?.IsGeneratedComInterfaceType is true)
+
+                        hasAnyProjectedWindowsRuntimeInterfaces = true;
+
+                        interfaces.Add(interfaceSignature);
+                    }
+                    else if (implementation.Interface.IsGeneratedComInterfaceType)
+                    {
+                        // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
+                        if (implementation.Interface.Resolve() is not TypeDefinition interfaceDefinition)
                         {
-                            // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                            if (implementation.Interface.Resolve() is not TypeDefinition interfaceType)
-                            {
-                                WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, type).LogOrThrow(args.TreatWarningsAsErrors);
+                            WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
-                                continue;
-                            }
-
-                            // We can only gather this type if we can find the generated 'InterfaceInformation' type.
-                            // If we can't find it, we can't add the interface to the list of interface entries. We
-                            // should warn if that's the (unlikely) case, so users can at least know that something
-                            // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
-                            if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out _))
-                            {
-                                WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                                continue;
-                            }
-
-                            // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
-                            // so we can check against some specific IID which might affect how we construct the COM
-                            // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
-                            if (!interfaceType.TryGetGuidAttribute(interopReferences, out _))
-                            {
-                                WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                                continue;
-                            }
-
-                            // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
+                            continue;
                         }
+
+                        // We can only gather this type if we can find the generated 'InterfaceInformation' type.
+                        // If we can't find it, we can't add the interface to the list of interface entries. We
+                        // should warn if that's the (unlikely) case, so users can at least know that something
+                        // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
+                        if (!interfaceDefinition.TryGetInterfaceInformationType(interopReferences, out _))
+                        {
+                            WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceDefinition, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                            continue;
+                        }
+
+                        // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
+                        // so we can check against some specific IID which might affect how we construct the COM
+                        // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
+                        if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out _))
+                        {
+                            WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceDefinition, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                            continue;
+                        }
+
+                        // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
+                        interfaces.Add(interfaceSignature);
                     }
                 }
 
