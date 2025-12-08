@@ -542,6 +542,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve the '[Guid]' attribute for a given interface type.
+    /// </summary>
+    public static WellKnownInteropException GeneratedComInterfaceReservedGuidError(TypeDefinition interfaceType, TypeDefinition type, Guid iid, string interfaceName)
+    {
+        return Exception(63, $"The '[GeneratedComInterface]' type '{interfaceType}' found while processing type '{type}' is using IID '{iid.ToString().ToUpperInvariant()}' (which maps to the '{interfaceName}' interface): this interface is implicitly implemented and cannot be overridden.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
