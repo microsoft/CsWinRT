@@ -249,9 +249,19 @@ internal partial class InteropGenerator
                             // If we can't find it, we can't add the interface to the list of interface entries. We
                             // should warn if that's the (unlikely) case, so users can at least know that something
                             // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
-                            if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
+                            if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out _))
                             {
                                 WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                                continue;
+                            }
+
+                            // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
+                            // so we can check against some specific IID which might affect how we construct the COM
+                            // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
+                            if (!interfaceType.TryGetGuidAttribute(interopReferences, out _))
+                            {
+                                WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                                 continue;
                             }

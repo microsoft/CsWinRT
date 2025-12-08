@@ -526,6 +526,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve the '[Guid]' attribute for a given interface type.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceGuidAttributeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
+    {
+        return Warning(61, $"Failed to resolve the '[Guid]' attribute for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

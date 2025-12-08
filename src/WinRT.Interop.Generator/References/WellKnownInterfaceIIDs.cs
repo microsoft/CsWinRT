@@ -17,6 +17,11 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal static class WellKnownInterfaceIIDs
 {
     /// <summary>
+    /// Gets the IID for <c>IMarshal</c> (00000003-0000-0000-C000-000000000046).
+    /// </summary>
+    public static Guid IID_IMarshal { get; } = new("00000003-0000-0000-C000-000000000046");
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>get_IID_...</c> method corresponding to the specified <paramref name="interfaceType"/>.
     /// </summary>
     /// <param name="interfaceType">The input interface type.</param>
