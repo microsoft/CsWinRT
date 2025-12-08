@@ -37,7 +37,11 @@ public abstract class BindableCustomProperty
     /// </summary>
     /// <param name="target">The owning instance.</param>
     /// <returns>The retrieved value.</returns>
-    public abstract object? GetValue(object target);
+    /// <exception cref="NotSupportedException">Thrown if not implmented by a derived type.</exception>
+    public virtual object? GetValue(object target)
+    {
+        throw new NotSupportedException($"Calling '{nameof(GetValue)}' is not supported for property '{Name}'.");
+    }
 
     /// <summary>
     /// Gets the value at an index location, for cases where the custom property has indexer support.
@@ -45,14 +49,22 @@ public abstract class BindableCustomProperty
     /// <param name="target">The owning instance.</param>
     /// <param name="index">The index to get.</param>
     /// <returns>The retrieved value at the index.</returns>
-    public abstract object? GetIndexedValue(object target, object index);
+    /// <exception cref="NotSupportedException">Thrown if not implmented by a derived type.</exception>
+    public virtual object? GetIndexedValue(object target, object index)
+    {
+        throw new NotSupportedException($"Calling '{nameof(GetIndexedValue)}' is not supported for property '{Name}'.");
+    }
 
     /// <summary>
     /// Sets the custom property value on a specified instance.
     /// </summary>
     /// <param name="target">The owner instance.</param>
     /// <param name="value">The value to set.</param>
-    public abstract void SetValue(object target, object? value);
+    /// <exception cref="NotSupportedException">Thrown if not implmented by a derived type.</exception>
+    public virtual void SetValue(object target, object? value)
+    {
+        throw new NotSupportedException($"Calling '{nameof(SetValue)}' is not supported for property '{Name}'.");
+    }
 
     /// <summary>
     /// Sets the value at an index location, for cases where the custom property has indexer support.
@@ -60,5 +72,9 @@ public abstract class BindableCustomProperty
     /// <param name="target">The owner instance.</param>
     /// <param name="value">The value to set.</param>
     /// <param name="index">The index location to set to.</param>
-    public abstract void SetIndexedValue(object target, object? value, object? index);
+    /// <exception cref="NotSupportedException">Thrown if not implmented by a derived type.</exception>
+    public virtual void SetIndexedValue(object target, object? value, object? index)
+    {
+        throw new NotSupportedException($"Calling '{nameof(SetIndexedValue)}' is not supported for property '{Name}'.");
+    }
 }
