@@ -14,16 +14,15 @@ public sealed partial class CustomPropertyProviderGenerator : IIncrementalGenera
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        //var bindableCustomPropertyAttributes = context.ForAttributeWithMetadataNameAndOptions(
-        //    fullyQualifiedMetadataName: "WinRT.GeneratedBindableCustomPropertyAttribute",
-        //    predicate: Execute.IsTargetNodeValid,
-        //    transform: static (n, _) => n)
-        //.Combine(properties)
-        //.Select(static ((GeneratorAttributeSyntaxContext generatorSyntaxContext, CsWinRTAotOptimizerProperties properties) value, CancellationToken _) =>
-        //        value.properties.IsCsWinRTAotOptimizerEnabled ? GetBindableCustomProperties(value.generatorSyntaxContext) : default)
-        //.Where(static bindableCustomProperties => bindableCustomProperties != default)
-        //.Collect()
-        //.Combine(properties);
-        //context.RegisterImplementationSourceOutput(bindableCustomPropertyAttributes, GenerateBindableCustomProperties);
+        // Gather the info on all types annotated with '[GeneratedCustomPropertyProvider]'.
+        IncrementalValuesProvider<CustomPropertyProviderInfo> providerInfo = context.ForAttributeWithMetadataNameAndOptions(
+            fullyQualifiedMetadataName: "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute",
+            predicate: Execute.IsTargetNodeValid,
+            transform: Execute.GetCustomPropertyProviderInfo)
+            .WithTrackingName("CustomPropertyProviderInfo")
+            .SkipNullValues();
+
+        // Write the implementation for all annotated types
+        context.RegisterSourceOutput(providerInfo, Execute.WriteCustomPropertyProviderImplementations);
     }
 }
