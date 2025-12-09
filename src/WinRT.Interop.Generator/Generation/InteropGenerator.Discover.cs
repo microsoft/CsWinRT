@@ -277,11 +277,18 @@ internal partial class InteropGenerator
                         // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
                         // so we can check against some specific IID which might affect how we construct the COM
                         // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
-                        if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out _))
+                        if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out Guid iid))
                         {
                             WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceDefinition, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                             continue;
+                        }
+
+                        // Validate that the current interface isn't trying to implement a reserved interface.
+                        // For instance, it's not allowed to try to explicitly implement 'IUnknown' or 'IInspectable'.
+                        if (WellKnownInterfaceIIDs.ReservedIIDsMap.TryGetValue(iid, out string? interfaceName))
+                        {
+                            throw WellKnownInteropExceptions.GeneratedComInterfaceReservedGuidError(interfaceDefinition, type, iid, interfaceName);
                         }
 
                         // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
