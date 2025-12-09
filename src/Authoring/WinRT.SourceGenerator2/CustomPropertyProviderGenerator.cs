@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
+using WindowsRuntime.SourceGenerator.Models;
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -23,6 +24,6 @@ public sealed partial class CustomPropertyProviderGenerator : IIncrementalGenera
             .SkipNullValues();
 
         // Write the implementation for all annotated types
-        context.RegisterSourceOutput(providerInfo, Execute.WriteCustomPropertyProviderImplementations);
+        context.RegisterSourceOutput(providerInfo, Execute.WriteCustomPropertyProviderImplementation);
     }
 }
