@@ -116,9 +116,7 @@ internal struct PooledArrayBuilder<T> : IDisposable
     /// <inheritdoc cref="ImmutableArray{T}.Builder.ToImmutable"/>
     public readonly ImmutableArray<T> ToImmutable()
     {
-        T[] array = _writer!.WrittenSpan.ToArray();
-
-        return Unsafe.As<T[], ImmutableArray<T>>(ref array);
+        return _writer!.WrittenSpan.ToImmutableArray();
     }
 
     /// <inheritdoc cref="ImmutableArray{T}.Builder.ToArray"/>
