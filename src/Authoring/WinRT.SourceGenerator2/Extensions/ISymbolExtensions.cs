@@ -17,6 +17,24 @@ internal static class ISymbolExtensions
     extension(ISymbol symbol)
     {
         /// <summary>
+        /// Gets the fully qualified name for a given symbol.
+        /// </summary>
+        /// <returns>The fully qualified name for <paramref name="symbol"/>.</returns>
+        public string GetFullyQualifiedName()
+        {
+            return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
+        /// <summary>
+        /// Gets the fully qualified name for a given symbol, including nullability annotations
+        /// </summary>
+        /// <returns>The fully qualified name for <paramref name="symbol"/>.</returns>
+        public string GetFullyQualifiedNameWithNullabilityAnnotations()
+        {
+            return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier));
+        }
+
+        /// <summary>
         /// Checks whether a type has an attribute with a specified type.
         /// </summary>
         /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
