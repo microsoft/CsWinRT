@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -101,69 +102,73 @@ public partial class CustomPropertyProviderGenerator
         {
         }
 
+        /// <summary>
+        /// Gets the <see cref="CustomPropertyInfo"/> values for all applicable properties of a target type.
+        /// </summary>
+        /// <param name="typeSymbol">The annotated type.</param>
+        /// <param name="attribute">The attribute to trigger generation.</param>
+        /// <param name="token">The cancellation token for the operation.</param>
+        /// <returns>The resulting <see cref="CustomPropertyInfo"/> values for <paramref name="typeSymbol"/>.</returns>
         private static EquatableArray<CustomPropertyInfo> GetCustomPropertyInfo(INamedTypeSymbol typeSymbol, AttributeData attribute, CancellationToken token)
         {
+            string?[]? propertyNames = null;
+            ITypeSymbol?[]? indexerTypes = null;
+
+            token.ThrowIfCancellationRequested();
+
+            // If using the attribute constructor taking explicit property names and indexer
+            // types, get those names to filter the properties. We'll validate them later.
+            if (attribute.ConstructorArguments is [
+                { Kind: TypedConstantKind.Array, Values: var typedPropertyNames },
+                { Kind: TypedConstantKind.Array, Values: var typedIndexerTypes }])
+            {
+                propertyNames = [.. typedPropertyNames.Select(tc => tc.Value as string)];
+                indexerTypes = [.. typedIndexerTypes.Select(tc => tc.Value as ITypeSymbol)];
+            }
+
+            token.ThrowIfCancellationRequested();
+
             using PooledArrayBuilder<CustomPropertyInfo> customPropertyInfo = new();
 
-            // Make all public properties in the class bindable including ones in base type.
-            if (attribute.ConstructorArguments.IsDefaultOrEmpty)
+            // Enumerate all members of the annotated type to discover all properties
+            foreach (ISymbol symbol in typeSymbol.EnumerateAllMembers())
             {
-                foreach (ISymbol symbol in typeSymbol.EnumerateAllMembers())
-                {
-                    // Only gather public properties, and ignore overrides (we'll find the base definition instead).
-                    // We also ignore partial property implementations, as we only care about the partial definitions.
-                    if (symbol is not IPropertySymbol { DeclaredAccessibility: Accessibility.Public, IsOverride: false, PartialDefinitionPart: null } propertySymbol)
-                    {
-                        continue;
-                    }
+                token.ThrowIfCancellationRequested();
 
-                    // We can only support indexers with a single parameter.
-                    // If there's more, an analyzer will emit a warning.
-                    if (propertySymbol.Parameters.Length > 1)
-                    {
-                        continue;
-                    }
-
-                    // Gather all the info for the current property
-                    customPropertyInfo.Add(new CustomPropertyInfo(
-                        Name: propertySymbol.Name,
-                        FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
-                        FullyQualifiedIndexerTypeName: propertySymbol.Parameters.FirstOrDefault()?.GetFullyQualifiedNameWithNullabilityAnnotations(),
-                        CanRead: propertySymbol.GetMethod is { DeclaredAccessibility: Accessibility.Public },
-                        CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public },
-                        IsStatic: propertySymbol.IsStatic));
-                }
-            }
-            // Make specified public properties in the class bindable including ones in base type.
-            else if (attributeData.ConstructorArguments is
-                [
-                { Kind: TypedConstantKind.Array, Values: [..] propertyNames },
-                { Kind: TypedConstantKind.Array, Values: [..] propertyIndexerTypes }
-                ])
-            {
-                for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
+                // Only gather public properties, and ignore overrides (we'll find the base definition instead).
+                // We also ignore partial property implementations, as we only care about the partial definitions.
+                if (symbol is not IPropertySymbol { DeclaredAccessibility: Accessibility.Public, IsOverride: false, PartialDefinitionPart: null } propertySymbol)
                 {
-                    foreach (var member in curSymbol.GetMembers())
-                    {
-                        if (member is IPropertySymbol propertySymbol &&
-                            member.DeclaredAccessibility == Accessibility.Public)
-                        {
-                            if (!propertySymbol.IsIndexer &&
-                                propertyNames.Any(p => p.Value is string value && value == propertySymbol.Name))
-                            {
-                                AddProperty(propertySymbol);
-                            }
-                            else if (propertySymbol.IsIndexer &&
-                                     // ICustomProperty only supports single indexer parameter.
-                                     propertySymbol.Parameters.Length == 1 &&
-                                     propertyIndexerTypes.Any(p => p.Value is ISymbol typeSymbol && typeSymbol.Equals(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default)))
-                            {
-                                AddProperty(propertySymbol);
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                // We can only support indexers with a single parameter.
+                // If there's more, an analyzer will emit a warning.
+                if (propertySymbol.Parameters.Length > 1)
+                {
+                    continue;
+                }
+
+                // Ignore the current property if we have explicit filters and the property doesn't match
+                if ((propertySymbol.IsIndexer && indexerTypes?.Contains(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default) is false) ||
+                    (!propertySymbol.IsIndexer && propertyNames?.Contains(propertySymbol.Name, StringComparer.Ordinal) is false))
+                {
+                    continue;
+                }
+
+                // Gather all the info for the current property
+                customPropertyInfo.Add(new CustomPropertyInfo(
+                    Name: propertySymbol.Name,
+                    FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
+                    FullyQualifiedIndexerTypeName: propertySymbol.Parameters.FirstOrDefault()?.GetFullyQualifiedNameWithNullabilityAnnotations(),
+                    CanRead: propertySymbol.GetMethod is { DeclaredAccessibility: Accessibility.Public },
+                    CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public },
+                    IsStatic: propertySymbol.IsStatic));
             }
+
+            token.ThrowIfCancellationRequested();
+
+            return customPropertyInfo.ToImmutable();
         }
     }
 }
