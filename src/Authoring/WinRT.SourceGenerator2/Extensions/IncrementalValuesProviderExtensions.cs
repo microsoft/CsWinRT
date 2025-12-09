@@ -16,7 +16,7 @@ internal static class IncrementalValuesProviderExtensions
     /// <typeparam name="T">The type of values being produced.</typeparam>
     /// <param name="provider">The input <see cref="IncrementalValuesProvider{TValues}"/> instance.</param>
     /// <returns>The resulting <see cref="IncrementalValuesProvider{TValues}"/> instance.</returns>
-    public static IncrementalValuesProvider<T> SkipNullValues<T>(IncrementalValuesProvider<T?> provider)
+    public static IncrementalValuesProvider<T> SkipNullValues<T>(this IncrementalValuesProvider<T?> provider)
         where T : class
     {
         return provider.Where(static value => value is not null)!;
