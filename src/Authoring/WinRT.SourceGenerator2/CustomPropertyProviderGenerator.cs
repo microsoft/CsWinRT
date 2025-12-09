@@ -24,6 +24,6 @@ public sealed partial class CustomPropertyProviderGenerator : IIncrementalGenera
             .SkipNullValues();
 
         // Write the implementation for all annotated types
-        context.RegisterSourceOutput(providerInfo, Execute.WriteCustomPropertyProviderImplementation);
+        context.RegisterSourceOutput(providerInfo, Emit.WriteCustomPropertyProviderImplementation);
     }
 }
