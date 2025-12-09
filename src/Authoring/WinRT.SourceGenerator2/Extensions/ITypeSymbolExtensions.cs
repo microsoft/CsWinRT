@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 #pragma warning disable CS1734
@@ -15,6 +16,23 @@ internal static class ITypeSymbolExtensions
 {
     extension(ITypeSymbol symbol)
     {
+        /// <summary>
+        /// Enumerates all members of a given <see cref="ITypeSymbol"/> instance, including inherited ones.
+        /// </summary>
+        /// <returns>The sequence of all member symbols for <paramref name="symbol"/>.</returns>
+        public IEnumerable<ISymbol> EnumerateAllMembers()
+        {
+            for (ITypeSymbol? currentSymbol = symbol;
+                currentSymbol is not (null or { SpecialType: SpecialType.System_ValueType or SpecialType.System_Object });
+                currentSymbol = currentSymbol.BaseType)
+            {
+                foreach (ISymbol currentMember in currentSymbol.GetMembers())
+                {
+                    yield return currentMember;
+                }
+            }
+        }
+
         /// <summary>
         /// Gets the fully qualified metadata name for a given <see cref="ITypeSymbol"/> instance.
         /// </summary>
