@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-#pragma warning disable CS1734
+#pragma warning disable CS1734, IDE0046
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -16,6 +16,29 @@ internal static class ITypeSymbolExtensions
 {
     extension(ITypeSymbol symbol)
     {
+        /// <summary>
+        /// Gets a value indicating whether the given <see cref="ITypeSymbol"/> can be boxed.
+        /// </summary>
+        public bool CanBeBoxed
+        {
+            get
+            {
+                // Byref-like types can't be boxed, and same for all kinds of pointers
+                if (symbol.IsRefLikeType || symbol.TypeKind is TypeKind.Pointer or TypeKind.FunctionPointer)
+                {
+                    return false;
+                }
+
+                // Type parameters with 'allows ref struct' also can't be boxed
+                if (symbol is ITypeParameterSymbol { AllowsRefLikeType: true })
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         /// <summary>
         /// Enumerates all members of a given <see cref="ITypeSymbol"/> instance, including inherited ones.
         /// </summary>
