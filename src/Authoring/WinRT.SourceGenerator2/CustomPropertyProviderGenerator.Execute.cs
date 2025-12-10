@@ -138,6 +138,12 @@ public partial class CustomPropertyProviderGenerator
                     continue;
                 }
 
+                // Indexer properties must be instance properties
+                if (propertySymbol.IsIndexer && propertySymbol.IsStatic)
+                {
+                    continue;
+                }
+
                 // We can only support indexers with a single parameter.
                 // If there's more, an analyzer will emit a warning.
                 if (propertySymbol.Parameters.Length > 1)
