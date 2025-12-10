@@ -476,6 +476,6 @@ internal partial class InteropGenerator
         windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
-        return new(module.CorLibTypeFactory, windowsRuntimeAssembly, windowsSdkProjectionAssembly);
+        return new(module.CorLibTypeFactory, windowsRuntimeAssembly.ImportWith(module.DefaultImporter), windowsSdkProjectionAssembly.ImportWith(module.DefaultImporter));
     }
 }
