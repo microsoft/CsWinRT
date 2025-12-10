@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace WindowsRuntime.SourceGenerator.Models;
 
 /// <summary>
@@ -18,4 +20,11 @@ internal sealed record CustomPropertyInfo(
     string? FullyQualifiedIndexerTypeName,
     bool CanRead,
     bool CanWrite,
-    bool IsStatic);
+    bool IsStatic)
+{
+    /// <summary>
+    /// Gets whether the current property is an indexer property.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(FullyQualifiedIndexerTypeName))]
+    public bool IsIndexer => FullyQualifiedIndexerTypeName is not null;
+}
