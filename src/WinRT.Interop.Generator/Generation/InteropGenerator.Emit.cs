@@ -188,13 +188,15 @@ internal partial class InteropGenerator
         }
 
         // Get the loaded module for the runtime .dll (this should also always be available here)
-        if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value) is null)
+        if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("WinRT.Runtime2.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
         // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
+        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }

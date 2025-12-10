@@ -30,7 +30,7 @@ internal static partial class InteropGenerator
         {
             // If no debug repro directory was provided, we have nothing to do.
             // This is fully expected, it just means no debug repro is needed.
-            if (Path.GetExtension(inputFilePath) == ".zip")
+            if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
             {
                 ConsoleApp.Log("Unpacking input 'cswinrtgen' debug repro");
 
