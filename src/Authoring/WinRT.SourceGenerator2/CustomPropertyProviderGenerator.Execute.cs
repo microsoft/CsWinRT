@@ -145,9 +145,17 @@ public partial class CustomPropertyProviderGenerator
                     continue;
                 }
 
+                ITypeSymbol? indexerType = propertySymbol.Parameters.FirstOrDefault()?.Type;
+
                 // Ignore the current property if we have explicit filters and the property doesn't match
-                if ((propertySymbol.IsIndexer && indexerTypes?.Contains(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default) is false) ||
+                if ((propertySymbol.IsIndexer && indexerTypes?.Contains(indexerType, SymbolEqualityComparer.Default) is false) ||
                     (!propertySymbol.IsIndexer && propertyNames?.Contains(propertySymbol.Name, StringComparer.Ordinal) is false))
+                {
+                    continue;
+                }
+
+                // If any types in the property signature cannot be boxed, we have to skip the property
+                if (!propertySymbol.Type.CanBeBoxed || indexerType?.CanBeBoxed is false)
                 {
                     continue;
                 }
@@ -156,7 +164,7 @@ public partial class CustomPropertyProviderGenerator
                 customPropertyInfo.Add(new CustomPropertyInfo(
                     Name: propertySymbol.Name,
                     FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
-                    FullyQualifiedIndexerTypeName: propertySymbol.Parameters.FirstOrDefault()?.GetFullyQualifiedNameWithNullabilityAnnotations(),
+                    FullyQualifiedIndexerTypeName: indexerType?.GetFullyQualifiedNameWithNullabilityAnnotations(),
                     CanRead: propertySymbol.GetMethod is { DeclaredAccessibility: Accessibility.Public },
                     CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public },
                     IsStatic: propertySymbol.IsStatic));
