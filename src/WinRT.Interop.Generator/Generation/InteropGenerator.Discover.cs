@@ -205,7 +205,7 @@ internal partial class InteropGenerator
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
                 if (!type.IsPossiblyWindowsRuntimeExposedType ||
                     type.IsProjectedWindowsRuntimeType ||
-                    type.IsWindowsRuntimeManagedOnlyType(interopReferences))
+                    type.IsWindowsRuntimeManagedOnlyType(interopReferences, module))
                 {
                     continue;
                 }
@@ -220,7 +220,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
+                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module))
                 {
                     foreach (InterfaceImplementation implementation in currentType.Interfaces)
                     {
@@ -229,7 +229,7 @@ internal partial class InteropGenerator
                             implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
                             (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
                             genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
-                            genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
+                            genSig.TypeArguments.All(arg => arg.IsFullyResolvable(module) && arg.Resolve(module)!.IsProjectedWindowsRuntimeType)))
                         {
                             hasAnyProjectedWindowsRuntimeInterfaces = true;
 
@@ -238,7 +238,7 @@ internal partial class InteropGenerator
                         else if (implementation.Interface?.IsGeneratedComInterfaceType is true)
                         {
                             // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                            if (implementation.Interface.Resolve() is not TypeDefinition interfaceType)
+                            if (implementation.Interface.Resolve(module) is not TypeDefinition interfaceType)
                             {
                                 WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -304,7 +304,7 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(module))
                 {
                     continue;
                 }
@@ -316,7 +316,7 @@ internal partial class InteropGenerator
                 // manually construct an SZ array type for it and add it to the set of tracked array types.
                 if (typeSignature.IsValueType &&
                     typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
-                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
+                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences, module))
                 {
                     discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
 
@@ -326,7 +326,7 @@ internal partial class InteropGenerator
                 // Ignore generic instantiations that are not Windows Runtime types. That is, those that
                 // have a generic type definition that's not a Windows Runtime type, or that have any type
                 // arguments that are not Windows Runtime types.
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences, module))
                 {
                     continue;
                 }
@@ -339,7 +339,7 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                TypeDefinition typeDefinition = typeSignature.Resolve()!;
+                TypeDefinition typeDefinition = typeSignature.Resolve(module)!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
                 // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
@@ -361,7 +361,7 @@ internal partial class InteropGenerator
                     discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
 
                     // We also want to crawl base interfaces
-                    foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
+                    foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature, module))
                     {
                         discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
                     }
@@ -403,13 +403,13 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(module))
                 {
                     continue;
                 }
 
                 // Ignore array types that are not Windows Runtime types
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+                if (!typeSignature.IsWindowsRuntimeType(interopReferences, module))
                 {
                     continue;
                 }

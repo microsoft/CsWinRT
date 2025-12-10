@@ -218,7 +218,7 @@ internal static class ModuleDefinitionExtensions
             }
 
             // And process locals as well
-            foreach (CilLocalVariable localVariable in specification.Method!.Resolve()?.CilMethodBody?.LocalVariables ?? [])
+            foreach (CilLocalVariable localVariable in specification.Method!.Resolve(module)?.CilMethodBody?.LocalVariables ?? [])
             {
                 foreach (TResult result in EnumerateTypeSignatures(
                     localVariable.VariableType.InstantiateGenericTypes(genericContext),

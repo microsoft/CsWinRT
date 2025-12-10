@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             factoryType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceFactory"),
+                name: InteropUtf8NameFactory.TypeName(vectorType, module, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -136,7 +136,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             methodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(vectorType, module, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -341,7 +341,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(vectorType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -473,7 +473,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(vectorType, module, "Impl"),
                 vftblType: interopDefinitions.IObservableVectorVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -507,7 +507,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType),
+                name: InteropUtf8NameFactory.TypeName(vectorType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: vectorComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

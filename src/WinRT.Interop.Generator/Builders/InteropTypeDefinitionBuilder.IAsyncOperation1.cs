@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(operationType, module, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -226,7 +226,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(operationType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -370,7 +370,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(operationType, module, "Impl"),
                 vftblType: interopDefinitions.IAsyncOperationVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -403,7 +403,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType),
+                name: InteropUtf8NameFactory.TypeName(operationType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: operationComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

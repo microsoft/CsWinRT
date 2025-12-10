@@ -159,7 +159,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
-                name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature),
+                name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature, module),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: baseEventSourceSignature.ToTypeDefOrRef());
 

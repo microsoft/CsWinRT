@@ -63,7 +63,7 @@ internal partial class InteropMethodRewriteFactory
             if (returnType.IsValueType)
             {
                 // If the return type is blittable, we can always return it directly (simplest case)
-                if (returnType.IsBlittable(interopReferences))
+                if (returnType.IsBlittable(interopReferences, module))
                 {
                     body.Instructions.ReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
@@ -91,7 +91,7 @@ internal partial class InteropMethodRewriteFactory
                     // a custom-mapped primitive type or a projected type. Technically speaking it can
                     // never be a 'KeyValuePair<,>' or 'Nullable<T>', because both of those are interface
                     // types in the Windows Runtime type system, meaning they can't be boxed like value types.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState, module);
 
                     // Get the right reference to the unboxing marshalling method to call
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -110,26 +110,26 @@ internal partial class InteropMethodRewriteFactory
                         releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree,
                         module: module);
                 }
-                else if (returnType.IsManagedValueType(interopReferences))
+                else if (returnType.IsManagedValueType(interopReferences, module))
                 {
                     // Here we're marshalling a value type that is managed, meaning its ABI type will
                     // hold some references to unmanaged resources. In this case we need to resolve the
                     // marshaller type so we can both marshal the value and also clean resources after.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState, module);
 
                     // Get the reference to 'ConvertToManaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
                         name: "ConvertToManaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: returnType,
-                            parameterTypes: [returnType.GetAbiType(interopReferences)]));
+                            parameterTypes: [returnType.GetAbiType(interopReferences, module)]));
 
                     // Get the reference to 'Dispose' too, as the ABI type has some unmanaged references
                     IMethodDefOrRef disposeMethod = marshallerType.GetMethodDefOrRef(
                         name: "Dispose"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: module.CorLibTypeFactory.Void,
-                            parameterTypes: [returnType.GetAbiType(interopReferences)]));
+                            parameterTypes: [returnType.GetAbiType(interopReferences, module)]));
 
                     // Emit code similar to the cases above, but calling 'Dispose' on the ABI type instead of releasing it
                     RewriteBody(
@@ -145,14 +145,14 @@ internal partial class InteropMethodRewriteFactory
                 {
                     // The last case is a non-blittable, unmanaged value type. That is, we still have to call
                     // the marshalling method to get the return value, but no resources cleanup is needed.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState, module);
 
                     // Get the reference to 'ConvertToManaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
                         name: "ConvertToManaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: returnType,
-                            parameterTypes: [returnType.GetAbiType(interopReferences)]));
+                            parameterTypes: [returnType.GetAbiType(interopReferences, module)]));
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
                     body.Instructions.ReplaceRange(marker, [
@@ -210,7 +210,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(returnType, interopReferences, emitState);
+                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(returnType, interopReferences, emitState, module);
 
                 // Get the marshalling method, with the parameter type always just being 'void*' here too
                 IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(

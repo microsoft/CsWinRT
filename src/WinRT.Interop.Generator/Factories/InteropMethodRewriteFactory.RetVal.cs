@@ -69,7 +69,7 @@ internal partial class InteropMethodRewriteFactory
             {
                 // If the return type is blittable, we can assign it directly to the target address.
                 // However, we must use the correct indirect store instruction for primitive types.
-                if (retValType.IsBlittable(interopReferences))
+                if (retValType.IsBlittable(interopReferences, module))
                 {
                     CilInstruction storeInstruction = retValType.ElementType switch
                     {
@@ -85,7 +85,7 @@ internal partial class InteropMethodRewriteFactory
                         ElementType.U8 => new CilInstruction(Stind_I8),
                         ElementType.R4 => new CilInstruction(Stind_R4),
                         ElementType.R8 => new CilInstruction(Stind_R8),
-                        ElementType.ValueType when retValType.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
+                        ElementType.ValueType when retValType.Resolve(module) is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
                         _ => new CilInstruction(Stobj, retValType.ToTypeDefOrRef()),
                     };
 
@@ -107,7 +107,7 @@ internal partial class InteropMethodRewriteFactory
 
                     // For 'Nullable<T>' return types, we need the marshaller for the instantiated 'T'
                     // type, as that will contain the boxing methods. See more info in 'ReturnValue'.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState, module);
 
                     // Get the right reference to the boxing marshalling method to call
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -127,19 +127,19 @@ internal partial class InteropMethodRewriteFactory
                 else
                 {
                     // For all other struct types, we just always defer to their generated marshaller type
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(retValType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(retValType, interopReferences, emitState, module);
 
                     // Get the reference to 'ConvertToUnmanaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
                         name: "ConvertToUnmanaged"u8,
                         signature: MethodSignature.CreateStatic(
                             returnType: retValType,
-                            parameterTypes: [retValType.GetAbiType(interopReferences)]));
+                            parameterTypes: [retValType.GetAbiType(interopReferences, module)]));
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReplaceRange(marker, [
                         new CilInstruction(Call, marshallerMethod),
-                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).ToTypeDefOrRef())]);
+                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences, module).ToTypeDefOrRef())]);
                 }
             }
             else if (retValType.IsTypeOfString(interopReferences))
@@ -176,7 +176,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(retValType, interopReferences, emitState);
+                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(retValType, interopReferences, emitState, module);
 
                 // Get the marshalling method for this '[retval]' type
                 IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(

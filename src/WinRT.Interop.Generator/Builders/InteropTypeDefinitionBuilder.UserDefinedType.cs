@@ -76,7 +76,7 @@ internal partial class InteropTypeDefinitionBuilder
                     MethodDefinition get_VtableMethod = implTypeDefinition.GetMethod("get_Vtable"u8);
 
                     // The IID will be in the generated '<InterfaceIIDs>' type in 'WinRT.Interop.dll'
-                    Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(typeSignature)}";
+                    Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(typeSignature, module)}";
                     MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
 
                     // Add the entry from the ABI type in 'WinRT.Interop.dll'
@@ -100,7 +100,7 @@ internal partial class InteropTypeDefinitionBuilder
                 else
                 {
                     // We always need to resolve the user-defined types in all cases below, so just do it once first
-                    TypeDefinition interfaceType = typeSignature.Resolve()!;
+                    TypeDefinition interfaceType = typeSignature.Resolve(module)!;
 
                     // For '[GeneratedComInterface]', we need to retrieve and use the generated vtable from the COM generators
                     if (interfaceType.IsGeneratedComInterfaceType)
@@ -144,7 +144,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, module, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count),
                 interopReferences: interopReferences,
                 module: module,
@@ -174,7 +174,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, module, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -258,7 +258,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
-                name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, module),
                 runtimeClassName: "", // TODO
                 comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

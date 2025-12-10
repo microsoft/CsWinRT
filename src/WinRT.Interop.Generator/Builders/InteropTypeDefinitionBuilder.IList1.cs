@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -98,8 +98,8 @@ internal partial class InteropTypeDefinitionBuilder
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IList1Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
-                elementType: elementType.GetAbiType(interopReferences),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "Vftbl"),
+                elementType: elementType.GetAbiType(interopReferences, module),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -128,7 +128,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             vectorMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IVectorMethods"),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "IVectorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -276,7 +276,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IListMethods"),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "IListMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -712,7 +712,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -1067,7 +1067,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(listType, module, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -1098,7 +1098,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType),
+                name: InteropUtf8NameFactory.TypeName(listType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: listComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

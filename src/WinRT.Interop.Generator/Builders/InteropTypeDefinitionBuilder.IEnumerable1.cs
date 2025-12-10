@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -92,7 +92,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             iterableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             enumerableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "IEnumerableMethods"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module, "IEnumerableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -393,7 +393,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -476,7 +476,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module, "Impl"),
                 vftblType: interopDefinitions.IEnumerable1Vftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -507,7 +507,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: enumerableComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

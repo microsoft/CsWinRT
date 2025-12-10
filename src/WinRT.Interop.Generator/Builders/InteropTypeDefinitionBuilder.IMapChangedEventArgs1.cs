@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             argsMethodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
-                name: InteropUtf8NameFactory.TypeName(argsType, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(argsType, module, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
-                name: InteropUtf8NameFactory.TypeName(argsType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(argsType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -332,7 +332,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
-                name: InteropUtf8NameFactory.TypeName(argsType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(argsType, module, "Impl"),
                 vftblType: interopDefinitions.IMapChangedEventArgsVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -363,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
-                name: InteropUtf8NameFactory.TypeName(argsType),
+                name: InteropUtf8NameFactory.TypeName(argsType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: argsComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

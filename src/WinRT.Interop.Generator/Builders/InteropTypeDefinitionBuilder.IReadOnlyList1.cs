@@ -49,8 +49,8 @@ internal partial class InteropTypeDefinitionBuilder
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Vftbl"),
-                elementType: elementType.GetAbiType(interopReferences),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module, "Vftbl"),
+                elementType: elementType.GetAbiType(interopReferences, module),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             vectorViewMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IVectorViewMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module, "IVectorViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -125,7 +125,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             readOnlyListMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module, "IReadOnlyListMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -324,7 +324,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -460,7 +460,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -491,7 +491,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

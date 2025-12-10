@@ -29,12 +29,17 @@ internal static class GuidGenerator
     /// Generates the IID for the specified type by computing its Windows Runtime signature and deriving an IID from that signature.
     /// </summary>
     /// <param name="type">The <see cref="TypeSignature"/> to generate the IID for.</param>
-    /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
+    /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting IID for <paramref name="type"/>.</returns>
-    public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    public static Guid CreateIID(
+        TypeSignature type,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
-        string signature = SignatureGenerator.GetSignature(type, interopReferences, useWindowsUIXamlProjections);
+        string signature = SignatureGenerator.GetSignature(type, interopReferences, module, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
 
         return guid;
@@ -46,9 +51,14 @@ internal static class GuidGenerator
     /// </summary>
     /// <param name="type">The type descriptor to try to get the IID for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
     /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
-    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(ITypeDescriptor type, InteropReferences interopReferences, out Guid iid)
+    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        ITypeDescriptor type,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out Guid iid)
     {
         // First try to get the IID from the custom-mapped types mapping
         if (WellKnownInterfaceIIDs.TryGetGUID(type, interopReferences, out iid))
@@ -56,7 +66,7 @@ internal static class GuidGenerator
             return true;
         }
 
-        if (type.Resolve() is TypeDefinition typeDefinition)
+        if (type.Resolve(module) is TypeDefinition typeDefinition)
         {
             // For delegate types, we resolve the IID from their generated RVA field.
             // Only interface types have the '[Guid]' attribute on them, not delegates.

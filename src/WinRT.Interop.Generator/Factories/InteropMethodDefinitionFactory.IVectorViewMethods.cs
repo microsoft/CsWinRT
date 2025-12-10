@@ -59,7 +59,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences));
+            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences, module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);

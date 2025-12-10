@@ -490,7 +490,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, bucketsRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize / sizeof(int))) },
+                { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve(module)!.ClassLayout!.ClassSize / sizeof(int))) },
                 { Newobj, interopReferences.ReadOnlySpanInt32_ctor },
                 { Ret }
             }
@@ -507,7 +507,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, keysRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)keysRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { CilInstruction.CreateLdcI4((int)keysRvaField.Signature!.FieldType.Resolve(module)!.ClassLayout!.ClassSize) },
                 { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }
@@ -524,7 +524,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, valuesRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)valuesRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { CilInstruction.CreateLdcI4((int)valuesRvaField.Signature!.FieldType.Resolve(module)!.ClassLayout!.ClassSize) },
                 { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }

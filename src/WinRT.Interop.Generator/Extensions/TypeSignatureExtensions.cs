@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -15,30 +16,29 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeSignature"/> instance can be fully resolved to type definitions.
         /// </summary>
-        public bool IsFullyResolvable
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+        /// <returns>Whether the input <see cref="TypeSignature"/> instance can be fully resolved to type definitions.</returns>
+        public bool IsFullyResolvable(ModuleDefinition module)
         {
-            get
+            // Ensure that we can resolve the type (if we can't, we're likely missing a .dll)
+            if (signature.Resolve(module) is null)
             {
-                // Ensure that we can resolve the type (if we can't, we're likely missing a .dll)
-                if (signature.Resolve() is null)
-                {
-                    return false;
-                }
+                return false;
+            }
 
-                // Recurse on all type arguments as well
-                if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            // Recurse on all type arguments as well
+            if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            {
+                foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
                 {
-                    foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
+                    if (!typeArgument.IsFullyResolvable(module))
                     {
-                        if (!typeArgument.IsFullyResolvable)
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
-
-                return true;
             }
+
+            return true;
         }
     }
 }

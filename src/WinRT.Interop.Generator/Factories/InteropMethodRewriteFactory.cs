@@ -19,11 +19,13 @@ internal static partial class InteropMethodRewriteFactory
     /// <param name="type">The value type to get the marshaller type for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>The marshaller type for <paramref name="type"/>.</returns>
     private static ITypeDefOrRef GetValueTypeMarshallerType(
         TypeSignature type,
         InteropReferences interopReferences,
-        InteropGeneratorEmitState emitState)
+        InteropGeneratorEmitState emitState,
+        ModuleDefinition module)
     {
         // For generic instantiations (the only one possible is 'KeyValuePair<,>'
         // here), the marshaller type will be in the same 'WinRT.Interop.dll'.
@@ -54,7 +56,7 @@ internal static partial class InteropMethodRewriteFactory
         }
 
         // In all other cases, the marshaller type will be in the declared assembly
-        return type.Resolve()!.DeclaringModule!.CreateTypeReference(
+        return type.Resolve(module)!.DeclaringModule!.CreateTypeReference(
             ns: $"ABI.{type.Namespace}",
             name: $"{type.Name}Marshaller");
     }
@@ -65,11 +67,13 @@ internal static partial class InteropMethodRewriteFactory
     /// <param name="type">The reference type to get the marshaller type for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>The marshaller type for <paramref name="type"/>.</returns>
     private static ITypeDefOrRef GetReferenceTypeMarshallerType(
         TypeSignature type,
         InteropReferences interopReferences,
-        InteropGeneratorEmitState emitState)
+        InteropGeneratorEmitState emitState,
+        ModuleDefinition module)
     {
         // Just like for value types, generic types have marshaller types in 'WinRT.Interop.dll'
         if (type is GenericInstanceTypeSignature)
@@ -96,7 +100,7 @@ internal static partial class InteropMethodRewriteFactory
         // also includes special manually projected types, such as 'AsyncActionCompletedHandler'.
         // Even though those types are in 'WinRT.Runtime.dll', the marshaller type will also be
         // there, so trying to resolve it via the declaring module like for other types is fine.
-        return type.Resolve()!.DeclaringModule!.CreateTypeReference(
+        return type.Resolve(module)!.DeclaringModule!.CreateTypeReference(
             ns: $"ABI.{type.Namespace}",
             name: $"{type.Name}Marshaller");
     }

@@ -134,7 +134,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        keyType.GetAbiType(interopReferences).MakePointerType()]))
+                        keyType.GetAbiType(interopReferences, module).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };

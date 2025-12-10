@@ -22,11 +22,13 @@ internal static partial class SignatureGenerator
     /// </summary>
     /// <param name="type">The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to generate the signature for.</param>
     /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting signature for <paramref name="type"/>.</returns>
     public static string GetSignature(
         TypeSignature type,
         InteropReferences interopReferences,
+        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         // If we have a registered signature for a mapped type, just return that directly
@@ -37,7 +39,7 @@ internal static partial class SignatureGenerator
 
         // We need to be able to resolve the type definition to compute several kinds of signatures.
         // Also, all input type signatures here are expected to be resolvable, so validate that too.
-        if (type.Resolve() is not TypeDefinition typeDefinition)
+        if (type.Resolve(module) is not TypeDefinition typeDefinition)
         {
             goto Failure;
         }
@@ -66,15 +68,15 @@ internal static partial class SignatureGenerator
             ElementType.Object => ObjectSignature,
             ElementType.String => StringSignature,
             ElementType.Type => TypeSignature,
-            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopReferences, module, useWindowsUIXamlProjections),
             ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum => Enum(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
             ElementType.ValueType when typeDefinition.IsClass && type.IsTypeOfGuid(interopReferences) => GuidSignature,
-            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsInterface => Interface(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopReferences, module, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopReferences, module, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopReferences, module, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsInterface => Interface(typeDefinition, interopReferences, module, useWindowsUIXamlProjections),
+            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopReferences, module, useWindowsUIXamlProjections),
+            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopReferences, module, useWindowsUIXamlProjections),
             _ => null
         };
 

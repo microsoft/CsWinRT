@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             actionMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(actionType, module, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -273,7 +273,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(actionType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -506,7 +506,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(actionType, module, "Impl"),
                 vftblType: interopDefinitions.IAsyncActionWithProgressVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -542,7 +542,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType),
+                name: InteropUtf8NameFactory.TypeName(actionType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: actionComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

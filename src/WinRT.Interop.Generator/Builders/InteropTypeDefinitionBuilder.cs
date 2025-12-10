@@ -42,11 +42,11 @@ internal static partial class InteropTypeDefinitionBuilder
         out MethodDefinition get_IidMethod)
     {
         IID(
-            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, module),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
-            iid: GuidGenerator.CreateIID(interfaceType, interopReferences, useWindowsUIXamlProjections),
+            iid: GuidGenerator.CreateIID(interfaceType, interopReferences, module, useWindowsUIXamlProjections),
             out get_IidMethod);
     }
 
@@ -101,7 +101,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal sealed class' type
         nativeObjectType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "NativeObject"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, module, "NativeObject"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: nativeObjectBaseType.ToTypeDefOrRef());
 
@@ -139,7 +139,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal abstract class' type
         callbackType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, module, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
         {
@@ -240,7 +240,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal sealed class' type
         marshallerType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersMarshallerAttribute"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, module, "ComWrappersMarshallerAttribute"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -303,7 +303,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal static class' type
         marshallerType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "Marshaller"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, module, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 

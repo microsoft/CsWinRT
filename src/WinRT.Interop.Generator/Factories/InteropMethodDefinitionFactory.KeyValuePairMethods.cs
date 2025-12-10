@@ -57,7 +57,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Declare the local variables:
             //   [0]: '<ABI_RESULT_TYPE>' (the ABI type for the result type)
-            CilLocalVariable loc_0_resultNative = new(keyOrValueType.GetAbiType(interopReferences));
+            CilLocalVariable loc_0_resultNative = new(keyOrValueType.GetAbiType(interopReferences, module));
 
             // Jump labels
             CilInstruction nop_returnValueRewrite = new(Nop);

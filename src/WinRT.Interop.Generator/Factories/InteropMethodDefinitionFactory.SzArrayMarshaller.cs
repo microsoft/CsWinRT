@@ -41,7 +41,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).MakePointerType()]));
+                        elementType.GetAbiType(interopReferences, module).MakePointerType()]));
 
             // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
             // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
@@ -71,7 +71,7 @@ internal partial class InteropMethodDefinitionFactory
                     }
                 };
             }
-            else if (!elementType.Resolve()!.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            else if (!elementType.Resolve(module)!.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 freeMethod.CilMethodBody = new CilMethodBody
                 {
@@ -84,7 +84,7 @@ internal partial class InteropMethodDefinitionFactory
                     }
                 };
             }
-            else if (elementType.Resolve()!.IsByRefLike) // TODO: check for blittable
+            else if (elementType.Resolve(module)!.IsByRefLike) // TODO: check for blittable
             {
                 freeMethod.CilMethodBody = new CilMethodBody
                 {

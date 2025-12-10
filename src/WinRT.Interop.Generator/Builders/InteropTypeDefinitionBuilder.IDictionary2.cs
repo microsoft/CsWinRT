@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -106,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 vftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences,
@@ -142,7 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, module, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences,
@@ -208,7 +208,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             mapMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IMapMethods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "IMapMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -341,7 +341,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             dictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IDictionaryMethods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "IDictionaryMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -784,7 +784,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -1183,7 +1183,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -1217,7 +1217,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

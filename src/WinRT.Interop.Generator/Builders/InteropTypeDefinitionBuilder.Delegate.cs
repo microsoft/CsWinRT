@@ -43,11 +43,11 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // 'IDelegate' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(delegateType, interopReferences, module, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
             // 'IReference<T>' IID, which uses a boxed type signature to represent it.
@@ -57,11 +57,11 @@ internal partial class InteropTypeDefinitionBuilder
             // scenario. This is different than boxed value type, which instead are
             // just always projected as and using 'Nullable<T>' to represent this.
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopReferences, module, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
 
@@ -148,7 +148,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "Impl"),
                 vftblType: interopDefinitions.DelegateVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -256,7 +256,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "ReferenceImpl"),
                 vftblType: interopDefinitions.DelegateReferenceVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -290,7 +290,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.DelegateInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -327,7 +327,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             callbackType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersCallback"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -390,14 +390,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "NativeDelegate"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "NativeDelegate"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(nativeDelegateType);
 
             // Construct the 'Invoke' method on the delegate type, so we can get the constructed parameter types
-            MethodSignature invokeSignature = delegateType.Resolve()!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
+            MethodSignature invokeSignature = delegateType.Resolve(module)!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
 
             // Define the 'Invoke' method as follows:
             //
@@ -537,7 +537,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -637,7 +637,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -758,7 +758,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType),
+                name: InteropUtf8NameFactory.TypeName(delegateType, module),
                 runtimeClassName: delegateType.FullName, // TODO
                 comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

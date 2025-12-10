@@ -28,11 +28,11 @@ internal static class TypeDefinitionExtensions
         /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
+        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, ModuleDefinition module)
         {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module))
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -193,15 +193,15 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Enumerates all base types of the specified type, including itself.
         /// </summary>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>The sequence of base types for the input type, including itself.</returns>
-        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(CorLibTypeFactory corLibTypeFactory)
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(ModuleDefinition module)
         {
             yield return type;
 
-            for (TypeDefinition? baseType = type.BaseType?.Resolve();
-                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, corLibTypeFactory.Object);
-                baseType = baseType.BaseType?.Resolve())
+            for (TypeDefinition? baseType = type.BaseType?.Resolve(module);
+                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, module.CorLibTypeFactory.Object);
+                baseType = baseType.BaseType?.Resolve(module))
             {
                 yield return baseType;
             }
@@ -211,13 +211,14 @@ internal static class TypeDefinitionExtensions
         /// Enumerates all generic instance type signatures for base interfaces, from a given starting interface.
         /// </summary>
         /// <param name="typeSignature">The constructed signature for the interface type.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>All (unique) generic type signatures for base interfaces.</returns>
         /// <remarks>
         /// This method can only be called when <paramref name="typeSignature"/> is an interface type.
         /// Additionally, <paramref name="typeSignature"/> must be constructed over that type.
         /// </remarks>
         /// <exception cref="ArgumentException"><paramref name="typeSignature"/> is not an interface type, or <paramref name="typeSignature"/> is not a match for it.</exception>
-        public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature)
+        public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature, ModuleDefinition module)
         {
             // This method is only valid when called on interface types (it's meant to enumerate the base interfaces)
             if (!type.IsInterface)
@@ -246,9 +247,9 @@ internal static class TypeDefinitionExtensions
                 yield return interfaceSignature;
 
                 // Also recurse on the base interfaces
-                if (interfaceSignature.IsFullyResolvable)
+                if (interfaceSignature.IsFullyResolvable(module))
                 {
-                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceSignature.Resolve()!.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
+                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceSignature.Resolve(module)!.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature, module))
                     {
                         yield return baseInterfaceImplementation;
                     }

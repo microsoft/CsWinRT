@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             iteratorMethodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "IIteratorMethods"),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, module, "IIteratorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -75,7 +75,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [2]: '<ABI_ELEMENT_TYPE>' (the native value that was retrieved)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences));
+            CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences, module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -307,7 +307,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -498,7 +498,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, module, "Impl"),
                 vftblType: interopDefinitions.IEnumerator1Vftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -533,7 +533,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

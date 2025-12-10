@@ -179,8 +179,9 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a given type is blittable.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the type is blittable.</returns>
-        public bool IsBlittable(InteropReferences interopReferences)
+        public bool IsBlittable(InteropReferences interopReferences, ModuleDefinition module)
         {
             // Only value types are possibly blittable
             if (!type.IsValueType)
@@ -194,7 +195,7 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(module)!;
 
             // Enum types are always blittable
             if (typeDefinition.IsEnum)
@@ -225,7 +226,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // If any fields aren't blittable, then the whole type isn't
-                if (!fieldDefinition.Signature!.FieldType.IsBlittable(interopReferences))
+                if (!fieldDefinition.Signature!.FieldType.IsBlittable(interopReferences, module))
                 {
                     return false;
                 }
@@ -238,8 +239,9 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a given type is managed (i.e. it requires disposal).
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the type is a managed value type.</returns>
-        public bool IsManagedValueType(InteropReferences interopReferences)
+        public bool IsManagedValueType(InteropReferences interopReferences, ModuleDefinition module)
         {
             if (!type.IsValueType)
             {
@@ -252,7 +254,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(module)!;
 
             // Enum types are always blittable
             if (typeDefinition.IsEnum)
@@ -290,7 +292,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // If any fields are managed, then the containing type needs disposal too
-                if (fieldDefinition.Signature!.FieldType.IsManagedValueType(interopReferences))
+                if (fieldDefinition.Signature!.FieldType.IsManagedValueType(interopReferences, module))
                 {
                     return true;
                 }
@@ -303,8 +305,9 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a given type needs tracker support (when marshalled as a CCW).
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the type requires tracker support.</returns>
-        public bool IsTrackerSupportRequired(InteropReferences interopReferences)
+        public bool IsTrackerSupportRequired(InteropReferences interopReferences, ModuleDefinition module)
         {
             // Check reference types first, as there's fewer special cases to handle
             if (!type.IsValueType)
@@ -319,7 +322,7 @@ internal static class WindowsRuntimeExtensions
                 // E.g. an 'int[]' or a 'string[]' array doesn't need it, but 'object[]' does.
                 if (type is SzArrayTypeSignature arrayType)
                 {
-                    return arrayType.BaseType.IsTrackerSupportRequired(interopReferences);
+                    return arrayType.BaseType.IsTrackerSupportRequired(interopReferences, module);
                 }
 
                 // For all other cases, we assume tracker support is required, to be safe
@@ -332,7 +335,7 @@ internal static class WindowsRuntimeExtensions
             {
                 foreach (TypeSignature typeArgument in genericType.TypeArguments)
                 {
-                    if (typeArgument.IsTrackerSupportRequired(interopReferences))
+                    if (typeArgument.IsTrackerSupportRequired(interopReferences, module))
                     {
                         return true;
                     }
@@ -341,7 +344,7 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(module)!;
 
             // Enum types are blittable, so they never need tracker support
             if (typeDefinition.IsEnum)
@@ -371,7 +374,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // If any fields need tracker support, then the containing type needs it too
-                if (fieldDefinition.Signature!.FieldType.IsTrackerSupportRequired(interopReferences))
+                if (fieldDefinition.Signature!.FieldType.IsTrackerSupportRequired(interopReferences, module))
                 {
                     return true;
                 }
@@ -384,8 +387,9 @@ internal static class WindowsRuntimeExtensions
         /// Gets the ABI type for a given type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>The ABi type for the input type.</returns>
-        public TypeSignature GetAbiType(InteropReferences interopReferences)
+        public TypeSignature GetAbiType(InteropReferences interopReferences, ModuleDefinition module)
         {
             // All constructed generics will use 'void*' for the ABI type. This applies to both reference
             // types, as well as 'KeyValuePair<,>', which also maps to 'void*', since it's an interface.
@@ -394,12 +398,12 @@ internal static class WindowsRuntimeExtensions
                 return interopReferences.CorLibTypeFactory.Void.MakePointerType();
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(module)!;
 
             if (typeDefinition.IsValueType)
             {
                 // If the type is blittable, then it's the same as the ABI type
-                if (type.IsBlittable(interopReferences))
+                if (type.IsBlittable(interopReferences, module))
                 {
                     return type.ToTypeDefOrRef().ToValueTypeSignature();
                 }
@@ -497,10 +501,11 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="TypeDefinition"/> represents a Windows Runtime managed-only type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the input type is a Windows Runtime managed-only type.</returns>
-        public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
+        public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences, ModuleDefinition module)
         {
-            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
+            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, module);
         }
 
         /// <summary>
@@ -583,14 +588,15 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="TypeSignature"/> represents a Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>Whether the type represents a Windows Runtime type.</returns>
-        public bool IsWindowsRuntimeType(InteropReferences interopReferences)
+        public bool IsWindowsRuntimeType(InteropReferences interopReferences, ModuleDefinition module)
         {
             // Check SZ arrays first, as that's the simplest case to handle.
             // Arrays are Windows Runtime types if the element type is one.
             if (signature is SzArrayTypeSignature arrayType)
             {
-                return arrayType.BaseType.IsWindowsRuntimeType(interopReferences);
+                return arrayType.BaseType.IsWindowsRuntimeType(interopReferences, module);
             }
 
             // Check constructed generics next, as they can only be a handful of well-known cases
@@ -617,7 +623,7 @@ internal static class WindowsRuntimeExtensions
                     }
 
                     // Otherwise, do the usual validation for all type arguments
-                    if (!typeArgument.IsWindowsRuntimeType(interopReferences))
+                    if (!typeArgument.IsWindowsRuntimeType(interopReferences, module))
                     {
                         return false;
                     }
@@ -635,7 +641,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            TypeDefinition type = signature.Resolve()!;
+            TypeDefinition type = signature.Resolve(module)!;
 
             // For all other cases, just check that the type is projected. This will also include
             // manually projected types that are defined in 'WinRT.Runtime.dll' (same attributes).
@@ -645,6 +651,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Gets the Windows Runtime metadata name for a <see cref="TypeSignature"/>, if available.
         /// </summary>
+        /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
         /// <returns>The Windows Runtime metadata name from the underlying type's <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
         /// <remarks>
         /// <para>
@@ -653,13 +660,13 @@ internal static class WindowsRuntimeExtensions
         /// For other types, it resolves the type definition directly.
         /// </para>
         /// </remarks>
-        public Utf8String? GetWindowsRuntimeMetadataName()
+        public Utf8String? GetWindowsRuntimeMetadataName(ModuleDefinition module)
         {
             return signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve()?.GetWindowsRuntimeMetadataName(),
-                ArrayTypeSignature array => array.BaseType.GetWindowsRuntimeMetadataName(),
-                _ => signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName()
+                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(module)?.GetWindowsRuntimeMetadataName(),
+                ArrayTypeSignature array => array.BaseType.GetWindowsRuntimeMetadataName(module),
+                _ => signature.ToTypeDefOrRef().Resolve(module)?.GetWindowsRuntimeMetadataName()
             };
         }
     }

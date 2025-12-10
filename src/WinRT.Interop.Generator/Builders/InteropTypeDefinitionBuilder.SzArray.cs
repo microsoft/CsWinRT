@@ -35,12 +35,12 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition marshallerType)
         {
             TypeSignature elementType = arrayType.BaseType;
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences, module);
 
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "Marshaller"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, module, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -161,7 +161,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             callbackType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersCallback"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, module, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -226,7 +226,7 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
-                        arrayType.BaseType.GetAbiType(interopReferences).MakePointerType().MakePointerType()]))
+                        arrayType.BaseType.GetAbiType(interopReferences, module).MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -300,7 +300,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, module, "Impl"),
                 vftblType: interopDefinitions.IReferenceArrayVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -330,7 +330,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, module, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.IReferenceArrayInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -370,7 +370,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, module, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -385,7 +385,7 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
-            CreateComInterfaceFlags flags = arrayType.IsTrackerSupportRequired(interopReferences)
+            CreateComInterfaceFlags flags = arrayType.IsTrackerSupportRequired(interopReferences, module)
                 ? CreateComInterfaceFlags.TrackerSupport
                 : CreateComInterfaceFlags.None;
 
@@ -488,7 +488,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType), // TODO
+                name: InteropUtf8NameFactory.TypeName(arrayType, module), // TODO
                 runtimeClassName: $"Windows.Foundation.IReferenceArray`1<{arrayType.BaseType}>", // TODO
                 comWrappersMarshallerAttributeType: arrayComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

@@ -54,9 +54,10 @@ internal static class InteropUtf8NameFactory
     /// Gets the name for a generated interop type.
     /// </summary>
     /// <param name="typeSignature">The source <see cref="TypeSignature"/> for the type to generate.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="nameSuffix">The optional name suffix to use.</param>
     /// <returns>The name to use.</returns>
-    public static Utf8String TypeName(TypeSignature typeSignature, string? nameSuffix = null)
+    public static Utf8String TypeName(TypeSignature typeSignature, ModuleDefinition module, string? nameSuffix = null)
     {
         DefaultInterpolatedStringHandler interpolatedStringHandler = new(literalLength: 2, formattedCount: 1);
 
@@ -64,6 +65,7 @@ internal static class InteropUtf8NameFactory
         static void AppendTypeName(
             ref DefaultInterpolatedStringHandler interpolatedStringHandler,
             TypeSignature typeSignature,
+            ModuleDefinition module,
             int depth)
         {
             // Special case for well known type identifiers (eg. 'string', 'int', etc.)
@@ -82,7 +84,7 @@ internal static class InteropUtf8NameFactory
 
             // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
             interpolatedStringHandler.AppendLiteral("<");
-            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature));
+            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature, module));
             interpolatedStringHandler.AppendLiteral(">");
 
             // If the type is generic, append the definition name and the type arguments
@@ -103,7 +105,7 @@ internal static class InteropUtf8NameFactory
 
                     // Append the type argument with the same format as the root type. This is
                     // important to ensure that nested generic types will be handled correctly.
-                    AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, depth: depth + 1);
+                    AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, module, depth: depth + 1);
                 }
 
                 interpolatedStringHandler.AppendLiteral(">");
@@ -167,7 +169,7 @@ internal static class InteropUtf8NameFactory
         }
 
         // Append the full type name first
-        AppendTypeName(ref interpolatedStringHandler, typeSignature, depth: 0);
+        AppendTypeName(ref interpolatedStringHandler, typeSignature, module, depth: 0);
 
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
@@ -192,9 +194,10 @@ internal static class InteropUtf8NameFactory
     /// </summary>
     /// <param name="assemblyName">The input assembly name to convert.</param>
     /// <param name="typeSignature">The type signature for which to convert.</param>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>The resulting assembly name to use.</returns>
     [return: NotNullIfNotNull(nameof(assemblyName))]
-    private static Utf8String? AssemblyNameOrWellKnownIdentifier(Utf8String? assemblyName, TypeSignature typeSignature)
+    private static Utf8String? AssemblyNameOrWellKnownIdentifier(Utf8String? assemblyName, TypeSignature typeSignature, ModuleDefinition module)
     {
         // Replace some assembly names with well known constants, to make the names more compact
         return assemblyName switch
@@ -203,7 +206,7 @@ internal static class InteropUtf8NameFactory
             { Value: "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" } => "#Windows"u8,
             { Value: "WinRT.Runtime" } => "#CsWinRT"u8,
             { Value: "WinRT.Runtime2" } => "#CsWinRT"u8,
-            _ => typeSignature.GetWindowsRuntimeMetadataName() ?? assemblyName
+            _ => typeSignature.GetWindowsRuntimeMetadataName(module) ?? assemblyName
         };
     }
 

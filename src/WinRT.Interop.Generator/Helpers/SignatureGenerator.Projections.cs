@@ -19,12 +19,17 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeSignature"><inheritdoc cref="GetSignature" path="/param[@name='type']/node()"/></param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
-    private static string? GenericInstance(GenericInstanceTypeSignature typeSignature, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? GenericInstance(
+        GenericInstanceTypeSignature typeSignature,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
         // If we fail to get the IID of the generic interface, we can't do anything else
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeSignature.GenericType, interopReferences, out Guid interfaceIid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeSignature.GenericType, interopReferences, module, out Guid interfaceIid))
         {
             return null;
         }
@@ -40,7 +45,7 @@ internal partial class SignatureGenerator
         foreach (TypeSignature argumentSignature in typeSignature.TypeArguments)
         {
             handler.AppendFormatted(';');
-            handler.AppendFormatted(GetSignature(argumentSignature, interopReferences, useWindowsUIXamlProjections));
+            handler.AppendFormatted(GetSignature(argumentSignature, interopReferences, module, useWindowsUIXamlProjections));
         }
 
         handler.AppendFormatted(')');
@@ -76,12 +81,14 @@ internal partial class SignatureGenerator
     /// <param name="typeFullName">The full name of the value type.</param>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
     private static string? ValueType(
         string typeFullName,
         TypeDefinition typeDefinition,
         InteropReferences interopReferences,
+        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         // Valid projected value types must always have at least one field
@@ -112,7 +119,7 @@ internal partial class SignatureGenerator
             }
 
             handler.AppendFormatted(';');
-            handler.AppendFormatted(GetSignature(fieldSignature, interopReferences, useWindowsUIXamlProjections));
+            handler.AppendFormatted(GetSignature(fieldSignature, interopReferences, module, useWindowsUIXamlProjections));
         }
 
         handler.AppendFormatted(')');
@@ -125,11 +132,16 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Delegate(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Delegate(
+        TypeDefinition typeDefinition,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
         // Just like for generic instantiations, we need to resolve the IID for the type first
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, module, out Guid iid))
         {
             return null;
         }
@@ -144,22 +156,24 @@ internal partial class SignatureGenerator
     /// <param name="typeFullName">The full name of the class type.</param>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
     private static string? Class(
         string typeFullName,
         TypeDefinition typeDefinition,
         InteropReferences interopReferences,
+        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         // If we can resolve the default interface type from the projected runtime class, use it
         if (TryGetDefaultInterfaceFromAttribute(typeDefinition, interopReferences, out TypeSignature? defaultInterface))
         {
-            return $"rc({typeFullName};{GetSignature(defaultInterface, interopReferences, useWindowsUIXamlProjections)})";
+            return $"rc({typeFullName};{GetSignature(defaultInterface, interopReferences, module, useWindowsUIXamlProjections)})";
         }
 
         // Otherwise, get the IID from the type definition and use it
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, module, out Guid iid))
         {
             return null;
         }
@@ -172,11 +186,16 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Interface(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Interface(
+        TypeDefinition typeDefinition,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
         // For all interface types, we should always be able to resolve their IID
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, module, out Guid iid))
         {
             return null;
         }
@@ -190,12 +209,14 @@ internal partial class SignatureGenerator
     /// <param name="typeSignature"><inheritdoc cref="GetSignature" path="/param[@name='type']/node()"/></param>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
     private static string? Box(
         BoxedTypeSignature typeSignature,
         TypeDefinition typeDefinition,
         InteropReferences interopReferences,
+        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         // Boxed type signatures are only used to represent 'IReference<T>' instantiations
@@ -209,7 +230,7 @@ internal partial class SignatureGenerator
         _ = WellKnownInterfaceIIDs.TryGetGUID(interopReferences.Nullable1, interopReferences, out Guid iid);
 
         // Construct the signature for the boxed delegate (the base type will be the possibly constructed delegate)
-        return $"pinterface({{{iid}}};{GetSignature(typeSignature.BaseType, interopReferences, useWindowsUIXamlProjections)})";
+        return $"pinterface({{{iid}}};{GetSignature(typeSignature.BaseType, interopReferences, module, useWindowsUIXamlProjections)})";
     }
 
     /// <summary>
@@ -217,9 +238,14 @@ internal partial class SignatureGenerator
     /// </summary>
     /// <param name="typeSignature"><inheritdoc cref="GetSignature" path="/param[@name='type']/node()"/></param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
+    /// <param name="module"><inheritdoc cref="GetSignature" path="/param[@name='module']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Array(SzArrayTypeSignature typeSignature, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Array(
+        SzArrayTypeSignature typeSignature,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
-        return $"pinterface({{61c17707-2d65-11e0-9ae8-d48564015472}};{GetSignature(typeSignature.BaseType, interopReferences, useWindowsUIXamlProjections)})";
+        return $"pinterface({{61c17707-2d65-11e0-9ae8-d48564015472}};{GetSignature(typeSignature.BaseType, interopReferences, module, useWindowsUIXamlProjections)})";
     }
 }

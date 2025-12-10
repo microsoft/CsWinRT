@@ -66,7 +66,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Otherwise, we must construct a new specialized vtable type
             TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, module, "Vftbl"),
                 keyType: keyType,
                 valueType: module.CorLibTypeFactory.Void,
                 interopReferences: interopReferences,
@@ -103,7 +103,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             mapViewMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IMapViewMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, module, "IMapViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
@@ -182,7 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             readOnlyDictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IReadOnlyDictionaryMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, module, "IReadOnlyDictionaryMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
@@ -438,7 +438,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, module, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -636,7 +636,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, module, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -670,7 +670,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, module),
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
