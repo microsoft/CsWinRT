@@ -35,6 +35,9 @@ public partial class CustomPropertyProviderGenerator
                     WriteCustomPropertyProviderGetIndexedProperty,
                     WriteCustomPropertyProviderGetStringRepresentation]);
 
+            // Emit the additional property implementation types, if needed
+            WriteCustomPropertyImplementationTypes(info, writer);
+
             // Add the source file for the annotated type
             context.AddSource($"{info.TypeHierarchy.FullyQualifiedMetadataName}.g.cs", writer.ToString());
         }
@@ -67,7 +70,7 @@ public partial class CustomPropertyProviderGenerator
             using (writer.WriteBlock())
             {
                 // Fast-path if there are no non-indexer custom properties
-                if (!info.CustomProperties.Any(static info => info.FullyQualifiedIndexerTypeName is null))
+                if (!info.CustomProperties.Any(static info => !info.IsIndexer))
                 {
                     writer.WriteLine("return null;");
 
@@ -81,8 +84,7 @@ public partial class CustomPropertyProviderGenerator
                     // Emit a switch case for each available property
                     foreach (CustomPropertyInfo propertyInfo in info.CustomProperties)
                     {
-                        // Skip all indexer properties
-                        if (propertyInfo.FullyQualifiedIndexerTypeName is not null)
+                        if (propertyInfo.IsIndexer)
                         {
                             continue;
                         }
@@ -112,7 +114,7 @@ public partial class CustomPropertyProviderGenerator
             using (writer.WriteBlock())
             {
                 // Fast-path if there are no indexer custom properties
-                if (!info.CustomProperties.Any(static info => info.FullyQualifiedIndexerTypeName is not null))
+                if (!info.CustomProperties.Any(static info => info.IsIndexer))
                 {
                     writer.WriteLine("return null;");
 
@@ -122,8 +124,7 @@ public partial class CustomPropertyProviderGenerator
                 // Switch over the type of all available indexer properties
                 foreach (CustomPropertyInfo propertyInfo in info.CustomProperties)
                 {
-                    // Skip all not indexer properties
-                    if (propertyInfo.FullyQualifiedIndexerTypeName is null)
+                    if (!propertyInfo.IsIndexer)
                     {
                         continue;
                     }
@@ -157,6 +158,214 @@ public partial class CustomPropertyProviderGenerator
                     return ToString();
                 }
                 """, isMultiline: true);
+        }
+
+        /// <summary>
+        /// Writes the <c>ICustomProperty</c> implementation types.
+        /// </summary>
+        /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
+        /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
+        private static void WriteCustomPropertyImplementationTypes(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        {
+            // If we have no custom properties, we don't need to emit any additional code
+            if (info.CustomProperties.IsEmpty)
+            {
+                return;
+            }
+
+            // All generated types go in this well-known namespace
+            writer.WriteLine();
+            writer.WriteLine("namespace WindowsRuntime.Xaml.Generated");
+
+            using (writer.WriteBlock())
+            {
+                // Using declarations for well-known types we can refer to directly
+                writer.WriteLine("using global::System;");
+                writer.WriteLine($"using global:{info.FullyQualifiedCustomPropertyProviderInterfaceName};");
+                writer.WriteLine();
+
+                // Write all custom property implementation types
+                for (int i = 0; i < info.CustomProperties.Length; i++)
+                {
+                    // Ensure members are correctly separated by one line
+                    if (i > 0)
+                    {
+                        writer.WriteLine();
+                    }
+
+                    CustomPropertyInfo propertyInfo = info.CustomProperties[i];
+
+                    // Generate the correct implementation types for normal properties or indexer properties
+                    if (propertyInfo.IsIndexer)
+                    {
+                        WriteIndexedCustomPropertyImplementationType(info, propertyInfo, writer);
+                    }
+                    else
+                    {
+                        WriteCustomPropertyImplementationType(info, propertyInfo, writer);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes a single <c>ICustomProperty</c> implementation type.
+        /// </summary>
+        /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
+        /// <param name="propertyInfo">The input <see cref="CustomPropertyInfo"/> instance for the property to generate the implementation type for.</param>
+        /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
+        private static void WriteCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, IndentedTextWriter writer)
+        {
+            string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
+
+            // Emit a type as follows:
+            //
+            // file sealed class <IMPLEMENTATION_TYPE_NAME> : <CUSTOM_PROPERTY_INTERFACE_TYPE>
+            writer.WriteLine($"file sealed class {implementationTypeName} : {info.FullyQualifiedCustomPropertyInterfaceName}");
+
+            using (writer.WriteBlock())
+            {
+                // Emit all 'ICustomProperty' members for an indexer proprty, and the singleton field
+                writer.WriteLine($$"""
+                    /// <summary>
+                    /// Gets the singleton <see cref="{{implementationTypeName}}"/> instance for this custom property.
+                    /// </summary>
+                    public static readonly {{implementationTypeName}} Instance = new();
+
+                    /// <inheritdoc/>
+                    public bool CanRead => {{propertyInfo.CanRead.ToString().ToLowerInvariant()}};
+
+                    /// <inheritdoc/>
+                    public bool CanWrite => {{propertyInfo.CanWrite.ToString().ToLowerInvariant()}};
+
+                    /// <inheritdoc/>
+                    public string Name => "{{propertyInfo.Name}}";
+
+                    /// <inheritdoc/>
+                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
+                    """, isMultiline: true);
+
+                // Emit the normal property accessors (not supported)
+                writer.WriteLine();
+                writer.WriteLine("""
+                    /// <inheritdoc/>
+                    public object GetValue(object target)
+                    {
+                        throw new NotSupportedException();
+                    }
+                        
+                    /// <inheritdoc/>
+                    public void SetValue(object target, object value)
+                    {
+                        throw new NotSupportedException();
+                    }
+                    """, isMultiline: true);
+
+                // Emit the property accessors (indexer properties can only be instance properties)
+                writer.WriteLine();
+                writer.WriteLine($$"""
+                    /// <inheritdoc/>
+                    public object GetIndexedValue(object target, object index)
+                    {
+                        return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index];
+                    }
+                        
+                    /// <inheritdoc/>
+                    public void SetIndexedValue(object target, object value, object index)
+                    {
+                        (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index] = ({{propertyInfo.FullyQualifiedTypeName}})value;
+                    }
+                    """, isMultiline: true);
+            }
+        }
+
+        /// <summary>
+        /// Writes a single indexed <c>ICustomProperty</c> implementation type.
+        /// </summary>
+        /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
+        /// <param name="propertyInfo">The input <see cref="CustomPropertyInfo"/> instance for the property to generate the implementation type for.</param>
+        /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
+        private static void WriteIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, IndentedTextWriter writer)
+        {
+            string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
+
+            // Emit the implementation type, same as above
+            writer.WriteLine($"file sealed class {implementationTypeName} : {info.FullyQualifiedCustomPropertyInterfaceName}");
+
+            using (writer.WriteBlock())
+            {
+                // Emit all 'ICustomProperty' members for a normal proprty, and the singleton field
+                writer.WriteLine($$"""
+                    /// <summary>
+                    /// Gets the singleton <see cref="{{implementationTypeName}}"/> instance for this custom property.
+                    /// </summary>
+                    public static readonly {{implementationTypeName}} Instance = new();
+
+                    /// <inheritdoc/>
+                    public bool CanRead => {{propertyInfo.CanRead.ToString().ToLowerInvariant()}};
+
+                    /// <inheritdoc/>
+                    public bool CanWrite => {{propertyInfo.CanWrite.ToString().ToLowerInvariant()}};
+
+                    /// <inheritdoc/>
+                    public string Name => "{{propertyInfo.Name}}";
+
+                    /// <inheritdoc/>
+                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
+                    """, isMultiline: true);
+
+                // Emit the right dispatching code depending on whether the property is static
+                if (propertyInfo.IsStatic)
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($$"""
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return {{info.TypeHierarchy.GetFullyQualifiedTypeName()}}.{{propertyInfo.Name}};
+                        }
+                        
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            {{info.TypeHierarchy.GetFullyQualifiedTypeName()}}.{{propertyInfo.Name}} = ({{propertyInfo.FullyQualifiedTypeName}})value;
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($$"""
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target).{{propertyInfo.Name}};
+                        }
+                        
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target).{{propertyInfo.Name}} = ({{propertyInfo.FullyQualifiedTypeName}})value;
+                        }
+                        """, isMultiline: true);
+                }
+
+                // Emit the indexer property accessors (not supported)
+                writer.WriteLine();
+                writer.WriteLine("""                    
+                    /// <inheritdoc/>
+                    public object GetIndexedValue(object target, object index)
+                    {
+                        throw new NotSupportedException();
+                    }
+                    
+                    /// <inheritdoc/>
+                    public void SetIndexedValue(object target, object value, object index)
+                    {
+                        throw new NotSupportedException();
+                    }
+                    """, isMultiline: true);
+            }
         }
     }
 }
