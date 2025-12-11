@@ -164,7 +164,10 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncActionWithProgress1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperation1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperationWithProgress2);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperationWithProgress2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IMapChangedEventArgs1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableMap2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableVector1);
         }
 
         /// <summary>
@@ -180,9 +183,20 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICommand) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyCollectionChanged) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyDataErrorInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime non-generic interface type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime non-generic interface type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs);
         }
 
         /// <summary>
@@ -209,7 +223,9 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationCompletedHandler1) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationProgressHandler2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.MapChangedEventHandler2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.VectorChangedEventHandler1);
         }
 
         /// <summary>
@@ -621,6 +637,18 @@ internal static class WindowsRuntimeExtensions
             return signature is GenericInstanceTypeSignature genericSignature
                 ? genericSignature.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences)
                 : signature.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences);
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> represents a manually-projected Windows Runtime interface type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime interface type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeInterfaceType(InteropReferences interopReferences)
+        {
+            return signature is GenericInstanceTypeSignature genericSignature
+                ? genericSignature.GenericType.IsManuallyProjectedWindowsRuntimeGenericInterfaceType(interopReferences)
+                : signature.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences);
         }
 
         /// <summary>
