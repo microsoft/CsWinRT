@@ -59,7 +59,7 @@ internal sealed class PathAssemblyResolver : IAssemblyResolver
         // Find the first match in our list of reference paths, and load that assembly
         foreach (string path in _referencePath)
         {
-            if (Path.GetFileNameWithoutExtension(path.AsSpan()).SequenceEqual(assembly.Name))
+            if (Path.GetFileNameWithoutExtension(Path.Normalize(path).AsSpan()).SequenceEqual(assembly.Name))
             {
                 return _cache.GetOrAdd(
                     key: assembly,

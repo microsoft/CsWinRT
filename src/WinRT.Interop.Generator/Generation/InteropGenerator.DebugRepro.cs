@@ -41,7 +41,7 @@ internal partial class InteropGenerator
         // Get all entries of interest
         ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtgen.rsp");
         ZipArchiveEntry originalPathsEntry = archive.Entries.Single(entry => entry.Name == "original-paths.json");
-        ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(entry.Name) == ".dll")];
+        ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(Path.Normalize(entry.Name)) == ".dll")];
 
         token.ThrowIfCancellationRequested();
 
@@ -77,7 +77,7 @@ internal partial class InteropGenerator
 
             // Construct the path in the temporary subfolder with the original .dll name
             string originalPath = originalPaths[dllEntry.Name];
-            string originalName = Path.GetFileName(originalPath);
+            string originalName = Path.GetFileName(Path.Normalize(originalPath));
             string destinationPath = Path.Combine(destinationFolder, originalName);
 
             // Extract the .dll to the new destination path
@@ -235,7 +235,7 @@ internal partial class InteropGenerator
     /// <returns>The hashed filename.</returns>
     private static string GetHashedFileName(string filePath)
     {
-        string fileName = Path.GetFileName(filePath);
+        string fileName = Path.GetFileName(Path.Normalize(filePath));
         byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
         byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
         string hash = Convert.ToHexString(hashData);
