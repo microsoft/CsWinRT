@@ -218,10 +218,23 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // We can skip all projected Windows Runtime types early, as they don't need CCW support
+                if (type.IsProjectedWindowsRuntimeType)
+                {
+                    continue;
+                }
+
+                // We'll need to look up attributes and enumerate interfaces across the entire type
+                // hierarchy for this type, so make sure that we can resolve all types from it first.
+                if (!type.IsTypeHierarchyFullyResolvable(out ITypeDefOrRef? failedResolutionBaseType))
+                {
+                    WellKnownInteropExceptions.UserDefinedTypeNotFullyResolvedWarning(failedResolutionBaseType, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                    continue;
+                }
+
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
-                if (!type.IsPossiblyWindowsRuntimeExposedType ||
-                    type.IsProjectedWindowsRuntimeType ||
-                    type.IsWindowsRuntimeManagedOnlyType(interopReferences))
+                if (!type.IsPossiblyWindowsRuntimeExposedType || type.IsWindowsRuntimeManagedOnlyType(interopReferences))
                 {
                     continue;
                 }

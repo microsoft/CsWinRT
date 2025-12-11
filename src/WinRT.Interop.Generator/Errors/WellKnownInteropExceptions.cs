@@ -566,11 +566,19 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve a Windows Runtime interface type.
+    /// Failed to resolve a base type for a Windows Runtime class type.
     /// </summary>
     public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
     {
         return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a base type for a user-defined type.
+    /// </summary>
+    public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
+    {
+        return Warning(67, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
     }
 
     /// <summary>
