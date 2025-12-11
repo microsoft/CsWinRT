@@ -55,11 +55,10 @@ internal static class TypeDefinitionExtensions
         /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
+        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType)
         {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf())
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -220,31 +219,38 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Enumerates all base types of the specified type, including itself.
         /// </summary>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>The sequence of base types for the input type, including itself.</returns>
-        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(CorLibTypeFactory corLibTypeFactory)
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf()
         {
             yield return type;
 
-            for (TypeDefinition? baseType = type.BaseType?.Resolve();
-                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, corLibTypeFactory.Object);
-                baseType = baseType.BaseType?.Resolve())
+            ITypeDefOrRef? baseType = type.BaseType;
+
+            while (baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object }))
             {
-                yield return baseType;
+                // If we can't resolve the current base type, we have to stop.
+                // Callers should validate the type hierarchy before calling this.
+                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
+                {
+                    yield break;
+                }
+
+                yield return baseDefinition;
+
+                baseType = baseDefinition.BaseType;
             }
         }
 
         /// <summary>
         /// Enumerates all interface types implementation by the specified type, including those implemented by base types.
         /// </summary>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>The sequence of interface types implemented by the input type.</returns>
         /// <remarks>
         /// This method might return the same interface types multiple times, if implemented by multiple types in the hierarchy.
         /// </remarks>
-        public IEnumerable<InterfaceImplementation> EnumerateAllInterfaces(CorLibTypeFactory corLibTypeFactory)
+        public IEnumerable<InterfaceImplementation> EnumerateAllInterfaces()
         {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf())
             {
                 foreach (InterfaceImplementation implementation in currentType.Interfaces)
                 {

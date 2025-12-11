@@ -249,7 +249,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces(module.CorLibTypeFactory))
+                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces())
                 {
                     // If the current implementation has no valid interface, skip it.
                     // This should never really happen for valid .NET assemblies.

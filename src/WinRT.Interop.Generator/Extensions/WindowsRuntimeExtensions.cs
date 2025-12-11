@@ -528,7 +528,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the input type is a Windows Runtime managed-only type.</returns>
         public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
         {
-            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
+            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute);
         }
 
         /// <summary>
