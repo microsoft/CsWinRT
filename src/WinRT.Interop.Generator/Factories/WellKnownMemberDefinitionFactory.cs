@@ -49,7 +49,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
 
         // Select the property and accessor name based on 'propertyName'
         Utf8String effectivePropertyName = $"IID_{propertyName}";
@@ -74,7 +74,7 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
+            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor) },
             GetMethod = get_IidMethod
         };
     }
@@ -95,7 +95,7 @@ internal static class WellKnownMemberDefinitionFactory
         out PropertyDefinition iidProperty)
     {
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
 
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(
@@ -117,7 +117,7 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: PropertyAttributes.None,
             signature: PropertySignature.FromGetMethod(get_IidMethod))
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
+            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor) },
             GetMethod = get_IidMethod
         };
     }

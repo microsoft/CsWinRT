@@ -41,7 +41,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType()]));
+                        elementType.GetAbiType(interopReferences).MakePointerType()]));
 
             // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
             // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
@@ -53,7 +53,7 @@ internal partial class InteropMethodDefinitionFactory
                     {
                         { Ldarg_0 },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe },
                         { Ret }
                     }
                 };
@@ -66,7 +66,7 @@ internal partial class InteropMethodDefinitionFactory
                     {
                         { Ldarg_0 },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe },
                         { Ret }
                     }
                 };
@@ -79,7 +79,7 @@ internal partial class InteropMethodDefinitionFactory
                     {
                         { Ldarg_0 },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeObjectArrayUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeObjectArrayUnsafe },
                         { Ret }
                     }
                 };
@@ -92,7 +92,7 @@ internal partial class InteropMethodDefinitionFactory
                     {
                         { Ldarg_0 },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeBlittableArrayUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeBlittableArrayUnsafe },
                         { Ret }
                     }
                 };
