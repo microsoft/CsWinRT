@@ -550,6 +550,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve a generic type signature.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(64, $"Failed to resolve the generic type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// Failed to resolve an SZ array type signature
+    /// </summary>
+    public static WellKnownInteropWarning SzArrayTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(65, $"Failed to resolve the SZ array type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
