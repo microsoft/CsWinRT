@@ -123,7 +123,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Int32.MakePointerType()]);
+                interopReferences.TrustLevel.MakePointerType()]);
     }
 
     /// <summary>

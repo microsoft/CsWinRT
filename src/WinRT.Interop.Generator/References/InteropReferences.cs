@@ -939,6 +939,11 @@ internal sealed class InteropReferences
     public TypeReference MapChangedEventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "MapChangedEventHandlerEventSource`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.TrustLevel</c>.
+    /// </summary>
+    public TypeReference TrustLevel => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "TrustLevel"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Point</c>.
     /// </summary>
     public TypeReference Point => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Point"u8);
