@@ -401,6 +401,20 @@ internal partial class InteropGenerator
                     // We also want to crawl base interfaces
                     foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
                     {
+                        if (!interfaceSignature.IsFullyResolvable(out _))
+                        {
+                            // Also log a warning the first time we fail to resolve one of the recursively discovered generic
+                            // instantiations from this module. The enumeration also yields back interfaces that couldn't be
+                            // resolved, as that step is performed after yielding. This is done so we can have our own logic
+                            // to log warnings or throw errors from here while we're processing interfaces in this module.
+                            if (discoveryState.TrackFailedResolutionType(typeSignature, module))
+                            {
+                                WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
+                            }
+
+                            continue;
+                        }
+
                         discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
                     }
 
