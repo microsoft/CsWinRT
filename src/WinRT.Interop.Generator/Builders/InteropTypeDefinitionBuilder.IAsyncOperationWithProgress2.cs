@@ -46,7 +46,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType(resultType, progressType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType(resultType, progressType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(operationMethodsType);
@@ -70,7 +70,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2get_Progress(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2get_Progress(resultType, progressType),
                 method: get_ProgressMethod);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationProgressHandler<TResult, TProgress>' instance to native
@@ -88,7 +88,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Progress(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Progress(resultType, progressType),
                 method: set_ProgressMethod);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>' instance to managed
@@ -106,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2get_Completed(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2get_Completed(resultType, progressType),
                 method: get_CompletedMethod);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>' instance to native
@@ -124,7 +124,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Completed(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2set_Completed(resultType, progressType),
                 method: set_CompletedMethod);
 
             // Define the 'GetResults' method:
@@ -136,7 +136,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             operationMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2GetResults(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgressMethodsImpl2GetResults(resultType, progressType),
                 method: getResultsMethod);
         }
 
@@ -273,11 +273,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor) },
                 Interfaces =
                 {
-                    new InterfaceImplementation(operationType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IAsyncInfo.Import(module))
+                    new InterfaceImplementation(operationType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IAsyncInfo)
                 }
             };
 
@@ -294,11 +294,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ProgressMethod = new(
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.get_Progress",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(asyncOperationProgressHandlerType.Import(module)));
+                signature: MethodSignature.CreateInstance(asyncOperationProgressHandlerType));
 
             // Add and implement the 'get_Progress' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgress2get_Progress(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgress2get_Progress(resultType, progressType),
                 method: get_ProgressMethod);
 
             // Create a body for the 'get_Progress' method
@@ -315,11 +315,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [asyncOperationProgressHandlerType.Import(module)]));
+                    parameterTypes: [asyncOperationProgressHandlerType]));
 
             // Add and implement the 'set_Progress' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgress2set_Progress(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgress2set_Progress(resultType, progressType),
                 method: set_ProgressMethod);
 
             // Create a body for the 'set_Progress' method
@@ -349,11 +349,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CompletedMethod = new(
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.get_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(asyncOperationWithProgressCompletedHandlerType.Import(module)));
+                signature: MethodSignature.CreateInstance(asyncOperationWithProgressCompletedHandlerType));
 
             // Add and implement the 'get_Completed' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgress2get_Completed(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgress2get_Completed(resultType, progressType),
                 method: get_CompletedMethod);
 
             // Create a body for the 'get_Completed' method
@@ -370,11 +370,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [asyncOperationWithProgressCompletedHandlerType.Import(module)]));
+                    parameterTypes: [asyncOperationWithProgressCompletedHandlerType]));
 
             // Add and implement the 'set_Completed' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgress2set_Completed(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgress2set_Completed(resultType, progressType),
                 method: set_CompletedMethod);
 
             // Create a body for the 'set_Completed' method
@@ -401,11 +401,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getResultsMethod = new(
                 name: $"Windows.Foundation.IAsyncOperationWithProgress<{resultType.FullName},{progressType.FullName}>.GetResults",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(resultType.Import(module)));
+                signature: MethodSignature.CreateInstance(resultType));
 
             // Add and implement the 'GetResults' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IAsyncOperationWithProgress2GetResults(resultType, progressType).Import(module),
+                declaration: interopReferences.IAsyncOperationWithProgress2GetResults(resultType, progressType),
                 method: getResultsMethod);
 
             // Create a body for the 'GetResults' method

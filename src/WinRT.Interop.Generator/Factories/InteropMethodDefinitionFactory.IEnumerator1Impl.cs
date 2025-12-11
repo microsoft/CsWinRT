@@ -51,7 +51,7 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
+                        elementType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -60,7 +60,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'get_Current' method
@@ -83,9 +83,9 @@ internal static partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType).Import(module) },
-                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType).Import(module) },
-                    { Callvirt, interopReferences.IEnumeratorAdapter1get_Current(elementType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
+                    { Callvirt, interopReferences.IEnumeratorAdapter1get_Current(elementType) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -109,7 +109,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -163,7 +163,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'get_HasCurrent' method
             boolMethod.CilMethodBody = new CilMethodBody()
@@ -185,9 +185,9 @@ internal static partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType).Import(module) },
-                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType).Import(module) },
-                    { Callvirt, adapterMethod.Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
+                    { Callvirt, adapterMethod },
                     { Stind_I1 },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -211,7 +211,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -244,7 +244,7 @@ internal static partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
+                        elementType.GetAbiType(interopReferences).MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
@@ -255,7 +255,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_implementation = new(Nop);
 
             // Create a method body for the 'get_Current' method
@@ -267,7 +267,7 @@ internal static partial class InteropMethodDefinitionFactory
                 LocalVariables =
                 {
                     new CilLocalVariable(module.CorLibTypeFactory.Int32),
-                    new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType(elementType).Import(module))
+                    new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType(elementType))
                 },
                 Instructions =
                 {
@@ -286,8 +286,8 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType).Import(module) },
-                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
                     { Stloc_1 },
                     { nop_implementation },
                     { Ldc_I4_0 },
@@ -312,7 +312,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
