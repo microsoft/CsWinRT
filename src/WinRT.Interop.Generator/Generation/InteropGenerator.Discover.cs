@@ -400,14 +400,10 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Gather all known delegate types. We want to gather all projected delegate types, plus any
-                // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
-                // We need to check whether the type is a projected Windows Runtime type from the resolved type
-                // definition, and not from the generic type definition we can retrieve from the type signature.
-                // If we did the latter, the resulting type definition would not include any custom attributes.
-                if (typeDefinition.IsDelegate &&
-                    (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
-                     typeDefinition.IsProjectedWindowsRuntimeType))
+                // Gather all Windows Runtime delegate types. We want to gather all projected delegate types, plus
+                // any custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
+                // The filtering is already done above, so here we can rely the type will be of one of those kinds.
+                if (typeDefinition.IsDelegate)
                 {
                     discoveryState.TrackGenericDelegateType(typeSignature);
 

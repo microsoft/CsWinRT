@@ -85,9 +85,10 @@ internal partial class InteropTypeDefinitionBuilder
                     // Add the entry from the ABI type in 'WinRT.Interop.dll'
                     entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod));
                 }
-                else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences))
+                else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences) || typeSignature.IsManuallyProjectedWindowsRuntimeInterfaceType(interopReferences))
                 {
-                    // For (non-generic) custom mapped types, their ABI types are in 'WinRT.Runtime.dll', so we use those directly
+                    // For (non-generic) custom-mapped types, their ABI types are in 'WinRT.Runtime.dll', so we use those directly.
+                    // This also applies to all manually-projected interface types (e.g. 'IAsyncAction'), they have the same location.
                     TypeReference typeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference($"ABI.{typeSignature.Namespace}", $"{typeSignature.Name}Impl");
                     MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
 
