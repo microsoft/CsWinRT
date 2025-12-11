@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 
 #pragma warning disable IDE0046
 
@@ -23,6 +24,32 @@ internal static class TypeDefinitionExtensions
         /// Gets whether a given type is static.
         /// </summary>
         public bool IsStatic => type.IsAbstract && type.IsSealed;
+
+        /// <summary>
+        /// Gets a value indicating whether a given <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.
+        /// </summary>
+        /// <param name="failedResolutionBaseType">The <see cref="ITypeDefOrRef"/> for the first base type that failed resolution, if any.</param>
+        /// <returns>Whether the input <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.</returns>
+        public bool IsTypeHierarchyFullyResolvable([NotNullWhen(false)] out ITypeDefOrRef? failedResolutionBaseType)
+        {
+            ITypeDefOrRef? baseType = type.BaseType;
+
+            while (baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object }))
+            {
+                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
+                {
+                    failedResolutionBaseType = baseType;
+
+                    return false;
+                }
+
+                baseType = baseDefinition.BaseType;
+            }
+
+            failedResolutionBaseType = null;
+
+            return true;
+        }
 
         /// <summary>
         /// Determines whether a type has or inherits an attribute that matches a particular type.

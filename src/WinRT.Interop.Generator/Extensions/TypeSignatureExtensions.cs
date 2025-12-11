@@ -17,6 +17,8 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeSignature"/> instance can be fully resolved to type definitions.
         /// </summary>
+        /// <param name="definition">The resulting <see cref="TypeDefinition"/>, if the type can be resolved.</param>
+        /// <returns>Whether the type can be fully resolved.</returns>
         public bool IsFullyResolvable([NotNullWhen(true)] out TypeDefinition? definition)
         {
             definition = signature.Resolve();
