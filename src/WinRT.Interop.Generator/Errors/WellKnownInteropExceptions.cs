@@ -566,6 +566,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve a Windows Runtime interface type.
+    /// </summary>
+    public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
+    {
+        return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

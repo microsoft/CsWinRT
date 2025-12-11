@@ -167,10 +167,18 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // If the base type is also a projected Windows Runtime type, track it
-                if (type.BaseType.IsProjectedWindowsRuntimeType)
+                // We need to resolve the base type to be able to look up attributes on it
+                if (!type.BaseType.IsFullyResolvable(out TypeDefinition? baseType))
                 {
-                    discoveryState.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
+                    WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(type.BaseType, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                    continue;
+                }
+
+                // If the base type is also a projected Windows Runtime type, track it
+                if (baseType.IsProjectedWindowsRuntimeType)
+                {
+                    discoveryState.TrackTypeHierarchyEntry(type.FullName, baseType.FullName);
                 }
             }
         }
