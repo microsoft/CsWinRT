@@ -558,7 +558,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve an SZ array type signature
+    /// Failed to resolve an SZ array type signature.
     /// </summary>
     public static WellKnownInteropWarning SzArrayTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
     {
