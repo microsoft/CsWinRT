@@ -474,6 +474,12 @@ internal static class WindowsRuntimeExtensions
         {
             get
             {
+                // Projected Windows Runtime classes can't be generic
+                if (type.HasGenericParameters)
+                {
+                    return false;
+                }
+
                 // We only care about classes
                 if (type is not { IsClass: true, IsValueType: false, IsDelegate: false })
                 {
