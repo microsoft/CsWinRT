@@ -78,7 +78,7 @@ internal static partial class InteropMethodRewriteFactory
         }
 
         // Special case 'object', we'll directly use 'WindowsRuntimeObjectMarshaller' for it
-        if (type.IsTypeOfObject(interopReferences))
+        if (type.IsTypeOfObject())
         {
             return interopReferences.WindowsRuntimeObjectMarshaller;
         }

@@ -6,6 +6,7 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -77,19 +78,18 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="string"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="string"/> type.</returns>
-        public bool IsTypeOfString(InteropReferences interopReferences)
+        public bool IsTypeOfString()
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String);
+            return type is CorLibTypeSignature { ElementType: ElementType.String };
         }
 
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="object"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="object"/> type.</returns>
-        public bool IsTypeOfObject(InteropReferences interopReferences)
+        public bool IsTypeOfObject()
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object);
+            return type is CorLibTypeSignature { ElementType: ElementType.Object };
         }
 
         /// <summary>
@@ -332,7 +332,7 @@ internal static class WindowsRuntimeExtensions
             if (!type.IsValueType)
             {
                 // 'string' objects don't need tracker support, as they can't reference anything
-                if (type.IsTypeOfString(interopReferences))
+                if (type.IsTypeOfString())
                 {
                     return false;
                 }
