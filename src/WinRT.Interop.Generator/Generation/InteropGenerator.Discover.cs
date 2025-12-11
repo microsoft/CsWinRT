@@ -242,7 +242,7 @@ internal partial class InteropGenerator
                     {
                         // Make sure we can resolve the interface type fully, which we should always be able to do.
                         // This can really only fail for some constructed generics, for invalid type arguments.
-                        if (!interfaceSignature.IsFullyResolvable)
+                        if (!interfaceSignature.IsFullyResolvable(out _))
                         {
                             WellKnownInteropExceptions.WindowsRuntimeInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -256,7 +256,7 @@ internal partial class InteropGenerator
                     else if (implementation.Interface.IsGeneratedComInterfaceType)
                     {
                         // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                        if (implementation.Interface.Resolve() is not TypeDefinition interfaceDefinition)
+                        if (!implementation.Interface.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
                         {
                             WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -338,7 +338,7 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
                 {
                     continue;
                 }
@@ -372,8 +372,6 @@ internal partial class InteropGenerator
 
                     continue;
                 }
-
-                TypeDefinition typeDefinition = typeSignature.Resolve()!;
 
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
                 // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
@@ -437,7 +435,7 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(out _))
                 {
                     continue;
                 }

@@ -265,9 +265,9 @@ internal static class TypeDefinitionExtensions
                 yield return interfaceSignature;
 
                 // Also recurse on the base interfaces
-                if (interfaceSignature.IsFullyResolvable)
+                if (interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
                 {
-                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceSignature.Resolve()!.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
+                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceDefinition.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
                     {
                         yield return baseInterfaceImplementation;
                     }
