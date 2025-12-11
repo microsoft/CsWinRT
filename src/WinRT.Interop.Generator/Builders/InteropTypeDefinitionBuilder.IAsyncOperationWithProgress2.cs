@@ -499,7 +499,12 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // TODO
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncOperation1Impl.GetResults(
+                operationType: operationType,
+                getResultsMethod: interopReferences.IAsyncOperationWithProgress2GetResults(resultType, progressType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
@@ -514,7 +519,8 @@ internal partial class InteropTypeDefinitionBuilder
                     get_ProgressMethod,
                     set_ProgressMethod,
                     get_CompletedMethod,
-                    set_CompletedMethod]);
+                    set_CompletedMethod,
+                    getResultsMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, operationType, "Impl");
