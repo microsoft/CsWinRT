@@ -161,7 +161,7 @@ internal partial class InteropMethodRewriteFactory
                         new CilInstruction(Ret)]);
                 }
             }
-            else if (returnType.IsTypeOfString(interopReferences))
+            else if (returnType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
                 RewriteBody(

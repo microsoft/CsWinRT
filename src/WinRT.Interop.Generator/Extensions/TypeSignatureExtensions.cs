@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -15,30 +17,31 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeSignature"/> instance can be fully resolved to type definitions.
         /// </summary>
-        public bool IsFullyResolvable
+        /// <param name="definition">The resulting <see cref="TypeDefinition"/>, if the type can be resolved.</param>
+        /// <returns>Whether the type can be fully resolved.</returns>
+        public bool IsFullyResolvable([NotNullWhen(true)] out TypeDefinition? definition)
         {
-            get
-            {
-                // Ensure that we can resolve the type (if we can't, we're likely missing a .dll)
-                if (signature.Resolve() is null)
-                {
-                    return false;
-                }
+            definition = signature.Resolve();
 
-                // Recurse on all type arguments as well
-                if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            // Ensure that we can resolve the type (if we can't, we're likely missing a .dll)
+            if (definition is null)
+            {
+                return false;
+            }
+
+            // Recurse on all type arguments as well
+            if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            {
+                foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
                 {
-                    foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
+                    if (!typeArgument.IsFullyResolvable(out _))
                     {
-                        if (!typeArgument.IsFullyResolvable)
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
-
-                return true;
             }
+
+            return true;
         }
     }
 }

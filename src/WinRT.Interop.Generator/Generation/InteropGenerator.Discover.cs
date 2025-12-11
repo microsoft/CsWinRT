@@ -167,10 +167,18 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // If the base type is also a projected Windows Runtime type, track it
-                if (type.BaseType.IsProjectedWindowsRuntimeType)
+                // We need to resolve the base type to be able to look up attributes on it
+                if (!type.BaseType.IsFullyResolvable(out TypeDefinition? baseType))
                 {
-                    discoveryState.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
+                    WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(type.BaseType, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                    continue;
+                }
+
+                // If the base type is also a projected Windows Runtime type, track it
+                if (baseType.IsProjectedWindowsRuntimeType)
+                {
+                    discoveryState.TrackTypeHierarchyEntry(type.FullName, baseType.FullName);
                 }
             }
         }
@@ -210,10 +218,23 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // We can skip all projected Windows Runtime types early, as they don't need CCW support
+                if (type.IsProjectedWindowsRuntimeType)
+                {
+                    continue;
+                }
+
+                // We'll need to look up attributes and enumerate interfaces across the entire type
+                // hierarchy for this type, so make sure that we can resolve all types from it first.
+                if (!type.IsTypeHierarchyFullyResolvable(out ITypeDefOrRef? failedResolutionBaseType))
+                {
+                    WellKnownInteropExceptions.UserDefinedTypeNotFullyResolvedWarning(failedResolutionBaseType, type).LogOrThrow(args.TreatWarningsAsErrors);
+
+                    continue;
+                }
+
                 // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
-                if (!type.IsPossiblyWindowsRuntimeExposedType ||
-                    type.IsProjectedWindowsRuntimeType ||
-                    type.IsWindowsRuntimeManagedOnlyType(interopReferences))
+                if (!type.IsPossiblyWindowsRuntimeExposedType || type.IsWindowsRuntimeManagedOnlyType(interopReferences))
                 {
                     continue;
                 }
@@ -228,7 +249,7 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces(module.CorLibTypeFactory))
+                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces())
                 {
                     // If the current implementation has no valid interface, skip it.
                     // This should never really happen for valid .NET assemblies.
@@ -242,7 +263,7 @@ internal partial class InteropGenerator
                     {
                         // Make sure we can resolve the interface type fully, which we should always be able to do.
                         // This can really only fail for some constructed generics, for invalid type arguments.
-                        if (!interfaceSignature.IsFullyResolvable)
+                        if (!interfaceSignature.IsFullyResolvable(out _))
                         {
                             WellKnownInteropExceptions.WindowsRuntimeInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -256,7 +277,7 @@ internal partial class InteropGenerator
                     else if (implementation.Interface.IsGeneratedComInterfaceType)
                     {
                         // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                        if (implementation.Interface.Resolve() is not TypeDefinition interfaceDefinition)
+                        if (!implementation.Interface.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
                         {
                             WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -338,8 +359,14 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
                 {
+                    // Log a warning the first time we fail to resolve this generic instantiation in this module
+                    if (discoveryState.TrackFailedResolutionType(typeSignature, module))
+                    {
+                        WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
+                    }
+
                     continue;
                 }
 
@@ -373,8 +400,6 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                TypeDefinition typeDefinition = typeSignature.Resolve()!;
-
                 // Gather all known delegate types. We want to gather all projected delegate types, plus any
                 // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
                 // We need to check whether the type is a projected Windows Runtime type from the resolved type
@@ -397,6 +422,20 @@ internal partial class InteropGenerator
                     // We also want to crawl base interfaces
                     foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
                     {
+                        if (!interfaceSignature.IsFullyResolvable(out _))
+                        {
+                            // Also log a warning the first time we fail to resolve one of the recursively discovered generic
+                            // instantiations from this module. The enumeration also yields back interfaces that couldn't be
+                            // resolved, as that step is performed after yielding. This is done so we can have our own logic
+                            // to log warnings or throw errors from here while we're processing interfaces in this module.
+                            if (discoveryState.TrackFailedResolutionType(interfaceSignature, module))
+                            {
+                                WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(interfaceSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
+                            }
+
+                            continue;
+                        }
+
                         discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
                     }
 
@@ -437,8 +476,14 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
+                if (!typeSignature.IsFullyResolvable(out _))
                 {
+                    // Log a warning the first time we fail to resolve this SZ array in this module
+                    if (discoveryState.TrackFailedResolutionType(typeSignature, module))
+                    {
+                        WellKnownInteropExceptions.SzArrayTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
+                    }
+
                     continue;
                 }
 

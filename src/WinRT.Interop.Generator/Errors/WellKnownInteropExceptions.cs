@@ -550,6 +550,38 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve a generic type signature.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(64, $"Failed to resolve the generic type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// Failed to resolve an SZ array type signature.
+    /// </summary>
+    public static WellKnownInteropWarning SzArrayTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(65, $"Failed to resolve the SZ array type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a base type for a Windows Runtime class type.
+    /// </summary>
+    public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
+    {
+        return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a base type for a user-defined type.
+    /// </summary>
+    public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
+    {
+        return Warning(67, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
