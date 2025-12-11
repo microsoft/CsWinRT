@@ -224,7 +224,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupValuesRvaData(Size={valuesRvaBuffer.WrittenCount}|Align=2)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: interopReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType)
         {
             ClassLayout = new ClassLayout(packingSize: 2, classSize: (uint)valuesRvaBuffer.WrittenCount)
         };
@@ -379,7 +379,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupKeysRvaData(Size={keysRvaBuffer.WrittenCount}|Align=2)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: interopReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType)
         {
             ClassLayout = new ClassLayout(packingSize: 2, classSize: (uint)keysRvaBuffer.WrittenCount)
         };
@@ -430,7 +430,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupBucketsRvaData(Size={bucketsRvaBuffer.WrittenCount}|Align=4)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: interopReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType)
         {
             ClassLayout = new ClassLayout(packingSize: 4, classSize: (uint)bucketsRvaBuffer.WrittenCount)
         };
@@ -483,7 +483,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         MethodDefinition get_BucketsMethod = new(
             name: "get_Buckets"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanInt32.Import(module)))
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanInt32))
         {
             IsAggressiveInlining = true,
             CilInstructions =
@@ -491,7 +491,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldsflda, bucketsRvaField },
                 { Conv_U },
                 { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize / sizeof(int))) },
-                { Newobj, interopReferences.ReadOnlySpanInt32_ctor.Import(module) },
+                { Newobj, interopReferences.ReadOnlySpanInt32_ctor },
                 { Ret }
             }
         };
@@ -500,7 +500,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         MethodDefinition get_KeysMethod = new(
             name: "get_Keys"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte.Import(module)))
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte))
         {
             IsAggressiveInlining = true,
             CilInstructions =
@@ -508,7 +508,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldsflda, keysRvaField },
                 { Conv_U },
                 { CilInstruction.CreateLdcI4((int)keysRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
-                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }
         };
@@ -517,7 +517,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         MethodDefinition get_ValuesMethod = new(
             name: "get_Values"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte.Import(module)))
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte))
         {
             IsAggressiveInlining = true,
             CilInstructions =
@@ -525,7 +525,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldsflda, valuesRvaField },
                 { Conv_U },
                 { CilInstruction.CreateLdcI4((int)valuesRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
-                { Newobj, interopReferences.ReadOnlySpanByte_ctor.Import(module) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }
         };

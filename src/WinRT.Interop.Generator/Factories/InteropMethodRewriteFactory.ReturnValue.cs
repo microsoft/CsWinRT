@@ -157,7 +157,7 @@ internal partial class InteropMethodRewriteFactory
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
                     body.Instructions.ReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
-                        new CilInstruction(Call, marshallerMethod.Import(module)),
+                        new CilInstruction(Call, marshallerMethod),
                         new CilInstruction(Ret)]);
                 }
             }
@@ -190,7 +190,7 @@ internal partial class InteropMethodRewriteFactory
                 // 'Exception' is also special, though it's simple: the ABI type is an unmanaged value type
                 body.Instructions.ReplaceRange(marker, [
                     CilInstruction.CreateLdloc(source, body),
-                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged.Import(module)),
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged),
                     new CilInstruction(Ret)]);
             }
             else if (returnType is GenericInstanceTypeSignature)
@@ -247,7 +247,7 @@ internal partial class InteropMethodRewriteFactory
             // Add a new local for the marshalled return value. We need this because it will be
             // assigned from inside a protected region (a 'try') block, so we can't return the
             // value directly. Instead, we'll load and return the local after the handler code.
-            CilLocalVariable loc_returnValue = new(returnType.Import(module));
+            CilLocalVariable loc_returnValue = new(returnType);
 
             body.LocalVariables.Add(loc_returnValue);
 
@@ -259,11 +259,11 @@ internal partial class InteropMethodRewriteFactory
             // Marshal the value and release the original interface pointer, or dispose the ABI value
             body.Instructions.ReplaceRange(marker, [
                 ldloc_tryStart,
-                new CilInstruction(Call, marshallerMethod.Import(module)),
+                new CilInstruction(Call, marshallerMethod),
                 CilInstruction.CreateStloc(loc_returnValue, body),
                 new CilInstruction(Leave_S, ldloc_finallyEnd.CreateLabel()),
                 ldloc_finallyStart,
-                new CilInstruction(Call, releaseOrDisposeMethod.Import(module)),
+                new CilInstruction(Call, releaseOrDisposeMethod),
                 new CilInstruction(Endfinally),
                 ldloc_finallyEnd,
                 new CilInstruction(Ret)]);

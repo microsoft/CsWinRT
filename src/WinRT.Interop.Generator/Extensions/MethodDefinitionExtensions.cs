@@ -39,7 +39,7 @@ internal static class MethodDefinitionExtensions
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, object_ctor.Import(module) },
+                    { Call, object_ctor },
                     { Ret }
                 }
             };
