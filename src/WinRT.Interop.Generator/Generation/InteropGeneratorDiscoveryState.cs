@@ -412,7 +412,7 @@ internal sealed class InteropGeneratorDiscoveryState
     /// </summary>
     /// <param name="failedType">The type that failed resolution.</param>
     /// <param name="module">The module in which the type resolution was attempted.</param>
-    ///<returns>Whether this is the first time this type failed resolution.</returns>
+    /// <returns>Whether this is the first time this type failed resolution.</returns>
     public bool TrackFailedResolutionType(TypeSignature failedType, ModuleDefinition module)
     {
         ThrowIfReadOnly();
