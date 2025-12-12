@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Code.Cil;
-using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.InteropGenerator.Models;
 
