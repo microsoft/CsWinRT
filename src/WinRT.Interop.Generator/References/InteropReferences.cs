@@ -204,6 +204,11 @@ internal sealed class InteropReferences
     public TypeReference Exception => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Exception"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.ArgumentNullException"/>.
+    /// </summary>
+    public TypeReference ArgumentNullException => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ArgumentNullException"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.NotSupportedException"/>.
     /// </summary>
     public TypeReference NotSupportedException => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "NotSupportedException"u8);
@@ -362,6 +367,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
     /// </summary>
     public TypeReference Interlocked => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshal"/>.
+    /// </summary>
+    public TypeReference Marshal => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "Marshal"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
@@ -1029,6 +1039,14 @@ internal sealed class InteropReferences
     public MemberReference Exceptionget_HResult => field ??= Exception.CreateMemberReference("get_HResult"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Int32));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="ArgumentNullException.ThrowIfNull(void*, string?)"/>.
+    /// </summary>
+    public MemberReference ArgumentNullExceptionThrowIfNull => field ??= ArgumentNullException
+        .CreateMemberReference("ThrowIfNull"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.String]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="NotSupportedException.NotSupportedException()"/>.
     /// </summary>
     public MemberReference NotSupportedException_ctor => field ??= NotSupportedException.CreateConstructorReference(_corLibTypeFactory);
@@ -1171,6 +1189,14 @@ internal sealed class InteropReferences
                 new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
                 new GenericParameterSignature(GenericParameterType.Method, 0),
                 new GenericParameterSignature(GenericParameterType.Method, 0)]));
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.InteropServices.Marshal.FreeCoTaskMem"/>.
+    /// </summary>
+    public MemberReference MarshalFreeCoTaskMem => field ??= Marshal
+        .CreateMemberReference("FreeCoTaskMem"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.IntPtr]));
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal.CreateSpan"/>.

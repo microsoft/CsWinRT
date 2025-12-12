@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -26,11 +27,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -138,6 +141,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition freeMethod = InteropMethodDefinitionFactory.SzArrayMarshaller.Free(
                 arrayType,
                 interopReferences,
+                emitState,
                 module);
 
             marshallerType.Methods.Add(freeMethod);
