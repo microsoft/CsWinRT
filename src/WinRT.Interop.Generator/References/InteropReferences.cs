@@ -68,7 +68,7 @@ internal sealed class InteropReferences
         name: "System.Runtime.InteropServices"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices).ImportWith(_corLibTypeFactory.CorLibScope.ContextModule!.DefaultImporter);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
@@ -77,7 +77,7 @@ internal sealed class InteropReferences
         name: "System.ObjectModel"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel).ImportWith(_corLibTypeFactory.CorLibScope.ContextModule!.DefaultImporter);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
@@ -86,7 +86,7 @@ internal sealed class InteropReferences
         name: "System.Memory"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory).ImportWith(_corLibTypeFactory.CorLibScope.ContextModule!.DefaultImporter);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Numerics.Vectors.dll</c>.
