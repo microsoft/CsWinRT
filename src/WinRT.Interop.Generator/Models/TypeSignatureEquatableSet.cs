@@ -122,7 +122,7 @@ internal sealed partial class TypeSignatureEquatableSet :
             return 0;
         }
 
-        // Fats-path if both sets are just empty
+        // Fast-path if both sets are just empty
         if (_set.Count == 0 && other._set.Count == 0)
         {
             return 0;
