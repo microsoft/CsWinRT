@@ -25,6 +25,17 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     /// </summary>
     public static TypeDescriptorComparer Instance { get; } = new();
 
+    /// <summary>
+    /// Creates a new comparer for the specified <see cref="ITypeDescriptor"/> type.
+    /// </summary>
+    /// <typeparam name="T">The <see cref="ITypeDescriptor"/> type to compare.</typeparam>
+    /// <returns>The resulting <see cref="IComparer{T}"/> instance.</returns>
+    public static IComparer<T> Create<T>()
+        where T : ITypeDescriptor
+    {
+        return (IComparer<T>)(IComparer<ITypeDescriptor>)Instance;
+    }
+
     /// <inheritdoc/>
     public int Compare(ITypeDescriptor? x, ITypeDescriptor? y)
     {

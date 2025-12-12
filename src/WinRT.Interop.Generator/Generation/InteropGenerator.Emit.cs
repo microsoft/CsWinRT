@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -251,7 +252,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -418,7 +419,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -525,7 +526,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -648,7 +649,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -772,7 +773,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -904,7 +905,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1027,7 +1028,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1176,7 +1177,7 @@ internal partial class InteropGenerator
         }
 
         // Generate specialized code for all discovered instantiations
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1251,7 +1252,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1357,7 +1358,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1473,7 +1474,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1589,7 +1590,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1695,7 +1696,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1801,7 +1802,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1905,7 +1906,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes)
+        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.Order(TypeDescriptorComparer.Create<SzArrayTypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2095,7 +2096,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes)
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderBy(static pair => pair.Key, TypeDescriptorComparer.Create<TypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2173,7 +2174,7 @@ internal partial class InteropGenerator
         try
         {
             // Also emit all shared COM interface entries types that are programmatically generated
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().Order(TypeDescriptorComparer.Create<TypeDefinition>()))
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
