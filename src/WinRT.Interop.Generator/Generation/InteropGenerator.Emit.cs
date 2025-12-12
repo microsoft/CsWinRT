@@ -2056,7 +2056,7 @@ internal partial class InteropGenerator
         Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
 
         // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
-        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes)
+        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes.Order())
         {
             args.Token.ThrowIfCancellationRequested();
 
