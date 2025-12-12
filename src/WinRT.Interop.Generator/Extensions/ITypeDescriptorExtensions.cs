@@ -8,6 +8,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Helpers;
 
+#pragma warning disable CS1734
+
 namespace WindowsRuntime.InteropGenerator;
 
 /// <summary>
