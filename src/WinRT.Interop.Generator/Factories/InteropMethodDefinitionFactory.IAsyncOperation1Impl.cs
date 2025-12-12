@@ -28,7 +28,7 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// /// <remarks>
+        /// <remarks>
         /// This method can also be used to define the <c>GetResults</c> method for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult,TProgress&gt;</c> interfaces.
         /// </remarks>
         public static MethodDefinition GetResults(
