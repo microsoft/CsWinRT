@@ -6,13 +6,30 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 
-namespace WindowsRuntime.InteropGenerator.Factories;
+namespace WindowsRuntime.InteropGenerator.Resolvers;
 
 /// <summary>
-/// A factory to rewrite interop method definitons, and add marshalling code as needed.
+/// A resolver for marshaller types for Windows Runtime types.
 /// </summary>
-internal static partial class InteropMethodRewriteFactory
+internal static class InteropMarshallerResolver
 {
+    /// <summary>
+    /// Get the marshaller type for a specified Windows Runtime type.
+    /// </summary>
+    /// <param name="type">The Windows Runtime type to get the marshaller type for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <returns>The marshaller type for <paramref name="type"/>.</returns>
+    public static ITypeDefOrRef GetMarshallerType(
+        TypeSignature type,
+        InteropReferences interopReferences,
+        InteropGeneratorEmitState emitState)
+    {
+        return type.IsValueType
+            ? GetValueTypeMarshallerType(type, interopReferences, emitState)
+            : GetReferenceTypeMarshallerType(type, interopReferences, emitState);
+    }
+
     /// <summary>
     /// Get the marshaller type for a specified value type.
     /// </summary>

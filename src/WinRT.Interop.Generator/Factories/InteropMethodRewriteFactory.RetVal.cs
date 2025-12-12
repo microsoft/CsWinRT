@@ -9,6 +9,7 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS1573, IDE0072
@@ -107,7 +108,7 @@ internal partial class InteropMethodRewriteFactory
 
                     // For 'Nullable<T>' return types, we need the marshaller for the instantiated 'T'
                     // type, as that will contain the boxing methods. See more info in 'ReturnValue'.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerResolver.GetMarshallerType(underlyingType, interopReferences, emitState);
 
                     // Get the right reference to the boxing marshalling method to call
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -127,7 +128,7 @@ internal partial class InteropMethodRewriteFactory
                 else
                 {
                     // For all other struct types, we just always defer to their generated marshaller type
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(retValType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerResolver.GetMarshallerType(retValType, interopReferences, emitState);
 
                     // Get the reference to 'ConvertToUnmanaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -176,7 +177,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(retValType, interopReferences, emitState);
+                ITypeDefOrRef marshallerType = InteropMarshallerResolver.GetMarshallerType(retValType, interopReferences, emitState);
 
                 // Get the marshalling method for this '[retval]' type
                 IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
