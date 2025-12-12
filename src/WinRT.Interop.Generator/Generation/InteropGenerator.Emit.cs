@@ -2242,7 +2242,10 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IgnoresAccessChecksToAttribute);
 
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
-            IgnoresAccessChecksToBuilder.AssemblyAttributes(discoveryState.ModuleDefinitions.Values, interopDefinitions, module);
+            IgnoresAccessChecksToBuilder.AssemblyAttributes(
+                referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
+                interopDefinitions: interopDefinitions,
+                module: module);
         }
         catch (Exception e)
         {
