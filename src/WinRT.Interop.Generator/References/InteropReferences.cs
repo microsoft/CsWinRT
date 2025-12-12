@@ -64,6 +64,9 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
     /// </summary>
+    /// <remarks>
+    /// This <see cref="AssemblyReference"/> will use the same scope as <see cref="_corLibTypeFactory"/>, to enable correct resolution.
+    /// </remarks>
     public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference(
         name: "System.Runtime.InteropServices"u8,
         version: new Version(10, 0, 0, 0),
@@ -73,6 +76,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference SystemObjectModel => field ??= new AssemblyReference(
         name: "System.ObjectModel"u8,
         version: new Version(10, 0, 0, 0),
@@ -82,6 +86,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference SystemMemory => field ??= new AssemblyReference(
         name: "System.Memory"u8,
         version: new Version(10, 0, 0, 0),
