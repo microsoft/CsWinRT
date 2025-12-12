@@ -156,7 +156,7 @@ internal sealed partial class TypeSignatureEquatableSet :
                 return 1;
             }
 
-            int result = TypeDescriptorComparer.Create<TypeSignature>().Compare(left.Current, right.Current);
+            int result = TypeDescriptorComparer.Instance.Compare(left.Current, right.Current);
 
             // If the items are not equal, just return that result. That is,
             // the first pair of items that is not equal determines the set.
