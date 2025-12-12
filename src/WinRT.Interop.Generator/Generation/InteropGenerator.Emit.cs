@@ -220,9 +220,14 @@ internal partial class InteropGenerator
             AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
             ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
 
+            // Add the assembly references to the interop module
             winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
             winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
             winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver);
+
+            // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
+            // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
+            winRTInteropModule.Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys);
 
             // Add the module to the parent assembly
             winRTInteropAssembly.Modules.Add(winRTInteropModule);
