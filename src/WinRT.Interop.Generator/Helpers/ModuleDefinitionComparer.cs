@@ -51,7 +51,7 @@ internal sealed class ModuleDefinitionComparer : IComparer<ModuleDefinition>
             if (module.Assembly is AssemblyDefinition assembly)
             {
                 handler.AppendLiteral("[");
-                handler.AppendFormatted(module);
+                handler.AppendFormatted(assembly);
                 handler.AppendLiteral("]");
             }
         }
