@@ -85,7 +85,9 @@ internal static partial class InteropMethodRewriteFactory
 
         // For custom-mapped types, get the marshaller type from 'WinRT.Runtime.dll'
         if (type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
-            type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences))
+            type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+            type.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+            type.IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(interopReferences))
         {
             return interopReferences.WindowsRuntimeModule.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
