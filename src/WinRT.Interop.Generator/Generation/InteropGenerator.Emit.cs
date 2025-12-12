@@ -252,7 +252,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -419,7 +419,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -526,7 +526,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -649,7 +649,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -773,7 +773,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -905,7 +905,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1028,7 +1028,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1177,7 +1177,7 @@ internal partial class InteropGenerator
         }
 
         // Generate specialized code for all discovered instantiations
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1252,7 +1252,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1358,7 +1358,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1474,7 +1474,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1590,7 +1590,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1696,7 +1696,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1802,7 +1802,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types.Order(TypeDescriptorComparer.Create<GenericInstanceTypeSignature>()))
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1906,7 +1906,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.Order(TypeDescriptorComparer.Create<SzArrayTypeSignature>()))
+        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2174,7 +2174,7 @@ internal partial class InteropGenerator
         try
         {
             // Also emit all shared COM interface entries types that are programmatically generated
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().Order(TypeDescriptorComparer.Create<TypeDefinition>()))
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
