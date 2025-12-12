@@ -69,86 +69,6 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IEnumerator<T>' types
-        DefineIEnumeratorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IEnumerable<T>' types
-        DefineIEnumerableTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyList<T>' types
-        DefineIReadOnlyListTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IList<T>' types
-        DefineIListTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyDictionary<TKey, TValue>' types
-        DefineIReadOnlyDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IDictionary<TKey, TValue>' types
-        DefineIDictionaryTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'KeyValuePair<TKey, TValue>' types
-        DefineKeyValuePairTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IMapChangedEventArgs<K, V>' types
-        DefineIMapChangedEventArgsTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableVector<T>' types
-        DefineIObservableVectorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableMap<K, V>' types
-        DefineIObservableMapTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncActionWithProgress<TProgress>' types
-        DefineIAsyncActionWithProgressTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperation<TResult>' types
-        DefineIAsyncOperationTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperationWithProgress<TResult, TProgress>' types
-        DefineIAsyncOperationWithProgressTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for SZ array types
-        DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Rewrite the IL methods of marshalling stubs needing two-pass generation
-        RewriteMethodDefinitions(args, emitState, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for user-defined array types
-        DefineUserDefinedTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
         // Add all dynamic top level internal types to the interop module
         DefineDynamicImplementationDetailTypes(interopDefinitions, module);
 
@@ -257,7 +177,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.OrderByFullyQualifiedTypeName())
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.OrderByFullyQualifiedTypeName().Take(20))
         {
             args.Token.ThrowIfCancellationRequested();
 
