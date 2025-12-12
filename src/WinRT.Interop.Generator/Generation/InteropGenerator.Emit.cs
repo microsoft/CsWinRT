@@ -1993,7 +1993,14 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (MethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
+        // We need to sort all items to a temporary list first, as the underlying items
+        // might otherwise change as we rewrite methods. This is because e.g. the target
+        // instructions will get replaced by marshalling code, meaning trying to compare
+        // different objects based on the index of those instructions in the target method
+        // would produce different results. This temporary list avoids that issue.
+        List<MethodRewriteInfo> rewriteInfos = [.. emitState.EnumerateMethodRewriteInfos().Order()];
+
+        foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
         {
             args.Token.ThrowIfCancellationRequested();
 
