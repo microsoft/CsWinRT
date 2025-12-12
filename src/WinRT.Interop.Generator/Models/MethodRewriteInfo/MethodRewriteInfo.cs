@@ -26,18 +26,15 @@ internal abstract class MethodRewriteInfo : IComparable<MethodRewriteInfo>
     public required CilInstruction Marker { get; init; }
 
     /// <inheritdoc/>
-    public virtual int CompareTo(MethodRewriteInfo? other)
+    public abstract int CompareTo(MethodRewriteInfo? other);
+
+    /// <summary>
+    /// Compares the current instance just based on the state from <see cref="MethodRewriteInfo"/>.
+    /// </summary>
+    /// <param name="other">The input <see cref="MethodRewriteInfo"/> instance.</param>
+    /// <returns>The comparison result.</returns>
+    protected int CompareByMethodRewriteInfo(MethodRewriteInfo other)
     {
-        if (other is null)
-        {
-            return 1;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return 0;
-        }
-
         int result = TypeDescriptorComparer.Instance.Compare(Type, other.Type);
 
         // Match by marshalling type first
