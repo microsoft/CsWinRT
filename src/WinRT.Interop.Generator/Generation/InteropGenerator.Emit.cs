@@ -2065,7 +2065,11 @@ internal partial class InteropGenerator
             try
             {
                 // Get the first user-defined with this vtable set as reference
-                typeSignature = discoveryState.UserDefinedAndVtableTypes.First(kvp => kvp.Value.Equals(vtableTypes)).Key;
+                typeSignature = discoveryState.UserDefinedAndVtableTypes
+                    .Where(kvp => kvp.Value.Equals(vtableTypes))
+                    .Select(static kvp => kvp.Key)
+                    .OrderByFullyQualifiedTypeName()
+                    .First();
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
