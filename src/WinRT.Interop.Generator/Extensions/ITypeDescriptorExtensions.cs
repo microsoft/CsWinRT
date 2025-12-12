@@ -55,7 +55,6 @@ internal static class ITypeDescriptorExtensions
         public IEnumerable<T> OrderByFullyQualifiedTypeName()
         {
             return descriptors.Order(TypeDescriptorComparer.Create<T>());
-
         }
     }
 }

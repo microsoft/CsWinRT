@@ -3,11 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -229,5 +231,20 @@ internal static class ModuleDefinitionExtensions
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Sorts the <see cref="ModuleDefinition"/> values of a sequence in ascending order, based on their fully qualified names.
+    /// </summary>
+    /// <returns>An <see cref="IEnumerable{T}"/> whose elements are sorted.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="modules"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// This method is implemented by using deferred execution. The immediate return value is an object that stores all the
+    /// information that is required to perform the action. The query represented by this method is not executed until the
+    /// object is enumerated by calling its <see cref="IEnumerable{T}.GetEnumerator"/> method.
+    /// </remarks>
+    public static IEnumerable<ModuleDefinition> OrderByFullyQualifiedName(this IEnumerable<ModuleDefinition> modules)
+    {
+        return modules.Order(ModuleDefinitionComparer.Instance);
     }
 }
