@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -11,6 +12,7 @@ namespace Windows.Foundation;
 /// Provides support for asynchronous operations.
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[Guid("00000036-0000-0000-C000-000000000046")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncInfo
 {
