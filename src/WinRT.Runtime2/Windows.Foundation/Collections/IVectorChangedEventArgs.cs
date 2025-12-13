@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -10,6 +11,7 @@ namespace Windows.Foundation.Collections;
 /// Provides data for the changed event of a vector.
 /// </summary>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[Guid("575933DF-34FE-4480-AF15-07691F3D5D9B")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IVectorChangedEventArgs
 {
