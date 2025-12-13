@@ -83,10 +83,11 @@ internal static class TypeSignatureExtensions
                     // We don't have to check: if the interface is not generic, this will be a no-op.
                     yield return interfaceSignature.InstantiateGenericTypes(context);
 
-                    // Also recurse on the base interfaces
+                    // Also recurse on the base interfaces (no need to instantiate the returned interface type
+                    // signatures for base interfaces here: they will be already instantiate when returned).
                     foreach (TypeSignature baseInterface in interfaceSignature.EnumerateAllInterfaces())
                     {
-                        yield return baseInterface.InstantiateGenericTypes(context);
+                        yield return baseInterface;
                     }
                 }
 
