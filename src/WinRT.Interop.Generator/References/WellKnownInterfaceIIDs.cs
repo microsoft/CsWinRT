@@ -127,6 +127,10 @@ internal static class WellKnownInterfaceIIDs
     {
         guid = interfaceType switch
         {
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
+                => new Guid("1BFCA4F6-2C4E-5174-9869-B39D35848FCC"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IServiceProvider)
+                => new Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler)
                 => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler1)
@@ -181,8 +185,6 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("C261D8D0-71BA-5F38-A239-872342253A18"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
                 => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
-                => new Guid("1BFCA4F6-2C4E-5174-9869-B39D35848FCC"),
             _ => Guid.Empty
         };
 
