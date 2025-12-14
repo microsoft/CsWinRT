@@ -249,41 +249,42 @@ internal partial class InteropGenerator
                 bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
                 // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (InterfaceImplementation implementation in type.EnumerateAllInterfaces())
+                foreach (TypeSignature interfaceSignature in type.ToTypeSignature().EnumerateAllInterfaces())
                 {
-                    // If the current implementation has no valid interface, skip it.
-                    // This should never really happen for valid .NET assemblies.
-                    if (implementation.Interface?.ToReferenceTypeSignature() is not TypeSignature interfaceSignature)
+                    // Make sure we can resolve the interface type fully, which we should always be able to do.
+                    // This can really only fail for some constructed generics, for invalid type arguments.
+                    if (!interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
                     {
+                        WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
+
                         continue;
                     }
 
                     // Check for projected Windows Runtime interfaces first
                     if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
                     {
-                        // Make sure we can resolve the interface type fully, which we should always be able to do.
-                        // This can really only fail for some constructed generics, for invalid type arguments.
-                        if (!interfaceSignature.IsFullyResolvable(out _))
-                        {
-                            WellKnownInteropExceptions.WindowsRuntimeInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                            continue;
-                        }
-
                         hasAnyProjectedWindowsRuntimeInterfaces = true;
 
                         interfaces.Add(interfaceSignature);
-                    }
-                    else if (implementation.Interface.IsGeneratedComInterfaceType)
-                    {
-                        // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                        if (!implementation.Interface.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
+
+                        // If the current interface is generic, also make sure that it's tracked. This is needed
+                        // to fully cover all possible constructed generic interface types that might be needed.
+                        // For instance, consider this case:
+                        //
+                        // class A<T> : IEnumerable<T>;
+                        // class B : A<int>;
+                        //
+                        // While processing 'B', we'll discover the constructed 'IEnumerable<int>' interface.
+                        // This interface would not have been discovered when processing 'A<T>', as it's not
+                        // in the 'TypeSpec' metadata table, and only appears as unconstructed on 'A<T>'.
+                        // So the discovery logic for generic instantiations below would otherwise miss it.
+                        if (interfaceSignature is GenericInstanceTypeSignature constructedSignature)
                         {
-                            WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(interfaceSignature, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                            continue;
+                            discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
                         }
-
+                    }
+                    else if (interfaceDefinition.IsGeneratedComInterfaceType)
+                    {
                         // We can only gather this type if we can find the generated 'InterfaceInformation' type.
                         // If we can't find it, we can't add the interface to the list of interface entries. We
                         // should warn if that's the (unlikely) case, so users can at least know that something
@@ -416,8 +417,15 @@ internal partial class InteropGenerator
                     discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
 
                     // We also want to crawl base interfaces
-                    foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
+                    foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
                     {
+                        // Filter out just constructed generic interfaces, since we only care about those here.
+                        // The non-generic ones are only useful when gathering interfaces for user-defined types.
+                        if (interfaceSignature is not GenericInstanceTypeSignature constructedSignature)
+                        {
+                            continue;
+                        }
+
                         if (!interfaceSignature.IsFullyResolvable(out _))
                         {
                             // Also log a warning the first time we fail to resolve one of the recursively discovered generic
@@ -432,7 +440,7 @@ internal partial class InteropGenerator
                             continue;
                         }
 
-                        discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
+                        discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
                     }
 
                     continue;
