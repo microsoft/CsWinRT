@@ -47,7 +47,7 @@ internal static class GuidGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
     /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
-    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(ITypeDescriptor type, InteropReferences interopReferences, out Guid iid)
+    private static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(ITypeDescriptor type, InteropReferences interopReferences, out Guid iid)
     {
         // First try to get the IID from the custom-mapped types mapping
         if (WellKnownInterfaceIIDs.TryGetGUID(type, interopReferences, out iid))
