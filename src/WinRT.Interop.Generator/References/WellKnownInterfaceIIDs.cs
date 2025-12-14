@@ -86,6 +86,8 @@ internal static class WellKnownInterfaceIIDs
                => "Windows_Foundation_IAsyncInfo",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncAction)
                 => "Windows_Foundation_IAsyncAction",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
+                => "Windows_Foundation_Collections_IVectorChangedEventArgs",
 
             // XAML types
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
