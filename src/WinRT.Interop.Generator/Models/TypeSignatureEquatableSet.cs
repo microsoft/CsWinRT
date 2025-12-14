@@ -6,13 +6,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.InteropGenerator.Models;
 
 /// <summary>
 /// An immutable, equatable set of <see cref="TypeSignature"/> values.
 /// </summary>
-internal sealed partial class TypeSignatureEquatableSet : IEquatable<TypeSignatureEquatableSet>, IEnumerable<TypeSignature>
+internal sealed partial class TypeSignatureEquatableSet :
+    IEquatable<TypeSignatureEquatableSet>,
+    IComparable<TypeSignatureEquatableSet>,
+    IEnumerable<TypeSignature>
 {
     /// <summary>
     /// The comparer for the <see cref="TypeSignature"/> set.
@@ -103,6 +107,64 @@ internal sealed partial class TypeSignatureEquatableSet : IEquatable<TypeSignatu
         }
 
         return hashCode.ToHashCode();
+    }
+
+    /// <inheritdoc/>
+    public int CompareTo(TypeSignatureEquatableSet? other)
+    {
+        if (other is null)
+        {
+            return 1;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return 0;
+        }
+
+        // Fast-path if both sets are just empty
+        if (_set.Count == 0 && other._set.Count == 0)
+        {
+            return 0;
+        }
+
+        using IEnumerator<TypeSignature> left = _set.OrderByFullyQualifiedTypeName().GetEnumerator();
+        using IEnumerator<TypeSignature> right = other.OrderByFullyQualifiedTypeName().GetEnumerator();
+
+        // We want to enumerate pairs of items from both sets, one at a time
+        while (true)
+        {
+            bool leftMoveNext = left.MoveNext();
+            bool rightMoveNext = right.MoveNext();
+
+            // If both sets have no remaining items, they are equal.
+            // This is because all previous items up to now matched.
+            if (!leftMoveNext && !rightMoveNext)
+            {
+                return 0;
+            }
+
+            // If the left sequence is over, then that set comes first
+            if (!leftMoveNext)
+            {
+                return -1;
+            }
+
+            // If the other sequence is over, then that set comes after this one
+            if (!rightMoveNext)
+            {
+                return 1;
+            }
+
+            int result = TypeDescriptorComparer.Instance.Compare(left.Current, right.Current);
+
+            // If the items are not equal, just return that result. That is,
+            // the first pair of items that is not equal determines the set.
+            if (result != 0)
+            {
+                return result;
+            }
+        }
     }
 
     /// <inheritdoc/>
