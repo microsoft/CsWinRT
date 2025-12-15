@@ -260,92 +260,13 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
-                {
-                    // Log a warning the first time we fail to resolve this generic instantiation in this module
-                    if (discoveryState.TrackFailedResolutionType(typeSignature, module))
-                    {
-                        WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
-                    }
-
-                    continue;
-                }
-
-                // Check for all '[ReadOnly]Span<T>' types in particular, and track them as SZ array types.
-                // This is because "pass-array" and "fill-array" parameters are projected using spans, but
-                // those projections require the marshalling code produced when discovering SZ array types.
-                // So if we see any of these spans where the element type is a Windows Runtime type, we
-                // manually construct an SZ array type for it and add it to the set of tracked array types.
-                if (typeSignature.IsValueType &&
-                    typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
-                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
-                {
-                    discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
-
-                    continue;
-                }
-
-                // Ignore generic instantiations that are not Windows Runtime types. That is, those that
-                // have a generic type definition that's not a Windows Runtime type, or that have any type
-                // arguments that are not Windows Runtime types.
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
-                {
-                    continue;
-                }
-
-                // Gather all 'KeyValuePair<,>' instances
-                if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
-                {
-                    discoveryState.TrackKeyValuePairType(typeSignature);
-
-                    continue;
-                }
-
-                // Gather all Windows Runtime delegate types. We want to gather all projected delegate types, plus
-                // any custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
-                // The filtering is already done above, so here we can rely the type will be of one of those kinds.
-                if (typeDefinition.IsDelegate)
-                {
-                    discoveryState.TrackGenericDelegateType(typeSignature);
-
-                    continue;
-                }
-
-                // Track all projected Windows Runtime generic interfaces
-                if (typeDefinition.IsInterface)
-                {
-                    discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
-
-                    // We also want to crawl base interfaces
-                    foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
-                    {
-                        // Filter out just constructed generic interfaces, since we only care about those here.
-                        // The non-generic ones are only useful when gathering interfaces for user-defined types.
-                        if (interfaceSignature is not GenericInstanceTypeSignature constructedSignature)
-                        {
-                            continue;
-                        }
-
-                        if (!interfaceSignature.IsFullyResolvable(out _))
-                        {
-                            // Also log a warning the first time we fail to resolve one of the recursively discovered generic
-                            // instantiations from this module. The enumeration also yields back interfaces that couldn't be
-                            // resolved, as that step is performed after yielding. This is done so we can have our own logic
-                            // to log warnings or throw errors from here while we're processing interfaces in this module.
-                            if (discoveryState.TrackFailedResolutionType(interfaceSignature, module))
-                            {
-                                WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(interfaceSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
-                            }
-
-                            continue;
-                        }
-
-                        discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
-                    }
-
-                    continue;
-                }
+                // Track the constructed generic type (ignore it if not applicable)
+                _ = InteropTypeDiscovery.TryTrackGenericTypeInstance(
+                    typeSignature: typeSignature,
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)

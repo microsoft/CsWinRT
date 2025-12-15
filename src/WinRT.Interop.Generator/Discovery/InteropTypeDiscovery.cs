@@ -30,6 +30,7 @@ internal static partial class InteropTypeDiscovery
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
     /// <remarks>
     /// This method expects <paramref name="typeDefinition"/> to either be non-generic, or
     /// to have <paramref name="typeSignature"/> be a fully constructed signature for it.
