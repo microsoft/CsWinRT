@@ -20,8 +20,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
-    public static bool TryTrackGenericTypeInstance(
+    public static void TryTrackGenericTypeInstance(
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
@@ -37,13 +36,13 @@ internal partial class InteropTypeDiscovery
                 WellKnownInteropExceptions.GenericTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
             }
 
-            return false;
+            return;
         }
 
         // If the current type signature represents a Windows Runtime type, track it
         if (typeSignature.IsWindowsRuntimeType(interopReferences))
         {
-            return TryTrackWindowsRuntimeGenericTypeInstance(
+            TryTrackWindowsRuntimeGenericTypeInstance(
                 typeDefinition,
                 typeSignature,
                 args,
@@ -51,14 +50,16 @@ internal partial class InteropTypeDiscovery
                 interopReferences,
                 module);
         }
-
-        // Otherwise, try to track information for some constructed managed type
-        return TryTrackManagedGenericTypeInstance(
-            typeDefinition,
-            typeSignature,
-            args,
-            discoveryState,
-            interopReferences);
+        else
+        {
+            // Otherwise, try to track information for some constructed managed type
+            TryTrackManagedGenericTypeInstance(
+                typeDefinition,
+                typeSignature,
+                args,
+                discoveryState,
+                interopReferences);
+        }
     }
 
     /// <summary>
@@ -69,8 +70,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
-    public static bool TryTrackSzArrayType(
+    public static void TryTrackSzArrayType(
         SzArrayTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
@@ -86,19 +86,17 @@ internal partial class InteropTypeDiscovery
                 WellKnownInteropExceptions.SzArrayTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
             }
 
-            return false;
+            return;
         }
 
         // Ignore array types that are not Windows Runtime types
         if (!typeSignature.IsWindowsRuntimeType(interopReferences))
         {
-            return false;
+            return;
         }
 
         // Track all SZ array types, as we'll need to emit marshalling code for them
         discoveryState.TrackSzArrayType(typeSignature);
-
-        return true;
     }
 
     /// <summary>
@@ -110,8 +108,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
-    private static bool TryTrackWindowsRuntimeGenericTypeInstance(
+    private static void TryTrackWindowsRuntimeGenericTypeInstance(
         TypeDefinition typeDefinition,
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
@@ -124,7 +121,7 @@ internal partial class InteropTypeDiscovery
         {
             discoveryState.TrackKeyValuePairType(typeSignature);
 
-            return true;
+            return;
         }
 
         // Gather all Windows Runtime delegate types. We want to gather all projected delegate types, plus
@@ -134,7 +131,7 @@ internal partial class InteropTypeDiscovery
         {
             discoveryState.TrackGenericDelegateType(typeSignature);
 
-            return true;
+            return;
         }
 
         // Track all projected Windows Runtime generic interfaces
@@ -168,12 +165,7 @@ internal partial class InteropTypeDiscovery
 
                 discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
             }
-
-            return true;
         }
-
-        // This is technically unreachable, assuming the input type is a Windows Runtime type
-        return false;
     }
 
     /// <summary>
@@ -184,8 +176,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
-    private static bool TryTrackManagedGenericTypeInstance(
+    private static void TryTrackManagedGenericTypeInstance(
         TypeDefinition typeDefinition,
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
@@ -203,11 +194,11 @@ internal partial class InteropTypeDiscovery
         {
             discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
 
-            return false;
+            return;
         }
 
         // Otherwise, try to track a constructed user-defined type
-        return TryTrackExposedUserDefinedType(
+        TryTrackExposedUserDefinedType(
             typeDefinition,
             typeSignature,
             args,

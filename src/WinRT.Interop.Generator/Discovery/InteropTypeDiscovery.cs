@@ -28,8 +28,7 @@ internal static partial class InteropTypeDiscovery
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
-    public static bool TryTrackTypeHierarchyType(
+    public static void TryTrackTypeHierarchyType(
         TypeDefinition typeDefinition,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState)
@@ -37,13 +36,13 @@ internal static partial class InteropTypeDiscovery
         // We only care about projected Windows Runtime classes
         if (!typeDefinition.IsProjectedWindowsRuntimeClassType)
         {
-            return false;
+            return;
         }
 
         // Ignore types that don't have another base class
         if (!typeDefinition.HasBaseType(out ITypeDefOrRef? baseType))
         {
-            return false;
+            return;
         }
 
         // We need to resolve the base type to be able to look up attributes on it
@@ -51,18 +50,14 @@ internal static partial class InteropTypeDiscovery
         {
             WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
-            return false;
+            return;
         }
 
         // If the base type is also a projected Windows Runtime type, track it
         if (baseType.IsProjectedWindowsRuntimeType)
         {
             discoveryState.TrackTypeHierarchyEntry(typeDefinition.FullName, baseType.FullName);
-
-            return true;
         }
-
-        return false;
     }
 
     /// <summary>
@@ -73,12 +68,11 @@ internal static partial class InteropTypeDiscovery
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
     /// <remarks>
     /// This method expects <paramref name="typeDefinition"/> to either be non-generic, or
     /// to have <paramref name="typeSignature"/> be a fully constructed signature for it.
     /// </remarks>
-    public static bool TryTrackExposedUserDefinedType(
+    public static void TryTrackExposedUserDefinedType(
         TypeDefinition typeDefinition,
         TypeSignature typeSignature,
         InteropGeneratorArgs args,
@@ -88,7 +82,7 @@ internal static partial class InteropTypeDiscovery
         // We can skip all projected Windows Runtime types early, as they don't need CCW support
         if (typeDefinition.IsProjectedWindowsRuntimeType)
         {
-            return false;
+            return;
         }
 
         // We'll need to look up attributes and enumerate interfaces across the entire type
@@ -97,13 +91,13 @@ internal static partial class InteropTypeDiscovery
         {
             WellKnownInteropExceptions.UserDefinedTypeNotFullyResolvedWarning(failedResolutionBaseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
-            return false;
+            return;
         }
 
         // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
         if (!typeDefinition.IsPossiblyWindowsRuntimeExposedType || typeDefinition.IsWindowsRuntimeManagedOnlyType(interopReferences))
         {
-            return false;
+            return;
         }
 
         // Reuse the thread-local builder to track all implemented interfaces for the current type
@@ -194,7 +188,5 @@ internal static partial class InteropTypeDiscovery
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
-
-        return true;
     }
 }

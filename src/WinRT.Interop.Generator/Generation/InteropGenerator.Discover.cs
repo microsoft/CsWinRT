@@ -156,7 +156,7 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                _ = InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState);
+                InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState);
             }
         }
         catch (Exception e)
@@ -195,8 +195,8 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Track the type (if it's not applicable, we just ignore it)
-                _ = InteropTypeDiscovery.TryTrackExposedUserDefinedType(
+                // Track the type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackExposedUserDefinedType(
                     typeDefinition: type,
                     typeSignature: type.ToTypeSignature(),
                     args: args,
@@ -236,8 +236,8 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Track the constructed generic type (ignore it if not applicable)
-                _ = InteropTypeDiscovery.TryTrackGenericTypeInstance(
+                // Track the constructed generic type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackGenericTypeInstance(
                     typeSignature: typeSignature,
                     args: args,
                     discoveryState: discoveryState,
@@ -277,8 +277,8 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Track the SZ array type
-                _ = InteropTypeDiscovery.TryTrackSzArrayType(
+                // Track the SZ array type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackSzArrayType(
                     typeSignature: typeSignature,
                     args: args,
                     discoveryState: discoveryState,
