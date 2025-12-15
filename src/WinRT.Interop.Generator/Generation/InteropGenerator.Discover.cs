@@ -156,31 +156,7 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // We only care about projected Windows Runtime classes
-                if (!type.IsProjectedWindowsRuntimeClassType)
-                {
-                    continue;
-                }
-
-                // Ignore types that don't have another base class
-                if (!type.HasBaseType(out ITypeDefOrRef? baseType))
-                {
-                    continue;
-                }
-
-                // We need to resolve the base type to be able to look up attributes on it
-                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
-                {
-                    WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                    continue;
-                }
-
-                // If the base type is also a projected Windows Runtime type, track it
-                if (baseType.IsProjectedWindowsRuntimeType)
-                {
-                    discoveryState.TrackTypeHierarchyEntry(type.FullName, baseType.FullName);
-                }
+                _ = InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState);
             }
         }
         catch (Exception e)
@@ -301,26 +277,13 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable(out _))
-                {
-                    // Log a warning the first time we fail to resolve this SZ array in this module
-                    if (discoveryState.TrackFailedResolutionType(typeSignature, module))
-                    {
-                        WellKnownInteropExceptions.SzArrayTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
-                    }
-
-                    continue;
-                }
-
-                // Ignore array types that are not Windows Runtime types
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
-                {
-                    continue;
-                }
-
-                // Track all SZ array types, as we'll need to emit marshalling code for them
-                discoveryState.TrackSzArrayType(typeSignature);
+                // Track the SZ array type
+                _ = InteropTypeDiscovery.TryTrackSzArrayType(
+                    typeSignature: typeSignature,
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)

@@ -62,6 +62,46 @@ internal partial class InteropTypeDiscovery
     }
 
     /// <summary>
+    /// Tries to track an SZ array type.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="SzArrayTypeSignature"/> for the SZ array type to analyze.</param>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
+    public static bool TryTrackSzArrayType(
+        SzArrayTypeSignature typeSignature,
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Ignore types that are not fully resolvable (this likely means a .dll is missing)
+        if (!typeSignature.IsFullyResolvable(out _))
+        {
+            // Log a warning the first time we fail to resolve this SZ array in this module
+            if (discoveryState.TrackFailedResolutionType(typeSignature, module))
+            {
+                WellKnownInteropExceptions.SzArrayTypeSignatureNotResolvedError(typeSignature, module).LogOrThrow(args.TreatWarningsAsErrors);
+            }
+
+            return false;
+        }
+
+        // Ignore array types that are not Windows Runtime types
+        if (!typeSignature.IsWindowsRuntimeType(interopReferences))
+        {
+            return false;
+        }
+
+        // Track all SZ array types, as we'll need to emit marshalling code for them
+        discoveryState.TrackSzArrayType(typeSignature);
+
+        return true;
+    }
+
+    /// <summary>
     /// Tries to track a constructed generic Windows Runtime type.
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>

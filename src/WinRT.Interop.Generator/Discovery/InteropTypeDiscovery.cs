@@ -23,6 +23,49 @@ internal static partial class InteropTypeDiscovery
     private static TypeSignatureEquatableSet.Builder? TypeSignatures;
 
     /// <summary>
+    /// Tries to track a given composable Windows Runtime type.
+    /// </summary>
+    /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <returns>Whether the input type was actually tracked, or ignored.</returns>
+    public static bool TryTrackTypeHierarchyType(
+        TypeDefinition typeDefinition,
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState)
+    {
+        // We only care about projected Windows Runtime classes
+        if (!typeDefinition.IsProjectedWindowsRuntimeClassType)
+        {
+            return false;
+        }
+
+        // Ignore types that don't have another base class
+        if (!typeDefinition.HasBaseType(out ITypeDefOrRef? baseType))
+        {
+            return false;
+        }
+
+        // We need to resolve the base type to be able to look up attributes on it
+        if (!baseType.IsFullyResolvable(out _))
+        {
+            WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+
+            return false;
+        }
+
+        // If the base type is also a projected Windows Runtime type, track it
+        if (baseType.IsProjectedWindowsRuntimeType)
+        {
+            discoveryState.TrackTypeHierarchyEntry(typeDefinition.FullName, baseType.FullName);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Tries to track an exposed user-defined type.
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>
