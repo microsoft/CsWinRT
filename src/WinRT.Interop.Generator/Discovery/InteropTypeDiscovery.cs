@@ -79,6 +79,13 @@ internal static partial class InteropTypeDiscovery
         InteropGeneratorDiscoveryState discoveryState,
         InteropReferences interopReferences)
     {
+        // Ignore all type definitions with generic parameters where we don't have constructed
+        // generic type signature. We can track these separately when we see them as instantiated.
+        if (typeDefinition.HasGenericParameters && typeSignature is not GenericInstanceTypeSignature)
+        {
+            return;
+        }
+
         // We can skip all projected Windows Runtime types early, as they don't need CCW support
         if (typeDefinition.IsProjectedWindowsRuntimeType)
         {

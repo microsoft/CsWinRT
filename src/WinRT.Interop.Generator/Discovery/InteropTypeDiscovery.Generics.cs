@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
@@ -27,6 +28,13 @@ internal partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Filter all constructed generic type signatures we have. We don't care about generic type
+        // definitions (eg. 'TypedEventHandler`1<!0, !1>') for the purposes of marshalling code.
+        if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
+        {
+            return;
+        }
+
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
         if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
         {
@@ -77,6 +85,13 @@ internal partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Filter all constructed generic type signatures we have. We don't care about
+        // generic type definitions (eg. '!0[]') for the purposes of marshalling code.
+        if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
+        {
+            return;
+        }
+
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
         if (!typeSignature.IsFullyResolvable(out _))
         {

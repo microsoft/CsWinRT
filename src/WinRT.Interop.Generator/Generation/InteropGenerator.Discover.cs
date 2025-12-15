@@ -187,14 +187,6 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Ignore all type definitions with generic parameters, because they would be
-                // unconstructed (by definition). We'll process instantiations that we can see
-                // separately in the discovery phase, same as we do for constructed interfaces.
-                if (type.HasGenericParameters)
-                {
-                    continue;
-                }
-
                 // Track the type (if it's not applicable, it will be a no-op)
                 InteropTypeDiscovery.TryTrackExposedUserDefinedType(
                     typeDefinition: type,
