@@ -6,6 +6,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -79,6 +80,12 @@ internal static partial class InteropTypeDiscovery
         InteropGeneratorDiscoveryState discoveryState,
         InteropReferences interopReferences)
     {
+        // Ignore types that should explicitly be excluded
+        if (TypeExclusions.IsExcluded(typeDefinition, interopReferences))
+        {
+            return;
+        }
+
         // Ignore all type definitions with generic parameters where we don't have constructed
         // generic type signature. We can track these separately when we see them as instantiated.
         if (typeDefinition.HasGenericParameters && typeSignature is not GenericInstanceTypeSignature)

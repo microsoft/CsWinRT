@@ -28,6 +28,12 @@ internal static class TypeExclusions
             return IsExcluded(typeSignature.GenericType, interopReferences);
         }
 
+        // Also handle SZ arrays and check their element type
+        if (type is SzArrayTypeSignature arraySignature)
+        {
+            return IsExcluded(arraySignature.BaseType, interopReferences);
+        }
+
         // Check if the input type matches any of our exclusions
         foreach (TypeReference excludedType in (ReadOnlySpan<TypeReference>)[interopReferences.Task1])
         {
