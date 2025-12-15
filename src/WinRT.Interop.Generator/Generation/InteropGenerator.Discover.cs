@@ -162,15 +162,15 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that don't have another base class
-                if (type.BaseType is null || SignatureComparer.IgnoreVersion.Equals(type.BaseType, module.CorLibTypeFactory.Object))
+                if (!type.HasBaseType(out ITypeDefOrRef? baseType))
                 {
                     continue;
                 }
 
                 // We need to resolve the base type to be able to look up attributes on it
-                if (!type.BaseType.IsFullyResolvable(out TypeDefinition? baseType))
+                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
                 {
-                    WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(type.BaseType, type).LogOrThrow(args.TreatWarningsAsErrors);
+                    WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, type).LogOrThrow(args.TreatWarningsAsErrors);
 
                     continue;
                 }
