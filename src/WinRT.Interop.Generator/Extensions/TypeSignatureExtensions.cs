@@ -47,7 +47,7 @@ internal static class TypeSignatureExtensions
         }
 
         /// <summary>
-        /// Enumerates all interface types implementation by the specified type, including those implemented by base types.
+        /// Enumerates all interface types implemented by the specified type, including those implemented by base types.
         /// </summary>
         /// <returns>The sequence of interface types implemented by the input type.</returns>
         /// <remarks>
@@ -84,7 +84,7 @@ internal static class TypeSignatureExtensions
                     yield return interfaceSignature.InstantiateGenericTypes(context);
 
                     // Also recurse on the base interfaces (no need to instantiate the returned interface type
-                    // signatures for base interfaces here: they will be already instantiate when returned).
+                    // signatures for base interfaces here: they will be already instantiated when returned).
                     foreach (TypeSignature baseInterface in interfaceSignature.EnumerateAllInterfaces())
                     {
                         yield return baseInterface;
