@@ -89,9 +89,15 @@ public abstract class WindowsRuntimeReadOnlyDictionary<
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/>.
+    /// </remarks>
     public IEnumerable<TKey> Keys => _keys ??= new ReadOnlyDictionaryKeyCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="ReadOnlyDictionaryValueCollection{TKey, TValue}"/>.
+    /// </remarks>
     public IEnumerable<TValue> Values => _values ??= new ReadOnlyDictionaryValueCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
