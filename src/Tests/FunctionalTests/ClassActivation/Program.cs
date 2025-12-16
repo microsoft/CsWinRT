@@ -5,10 +5,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using TestComponent;
 using TestComponentCSharp;
+using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Foundation.Tasks;
 using WindowsRuntime.InteropServices;
 
 CustomDisposableTest customDisposableTest = new();
@@ -115,6 +118,46 @@ unsafe
     }
 }
 
+IAsyncActionWithProgress<int> asyncActionWithProgress = GenericFactory.MakeAsyncActionWithProgress();
+
+unsafe
+{
+    void* asyncActionWithProgressPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(asyncActionWithProgress);
+
+    try
+    {
+        ComHelpers.EnsureQueryInterface(
+            unknownPtr: asyncActionWithProgressPtr,
+            iids: [
+                new Guid("0EDE398F-0090-574E-AD30-E152B433BF6A"),   // 'IAsyncActionWithProgress<int>'
+                new Guid("0DB2462F-B6D6-5A6C-8834-B530BAAA45FD")]); // 'IAsyncInfo'
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(asyncActionWithProgressPtr);
+    }
+}
+
+IAsyncOperation<TimeSpan> asyncOperation = GenericFactory.MakeAsyncOperation();
+
+unsafe
+{
+    void* asyncOperationPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(asyncOperation);
+
+    try
+    {
+        ComHelpers.EnsureQueryInterface(
+            unknownPtr: asyncOperationPtr,
+            iids: [
+                new Guid("1AE01209-1ACA-51D3-A080-8B1214E0A39E"),   // 'IAsyncOperation<TimeSpan>'
+                new Guid("0DB2462F-B6D6-5A6C-8834-B530BAAA45FD")]); // 'IAsyncInfo'
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(asyncOperationPtr);
+    }
+}
+
 sealed class TestComposable : Composable
 {
 }
@@ -209,6 +252,26 @@ class GenericFactory
     public static object Make() => Make<bool>();
 
     private static object Make<T>() => new GenericType<T, float>();
+
+    // Specific test for 'AsyncInfo.Run' with explicit type arguments
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public static IAsyncActionWithProgress<int> MakeAsyncActionWithProgress()
+    {
+        return AsyncInfo.Run<int>((token, progress) => Task.CompletedTask);
+    }
+
+    // Specific test for 'AsyncInfo.Run' with transitive type arguments
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public static IAsyncOperation<TimeSpan> MakeAsyncOperation()
+    {
+        return MakeAsyncActionOperation<TimeSpan>();
+    }
+
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    private static IAsyncOperation<T> MakeAsyncActionOperation<T>()
+    {
+        return AsyncInfo.Run(token => Task.FromResult(default(T)));
+    }
 }
 
 [Guid("3C832AA5-5F7E-46EE-B1BF-7FE03AE866AF")]
