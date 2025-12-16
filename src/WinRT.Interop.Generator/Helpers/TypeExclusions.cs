@@ -9,7 +9,7 @@ using WindowsRuntime.InteropGenerator.References;
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
 /// <summary>
-/// Contains logic to handle special-cases types to exclude from the interop API surface.
+/// Contains logic to handle special-case types to exclude from the interop API surface.
 /// </summary>
 internal static class TypeExclusions
 {
