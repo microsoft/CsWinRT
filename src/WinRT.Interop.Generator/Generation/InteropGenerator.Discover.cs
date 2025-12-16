@@ -192,7 +192,8 @@ internal partial class InteropGenerator
                     typeSignature: type.ToTypeSignature(),
                     args: args,
                     discoveryState: discoveryState,
-                    interopReferences: interopReferences);
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)

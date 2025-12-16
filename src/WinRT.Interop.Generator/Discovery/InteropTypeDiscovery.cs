@@ -69,6 +69,7 @@ internal static partial class InteropTypeDiscovery
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module currently being analyzed.</param>
     /// <remarks>
     /// This method expects <paramref name="typeDefinition"/> to either be non-generic, or
     /// to have <paramref name="typeSignature"/> be a fully constructed signature for it.
@@ -78,7 +79,8 @@ internal static partial class InteropTypeDiscovery
         TypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
-        InteropReferences interopReferences)
+        InteropReferences interopReferences,
+        ModuleDefinition module)
     {
         // Ignore types that should explicitly be excluded
         if (TypeExclusions.IsExcluded(typeDefinition, interopReferences))
@@ -158,7 +160,12 @@ internal static partial class InteropTypeDiscovery
                 // So the discovery logic for generic instantiations below would otherwise miss it.
                 if (interfaceSignature is GenericInstanceTypeSignature constructedSignature)
                 {
-                    TryTrackWindowsRuntimeGenericInterfaceTypeInstance(constructedSignature, discoveryState, interopReferences);
+                    TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                        typeSignature: constructedSignature,
+                        args: args,
+                        discoveryState,
+                        interopReferences: interopReferences,
+                        module: module);
                 }
             }
             else if (interfaceDefinition.IsGeneratedComInterfaceType)
