@@ -165,7 +165,7 @@ internal partial class InteropTypeDiscovery
         // Track all projected Windows Runtime generic interfaces
         if (typeDefinition.IsInterface)
         {
-            discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(typeSignature, discoveryState, interopReferences);
 
             // We also want to crawl base interfaces
             foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
@@ -191,8 +191,106 @@ internal partial class InteropTypeDiscovery
                     continue;
                 }
 
-                discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
+                TryTrackWindowsRuntimeGenericInterfaceTypeInstance(constructedSignature, discoveryState, interopReferences);
             }
+        }
+    }
+
+    /// <summary>
+    /// Tries to track a constructed generic Windows Runtime interface type.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="GenericInstanceTypeSignature"/> for the constructed type to analyze.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    private static void TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+        GenericInstanceTypeSignature typeSignature,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropReferences interopReferences)
+    {
+        if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
+        {
+            discoveryState.TrackIEnumerator1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
+        {
+            discoveryState.TrackIEnumerable1Type(typeSignature);
+
+            // We need special handling for 'IEnumerator<T>' types whenever we discover any constructed 'IEnumerable<T>'
+            // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
+            // from other generated code, or projections. This special handling is needed because unlike with the other
+            // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
+            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
+        {
+            discoveryState.TrackIList1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
+        {
+            discoveryState.TrackIReadOnlyList1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
+        {
+            discoveryState.TrackIDictionary2Type(typeSignature);
+
+            // When discovering dictionary types, make sure to also track 'KeyValuePair<TKey, TValue>' types. Those will
+            // be needed when generating code for 'IEnumerator<KeyValuePair<TKey, TValue>>' types, which will be discovered
+            // automatically. However, the same is not true the constructed 'KeyValuePair<TKey, TValue>' types themselves.
+            // This is for the same reason why we need the other special cases in this method: members are not analyzed.
+            discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
+        {
+            discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
+
+            // Same handling as above for constructed 'KeyValuePair<TKey, TValue>' types
+            discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
+        {
+            discoveryState.TrackIObservableVector1Type(typeSignature);
+
+            // We need special handling for constructed 'VectorChangedEventHandler<T>' types, as those are required for each
+            // discovered 'IObservableVector<T>' type. These are not necessarily discovered in the same way, as while we are
+            // recursively constructing interfaces, we don't have the same logic for delegate types (or for types used in
+            // any signature of interface members). Because we only need this delegate type and the one below, we can just
+            // special case it. That is, we manually construct it every time we discover a constructed 'IObservableVector<T>'.
+            discoveryState.TrackGenericDelegateType(interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
+        {
+            discoveryState.TrackIObservableMap2Type(typeSignature);
+
+            // Same handling as above for 'MapChangedEventHandler<K,V>' types
+            discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
+        {
+            discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncActionWithProgress1))
+        {
+            discoveryState.TrackIAsyncActionWithProgress1Type(typeSignature);
+
+            // Ensure that the delegate types for this instantiation of 'IAsyncActionWithProgress<TProgress>' are also tracked.
+            // Same rationale as above for the other special cased types. Same below as well for the other async info types.
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperation1))
+        {
+            discoveryState.TrackIAsyncOperation1Type(typeSignature);
+
+            // Same handling as above for 'AsyncOperationCompletedHandler<TResult>'
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+        }
+        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperationWithProgress2))
+        {
+            discoveryState.TrackIAsyncOperationWithProgress2Type(typeSignature);
+
+            // Same handling as above for 'AsyncOperationProgressHandler<TResult, TProgress>' and 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>'
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
     }
 

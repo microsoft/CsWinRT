@@ -158,7 +158,7 @@ internal static partial class InteropTypeDiscovery
                 // So the discovery logic for generic instantiations below would otherwise miss it.
                 if (interfaceSignature is GenericInstanceTypeSignature constructedSignature)
                 {
-                    discoveryState.TrackGenericInterfaceType(constructedSignature, interopReferences);
+                    TryTrackWindowsRuntimeGenericInterfaceTypeInstance(constructedSignature, discoveryState, interopReferences);
                 }
             }
             else if (interfaceDefinition.IsGeneratedComInterfaceType)
