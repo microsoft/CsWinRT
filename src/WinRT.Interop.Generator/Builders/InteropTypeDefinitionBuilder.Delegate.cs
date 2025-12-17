@@ -8,8 +8,9 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
-using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
+using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -71,19 +72,28 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature delegateType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+
+            // Prepare the sender and arguments types. This path is only ever reached for valid
+            // generic Windows Runtime delegate types, and they all have exactly two type arguments.
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+
             // Define the 'Invoke' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int Invoke(void* thisPtr, void* sender, void* e)
+            // private static int Invoke(void* thisPtr, <ABI_SENDER_TYPE> sender, <ABI_ARGS_TYPE> e)
             MethodDefinition invokeMethod = new(
                 name: "Invoke"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -91,8 +101,8 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType()]))
+                        senderType.GetAbiType(interopReferences).Import(module),
+                        argsType.GetAbiType(interopReferences).Import(module)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -101,6 +111,8 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction nop_parameter1Rewrite = new(Nop);
+            CilInstruction nop_parameter2Rewrite = new(Nop);
 
             // Create a method body for the 'Invoke' method
             invokeMethod.CilMethodBody = new CilMethodBody()
@@ -113,11 +125,9 @@ internal partial class InteropTypeDefinitionBuilder
                     // '.try' code
                     { ldarg_0_tryStart },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
-                    { Ldarg_1 },
-                    { Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
-                    { Ldarg_2 },
-                    { Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
-                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module).Import(module) },
+                    { nop_parameter1Rewrite },
+                    { nop_parameter2Rewrite },
+                    { Callvirt, delegateInvokeMethod.Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -144,6 +154,19 @@ internal partial class InteropTypeDefinitionBuilder
                     }
                 }
             };
+
+            // Track rewriting the two parameters for this method
+            emitState.TrackManagedParameterMethodRewrite(
+                paraneterType: senderType,
+                method: invokeMethod,
+                marker: nop_parameter1Rewrite,
+                parameterIndex: 1);
+
+            emitState.TrackManagedParameterMethodRewrite(
+                paraneterType: argsType,
+                method: invokeMethod,
+                marker: nop_parameter2Rewrite,
+                parameterIndex: 2);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
