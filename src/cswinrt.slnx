@@ -206,6 +206,7 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/SourceGenerator2Test/SourceGenerator2Test.csproj" Id="c8643d0a-8a2b-47a3-b903-4d339d0cbddc" />
     <Project Path="Tests/SourceGeneratorTest/SourceGeneratorTest.csproj">
       <Build Project="false" />
     </Project>
