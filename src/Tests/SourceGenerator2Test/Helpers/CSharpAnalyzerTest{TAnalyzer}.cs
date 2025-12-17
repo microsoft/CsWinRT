@@ -62,7 +62,7 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
 
-        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80; // TODO: use the .NET 10 ref assemblies
+        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net100;
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location));
 
         return test.RunAsync(CancellationToken.None);
