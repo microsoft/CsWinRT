@@ -2035,6 +2035,18 @@ internal partial class InteropGenerator
                             emitState: emitState,
                             module: module);
                         break;
+
+                    // Rewrite managed parameters
+                    case MethodRewriteInfo.ManagedParameter managedParameterInfo:
+                        InteropMethodRewriteFactory.ManagedParameter.RewriteMethod(
+                            parameterType: managedParameterInfo.Type,
+                            method: managedParameterInfo.Method,
+                            marker: managedParameterInfo.Marker,
+                            parameterIndex: managedParameterInfo.ParameterIndex,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
                     default: throw new UnreachableException();
                 }
             }
