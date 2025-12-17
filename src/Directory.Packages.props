@@ -35,6 +35,7 @@
     <PackageVersion Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="$(MicrosoftWinAppSDKIxpVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="$(MicrosoftWinAppSDKWinUIVersion)" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
+    <PackageVersion Include="MSTest" Version="4.0.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.10.1" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.10.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
