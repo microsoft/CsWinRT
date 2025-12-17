@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using WindowsRuntime.SourceGenerator.Models;
 
-#pragma warning disable IDE0046
+#pragma warning disable CS8620, IDE0046 // TODO: remove 'CS8620' suppression when compiler warning is fixed
 
 namespace WindowsRuntime.SourceGenerator;
 
