@@ -574,6 +574,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// A parameter index was not valid in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteSourceLocalTypeMismatchError(TypeSignature localType, TypeSignature returnType, MethodDefinition method)
+    {
+        return Exception(67, $"Local variable of type '{localType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
