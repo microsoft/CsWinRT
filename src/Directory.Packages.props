@@ -46,6 +46,7 @@
     <PackageVersion Include="System.Numerics.Tensors" Version="9.0.7" />
     <PackageVersion Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageVersion Include="System.Runtime.Extensions" Version="4.3.1" />
+    <PackageVersion Include="MSTest" Version="4.1.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.1.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.1.0" />
     <PackageVersion Include="MSTest.Analyzers" Version="4.1.0" />
