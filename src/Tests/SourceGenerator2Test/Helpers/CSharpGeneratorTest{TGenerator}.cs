@@ -27,7 +27,7 @@ internal static class CSharpGeneratorTest<TGenerator>
     /// <param name="languageVersion">The language version to use to run the test.</param>
     public static void VerifySources(string source, (string Filename, string Source) result, LanguageVersion languageVersion = LanguageVersion.CSharp14)
     {
-        RunGenerator(source, out Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, languageVersion);
+        RunGenerator(source, languageVersion, out Compilation compilation, out ImmutableArray<Diagnostic> diagnostics);
 
         // Ensure that no diagnostics were generated
         CollectionAssert.AreEquivalent((Diagnostic[])[], diagnostics);
@@ -72,14 +72,14 @@ internal static class CSharpGeneratorTest<TGenerator>
     /// Runs a generator and gathers the output results.
     /// </summary>
     /// <param name="source">The input source to process.</param>
+    /// <param name="languageVersion">The language version to use to run the test.</param>
     /// <param name="compilation"><inheritdoc cref="GeneratorDriver.RunGeneratorsAndUpdateCompilation" path="/param[@name='outputCompilation']/node()"/></param>
     /// <param name="diagnostics"><inheritdoc cref="GeneratorDriver.RunGeneratorsAndUpdateCompilation" path="/param[@name='diagnostics']/node()"/></param>
-    /// <param name="languageVersion">The language version to use to run the test.</param>
     private static void RunGenerator(
         string source,
+        LanguageVersion languageVersion,
         out Compilation compilation,
-        out ImmutableArray<Diagnostic> diagnostics,
-        LanguageVersion languageVersion = LanguageVersion.CSharp12)
+        out ImmutableArray<Diagnostic> diagnostics)
     {
         Compilation originalCompilation = CreateCompilation(source, languageVersion);
 
