@@ -2014,23 +2014,23 @@ internal partial class InteropGenerator
                 switch (rewriteInfo)
                 {
                     // Rewrite return values for managed types
-                    case ReturnTypeMethodRewriteInfo returnTypeInfo:
+                    case MethodRewriteInfo.ReturnValue returnValueInfo:
                         InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
-                            returnType: returnTypeInfo.Type,
-                            method: returnTypeInfo.Method,
-                            marker: returnTypeInfo.Marker,
-                            source: returnTypeInfo.Source,
+                            returnType: returnValueInfo.Type,
+                            method: returnValueInfo.Method,
+                            marker: returnValueInfo.Marker,
+                            source: returnValueInfo.Source,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);
                         break;
 
                     // Rewrite return values for native types
-                    case RetValTypeMethodRewriteInfo retValTypeInfo:
+                    case MethodRewriteInfo.RetVal retValInfo:
                         InteropMethodRewriteFactory.RetVal.RewriteMethod(
-                            retValType: retValTypeInfo.Type,
-                            method: retValTypeInfo.Method,
-                            marker: retValTypeInfo.Marker,
+                            retValType: retValInfo.Type,
+                            method: retValInfo.Method,
+                            marker: retValInfo.Marker,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);

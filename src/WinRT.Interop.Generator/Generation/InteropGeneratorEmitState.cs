@@ -88,7 +88,7 @@ internal sealed class InteropGeneratorEmitState
     /// <param name="returnType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
-    /// <param name="source"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Source" path="/node()"/></param>
+    /// <param name="source"><inheritdoc cref="MethodRewriteInfo.ReturnValue.Source" path="/node()"/></param>
     public void TrackReturnValueMethodRewrite(
         TypeSignature returnType,
         MethodDefinition method,
@@ -97,7 +97,7 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new ReturnTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.ReturnValue
         {
             Type = returnType,
             Method = method,
@@ -119,7 +119,7 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new RetValTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.RetVal
         {
             Type = retValType,
             Method = method,

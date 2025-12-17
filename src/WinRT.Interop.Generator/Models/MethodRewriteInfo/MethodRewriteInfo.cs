@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropGenerator.Models;
 /// <summary>
 /// Contains generic info for a target method for two-pass IL generation.
 /// </summary>
-internal abstract class MethodRewriteInfo : IComparable<MethodRewriteInfo>
+internal abstract partial class MethodRewriteInfo : IComparable<MethodRewriteInfo>
 {
     /// <summary>
     /// The type of the value that needs to be marshalled.
