@@ -90,6 +90,18 @@ internal static class WellKnownInterfaceIIDs
                 => "Windows_Foundation_Collections_IVectorChangedEventArgs",
 
             // XAML types
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable) && useWindowsUIXamlProjections
+                => "Windows_UI_Xaml_Interop_IBindableIterable",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
+                => "Microsoft_UI_Xaml_Interop_IBindableIterable",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator) && useWindowsUIXamlProjections
+                => "Windows_UI_Xaml_Interop_IBindableIterator",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
+                => "Microsoft_UI_Xaml_Interop_IBindableIterator",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList) && useWindowsUIXamlProjections
+                => "Windows_UI_Xaml_Interop_IBindableVector",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
+                => "Microsoft_UI_Xaml_Interop_IBindableVector",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
                 => "Windows_UI_Xaml_Interop_INotifyCollectionChanged",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged)
@@ -142,12 +154,8 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.KeyValuePair2)
                 => new Guid("02B51929-C1C4-4A7E-8940-0312B5C18500"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
-                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable1)
                 => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
-                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator1)
                 => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
@@ -156,8 +164,6 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("9D534225-231F-55E7-A6D0-6C938E2D9160"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.MapChangedEventHandler2)
                 => new Guid("19046F0B-CF81-5DEC-BBB2-7CC250DA8B8B"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
-                => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList1)
                 => new Guid("0E3F106F-A266-50A1-8043-C90FCF3844F6"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyList1)
@@ -190,6 +196,12 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
 
             // XAML types
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
+                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
+                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
+                => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
                 => new Guid("28B167D5-1A31-465B-9B25-D5C3AE686C40"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged)
