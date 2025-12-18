@@ -452,10 +452,13 @@ internal partial class InteropTypeDefinitionBuilder
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
 
             // Jump labels
-            CilInstruction nop_try_0 = new(Nop);
-            CilInstruction nop_try_1 = new(Nop);
+            CilInstruction nop_try_this = new(Nop);
+            CilInstruction nop_try_sender = new(Nop);
+            CilInstruction nop_try_args = new(Nop);
             CilInstruction nop_ld_sender = new(Nop);
             CilInstruction nop_ld_args = new(Nop);
+            CilInstruction nop_finally_sender = new(Nop);
+            CilInstruction nop_finally_args = new(Nop);
             CilInstruction ldloca_0_invoke = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ldloca_0_finally_0 = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ret = new(Ret);
@@ -470,10 +473,11 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_0 },
                     { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
                     { Stloc_0 },
+                    { nop_try_this },
 
                     // Arguments loading inside outer 'try/catch' block
-                    { nop_try_0 },
-                    { nop_try_1 },
+                    { nop_try_sender },
+                    { nop_try_args },
 
                     // 'Invoke' call for the native delegate (and 'try' for local [2])
                     { ldloca_0_invoke },
@@ -491,6 +495,11 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, ret.CreateLabel() },
 
+                    // Optional 'finally' blocks for the marshalled parameters. These are intentionally
+                    // in reverse order, as the inner-most parameter should be released first.
+                    { nop_finally_args },
+                    { nop_finally_sender },
+
                     // 'finally' for local [0]
                     { ldloca_0_finally_0 },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
@@ -505,7 +514,7 @@ internal partial class InteropTypeDefinitionBuilder
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Finally,
-                        TryStart = nop_try_0.CreateLabel(),
+                        TryStart = nop_try_this.CreateLabel(),
                         TryEnd = ldloca_0_finally_0.CreateLabel(),
                         HandlerStart = ldloca_0_finally_0.CreateLabel(),
                         HandlerEnd = ret.CreateLabel()
