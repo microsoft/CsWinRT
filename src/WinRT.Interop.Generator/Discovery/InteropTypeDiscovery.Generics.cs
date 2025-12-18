@@ -315,6 +315,9 @@ internal partial class InteropTypeDiscovery
 
             // Same handling as above for 'MapChangedEventHandler<K,V>' types
             discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+
+            // Also manually track the args type for 'MapChangedEventHandler<K,V>'
+            discoveryState.TrackIMapChangedEventArgs1Type(interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[1]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
