@@ -98,7 +98,7 @@ internal partial class InteropMethodRewriteFactory
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
                     body.Instructions.ReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerMethod)]);
+                        new CilInstruction(Call, marshallerMethod.Import(module))]);
                 }
                 else
                 {
@@ -116,7 +116,7 @@ internal partial class InteropMethodRewriteFactory
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
                     body.Instructions.ReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerMethod)]);
+                        new CilInstruction(Call, marshallerMethod.Import(module))]);
                 }
             }
             else if (parameterType.IsTypeOfString())
@@ -124,7 +124,7 @@ internal partial class InteropMethodRewriteFactory
                 // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
                 body.Instructions.ReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged)]);
+                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
             else if (parameterType is GenericInstanceTypeSignature)
             {
@@ -148,7 +148,7 @@ internal partial class InteropMethodRewriteFactory
                 // Marshal the value and release the original interface pointer
                 body.Instructions.ReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, marshallerMethod)]);
+                    new CilInstruction(Call, marshallerMethod.Import(module))]);
             }
         }
     }
