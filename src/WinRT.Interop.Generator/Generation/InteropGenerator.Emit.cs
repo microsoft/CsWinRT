@@ -293,6 +293,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -367,9 +368,6 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.VectorChangedEventHandler1))
                 {
-                    // We need the marshaller type for the 'IObservableVector<T>' implementation
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
-
                     InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
@@ -380,9 +378,6 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
                 {
-                    // We need the marshaller type for the 'IObservableMap<K, V>' implementation
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
-
                     InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
@@ -390,15 +385,6 @@ internal partial class InteropGenerator
                         emitState: emitState,
                         module: module,
                         eventSourceType: out _);
-                }
-                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionProgressHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationProgressHandler2) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationWithProgressCompletedHandler2))
-                {
-                    // We need these marshaller types for the various async type implementations
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
                 }
             }
             catch (Exception e)
@@ -478,9 +464,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumeratorComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IEnumerator1.Marshaller(
-                    enumeratorType: typeSignature,
-                    enumeratorComWrappersCallbackType: enumeratorComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: enumeratorComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -601,9 +587,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumerableComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IEnumerable1.Marshaller(
-                    enumerableType: typeSignature,
-                    enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: enumerableComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -724,9 +710,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyListComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyList1.Marshaller(
-                    readOnlyListType: typeSignature,
-                    readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: readOnlyListComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -856,9 +842,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition listComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IList1.Marshaller(
-                    listType: typeSignature,
-                    listComWrappersCallbackType: listComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: listComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -980,9 +966,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyDictionaryComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Marshaller(
-                    readOnlyDictionaryType: typeSignature,
-                    readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1113,9 +1099,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition dictionaryComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.Marshaller(
-                    dictionaryType: typeSignature,
-                    dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: dictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1310,9 +1296,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition argsComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Marshaller(
-                    argsType: typeSignature,
-                    argsComWrappersCallbackType: argsComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: argsComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1427,11 +1413,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IObservableVector1.Marshaller(
-                    vectorType: typeSignature,
-                    vectorComWrappersCallbackType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1543,11 +1530,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IObservableMap2.Marshaller(
-                    mapType: typeSignature,
-                    mapComWrappersCallbackType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1649,11 +1637,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition actionComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Marshaller(
-                    actionType: typeSignature,
-                    operationComWrappersCallbackType: actionComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: actionComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1755,11 +1744,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperation1.Marshaller(
-                    operationType: typeSignature,
-                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1861,11 +1851,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Marshaller(
-                    operationType: typeSignature,
-                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 

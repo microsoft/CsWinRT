@@ -649,6 +649,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -657,6 +658,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             MethodDefinition get_ReferenceIidMethod,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -767,6 +769,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             marshallerType.Methods.Add(unboxToUnmanagedMethod);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
         }
 
         /// <summary>
