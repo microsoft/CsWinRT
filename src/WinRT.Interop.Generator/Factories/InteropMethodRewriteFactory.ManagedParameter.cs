@@ -54,8 +54,7 @@ internal partial class InteropMethodRewriteFactory
                 throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }
 
-            // If we didn't find the marker, it means the target method is either invalid, or the
-            // supplied marker was incorrect (or the caller forgot to add it to the method body).
+            // Validate that the target parameter index is in range
             if ((uint)parameterIndex >= method.Parameters.Count)
             {
                 throw WellKnownInteropExceptions.MethodRewriteParameterIndexNotValidError(parameterIndex, method);
