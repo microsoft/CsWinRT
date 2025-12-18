@@ -410,6 +410,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+
+            // Prepare the sender and arguments types (same as for the 'Impl' type above)
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
@@ -418,9 +424,6 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(nativeDelegateType);
-
-            // Construct the 'Invoke' method on the delegate type, so we can get the constructed parameter types
-            MethodSignature invokeSignature = delegateType.Import(module).Resolve()!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
 
             // Define the 'Invoke' method as follows:
             //
@@ -432,8 +435,8 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module),
-                        invokeSignature.ParameterTypes[0].Import(module),
-                        invokeSignature.ParameterTypes[1].Import(module)]))
+                        senderType.Import(module),
+                        argsType.Import(module)]))
             { CilMethodBody = new CilMethodBody() };
 
             nativeDelegateType.Methods.Add(invokeMethod);
