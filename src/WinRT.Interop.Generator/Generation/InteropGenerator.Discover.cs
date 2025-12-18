@@ -14,7 +14,6 @@ using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
-using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -221,13 +220,6 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Filter all constructed generic type signatures we have. We don't care about generic type
-                // definitions (eg. 'TypedEventHandler`1<!0, !1>') for the purposes of marshalling code.
-                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
-                {
-                    continue;
-                }
-
                 // Track the constructed generic type (if it's not applicable, it will be a no-op)
                 InteropTypeDiscovery.TryTrackGenericTypeInstance(
                     typeSignature: typeSignature,
@@ -261,13 +253,6 @@ internal partial class InteropGenerator
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
                 args.Token.ThrowIfCancellationRequested();
-
-                // Filter all constructed generic type signatures we have. We don't care about
-                // generic type definitions (eg. '!0[]') for the purposes of marshalling code.
-                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
-                {
-                    continue;
-                }
 
                 // Track the SZ array type (if it's not applicable, it will be a no-op)
                 InteropTypeDiscovery.TryTrackSzArrayType(
