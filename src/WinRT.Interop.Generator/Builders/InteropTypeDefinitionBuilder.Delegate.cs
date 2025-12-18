@@ -436,14 +436,9 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module),
                         senderType.Import(module),
-                        argsType.Import(module)]))
-            { CilMethodBody = new CilMethodBody() };
+                        argsType.Import(module)]));
 
             nativeDelegateType.Methods.Add(invokeMethod);
-
-            // Get the method body for the 'Invoke' method
-            CilMethodBody invokeBody = invokeMethod.CilMethodBody;
-            CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue
@@ -452,93 +447,71 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
-            //   [1]: 'WindowsRuntimeObjectReferenceValue' (for 'senderValue')
-            //   [2]: 'WindowsRuntimeObjectReferenceValue' (for 'eValue')
-            //   [3]: 'void*' (for 'thisPtr')
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Void.MakePointerType()));
+            //   [1]: 'void*' (for 'thisPtr')
+            CilLocalVariable loc_0_thisValue = new(windowsRuntimeObjectReferenceValueType);
+            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
 
+            // Jump labels
+            CilInstruction nop_try_0 = new(Nop);
+            CilInstruction nop_try_1 = new(Nop);
+            CilInstruction nop_ld_sender = new(Nop);
+            CilInstruction nop_ld_args = new(Nop);
+            CilInstruction ldloca_0_invoke = new(Ldloca_S, loc_0_thisValue);
+            CilInstruction ldloca_0_finally_0 = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ret = new(Ret);
 
-            // Load the local [0]
-            _ = invokeInstructions.Add(Ldarg_0);
-            _ = invokeInstructions.Add(Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module));
-            _ = invokeInstructions.Add(Stloc_0);
-
-            // '.try' for local [0]
-            CilInstruction try_0 = invokeInstructions.Add(Ldarg_1);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.Import(module));
-            _ = invokeInstructions.Add(Stloc_1);
-
-            // '.try' for local [1]
-            CilInstruction try_1 = invokeInstructions.Add(Ldarg_2);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.Import(module));
-            _ = invokeInstructions.Add(Stloc_2);
-
-            // 'Invoke' call for the native delegate (and 'try' for local [2])
-            CilInstruction try_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Stloc_3);
-            _ = invokeInstructions.Add(Ldloc_3);
-            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Ldloc_3);
-            _ = invokeInstructions.Add(Ldind_I);
-            _ = invokeInstructions.Add(Ldfld, interopDefinitions.DelegateVftbl.Fields[3]);
-            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(interopReferences).Import(module).MakeStandAloneSignature());
-            _ = invokeInstructions.Add(Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module));
-            _ = invokeInstructions.Add(Leave_S, ret.CreateLabel());
-
-            // 'finally' for local [2]
-            CilInstruction finally_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            // 'finally' for local [1]
-            CilInstruction finally_1 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            // 'finally' for local [0]
-            CilInstruction finally_0 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            invokeInstructions.Add(ret);
-
-            // Setup 'try/finally' for local [0]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+            // Create a method body for the 'Invoke' method
+            invokeMethod.CilMethodBody = new CilMethodBody()
             {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_0.CreateLabel(),
-                TryEnd = finally_0.CreateLabel(),
-                HandlerStart = finally_0.CreateLabel(),
-                HandlerEnd = ret.CreateLabel()
-            });
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr },
+                Instructions =
+                {
+                    // Load the local [0]
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Stloc_0 },
 
-            // Setup 'try/finally' for local [1]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
-            {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_1.CreateLabel(),
-                TryEnd = finally_1.CreateLabel(),
-                HandlerStart = finally_1.CreateLabel(),
-                HandlerEnd = finally_0.CreateLabel()
-            });
+                    // Arguments loading inside outer 'try/catch' block
+                    { nop_try_0 },
+                    { nop_try_1 },
 
-            // Setup 'try/finally' for local [2]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
-            {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_2.CreateLabel(),
-                TryEnd = finally_2.CreateLabel(),
-                HandlerStart = finally_2.CreateLabel(),
-                HandlerEnd = finally_1.CreateLabel()
-            });
+                    // 'Invoke' call for the native delegate (and 'try' for local [2])
+                    { ldloca_0_invoke },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Stloc_1 },
+                    { Ldloc_1 },
+                    { nop_ld_sender },
+                    { nop_ld_args },
+                    { Ldnull }, // TODO: remove
+                    { Ldnull }, // TODO: remove
+                    { Ldloc_1 },
+                    { Ldind_I },
+                    { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
+                    { Calli, WellKnownTypeSignatureFactory.InvokeImpl(interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Leave_S, ret.CreateLabel() },
+
+                    // 'finally' for local [0]
+                    { ldloca_0_finally_0 },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+
+                    // return;
+                    { ret }
+                },
+                ExceptionHandlers =
+                {
+                    // Setup 'try/finally' for local [0]
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = nop_try_0.CreateLabel(),
+                        TryEnd = ldloca_0_finally_0.CreateLabel(),
+                        HandlerStart = ldloca_0_finally_0.CreateLabel(),
+                        HandlerEnd = ret.CreateLabel()
+                    }
+                }
+            };
         }
 
         /// <summary>
