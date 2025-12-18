@@ -459,7 +459,6 @@ internal partial class InteropTypeDefinitionBuilder
             CilInstruction nop_ld_args = new(Nop);
             CilInstruction nop_finally_sender = new(Nop);
             CilInstruction nop_finally_args = new(Nop);
-            CilInstruction ldloca_0_invoke = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ldloca_0_finally_0 = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ret = new(Ret);
 
@@ -480,7 +479,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { nop_try_args },
 
                     // 'Invoke' call for the native delegate (and 'try' for local [2])
-                    { ldloca_0_invoke },
+                    { Ldloca_S, loc_0_thisValue },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
                     { Stloc_1 },
                     { Ldloc_1 },
