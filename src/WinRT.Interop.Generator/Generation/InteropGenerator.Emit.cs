@@ -276,6 +276,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 

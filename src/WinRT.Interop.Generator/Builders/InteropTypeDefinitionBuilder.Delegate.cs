@@ -401,12 +401,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeDelegateType">The resulting callback type.</param>
         public static void NativeDelegateType(
             GenericInstanceTypeSignature delegateType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
@@ -485,8 +487,6 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldloc_1 },
                     { nop_ld_sender },
                     { nop_ld_args },
-                    { Ldnull }, // TODO: remove
-                    { Ldnull }, // TODO: remove
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
@@ -520,6 +520,23 @@ internal partial class InteropTypeDefinitionBuilder
                     }
                 }
             };
+
+            // Track rewriting the two parameters for this method
+            emitState.TrackNativeParameterMethodRewrite(
+                paraneterType: senderType,
+                method: invokeMethod,
+                tryMarker: nop_try_sender,
+                loadMarker: nop_ld_sender,
+                finallyMarker: nop_finally_sender,
+                parameterIndex: 1);
+
+            emitState.TrackNativeParameterMethodRewrite(
+                paraneterType: argsType,
+                method: invokeMethod,
+                tryMarker: nop_try_args,
+                loadMarker: nop_ld_args,
+                finallyMarker: nop_finally_args,
+                parameterIndex: 2);
         }
 
         /// <summary>
