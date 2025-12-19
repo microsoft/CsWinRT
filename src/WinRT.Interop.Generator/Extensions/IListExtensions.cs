@@ -22,6 +22,24 @@ internal static class IListExtensions
             return list.Count != 0 && list.ReferenceIndexOf(value) >= 0;
         }
 
+        /// <inheritdoc cref="List{T}.Remove(T)"/>
+        /// <remarks>
+        /// This method only ever compares values by reference equality.
+        /// </remarks>
+        public bool ReferenceRemove(T value)
+        {
+            int index = list.ReferenceIndexOf(value);
+
+            if (index >= 0)
+            {
+                list.RemoveAt(index);
+
+                return true;
+            }
+
+            return false;
+        }
+
         /// <inheritdoc cref="IList{T}.IndexOf(T)"/>
         /// <remarks>
         /// This method only ever compares values by reference equality.

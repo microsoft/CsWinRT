@@ -16,11 +16,23 @@ internal static class CilInstructionCollectionExtensions
     extension(CilInstructionCollection instructions)
     {
         /// <summary>
+        /// Removes a set of CIL instructions from the collection.
+        /// </summary>
+        /// <param name="items">The instructions to remove.</param>
+        public void ReferenceRemoveRange(params IEnumerable<CilInstruction> items)
+        {
+            foreach (CilInstruction item in items)
+            {
+                _ = instructions.ReferenceRemove(item);
+            }
+        }
+
+        /// <summary>
         /// Replaces a target instruction with a collection of new instructions.
         /// </summary>
         /// <param name="target">The instruction to replace.</param>
-        /// <param name="values">The new instructions to emit.</param>
-        public void ReplaceRange(CilInstruction target, params IEnumerable<CilInstruction> values)
+        /// <param name="items">The new instructions to emit.</param>
+        public void ReplaceRange(CilInstruction target, params IEnumerable<CilInstruction> items)
         {
             int index = instructions.ReferenceIndexOf(target);
 
@@ -31,7 +43,7 @@ internal static class CilInstructionCollectionExtensions
             }
 
             instructions.RemoveAt(index);
-            instructions.InsertRange(index, values);
+            instructions.InsertRange(index, items);
         }
     }
 }
