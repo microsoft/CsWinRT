@@ -96,13 +96,43 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    /// <remarks>This method always assumes the <see cref="Delegate"/> type will take two objects as input parameters.</remarks>
+    /// <remarks>
+    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// this overload just uses <see cref="void"/><c>*</c> as sender and args types, so it can be shared across reference types (for both types).
+    /// </remarks>
     public static TypeDefinition DelegateVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        return DelegateVftbl(
+            ns: null,
+            name: "<DelegateVftbl>"u8,
+            senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="senderType">The sender type for the vtable type.</param>
+    /// <param name="argsType">The args type for the vtable type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition DelegateVftbl(
+        Utf8String? ns,
+        Utf8String name,
+        TypeSignature senderType,
+        TypeSignature argsType,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
-            ns: null,
-            name: "<DelegateVftbl>"u8,
+            ns: ns,
+            name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.ValueType.Import(module));
 
@@ -112,14 +142,17 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
 
         // Also get the 'Invoke' signature
-        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(interopReferences);
+        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(
+            senderType: senderType,
+            argsType: argsType,
+            interopReferences: interopReferences);
 
         // The vtable layout for 'IDelegate' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT> Invoke;
+        // public delegate* unmanaged[MemberFunction]<void*, <SENDER_TYPE>, <ARGS_TYPE>, HRESULT> Invoke;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));

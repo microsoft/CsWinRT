@@ -243,13 +243,18 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
-    /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate, taking objects for both parameters.
+    /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate.
     /// </summary>
+    /// <param name="senderType">The sender type for the vtable type.</param>
+    /// <param name="argsType">The args type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static MethodSignature InvokeImpl(InteropReferences interopReferences)
+    public static MethodSignature InvokeImpl(
+        TypeSignature senderType,
+        TypeSignature argsType,
+        InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <SENDER_TYPE>, <ARGS_TYPE>, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -258,8 +263,8 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                senderType,
+                argsType]);
     }
 
     /// <summary>
