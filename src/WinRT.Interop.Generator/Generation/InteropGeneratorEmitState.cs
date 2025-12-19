@@ -128,7 +128,7 @@ internal sealed class InteropGeneratorEmitState
     }
 
     /// <summary>
-    /// Tracks a method rewrite that involves loading a parameter in the specified method.
+    /// Tracks a method rewrite that involves loading a managed parameter in the specified method.
     /// </summary>
     /// <param name="paraneterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
@@ -147,6 +147,36 @@ internal sealed class InteropGeneratorEmitState
             Type = paraneterType,
             Method = method,
             Marker = marker,
+            ParameterIndex = parameterIndex
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves loading a native parameter in the specified method.
+    /// </summary>
+    /// <param name="paraneterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="tryMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.TryMarker" path="/node()"/></param>
+    /// <param name="loadMarker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    /// <param name="finallyMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.FinallyMarker" path="/node()"/></param>
+    /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.NativeParameter.ParameterIndex" path="/node()"/></param>
+    public void TrackNativeParameterMethodRewrite(
+        TypeSignature paraneterType,
+        MethodDefinition method,
+        CilInstruction tryMarker,
+        CilInstruction loadMarker,
+        CilInstruction finallyMarker,
+        int parameterIndex)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.NativeParameter
+        {
+            Type = paraneterType,
+            Method = method,
+            TryMarker = tryMarker,
+            Marker = loadMarker,
+            FinallyMarker = finallyMarker,
             ParameterIndex = parameterIndex
         });
     }
