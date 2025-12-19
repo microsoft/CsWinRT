@@ -60,7 +60,7 @@ internal partial class InteropMethodRewriteFactory
 
             // If we didn't find the marker, it means the target method is either invalid, or the
             // supplied marker was incorrect (or the caller forgot to add it to the method body).
-            if (!body.Instructions.Contains(marker))
+            if (!body.Instructions.ReferenceContains(marker))
             {
                 throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }

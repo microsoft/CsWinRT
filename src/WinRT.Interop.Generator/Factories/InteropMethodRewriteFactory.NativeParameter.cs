@@ -56,7 +56,7 @@ internal partial class InteropMethodRewriteFactory
             // If we didn't find any of markers, it means the target method is either invalid
             foreach (CilInstruction marker in (ReadOnlySpan<CilInstruction>)[tryMarker, loadMarker, finallyMarker])
             {
-                if (!body.Instructions.Contains(marker))
+                if (!body.Instructions.ReferenceContains(marker))
                 {
                     throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
                 }

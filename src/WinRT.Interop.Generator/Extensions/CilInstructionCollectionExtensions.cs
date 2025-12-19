@@ -22,20 +22,10 @@ internal static class CilInstructionCollectionExtensions
         /// <param name="values">The new instructions to emit.</param>
         public void ReplaceRange(CilInstruction target, params IEnumerable<CilInstruction> values)
         {
-            int index;
-
-            // Find the index of the target instruction in the collection.
-            // We can't use 'IndexOf', as we only want to match by reference.
-            for (index = 0; index < instructions.Count; index++)
-            {
-                if (instructions[index] == target)
-                {
-                    break;
-                }
-            }
+            int index = instructions.ReferenceIndexOf(target);
 
             // Ensure we did find the target instruction
-            if (index >= instructions.Count)
+            if (index == -1)
             {
                 throw new ArgumentException("The target instruction was not found in the collection.", nameof(target));
             }
