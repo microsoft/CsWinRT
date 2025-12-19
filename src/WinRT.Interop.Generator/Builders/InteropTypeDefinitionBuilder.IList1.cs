@@ -86,9 +86,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
-            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
-            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            // For types which use 'void*' as their ABI types, we can share the same vtable type definition
+            if (elementType.GetAbiType(interopReferences).IsTypeOfVoidPointer())
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 
