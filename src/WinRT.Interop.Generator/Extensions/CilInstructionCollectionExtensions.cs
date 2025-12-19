@@ -32,7 +32,7 @@ internal static class CilInstructionCollectionExtensions
         /// </summary>
         /// <param name="target">The instruction to replace.</param>
         /// <param name="items">The new instructions to emit.</param>
-        public void ReplaceRange(CilInstruction target, params IEnumerable<CilInstruction> items)
+        public void ReferenceReplaceRange(CilInstruction target, params IEnumerable<CilInstruction> items)
         {
             int index = instructions.ReferenceIndexOf(target);
 

@@ -89,7 +89,7 @@ internal partial class InteropMethodRewriteFactory
                         _ => new CilInstruction(Stobj, retValType.Import(module).ToTypeDefOrRef()),
                     };
 
-                    body.Instructions.ReplaceRange(marker, [storeInstruction]);
+                    body.Instructions.ReferenceReplaceRange(marker, [storeInstruction]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
@@ -137,7 +137,7 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [retValType]));
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         new CilInstruction(Call, marshallerMethod.Import(module)),
                         new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
                 }
@@ -145,21 +145,21 @@ internal partial class InteropMethodRewriteFactory
             else if (retValType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller'
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stind_I)]);
             }
             else if (retValType.IsTypeOfType(interopReferences))
             {
                 // 'Type' values also need their own specialized marshaller
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stobj, interopReferences.AbiType.Import(module).ToTypeDefOrRef())]);
             }
             else if (retValType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, and needs its own specialized marshaller
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stobj, interopReferences.AbiException.Import(module).ToTypeDefOrRef())]);
             }
@@ -213,7 +213,7 @@ internal partial class InteropMethodRewriteFactory
             body.LocalVariables.Add(loc_returnValue);
 
             // Marshal the value and detach its native pointer before assigning it to the target location
-            body.Instructions.ReplaceRange(marker, [
+            body.Instructions.ReferenceReplaceRange(marker, [
                 new CilInstruction(Call, marshallerMethod.Import(module)),
                 CilInstruction.CreateStloc(loc_returnValue, body),
                 new CilInstruction(Ldloca_S, loc_returnValue),

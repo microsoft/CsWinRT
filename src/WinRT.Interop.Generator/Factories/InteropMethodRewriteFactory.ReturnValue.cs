@@ -71,7 +71,7 @@ internal partial class InteropMethodRewriteFactory
                 // If the return type is blittable, we can always return it directly (simplest case)
                 if (returnType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
                         new CilInstruction(Ret)]);
                 }
@@ -161,7 +161,7 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [returnType.GetAbiType(interopReferences)]));
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
                         new CilInstruction(Call, marshallerMethod.Import(module)),
                         new CilInstruction(Ret)]);
@@ -194,7 +194,7 @@ internal partial class InteropMethodRewriteFactory
             else if (returnType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, though it's simple: the ABI type is an unmanaged value type
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdloc(source, body),
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged.Import(module)),
                     new CilInstruction(Ret)]);
@@ -263,7 +263,7 @@ internal partial class InteropMethodRewriteFactory
             CilInstruction ldloc_finallyEnd = CilInstruction.CreateLdloc(loc_returnValue, body);
 
             // Marshal the value and release the original interface pointer, or dispose the ABI value
-            body.Instructions.ReplaceRange(marker, [
+            body.Instructions.ReferenceReplaceRange(marker, [
                 ldloc_tryStart,
                 new CilInstruction(Call, marshallerMethod.Import(module)),
                 CilInstruction.CreateStloc(loc_returnValue, body),

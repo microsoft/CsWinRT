@@ -81,8 +81,8 @@ internal partial class InteropMethodRewriteFactory
                 // If the return type is blittable, we can just load it directly it directly (simplest case)
                 if (parameterType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.RemoveRange([tryMarker, finallyMarker]);
-                    body.Instructions.ReplaceRange(loadMarker, CilInstruction.CreateLdarg(parameterIndex));
+                    body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                    body.Instructions.ReferenceReplaceRange(loadMarker, CilInstruction.CreateLdarg(parameterIndex));
                 }
                 else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
                 {
@@ -159,20 +159,20 @@ internal partial class InteropMethodRewriteFactory
             else if (parameterType.IsTypeOfString())
             {
                 // TODO
-                body.Instructions.RemoveRange([tryMarker, finallyMarker]);
-                body.Instructions.ReplaceRange(loadMarker, new CilInstruction(Ldnull));
+                body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                body.Instructions.ReferenceReplaceRange(loadMarker, new CilInstruction(Ldnull));
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
                 // TODO
-                body.Instructions.RemoveRange([tryMarker, finallyMarker]);
-                body.Instructions.ReplaceRange(loadMarker, new CilInstruction(Ldnull));
+                body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                body.Instructions.ReferenceReplaceRange(loadMarker, new CilInstruction(Ldnull));
             }
             else if (parameterType.IsTypeOfException(interopReferences))
             {
                 // The ABI type of 'Exception' is unmanaged, so we can marshal the value directly
-                body.Instructions.RemoveRange([tryMarker, finallyMarker]);
-                body.Instructions.ReplaceRange(loadMarker, [
+                body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                body.Instructions.ReferenceReplaceRange(loadMarker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module))]);
             }
@@ -234,7 +234,7 @@ internal partial class InteropMethodRewriteFactory
             CilInstruction nop_finallyEnd = new(Nop);
 
             // Marshal the value before the call
-            body.Instructions.ReplaceRange(tryMarker, [
+            body.Instructions.ReferenceReplaceRange(tryMarker, [
                 CilInstruction.CreateLdarg(parameterIndex),
                 new CilInstruction(Call, marshallerMethod.Import(module)),
                 CilInstruction.CreateStloc(loc_parameter, body),
@@ -244,13 +244,13 @@ internal partial class InteropMethodRewriteFactory
             // we'll get the pointer from it. Otherwise, we just load the ABI value and pass it directly to native.
             if (parameterAbiType.IsTypeOfVoidPointer())
             {
-                body.Instructions.ReplaceRange(loadMarker, [
+                body.Instructions.ReferenceReplaceRange(loadMarker, [
                     new CilInstruction(Ldloca_S, loc_parameter),
                     new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module))]);
             }
             else
             {
-                body.Instructions.ReplaceRange(loadMarker, CilInstruction.CreateLdloc(loc_parameter, body));
+                body.Instructions.ReferenceReplaceRange(loadMarker, CilInstruction.CreateLdloc(loc_parameter, body));
             }
 
             // Release the ABI value, or the 'WindowsRuntimeObjectReferenceValue' value, after the call.
@@ -261,7 +261,7 @@ internal partial class InteropMethodRewriteFactory
             {
                 ldloc_or_a_finallyStart = new CilInstruction(Ldloca_S, loc_parameter);
 
-                body.Instructions.ReplaceRange(finallyMarker, [
+                body.Instructions.ReferenceReplaceRange(finallyMarker, [
                     ldloc_or_a_finallyStart,
                     new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module)),
                     new CilInstruction(Endfinally),
@@ -271,7 +271,7 @@ internal partial class InteropMethodRewriteFactory
             {
                 ldloc_or_a_finallyStart = CilInstruction.CreateLdloc(loc_parameter, body);
 
-                body.Instructions.ReplaceRange(finallyMarker, [
+                body.Instructions.ReferenceReplaceRange(finallyMarker, [
                     ldloc_or_a_finallyStart,
                     new CilInstruction(Call, disposeMethod!.Import(module)),
                     new CilInstruction(Endfinally),
