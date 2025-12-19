@@ -10,6 +10,7 @@ using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -97,6 +98,18 @@ internal partial class InteropMethodRewriteFactory
             else if (parameterType.IsTypeOfString())
             {
                 // TODO
+            }
+            else if (parameterType.IsTypeOfType(interopReferences))
+            {
+
+            }
+            else if (parameterType.IsTypeOfException(interopReferences))
+            {
+                // The ABI type of 'Exception' is unmanaged, so we can marshal the value directly
+                body.Instructions.RemoveRange([tryMarker, finallyMarker]);
+                body.Instructions.ReplaceRange(loadMarker, [
+                    CilInstruction.CreateLdarg(parameterIndex),
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module))]);
             }
             else if (parameterType is GenericInstanceTypeSignature)
             {
