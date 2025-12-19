@@ -13,6 +13,15 @@ internal static class IListExtensions
     extension<T>(IList<T> list)
         where T : class
     {
+        /// <inheritdoc cref="List{T}.Contains(T)"/>
+        /// <remarks>
+        /// This method only ever compares values by reference equality.
+        /// </remarks>
+        public bool ReferenceContains(T value)
+        {
+            return list.Count != 0 && list.ReferenceIndexOf(value) >= 0;
+        }
+
         /// <inheritdoc cref="IList{T}.IndexOf(T)"/>
         /// <remarks>
         /// This method only ever compares values by reference equality.
