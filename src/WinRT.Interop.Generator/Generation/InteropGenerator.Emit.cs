@@ -2039,6 +2039,20 @@ internal partial class InteropGenerator
                             emitState: emitState,
                             module: module);
                         break;
+
+                    // Rewrite native parameters
+                    case MethodRewriteInfo.NativeParameter nativeParameterInfo:
+                        InteropMethodRewriteFactory.NativeParameter.RewriteMethod(
+                            parameterType: nativeParameterInfo.Type,
+                            method: nativeParameterInfo.Method,
+                            tryMarker: nativeParameterInfo.TryMarker,
+                            loadMarker: nativeParameterInfo.Marker,
+                            finallyMarker: nativeParameterInfo.FinallyMarker,
+                            parameterIndex: nativeParameterInfo.ParameterIndex,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
                     default: throw new UnreachableException();
                 }
             }
