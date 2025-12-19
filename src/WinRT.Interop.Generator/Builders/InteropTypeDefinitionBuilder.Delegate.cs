@@ -189,6 +189,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -196,6 +197,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature delegateType,
+            TypeDefinition vftblType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -291,7 +293,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
-                vftblType: interopDefinitions.DelegateVftbl,
+                vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,

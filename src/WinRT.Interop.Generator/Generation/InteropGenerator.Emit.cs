@@ -308,6 +308,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.Delegate.ImplType(
                     delegateType: typeSignature,
+                    vftblType: vftblType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
