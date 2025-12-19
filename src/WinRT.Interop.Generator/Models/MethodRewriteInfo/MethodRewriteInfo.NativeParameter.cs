@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.InteropGenerator.Models;
 
@@ -31,49 +33,47 @@ internal partial class MethodRewriteInfo
                 return 1;
             }
 
-            if (ReferenceEquals(this, other))
-            {
-                return 0;
-            }
-
             // If the input object is of a different type, just sort alphabetically based on the type name
             if (other is not NativeParameter info)
             {
                 return typeof(NativeParameter).FullName!.CompareTo(other.GetType().FullName!);
             }
 
-            int result = CompareByMethodRewriteInfo(other);
+            int result = MemberDefinitionComparer.Instance.Compare(Method, other.Method);
 
-            // If the two items are already not equal, we can stop here
+            // First, sort by target method
             if (result != 0)
             {
                 return result;
             }
 
-            int leftIndex = Method.CilMethodBody?.Instructions.IndexOf(TryMarker) ?? -1;
-            int rightIndex = other.Method.CilMethodBody?.Instructions.IndexOf(info.TryMarker) ?? -1;
+            // Next, sort by parameter index
+            result = ParameterIndex.CompareTo(info.ParameterIndex);
 
-            result = leftIndex.CompareTo(rightIndex);
-
-            // Compare by the position of the marker for the 'try' block
             if (result != 0)
             {
                 return result;
             }
 
-            leftIndex = Method.CilMethodBody?.Instructions.IndexOf(FinallyMarker) ?? -1;
-            rightIndex = other.Method.CilMethodBody?.Instructions.IndexOf(info.FinallyMarker) ?? -1;
+            ReadOnlySpan<CilInstruction> markers = [TryMarker, Marker, FinallyMarker];
+            ReadOnlySpan<CilInstruction> otherMarkers = [info.TryMarker, info.Marker, info.FinallyMarker];
 
-            result = leftIndex.CompareTo(rightIndex);
-
-            // Next, compare by the position of the marker for the 'finally' block
-            if (result != 0)
+            // Next, compare by order of instructions within the target method
+            for (int i = 0; i < markers.Length; i++)
             {
-                return result;
+                int leftIndex = Method.CilMethodBody?.Instructions.ReferenceIndexOf(markers[i]) ?? -1;
+                int rightIndex = other.Method.CilMethodBody?.Instructions.ReferenceIndexOf(otherMarkers[i]) ?? -1;
+
+                result = leftIndex.CompareTo(rightIndex);
+
+                if (result != 0)
+                {
+                    return result;
+                }
             }
 
-            // Lastly, compare by parameter index
-            return ParameterIndex.CompareTo(info.ParameterIndex);
+            // Lastly, compare by target type (this shouldn't be reached for valid objects)
+            return TypeDescriptorComparer.Instance.Compare(Type, other.Type);
         }
     }
 }
