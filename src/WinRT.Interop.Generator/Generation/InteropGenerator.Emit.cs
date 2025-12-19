@@ -272,6 +272,14 @@ internal partial class InteropGenerator
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
 
+                InteropTypeDefinitionBuilder.Delegate.Vftbl(
+                    delegateType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    vftblType: out TypeDefinition vftblType);
+
                 InteropTypeDefinitionBuilder.Delegate.NativeDelegateType(
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,

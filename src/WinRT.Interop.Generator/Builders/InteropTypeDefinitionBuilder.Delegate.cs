@@ -67,6 +67,125 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the vtable for an <c>IDelegate</c> interface.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="vftblType">The resulting vtable type.</param>
+        public static void Vftbl(
+            GenericInstanceTypeSignature delegateType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition vftblType)
+        {
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+
+            // Prepare the sender and arguments types (same as for the 'Impl' type below)
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+
+            bool isSenderReferenceType = senderType.HasReferenceAbiType(interopReferences);
+            bool isArgsReferenceType = argsType.HasReferenceAbiType(interopReferences);
+
+            // We can share the vtable type for 'void*' when both sender and args types are reference types
+            if (isSenderReferenceType && isArgsReferenceType)
+            {
+                vftblType = interopDefinitions.DelegateVftbl;
+
+                return;
+            }
+
+            // If both the sender and the args types are not reference types, we can't possibly share
+            // the vtable type. So in this case, we just always construct a specialized new type.
+            if (!isSenderReferenceType && !isArgsReferenceType)
+            {
+                vftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
+                    ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+                    name: InteropUtf8NameFactory.TypeName(delegateType, "Vftbl"),
+                    senderType: senderType.GetAbiType(interopReferences),
+                    argsType: argsType.GetAbiType(interopReferences),
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(vftblType);
+
+                return;
+            }
+
+            // Helper to create vtable types that can be shared between multiple delegate types
+            static void GetOrCreateVftbl(
+                TypeSignature senderType,
+                TypeSignature argsType,
+                TypeSignature displaySenderType,
+                TypeSignature displayArgsType,
+                InteropReferences interopReferences,
+                InteropGeneratorEmitState emitState,
+                ModuleDefinition module,
+                out TypeDefinition vftblType)
+            {
+                // If we already have a vtable type for this pair, reuse that
+                if (emitState.TryGetDelegateVftblType(senderType, argsType, out vftblType!))
+                {
+                    return;
+                }
+
+                // Create a dummy signature just to generate the mangled name for the vtable type
+                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType(
+                    displaySenderType,
+                    displayArgsType);
+
+                // Construct a new specialized vtable type
+                TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedEventHandlerType),
+                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, "Vftbl"),
+                    senderType: senderType,
+                    argsType: argsType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                // Go through the lookup so that we can reuse the vtable later
+                vftblType = emitState.GetOrAddDelegateVftblType(senderType, argsType, newVftblType);
+
+                // If we won the race and this is the vtable type that was just created, we can add it to the module
+                if (vftblType == newVftblType)
+                {
+                    module.TopLevelTypes.Add(newVftblType);
+                }
+            }
+
+            // Get or create a shared vtable where the reference type is replaced with just 'void*'
+            if (isSenderReferenceType)
+            {
+                GetOrCreateVftbl(
+                    senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    argsType: argsType.GetAbiType(interopReferences),
+                    displaySenderType: interopReferences.CorLibTypeFactory.Object,
+                    displayArgsType: argsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out vftblType);
+            }
+            else
+            {
+                GetOrCreateVftbl(
+                    senderType: senderType.GetAbiType(interopReferences),
+                    argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    displaySenderType: senderType,
+                    displayArgsType: interopReferences.CorLibTypeFactory.Object,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out vftblType);
+            }
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
@@ -442,6 +561,12 @@ internal partial class InteropTypeDefinitionBuilder
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
+            // Prepare the 'Invoke' signature
+            MethodSignature invokeSignature = WellKnownTypeSignatureFactory.InvokeImpl(
+                senderType: senderType.GetAbiType(interopReferences),
+                argsType: argsType.GetAbiType(interopReferences),
+                interopReferences: interopReferences);
+
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue
                 .Import(module)
@@ -490,7 +615,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
-                    { Calli, WellKnownTypeSignatureFactory.InvokeImpl(interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Calli, invokeSignature.Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, ret.CreateLabel() },
 

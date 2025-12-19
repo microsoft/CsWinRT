@@ -41,6 +41,11 @@ internal sealed class InteropGeneratorEmitState
     private readonly ConcurrentDictionary<(TypeSignature Key, TypeSignature Value), TypeDefinition> _mapVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
 
     /// <summary>
+    /// A map to allow reusing vtable types for applicable <c>IDelegate</c> interfaces.
+    /// </summary>
+    private readonly ConcurrentDictionary<(TypeSignature Sender, TypeSignature Args), TypeDefinition> _delegateVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
+
+    /// <summary>
     /// Indicates whether the current state is readonly.
     /// </summary>
     private volatile bool _isReadOnly;
@@ -238,6 +243,32 @@ internal sealed class InteropGeneratorEmitState
         ThrowIfReadOnly();
 
         return _mapVftblTypes.GetOrAdd((keyType, valueType), vftblType);
+    }
+
+    /// <summary>
+    /// Tries to get a previously registered vtable type for an <c>IDelegate</c> interface.
+    /// </summary>
+    /// <param name="senderType">The sender type.</param>
+    /// <param name="argsType">The args type.</param>
+    /// <param name="vftblType">The resulting vtable type, if present.</param>
+    /// <returns>Whether <paramref name="vftblType"/> was successfully retrieved.</returns>
+    public bool TryGetDelegateVftblType(TypeSignature senderType, TypeSignature argsType, [NotNullWhen(true)] out TypeDefinition? vftblType)
+    {
+        return _delegateVftblTypes.TryGetValue((senderType, argsType), out vftblType);
+    }
+
+    /// <summary>
+    /// Gets or adds a vtable type for an <c>IDelegate</c> interface.
+    /// </summary>
+    /// <param name="senderType">The key type.</param>
+    /// <param name="argsType">The value type.</param>
+    /// <param name="vftblType">The created vtable type for <paramref name="senderType"/>.</param>
+    /// <returns>The vtable type that should be used.</returns>
+    public TypeDefinition GetOrAddDelegateVftblType(TypeSignature senderType, TypeSignature argsType, TypeDefinition vftblType)
+    {
+        ThrowIfReadOnly();
+
+        return _delegateVftblTypes.GetOrAdd((senderType, argsType), vftblType);
     }
 
     /// <summary>
