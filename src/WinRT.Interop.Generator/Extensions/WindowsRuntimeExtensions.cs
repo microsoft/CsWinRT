@@ -93,6 +93,15 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is a <see cref="void"/> pointer type.
+        /// </summary>
+        /// <returns>Whether the type is a <see cref="void"/> pointer type.</returns>
+        public bool IsTypeOfVoidPointer()
+        {
+            return type is PointerTypeSignature { BaseType: CorLibTypeSignature { ElementType: ElementType.Void } };
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
