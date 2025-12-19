@@ -135,14 +135,14 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedReadOnlyDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
+                TypeSignature sharedDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
                     displayKeyType,
                     displayValueType);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType),
+                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences,
