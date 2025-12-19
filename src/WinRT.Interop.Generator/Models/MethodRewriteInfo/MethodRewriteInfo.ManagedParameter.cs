@@ -9,7 +9,7 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for a managed parameter.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod"/>
+    /// <see cref="Factories.InteropMethodRewriteFactory.ManagedParameter.RewriteMethod"/>
     public sealed class ManagedParameter : MethodRewriteInfo
     {
         /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ManagedParameter.RewriteMethod" path="/param[@name='parameterIndex']/node()"/></summary>
