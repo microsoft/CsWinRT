@@ -87,7 +87,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = listType.TypeArguments[0];
 
             // For types which use 'void*' as their ABI types, we can share the same vtable type definition
-            if (elementType.GetAbiType(interopReferences).IsTypeOfVoidPointer())
+            if (elementType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 

@@ -89,8 +89,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
 
-            bool isKeyReferenceType = keyType.GetAbiType(interopReferences).IsTypeOfVoidPointer();
-            bool isValueReferenceType = keyType.GetAbiType(interopReferences).IsTypeOfVoidPointer();
+            bool isKeyReferenceType = keyType.HasReferenceAbiType(interopReferences);
+            bool isValueReferenceType = keyType.HasReferenceAbiType(interopReferences);
 
             // We can share the vtable type for 'void*' when both key and value types are reference types
             if (isKeyReferenceType && isValueReferenceType)

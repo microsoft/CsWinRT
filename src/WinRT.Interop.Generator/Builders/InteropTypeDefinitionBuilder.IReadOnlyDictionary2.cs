@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
             // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
             // The 'IMapView<K, V>' interface doesn't use 'V' as a by-value parameter anywhere in the vtable,
             // so we can aggressively share vtable types for all cases where 'K' is a reference type.
-            if (keyType.GetAbiType(interopReferences).IsTypeOfVoidPointer())
+            if (keyType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyDictionary2Vftbl;
 
