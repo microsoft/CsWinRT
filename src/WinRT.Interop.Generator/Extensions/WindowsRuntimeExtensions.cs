@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -49,27 +50,27 @@ internal static class WindowsRuntimeExtensions
     extension(ITypeDescriptor type)
     {
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Guid"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>
         public bool IsTypeOfGuid(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
         }
 
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Type"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Type"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Type"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Type"/> type.</returns>
         public bool IsTypeOfType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type);
         }
 
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Exception"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Exception"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Exception"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Exception"/> type.</returns>
         public bool IsTypeOfException(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception);
@@ -675,20 +676,50 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Nullable{T}"/> type.
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether the type is some <see cref="System.Nullable{T}"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Nullable{T}"/> type.</returns>
         public bool IsConstructedNullableValueType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
         }
 
         /// <summary>
-        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.
+        /// Tries to extract the underlying type from a constructed <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether the type is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.</returns>
+        /// <param name="underlyingType">The underlying nullable type, if the input type is a constructed <see cref="Nullable{T}"/> type.</param>
+        /// <returns>Whether <paramref name="underlyingType"/> was successfully retrieved.</returns>
+        public bool TryGetNullableUnderlyingType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? underlyingType)
+        {
+            // First check that we have some constructed generic value type.
+            // We also check that we have a single type argument to narrow down.
+            if (signature is not GenericInstanceTypeSignature { IsValueType: false, TypeArguments: [TypeSignature typeArgument] } genericSignature)
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            // Check that we actually have a constructed 'Nullable<T>' type
+            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable1))
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            underlyingType = typeArgument;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="Span{T}"/> or <see cref="ReadOnlySpan{T}"/> type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is some <see cref="Span{T}"/> or <see cref="ReadOnlySpan{T}"/> type.</returns>
         public bool IsConstructedSpanOrReadOnlySpanType(InteropReferences interopReferences)
         {
             if (signature is not GenericInstanceTypeSignature genericSignature)
