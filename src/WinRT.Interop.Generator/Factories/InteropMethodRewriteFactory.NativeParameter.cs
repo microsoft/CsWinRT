@@ -101,14 +101,7 @@ internal partial class InteropMethodRewriteFactory
                 }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
-                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
-
-                    // Get the right reference to the unboxing marshalling method to call
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "BoxToUnmanaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                            parameterTypes: [parameterType]));
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     RewriteBody(
                         parameterType: parameterType,
@@ -117,7 +110,7 @@ internal partial class InteropMethodRewriteFactory
                         loadMarker: loadMarker,
                         finallyMarker: finallyMarker,
                         parameterIndex: parameterIndex,
-                        marshallerMethod: marshallerMethod,
+                        marshallerMethod: marshallerType.BoxToUnmanaged(),
                         disposeMethod: null,
                         interopReferences: interopReferences,
                         module: module);
@@ -125,21 +118,7 @@ internal partial class InteropMethodRewriteFactory
                 else
                 {
                     // The last case handles all other value types, which need explicit disposal for their ABI values
-                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
-
-                    // Get the reference to 'ConvertToUnmanaged' to produce the resulting value to pass as argument
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "ConvertToUnmanaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: parameterType.GetAbiType(interopReferences),
-                            parameterTypes: [parameterType]));
-
-                    // Get the reference to 'Dispose' method to call on the ABI value
-                    IMethodDefOrRef disposeMethod = marshallerType.GetMethodDefOrRef(
-                        name: "Dispose"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: interopReferences.CorLibTypeFactory.Void,
-                            parameterTypes: [parameterType.GetAbiType(interopReferences)]));
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     RewriteBody(
                         parameterType: parameterType,
@@ -148,8 +127,8 @@ internal partial class InteropMethodRewriteFactory
                         loadMarker: loadMarker,
                         finallyMarker: finallyMarker,
                         parameterIndex: parameterIndex,
-                        marshallerMethod: marshallerMethod,
-                        disposeMethod: disposeMethod,
+                        marshallerMethod: marshallerType.ConvertToUnmanaged(),
+                        disposeMethod: marshallerType.Dispose(),
                         interopReferences: interopReferences,
                         module: module);
                 }
@@ -187,14 +166,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller for all other types (doesn't matter if constructed generics or not)
-                ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
-
-                // Get the reference to 'ConvertToUnmanaged' to produce the resulting value to pass as argument
-                IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                    name: "ConvertToUnmanaged"u8,
-                    signature: MethodSignature.CreateStatic(
-                        returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                        parameterTypes: [parameterType]));
+                InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                 RewriteBody(
                     parameterType: parameterType,
@@ -203,7 +175,7 @@ internal partial class InteropMethodRewriteFactory
                     loadMarker: loadMarker,
                     finallyMarker: finallyMarker,
                     parameterIndex: parameterIndex,
-                    marshallerMethod: marshallerMethod,
+                    marshallerMethod: marshallerType.ConvertToUnmanaged(),
                     disposeMethod: null,
                     interopReferences: interopReferences,
                     module: module);

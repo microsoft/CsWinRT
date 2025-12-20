@@ -14,13 +14,13 @@ namespace WindowsRuntime.InteropGenerator.Resolvers;
 internal static class InteropMarshallerTypeResolver
 {
     /// <summary>
-    /// Get the marshaller type for a specified type.
+    /// Gets the marshaller type for a specified type.
     /// </summary>
     /// <param name="type">The type to get the marshaller type for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <returns>The marshaller type for <paramref name="type"/>.</returns>
-    public static ITypeDefOrRef GetMarshallerType(
+    public static InteropMarshallerType GetMarshallerType(
         TypeSignature type,
         InteropReferences interopReferences,
         InteropGeneratorEmitState emitState)
@@ -40,13 +40,15 @@ internal static class InteropMarshallerTypeResolver
 
             // For all other generic instantiations (including 'KeyValuePair<,>'), we can just look the marshaller
             // types up. All those marshaller types will always be generated in the same 'WinRT.Interop.dll'.
-            return emitState.LookupTypeDefinition(type, "Marshaller");
+            ITypeDefOrRef marshallerType = emitState.LookupTypeDefinition(type, "Marshaller");
+
+            return new(type, interopReferences, marshallerType);
         }
 
         // Special case 'object', we'll directly use 'WindowsRuntimeObjectMarshaller' for it
         if (type.IsTypeOfObject())
         {
-            return interopReferences.WindowsRuntimeObjectMarshaller;
+            return new(type, interopReferences, interopReferences.WindowsRuntimeObjectMarshaller);
         }
 
         // For custom-mapped types, get the marshaller type from 'WinRT.Runtime.dll'
@@ -55,17 +57,23 @@ internal static class InteropMarshallerTypeResolver
             type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
             type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
         {
-            return interopReferences.WindowsRuntimeModule.CreateTypeReference(
+            ITypeDefOrRef marshallerType = interopReferences.WindowsRuntimeModule.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
                 name: $"{type.Name}Marshaller");
-        }
 
-        // In all other cases, the marshaller type will be in the declared assembly. Note that this
-        // also includes special manually projected types, such as 'AsyncActionCompletedHandler'.
-        // Even though those types are in 'WinRT.Runtime.dll', the marshaller type will also be
-        // there, so trying to resolve it via the declaring module like for other types is fine.
-        return type.Resolve()!.DeclaringModule!.CreateTypeReference(
-            ns: $"ABI.{type.Namespace}",
-            name: $"{type.Name}Marshaller");
+            return new(type, interopReferences, marshallerType);
+        }
+        else
+        {
+            // In all other cases, the marshaller type will be in the declared assembly. Note that this
+            // also includes special manually projected types, such as 'AsyncActionCompletedHandler'.
+            // Even though those types are in 'WinRT.Runtime.dll', the marshaller type will also be
+            // there, so trying to resolve it via the declaring module like for other types is fine.
+            ITypeDefOrRef marshallerType = type.Resolve()!.DeclaringModule!.CreateTypeReference(
+                ns: $"ABI.{type.Namespace}",
+                name: $"{type.Name}Marshaller");
+
+            return new(type, interopReferences, marshallerType);
+        }
     }
 }

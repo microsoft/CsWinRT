@@ -104,38 +104,24 @@ internal partial class InteropMethodRewriteFactory
                 }
                 else if (retValType.IsConstructedNullableValueType(interopReferences))
                 {
-                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
-
-                    // Get the right reference to the boxing marshalling method to call
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "BoxToManaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: retValType,
-                            parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
                     RewriteBody(
                         body: body,
                         marker: marker,
-                        marshallerMethod: marshallerMethod,
+                        marshallerMethod: marshallerType.BoxToUnmanaged(),
                         interopReferences: interopReferences,
                         module: module);
                 }
                 else
                 {
                     // For all other struct types, we just always defer to their generated marshaller type
-                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
-
-                    // Get the reference to 'ConvertToUnmanaged' to produce the resulting value to return
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "ConvertToUnmanaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: retValType.GetAbiType(interopReferences),
-                            parameterTypes: [retValType]));
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReferenceReplaceRange(marker, [
-                        new CilInstruction(Call, marshallerMethod.Import(module)),
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)),
                         new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
                 }
             }
@@ -173,20 +159,13 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types
-                ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
-
-                // Get the marshalling method for this '[retval]' type
-                IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                    name: "ConvertToUnmanaged"u8,
-                    signature: MethodSignature.CreateStatic(
-                        returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                        parameterTypes: [retValType]));
+                InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(retValType, interopReferences, emitState);
 
                 // Marshal the value and assign it to the target location
                 RewriteBody(
                     body: body,
                     marker: marker,
-                    marshallerMethod: marshallerMethod,
+                    marshallerMethod: marshallerType.ConvertToUnmanaged(),
                     interopReferences: interopReferences,
                     module: module);
             }
