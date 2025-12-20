@@ -139,6 +139,11 @@ internal sealed class InteropReferences
     public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeSignature"/> for <see cref="Nullable{T}"/> of <see cref="int"/>.
+    /// </summary>
+    public GenericInstanceTypeSignature NullableInt32 => field ??= Nullable1.MakeGenericValueType(_corLibTypeFactory.Int32);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Type"/>.
     /// </summary>
     public TypeReference Type => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Type"u8);
@@ -174,22 +179,22 @@ internal sealed class InteropReferences
     public TypeReference ReadOnlySpan1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Byte);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Char);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="ushort"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="ushort"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.UInt16);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Int32);
 
@@ -859,6 +864,11 @@ internal sealed class InteropReferences
     public TypeReference TypeReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "TypeReference"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.HStringReference</c>.
+    /// </summary>
+    public TypeReference HStringReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "HStringReference"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
     /// </summary>
     public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "HStringMarshaller"u8);
@@ -1027,6 +1037,21 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncOperationWithProgressCompletedHandler&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="string.Length"/>.
+    /// </summary>
+    public MemberReference Stringget_Length => field ??= _corLibTypeFactory.String
+        .ToTypeDefOrRef()
+        .CreateMemberReference("get_Length"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Int32));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="string.GetPinnableReference"/>.
+    /// </summary>
+    public MemberReference StringGetPinnableReference => field ??= _corLibTypeFactory.String
+        .ToTypeDefOrRef()
+        .CreateMemberReference("GetPinnableReference"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Char.MakeByReferenceType().MakeModifierType(InAttribute, isRequired: true)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
@@ -1787,12 +1812,30 @@ internal sealed class InteropReferences
             returnType: AbiType.ToValueTypeSignature()));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringReference.get_HString</c>.
+    /// </summary>
+    public MemberReference HStringReferenceget_HString => field ??= HStringReference
+        .CreateMemberReference("get_HString"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void.MakePointerType()));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
     /// </summary>
     public MemberReference HStringMarshallerConvertToUnmanaged => field ??= HStringMarshaller
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Void.MakePointerType(),
             parameterTypes: [ReadOnlySpanChar]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference HStringMarshallerConvertToUnmanagedUnsafe => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.Char.MakePointerType(),
+                Nullable1.MakeGenericValueType(_corLibTypeFactory.Int32),
+                HStringReference.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManaged</c>.
@@ -1892,6 +1935,22 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     EventRegistrationToken.ToValueTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference Nullable1_ctor(TypeSignature valueType)
+    {
+        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
+        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
+        return Nullable1
+            .MakeGenericValueType(valueType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]);
     }
 
     /// <summary>
