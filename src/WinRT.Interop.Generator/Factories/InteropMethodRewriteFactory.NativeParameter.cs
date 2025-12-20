@@ -164,9 +164,14 @@ internal partial class InteropMethodRewriteFactory
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
-                // TODO
-                body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
-                body.Instructions.ReferenceReplaceRange(loadMarker, new CilInstruction(Ldnull));
+                RewriteBodyForTypeOfType(
+                    body: body,
+                    tryMarker: tryMarker,
+                    loadMarker: loadMarker,
+                    finallyMarker: finallyMarker,
+                    parameterIndex: parameterIndex,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             else if (parameterType.IsTypeOfException(interopReferences))
             {
@@ -287,6 +292,47 @@ internal partial class InteropMethodRewriteFactory
                 HandlerStart = ldloc_or_a_finallyStart.CreateLabel(),
                 HandlerEnd = nop_finallyEnd.CreateLabel()
             });
+        }
+
+        /// <inheritdoc cref="RewriteMethod"/>
+        /// <param name="body">The target body to perform two-pass code generation on.</param>
+        private static void RewriteBodyForTypeOfType(
+            CilMethodBody body,
+            CilInstruction tryMarker,
+            CilInstruction loadMarker,
+            CilInstruction finallyMarker,
+            int parameterIndex,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            // Declare the local variables:
+            //   [0]: 'TypeReference' (for 'typeReference')
+            //   [1]: 'ref byte' (for the pinned type reference)
+            CilLocalVariable loc_0_typeReference = new(interopReferences.TypeReference.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_1_pinnedTypeReference = new(interopReferences.CorLibTypeFactory.Byte.MakeByReferenceType().MakePinnedType());
+
+            body.LocalVariables.Add(loc_0_typeReference);
+            body.LocalVariables.Add(loc_1_pinnedTypeReference);
+
+            // Get the 'TypeReference' value and pin it
+            body.Instructions.ReferenceReplaceRange(tryMarker, [
+                CilInstruction.CreateLdarg(parameterIndex),
+                new CilInstruction(Ldloca_S, loc_0_typeReference),
+                new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanagedUnsafe.Import(module)),
+                new CilInstruction(Ldloca_S, loc_0_typeReference),
+                new CilInstruction(Call, interopReferences.TypeReferenceGetPinnableReference.Import(module)),
+                CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body)]);
+
+            // Get the ABI 'Type' value and pass it as a parameter
+            body.Instructions.ReferenceReplaceRange(loadMarker, [
+                new CilInstruction(Ldloca_S, loc_0_typeReference),
+                new CilInstruction(Call, interopReferences.TypeReferenceConvertToUnmanagedUnsafe.Import(module))]);
+
+            // Unpin the local (just assign 'null' to it)
+            body.Instructions.ReferenceReplaceRange(finallyMarker, [
+                new CilInstruction(Ldc_I4_0),
+                new CilInstruction(Conv_U),
+                CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body)]);
         }
     }
 }
