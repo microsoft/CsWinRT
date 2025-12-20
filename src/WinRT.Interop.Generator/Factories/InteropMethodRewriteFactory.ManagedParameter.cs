@@ -126,6 +126,13 @@ internal partial class InteropMethodRewriteFactory
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
+            else if (parameterType.IsTypeOfType(interopReferences))
+            {
+                // When marshalling 'Type' values, we must use 'TypeMarshaller' (the ABI type is a value type)
+                body.Instructions.ReplaceRange(marker, [
+                    CilInstruction.CreateLdarg(parameterIndex),
+                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToManaged.Import(module))]);
+            }
             else if (parameterType is GenericInstanceTypeSignature)
             {
                 // This case (constructed interfaces or delegates) is effectively identical to marshalling 'KeyValuePair<,>' values
