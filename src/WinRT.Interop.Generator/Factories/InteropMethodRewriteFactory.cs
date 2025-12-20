@@ -34,23 +34,13 @@ internal static partial class InteropMethodRewriteFactory
 
         // For primitive types, the marshaller type is in 'WinRT.Runtime.dll'.
         // In this case we can also rely on all types being under 'System'.
-        if (type.IsFundamentalWindowsRuntimeType(interopReferences))
+        // The same applies to custom-mapped struct types.
+        if (type.IsFundamentalWindowsRuntimeType(interopReferences) ||
+            type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
         {
             return interopReferences.WindowsRuntimeModule.CreateTypeReference(
                 ns: "ABI.System"u8,
                 name: $"{type.Name}Marshaller");
-        }
-
-        // 'TimeSpan' is custom-mapped and not blittable
-        if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan))
-        {
-            return interopReferences.TimeSpanMarshaller;
-        }
-
-        // 'DateTimeOffset' also is custom-mapped and not blittable
-        if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
-        {
-            return interopReferences.DateTimeOffsetMarshaller;
         }
 
         // In all other cases, the marshaller type will be in the declared assembly
@@ -84,10 +74,9 @@ internal static partial class InteropMethodRewriteFactory
         }
 
         // For custom-mapped types, get the marshaller type from 'WinRT.Runtime.dll'
-        if (type.IsTypeOfType(interopReferences) ||
-            type.IsTypeOfException(interopReferences) ||
-            type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
-            type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences))
+        if (type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+            type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+            type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
         {
             return interopReferences.WindowsRuntimeModule.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
