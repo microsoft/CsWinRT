@@ -487,10 +487,10 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Gets the ABI type for a given type.
+        /// Gets whether a given type has an ABI type that is a reference type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>The ABi type for the input type.</returns>
+        /// <returns>Whether the input type has an ABI type that is a reference type.</returns>
         public bool HasReferenceAbiType(InteropReferences interopReferences)
         {
             // All constructed generics will use 'void*' for the ABI type
@@ -525,7 +525,7 @@ internal static class WindowsRuntimeExtensions
         /// Gets the ABI type for a given type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>The ABi type for the input type.</returns>
+        /// <returns>The ABI type for the input type.</returns>
         public TypeSignature GetAbiType(InteropReferences interopReferences)
         {
             // All constructed generics will use 'void*' for the ABI type. This applies to both reference
