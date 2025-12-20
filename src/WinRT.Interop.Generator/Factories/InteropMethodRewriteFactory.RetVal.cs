@@ -146,16 +146,6 @@ internal partial class InteropMethodRewriteFactory
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stobj, interopReferences.AbiException.Import(module).ToTypeDefOrRef())]);
             }
-            else if (retValType is GenericInstanceTypeSignature)
-            {
-                // For all other generic type instantiations, we use the marshaller in 'WinRT.Interop.dll'
-                RewriteBody(
-                    body: body,
-                    marker: marker,
-                    marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
-                    interopReferences: interopReferences,
-                    module: module);
-            }
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types

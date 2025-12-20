@@ -165,20 +165,6 @@ internal partial class InteropMethodRewriteFactory
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged.Import(module)),
                     new CilInstruction(Ret)]);
             }
-            else if (returnType is GenericInstanceTypeSignature)
-            {
-                // This case (constructed interfaces or delegates) is effectively identical to marshalling
-                // 'KeyValuePair<,>' values: the marshalling code will always be in 'WinRT.Interop.dll', the
-                // ABI type will always just be 'void*', and we will always release the interface pointer.
-                RewriteBody(
-                    returnType: returnType,
-                    body: body,
-                    marker: marker,
-                    source: source,
-                    marshallerMethod: emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged"),
-                    releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree,
-                    module: module);
-            }
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types

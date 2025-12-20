@@ -78,18 +78,11 @@ internal static partial class InteropMethodRewriteFactory
                 {
                     body.Instructions.ReferenceReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
                 }
-                else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
-                {
-                    // If the type is some constructed 'KeyValuePair<,>' type, we use the generated marshaller
-                    body.Instructions.ReferenceReplaceRange(marker, [
-                        CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
-                }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                    // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
+                    // For 'Nullable<T>' parameters (i.e. we have an 'IReference<T>' interface pointer), we unbox the underlying type
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module))]);
@@ -98,6 +91,7 @@ internal static partial class InteropMethodRewriteFactory
                 {
                     // The last case handles all other value types. It doesn't matter if they possibly hold some unmanaged
                     // resources, as they're only being used as parameters. That means the caller is responsible for disposal.
+                    // This case can also handle 'KeyValuePair<,>' instantiations, which are just marshalled normally too.
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
@@ -113,26 +107,12 @@ internal static partial class InteropMethodRewriteFactory
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
-            else if (parameterType.IsTypeOfType(interopReferences))
-            {
-                // When marshalling 'Type' values, we must use 'TypeMarshaller' (the ABI type is a value type)
-                body.Instructions.ReferenceReplaceRange(marker, [
-                    CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToManaged.Import(module))]);
-            }
-            else if (parameterType is GenericInstanceTypeSignature)
-            {
-                // This case (constructed interfaces or delegates) is effectively identical to marshalling 'KeyValuePair<,>' values
-                body.Instructions.ReferenceReplaceRange(marker, [
-                    CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
-            }
             else
             {
-                // Get the marshaller type for all other reference types
+                // Get the marshaller type for all other reference types (including generics)
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                // Marshal the value and release the original interface pointer
+                // Marshal the value normally (the caller will own the native resource)
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
