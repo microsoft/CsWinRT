@@ -5,7 +5,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -72,25 +71,7 @@ internal partial class InteropMethodRewriteFactory
                 // However, we must use the correct indirect store instruction for primitive types.
                 if (retValType.IsBlittable(interopReferences))
                 {
-                    CilInstruction storeInstruction = retValType.ElementType switch
-                    {
-                        ElementType.Boolean => new CilInstruction(Stind_I1),
-                        ElementType.Char => new CilInstruction(Stind_I2),
-                        ElementType.I1 => new CilInstruction(Stind_I1),
-                        ElementType.U1 => new CilInstruction(Stind_I1),
-                        ElementType.I2 => new CilInstruction(Stind_I2),
-                        ElementType.U2 => new CilInstruction(Stind_I2),
-                        ElementType.I4 => new CilInstruction(Stind_I4),
-                        ElementType.U4 => new CilInstruction(Stind_I4),
-                        ElementType.I8 => new CilInstruction(Stind_I8),
-                        ElementType.U8 => new CilInstruction(Stind_I8),
-                        ElementType.R4 => new CilInstruction(Stind_R4),
-                        ElementType.R8 => new CilInstruction(Stind_R8),
-                        ElementType.ValueType when retValType.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
-                        _ => new CilInstruction(Stobj, retValType.Import(module).ToTypeDefOrRef()),
-                    };
-
-                    body.Instructions.ReferenceReplaceRange(marker, [storeInstruction]);
+                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType, module)]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
