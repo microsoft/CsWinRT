@@ -8,6 +8,7 @@ using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS1573
@@ -90,14 +91,7 @@ internal partial class InteropMethodRewriteFactory
                 }
                 else if (returnType.IsConstructedNullableValueType(interopReferences))
                 {
-                    TypeSignature underlyingType = ((GenericInstanceTypeSignature)returnType).TypeArguments[0];
-
-                    // For 'Nullable<T>' return types, we need the marshaller for the instantiated 'T'
-                    // type, as that will contain the unboxing methods. The 'T' in this case can be
-                    // a custom-mapped primitive type or a projected type. Technically speaking it can
-                    // never be a 'KeyValuePair<,>' or 'Nullable<T>', because both of those are interface
-                    // types in the Windows Runtime type system, meaning they can't be boxed like value types.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(returnType, interopReferences, emitState);
 
                     // Get the right reference to the unboxing marshalling method to call
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -121,7 +115,7 @@ internal partial class InteropMethodRewriteFactory
                     // Here we're marshalling a value type that is managed, meaning its ABI type will
                     // hold some references to unmanaged resources. In this case we need to resolve the
                     // marshaller type so we can both marshal the value and also clean resources after.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(returnType, interopReferences, emitState);
 
                     // Get the reference to 'ConvertToManaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -151,7 +145,7 @@ internal partial class InteropMethodRewriteFactory
                 {
                     // The last case is a non-blittable, unmanaged value type. That is, we still have to call
                     // the marshalling method to get the return value, but no resources cleanup is needed.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(returnType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(returnType, interopReferences, emitState);
 
                     // Get the reference to 'ConvertToManaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -216,7 +210,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for either generic reference types, or all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(returnType, interopReferences, emitState);
+                ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(returnType, interopReferences, emitState);
 
                 // Get the marshalling method, with the parameter type always just being 'void*' here too
                 IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(

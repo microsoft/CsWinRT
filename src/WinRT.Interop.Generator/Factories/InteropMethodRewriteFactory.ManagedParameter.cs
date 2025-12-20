@@ -9,14 +9,17 @@ using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS8620 // TODO: remove once Roslyn bug is fixed
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
-/// <inheritdoc cref="InteropMethodRewriteFactory"/>
-internal partial class InteropMethodRewriteFactory
+/// <summary>
+/// A factory to rewrite interop method definitons, and add marshalling code as needed.
+/// </summary>
+internal static partial class InteropMethodRewriteFactory
 {
     /// <summary>
     /// Contains the logic for marshalling managed parameters (i.e. parameters that are passed to managed methods).
@@ -84,10 +87,7 @@ internal partial class InteropMethodRewriteFactory
                 }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
-                    TypeSignature underlyingType = ((GenericInstanceTypeSignature)parameterType).TypeArguments[0];
-
-                    // For 'Nullable<T>' return types, we need the marshaller for the instantiated 'T' type (same as for return values)
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     // Get the right reference to the unboxing marshalling method to call
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -105,7 +105,7 @@ internal partial class InteropMethodRewriteFactory
                 {
                     // The last case handles all other value types. It doesn't matter if they possibly hold some unmanaged
                     // resources, as they're only being used as parameters. That means the caller is responsible for disposal.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(parameterType, interopReferences, emitState);
+                    ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     // Get the reference to 'ConvertToManaged' to produce the resulting value to return
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
@@ -144,7 +144,7 @@ internal partial class InteropMethodRewriteFactory
             else
             {
                 // Get the marshaller type for all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(parameterType, interopReferences, emitState);
+                ITypeDefOrRef marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                 // Get the marshalling method, with the parameter type always just being 'void*' here too
                 IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(

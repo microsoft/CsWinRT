@@ -695,7 +695,7 @@ internal static class WindowsRuntimeExtensions
         {
             // First check that we have some constructed generic value type.
             // We also check that we have a single type argument to narrow down.
-            if (signature is not GenericInstanceTypeSignature { IsValueType: false, TypeArguments: [TypeSignature typeArgument] } genericSignature)
+            if (signature is not GenericInstanceTypeSignature { IsValueType: true, TypeArguments: [TypeSignature typeArgument] } genericSignature)
             {
                 underlyingType = null;
 
