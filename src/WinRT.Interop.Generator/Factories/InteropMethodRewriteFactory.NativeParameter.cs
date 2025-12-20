@@ -158,9 +158,14 @@ internal partial class InteropMethodRewriteFactory
             }
             else if (parameterType.IsTypeOfString())
             {
-                // TODO
-                body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
-                body.Instructions.ReferenceReplaceRange(loadMarker, new CilInstruction(Ldnull));
+                RewriteBodyForTypeOfString(
+                    body: body,
+                    tryMarker: tryMarker,
+                    loadMarker: loadMarker,
+                    finallyMarker: finallyMarker,
+                    parameterIndex: parameterIndex,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
@@ -292,6 +297,77 @@ internal partial class InteropMethodRewriteFactory
                 HandlerStart = ldloc_or_a_finallyStart.CreateLabel(),
                 HandlerEnd = nop_finallyEnd.CreateLabel()
             });
+        }
+
+        /// <inheritdoc cref="RewriteMethod"/>
+        /// <param name="body">The target body to perform two-pass code generation on.</param>
+        private static void RewriteBodyForTypeOfString(
+            CilMethodBody body,
+            CilInstruction tryMarker,
+            CilInstruction loadMarker,
+            CilInstruction finallyMarker,
+            int parameterIndex,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            // Declare the local variables:
+            //   [0]: 'ref char' (for the pinned 'string')
+            //   [1]: 'HStringReference' (for 'hstringReference')
+            //   [2]: 'int?' (for 'length')
+            CilLocalVariable loc_0_pinnedString = new(interopReferences.CorLibTypeFactory.Char.MakeByReferenceType().MakePinnedType());
+            CilLocalVariable loc_1_hstringReference = new(interopReferences.HStringReference.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.CorLibTypeFactory.Int32).Import(module));
+
+            body.LocalVariables.Add(loc_0_pinnedString);
+            body.LocalVariables.Add(loc_1_hstringReference);
+            body.LocalVariables.Add(loc_2_length);
+
+            // Prepare the jump labels
+            CilInstruction ldarg_pinning = CilInstruction.CreateLdarg(parameterIndex);
+            CilInstruction ldarg_lengthNullCheck = CilInstruction.CreateLdarg(parameterIndex);
+            CilInstruction ldarg_getLength = CilInstruction.CreateLdarg(parameterIndex);
+            CilInstruction ldloca_s_getHStringReference = new(Ldloca_S, loc_1_hstringReference);
+
+            // Pin the input 'string' value, get the (possibly 'null') length, and create the 'HStringReference' value
+            body.Instructions.ReferenceReplaceRange(tryMarker, [
+
+                // fixed (char* p = value) { }
+                CilInstruction.CreateLdarg(parameterIndex),
+                new CilInstruction(Brtrue_S, ldarg_pinning.CreateLabel()),
+                new CilInstruction(Ldc_I4_0),
+                new CilInstruction(Conv_U),
+                new CilInstruction(Br_S, ldarg_lengthNullCheck.CreateLabel()),
+                ldarg_pinning,
+                new CilInstruction(Call, interopReferences.StringGetPinnableReference.Import(module)),
+                CilInstruction.CreateStloc(loc_0_pinnedString, body),
+                CilInstruction.CreateLdloc(loc_0_pinnedString, body),
+                new CilInstruction(Conv_U),
+
+                // int? length = value?.Length;
+                ldarg_lengthNullCheck,
+                new CilInstruction(Brtrue_S, ldarg_getLength.CreateLabel()),
+                new CilInstruction(Ldloca_S, loc_2_length),
+                new CilInstruction(Initobj, interopReferences.NullableInt32.Import(module).ToTypeDefOrRef()),
+                CilInstruction.CreateLdloc(loc_2_length, body),
+                new CilInstruction(Br_S, ldloca_s_getHStringReference.CreateLabel()),
+                ldarg_getLength,
+                new CilInstruction(Call, interopReferences.Stringget_Length.Import(module)),
+                new CilInstruction(Newobj, interopReferences.Nullable1_ctor(interopReferences.CorLibTypeFactory.Int32).Import(module)),
+
+                // HStringMarshaller.ConvertToUnmanagedUnsafe(p, length, out HStringReference hstringReference);
+                ldloca_s_getHStringReference,
+                new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanagedUnsafe.Import(module))]);
+
+            // Get the 'HString' value from the reference and pass it as a parameter
+            body.Instructions.ReferenceReplaceRange(loadMarker, [
+                new CilInstruction(Ldloca_S, loc_1_hstringReference),
+                new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
+
+            // Unpin the local (just assign 'null' to it)
+            body.Instructions.ReferenceReplaceRange(finallyMarker, [
+                new CilInstruction(Ldc_I4_0),
+                new CilInstruction(Conv_U),
+                CilInstruction.CreateStloc(loc_0_pinnedString, body)]);
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
