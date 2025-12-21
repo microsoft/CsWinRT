@@ -942,6 +942,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
 
