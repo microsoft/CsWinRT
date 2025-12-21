@@ -39,6 +39,7 @@ internal partial class InteropMethodDefinitionFactory
             ModuleDefinition module)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
             // Define the 'GetAt' method as follows:
             //
@@ -59,7 +60,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_resultNative = new(elementType.GetAbiType(interopReferences).Import(module));
+            CilLocalVariable loc_2_resultNative = new(elementAbiType.Import(module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -92,7 +93,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // This 'calli' instruction is always using 'IReadOnlyList1GetAtImpl', but the signature for
                     // the vtable slot for 'GetAt' for 'IVector<T>' is identical, so doing so is safe in this case.
-                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
