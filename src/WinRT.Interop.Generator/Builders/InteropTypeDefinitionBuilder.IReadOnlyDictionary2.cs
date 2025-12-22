@@ -127,29 +127,18 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
                 method: hasKeyMethod);
 
-            // Define the 'Lookup' method as follows:
-            //
-            // public static <VALUE_TYPE> Lookup(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition lookupMethod = new(
-                name: "Lookup"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: valueType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IMapViewMethods.Lookup(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Lookup' method
             mapViewMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
                 method: lookupMethod);
-
-            // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
