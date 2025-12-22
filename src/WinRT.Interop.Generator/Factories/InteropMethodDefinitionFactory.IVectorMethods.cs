@@ -76,6 +76,115 @@ internal partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Append</c> method for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Append(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition vftblType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+
+            // Define the 'Append' method as follows:
+            //
+            // public static void Append(WindowsRuntimeObjectReference thisReference, <ELEMENT_TYPE> value)
+            MethodDefinition setAtOrInsertAtMethod = new(
+                name: "Append"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        elementType.Import(module)]))
+            { NoInlining = true };
+
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
+            //   [1]: 'void*' (for 'thisPtr')
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+
+            // Jump labels
+            CilInstruction nop_try_this = new(Nop);
+            CilInstruction nop_try_value = new(Nop);
+            CilInstruction nop_ld_value = new(Nop);
+            CilInstruction nop_finally_value = new(Nop);
+            CilInstruction ldloca_s_0_finally_this = new(Ldloca_S, loc_0_thisValue);
+            CilInstruction ret_finally_end_this = new(Ret);
+
+            // Create a method body for the method
+            setAtOrInsertAtMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr },
+                Instructions =
+                {
+                    // Initialize 'thisValue'
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Stloc_0 },
+                    { nop_try_this },
+
+                    // Load the value, possibly inside a 'try/finally' block
+                    { nop_try_value },
+
+                    // '.try' code
+                    { Ldloca_S, loc_0_thisValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Stloc_1 },
+                    { Ldloc_1 },
+                    { nop_ld_value },
+                    { Ldloc_1 },
+                    { Ldind_I },
+                    { Ldfld, vftblType.GetField("Append"u8) },
+                    { Calli, WellKnownTypeSignatureFactory.IList1AppendImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Leave_S, ret_finally_end_this.CreateLabel() },
+
+                    // Optional 'finally' block for the marshalled key
+                    { nop_finally_value },
+
+                    // '.finally' code
+                    { ldloca_s_0_finally_this },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+
+                    // return result;
+                    { ret_finally_end_this }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = nop_try_this.CreateLabel(),
+                        TryEnd = ldloca_s_0_finally_this.CreateLabel(),
+                        HandlerStart = ldloca_s_0_finally_this.CreateLabel(),
+                        HandlerEnd = ret_finally_end_this.CreateLabel()
+                    }
+                }
+            };
+
+            // Track rewriting the 'value' parameter for this method
+            emitState.TrackNativeParameterMethodRewrite(
+                paraneterType: elementType,
+                method: setAtOrInsertAtMethod,
+                tryMarker: nop_try_value,
+                loadMarker: nop_ld_value,
+                finallyMarker: nop_finally_value,
+                parameterIndex: 1);
+
+            return setAtOrInsertAtMethod;
+        }
+
+        /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> or <c>InsertAt</c> method for some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="methodName">The name of the method to create.</param>
@@ -177,7 +286,7 @@ internal partial class InteropMethodDefinitionFactory
                 }
             };
 
-            // Track rewriting the return value for this method
+            // Track rewriting the 'value' parameter for this method
             emitState.TrackNativeParameterMethodRewrite(
                 paraneterType: elementType,
                 method: setAtOrInsertAtMethod,

@@ -165,29 +165,18 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1SetAt(elementType).Import(module),
                 method: setAtMethod);
 
-            // Define the 'Append' method as follows:
-            //
-            // public static void Append(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value)
-            MethodDefinition appendMethod = new(
-                name: "Append"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IVectorMethods.Append(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Append' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
                 method: appendMethod);
-
-            // Create a method body for the 'Append' method
-            appendMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
 
             // Define the 'IndexOf' method as follows:
             //
