@@ -49,6 +49,33 @@ internal partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>InsertAt</c> method for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition InsertAt(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition vftblType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            return SetAtOrInsertAt(
+                methodName: "InsertAt"u8,
+                methodSignature: WellKnownTypeSignatureFactory.IList1InsertAtImpl(elementType.GetAbiType(interopReferences), interopReferences),
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> or <c>InsertAt</c> method for some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="methodName">The name of the method to create.</param>

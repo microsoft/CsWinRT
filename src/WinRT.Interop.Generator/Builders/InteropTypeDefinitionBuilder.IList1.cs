@@ -217,30 +217,18 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
 
-            // Define the 'InsertAt' method as follows:
-            //
-            // public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition insertAtMethod = new(
-                name: "InsertAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IVectorMethods.InsertAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'InsertAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1InsertAt(elementType).Import(module),
                 method: insertAtMethod);
-
-            // Create a method body for the 'InsertAt' method
-            insertAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
