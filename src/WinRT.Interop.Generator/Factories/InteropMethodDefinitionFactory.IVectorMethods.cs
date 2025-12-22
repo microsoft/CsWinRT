@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -36,13 +37,43 @@ internal partial class InteropMethodDefinitionFactory
             ModuleDefinition module)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
-            // Define the 'SetAt' method as follows:
+            return SetAtOrInsertAt(
+                methodName: "SetAt"u8,
+                methodSignature: WellKnownTypeSignatureFactory.IList1SetAtImpl(elementType.GetAbiType(interopReferences), interopReferences),
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> or <c>InsertAt</c> method for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="methodName">The name of the method to create.</param>
+        /// <param name="methodSignature">The signature of the method to create.</param>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        private static MethodDefinition SetAtOrInsertAt(
+            Utf8String methodName,
+            MethodSignature methodSignature,
+            GenericInstanceTypeSignature listType,
+            TypeDefinition vftblType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Define the 'SetAt' or 'InsertAt' method as follows:
             //
-            // public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, <ELEMENT_TYPE> value)
-            MethodDefinition removeMethod = new(
-                name: "SetAt"u8,
+            // public static void <METHOD_NAME>(WindowsRuntimeObjectReference thisReference, uint index, <ELEMENT_TYPE> value)
+            MethodDefinition setAtOrInsertAtMethod = new(
+                name: methodName,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
@@ -66,8 +97,8 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction ldloca_s_0_finally_this = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ret_finally_end_this = new(Ret);
 
-            // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody()
+            // Create a method body for the method
+            setAtOrInsertAtMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisValue, loc_1_thisPtr },
                 Instructions =
@@ -90,8 +121,8 @@ internal partial class InteropMethodDefinitionFactory
                     { nop_ld_value },
                     { Ldloc_1 },
                     { Ldind_I },
-                    { Ldfld, vftblType.GetField("SetAt"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.IList1SetAtImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Ldfld, vftblType.GetField(methodName) },
+                    { Calli, methodSignature.Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, ret_finally_end_this.CreateLabel() },
 
@@ -122,13 +153,13 @@ internal partial class InteropMethodDefinitionFactory
             // Track rewriting the return value for this method
             emitState.TrackNativeParameterMethodRewrite(
                 paraneterType: elementType,
-                method: removeMethod,
+                method: setAtOrInsertAtMethod,
                 tryMarker: nop_try_value,
                 loadMarker: nop_ld_value,
                 finallyMarker: nop_finally_value,
                 parameterIndex: 2);
 
-            return removeMethod;
+            return setAtOrInsertAtMethod;
         }
     }
 }
