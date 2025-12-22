@@ -222,7 +222,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // This 'calli' instruction is always using 'IReadOnlyDictionary2LookupImpl', but the signature for
                     // the vtable slot for 'HasKey' for 'IMap<K,V>' is identical, so doing so is safe in this case.
-                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyDictionary2LookupImpl(keyAbiType, valueType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyDictionary2LookupImpl(keyAbiType, valueAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, nop_finally_end_this.CreateLabel() },
 
