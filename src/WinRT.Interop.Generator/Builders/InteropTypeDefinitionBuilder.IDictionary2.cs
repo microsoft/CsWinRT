@@ -95,7 +95,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We can share the vtable type for 'void*' when both key and value types are reference types
             if (isKeyReferenceType && isValueReferenceType)
             {
-                vftblType = interopDefinitions.IReadOnlyDictionary2Vftbl;
+                vftblType = interopDefinitions.IDictionary2Vftbl;
 
                 return;
             }
@@ -104,7 +104,7 @@ internal partial class InteropTypeDefinitionBuilder
             // the vtable type. So in this case, we just always construct a specialized new type.
             if (!isKeyReferenceType && !isValueReferenceType)
             {
-                vftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
+                vftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                     name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
                     keyType: keyType,
@@ -246,30 +246,18 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IMapMethodsImpl2Lookup(keyType, valueType).Import(module),
                 method: lookupMethod);
 
-            // Define the 'Insert' method as follows:
-            //
-            // public static bool Insert(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, <VALUE_TYPE> value)
-            MethodDefinition insertMethod = new(
-                name: "Insert"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module),
-                        valueType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Insert' method
+            MethodDefinition insertMethod = InteropMethodDefinitionFactory.IMapMethods.Insert(
+                dictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Insert' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2Insert(keyType, valueType).Import(module),
                 method: insertMethod);
-
-            // Create a method body for the 'Insert' method
-            insertMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
 
             // Define the 'Remove' method as follows:
             //
