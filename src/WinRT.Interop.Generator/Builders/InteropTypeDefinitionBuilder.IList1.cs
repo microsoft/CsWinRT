@@ -178,33 +178,18 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
                 method: appendMethod);
 
-            // Define the 'IndexOf' method as follows:
-            //
-            // public static bool IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value, out uint index)
-            MethodDefinition indexOfMethod = new(
-                name: "IndexOf"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module),
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
-            {
-                NoInlining = true,
-                CilOutParameterIndices = [3]
-            };
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IVectorMethods.IndexOf(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'IndexOf' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1IndexOf(elementType).Import(module),
                 method: indexOfMethod);
-
-            // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
 
             // Define the 'InsertAt' method
             MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IVectorMethods.InsertAt(
