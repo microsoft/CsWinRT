@@ -259,29 +259,18 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IMapMethodsImpl2Insert(keyType, valueType).Import(module),
                 method: insertMethod);
 
-            // Define the 'Remove' method as follows:
-            //
-            // public static void Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition removeMethod = new(
-                name: "Remove"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Remove' method
+            MethodDefinition removeMethod = InteropMethodDefinitionFactory.IMapMethods.Remove(
+                dictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Remove' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2Remove(keyType, valueType).Import(module),
                 method: removeMethod);
-
-            // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>

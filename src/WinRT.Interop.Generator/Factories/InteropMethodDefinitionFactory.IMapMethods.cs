@@ -154,5 +154,119 @@ internal partial class InteropMethodDefinitionFactory
 
             return insertMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Remove</c> method for some <c>IMaplt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="vftblType">The vtable type for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Remove(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition vftblType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature keyAbiType = keyType.GetAbiType(interopReferences);
+
+            // Define the 'Remove' method as follows:
+            //
+            // public static bool Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition removeMethod = new(
+                name: "Remove"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module)]))
+            { NoInlining = true };
+
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
+            //   [1]: 'void*' (for 'thisPtr')
+            //   [2]: 'bool' (for 'result')
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_result = new(interopReferences.CorLibTypeFactory.Boolean);
+
+            // Jump labels
+            CilInstruction nop_try_this = new(Nop);
+            CilInstruction nop_try_key = new(Nop);
+            CilInstruction nop_ld_key = new(Nop);
+            CilInstruction nop_finally_key = new(Nop);
+            CilInstruction ldloca_s_0_finally_this = new(Ldloca_S, loc_0_thisValue);
+            CilInstruction ldloc_2_finally_end_this = new(Ldloc_2);
+
+            // Create a method body for the 'Remove' method
+            removeMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_result },
+                Instructions =
+                {
+                    // Initialize 'thisValue'
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Stloc_0 },
+                    { nop_try_this },
+
+                    // Load the key, possibly inside a 'try/finally' block
+                    { nop_try_key },
+
+                    // '.try' code
+                    { Ldloca_S, loc_0_thisValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Stloc_1 },
+                    { Ldloc_1 },
+                    { nop_ld_key },
+                    { Ldloca_S, loc_2_result },
+                    { Conv_U },
+                    { Ldloc_1 },
+                    { Ldind_I },
+                    { Ldfld, vftblType.GetField("Remove"u8) },
+                    { Calli, WellKnownTypeSignatureFactory.IDictionary2RemoveImpl(keyAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Leave_S, ldloc_2_finally_end_this.CreateLabel() },
+
+                    // Optional 'finally' block for the marshalled key
+                    { nop_finally_key },
+
+                    // '.finally' code
+                    { ldloca_s_0_finally_this },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+
+                    // return result;
+                    { ldloc_2_finally_end_this },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = nop_try_this.CreateLabel(),
+                        TryEnd = ldloca_s_0_finally_this.CreateLabel(),
+                        HandlerStart = ldloca_s_0_finally_this.CreateLabel(),
+                        HandlerEnd = ldloc_2_finally_end_this.CreateLabel()
+                    }
+                }
+            };
+
+            // Track rewriting the return value for this method
+            emitState.TrackNativeParameterMethodRewrite(
+                paraneterType: keyType,
+                method: removeMethod,
+                tryMarker: nop_try_key,
+                loadMarker: nop_ld_key,
+                finallyMarker: nop_finally_key,
+                parameterIndex: 1);
+
+            return removeMethod;
+        }
     }
 }
