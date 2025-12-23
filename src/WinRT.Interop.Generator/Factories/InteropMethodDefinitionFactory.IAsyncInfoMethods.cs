@@ -307,7 +307,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblField },
-                    { Calli, WellKnownTypeSignatureFactory.get_TypedRetVal(resultType.GetAbiType(interopReferences).MakePointerType(), interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Calli, WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
