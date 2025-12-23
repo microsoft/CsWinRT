@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -37,8 +36,11 @@ internal static partial class InteropMethodDefinitionFactory
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+
             return HasCurrentOrMoveNext(
                 methodName: "get_HasCurrent"u8,
+                adapterMethod: interopReferences.IEnumeratorAdapter1get_HasCurrent(elementType),
                 enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
@@ -55,8 +57,11 @@ internal static partial class InteropMethodDefinitionFactory
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+
             return HasCurrentOrMoveNext(
                 methodName: "MoveNext"u8,
+                adapterMethod: interopReferences.IEnumeratorAdapter1MoveNext(elementType),
                 enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
@@ -267,11 +272,13 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Current</c> export method.
         /// </summary>
         /// <param name="methodName">The name of the method to generate.</param>
+        /// <param name="adapterMethod">The adapter method to forward the call to.</param>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         private static MethodDefinition HasCurrentOrMoveNext(
             Utf8String methodName,
+            MemberReference adapterMethod,
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             ModuleDefinition module)
@@ -293,11 +300,6 @@ internal static partial class InteropMethodDefinitionFactory
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
-
-            // Get the reference to the target method to invoke
-            MemberReference adapterMethod = methodName.AsSpan().SequenceEqual("get_HasCurrent"u8)
-                ? interopReferences.IEnumeratorAdapter1get_HasCurrent(elementType)
-                : interopReferences.IEnumeratorAdapter1MoveNext(elementType);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
