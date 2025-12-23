@@ -127,7 +127,7 @@ internal partial class InteropMethodDefinitionFactory
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int get_Key(void* thisPtr, <ABI_KEY_TYPE>* result)
-            MethodDefinition currentMethod = new(
+            MethodDefinition get_KeyMethod = new(
                 name: "get_Key"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -146,8 +146,8 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
-            // Create a method body for the 'get_Current' method
-            currentMethod.CilMethodBody = new CilMethodBody()
+            // Create a method body for the 'get_Key' method
+            get_KeyMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
@@ -199,10 +199,10 @@ internal partial class InteropMethodDefinitionFactory
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
                 retValType: keyType,
-                method: currentMethod,
+                method: get_KeyMethod,
                 marker: nop_convertToUnmanaged);
 
-            return currentMethod;
+            return get_KeyMethod;
         }
     }
 }
