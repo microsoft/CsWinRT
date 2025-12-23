@@ -811,6 +811,25 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the <c>get_CollectionChange</c> vtable entry for some map changed event args.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IMapChangedEventArgs1get_CollectionChangeImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CollectionChange.MakePointerType()]);
+    }
+
+    /// <summary>
     /// Creates a type signature for <c>in Guid</c> values.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
