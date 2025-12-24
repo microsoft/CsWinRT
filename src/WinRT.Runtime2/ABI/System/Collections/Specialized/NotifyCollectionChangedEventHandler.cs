@@ -223,9 +223,9 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue(
+            thisObject(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
                 NotifyCollectionChangedEventArgsMarshaller.ConvertToManaged(e)!);
 
@@ -294,9 +294,9 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+            *result = NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(thisObject).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

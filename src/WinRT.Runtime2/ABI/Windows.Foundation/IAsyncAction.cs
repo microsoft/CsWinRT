@@ -215,9 +215,9 @@ public static unsafe class IAsyncActionImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
-            *handler = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(unboxedValue.Completed).DetachThisPtrUnsafe();
+            *handler = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(thisObject.Completed).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -233,9 +233,9 @@ public static unsafe class IAsyncActionImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue.Completed = AsyncActionCompletedHandlerMarshaller.ConvertToManaged(handler);
+            thisObject.Completed = AsyncActionCompletedHandlerMarshaller.ConvertToManaged(handler);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -251,9 +251,9 @@ public static unsafe class IAsyncActionImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue.GetResults();
+            thisObject.GetResults();
 
             return WellKnownErrorCodes.S_OK;
         }

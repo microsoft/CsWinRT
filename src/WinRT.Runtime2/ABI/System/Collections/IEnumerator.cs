@@ -175,9 +175,9 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            object? current = IBindableIteratorAdapter.GetInstance(unboxedValue).Current;
+            object? current = IBindableIteratorAdapter.GetInstance(thisObject).Current;
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(current).DetachThisPtrUnsafe();
 
@@ -200,9 +200,9 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            *result = IBindableIteratorAdapter.GetInstance(unboxedValue).HasCurrent;
+            *result = IBindableIteratorAdapter.GetInstance(thisObject).HasCurrent;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -223,9 +223,9 @@ public static unsafe class IEnumeratorImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            *result = IBindableIteratorAdapter.GetInstance(unboxedValue).MoveNext();
+            *result = IBindableIteratorAdapter.GetInstance(thisObject).MoveNext();
 
             return WellKnownErrorCodes.S_OK;
         }
