@@ -3083,6 +3083,20 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.Size</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListAdapter1Size(TypeSignature elementType)
+    {
+        return IReadOnlyListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IReadOnlyList1.MakeGenericReferenceType(elementType)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;.Item</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>

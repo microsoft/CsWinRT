@@ -49,7 +49,7 @@ public static class IReadOnlyListAdapter<T>
     /// <returns>The number of items in the vector view.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.size"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Count(IReadOnlyList<T> list)
+    public static uint Size(IReadOnlyList<T> list)
     {
         return (uint)list.Count;
     }
