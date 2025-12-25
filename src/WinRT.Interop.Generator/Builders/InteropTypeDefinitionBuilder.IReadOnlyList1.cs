@@ -426,6 +426,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: readOnlyListType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
@@ -435,7 +442,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [getAtMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");

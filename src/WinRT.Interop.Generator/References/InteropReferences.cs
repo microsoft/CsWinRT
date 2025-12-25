@@ -664,6 +664,11 @@ internal sealed class InteropReferences
     public TypeReference IListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListMethods`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyListAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListAdapter`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListMethods`1"u8);
@@ -3059,6 +3064,22 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.Int32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
             .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.GetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListAdapter1GetAt(TypeSignature elementType)
+    {
+        return IReadOnlyListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    IReadOnlyList1.MakeGenericReferenceType(elementType),
+                    _corLibTypeFactory.UInt32]));
     }
 
     /// <summary>
