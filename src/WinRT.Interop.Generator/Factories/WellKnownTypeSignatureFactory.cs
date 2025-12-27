@@ -394,7 +394,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -403,7 +403,6 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
                 interopReferences.CorLibTypeFactory.UInt32,
                 elementType.MakePointerType(),
                 interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
@@ -583,7 +582,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, int, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
         // This is the same as 'IVectorView<T>.GetMany', so we can reuse that one here (like the methods above).
         return IReadOnlyList1GetManyImpl(elementType, interopReferences);
     }
