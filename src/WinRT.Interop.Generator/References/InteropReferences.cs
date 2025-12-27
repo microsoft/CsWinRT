@@ -1851,6 +1851,14 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManagedUnsafe</c>.
+    /// </summary>
+    public MemberReference HStringMarshallerConvertToManagedUnsafe => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToManagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: ReadOnlySpanChar,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.Free</c>.
     /// </summary>
     public MemberReference HStringMarshallerFree => field ??= HStringMarshaller
