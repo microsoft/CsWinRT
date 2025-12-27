@@ -270,6 +270,11 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
+            // Get the target 'IndexOf' method (we can optimize for 'string' types)
+            MemberReference adapterIndexOfMethod = elementType.IsTypeOfString()
+                ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
+                : interopReferences.IReadOnlyListAdapter1IndexOf(elementType);
+
             // Create a method body for the 'IndexOf' method
             indexOfMethod.CilMethodBody = new CilMethodBody()
             {
@@ -297,7 +302,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
                     { Ldarg_2 },
-                    { Call, interopReferences.IReadOnlyListAdapter1IndexOf(elementType).Import(module) },
+                    { Call, adapterIndexOfMethod.Import(module) },
                     { Stind_I1 },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -326,9 +331,14 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
+            // If the element type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = elementType.IsTypeOfString()
+                ? interopReferences.ReadOnlySpanChar
+                : elementType;
+
             // Track rewriting the two parameters for this method
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: elementType,
+                paraneterType: parameterType,
                 method: indexOfMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
