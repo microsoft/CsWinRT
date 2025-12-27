@@ -345,5 +345,52 @@ internal static partial class InteropMethodDefinitionFactory
 
             return indexOfMethod;
         }
+
+#pragma warning disable IDE0017
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition GetMany(
+            GenericInstanceTypeSignature readOnlyListType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
+            // Define the 'GetMany' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int GetMany(void* thisPtr, uint size, <ABI_ELEMENT_TYPE>* items, uint* result)
+            MethodDefinition indexOfMethod = new(
+                name: "GetMany"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.UInt32.MakePointerType(),
+                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
+                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Create a method body for the 'GetMany' method
+            indexOfMethod.CilMethodBody = new CilMethodBody()
+            {
+                Instructions =
+                {
+                    { Ldnull },
+                    { Throw } // TODO
+                },
+            };
+
+            return indexOfMethod;
+        }
     }
 }
