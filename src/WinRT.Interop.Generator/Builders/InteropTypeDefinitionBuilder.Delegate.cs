@@ -278,13 +278,13 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track rewriting the two parameters for this method
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: senderType,
+                parameterType: senderType,
                 method: invokeMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
 
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: argsType,
+                parameterType: argsType,
                 method: invokeMethod,
                 marker: nop_parameter2Rewrite,
                 parameterIndex: 2);
@@ -650,7 +650,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track rewriting the two parameters for this method
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: senderType,
+                parameterType: senderType,
                 method: invokeMethod,
                 tryMarker: nop_try_sender,
                 loadMarker: nop_ld_sender,
@@ -658,7 +658,7 @@ internal partial class InteropTypeDefinitionBuilder
                 parameterIndex: 1);
 
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: argsType,
+                parameterType: argsType,
                 method: invokeMethod,
                 tryMarker: nop_try_args,
                 loadMarker: nop_ld_args,

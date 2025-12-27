@@ -135,12 +135,12 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// Tracks a method rewrite that involves loading a managed parameter in the specified method.
     /// </summary>
-    /// <param name="paraneterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
     /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.ManagedParameter.ParameterIndex" path="/node()"/></param>
     public void TrackManagedParameterMethodRewrite(
-        TypeSignature paraneterType,
+        TypeSignature parameterType,
         MethodDefinition method,
         CilInstruction marker,
         int parameterIndex)
@@ -149,7 +149,7 @@ internal sealed class InteropGeneratorEmitState
 
         _methodRewriteInfos.Add(new MethodRewriteInfo.ManagedParameter
         {
-            Type = paraneterType,
+            Type = parameterType,
             Method = method,
             Marker = marker,
             ParameterIndex = parameterIndex
@@ -159,14 +159,14 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// Tracks a method rewrite that involves loading a native parameter in the specified method.
     /// </summary>
-    /// <param name="paraneterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="tryMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.TryMarker" path="/node()"/></param>
     /// <param name="loadMarker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
     /// <param name="finallyMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.FinallyMarker" path="/node()"/></param>
     /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.NativeParameter.ParameterIndex" path="/node()"/></param>
     public void TrackNativeParameterMethodRewrite(
-        TypeSignature paraneterType,
+        TypeSignature parameterType,
         MethodDefinition method,
         CilInstruction tryMarker,
         CilInstruction loadMarker,
@@ -177,7 +177,7 @@ internal sealed class InteropGeneratorEmitState
 
         _methodRewriteInfos.Add(new MethodRewriteInfo.NativeParameter
         {
-            Type = paraneterType,
+            Type = parameterType,
             Method = method,
             TryMarker = tryMarker,
             Marker = loadMarker,

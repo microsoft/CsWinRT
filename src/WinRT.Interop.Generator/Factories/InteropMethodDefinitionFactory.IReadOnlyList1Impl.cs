@@ -338,7 +338,7 @@ internal static partial class InteropMethodDefinitionFactory
 
             // Track rewriting the two parameters for this method
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: parameterType,
+                parameterType: parameterType,
                 method: indexOfMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);

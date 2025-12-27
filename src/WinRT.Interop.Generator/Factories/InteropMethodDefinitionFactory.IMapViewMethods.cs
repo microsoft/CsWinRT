@@ -130,7 +130,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track rewriting the return value for this method
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: keyType,
+                parameterType: keyType,
                 method: hasKeyMethod,
                 tryMarker: nop_try_key,
                 loadMarker: nop_ld_key,
@@ -253,7 +253,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track rewriting the 'key' parameter for this method
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: keyType,
+                parameterType: keyType,
                 method: lookupMethod,
                 tryMarker: nop_try_key,
                 loadMarker: nop_ld_key,
