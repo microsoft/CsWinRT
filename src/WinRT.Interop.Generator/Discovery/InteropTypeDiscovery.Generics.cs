@@ -239,6 +239,10 @@ internal partial class InteropTypeDiscovery
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
         {
             discoveryState.TrackIList1Type(typeSignature);
+
+            // Whenever we find an 'IList<T>' instantiation, we also need to track the corresponding 'IReadOnlyList<T>' instantiation.
+            // This is because that interface is needed to marshal the return value of the 'IVector<T>.GetView' method ('IVectorView<T>').
+            discoveryState.TrackIReadOnlyList1Type(interopReferences.IReadOnlyList1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
         {
