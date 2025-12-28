@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -52,6 +53,26 @@ public static class IListAdapter<T>
     public static uint Size(IList<T> list)
     {
         return (uint)list.Count;
+    }
+
+    /// <summary>
+    /// Returns an immutable view of the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <returns>The view of the vector.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.getview"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IReadOnlyList<T> GetView(IList<T> list)
+    {
+        // This list is not really read-only: once marshalled, native code could do
+        // a 'QueryInterface' call back to 'IVector<T>', which would succeed, and would
+        // return a modifiable reference for this view. We believe this is accetable, as
+        // it allows us to gain some performance. For instance, in most situations (because
+        // pretty much all built-in .NET collection types implementing 'IList<T>' also implement
+        // 'IReadOnlyList<T>'), this allows us to not allocate anything. That is, when native
+        // code calls 'GetView()', it would get back the same CCW instance, just through a
+        // 'QueryInterface' call for 'IVectorView<T>' instead.
+        return list as IReadOnlyList<T> ?? new ReadOnlyCollection<T>(list);
     }
 
     /// <summary>
