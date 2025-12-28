@@ -373,7 +373,7 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType(),
+                        module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
