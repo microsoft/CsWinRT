@@ -116,6 +116,24 @@ internal static partial class InteropTypeDiscovery
             return;
         }
 
+        // Check if this is the first time that this user-defined type has been seen, and stop immediately if not.
+        // If the type has been seen before, it means that it either has already been fully processed, or that it
+        // is currently being processed (possibly by another thread, if multi-threading discovery is enabled). The
+        // reason for this check is not so much to improve performance (although it does avoid some repeated work),
+        // but most importantly to avoid stack overlows due to infinite recursion in cases where user-defined types
+        // implement interfaces that then transitively required the same user-defined type to be tracked.
+        //
+        // For instance, consider a scenario where 'List<int>' is being discovered. While processing the implemented
+        // interfaces, 'IList<int>' will also be discovered. This will then require 'ReadOnlyCollection<int>' to be
+        // tracked, because it is used by the fallback code for the CCW implementation method of 'IVector<T>.GetView'.
+        // However, 'ReadOnlyCollection<int>' itself will also implement 'IList<int>', which would then require tracking
+        // 'ReadOnlyCollection<int>' itself again too, etc. That would just recurse forever without this check, because
+        // all those interfaces would keep being discovered before the initial processing of the type has finished.
+        if (!discoveryState.TryMarkUserDefinedType(typeSignature))
+        {
+            return;
+        }
+
         // Reuse a builder to track all implemented interfaces for the current type, or create a new one.
         // Note, we can't just have a single thread-local builder that we reuse here, as this method might
         // be called recursively in some scenarios. For instance, consider a type that implements a generic
