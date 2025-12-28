@@ -28,7 +28,7 @@ public static class IReadOnlyListAdapterExtensions
 
             for (int i = 0; i < count; i++)
             {
-                if (list[1].SequenceEqual(value))
+                if (list[i].SequenceEqual(value))
                 {
                     index = (uint)i;
 
