@@ -426,9 +426,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
             // Define the 'GetAt' method
             MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
                 readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -436,6 +439,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'get_Size' method
             MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
                 readOnlyListType: readOnlyListType,
+                sizeMethod: interopReferences.IReadOnlyListAdapter1Size(elementType),
                 interopReferences: interopReferences,
                 module: module);
 
