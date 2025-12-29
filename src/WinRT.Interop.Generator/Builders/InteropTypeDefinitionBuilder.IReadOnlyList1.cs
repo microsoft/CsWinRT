@@ -446,6 +446,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'IndexOf' method
             MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
                 readOnlyListType: readOnlyListType,
+                indexOfMethod: interopReferences.IReadOnlyListAdapter1IndexOf(elementType),
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);

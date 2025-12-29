@@ -1006,6 +1006,14 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: listType,
+                indexOfMethod: interopReferences.IListAdapter1IndexOf(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1018,7 +1026,8 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableMethods: [
                     getAtMethod,
                     sizeMethod,
-                    getViewMethod]);
+                    getViewMethod,
+                    indexOfMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");

@@ -3139,6 +3139,37 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.IndexOf</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1IndexOf(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(elementType),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;string&gt;.IndexOf</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfStringIndexOf()
+    {
+        return IListAdapterExtensions
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                    ReadOnlySpanChar,
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.GetAt</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
