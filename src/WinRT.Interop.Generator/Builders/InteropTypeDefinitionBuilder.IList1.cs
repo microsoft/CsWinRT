@@ -1047,6 +1047,12 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IList1Impl.Clear(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1065,7 +1071,8 @@ internal partial class InteropTypeDefinitionBuilder
                     insertAtMethod,
                     removeAtMethod,
                     appendMethod,
-                    removeAtEndMethod]);
+                    removeAtEndMethod,
+                    clearMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");
