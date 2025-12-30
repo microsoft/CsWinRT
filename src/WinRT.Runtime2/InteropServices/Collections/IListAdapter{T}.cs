@@ -99,6 +99,31 @@ public static class IListAdapter<T>
     }
 
     /// <summary>
+    /// Inserts an item at a specified index in the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <param name="index">The zero-based index.</param>
+    /// <param name="value">The item to insert.</param>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.insertat"/>
+    public static void InsertAt(IList<T> list, uint index, T value)
+    {
+        // Inserting at an index one past the end of the list is equivalent to just
+        // appending an item, so we need to ensure that we're within '[0, count + 1)'.
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count + 1);
+
+        try
+        {
+            list.Insert((int)index, value);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            e.HResult = WellKnownErrorCodes.E_BOUNDS;
+
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves the index of a specified item in the vector.
     /// </summary>
     /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -142,12 +143,64 @@ internal static partial class InteropMethodDefinitionFactory
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            // Define the 'SetAt' method as follows:
+            return SetAtOrInsertAt(
+                methodName: "SetAt"u8,
+                adapterMethod: interopReferences.IListAdapter1SetAt(elementType),
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>InsertAt</c> export method.
+        /// </summary>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition InsertAt(
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            return SetAtOrInsertAt(
+                methodName: "InsertAt"u8,
+                adapterMethod: interopReferences.IListAdapter1InsertAt(elementType),
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> or <c>InsertAt</c> export method.
+        /// </summary>
+        /// <param name="methodName">The name of the method to generate.</param>
+        /// <param name="adapterMethod">The adapter method to forward the call to.</param>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        private static MethodDefinition SetAtOrInsertAt(
+            Utf8String methodName,
+            MemberReference adapterMethod,
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Define the 'SetAt' or 'InsertAt' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int SetAt(void* thisPtr, uint index, <ABI_ELEMENT_TYPE> value)
-            MethodDefinition setAtMethod = new(
-                name: "SetAt"u8,
+            // private static int <NAME>>(void* thisPtr, uint index, <ABI_ELEMENT_TYPE> value)
+            MethodDefinition setAtOrInsertAtMethod = new(
+                name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
@@ -171,8 +224,8 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
-            // Create a method body for the 'SetAt' method
-            setAtMethod.CilMethodBody = new CilMethodBody()
+            // Create a method body for the 'SetAt' or 'InsertAt' method
+            setAtOrInsertAtMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -184,7 +237,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Ldloc_0 },
                     { Ldarg_1 },
                     { nop_parameter2Rewrite },
-                    { Call, interopReferences.IListAdapter1SetAt(elementType).Import(module) },
+                    { Call, adapterMethod.Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -215,11 +268,11 @@ internal static partial class InteropMethodDefinitionFactory
             // Track rewriting the parameter for this method
             emitState.TrackManagedParameterMethodRewrite(
                 parameterType: elementType,
-                method: setAtMethod,
+                method: setAtOrInsertAtMethod,
                 marker: nop_parameter2Rewrite,
                 parameterIndex: 2);
 
-            return setAtMethod;
+            return setAtOrInsertAtMethod;
         }
     }
 }

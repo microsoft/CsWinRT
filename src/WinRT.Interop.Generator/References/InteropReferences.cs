@@ -3187,6 +3187,23 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.InsertAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1InsertAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("InsertAt"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(elementType),
+                    _corLibTypeFactory.UInt32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.GetAt</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
