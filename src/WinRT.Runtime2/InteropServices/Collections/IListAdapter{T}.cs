@@ -76,6 +76,35 @@ public static class IListAdapter<T>
     }
 
     /// <summary>
+    /// Retrieves the index of a specified item in the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <param name="value">The item to find in the vector.</param>
+    /// <param name="index">If the item is found, this is the zero-based index of the item; otherwise, this parameter is <c>0</c>.</param>
+    /// <returns><see langword="true"/> if the item is found; otherwise, <see langword="false"/>.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.indexof"/>
+    public static bool IndexOf(IList<T> list, T value, out uint index)
+    {
+        int count = list.Count;
+
+        // Scan the list and look for the target item
+        for (int i = 0; i < count; i++)
+        {
+            if (EqualityComparer<T>.Default.Equals(value, list[i]))
+            {
+                index = (uint)i;
+
+                return true;
+            }
+        }
+
+        // Same as 'IndexOf' for 'IReadOnlyList<T>', see notes there
+        index = 0;
+
+        return false;
+    }
+
+    /// <summary>
     /// Sets the value at the specified index in the vector.
     /// </summary>
     /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
@@ -121,35 +150,6 @@ public static class IListAdapter<T>
 
             throw;
         }
-    }
-
-    /// <summary>
-    /// Retrieves the index of a specified item in the vector.
-    /// </summary>
-    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
-    /// <param name="value">The item to find in the vector.</param>
-    /// <param name="index">If the item is found, this is the zero-based index of the item; otherwise, this parameter is <c>0</c>.</param>
-    /// <returns><see langword="true"/> if the item is found; otherwise, <see langword="false"/>.</returns>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.indexof"/>
-    public static bool IndexOf(IList<T> list, T value, out uint index)
-    {
-        int count = list.Count;
-
-        // Scan the list and look for the target item
-        for (int i = 0; i < count; i++)
-        {
-            if (EqualityComparer<T>.Default.Equals(value, list[i]))
-            {
-                index = (uint)i;
-
-                return true;
-            }
-        }
-
-        // Same as 'IndexOf' for 'IReadOnlyList<T>', see notes there
-        index = 0;
-
-        return false;
     }
 
     /// <summary>
