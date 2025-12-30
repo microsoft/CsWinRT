@@ -314,7 +314,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Stloc_0 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
-                    { Callvirt, interopReferences.IList1Append(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Add(elementType).Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -510,6 +510,154 @@ internal static partial class InteropMethodDefinitionFactory
             };
 
             return clearMethod;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>ReplaceAll</c> export method.
+        /// </summary>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition ReplaceAll(
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+
+            // Define the 'ReplaceAll' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int ReplaceAll(void* thisPtr, uint size, <ABI_ELEMENT_TYPE>* items)
+            MethodDefinition replaceAllMethod = new(
+                name: "ReplaceAll"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.UInt32,
+                        elementAbiType.Import(module).MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
+            //   [1]: 'uint' (for the 'i' loop variable)
+            //   [2]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
+            CilLocalVariable loc_1_i = new(module.CorLibTypeFactory.UInt32);
+            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction ldarg_2_nullCheck = new(Ldarg_2);
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldloc_1_loopCheck = new(Ldloc_1);
+            CilInstruction ldloc_0_loopStart = new(Ldloc_0);
+            CilInstruction nop_convertToManaged = new(Nop);
+            CilInstruction ldloc_2_returnHResult = new(Ldloc_2);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
+            // Create a method body for the 'ReplaceAll' method
+            replaceAllMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_i, loc_2_hresult },
+                Instructions =
+                {
+                    // Return 'S_OK' if the size is '0'
+                    { Ldarg_1 },
+                    { Brtrue_S, ldarg_2_nullCheck.CreateLabel() },
+                    { Ldc_I4_0 },
+                    { Ret },
+
+                    // Return 'E_POINTER' if the array is 'null'
+                    { ldarg_2_nullCheck },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code to load the list
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Stloc_0 },
+
+                    // list.Clear();
+                    { Ldloc_0 },
+                    { Callvirt, interopReferences.ICollection1Clear(elementType).Import(module) },
+
+                    // int i = 0;
+                    { Ldc_I4_0 },
+                    { Stloc_1 },
+                    { Br_S, ldloc_1_loopCheck.CreateLabel() },
+
+                    // list.Add(<CONVERT_TO_MANAGED>(items[i]));
+                    { ldloc_0_loopStart },
+                    { Ldarg_2 },
+                    { Ldloc_1 },
+                    { Conv_U8 },
+                    { Sizeof, elementAbiType.Import(module).ToTypeDefOrRef() },
+                    { Conv_I8 },
+                    { Mul },
+                    { Conv_I },
+                    { Add },
+                    { CilInstruction.CreateLdind(elementAbiType, module) },
+                    { nop_convertToManaged },
+                    { Callvirt, interopReferences.ICollection1Add(elementType).Import(module) },
+
+                    // i++;
+                    { Ldloc_1 },
+                    { Ldc_I4_1 },
+                    { Add },
+                    { Stloc_1 },
+
+                    // if (i < size) goto LoopStart;
+                    { ldloc_1_loopCheck },
+                    { Ldarg_1 },
+                    { Blt_Un_S, ldloc_0_loopStart.CreateLabel() },
+
+                    // return S_OK
+                    { Ldc_I4_0 },
+                    { Stloc_2 },
+                    { Leave_S, ldloc_2_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_2 },
+                    { Leave_S, ldloc_2_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_2_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_2_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            // Track rewriting each item for this method
+            emitState.TrackManagedValueMethodRewrite(
+                parameterType: elementType,
+                method: replaceAllMethod,
+                marker: nop_convertToManaged);
+
+            return replaceAllMethod;
         }
 
         /// <summary>
