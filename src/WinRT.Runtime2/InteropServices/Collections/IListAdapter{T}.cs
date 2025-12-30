@@ -76,6 +76,29 @@ public static class IListAdapter<T>
     }
 
     /// <summary>
+    /// Sets the value at the specified index in the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <param name="index">The zero-based index at which to set the value.</param>
+    /// <param name="value">The item to set.</param>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.setat"/>
+    public static void SetAt(IList<T> list, uint index, T value)
+    {
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+
+        try
+        {
+            list[(int)index] = value;
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            e.HResult = WellKnownErrorCodes.E_BOUNDS;
+
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves the index of a specified item in the vector.
     /// </summary>
     /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>

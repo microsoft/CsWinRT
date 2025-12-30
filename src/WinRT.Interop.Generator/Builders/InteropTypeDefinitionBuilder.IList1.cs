@@ -1014,6 +1014,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IList1Impl.SetAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1027,7 +1034,8 @@ internal partial class InteropTypeDefinitionBuilder
                     getAtMethod,
                     sizeMethod,
                     getViewMethod,
-                    indexOfMethod]);
+                    indexOfMethod,
+                    setAtMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");
