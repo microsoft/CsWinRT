@@ -1053,6 +1053,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: listType,
+                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1072,7 +1080,8 @@ internal partial class InteropTypeDefinitionBuilder
                     removeAtMethod,
                     appendMethod,
                     removeAtEndMethod,
-                    clearMethod]);
+                    clearMethod,
+                    getManyMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");

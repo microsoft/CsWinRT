@@ -454,6 +454,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'GetMany' method
             MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
                 readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);

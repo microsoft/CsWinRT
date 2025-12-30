@@ -371,11 +371,16 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// /// <remarks>
+        /// This method can also be used to define the <c>GetMany</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature readOnlyListType,
+            MemberReference getAtMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
