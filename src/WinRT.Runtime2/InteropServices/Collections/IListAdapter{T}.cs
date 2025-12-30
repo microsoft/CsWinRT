@@ -153,6 +153,28 @@ public static class IListAdapter<T>
     }
 
     /// <summary>
+    /// Removes the item at the specified index in the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <param name="index">The zero-based index of the vector item to remove.</param>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.removeat"/>
+    public static void RemoveAt(IList<T> list, uint index)
+    {
+        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+
+        try
+        {
+            list.RemoveAt((int)index);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            e.HResult = WellKnownErrorCodes.E_BOUNDS;
+
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves multiple items from the vector view beginning at the given index.
     /// </summary>
     /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>

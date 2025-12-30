@@ -1028,6 +1028,12 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'RemoveAt' method
+            MethodDefinition removeAtMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1043,7 +1049,8 @@ internal partial class InteropTypeDefinitionBuilder
                     getViewMethod,
                     indexOfMethod,
                     setAtMethod,
-                    insertAtMethod]);
+                    insertAtMethod,
+                    removeAtMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");
