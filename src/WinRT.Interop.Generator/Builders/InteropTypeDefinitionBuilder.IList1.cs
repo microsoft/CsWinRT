@@ -1034,6 +1034,13 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IList1Impl.Append(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1050,7 +1057,8 @@ internal partial class InteropTypeDefinitionBuilder
                     indexOfMethod,
                     setAtMethod,
                     insertAtMethod,
-                    removeAtMethod]);
+                    removeAtMethod,
+                    appendMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");

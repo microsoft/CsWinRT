@@ -2912,6 +2912,20 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.Append"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1Append(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Append"u8, MethodSignature.CreateInstance(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.RemoveAt"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>

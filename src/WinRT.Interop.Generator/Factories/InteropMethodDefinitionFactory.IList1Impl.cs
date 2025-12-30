@@ -260,6 +260,99 @@ internal static partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Append</c> export method.
+        /// </summary>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Append(
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Define the 'Append' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int Append(void* thisPtr, <ABI_ELEMENT_TYPE> value)
+            MethodDefinition appendMethod = new(
+                name: "Append"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        elementType.GetAbiType(interopReferences).Import(module)]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
+            //   [1]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
+            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction nop_parameter1Rewrite = new(Nop);
+            CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
+            // Create a method body for the 'Append' method
+            appendMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_hresult },
+                Instructions =
+                {
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Stloc_0 },
+                    { Ldloc_0 },
+                    { nop_parameter1Rewrite },
+                    { Callvirt, interopReferences.IList1Append(elementType).Import(module) },
+                    { Ldc_I4_0 },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_1_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            // Track rewriting the parameter for this method
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: appendMethod,
+                marker: nop_parameter1Rewrite,
+                parameterIndex: 1);
+
+            return appendMethod;
+        }
+
+        /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> or <c>InsertAt</c> export method.
         /// </summary>
         /// <param name="methodName">The name of the method to generate.</param>
