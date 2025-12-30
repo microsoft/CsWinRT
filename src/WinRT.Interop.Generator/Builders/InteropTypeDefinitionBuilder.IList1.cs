@@ -1041,6 +1041,12 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'RemoveAtEnd' method
+            MethodDefinition removeAtEndMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAtEnd(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1058,7 +1064,8 @@ internal partial class InteropTypeDefinitionBuilder
                     setAtMethod,
                     insertAtMethod,
                     removeAtMethod,
-                    appendMethod]);
+                    appendMethod,
+                    removeAtEndMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -165,6 +166,45 @@ public static class IListAdapter<T>
         try
         {
             list.RemoveAt((int)index);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            e.HResult = WellKnownErrorCodes.E_BOUNDS;
+
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Removes the last item from the vector.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IList{T}"/> instance.</param>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.removeatend"/>
+    public static void RemoveAtEnd(IList<T> list)
+    {
+        // Manually hoist the count to avoid doing an interface dispatch call twice.
+        // We don't need to protect against mutation here: the actual list type would
+        // already either handle this, or the following 'RemoveAt' call might throw.
+        int count = list.Count;
+
+        // Check that the list isn't empty, as that would of course be invalid
+        if (count == 0)
+        {
+            [DoesNotReturn]
+            static void ThrowInvalidOperationException()
+            {
+                throw new InvalidOperationException("InvalidOperation_CannotRemoveLastFromEmptyCollection")
+                {
+                    HResult = WellKnownErrorCodes.E_BOUNDS
+                };
+            }
+
+            ThrowInvalidOperationException();
+        }
+
+        try
+        {
+            list.RemoveAt(count - 1);
         }
         catch (ArgumentOutOfRangeException e)
         {
