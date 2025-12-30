@@ -170,7 +170,6 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_parameter2Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
-            CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'SetAt' method
             setAtMethod.CilMethodBody = new CilMethodBody()

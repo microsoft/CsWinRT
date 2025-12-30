@@ -3139,23 +3139,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.SetAt</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference IListAdapter1SetAt(TypeSignature elementType)
-    {
-        return IListAdapter1
-            .MakeGenericReferenceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("SetAt"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
-                    _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.IndexOf</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -3184,6 +3167,23 @@ internal sealed class InteropReferences
                     IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
                     ReadOnlySpanChar,
                     _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.SetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1SetAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("SetAt"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(elementType),
+                    _corLibTypeFactory.UInt32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
