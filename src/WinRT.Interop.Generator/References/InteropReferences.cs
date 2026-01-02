@@ -3723,6 +3723,22 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;string, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IReadOnlyDictionaryAdapterOfStringLookup(TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapterExtensions
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.this"/>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>

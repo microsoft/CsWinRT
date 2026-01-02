@@ -28,11 +28,16 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>Lookup</c> export method.
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="lookupMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>Lookup</c> method for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition Lookup(
             GenericInstanceTypeSignature readOnlyDictionaryType,
+            MemberReference lookupMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
@@ -44,7 +49,7 @@ internal static partial class InteropMethodDefinitionFactory
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int Lookup(void* thisPtr, <ABI_KEY_TYPE> key, <ABI_ELEMENT_TYPE>* result)
-            MethodDefinition lookupMethod = new(
+            MethodDefinition lookupImplMethod = new(
                 name: "Lookup"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -71,8 +76,23 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
+            IMethodDescriptor adapterLookupMethod;
+
+            // Get the target 'Lookup' method (we can optimize for 'string' types)
+            if (keyType.IsTypeOfString())
+            {
+                adapterLookupMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                    ? interopReferences.IReadOnlyDictionaryAdapterOfStringLookup(valueType)
+                    : interopReferences.IListAdapterOfStringIndexOf(); // TODO
+            }
+            else
+            {
+                // Otherwise use the provided method directly (it will always be valid)
+                adapterLookupMethod = lookupMethod;
+            }
+
             // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody()
+            lookupImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -93,7 +113,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Ldarg_2 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
-                    { Call, interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType).Import(module) },
+                    { Call, adapterLookupMethod.Import(module) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -122,20 +142,25 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
+            // If the key type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = keyType.IsTypeOfString()
+                ? interopReferences.ReadOnlySpanChar
+                : keyType;
+
             // Track rewriting the parameter for this method
             emitState.TrackManagedParameterMethodRewrite(
-                parameterType: keyType,
-                method: lookupMethod,
+                parameterType: parameterType,
+                method: lookupImplMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
 
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
                 retValType: valueType,
-                method: lookupMethod,
+                method: lookupImplMethod,
                 marker: nop_convertToUnmanaged);
 
-            return lookupMethod;
+            return lookupImplMethod;
         }
     }
 }

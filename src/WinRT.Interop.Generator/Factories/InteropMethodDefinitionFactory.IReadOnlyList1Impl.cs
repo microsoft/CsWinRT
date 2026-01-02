@@ -239,6 +239,9 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>IndexOf</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition IndexOf(
             GenericInstanceTypeSignature readOnlyListType,
             MemberReference indexOfMethod,

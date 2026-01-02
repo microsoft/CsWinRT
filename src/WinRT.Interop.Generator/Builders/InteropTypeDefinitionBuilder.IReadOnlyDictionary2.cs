@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -582,9 +583,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
             // Define the 'Lookup' method
             MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
                 readOnlyDictionaryType: readOnlyDictionaryType,
+                lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
