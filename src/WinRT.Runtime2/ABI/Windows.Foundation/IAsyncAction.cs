@@ -17,13 +17,9 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IAsyncAction",
-    target: typeof(ABI.Windows.Foundation.IAsyncAction),
+    target: typeof(IAsyncInfo),
     trimTarget: typeof(IAsyncAction))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
-[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
-    source: typeof(IAsyncAction),
-    proxy: typeof(ABI.Windows.Foundation.IAsyncAction))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IAsyncAction),
@@ -32,14 +28,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.Windows.Foundation;
 
 /// <summary>
-/// ABI type for <see cref="global::Windows.Foundation.IAsyncAction"/>.
-/// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeMetadataTypeName("Windows.Foundation.IAsyncAction")]
-file static class IAsyncAction;
-
-/// <summary>
-/// Marshaller for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// Marshaller for <see cref="IAsyncAction"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -48,20 +37,20 @@ file static class IAsyncAction;
 public static unsafe class IAsyncActionMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::Windows.Foundation.IAsyncAction? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IAsyncAction? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::Windows.Foundation.IAsyncAction>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction);
+        return WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::Windows.Foundation.IAsyncAction? ConvertToManaged(void* value)
+    public static IAsyncAction? ConvertToManaged(void* value)
     {
-        return (global::Windows.Foundation.IAsyncAction?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IAsyncActionComWrappersCallback>(value);
+        return (IAsyncAction?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IAsyncActionComWrappersCallback>(value);
     }
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IAsyncAction"/>.
 /// </summary>
 file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
@@ -93,7 +82,7 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="IAsyncAction"/>.
 /// </summary>
 internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
@@ -110,7 +99,7 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// Interop methods for <see cref="IAsyncAction"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -118,7 +107,7 @@ internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : Window
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IAsyncActionMethods
 {
-    /// <see cref="global::Windows.Foundation.IAsyncAction.Completed"/>
+    /// <see cref="IAsyncAction.Completed"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static AsyncActionCompletedHandler? Completed(WindowsRuntimeObjectReference thisReference)
     {
@@ -141,7 +130,7 @@ public static unsafe class IAsyncActionMethods
         }
     }
 
-    /// <see cref="global::Windows.Foundation.IAsyncAction.Completed"/>
+    /// <see cref="IAsyncAction.Completed"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Completed(WindowsRuntimeObjectReference thisReference, AsyncActionCompletedHandler? handler)
     {
@@ -155,7 +144,7 @@ public static unsafe class IAsyncActionMethods
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
     }
 
-    /// <see cref="global::Windows.Foundation.IAsyncAction.GetResults"/>
+    /// <see cref="IAsyncAction.GetResults"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void GetResults(WindowsRuntimeObjectReference thisReference)
     {
@@ -170,7 +159,7 @@ public static unsafe class IAsyncActionMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// Binding type for <see cref="IAsyncAction"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IAsyncActionVftbl
@@ -187,7 +176,7 @@ internal unsafe struct IAsyncActionVftbl
 }
 
 /// <summary>
-/// The <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+/// The <see cref="IAsyncAction"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -196,7 +185,7 @@ internal unsafe struct IAsyncActionVftbl
 public static unsafe class IAsyncActionImpl
 {
     /// <summary>
-    /// The <see cref="IAsyncActionVftbl"/> value for the managed <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+    /// The <see cref="IAsyncActionVftbl"/> value for the managed <see cref="IAsyncAction"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IAsyncActionVftbl Vftbl;
@@ -214,7 +203,7 @@ public static unsafe class IAsyncActionImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::Windows.Foundation.IAsyncAction"/> implementation.
+    /// Gets a pointer to the managed <see cref="IAsyncAction"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -233,7 +222,7 @@ public static unsafe class IAsyncActionImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
             *handler = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(unboxedValue.Completed).DetachThisPtrUnsafe();
 
@@ -251,7 +240,7 @@ public static unsafe class IAsyncActionImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue.Completed = AsyncActionCompletedHandlerMarshaller.ConvertToManaged(handler);
 
@@ -269,7 +258,7 @@ public static unsafe class IAsyncActionImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::Windows.Foundation.IAsyncAction>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncAction>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue.GetResults();
 
@@ -283,32 +272,32 @@ public static unsafe class IAsyncActionImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IAsyncAction"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file interface IAsyncActionInterfaceImpl : global::Windows.Foundation.IAsyncAction
+file interface IAsyncActionInterfaceImpl : IAsyncAction
 {
     /// <inheritdoc/>
-    AsyncActionCompletedHandler? global::Windows.Foundation.IAsyncAction.Completed
+    AsyncActionCompletedHandler? IAsyncAction.Completed
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IAsyncAction).TypeHandle);
 
             return IAsyncActionMethods.Completed(thisReference);
         }
         set
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IAsyncAction).TypeHandle);
 
             IAsyncActionMethods.Completed(thisReference, value);
         }
     }
 
     /// <inheritdoc/>
-    void global::Windows.Foundation.IAsyncAction.GetResults()
+    void IAsyncAction.GetResults()
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IAsyncAction).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IAsyncAction).TypeHandle);
 
         IAsyncActionMethods.GetResults(thisReference);
     }

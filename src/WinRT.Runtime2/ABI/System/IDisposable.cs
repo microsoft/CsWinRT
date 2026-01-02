@@ -33,8 +33,9 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.IClosable")]
+[WindowsRuntimeMappedType(typeof(global::System.IDisposable))]
 file static class IDisposable;
 
 /// <summary>
@@ -149,7 +150,7 @@ public static unsafe class IDisposableImpl
 /// <summary>
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IClosable")]
 [DynamicInterfaceCastableImplementation]
 file interface IDisposableInterfaceImpl : global::System.IDisposable

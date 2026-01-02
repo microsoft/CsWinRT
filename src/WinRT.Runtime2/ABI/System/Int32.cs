@@ -32,9 +32,10 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="int"/>.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Int32>")]
 [WindowsRuntimeMetadataTypeName("Int32")]
+[WindowsRuntimeMappedType(typeof(int))]
 [WindowsRuntimeReferenceType(typeof(int?))]
 [Int32ComWrappersMarshaller]
 file static class Int32;
