@@ -356,7 +356,7 @@ internal static partial class InteropMethodDefinitionFactory
                 ? interopReferences.ReadOnlySpanChar
                 : elementType;
 
-            // Track rewriting the two parameters for this method
+            // Track rewriting the parameter for this method
             emitState.TrackManagedParameterMethodRewrite(
                 parameterType: parameterType,
                 method: indexOfImplMethod,
