@@ -3106,7 +3106,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32]));
     }
 
@@ -3121,7 +3121,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [IList1.MakeGenericReferenceType(elementType)]));
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>
@@ -3135,7 +3135,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("GetView"u8, MethodSignature.CreateStatic(
                 returnType: IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
-                parameterTypes: [IList1.MakeGenericReferenceType(elementType)]));
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>
@@ -3150,7 +3150,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     _corLibTypeFactory.UInt32.MakeByReferenceType()]));
     }
@@ -3181,7 +3181,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("SetAt"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
@@ -3198,7 +3198,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("InsertAt"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
@@ -3215,7 +3215,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("RemoveAt"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(elementType),
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32]));
     }
 
@@ -3230,7 +3230,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("RemoveAtEnd"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [IList1.MakeGenericReferenceType(elementType)]));
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>
@@ -3245,7 +3245,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(elementType),
+                    IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32]));
     }
 
@@ -3260,7 +3260,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [IReadOnlyList1.MakeGenericReferenceType(elementType)]));
+                parameterTypes: [IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>
@@ -3275,7 +3275,7 @@ internal sealed class InteropReferences
             .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(elementType),
+                    IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     _corLibTypeFactory.UInt32.MakeByReferenceType()]));
     }
