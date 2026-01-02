@@ -9,7 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-#pragma warning disable IDE0045
+#pragma warning disable IDE0045, IDE0046
 
 namespace WindowsRuntime.InteropServices;
 
@@ -77,6 +77,40 @@ public static class IReadOnlyDictionaryAdapterExtensions
             }
 
             return value!;
+        }
+
+        /// <summary>
+        /// Determines whether the map view contains the specified key.
+        /// </summary>
+        /// <param name="dictionary">The wrapped <see cref="IReadOnlyDictionary{TKey, TValue}"/> instance.</param>
+        /// <param name="key">The key to locate in the map view.</param>
+        /// <returns>Whether the key was found.</returns>
+        /// <remarks>
+        /// This overload can be used to avoid a <see cref="string"/> allocation on the caller side.
+        /// </remarks>
+        /// /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2.haskey"/>
+        public static bool HasKey(IReadOnlyDictionary<string, TValue> dictionary, ReadOnlySpan<char> key)
+        {
+            // Same logic as in 'Lookup' above for trying to avoid materializing the 'string' key
+            if (dictionary.GetType() == typeof(Dictionary<string, TValue>) &&
+                Unsafe.As<Dictionary<string, TValue>>(dictionary).TryGetAlternateLookup(out Dictionary<string, TValue>.AlternateLookup<ReadOnlySpan<char>> lookup1))
+            {
+                return lookup1.ContainsKey(key);
+            }
+
+            if (dictionary.GetType() == typeof(ConcurrentDictionary<string, TValue>) &&
+                Unsafe.As<ConcurrentDictionary<string, TValue>>(dictionary).TryGetAlternateLookup(out ConcurrentDictionary<string, TValue>.AlternateLookup<ReadOnlySpan<char>> lookup2))
+            {
+                return lookup2.ContainsKey(key);
+            }
+
+            if (dictionary is FrozenDictionary<string, TValue> candidate3 &&
+                candidate3.TryGetAlternateLookup(out FrozenDictionary<string, TValue>.AlternateLookup<ReadOnlySpan<char>> lookup3))
+            {
+                return lookup3.ContainsKey(key);
+            }
+
+            return dictionary.ContainsKey(key.ToString());
         }
     }
 }

@@ -259,5 +259,146 @@ internal static partial class InteropMethodDefinitionFactory
 
             return sizeImplMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>HasKey</c> export method.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="hasKeyMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>HasKey</c> method for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interfaces.
+        /// </remarks>
+        public static MethodDefinition HasKey(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            MemberReference hasKeyMethod,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            // Define the 'HasKey' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int HasKey(void* thisPtr, <ABI_KEY_TYPE> key, bool* result)
+            MethodDefinition hasKeyImplMethod = new(
+                name: "HasKey"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        keyType.GetAbiType(interopReferences).Import(module),
+                        module.CorLibTypeFactory.Boolean.MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
+            //   [1]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction nop_parameter1Rewrite = new(Nop);
+            CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction callHasKeyMethod;
+
+            // Get the target 'HasKey' method (we can optimize for 'string' types).
+            // We prepare the full instruction, as we need 'callvirt' in some cases.
+            if (keyType.IsTypeOfString())
+            {
+                MethodSpecification hasKeyMethodSpecification = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                    ? interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType)
+                    : interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType); // TODO
+
+                callHasKeyMethod = new(Call, hasKeyMethodSpecification.Import(module));
+            }
+            else
+            {
+                // Otherwise just use 'ContainsKey' method passed as input
+                callHasKeyMethod = new(Callvirt, hasKeyMethod.Import(module));
+            }
+
+            // Create a method body for the 'HasKey' method
+            hasKeyImplMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_hresult },
+                Instructions =
+                {
+                    // Return 'E_POINTER' if the argument is 'null'
+                    { Ldarg_2 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
+                    { Stloc_0 },
+                    { Ldarg_2 },
+                    { Ldloc_0 },
+                    { nop_parameter1Rewrite },
+                    { callHasKeyMethod },
+                    { nop_convertToUnmanaged },
+                    { Ldc_I4_0 },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_1_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            // If the key type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = keyType.IsTypeOfString()
+                ? interopReferences.ReadOnlySpanChar
+                : keyType;
+
+            // Track rewriting the parameter for this method
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: parameterType,
+                method: hasKeyImplMethod,
+                marker: nop_parameter1Rewrite,
+                parameterIndex: 1);
+
+            // Track the method for rewrite to marshal the result value
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: module.CorLibTypeFactory.Boolean,
+                method: hasKeyImplMethod,
+                marker: nop_convertToUnmanaged);
+
+            return hasKeyImplMethod;
+        }
     }
 }
