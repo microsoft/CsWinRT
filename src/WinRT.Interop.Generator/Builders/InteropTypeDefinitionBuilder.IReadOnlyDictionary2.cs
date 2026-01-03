@@ -609,6 +609,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'Split' method
+            MethodDefinition splitMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Split(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
@@ -621,7 +628,8 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableMethods: [
                     getAtMethod,
                     sizeMethod,
-                    hasKeymethod]);
+                    hasKeymethod,
+                    splitMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyDictionaryType, "Impl");

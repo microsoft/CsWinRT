@@ -400,5 +400,126 @@ internal static partial class InteropMethodDefinitionFactory
 
             return hasKeyImplMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Split</c> export method.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Split(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            // Define the 'Split' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int Split(void* thisPtr, void** first, void** second)
+            MethodDefinition splitMethod = new(
+                name: "Split"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
+            //   [1]: '<READONLY_DICTIONARY_TYPE>' (for 'firstObject')
+            //   [2]: '<READONLY_DICTIONARY_TYPE>' (for 'secondObject')
+            //   [3]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_1_firstObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_2_secondObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldloc_3_returnHResult = new(Ldloc_3);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction nop_firstObject_convertToUnmanaged = new(Nop);
+            CilInstruction nop_secondObject_convertToUnmanaged = new(Nop);
+
+            // Create a method body for the 'Split' method
+            splitMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_firstObject, loc_2_secondObject, loc_3_hresult },
+                Instructions =
+                {
+                    // Return 'E_POINTER' if the argument is 'null'
+                    { Ldarg_2 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
+                    { Stloc_0 },
+                    { Ldloc_0 },
+                    { Ldloca_S, loc_1_firstObject },
+                    { Ldloca_S, loc_2_secondObject },
+                    { Call, interopReferences.IReadOnlyDictionaryAdapter2Split(keyType, valueType).Import(module) },
+                    { Ldarg_1 },
+                    { Ldloc_1 },
+                    { nop_firstObject_convertToUnmanaged },
+                    { Ldarg_2 },
+                    { Ldloc_2 },
+                    { nop_secondObject_convertToUnmanaged },
+                    { Ldc_I4_0 },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_3_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_3_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            // Track the method for rewrite to marshal the two result values
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: readOnlyDictionaryType,
+                method: splitMethod,
+                marker: nop_firstObject_convertToUnmanaged);
+
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: readOnlyDictionaryType,
+                method: splitMethod,
+                marker: nop_secondObject_convertToUnmanaged);
+
+            return splitMethod;
+        }
     }
 }

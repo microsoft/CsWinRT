@@ -3772,6 +3772,28 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Split</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Split(TypeSignature keyType, TypeSignature valueType)
+    {
+        TypeSignature readOnlyDictionaryType = IReadOnlyDictionary2.MakeGenericReferenceType(
+            new GenericParameterSignature(GenericParameterType.Type, 0),
+            new GenericParameterSignature(GenericParameterType.Type, 1));
+
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Split"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    readOnlyDictionaryType,
+                    readOnlyDictionaryType.MakeByReferenceType(),
+                    readOnlyDictionaryType.MakeByReferenceType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.this"/>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
