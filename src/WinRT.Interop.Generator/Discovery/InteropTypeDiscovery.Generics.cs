@@ -311,6 +311,14 @@ internal partial class InteropTypeDiscovery
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
                 module: module);
+
+            // Handle 'IReadOnlyDictionarySplitAdapter<TKey, TValue>', which is returned by the 'IMapView<K, V>.Split' method
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.IReadOnlyDictionarySplitAdapter2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
         {
