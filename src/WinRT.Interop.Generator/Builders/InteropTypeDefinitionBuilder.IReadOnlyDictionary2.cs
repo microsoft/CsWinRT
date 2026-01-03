@@ -587,7 +587,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
 
             // Define the 'Lookup' method
-            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
                 readOnlyDictionaryType: readOnlyDictionaryType,
                 lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
                 interopReferences: interopReferences,
@@ -626,7 +626,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 vtableMethods: [
-                    getAtMethod,
+                    lookupMethod,
                     sizeMethod,
                     hasKeymethod,
                     splitMethod]);
