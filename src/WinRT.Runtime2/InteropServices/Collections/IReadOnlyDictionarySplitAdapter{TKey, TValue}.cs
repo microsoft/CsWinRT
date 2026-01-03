@@ -94,7 +94,7 @@ public sealed class IReadOnlyDictionarySplitAdapter<TKey, TValue> : IReadOnlyDic
             if (!TryGetValue(key, out TValue? value))
             {
                 [DoesNotReturn]
-                static void ThrowKeyNotFoundException() => throw new InvalidOperationException("Arg_KeyNotFoundWithKey");
+                static void ThrowKeyNotFoundException() => throw new KeyNotFoundException("Arg_KeyNotFoundWithKey");
 
                 ThrowKeyNotFoundException();
             }

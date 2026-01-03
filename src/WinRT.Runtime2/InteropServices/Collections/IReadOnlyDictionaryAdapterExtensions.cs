@@ -67,7 +67,7 @@ public static class IReadOnlyDictionaryAdapterExtensions
                 [DoesNotReturn]
                 static void ThrowKeyNotFoundException()
                 {
-                    throw new InvalidOperationException("Arg_KeyNotFoundWithKey")
+                    throw new KeyNotFoundException("Arg_KeyNotFoundWithKey")
                     {
                         HResult = WellKnownErrorCodes.E_BOUNDS
                     };
