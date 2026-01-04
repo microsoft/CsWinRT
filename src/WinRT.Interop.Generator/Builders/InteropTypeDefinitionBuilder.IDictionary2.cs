@@ -1115,6 +1115,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
+                readOnlyDictionaryType: dictionaryType,
+                sizeMethod: interopReferences.IDictionaryAdapter2Size(keyType, valueType),
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1124,7 +1131,9 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: [lookupMethod]);
+                vtableMethods: [
+                    lookupMethod,
+                    sizeMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
