@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -55,6 +56,7 @@ public static class IReadOnlyDictionaryAdapter<TKey, TValue>
     /// <param name="dictionary">The wrapped <see cref="IReadOnlyDictionary{TKey, TValue}"/> instance.</param>
     /// <returns>The number of elements in the map.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2.size"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint Size(IReadOnlyDictionary<TKey, TValue> dictionary)
     {
         return (uint)dictionary.Count;
