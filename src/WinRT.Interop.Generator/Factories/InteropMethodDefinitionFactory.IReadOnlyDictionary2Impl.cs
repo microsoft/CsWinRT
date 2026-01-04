@@ -83,7 +83,7 @@ internal static partial class InteropMethodDefinitionFactory
             {
                 adapterLookupMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
                     ? interopReferences.IReadOnlyDictionaryAdapterOfStringLookup(valueType)
-                    : interopReferences.IListAdapterOfStringIndexOf(); // TODO
+                    : interopReferences.IDictionaryAdapterOfStringLookup(valueType);
             }
             else
             {
