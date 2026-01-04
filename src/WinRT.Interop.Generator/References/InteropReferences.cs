@@ -3723,7 +3723,9 @@ internal sealed class InteropReferences
             .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
-                    IReadOnlyDictionary2.MakeGenericReferenceType(keyType, valueType),
+                    IReadOnlyDictionary2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)),
                     keyType]));
     }
 
