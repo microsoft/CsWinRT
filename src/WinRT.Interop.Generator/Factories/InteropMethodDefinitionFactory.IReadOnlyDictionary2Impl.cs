@@ -264,7 +264,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>HasKey</c> export method.
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="hasKeyMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
+        /// <param name="containsKeyMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -273,7 +273,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// </remarks>
         public static MethodDefinition HasKey(
             GenericInstanceTypeSignature readOnlyDictionaryType,
-            MemberReference hasKeyMethod,
+            MemberReference containsKeyMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
@@ -319,14 +319,14 @@ internal static partial class InteropMethodDefinitionFactory
             {
                 MethodSpecification hasKeyMethodSpecification = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
                     ? interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType)
-                    : interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType); // TODO
+                    : interopReferences.IDictionaryAdapterOfStringHasKey(valueType);
 
                 callHasKeyMethod = new(Call, hasKeyMethodSpecification.Import(module));
             }
             else
             {
                 // Otherwise just use 'ContainsKey' method passed as input
-                callHasKeyMethod = new(Callvirt, hasKeyMethod.Import(module));
+                callHasKeyMethod = new(Callvirt, containsKeyMethod.Import(module));
             }
 
             // Create a method body for the 'HasKey' method

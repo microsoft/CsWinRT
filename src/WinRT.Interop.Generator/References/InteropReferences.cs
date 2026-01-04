@@ -3722,6 +3722,22 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IDictionaryAdapterOfStringHasKey(TypeSignature valueType)
+    {
+        return IDictionaryAdapterExtensions
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.Item</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>

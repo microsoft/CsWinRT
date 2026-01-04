@@ -1122,6 +1122,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Define the 'HasKey' method
+            MethodDefinition hasKeymethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+                readOnlyDictionaryType: dictionaryType,
+                containsKeyMethod: interopReferences.IDictionary2ContainsKey(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1133,7 +1141,8 @@ internal partial class InteropTypeDefinitionBuilder
                 implType: out implType,
                 vtableMethods: [
                     lookupMethod,
-                    sizeMethod]);
+                    sizeMethod,
+                    hasKeymethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
