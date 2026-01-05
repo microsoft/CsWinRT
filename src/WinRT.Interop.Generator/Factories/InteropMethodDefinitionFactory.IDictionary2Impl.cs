@@ -347,5 +347,86 @@ internal static partial class InteropMethodDefinitionFactory
 
             return removeMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Clear</c> export method.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Clear(
+            GenericInstanceTypeSignature dictionaryType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            // Define the 'Clear' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int Clear(void* thisPtr)
+            MethodDefinition clearMethod = new(
+                name: "Clear"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
+            //   [1]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
+            // Create a method body for the 'Clear' method
+            clearMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_hresult },
+                Instructions =
+                {
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Stloc_0 },
+                    { Ldloc_0 },
+                    { Call, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)).Import(module) },
+                    { Ldc_I4_0 },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_1_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            return clearMethod;
+        }
     }
 }

@@ -1151,6 +1151,12 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Clear(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1166,7 +1172,8 @@ internal partial class InteropTypeDefinitionBuilder
                     hasKeymethod,
                     getViewMethod,
                     insertMethod,
-                    removeMethod]);
+                    removeMethod,
+                    clearMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
