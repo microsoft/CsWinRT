@@ -243,5 +243,109 @@ internal static partial class InteropMethodDefinitionFactory
 
             return insertMethod;
         }
+
+        /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Remove</c> export method.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition Remove(
+            GenericInstanceTypeSignature dictionaryType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            // Define the 'Remove' method as follows:
+            //
+            // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            // private static int Remove(void* thisPtr, <ABI_KEY_TYPE> key)
+            MethodDefinition removeMethod = new(
+                name: "Remove"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        keyType.GetAbiType(interopReferences).Import(module)]))
+            {
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+            };
+
+            // Declare the local variables:
+            //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
+            //   [1]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction nop_parameter1Rewrite = new(Nop);
+            CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
+            // Get the target 'Remove' method (we can optimize for 'string' types)
+            IMethodDescriptor adapterRemoveMethod = keyType.IsTypeOfString()
+                ? interopReferences.IDictionaryAdapterOfStringRemove(valueType)
+                : interopReferences.IDictionaryAdapter2Remove(keyType, valueType);
+
+            // Create a method body for the 'Remove' method
+            removeMethod.CilMethodBody = new CilMethodBody()
+            {
+                LocalVariables = { loc_0_thisObject, loc_1_hresult },
+                Instructions =
+                {
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Stloc_0 },
+                    { Ldloc_0 },
+                    { nop_parameter1Rewrite },
+                    { Call, adapterRemoveMethod.Import(module) },
+                    { Ldc_I4_0 },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_1_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
+            };
+
+            // If the key type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = keyType.IsTypeOfString()
+                ? interopReferences.ReadOnlySpanChar
+                : keyType;
+
+            // Track rewriting the parameter for this method
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: parameterType,
+                method: removeMethod,
+                marker: nop_parameter1Rewrite,
+                parameterIndex: 1);
+
+            return removeMethod;
+        }
     }
 }

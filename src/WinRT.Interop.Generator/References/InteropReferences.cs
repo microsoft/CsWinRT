@@ -3781,6 +3781,40 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Remove(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IDictionaryAdapterOfStringRemove(TypeSignature valueType)
+    {
+        return IDictionaryAdapterExtensions
+            .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.Item</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>

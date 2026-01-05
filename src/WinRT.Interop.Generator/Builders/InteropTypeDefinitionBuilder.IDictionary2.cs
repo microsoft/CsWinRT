@@ -1144,6 +1144,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'Remove' method
+            MethodDefinition removeMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Remove(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1158,7 +1165,8 @@ internal partial class InteropTypeDefinitionBuilder
                     sizeMethod,
                     hasKeymethod,
                     getViewMethod,
-                    insertMethod]);
+                    insertMethod,
+                    removeMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
