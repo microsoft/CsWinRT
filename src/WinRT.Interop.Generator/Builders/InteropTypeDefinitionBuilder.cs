@@ -461,7 +461,7 @@ internal static partial class InteropTypeDefinitionBuilder
         }
 
         // Enforce that we did initialize all vtable entries
-        //ArgumentOutOfRangeException.ThrowIfNotEqual(vtableOffset, vftblType.Fields.Count, nameof(vtableMethods)); // TODO
+        ArgumentOutOfRangeException.ThrowIfNotEqual(vtableOffset, vftblType.Fields.Count, nameof(vtableMethods));
 
         // Don't forget the 'ret' at the end of the static constructor
         _ = cctor.CilMethodBody.Instructions.Add(Ret);
