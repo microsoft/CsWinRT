@@ -601,7 +601,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'HasKey' method
-            MethodDefinition hasKeymethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
                 readOnlyDictionaryType: readOnlyDictionaryType,
                 containsKeyMethod: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType),
                 interopReferences: interopReferences,
@@ -627,7 +627,7 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableMethods: [
                     lookupMethod,
                     sizeMethod,
-                    hasKeymethod,
+                    hasKeyMethod,
                     splitMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)

@@ -1123,7 +1123,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'HasKey' method
-            MethodDefinition hasKeymethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
                 readOnlyDictionaryType: dictionaryType,
                 containsKeyMethod: interopReferences.IDictionary2ContainsKey(keyType, valueType),
                 interopReferences: interopReferences,
@@ -1169,7 +1169,7 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableMethods: [
                     lookupMethod,
                     sizeMethod,
-                    hasKeymethod,
+                    hasKeyMethod,
                     getViewMethod,
                     insertMethod,
                     removeMethod,
