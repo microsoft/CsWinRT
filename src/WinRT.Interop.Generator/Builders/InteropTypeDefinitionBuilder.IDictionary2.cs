@@ -1130,6 +1130,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'GetView' method
+            MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IDictionary2Impl.GetView(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1142,7 +1149,8 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableMethods: [
                     lookupMethod,
                     sizeMethod,
-                    hasKeymethod]);
+                    hasKeymethod,
+                    getViewMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
