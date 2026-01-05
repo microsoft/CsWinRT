@@ -3762,6 +3762,25 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Insert</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Insert(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.Item</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>

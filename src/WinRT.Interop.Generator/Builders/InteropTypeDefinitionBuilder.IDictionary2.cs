@@ -1137,6 +1137,13 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 module: module);
 
+            // Define the 'Insert' method
+            MethodDefinition insertMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Insert(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1150,7 +1157,8 @@ internal partial class InteropTypeDefinitionBuilder
                     lookupMethod,
                     sizeMethod,
                     hasKeymethod,
-                    getViewMethod]);
+                    getViewMethod,
+                    insertMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");
