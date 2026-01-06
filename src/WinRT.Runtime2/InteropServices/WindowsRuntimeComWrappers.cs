@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -117,11 +118,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         }
         else
         {
-            // Special case 'Exception', see notes in 'ComputeVtables' below for more details. Repeating this here
-            // allows us to still skip the repeated lookup, as we already know we won't find a matching key pair.
-            MarshallingInfo = instance is Exception
-                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
-                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+            // If we couldn't retrieve the marshalling info, get the one to marshal anonymous objects.
+            // E.g. this would be the case when marshalling a custom exception type, or some 'Type'.
+            MarshallingInfo = GetAnonymousInspectableMarshallingInfo(instance);
 
             thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, CreateComInterfaceFlags.TrackerSupport);
         }
@@ -222,11 +221,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // If we already have one available passed by callers up the stack, we can skip the lookup and just use it.
         if (marshallingInfo is null && !WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out marshallingInfo))
         {
-            // Special case for exception types, which won't have their own type map entry, but should all map to the
-            // same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
-            marshallingInfo = obj is Exception
-                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
-                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+            marshallingInfo = GetAnonymousInspectableMarshallingInfo(obj);
         }
 
         // Get the vtable from the current marshalling info (it will get cached in that instance)
@@ -344,5 +339,35 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                 objReference.Dispose();
             }
         }
+    }
+
+    /// <summary>
+    /// Gets the <see cref="WindowsRuntimeMarshallingInfo"/> value to marshal an anonymous (managed) object.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <returns>The <see cref="WindowsRuntimeMarshallingInfo"/> value to use to marshal <paramref name="instance"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static WindowsRuntimeMarshallingInfo GetAnonymousInspectableMarshallingInfo(object instance)
+    {
+        // Special case for (derived) exception types, which won't have their own type map entry, but should all map
+        // to the same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
+        // Note that custom exception types that might implement additional interfaces will still just be marshalled
+        // as any other exception type (i.e. as just 'HResult'). This is intended and by design.
+        if (instance is Exception)
+        {
+            return WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception));
+        }
+
+        // Special case for 'Type' instances too. This is needed even without considering custom user-defined types
+        // (which shouldn't really be common anyway), because 'Type' itself is just a base type and not instantiated.
+        // That is, when e.g. doing 'typeof(Foo)', the actual object is some 'RuntimeType' object itself (non public).
+        if (instance is Type)
+        {
+            return WindowsRuntimeMarshallingInfo.GetInfo(typeof(Type));
+        }
+
+        // For all other cases, we fallback to the marshalling info for 'object'. This is the
+        // shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'. 
+        return WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
     }
 }
