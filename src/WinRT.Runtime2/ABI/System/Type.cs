@@ -170,20 +170,47 @@ public static unsafe class TypeMarshaller
                 ? TypeKind.Primitive
                 : TypeKind.Metadata;
 
-            // Special case primitive types that are of types that can be boxed. That is, if the input type is not
-            // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
-            // will ensure that e.g. 'typeof(int)' will report 'Int32', rather than 'Windows.Foundation.IReference<Int32>'.
-            if (nullableUnderlyingType is null && marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
+            // We need special handling for several cases that represent non-boxed types
+            if (nullableUnderlyingType is null)
             {
-                // TODO: check for value types, and if so use the fullname as a fallback.
-                // TODO: also check for delegates here. Also skip 'KVP<,>'.
+                // Special case primitive types that are of types that can be boxed. That is, if the input type is not
+                // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
+                // will ensure that e.g. 'typeof(int)' will report 'Int32', not 'Windows.Foundation.IReference<Int32>'.
+                if (marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
+                {
+                    reference = new TypeReference { Name = metadataTypeName, Kind = kind };
 
-                reference = new TypeReference { Name = metadataTypeName, Kind = kind };
+                    return;
+                }
 
-                return;
+                // If we don't have a metadata type name, check if we have a value type or a delegate type.
+                // Note that this path can only be reached for those if either is true:
+                //   - The value type is not generic (otherwise the proxy type would've had the metadata name)
+                //   - The delegate is not generic (for the same reason as above, or we would've had a proxy)
+                // So in either case, we can just use the fully qualified type name here, which will match
+                // the .winmd type name. We don't have to worry about custom-mapped types here, as those will
+                // have already been handled above. This special case ensures we don't get the boxed type name.
+                if (typeOrUnderlyingType.IsValueType ||
+                    typeOrUnderlyingType.IsAssignableTo(typeof(Delegate)))
+                {
+                    reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
+
+                    return;
+                }
+
+                // TODO: Skip 'KVP<,>'.
             }
 
-            // TODO: Detect 'Nullable<KeyValuePair<,>>' and bypass and go to custom
+            // We don't support marshalling a 'KeyValuePair<,>?' type, as that is not a valid Windows Runtime
+            // type (since 'KeyValuePair<,>' is an interface in the Windows Runtime type system. So if we get
+            // one, we just treat it like any other custom (e.g. user-defined) types instead.
+            if (nullableUnderlyingType is not null &&
+                nullableUnderlyingType.IsValueType &&
+                nullableUnderlyingType.IsGenericType &&
+                nullableUnderlyingType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                goto CustomType;
+            }
 
             // If we don't have a metadata type name, try to get the runtime class name. This will handle
             // cases such as constructed 'Nullable<T>' types, which will report their boxed type name.
@@ -213,6 +240,8 @@ public static unsafe class TypeMarshaller
 
             return;
         }
+
+    CustomType:
 
         // All other cases are treated as custom types (e.g. user-defined types)
         reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };

@@ -18,7 +18,6 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.size"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Size>")]
-[WindowsRuntimeMetadataTypeName("Windows.Foundation.Size")]
 [WindowsRuntimeReferenceType(typeof(Size?))]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
