@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -116,12 +117,42 @@ public static unsafe class TypeMarshaller
         // would be the 'IReference<T>' type name for boxed instances of this type.
         global::System.Type? nullableUnderlyingType = Nullable.GetUnderlyingType(value);
 
+        // For projected types (not custom-mapped, but possibly manually projected, like e.g. 'IAsyncInfo'), we
+        // can always just use the fully qualified type name (as it will always match the one in the .winmd file).
+        // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeMetadata]'.
+        // Note that we're intentionally skipping generic types, as for those we need the 'cswinrtgen' info.
+        // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too.
+        if (nullableUnderlyingType is null && !value.IsGenericType && value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+        {
+            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Metadata };
+
+            return;
+        }
+
+        // TODO: for generic interfaces, 'cswinrtgen' will emit an entry with the metadata name in the metadata type map.
+
         // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
         // type map entry for normal marshalling (because they're interfaces), and they would also not show up as
         // being projected types from there. So we handle them here first to get the right metadata type name.
         if (nullableUnderlyingType is null && WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
         {
             reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = TypeKind.Metadata };
+
+            return;
+        }
+
+        // Special case 'Exception' types, since we also need to handle all derived types (e.g. user-defined)
+        if (value.IsAssignableTo(typeof(global::System.Exception)))
+        {
+            reference = new TypeReference { Name = "Windows.Foundation.HResult", Kind = TypeKind.Metadata };
+
+            return;
+        }
+
+        // Special case 'Type' as well, for the same reason (e.g. 'typeof(Foo)' would return a 'RuntimeType' instance)
+        if (value.IsAssignableTo(typeof(global::System.Type)))
+        {
+            reference = new TypeReference { Name = "Windows.UI.Xaml.Interop.TypeName", Kind = TypeKind.Metadata };
 
             return;
         }
@@ -139,14 +170,46 @@ public static unsafe class TypeMarshaller
                 ? TypeKind.Primitive
                 : TypeKind.Metadata;
 
-            // Special case primitive types that are of types that can be boxed. That is, if the input type is not
-            // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
-            // will ensure that e.g. 'typeof(int)' will report 'Int32', rather than 'Windows.Foundation.IReference<Int32>'.
-            if (nullableUnderlyingType is null && marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
+            // We need special handling for several cases that represent non-boxed types
+            if (nullableUnderlyingType is null)
             {
-                reference = new TypeReference { Name = metadataTypeName, Kind = kind };
+                // Special case primitive types that are of types that can be boxed. That is, if the input type is not
+                // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
+                // will ensure that e.g. 'typeof(int)' will report 'Int32', not 'Windows.Foundation.IReference<Int32>'.
+                if (marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
+                {
+                    reference = new TypeReference { Name = metadataTypeName, Kind = kind };
 
-                return;
+                    return;
+                }
+
+                // If we don't have a metadata type name, check if we have a value type or a delegate type.
+                // Note that this path can only be reached for those if either is true:
+                //   - The value type is not generic (otherwise the proxy type would've had the metadata name)
+                //   - The delegate is not generic (for the same reason as above, or we would've had a proxy)
+                // So in either case, we can just use the fully qualified type name here, which will match
+                // the .winmd type name. We don't have to worry about custom-mapped types here, as those will
+                // have already been handled above. This special case ensures we don't get the boxed type name.
+                if (typeOrUnderlyingType.IsValueType ||
+                    typeOrUnderlyingType.IsAssignableTo(typeof(Delegate)))
+                {
+                    reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
+
+                    return;
+                }
+
+                // TODO: Skip 'KVP<,>'.
+            }
+
+            // We don't support marshalling a 'KeyValuePair<,>?' type, as that is not a valid Windows Runtime
+            // type (since 'KeyValuePair<,>' is an interface in the Windows Runtime type system. So if we get
+            // one, we just treat it like any other custom (e.g. user-defined) types instead.
+            if (nullableUnderlyingType is not null &&
+                nullableUnderlyingType.IsValueType &&
+                nullableUnderlyingType.IsGenericType &&
+                nullableUnderlyingType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                goto CustomType;
             }
 
             // If we don't have a metadata type name, try to get the runtime class name. This will handle
@@ -161,8 +224,6 @@ public static unsafe class TypeMarshaller
             // Otherwise, use the type name directly. This will handle all remaining cases, such as projected
             // runtime classes and interface types. For all of those, the projected type name will be correct.
             reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
-
-            // TODO: handle 'Nullable<KeyValuePair<,>>' here
 
             return;
         }
@@ -179,6 +240,8 @@ public static unsafe class TypeMarshaller
 
             return;
         }
+
+    CustomType:
 
         // All other cases are treated as custom types (e.g. user-defined types)
         reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
@@ -208,10 +271,28 @@ public static unsafe class TypeMarshaller
             return global::System.Type.GetType(typeName.ToString());
         }
 
+        // Handle special-cases metadata types after checking the type kind
+        if (value.Kind is TypeKind.Metadata)
+        {
+            // For any 'HResult' type, we return 'Exception'. If a user had marshalled
+            // any derived exception type, that will not actually round-trip exactly.
+            // This is expected and by design. We don't try to preserve the original.
+            if (typeName.SequenceEqual("Windows.Foundation.HResult"))
+            {
+                return typeof(global::System.Exception);
+            }
+
+            // Same as above for 'Type'. We intentionally don't perfectly round-trip.
+            if (typeName.SequenceEqual("Windows.UI.Xaml.Interop.TypeName"))
+            {
+                return typeof(global::System.Type);
+            }
+        }
+
         global::System.Type? type = null;
 
-        // TODO: handle 'IReference<HResult>', 'IReference<TypeName>' and 'IReference<DELEGATE_TYPE>'.
-        // Those should all be reported as 'NoMetadataTypeInfo', not as the custom-mapped C# type.
+        // TODO: put type map entries for non-generic interfaces in the metadata type map.
+        // This also needs to have entries for all value types and delegate types
 
         // If the type was handled by the metadata lookup, get the public type from there
         if (WindowsRuntimeMetadataInfo.TryGetInfo(typeName, out WindowsRuntimeMetadataInfo? metadataInfo))
@@ -224,9 +305,33 @@ public static unsafe class TypeMarshaller
             // This will work for both 'Primitive' and 'Metadata' types, same as above.
             global::System.Type publicType = marshallingInfo.PublicType;
 
-            // For value types, we get the reference type (i.e. the constructed 'Nullable<T>' type)
-            // from the marshalling info. This will perform a lookup for '[WindowsRuntimeReferenceType]'.
-            type = publicType.IsValueType ? marshallingInfo.ReferenceType : publicType;
+            // If we got here, it means we have some 'IReference<T>' instance with the
+            // element type being some delegate, exception, or 'Type' type. Because we
+            // only support marshalling them as 'TypeName' by value (not references),
+            // we're intentionally always just returning missing metadata for them.
+            if (publicType.IsAssignableTo(typeof(Delegate)) ||
+                publicType.IsAssignableTo(typeof(global::System.Exception)) ||
+                publicType.IsAssignableTo(typeof(global::System.Type)))
+            {
+                return NoMetadataTypeInfo.GetOrCreate(typeName);
+            }
+
+            // Special case 'KeyValuePair<,>' instances, where we always want to return the public type
+            // directly here, and not its nullable version. This is because 'KeyValuePair<,>' is an
+            // interface type in the Windows Runtime type system, so the type name we got here from
+            // the marshalling type map wouldn't actually represent an 'IReference<T>' instantiation.
+            if (publicType.IsValueType &&
+                publicType.IsGenericType &&
+                publicType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                type = publicType;
+            }
+            else
+            {
+                // For value types, we get the reference type (i.e. the constructed 'Nullable<T>' type)
+                // from the marshalling info. This will perform a lookup for '[WindowsRuntimeReferenceType]'.
+                type = publicType.IsValueType ? marshallingInfo.ReferenceType : publicType;
+            }
         }
 
         // Handle the case of C# primitive types that are not Windows Runtime types.
