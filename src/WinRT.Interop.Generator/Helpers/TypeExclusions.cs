@@ -34,15 +34,17 @@ internal static class TypeExclusions
             return IsExcluded(arraySignature.BaseType, interopReferences);
         }
 
-        // Check if the input type matches any of our exclusions
-        foreach (TypeReference excludedType in (ReadOnlySpan<TypeReference>)[interopReferences.Task1])
-        {
-            if (SignatureComparer.IgnoreVersion.Equals(type, excludedType))
-            {
-                return true;
-            }
-        }
+        // This is the full set of types we want to always exclude from marshalling.
+        // We can't put this in a global variable as we need the 'InteropReferences'
+        // instance to actually retrieve the type references to enumerate. However
+        // by just using a 'ReadOnlySpan<T>' here, the full list is stack-allocated.
+        ReadOnlySpan<TypeReference> excludedTypes =
+        [
+            interopReferences.Task1,
+            interopReferences.ConditionalWeakTable2
+        ];
 
-        return false;
+        // Check if the input type matches any of our exclusions
+        return excludedTypes.Contains(type, SignatureComparer.IgnoreVersion);
     }
 }
