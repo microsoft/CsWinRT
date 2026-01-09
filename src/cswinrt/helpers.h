@@ -714,8 +714,8 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
+                    { "ThicknessHelper" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
@@ -866,8 +866,8 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
+                    { "ThicknessHelper" },
                 }
             },
             { "Windows.UI.Xaml.Controls.Primitives",
