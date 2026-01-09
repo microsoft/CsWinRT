@@ -142,7 +142,7 @@ internal partial class InteropMethodRewriteFactory
                         new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
                 }
             }
-            else if (retValType.IsTypeOfString(interopReferences))
+            else if (retValType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller'
                 body.Instructions.ReplaceRange(marker, [

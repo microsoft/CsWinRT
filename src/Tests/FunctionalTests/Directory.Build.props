@@ -27,6 +27,13 @@
 
     <!-- Don't fail builds right now due to potentially unsafe casts in generated code -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CsWinRT1034</WarningsNotAsErrors>
+
+    <!--
+      Enable CFG (Control Flow Guard), required by several security scanning tools running on build artifacts.
+      Also see: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/security#control-flow-guard.
+      And: https://learn.microsoft.com/en-us/windows/win32/secbp/control-flow-guard#how-does-cfg-really-work.
+    -->
+    <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">

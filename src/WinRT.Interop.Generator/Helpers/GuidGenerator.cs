@@ -6,7 +6,6 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
@@ -68,31 +67,9 @@ internal static class GuidGenerator
             }
 
             // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
-            if (TryGetIIDFromAttribute(typeDefinition, interopReferences, out iid))
+            if (typeDefinition.TryGetGuidAttribute(interopReferences, out iid))
             {
                 return true;
-            }
-        }
-
-        iid = Guid.Empty;
-
-        return false;
-    }
-
-    /// <summary>
-    /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified type.
-    /// </summary>
-    /// <param name="type">The type definition to inspect for <see cref="System.Runtime.InteropServices.GuidAttribute"/>.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
-    /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
-    private static bool TryGetIIDFromAttribute(TypeDefinition type, InteropReferences interopReferences, out Guid iid)
-    {
-        if (type.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
-        {
-            if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
-            {
-                return Guid.TryParse(guidString.Value, out iid);
             }
         }
 
