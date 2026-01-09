@@ -603,7 +603,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return true;
         }
 
-        string? value = _metadataTypeName;
+        string? value = _runtimeClassName;
 
         // We have a cached runtime class name, so return it immediately
         if (value is not null)
