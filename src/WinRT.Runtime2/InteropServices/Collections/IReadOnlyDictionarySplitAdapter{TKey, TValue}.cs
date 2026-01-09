@@ -162,6 +162,8 @@ public sealed class IReadOnlyDictionarySplitAdapter<TKey, TValue> : IReadOnlyDic
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
+        // The returned 'ArraySegment<KeyValuePair<TKey, TValue>>.Enumerator' type requires special handling in
+        // 'cswinrtgen' to be tracked correctly. If this implementation is changed, it needs to be kept in sync.
         return new ArraySegment<KeyValuePair<TKey, TValue>>(_items, _firstItemIndex, Count).GetEnumerator();
     }
 

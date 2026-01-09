@@ -134,6 +134,16 @@ internal sealed class InteropReferences
     public TypeReference Array => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}"/>.
+    /// </summary>
+    public TypeReference ArraySegment1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ArraySegment`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}.Enumerator"/>.
+    /// </summary>
+    public TypeReference ArraySegment1Enumerator => field ??= ArraySegment1.CreateTypeReference("Enumerator"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Nullable"/>.
     /// </summary>
     public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);

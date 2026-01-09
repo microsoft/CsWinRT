@@ -319,6 +319,14 @@ internal partial class InteropTypeDiscovery
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
                 module: module);
+
+            // Handle 'ArraySegment<T>.Enumerator', which is returned by 'IReadOnlyDictionarySplitAdapter<TKey, TValue>.GetEnumerator()'
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.ArraySegment1Enumerator.MakeGenericValueType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
         {
