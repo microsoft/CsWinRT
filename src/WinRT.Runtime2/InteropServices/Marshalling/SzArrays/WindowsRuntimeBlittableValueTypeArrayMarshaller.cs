@@ -11,21 +11,21 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for arrays of blittable Windows Runtime types.
 /// </summary>
+/// <typeparam name="T">THe type of elements in the array.</typeparam>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class BlittableValueTypeArrayMarshaller
+public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
+    where T : unmanaged
 {
     /// <summary>
     /// Marshals a managed array to an unmanaged Windows Runtime array.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="source">The source array.</param>
     /// <param name="size">The size of the array.</param>
     /// <param name="array">The resulting Windows Runtime array.</param>
-    public static void ConvertToUnmanaged<T>(ReadOnlySpan<T> source, out uint size, out T* array)
-        where T : unmanaged
+    public static void ConvertToUnmanaged(ReadOnlySpan<T> source, out uint size, out T* array)
     {
         if (source.IsEmpty)
         {
@@ -44,12 +44,10 @@ public static unsafe class BlittableValueTypeArrayMarshaller
     /// <summary>
     /// Marshals an unmanaged Windows Runtime array to a managed array.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="size">The size of the array.</param>
     /// <param name="value">The source array.</param>
     /// <returns>The resulting managed array.</returns>
-    public static T[] ConvertToManaged<T>(uint size, T* value)
-        where T : unmanaged
+    public static T[] ConvertToManaged(uint size, T* value)
     {
         if (size == 0)
         {
@@ -64,12 +62,10 @@ public static unsafe class BlittableValueTypeArrayMarshaller
     /// <summary>
     /// Copies items from a managed array to the target unmanaged Windows Runtime array.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="source">The source array.</param>
     /// <param name="size">The size of the array.</param>
     /// <param name="destination">The destination array.</param>
-    public static void CopyToUnmanaged<T>(ReadOnlySpan<T> source, uint size, T* destination)
-        where T : unmanaged
+    public static void CopyToUnmanaged(ReadOnlySpan<T> source, uint size, T* destination)
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
 
@@ -86,12 +82,10 @@ public static unsafe class BlittableValueTypeArrayMarshaller
     /// <summary>
     /// Copies items from an unmanaged Windows Runtime array to the target managed array.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="size">The size of the array.</param>
     /// <param name="source">The source array.</param>
     /// <param name="destination">The destination array.</param>
-    public static void CopyToManaged<T>(uint size, T* source, Span<T> destination)
-        where T : unmanaged
+    public static void CopyToManaged(uint size, T* source, Span<T> destination)
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
 
