@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for arrays of blittable Windows Runtime types.
 /// </summary>
-/// <typeparam name="T">THe type of elements in the array.</typeparam>
+/// <typeparam name="T">The type of elements in the array.</typeparam>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -105,7 +105,7 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
     /// <param name="size">The size of the array.</param>
     /// <param name="array">The input array.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Free(uint size, void* array)
+    public static void Free(uint size, T* array)
     {
         if (size == 0)
         {
