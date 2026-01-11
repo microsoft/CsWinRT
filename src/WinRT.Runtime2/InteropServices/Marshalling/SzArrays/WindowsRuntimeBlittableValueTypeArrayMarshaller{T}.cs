@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -104,7 +103,6 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
     /// </summary>
     /// <param name="size">The size of the array.</param>
     /// <param name="array">The input array.</param>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Free(uint size, T* array)
     {
         if (size == 0)

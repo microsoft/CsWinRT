@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -145,7 +144,6 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Free<TElementMarshaller>(uint size, TAbi* array)
         where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {

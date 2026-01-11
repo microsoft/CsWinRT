@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -18,7 +17,6 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Free<TElementMarshaller>(uint size, void** array)
     {
         if (size == 0)

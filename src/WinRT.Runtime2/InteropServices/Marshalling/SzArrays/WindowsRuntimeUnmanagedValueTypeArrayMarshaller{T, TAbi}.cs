@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -122,7 +121,6 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Free(uint size, TAbi* array)
     {
         if (size == 0)
