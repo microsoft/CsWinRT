@@ -89,7 +89,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
     public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<KeyValuePair<TKey, TValue>> source, uint size, void** destination)
         where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
         if (size == 0)
         {
@@ -125,7 +125,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
     public static void CopyToManaged<TElementMarshaller>(uint size, void** source, Span<KeyValuePair<TKey, TValue>> destination)
         where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
         if (size == 0)
         {

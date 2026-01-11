@@ -72,7 +72,7 @@ public static unsafe class ExceptionArrayMarshaller
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
     public static void CopyToUnmanaged(ReadOnlySpan<Exception?> source, uint size, ABI.System.Exception* destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
         if (size == 0)
         {
@@ -90,7 +90,7 @@ public static unsafe class ExceptionArrayMarshaller
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToManaged"/>
     public static void CopyToManaged(uint size, ABI.System.Exception* source, Span<Exception?> destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
         if (size == 0)
         {

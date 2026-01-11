@@ -80,7 +80,7 @@ public static unsafe class TypeArrayMarshaller
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
     public static void CopyToUnmanaged(ReadOnlySpan<Type> source, uint size, ABI.System.Type* destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
         if (size == 0)
         {
@@ -114,7 +114,7 @@ public static unsafe class TypeArrayMarshaller
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToManaged"/>
     public static void CopyToManaged(uint size, ABI.System.Type* source, Span<Type?> destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
         if (size == 0)
         {

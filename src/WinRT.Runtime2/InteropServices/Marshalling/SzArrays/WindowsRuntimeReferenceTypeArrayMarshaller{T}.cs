@@ -88,7 +88,7 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
     public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<T?> source, uint size, void** destination)
         where TElementMarshaller : IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
         if (size == 0)
         {
@@ -124,7 +124,7 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
     public static void CopyToManaged<TElementMarshaller>(uint size, void** source, Span<T?> destination)
         where TElementMarshaller : IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
         if (size == 0)
         {

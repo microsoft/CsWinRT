@@ -66,7 +66,7 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
     /// <param name="destination">The destination array.</param>
     public static void CopyToUnmanaged(ReadOnlySpan<T> source, uint size, T* destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
         if (size == 0)
         {
@@ -86,7 +86,7 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
     /// <param name="destination">The destination array.</param>
     public static void CopyToManaged(uint size, T* source, Span<T> destination)
     {
-        WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
+        WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
         if (size == 0)
         {
