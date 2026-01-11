@@ -20,7 +20,7 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
 {
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToUnmanaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static void ConvertToUnmanaged<TElementMarshaller>(ReadOnlySpan<T> source, out uint size, out void** array)
+    public static void ConvertToUnmanaged<TElementMarshaller>(ReadOnlySpan<T?> source, out uint size, out void** array)
         where TElementMarshaller : IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     {
         if (source.IsEmpty)
@@ -85,7 +85,7 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<T> source, uint size, void** destination)
+    public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<T?> source, uint size, void** destination)
         where TElementMarshaller : IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);

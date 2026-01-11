@@ -2,27 +2,22 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller for arrays of <see cref="KeyValuePair{TKey, TValue}"/> types.
+/// A marshaller for arrays of the Windows Runtime <c>HSTRING</c> type.
 /// </summary>
-/// <typeparam name="TKey">The type of the key.</typeparam>
-/// <typeparam name="TValue">The type of the value.</typeparam>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, TValue>
+public static unsafe class HStringArrayMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToUnmanaged"/>
-    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static void ConvertToUnmanaged<TElementMarshaller>(ReadOnlySpan<KeyValuePair<TKey, TValue>> source, out uint size, out void** array)
-        where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
+    public static void ConvertToUnmanaged(ReadOnlySpan<string?> source, out uint size, out void** array)
     {
         if (source.IsEmpty)
         {
@@ -38,18 +33,18 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
 
         try
         {
-            // Marshal all array elements (the ABI type for 'KeyValuePair<,>' is just 'void*')
+            // Marshal all input 'string'-s with 'HStringMarshaller' (note that 'HSTRING' is not a COM object)
             for (; i < source.Length; i++)
             {
-                destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
+                destination[i] = HStringMarshaller.ConvertToUnmanaged(source[i]);
             }
         }
         catch
         {
-            // Release any allocated native 'IKeyValuePair<,>' values
+            // Make sure to release all marshalled objects so far (this shouldn't ever throw)
             for (int j = 0; j < i; j++)
             {
-                WindowsRuntimeUnknownMarshaller.Free(destination[j]);
+                HStringMarshaller.Free(destination[j]);
             }
 
             // Also release the allocated array to avoid leaking
@@ -63,9 +58,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToManaged"/>
-    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static KeyValuePair<TKey, TValue>[] ConvertToManaged<TElementMarshaller>(uint size, void** value)
-        where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
+    public static string[] ConvertToManaged(uint size, void** value)
     {
         if (size == 0)
         {
@@ -74,20 +67,18 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
 
         ArgumentNullException.ThrowIfNull(value);
 
-        KeyValuePair<TKey, TValue>[] array = new KeyValuePair<TKey, TValue>[(int)size];
+        string[] array = new string[(int)size];
 
         for (int i = 0; i < size; i++)
         {
-            array[i] = TElementMarshaller.ConvertToManaged(value[i]);
+            array[i] = HStringMarshaller.ConvertToManaged(value[i]);
         }
 
         return array;
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
-    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<KeyValuePair<TKey, TValue>> source, uint size, void** destination)
-        where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
+    public static void CopyToUnmanaged(ReadOnlySpan<string?> source, uint size, void** destination)
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
 
@@ -105,7 +96,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
             // Marshal the items in the input span
             for (; i < source.Length; i++)
             {
-                destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
+                destination[i] = HStringMarshaller.ConvertToUnmanaged(source[i]);
             }
         }
         catch
@@ -113,7 +104,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
             // Release resources for any items, if we failed
             for (int j = 0; j < i; j++)
             {
-                WindowsRuntimeUnknownMarshaller.Free(destination[j]);
+                HStringMarshaller.Free(destination[j]);
             }
 
             throw;
@@ -121,9 +112,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToManaged"/>
-    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
-    public static void CopyToManaged<TElementMarshaller>(uint size, void** source, Span<KeyValuePair<TKey, TValue>> destination)
-        where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>
+    public static void CopyToManaged(uint size, void** source, Span<string> destination)
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
 
@@ -136,7 +125,25 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
 
         for (uint i = 0; i < size; i++)
         {
-            destination[(int)i] = TElementMarshaller.ConvertToManaged(source[i]);
+            destination[(int)i] = HStringMarshaller.ConvertToManaged(source[i]);
         }
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    public static void Free(uint size, void** array)
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (uint i = 0; i < size; i++)
+        {
+            HStringMarshaller.Free(array[i]);
+        }
+
+        Marshal.FreeCoTaskMem((nint)array);
     }
 }
