@@ -138,4 +138,22 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
             destination[(int)i] = TElementMarshaller.ConvertToManaged(source[i]);
         }
     }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    public static void Free<TElementMarshaller>(uint size, void** array)
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (uint i = 0; i < size; i++)
+        {
+            WindowsRuntimeUnknownMarshaller.Free(array[i]);
+        }
+
+        Marshal.FreeCoTaskMem((nint)array);
+    }
 }
