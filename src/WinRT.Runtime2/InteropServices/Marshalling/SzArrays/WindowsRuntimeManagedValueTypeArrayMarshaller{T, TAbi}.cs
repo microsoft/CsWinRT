@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller for arrays of unmanaged Windows Runtime types.
+/// A marshaller for arrays of managed Windows Runtime types.
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
 /// <typeparam name="TAbi">The ABI type for type <typeparamref name="T"/>.</typeparam>
@@ -17,14 +17,14 @@ namespace WindowsRuntime.InteropServices.Marshalling;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TAbi>
-    where T : unmanaged
+public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi>
+    where T : struct
     where TAbi : unmanaged
 {
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToUnmanaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static void ConvertToUnmanaged<TElementMarshaller>(ReadOnlySpan<T> source, out uint size, out TAbi* array)
-        where TElementMarshaller : IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {
         if (source.IsEmpty)
         {
@@ -36,20 +36,26 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
 
         TAbi* destination = (TAbi*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
 
+        int i = 0;
+
         try
         {
             // Marshal all array elements with the provided element marshaller.
-            // We don't need to guard each call, as the ABI type is unmanaged.
-            for (int i = 0; i < source.Length; i++)
+            // Because the native type contains resources, this might throw.
+            for (; i < source.Length; i++)
             {
                 destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]);
             }
         }
         catch
         {
-            // If marshalling any element failed, release the allocated array to avoid
-            // leaking. This shouldn't really happen with unmanaged value type, since
-            // the conversions should be pretty trivial, but leave it just in case.
+            // Make sure to release all native resources for marshalled values
+            for (int j = 0; j < i; j++)
+            {
+                TElementMarshaller.Dispose(destination[j]);
+            }
+
+            // Also release the allocated array to avoid leaking
             Marshal.FreeCoTaskMem((nint)destination);
 
             throw;
@@ -62,7 +68,7 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToManaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static T[] ConvertToManaged<TElementMarshaller>(uint size, TAbi* value)
-        where TElementMarshaller : IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {
         if (size == 0)
         {
@@ -84,7 +90,7 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static void CopyToUnmanaged<TElementMarshaller>(ReadOnlySpan<T> source, uint size, TAbi* destination)
-        where TElementMarshaller : IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(source, size);
 
@@ -95,16 +101,32 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        for (int i = 0; i < source.Length; i++)
+        int i = 0;
+
+        try
         {
-            destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]);
+            // Marshal the items in the input span
+            for (; i < source.Length; i++)
+            {
+                destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]);
+            }
+        }
+        catch
+        {
+            // Release resources for any items, if we failed
+            for (int j = 0; j < i; j++)
+            {
+                TElementMarshaller.Dispose(destination[j]);
+            }
+
+            throw;
         }
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToManaged"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static void CopyToManaged<TElementMarshaller>(uint size, TAbi* source, Span<T> destination)
-        where TElementMarshaller : IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {
         WindowsRuntimeArrayHelpers.ValidateDestinationSize(size, destination);
 
@@ -122,8 +144,10 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Free(uint size, TAbi* array)
+    public static void Free<TElementMarshaller>(uint size, TAbi* array)
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
     {
         if (size == 0)
         {
@@ -131,6 +155,11 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
         }
 
         ArgumentNullException.ThrowIfNull(array);
+
+        for (int i = 0; i < size; i++)
+        {
+            TElementMarshaller.Dispose(array[i]);
+        }
 
         Marshal.FreeCoTaskMem((nint)array);
     }
