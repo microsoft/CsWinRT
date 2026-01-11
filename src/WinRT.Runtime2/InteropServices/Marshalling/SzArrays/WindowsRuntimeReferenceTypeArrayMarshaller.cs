@@ -28,9 +28,9 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(array);
 
-        for (int i = 0; i < size; i++)
+        for (uint i = 0; i < size; i++)
         {
-            WindowsRuntimeUnknownMarshaller.Free(array[j]);
+            WindowsRuntimeUnknownMarshaller.Free(array[i]);
         }
 
         Marshal.FreeCoTaskMem((nint)array);
