@@ -78,7 +78,7 @@ internal partial class InteropTypeDefinitionFactory
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackConvertToUnmanagedMethodRewrite(
+            emitState.TrackRawRetValMethodRewrite(
                 parameterType: elementType,
                 method: convertToUnmanagedMethod,
                 marker: nop_convertToUnmanaged);
@@ -170,7 +170,7 @@ internal partial class InteropTypeDefinitionFactory
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackConvertToUnmanagedMethodRewrite(
+            emitState.TrackRawRetValMethodRewrite(
                 parameterType: elementType,
                 method: convertToUnmanagedMethod,
                 marker: nop_convertToUnmanaged);
@@ -287,7 +287,7 @@ internal partial class InteropTypeDefinitionFactory
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackConvertToUnmanagedMethodRewrite(
+            emitState.TrackRawRetValMethodRewrite(
                 parameterType: elementType,
                 method: convertToUnmanagedMethod,
                 marker: nop_convertToUnmanaged);
@@ -382,7 +382,7 @@ internal partial class InteropTypeDefinitionFactory
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackConvertToUnmanagedMethodRewrite(
+            emitState.TrackRawRetValMethodRewrite(
                 parameterType: elementType,
                 method: convertToUnmanagedMethod,
                 marker: nop_convertToUnmanaged);

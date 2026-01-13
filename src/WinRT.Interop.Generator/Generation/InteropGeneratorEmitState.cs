@@ -88,27 +88,6 @@ internal sealed class InteropGeneratorEmitState
     }
 
     /// <summary>
-    /// Tracks a method rewrite that involves emitting direct calls to <c>ConvertToUnmanaged</c> in the specified method.
-    /// </summary>
-    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
-    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
-    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
-    public void TrackConvertToUnmanagedMethodRewrite(
-        TypeSignature parameterType,
-        MethodDefinition method,
-        CilInstruction marker)
-    {
-        ThrowIfReadOnly();
-
-        _methodRewriteInfos.Add(new MethodRewriteInfo.ConvertToUnmanaged
-        {
-            Type = parameterType,
-            Method = method,
-            Marker = marker
-        });
-    }
-
-    /// <summary>
     /// Tracks a method rewrite that involves returning a value from the specified method at a given marker instruction.
     /// </summary>
     /// <param name="returnType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
@@ -148,6 +127,27 @@ internal sealed class InteropGeneratorEmitState
         _methodRewriteInfos.Add(new MethodRewriteInfo.RetVal
         {
             Type = retValType,
+            Method = method,
+            Marker = marker
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves emitting direct calls to <c>ConvertToUnmanaged</c> in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    public void TrackRawRetValMethodRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction marker)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.RawRetVal
+        {
+            Type = parameterType,
             Method = method,
             Marker = marker
         });

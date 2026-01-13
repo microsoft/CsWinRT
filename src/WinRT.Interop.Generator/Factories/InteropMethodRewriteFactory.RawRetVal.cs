@@ -21,7 +21,10 @@ internal partial class InteropMethodRewriteFactory
     /// <summary>
     /// Contains the logic for emitting direct calls to <c>ConvertToUnmanaged</c> for a given value (already on the stack).
     /// </summary>
-    public static class ConvertToUnmanaged
+    /// <remarks>
+    /// This is similar to <see cref="RetVal"/>, but without protected regions or any unwrapping.
+    /// </remarks>
+    public static class RawRetVal
     {
         /// <summary>
         /// Performs two-pass code generation on a target method to emit a direct call to <c>ConvertToUnmanaged</c>.
@@ -58,10 +61,20 @@ internal partial class InteropMethodRewriteFactory
                 return;
             }
 
-            // For any types, we always just forward directly to 'ConvertToUnmanaged', without any other changes
-            InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
+            // For nullable values, we actually need to call 'BoxToUnmanaged'
+            if (parameterType.IsConstructedNullableValueType(interopReferences))
+            {
+                InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-            body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.BoxToUnmanaged().Import(module)));
+            }
+            else
+            {
+                // For any other types, we always just forward directly to 'ConvertToUnmanaged', without any other changes
+                InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
+
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)));
+            }
         }
     }
 }
