@@ -2017,6 +2017,17 @@ internal partial class InteropGenerator
             {
                 switch (rewriteInfo)
                 {
+                    // Rewrite direct calls to 'ConvertToUnmanaged'
+                    case MethodRewriteInfo.ConvertToUnmanaged convertToUnmanagedValue:
+                        InteropMethodRewriteFactory.ConvertToUnmanaged.RewriteMethod(
+                            parameterType: convertToUnmanagedValue.Type,
+                            method: convertToUnmanagedValue.Method,
+                            marker: convertToUnmanagedValue.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
                     // Rewrite return values for managed types
                     case MethodRewriteInfo.ReturnValue returnValueInfo:
                         InteropMethodRewriteFactory.ReturnValue.RewriteMethod(

@@ -56,7 +56,7 @@ internal static partial class InteropMethodRewriteFactory
 
             if (parameterType.IsValueType)
             {
-                // If the return type is blittable, we have nothing else to do (the value is already loaded)
+                // If the parameter type is blittable, we have nothing else to do (the value is already loaded)
                 if (parameterType.IsBlittable(interopReferences))
                 {
                     return;
