@@ -1,0 +1,26 @@
+{
+  "hydrated": false,
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/suppressions"
+  },
+  "version": "1.0.0",
+  "suppressionSets": {
+    "default": {
+      "name": "default",
+      "createdDate": "2026-01-11 22:39:05Z",
+      "lastUpdatedDate": "2026-01-11 22:39:05Z"
+    }
+  },
+  "results": {
+    "daf27cc0f11a959079821f81488e507df9eeb782cfcbd899d4ebc2f554573631": {
+      "signature": "daf27cc0f11a959079821f81488e507df9eeb782cfcbd899d4ebc2f554573631",
+      "alternativeSignatures": [
+        "22e36b4b16223c3e15ad176f02db424a0a935c80dca465346285b8c86fa0684d"
+      ],
+      "memberOf": [
+        "default"
+      ],
+      "createdDate": "2026-01-11 22:39:05Z"
+    }
+  }
+}
