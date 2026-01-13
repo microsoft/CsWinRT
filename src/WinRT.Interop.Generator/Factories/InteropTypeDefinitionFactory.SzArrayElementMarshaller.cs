@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -71,18 +72,20 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
                 method: convertToUnmanagedMethod);
 
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToManaged' method as follows:
             //
             // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
             MethodDefinition convertToManagedMethod = new(
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementAbiType.Import(module), elementType.Import(module)))
+                signature: MethodSignature.CreateStatic(elementType.Import(module), elementAbiType.Import(module)))
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { nop_convertToManaged },
+                    { Ret }
                 }
             };
 
@@ -90,6 +93,13 @@ internal partial class InteropTypeDefinitionFactory
             elementMarshallerType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType).Import(module),
                 method: convertToManagedMethod);
+
+            // Track rewriting the managed value for 'ConvertToManaged'
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: convertToManagedMethod,
+                marker: nop_convertToManaged,
+                parameterIndex: 0);
 
             return elementMarshallerType;
         }
@@ -145,18 +155,20 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
                 method: convertToUnmanagedMethod);
 
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToManaged' method as follows:
             //
             // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
             MethodDefinition convertToManagedMethod = new(
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementAbiType.Import(module), elementType.Import(module)))
+                signature: MethodSignature.CreateStatic(elementType.Import(module), elementAbiType.Import(module)))
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { nop_convertToManaged },
+                    { Ret }
                 }
             };
 
@@ -164,6 +176,13 @@ internal partial class InteropTypeDefinitionFactory
             elementMarshallerType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType).Import(module),
                 method: convertToManagedMethod);
+
+            // Track rewriting the managed value for 'ConvertToManaged'
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: convertToManagedMethod,
+                marker: nop_convertToManaged,
+                parameterIndex: 0);
 
             // Define the 'Dispose' method as follows:
             //
@@ -244,6 +263,8 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType).Import(module),
                 method: convertToUnmanagedMethod);
 
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToManaged' method as follows:
             //
             // public static KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> ConvertToManaged(void* value)
@@ -256,8 +277,8 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { nop_convertToManaged },
+                    { Ret }
                 }
             };
 
@@ -265,6 +286,13 @@ internal partial class InteropTypeDefinitionFactory
             elementMarshallerType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType).Import(module),
                 method: convertToManagedMethod);
+
+            // Track rewriting the managed value for 'ConvertToManaged'
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: convertToManagedMethod,
+                marker: nop_convertToManaged,
+                parameterIndex: 0);
 
             return elementMarshallerType;
         }
@@ -321,6 +349,8 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType).Import(module),
                 method: convertToUnmanagedMethod);
 
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToManaged' method as follows:
             //
             // public static <ELEMENT_TYPE> ConvertToManaged(void* value)
@@ -333,8 +363,8 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { nop_convertToManaged },
+                    { Ret }
                 }
             };
 
@@ -342,6 +372,13 @@ internal partial class InteropTypeDefinitionFactory
             elementMarshallerType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType).Import(module),
                 method: convertToManagedMethod);
+
+            // Track rewriting the managed value for 'ConvertToManaged'
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: convertToManagedMethod,
+                marker: nop_convertToManaged,
+                parameterIndex: 0);
 
             return elementMarshallerType;
         }
