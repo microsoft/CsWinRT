@@ -2087,6 +2087,17 @@ internal partial class InteropGenerator
                             emitState: emitState,
                             module: module);
                         break;
+
+                    // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
+                    case MethodRewriteInfo.Dispose disposeInfo:
+                        InteropMethodRewriteFactory.Dispose.RewriteMethod(
+                            parameterType: disposeInfo.Type,
+                            method: disposeInfo.Method,
+                            marker: disposeInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
                     default: throw new UnreachableException();
                 }
             }

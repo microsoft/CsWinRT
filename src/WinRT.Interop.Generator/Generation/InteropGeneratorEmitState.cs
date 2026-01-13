@@ -229,6 +229,27 @@ internal sealed class InteropGeneratorEmitState
     }
 
     /// <summary>
+    /// Tracks a method rewrite that involves emitting calls to dispose (or release) a given value in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    public void TrackDisposeRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction marker)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.Dispose
+        {
+            Type = parameterType,
+            Method = method,
+            Marker = marker
+        });
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="MethodRewriteInfo"/> instances with info on two-pass code generation steps to perform.
     /// </summary>
     /// <returns>The <see cref="MethodRewriteInfo"/> instances to process.</returns>
