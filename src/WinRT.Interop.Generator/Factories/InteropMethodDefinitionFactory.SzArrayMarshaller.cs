@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
-using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -42,61 +40,6 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences).Import(module).MakePointerType()]));
-
-            // For 'string', 'Type', reference types and blittable types, we can reuse the shared stubs from the 'WindowsRuntimeArrayHelpers'
-            // type in WinRT.Runtime.dll, to simplify the code and reduce binary size (as we can reuse all these stubs for multiple types).
-            if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.CorLibTypeFactory.String))
-            {
-                freeMethod.CilMethodBody = new CilMethodBody
-                {
-                    Instructions =
-                    {
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeHStringArrayUnsafe.Import(module) },
-                        { Ret }
-                    }
-                };
-            }
-            else if (SignatureComparer.IgnoreVersion.Equals(elementType, interopReferences.Type))
-            {
-                freeMethod.CilMethodBody = new CilMethodBody
-                {
-                    Instructions =
-                    {
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeTypeArrayUnsafe.Import(module) },
-                        { Ret }
-                    }
-                };
-            }
-            else if (!elementType.Resolve()!.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
-            {
-                freeMethod.CilMethodBody = new CilMethodBody
-                {
-                    Instructions =
-                    {
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeObjectArrayUnsafe.Import(module) },
-                        { Ret }
-                    }
-                };
-            }
-            else if (elementType.Resolve()!.IsByRefLike) // TODO: check for blittable
-            {
-                freeMethod.CilMethodBody = new CilMethodBody
-                {
-                    Instructions =
-                    {
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeArrayHelpersFreeBlittableArrayUnsafe.Import(module) },
-                        { Ret }
-                    }
-                };
-            }
 
             return freeMethod;
         }
