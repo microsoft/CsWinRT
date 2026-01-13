@@ -14,10 +14,8 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
-/// <summary>
-/// A factory for interop method definitions.
-/// </summary>
-internal static partial class InteropMethodDefinitionFactory
+/// <inheritdoc cref="InteropMethodDefinitionFactory"/>
+internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
     /// Helpers for impl types for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> interfaces.
