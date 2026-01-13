@@ -785,7 +785,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: delegateType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, interopReferences),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: delegateType,
                 proxyTypeMapSourceType: delegateType,
