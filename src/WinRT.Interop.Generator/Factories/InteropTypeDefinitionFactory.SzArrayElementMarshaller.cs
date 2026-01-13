@@ -147,6 +147,7 @@ internal partial class InteropTypeDefinitionFactory
             // Rewriting labels
             CilInstruction nop_convertToUnmanaged = new(Nop);
             CilInstruction nop_convertToManaged = new(Nop);
+            CilInstruction nop_dispose = new(Nop);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -212,8 +213,9 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { Ldarg_0 },
+                    { nop_dispose },
+                    { Ret }
                 }
             };
 
@@ -221,6 +223,12 @@ internal partial class InteropTypeDefinitionFactory
             elementMarshallerType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerDispose(elementType, elementAbiType).Import(module),
                 method: disposeMethod);
+
+            // Track rewriting the disposal for 'Dispose'
+            emitState.TrackDisposeRewrite(
+                parameterType: elementType,
+                method: disposeMethod,
+                marker: nop_dispose);
 
             return elementMarshallerType;
         }
