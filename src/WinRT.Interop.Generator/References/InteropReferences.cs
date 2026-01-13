@@ -2705,22 +2705,19 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeReferenceTypeArrayMarshaller&lt;T&gt;.Free&lt;TElementMarshaller&gt;</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeReferenceTypeArrayMarshaller&lt;T&gt;.Free</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    /// <param name="elementMarshallerType">The element marshaller type.</param>
-    public MethodSpecification WindowsRuntimeReferenceTypeArrayMarshallerFree(TypeSignature elementType, TypeSignature elementMarshallerType)
+    public MemberReference WindowsRuntimeReferenceTypeArrayMarshallerFree(TypeSignature elementType)
     {
         return WindowsRuntimeReferenceTypeArrayMarshaller1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
-                genericParameterCount: 1,
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
     }
 
     /// <summary>

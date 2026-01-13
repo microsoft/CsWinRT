@@ -140,7 +140,7 @@ public static unsafe class WindowsRuntimeReferenceTypeArrayMarshaller<T>
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
-    public static void Free<TElementMarshaller>(uint size, void** array)
+    public static void Free(uint size, void** array)
     {
         if (size == 0)
         {
