@@ -7,6 +7,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -187,7 +188,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: operationType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(operationType, interopReferences),
                 typeSignature: operationType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,

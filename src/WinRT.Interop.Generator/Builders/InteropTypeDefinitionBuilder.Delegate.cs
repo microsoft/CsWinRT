@@ -764,7 +764,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
-                runtimeClassName: delegateType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, interopReferences),
                 comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,

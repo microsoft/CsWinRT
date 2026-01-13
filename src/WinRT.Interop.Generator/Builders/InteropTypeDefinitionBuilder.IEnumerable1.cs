@@ -9,6 +9,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -307,7 +308,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: enumerableType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumerableType, interopReferences),
                 typeSignature: enumerableType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,

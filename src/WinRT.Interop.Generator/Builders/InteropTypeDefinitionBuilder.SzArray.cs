@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -511,7 +512,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: arrayType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, interopReferences),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: arrayType,
                 proxyTypeMapSourceType: arrayType,
