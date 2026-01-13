@@ -52,6 +52,10 @@ internal partial class InteropTypeDefinitionFactory
                 Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
             };
 
+            // Rewriting labels
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToUnmanaged' method as follows:
             //
             // public static <ABI_ELEMENT_TYPE> ConvertToUnmanaged(<ELEMENT_TYPE> value)
@@ -62,8 +66,9 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { Ldarg_0 },
+                    { nop_convertToUnmanaged },
+                    { Ret }
                 }
             };
 
@@ -72,7 +77,11 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
                 method: convertToUnmanagedMethod);
 
-            CilInstruction nop_convertToManaged = new(Nop);
+            // Track rewriting the native value for 'ConvertToUnmanaged'
+            emitState.TrackConvertToUnmanagedMethodRewrite(
+                parameterType: elementType,
+                method: convertToUnmanagedMethod,
+                marker: nop_convertToUnmanaged);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -135,6 +144,10 @@ internal partial class InteropTypeDefinitionFactory
                 Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
             };
 
+            // Rewriting labels
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToUnmanaged' method as follows:
             //
             // public static <ABI_ELEMENT_TYPE> ConvertToUnmanaged(<ELEMENT_TYPE> value)
@@ -145,8 +158,9 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { Ldarg_0 },
+                    { nop_convertToUnmanaged },
+                    { Ret }
                 }
             };
 
@@ -155,7 +169,11 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
                 method: convertToUnmanagedMethod);
 
-            CilInstruction nop_convertToManaged = new(Nop);
+            // Track rewriting the native value for 'ConvertToUnmanaged'
+            emitState.TrackConvertToUnmanagedMethodRewrite(
+                parameterType: elementType,
+                method: convertToUnmanagedMethod,
+                marker: nop_convertToUnmanaged);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -241,6 +259,10 @@ internal partial class InteropTypeDefinitionFactory
 
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
 
+            // Rewriting labels
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToUnmanaged' method as follows:
             //
             // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> value)
@@ -253,8 +275,9 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { Ldarg_0 },
+                    { nop_convertToUnmanaged },
+                    { Ret }
                 }
             };
 
@@ -263,7 +286,11 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType).Import(module),
                 method: convertToUnmanagedMethod);
 
-            CilInstruction nop_convertToManaged = new(Nop);
+            // Track rewriting the native value for 'ConvertToUnmanaged'
+            emitState.TrackConvertToUnmanagedMethodRewrite(
+                parameterType: elementType,
+                method: convertToUnmanagedMethod,
+                marker: nop_convertToUnmanaged);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -327,6 +354,10 @@ internal partial class InteropTypeDefinitionFactory
                 Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
             };
 
+            // Rewriting labels
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction nop_convertToManaged = new(Nop);
+
             // Define the 'ConvertToUnmanaged' method as follows:
             //
             // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<ELEMENT_TYPE> value)
@@ -339,8 +370,9 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    { Ldnull },
-                    { Throw }
+                    { Ldarg_0 },
+                    { nop_convertToUnmanaged },
+                    { Ret }
                 }
             };
 
@@ -349,7 +381,11 @@ internal partial class InteropTypeDefinitionFactory
                 declaration: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType).Import(module),
                 method: convertToUnmanagedMethod);
 
-            CilInstruction nop_convertToManaged = new(Nop);
+            // Track rewriting the native value for 'ConvertToUnmanaged'
+            emitState.TrackConvertToUnmanagedMethodRewrite(
+                parameterType: elementType,
+                method: convertToUnmanagedMethod,
+                marker: nop_convertToUnmanaged);
 
             // Define the 'ConvertToManaged' method as follows:
             //
