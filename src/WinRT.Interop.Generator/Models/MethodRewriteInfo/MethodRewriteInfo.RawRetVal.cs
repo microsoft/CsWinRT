@@ -7,7 +7,7 @@ namespace WindowsRuntime.InteropGenerator.Models;
 internal partial class MethodRewriteInfo
 {
     /// <summary>
-    /// Contains info for a target method for two-pass IL generation, for for emitting direct calls to <c>ConvertToUnmanaged</c>.
+    /// Contains info for a target method for two-pass IL generation, for emitting direct calls to <c>ConvertToUnmanaged</c>.
     /// </summary>
     /// <see cref="Factories.InteropMethodRewriteFactory.RawRetVal.RewriteMethod"/>
     public sealed class RawRetVal : MethodRewriteInfo

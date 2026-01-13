@@ -59,6 +59,8 @@ internal static partial class InteropMethodRewriteFactory
                 // If the parameter type is blittable, we have nothing else to do (the value is already loaded)
                 if (parameterType.IsBlittable(interopReferences))
                 {
+                    _ = body.Instructions.ReferenceRemove(marker);
+
                     return;
                 }
 

@@ -11,8 +11,6 @@ using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
-#pragma warning disable CS1573
-
 namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <inheritdoc cref="InteropMethodRewriteFactory"/>
@@ -44,6 +42,7 @@ internal partial class InteropMethodRewriteFactory
             ModuleDefinition module)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
+            // Validate that we do have some IL body for the input method (this should always be thevv case)
             if (method.CilMethodBody is not CilMethodBody body)
             {
                 throw WellKnownInteropExceptions.MethodRewriteMissingBodyError(method);
@@ -58,6 +57,8 @@ internal partial class InteropMethodRewriteFactory
             // If the parameter type is blittable, we have nothing else to do (the value is already loaded)
             if (parameterType.IsBlittable(interopReferences))
             {
+                _ = body.Instructions.ReferenceRemove(marker);
+
                 return;
             }
 
