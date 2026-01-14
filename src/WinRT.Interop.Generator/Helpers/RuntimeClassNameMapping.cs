@@ -52,6 +52,8 @@ internal class RuntimeClassNameMapping
 
             return resultHandler.ToStringAndClear();
         }
-        return type.FullName;
+        return TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName)
+            ? simpleMappedTypeName
+            : type.FullName;
     }
 }

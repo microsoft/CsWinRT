@@ -80,7 +80,20 @@ internal static class TypeMapping
         new("System.Numerics.Vector4", new("Windows.Foundation.Numerics", "Vector4", "struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4)")),
         new("Windows.Foundation.Point", new("Windows.Foundation", "Point", "struct(Windows.Foundation.Point;f4;f4)")),
         new("Windows.Foundation.Size", new("Windows.Foundation", "Size", "struct(Windows.Foundation.Size;f4;f4)")),
-        new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")));
+        new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")),
+        new("System.Boolean", new("", "Boolean")),
+        new("System.Byte", new("", "Byte")),
+        new("System.Char", new("", "Char")),
+        new("System.Double", new("", "Double")),
+        new("System.Guid", new("", "Guid")),
+        new("System.Int16", new("", "Int16")),
+        new("System.Int32", new("", "Int32")),
+        new("System.Int64", new("", "Int64")),
+        new("System.Object", new("", "Object")),
+        new("System.Single", new("", "Single")),
+        new("System.String", new("", "String")),
+        new("System.UInt16", new("", "UInt16")),
+        new("System.UInt32", new("", "UInt32")));
 
     /// <summary>
     /// Mapping of projected <c>Microsoft.UI.Xaml</c> types to their corresponding <c>Windows.UI.Xaml</c> types.
@@ -124,12 +137,23 @@ internal static class TypeMapping
 
         DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
 
+        if (string.IsNullOrEmpty(result.WindowsRuntimeNamespace))
+        {
+            handler.Clear();
+            handler = $"{result.WindowsRuntimeName}";
+        }
+
         // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML name
         if (useWindowsUIXamlProjections && WindowsUIXamlTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
         {
             handler.Clear();
-
             mappedName = $"{mappedType.WindowsRuntimeNamespace}.{mappedType.WindowsRuntimeName}";
+
+            if (string.IsNullOrEmpty(mappedType.WindowsRuntimeNamespace))
+            {
+                handler.Clear();
+                mappedName = $"{mappedType.WindowsRuntimeName}";
+            }
 
             return true;
         }
