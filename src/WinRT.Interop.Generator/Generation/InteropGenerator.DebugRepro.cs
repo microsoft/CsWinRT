@@ -68,10 +68,15 @@ internal partial class InteropGenerator
         List<string> referencePaths = [];
         string? outputAssemblyPath = null;
 
+        // Create another subdirectory for all the input assemblies. We don't put these in the top level
+        // temporary folder so that the number of files there remains very small. The reason is just to
+        // make inspecting the resulting .dll easier, without having to scroll past hundreds of folders.
+        string assembliesDirectory = Path.Combine(tempDirectory, "in");
+
         // Extract all .dll-s, one per directory, so we can ensure there's no name conflicts
         foreach ((int index, ZipArchiveEntry dllEntry) in dllEntries.Index())
         {
-            string destinationFolder = Path.Combine(tempDirectory, index.ToString("000"));
+            string destinationFolder = Path.Combine(assembliesDirectory, index.ToString("000"));
 
             _ = Directory.CreateDirectory(destinationFolder);
 
