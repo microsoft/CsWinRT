@@ -251,7 +251,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
     /// </summary>
-    public TypeReference ICommand => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
+    public TypeReference ICommand => field ??= SystemObjectModel.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.

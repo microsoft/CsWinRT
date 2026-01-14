@@ -199,6 +199,9 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDisposable) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IServiceProvider) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICommand) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyCollectionChanged) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyDataErrorInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged);
