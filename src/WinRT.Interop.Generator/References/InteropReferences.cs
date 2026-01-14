@@ -2770,6 +2770,23 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;.Free</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference WindowsRuntimeKeyValuePairTypeArrayMarshallerFree(TypeSignature keyType, TypeSignature valueType)
+    {
+        return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>AddEventHandler</c> for <see cref="EventRegistrationTokenTable1"/>.
     /// </summary>
     /// <param name="eventRegistrationTokenTableType">The input table type.</param>
