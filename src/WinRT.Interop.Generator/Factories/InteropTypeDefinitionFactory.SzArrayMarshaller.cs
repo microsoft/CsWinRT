@@ -116,17 +116,18 @@ internal partial class InteropTypeDefinitionFactory
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            TypeSignature elementType = arrayType.BaseType;
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
+            TypeSignature keyType = elementType.TypeArguments[0];
+            TypeSignature valueType = elementType.TypeArguments[1];
             TypeSignature elementMarshallerTypeSignature = elementMarshallerType.ToTypeSignature();
 
             return Marshaller(
                 arrayType: arrayType,
-                convertToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                convertToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                copyToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                copyToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                freeMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerFree(elementType, elementAbiType),
+                convertToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToUnmanaged(keyType, valueType, elementMarshallerTypeSignature),
+                convertToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToManaged(keyType, valueType, elementMarshallerTypeSignature),
+                copyToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToUnmanaged(keyType, valueType, elementMarshallerTypeSignature),
+                copyToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(keyType, valueType, elementMarshallerTypeSignature),
+                freeMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerFree(keyType, valueType),
                 interopReferences: interopReferences,
                 module: module);
         }
