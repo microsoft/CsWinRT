@@ -19,10 +19,10 @@ internal class RuntimeClassNameMapping
 #pragma warning restore IDE0044 // Add readonly modifier
     // ---------------------------------------------------------
 
-    public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type)
+    public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
         if (type is GenericInstanceTypeSignature genericInstanceType
-            && TypeMapping.TryFindMappedTypeName(genericInstanceType.GenericType.FullName, false, out string? mappedTypeName))
+            && TypeMapping.TryFindMappedTypeName(genericInstanceType.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
         {
             if (genericInstanceType.TypeArguments.Count == 0)
             {
@@ -33,7 +33,7 @@ internal class RuntimeClassNameMapping
 
             foreach (TypeSignature typeArgument in genericInstanceType.TypeArguments)
             {
-                string mappedArgumentName = GetMappedGenericInstanceRuntimeClassName(typeArgument);
+                string mappedArgumentName = GetMappedGenericInstanceRuntimeClassName(typeArgument, useWindowsUIXamlProjections);
                 typeArgumentsStringHandler.AppendFormatted(mappedArgumentName);
                 typeArgumentsStringHandler.AppendLiteral(", ");
             }

@@ -753,18 +753,20 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="proxyType">The resulting proxy type.</param>
         public static void Proxy(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateComWrappersMarshallerAttributeType,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
-                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(delegateType),
+                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,
@@ -778,14 +780,16 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         public static void TypeMapAttributes(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition proxyType,
             InteropReferences interopReferences,
-            ModuleDefinition module)
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(delegateType),
+                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: delegateType,
                 proxyTypeMapSourceType: delegateType,

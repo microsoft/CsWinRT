@@ -225,6 +225,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature readOnlyListType,
@@ -232,10 +233,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(readOnlyListType),
+                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
                 typeSignature: readOnlyListType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
