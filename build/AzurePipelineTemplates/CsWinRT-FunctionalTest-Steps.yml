@@ -42,7 +42,7 @@ steps:
     - task: CmdLine@2
       displayName: Run ${{ functionalTest }} trimmed (net10.0)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
-      continueOnError: True
+      continueOnError: true
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
@@ -50,6 +50,8 @@ steps:
           echo Running ${{ functionalTest }}.exe 
           ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 100 (
+            echo ##vso[task.logissue type=error]Test ${{ functionalTest }} failed with exit code %Errorlevel%
+            echo ##vso[task.complete result=Failed;]
             exit /b !ErrorLevel!
           )
           exit /b 0 
@@ -73,7 +75,7 @@ steps:
     - task: CmdLine@2
       displayName: Run ${{ functionalTest }} for AOT (net10.0)
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
-      continueOnError: True
+      continueOnError: true
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
@@ -81,6 +83,8 @@ steps:
           echo Running ${{ functionalTest }}.exe 
           ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 100 (
+            echo ##vso[task.logissue type=error]Test ${{ functionalTest }} failed with exit code %Errorlevel%
+            echo ##vso[task.complete result=Failed;]
             exit /b !ErrorLevel!
           )
           exit /b 0 
