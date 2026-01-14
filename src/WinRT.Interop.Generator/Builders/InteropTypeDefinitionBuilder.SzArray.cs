@@ -142,7 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                 module.TopLevelTypes.Add(elementMarshallerType);
 
-                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.UnmanagedValueType(
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ReferenceType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
                     interopReferences: interopReferences,
