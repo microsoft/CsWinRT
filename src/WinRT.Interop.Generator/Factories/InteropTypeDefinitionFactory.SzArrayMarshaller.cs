@@ -4,7 +4,6 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -25,13 +24,11 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition BlittableValueType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -53,14 +50,12 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.UnmanagedValueType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -84,14 +79,12 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.ManagedValueType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -115,14 +108,12 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.KeyValuePair"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -146,14 +137,12 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.ReferenceType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;

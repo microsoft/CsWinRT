@@ -135,7 +135,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for SZ array types
-        DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineSzArrayTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1905,12 +1905,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineSzArrayTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -1932,6 +1934,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.Marshaller(
                     arrayType: typeSignature,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
