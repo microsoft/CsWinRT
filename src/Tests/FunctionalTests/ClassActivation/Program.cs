@@ -55,7 +55,7 @@ unsafe
         // Sanity check: we should still also be able to 'QueryInterface' for other interfaces
         Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
             pUnk: (nint)testMixedComClassUnknownPtr,
-            iid: new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
+            iid: new Guid("40D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
             ppv: out *(nint*)&closablePtr));
         Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
             pUnk: (nint)testMixedComClassUnknownPtr,
