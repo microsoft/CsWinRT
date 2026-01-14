@@ -43,75 +43,14 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller2
                 .MakeGenericReferenceType(elementType, elementAbiType);
 
-            // We're declaring an 'internal abstract class' type
-            TypeDefinition elementMarshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
-            };
-
-            // Rewriting labels
-            CilInstruction nop_convertToUnmanaged = new(Nop);
-            CilInstruction nop_convertToManaged = new(Nop);
-
-            // Define the 'ConvertToUnmanaged' method as follows:
-            //
-            // public static <ABI_ELEMENT_TYPE> ConvertToUnmanaged(<ELEMENT_TYPE> value)
-            MethodDefinition convertToUnmanagedMethod = new(
-                name: "ConvertToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementAbiType.Import(module), elementType.Import(module)))
-            {
-                CilInstructions =
-                {
-                    { Ldarg_0 },
-                    { nop_convertToUnmanaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToUnmanaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
-                method: convertToUnmanagedMethod);
-
-            // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackRawRetValMethodRewrite(
-                parameterType: elementType,
-                method: convertToUnmanagedMethod,
-                marker: nop_convertToUnmanaged);
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementType.Import(module), elementAbiType.Import(module)))
-            {
-                CilInstructions =
-                {
-                    { nop_convertToManaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToManaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType).Import(module),
-                method: convertToManagedMethod);
-
-            // Track rewriting the managed value for 'ConvertToManaged'
-            emitState.TrackManagedParameterMethodRewrite(
-                parameterType: elementType,
-                method: convertToManagedMethod,
-                marker: nop_convertToManaged,
-                parameterIndex: 0);
-
-            return elementMarshallerType;
+            return ElementMarshaller(
+                arrayType: arrayType,
+                interfaceType: interfaceType,
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
+                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
         }
 
         /// <summary>
@@ -136,74 +75,18 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
                 .MakeGenericReferenceType(elementType, elementAbiType);
 
-            // We're declaring an 'internal abstract class' type
-            TypeDefinition elementMarshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
-            };
+            // Get the element marshaller type with the common method implementations
+            TypeDefinition elementMarshallerType = ElementMarshaller(
+                arrayType: arrayType,
+                interfaceType: interfaceType,
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
+                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Rewriting labels
-            CilInstruction nop_convertToUnmanaged = new(Nop);
-            CilInstruction nop_convertToManaged = new(Nop);
             CilInstruction nop_dispose = new(Nop);
-
-            // Define the 'ConvertToUnmanaged' method as follows:
-            //
-            // public static <ABI_ELEMENT_TYPE> ConvertToUnmanaged(<ELEMENT_TYPE> value)
-            MethodDefinition convertToUnmanagedMethod = new(
-                name: "ConvertToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementAbiType.Import(module), elementType.Import(module)))
-            {
-                CilInstructions =
-                {
-                    { Ldarg_0 },
-                    { nop_convertToUnmanaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToUnmanaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType).Import(module),
-                method: convertToUnmanagedMethod);
-
-            // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackRawRetValMethodRewrite(
-                parameterType: elementType,
-                method: convertToUnmanagedMethod,
-                marker: nop_convertToUnmanaged);
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(elementType.Import(module), elementAbiType.Import(module)))
-            {
-                CilInstructions =
-                {
-                    { nop_convertToManaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToManaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType).Import(module),
-                method: convertToManagedMethod);
-
-            // Track rewriting the managed value for 'ConvertToManaged'
-            emitState.TrackManagedParameterMethodRewrite(
-                parameterType: elementType,
-                method: convertToManagedMethod,
-                marker: nop_convertToManaged,
-                parameterIndex: 0);
 
             // Define the 'Dispose' method as follows:
             //
@@ -258,81 +141,14 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
                 .MakeGenericReferenceType(keyType, valueType);
 
-            // We're declaring an 'internal abstract class' type
-            TypeDefinition elementMarshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
-            };
-
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
-
-            // Rewriting labels
-            CilInstruction nop_convertToUnmanaged = new(Nop);
-            CilInstruction nop_convertToManaged = new(Nop);
-
-            // Define the 'ConvertToUnmanaged' method as follows:
-            //
-            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> value)
-            MethodDefinition convertToUnmanagedMethod = new(
-                name: "ConvertToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
-                    parameterTypes: [keyValuePairType.Import(module)]))
-            {
-                CilInstructions =
-                {
-                    { Ldarg_0 },
-                    { nop_convertToUnmanaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToUnmanaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType).Import(module),
-                method: convertToUnmanagedMethod);
-
-            // Track rewriting the native value for 'ConvertToUnmanaged'
-            emitState.TrackRawRetValMethodRewrite(
-                parameterType: elementType,
-                method: convertToUnmanagedMethod,
-                marker: nop_convertToUnmanaged);
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> ConvertToManaged(void* value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: keyValuePairType.Import(module),
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
-            {
-                CilInstructions =
-                {
-                    { nop_convertToManaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToManaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType).Import(module),
-                method: convertToManagedMethod);
-
-            // Track rewriting the managed value for 'ConvertToManaged'
-            emitState.TrackManagedParameterMethodRewrite(
-                parameterType: elementType,
-                method: convertToManagedMethod,
-                marker: nop_convertToManaged,
-                parameterIndex: 0);
-
-            return elementMarshallerType;
+            return ElementMarshaller(
+                arrayType: arrayType,
+                interfaceType: interfaceType,
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType),
+                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
         }
 
         /// <summary>
@@ -356,6 +172,38 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeReferenceTypeArrayElementMarshaller1
                 .MakeGenericReferenceType(elementType);
 
+            return ElementMarshaller(
+                arrayType: arrayType,
+                interfaceType: interfaceType,
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType),
+                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the element marshaller for some element type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interfaceType">The interface type the element marshaller type should implement.</param>
+        /// <param name="convertToUnmanagedInterfaceMethod">The <c>ConvertToUnmanaged</c> interface method being implemented.</param>
+        /// <param name="convertToManagedInterfaceMethod">The <c>ConvertToManaged</c> interface method being implemented.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting element marshaller type.</returns>
+        public static TypeDefinition ElementMarshaller(
+            SzArrayTypeSignature arrayType,
+            TypeSignature interfaceType,
+            MemberReference convertToUnmanagedInterfaceMethod,
+            MemberReference convertToManagedInterfaceMethod,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = arrayType.BaseType;
+
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
@@ -372,12 +220,12 @@ internal partial class InteropTypeDefinitionFactory
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
-            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<ELEMENT_TYPE> value)
+            // public static <RAW_ABI_ELEMENT_TYPE> ConvertToUnmanaged(<ELEMENT_TYPE> value)
             MethodDefinition convertToUnmanagedMethod = new(
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
+                    returnType: elementType.GetRawAbiType(interopReferences).Import(module),
                     parameterTypes: [elementType.Import(module)]))
             {
                 CilInstructions =
@@ -390,7 +238,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'ConvertToUnmanaged' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType).Import(module),
+                declaration: convertToUnmanagedInterfaceMethod.Import(module),
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'
@@ -401,13 +249,13 @@ internal partial class InteropTypeDefinitionFactory
 
             // Define the 'ConvertToManaged' method as follows:
             //
-            // public static <ELEMENT_TYPE> ConvertToManaged(void* value)
+            // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
             MethodDefinition convertToManagedMethod = new(
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: elementType.Import(module),
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [elementType.GetAbiType(interopReferences).Import(module)]))
             {
                 CilInstructions =
                 {
@@ -418,7 +266,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'ConvertToManaged' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType).Import(module),
+                declaration: convertToManagedInterfaceMethod.Import(module),
                 method: convertToManagedMethod);
 
             // Track rewriting the managed value for 'ConvertToManaged'
