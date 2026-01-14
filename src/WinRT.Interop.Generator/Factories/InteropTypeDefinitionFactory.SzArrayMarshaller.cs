@@ -127,7 +127,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToManaged(keyType, valueType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToUnmanaged(keyType, valueType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(keyType, valueType, elementMarshallerTypeSignature),
-                freeMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerFree(keyType, valueType),
+                freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -155,7 +155,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerConvertToManaged(elementType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToUnmanaged(elementType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToManaged(elementType, elementMarshallerTypeSignature),
-                freeMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerFree(elementType),
+                freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }

@@ -939,6 +939,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeReferenceTypeArrayMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeReferenceTypeArrayMarshaller`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeUnknownArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownArrayMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeKeyValuePairTypeArrayMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeKeyValuePairTypeArrayMarshaller`2"u8);
@@ -1907,6 +1912,16 @@ internal sealed class InteropReferences
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller.Free</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeUnknownArrayMarshallerFree => field ??= WindowsRuntimeUnknownArrayMarshaller
+        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.ConvertToUnmanaged</c>.
     /// </summary>
     public MemberReference TypeArrayMarshallerConvertToUnmanaged => field ??= TypeArrayMarshaller
@@ -2660,22 +2675,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeReferenceTypeArrayMarshaller&lt;T&gt;.Free</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference WindowsRuntimeReferenceTypeArrayMarshallerFree(TypeSignature elementType)
-    {
-        return WindowsRuntimeReferenceTypeArrayMarshaller1
-            .MakeGenericReferenceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;.ConvertToUnmanaged&lt;TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
@@ -2767,23 +2766,6 @@ internal sealed class InteropReferences
                             new GenericParameterSignature(GenericParameterType.Type, 0),
                             new GenericParameterSignature(GenericParameterType.Type, 1)))]))
             .MakeGenericInstanceMethod(elementMarshallerType);
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;.Free</c>.
-    /// </summary>
-    /// <param name="keyType">The input key type.</param>
-    /// <param name="valueType">The input value type.</param>
-    public MemberReference WindowsRuntimeKeyValuePairTypeArrayMarshallerFree(TypeSignature keyType, TypeSignature valueType)
-    {
-        return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
     }
 
     /// <summary>
