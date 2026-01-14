@@ -157,7 +157,6 @@ internal partial class InteropTypeDefinitionFactory
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
             TypeSignature elementMarshallerTypeSignature = elementMarshallerType.ToTypeSignature();
 
             return Marshaller(
@@ -167,6 +166,75 @@ internal partial class InteropTypeDefinitionFactory
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToUnmanaged(elementType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToManaged(elementType, elementMarshallerTypeSignature),
                 freeMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerFree(elementType),
+                interopReferences: interopReferences,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="string"/> type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting marshaller type.</returns>
+        public static TypeDefinition String(
+            SzArrayTypeSignature arrayType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            return Marshaller(
+                arrayType: arrayType,
+                convertToUnmanagedMethod: interopReferences.HStringArrayMarshallerConvertToUnmanaged,
+                convertToManagedMethod: interopReferences.HStringArrayMarshallerConvertToManaged,
+                copyToUnmanagedMethod: interopReferences.HStringArrayMarshallerCopyToUnmanaged,
+                copyToManagedMethod: interopReferences.HStringArrayMarshallerCopyToManaged,
+                freeMethod: interopReferences.HStringArrayMarshallerFree,
+                interopReferences: interopReferences,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="System.Type"/> type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting marshaller type.</returns>
+        public static TypeDefinition Type(
+            SzArrayTypeSignature arrayType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            return Marshaller(
+                arrayType: arrayType,
+                convertToUnmanagedMethod: interopReferences.TypeArrayMarshallerConvertToUnmanaged,
+                convertToManagedMethod: interopReferences.TypeArrayMarshallerConvertToManaged,
+                copyToUnmanagedMethod: interopReferences.TypeArrayMarshallerCopyToUnmanaged,
+                copyToManagedMethod: interopReferences.TypeArrayMarshallerCopyToManaged,
+                freeMethod: interopReferences.TypeArrayMarshallerFree,
+                interopReferences: interopReferences,
+                module: module);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="System.Exception"/> type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting marshaller type.</returns>
+        public static TypeDefinition Exception(
+            SzArrayTypeSignature arrayType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            return Marshaller(
+                arrayType: arrayType,
+                convertToUnmanagedMethod: interopReferences.ExceptionArrayMarshallerConvertToUnmanaged,
+                convertToManagedMethod: interopReferences.ExceptionArrayMarshallerConvertToManaged,
+                copyToUnmanagedMethod: interopReferences.ExceptionArrayMarshallerCopyToUnmanaged,
+                copyToManagedMethod: interopReferences.ExceptionArrayMarshallerCopyToManaged,
+                freeMethod: interopReferences.ExceptionArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }
