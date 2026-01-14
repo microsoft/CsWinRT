@@ -1,38 +1,56 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
 internal class RuntimeClassNameMapping
 {
-    public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type, InteropReferences interopReferences)
+
+    // TODO: Debug code; Will remove later ---------------------
+#pragma warning disable IDE0044 // Add readonly modifier
+    private static readonly string printPath = @"C:\Users\kythant\staging\MappedRuntimeClassNames.txt";
+    private static HashSet<string> seenStrings = [];
+    private static StreamWriter writer = new(printPath, append: false);
+#pragma warning restore IDE0044 // Add readonly modifier
+    // ---------------------------------------------------------
+
+    public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type)
     {
-        if (type is GenericInstanceTypeSignature genericInstanceType && type.Resolve() is TypeDefinition typeDefinition)
+        if (type is GenericInstanceTypeSignature genericInstanceType
+            && TypeMapping.TryFindMappedTypeName(genericInstanceType.GenericType.FullName, false, out string? mappedTypeName))
         {
-            if (TypeMapping.TryFindMappedTypeName(typeDefinition.FullName, false, out string? mappedTypeName))
+            if (genericInstanceType.TypeArguments.Count == 0)
             {
-                if (genericInstanceType.TypeArguments.Count == 0)
-                {
-                    return mappedTypeName;
-                }
-
-                DefaultInterpolatedStringHandler typeArgumentsStringHandler = $"<";
-
-                foreach (TypeSignature typeArgument in genericInstanceType.TypeArguments)
-                {
-                    string mappedArgumentName = GetMappedGenericInstanceRuntimeClassName(typeArgument, interopReferences);
-                    typeArgumentsStringHandler.AppendFormatted(mappedArgumentName);
-                    typeArgumentsStringHandler.AppendLiteral(", ");
-                }
-
-                DefaultInterpolatedStringHandler handler = $"{mappedTypeName}{typeArgumentsStringHandler.ToStringAndClear().TrimEnd().TrimEnd(',')}>";
-                return handler.ToString();
+                return mappedTypeName;
             }
+
+            DefaultInterpolatedStringHandler typeArgumentsStringHandler = $"<";
+
+            foreach (TypeSignature typeArgument in genericInstanceType.TypeArguments)
+            {
+                string mappedArgumentName = GetMappedGenericInstanceRuntimeClassName(typeArgument);
+                typeArgumentsStringHandler.AppendFormatted(mappedArgumentName);
+                typeArgumentsStringHandler.AppendLiteral(", ");
+            }
+
+            DefaultInterpolatedStringHandler resultHandler = $"{mappedTypeName}{typeArgumentsStringHandler.ToStringAndClear().TrimEnd().TrimEnd(',')}>";
+
+            // TODO: Debug code; Will remove later ---------------------
+            if (!seenStrings.Contains(type.FullName))
+            {
+                writer.WriteLine(type.FullName);
+                writer.WriteLine(resultHandler.ToString());
+                writer.WriteLine();
+                _ = seenStrings.Add(type.FullName);
+            }
+            // ---------------------------------------------------------
+
+            return resultHandler.ToStringAndClear();
         }
         return type.FullName;
     }
