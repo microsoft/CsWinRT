@@ -28,6 +28,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
@@ -120,6 +121,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
@@ -240,6 +242,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
@@ -339,6 +342,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
