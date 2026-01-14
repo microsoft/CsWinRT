@@ -48,6 +48,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
+                isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -81,6 +82,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
+                isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -141,11 +143,18 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
                 .MakeGenericReferenceType(keyType, valueType);
 
+            // If both the key and the value types are value types, it means the whole marshaller will be specialized.
+            // In that case we can emit the element marshaller type as a value type as well, so the whole thing can be
+            // fully specialized and inlined. We don't do this if either type is a reference type, because that means
+            // the generic instantiation could still be shared between different types, so we prefer to save size there.
+            bool isValueType = keyType.IsValueType && valueType.IsValueType;
+
             return ElementMarshaller(
                 arrayType: arrayType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType),
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType),
+                isValueType: isValueType,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -177,6 +186,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType),
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType),
+                isValueType: false,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -189,6 +199,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interfaceType">The interface type the element marshaller type should implement.</param>
         /// <param name="convertToUnmanagedInterfaceMethod">The <c>ConvertToUnmanaged</c> interface method being implemented.</param>
         /// <param name="convertToManagedInterfaceMethod">The <c>ConvertToManaged</c> interface method being implemented.</param>
+        /// <param name="isValueType">Indicates whether the element marshaller type should be emitted as a value type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -198,18 +209,24 @@ internal partial class InteropTypeDefinitionFactory
             TypeSignature interfaceType,
             MemberReference convertToUnmanagedInterfaceMethod,
             MemberReference convertToManagedInterfaceMethod,
+            bool isValueType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = arrayType.BaseType;
 
+            // Select the attributes and base type depending on whether we want a value type or not
+            (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
+                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType)
+                : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                attributes: attributes,
+                baseType: baseType)
             {
                 Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
             };
