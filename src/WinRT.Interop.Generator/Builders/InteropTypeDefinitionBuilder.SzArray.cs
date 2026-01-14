@@ -512,7 +512,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, interopReferences),
+                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(arrayType, interopReferences),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: arrayType,
                 proxyTypeMapSourceType: arrayType,
