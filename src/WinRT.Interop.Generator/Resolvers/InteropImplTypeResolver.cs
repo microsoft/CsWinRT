@@ -46,13 +46,11 @@ internal static class InteropImplTypeResolver
     /// Gets the "Impl" methods for a given custom-mapped or manually projected type.
     /// </summary>
     /// <param name="type">The type to get the marshaller type for.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The "Impl" methods for <paramref name="type"/>.</returns>
     public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetCustomMappedOrManuallyProjectedTypeImpl(
         TypeSignature type,
-        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
@@ -75,15 +73,11 @@ internal static class InteropImplTypeResolver
     /// Gets the "Impl" methods for a (non-generic) projected type.
     /// </summary>
     /// <param name="type">The type to get the marshaller type for.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The "Impl" methods for <paramref name="type"/>.</returns>
     public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetProjectedTypeImpl(
         TypeDefinition type,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
+        InteropReferences interopReferences)
     {
         // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types. In this
         // case, the marshalling code will just be in the declaring assembly of each of these projected interface types.
