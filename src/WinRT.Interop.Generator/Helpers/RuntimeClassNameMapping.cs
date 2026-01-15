@@ -29,29 +29,32 @@ internal class RuntimeClassNameMapping
                 return mappedTypeName;
             }
 
-            DefaultInterpolatedStringHandler typeArgumentsStringHandler = $"<";
+            DefaultInterpolatedStringHandler handler = $"{mappedTypeName}<";
 
-            foreach (TypeSignature typeArgument in genericInstanceType.TypeArguments)
+
+
+            handler.AppendLiteral(GetMappedGenericInstanceRuntimeClassName(genericInstanceType.TypeArguments[0], useWindowsUIXamlProjections));
+
+            for (int i = 1; i < genericInstanceType.TypeArguments.Count; i++)
             {
-                string mappedArgumentName = GetMappedGenericInstanceRuntimeClassName(typeArgument, useWindowsUIXamlProjections);
-                typeArgumentsStringHandler.AppendFormatted(mappedArgumentName);
-                typeArgumentsStringHandler.AppendLiteral(", ");
+                handler.AppendLiteral(", ");
+                handler.AppendLiteral(GetMappedGenericInstanceRuntimeClassName(genericInstanceType.TypeArguments[i], useWindowsUIXamlProjections));
             }
-
-            DefaultInterpolatedStringHandler resultHandler = $"{mappedTypeName}{typeArgumentsStringHandler.ToStringAndClear().TrimEnd().TrimEnd(',')}>";
+            handler.AppendLiteral(">");
 
             // TODO: Debug code; Will remove later ---------------------
             if (!seenStrings.Contains(type.FullName))
             {
                 writer.WriteLine(type.FullName);
-                writer.WriteLine(resultHandler.ToString());
+                writer.WriteLine(handler.ToString());
                 writer.WriteLine();
                 _ = seenStrings.Add(type.FullName);
             }
             // ---------------------------------------------------------
 
-            return resultHandler.ToStringAndClear();
+            return handler.ToStringAndClear();
         }
+
         return TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName)
             ? simpleMappedTypeName
             : type.FullName;
