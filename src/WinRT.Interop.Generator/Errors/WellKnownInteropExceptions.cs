@@ -430,11 +430,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve a '[GeneratedComInterface]' type.
+    /// Failed to resolve the type of an implemented interface.
     /// </summary>
-    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
     {
-        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(49, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -534,11 +534,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve a Windows Runtime interface type.
+    /// Failed to resolve a base type for a user-defined type.
     /// </summary>
-    public static WellKnownInteropWarning WindowsRuntimeInterfaceTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
     {
-        return Warning(62, $"Failed to resolve the Windows Runtime interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(62, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
     }
 
     /// <summary>
@@ -571,14 +571,6 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
     {
         return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
-    }
-
-    /// <summary>
-    /// Failed to resolve a base type for a user-defined type.
-    /// </summary>
-    public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
-    {
-        return Warning(67, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
     }
 
     /// <summary>

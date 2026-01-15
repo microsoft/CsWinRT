@@ -251,7 +251,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
     /// </summary>
-    public TypeReference ICommand => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
+    public TypeReference ICommand => field ??= SystemObjectModel.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.
@@ -2252,7 +2252,8 @@ internal sealed class InteropReferences
         return IAsyncOperation1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(resultType));
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
     }
 
     /// <summary>
@@ -2375,7 +2376,8 @@ internal sealed class InteropReferences
         return IAsyncOperationWithProgress2
             .MakeGenericReferenceType(resultType, progressType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
     }
 
     /// <summary>

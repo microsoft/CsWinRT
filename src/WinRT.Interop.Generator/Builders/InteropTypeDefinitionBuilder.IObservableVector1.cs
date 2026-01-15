@@ -489,6 +489,9 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Methods.Add(makeVectorChangedMethod);
             implType.Methods.Add(get_VectorChangedTableMethod);
             implType.Properties.Add(vectorChangedTableProperty);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, vectorType, "Impl");
         }
 
         /// <summary>
