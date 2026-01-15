@@ -88,7 +88,7 @@ internal static class TypeMapping
     /// </summary>
     private static readonly FrozenDictionary<string, string> FundamentalTypeMapping = FrozenDictionary.Create<string, string>(comparer: null,
         new("System.Boolean", "Boolean"),
-        new("System.Byte", "Byte"),
+        new("System.Byte", "UInt8"),
         new("System.Char", "Char"),
         new("System.Double", "Double"),
         new("System.Guid", "Guid"),
