@@ -12,6 +12,7 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IEnumerable"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
+[WindowsRuntimeManagedOnlyType]
 internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerable, IWindowsRuntimeInterface<IEnumerable>
 {
     /// <summary>

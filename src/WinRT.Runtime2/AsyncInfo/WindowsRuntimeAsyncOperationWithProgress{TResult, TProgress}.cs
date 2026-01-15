@@ -18,6 +18,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 /// <typeparam name="TIAsyncOperationWithProgressMethods">The <see cref="IAsyncOperationWithProgressMethodsImpl{TResult, TProgress}"/> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
