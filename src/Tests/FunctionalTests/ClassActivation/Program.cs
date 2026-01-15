@@ -260,17 +260,12 @@ class GenericFactory
         return AsyncInfo.Run<int>((token, progress) => Task.CompletedTask);
     }
 
-    // Specific test for 'AsyncInfo.Run' with transitive type arguments
+    // Specific test for 'AsyncInfo.Run' with transitive type arguments.
+    // Note: transitive type arguments aren't currently supported for this.
     [SupportedOSPlatform("windows10.0.10240.0")]
     public static IAsyncOperation<TimeSpan> MakeAsyncOperation()
     {
-        return MakeAsyncActionOperation<TimeSpan>();
-    }
-
-    [SupportedOSPlatform("windows10.0.10240.0")]
-    private static IAsyncOperation<T> MakeAsyncActionOperation<T>()
-    {
-        return AsyncInfo.Run(token => Task.FromResult(default(T)));
+        return AsyncInfo.Run(token => Task.FromResult(default(TimeSpan)));
     }
 }
 
