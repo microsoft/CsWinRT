@@ -1242,7 +1242,7 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // The type layout looks like this:
         //
-        // public ComInterfaceEntry Array;
+        // public ComInterfaceEntry IReferenceArray'1;
         // public ComInterfaceEntry IBindableVector;
         // public ComInterfaceEntry IBindableIterable;
         // public ComInterfaceEntry IVector'1;
@@ -1255,7 +1255,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IAgileObject;
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("Array"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IReferenceArray'1"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableVector"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableIterable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IVector'1"u8, FieldAttributes.Public, comInterfaceEntryType));
