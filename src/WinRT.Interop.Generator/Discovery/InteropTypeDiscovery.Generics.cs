@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Visitors;
 
@@ -28,6 +29,12 @@ internal partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Ignore types that should explicitly be excluded
+        if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
+        {
+            return;
+        }
+
         // Filter all constructed generic type signatures we have. We don't care about generic type
         // definitions (eg. 'TypedEventHandler`1<!0, !1>') for the purposes of marshalling code.
         if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
@@ -85,6 +92,12 @@ internal partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Ignore types that should explicitly be excluded
+        if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
+        {
+            return;
+        }
+
         // Filter all constructed generic type signatures we have. We don't care about
         // generic type definitions (eg. '!0[]') for the purposes of marshalling code.
         if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))

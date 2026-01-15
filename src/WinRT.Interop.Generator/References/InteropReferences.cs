@@ -194,6 +194,11 @@ internal sealed class InteropReferences
     public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Int32);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Tasks.Task{TResult}"/>.
+    /// </summary>
+    public TypeReference Task1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading.Tasks"u8, "Task`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="Func{T1, T2, TResult}"/>.
     /// </summary>
     public TypeReference Func3 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Func`3"u8);

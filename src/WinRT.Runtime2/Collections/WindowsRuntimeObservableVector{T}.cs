@@ -24,6 +24,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIVectorMethods">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIObservableVectorMethods">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

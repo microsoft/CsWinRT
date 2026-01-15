@@ -26,6 +26,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIMapMethods">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIObservableMapMethods">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
