@@ -288,18 +288,23 @@ file static class ComHelpers
     {
         foreach (Guid iid in iids)
         {
-            void* interfacePtr = null;
+            int hresult = Marshal.QueryInterface(
+                pUnk: (nint)unknownPtr,
+                iid: iid,
+                ppv: out nint interfacePtr);
 
-            try
+            WindowsRuntimeMarshal.Free((void*)interfacePtr);
+
+            const int E_NOINTERFACE = unchecked((int)0x80004002);
+
+            // If we failed due to 'E_NOINTERFACE', we want a custom message with the IID, to help debugging
+            if (hresult == E_NOINTERFACE)
             {
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
-                    pUnk: (nint)unknownPtr,
-                    iid: iid,
-                    ppv: out *(nint*)&interfacePtr));
+                throw new InvalidCastException($"Specified cast is not valid (IID: '{iid.ToString().ToUpperInvariant()}').");
             }
-            finally
+            else
             {
-                WindowsRuntimeMarshal.Free(interfacePtr);
+                Marshal.ThrowExceptionForHR(hresult);
             }
         }
     }
