@@ -69,7 +69,7 @@ internal partial class InteropMethodRewriteFactory
 
             if (parameterType.IsValueType)
             {
-                // If the return type is blittable, we can just load it directly it directly (simplest case)
+                // If the return type is blittable, we can just load it directly (simplest case)
                 if (parameterType.IsBlittable(interopReferences))
                 {
                     body.Instructions.ReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
