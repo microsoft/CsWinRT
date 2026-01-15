@@ -796,7 +796,7 @@ internal static class WindowsRuntimeExtensions
             // Arrays are Windows Runtime types if the element type is one.
             if (signature is SzArrayTypeSignature arrayType)
             {
-                // Windows Runtime only allows single-dimentional (and not jagged) arrays
+                // Windows Runtime only allows single-dimensional (and not jagged) arrays
                 if (arrayType.BaseType is SzArrayTypeSignature)
                 {
                     return false;

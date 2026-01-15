@@ -130,7 +130,7 @@ internal partial class InteropTypeDiscovery
 
         // Each SZ array also gets a series of interfaces automatically implemented by the runtime.
         // The set is fixed, so we can just hardcode those here to make sure they are also discovered.
-        // They will all be needed later, because CCWs for array objecs will need those vtable slots.
+        // They will all be needed later, because CCWs for array objects will need those vtable slots.
         foreach (GenericInstanceTypeSignature interfaceType in (ReadOnlySpan<GenericInstanceTypeSignature>)[
             interopReferences.IList1.MakeGenericReferenceType(typeSignature.BaseType),
             interopReferences.ICollection1.MakeGenericReferenceType(typeSignature.BaseType),
