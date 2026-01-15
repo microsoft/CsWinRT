@@ -65,7 +65,7 @@ internal static class InteropImplTypeResolver
             interopReferences: interopReferences,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections);
 
-        // Return the pair of methods from the ABI type in 'WinRT.Interop.dll'
+        // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'
         return (get_IIDMethod, get_VtableMethod);
     }
 
