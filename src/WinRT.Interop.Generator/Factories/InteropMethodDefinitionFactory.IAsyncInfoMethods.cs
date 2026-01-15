@@ -302,7 +302,6 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
                     { Stloc_1 },
                     { Ldloc_1 },
-                    { Ldarg_1 },
                     { Ldloca_S, loc_2_resultNative },
                     { Ldloc_1 },
                     { Ldind_I },
