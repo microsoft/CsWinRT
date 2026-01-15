@@ -130,7 +130,7 @@ unsafe
             unknownPtr: asyncActionWithProgressPtr,
             iids: [
                 new Guid("0EDE398F-0090-574E-AD30-E152B433BF6A"),   // 'IAsyncActionWithProgress<int>'
-                new Guid("0DB2462F-B6D6-5A6C-8834-B530BAAA45FD")]); // 'IAsyncInfo'
+                new Guid("00000036-0000-0000-C000-000000000046")]); // 'IAsyncInfo'
     }
     finally
     {
@@ -150,7 +150,7 @@ unsafe
             unknownPtr: asyncOperationPtr,
             iids: [
                 new Guid("1AE01209-1ACA-51D3-A080-8B1214E0A39E"),   // 'IAsyncOperation<TimeSpan>'
-                new Guid("0DB2462F-B6D6-5A6C-8834-B530BAAA45FD")]); // 'IAsyncInfo'
+                new Guid("00000036-0000-0000-C000-000000000046")]); // 'IAsyncInfo'
     }
     finally
     {
