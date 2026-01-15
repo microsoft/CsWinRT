@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -18,10 +19,9 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 internal static partial class InteropTypeDiscovery
 {
     /// <summary>
-    /// A thread-local <see cref="TypeSignatureEquatableSet.Builder"/> instance that can be reused by discovery logic.
+    /// A pool of <see cref="TypeSignatureEquatableSet.Builder"/> instances that can be reused by discovery logic.
     /// </summary>
-    [ThreadStatic]
-    private static TypeSignatureEquatableSet.Builder? TypeSignatures;
+    private static readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> TypeSignatureBuilderPool = [];
 
     /// <summary>
     /// Tries to track a given composable Windows Runtime type.
@@ -116,8 +116,17 @@ internal static partial class InteropTypeDiscovery
             return;
         }
 
-        // Reuse the thread-local builder to track all implemented interfaces for the current type
-        TypeSignatureEquatableSet.Builder interfaces = TypeSignatures ??= new TypeSignatureEquatableSet.Builder();
+        // Reuse a builder to track all implemented interfaces for the current type, or create a new one.
+        // Note, we can't just have a single thread-local builder that we reuse here, as this method might
+        // be called recursively in some scenarios. For instance, consider a type that implements a generic
+        // interface such as 'IList<T>' (some constructed instantiation of it). As part of the interface
+        // discovery logic, we'll also be tracking the additional 'ReadOnlyCollection<T>' type, as that's
+        // needed from the 'IListAdapter<T>.GetView' method. That type will itself be analyzed here just
+        // like any other user-define type, and so on. So the pool is needed to avoid creating conflicts.
+        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
+        {
+            interfaces = new TypeSignatureEquatableSet.Builder();
+        }
 
         // Since we're reusing the builder for all types, make sure to clear it first
         interfaces.Clear();
@@ -209,5 +218,8 @@ internal static partial class InteropTypeDiscovery
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
+
+        // Return the builder to the pool for reuse
+        TypeSignatureBuilderPool.Add(interfaces);
     }
 }
