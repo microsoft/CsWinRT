@@ -812,14 +812,14 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // The type layout looks like this:
         //
-        // public ComInterfaceEntry IKeyValuePair;
+        // public ComInterfaceEntry IKeyValuePair'2;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
         // public ComInterfaceEntry IAgileObject;
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair'2"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -1243,6 +1243,11 @@ internal static partial class WellKnownTypeDefinitionFactory
         // The type layout looks like this:
         //
         // public ComInterfaceEntry Array;
+        // public ComInterfaceEntry IBindableVector;
+        // public ComInterfaceEntry IBindableIterable;
+        // public ComInterfaceEntry IVector'1;
+        // public ComInterfaceEntry IIterable'1;
+        // public ComInterfaceEntry IVectorView'1;
         // public ComInterfaceEntry IPropertyValue;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
@@ -1251,6 +1256,11 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
         interfaceEntriesType.Fields.Add(new FieldDefinition("Array"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableVector"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableIterable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IVector'1"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IIterable'1"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IVectorView'1"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
