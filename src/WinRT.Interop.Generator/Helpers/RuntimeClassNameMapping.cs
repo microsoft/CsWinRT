@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
 
@@ -10,15 +8,6 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 
 internal class RuntimeClassNameMapping
 {
-
-    // TODO: Debug code; Will remove later ---------------------
-#pragma warning disable IDE0044 // Add readonly modifier
-    private static readonly string printPath = @"C:\Users\kythant\staging\MappedRuntimeClassNames.txt";
-    private static HashSet<string> seenStrings = [];
-    private static StreamWriter writer = new(printPath, append: false);
-#pragma warning restore IDE0044 // Add readonly modifier
-    // ---------------------------------------------------------
-
     /// <summary>
     /// Builds the projected WinRT runtime class name for a (potentially generic) type,
     /// applying known type-name mappings and recursively formatting generic arguments.
@@ -57,16 +46,6 @@ internal class RuntimeClassNameMapping
             }
 
             handler.AppendLiteral(">");
-
-            // TODO: Debug code; Will remove later ---------------------
-            if (!seenStrings.Contains(type.FullName))
-            {
-                writer.WriteLine(type.FullName);
-                writer.WriteLine(handler.ToString());
-                writer.WriteLine();
-                _ = seenStrings.Add(type.FullName);
-            }
-            // ---------------------------------------------------------
 
             return handler.ToStringAndClear();
         }
