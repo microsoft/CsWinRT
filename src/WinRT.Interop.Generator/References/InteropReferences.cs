@@ -2252,7 +2252,8 @@ internal sealed class InteropReferences
         return IAsyncOperation1
             .MakeGenericReferenceType(resultType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(resultType));
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
     }
 
     /// <summary>
@@ -2375,7 +2376,8 @@ internal sealed class InteropReferences
         return IAsyncOperationWithProgress2
             .MakeGenericReferenceType(resultType, progressType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
+            .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
     }
 
     /// <summary>

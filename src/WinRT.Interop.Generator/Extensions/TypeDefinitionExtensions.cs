@@ -26,24 +26,33 @@ internal static class TypeDefinitionExtensions
         public bool IsStatic => type.IsAbstract && type.IsSealed;
 
         /// <summary>
+        /// Gets whether a given type has a base type other than <see cref="object"/>.
+        /// </summary>
+        /// <param name="baseType">The resulting base type, if available.</param>
+        public bool HasBaseType([NotNullWhen(true)] out ITypeDefOrRef? baseType)
+        {
+            baseType = type.BaseType;
+
+            return baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object });
+        }
+
+        /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.
         /// </summary>
         /// <param name="failedResolutionBaseType">The <see cref="ITypeDefOrRef"/> for the first base type that failed resolution, if any.</param>
         /// <returns>Whether the input <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.</returns>
         public bool IsTypeHierarchyFullyResolvable([NotNullWhen(false)] out ITypeDefOrRef? failedResolutionBaseType)
         {
-            ITypeDefOrRef? baseType = type.BaseType;
+            TypeDefinition currentDefinition = type;
 
-            while (baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object }))
+            while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
-                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
+                if (!baseType.IsFullyResolvable(out currentDefinition!))
                 {
                     failedResolutionBaseType = baseType;
 
                     return false;
                 }
-
-                baseType = baseDefinition.BaseType;
             }
 
             failedResolutionBaseType = null;
@@ -224,38 +233,18 @@ internal static class TypeDefinitionExtensions
         {
             yield return type;
 
-            ITypeDefOrRef? baseType = type.BaseType;
+            TypeDefinition currentDefinition = type;
 
-            while (baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object }))
+            while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
                 // If we can't resolve the current base type, we have to stop.
                 // Callers should validate the type hierarchy before calling this.
-                if (!baseType.IsFullyResolvable(out TypeDefinition? baseDefinition))
+                if (!baseType.IsFullyResolvable(out currentDefinition!))
                 {
                     yield break;
                 }
 
-                yield return baseDefinition;
-
-                baseType = baseDefinition.BaseType;
-            }
-        }
-
-        /// <summary>
-        /// Enumerates all interface types implementation by the specified type, including those implemented by base types.
-        /// </summary>
-        /// <returns>The sequence of interface types implemented by the input type.</returns>
-        /// <remarks>
-        /// This method might return the same interface types multiple times, if implemented by multiple types in the hierarchy.
-        /// </remarks>
-        public IEnumerable<InterfaceImplementation> EnumerateAllInterfaces()
-        {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf())
-            {
-                foreach (InterfaceImplementation implementation in currentType.Interfaces)
-                {
-                    yield return implementation;
-                }
+                yield return currentDefinition;
             }
         }
 
