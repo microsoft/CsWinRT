@@ -439,7 +439,12 @@ internal partial class InteropTypeDiscovery
             typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
             typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
         {
-            discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
+            TryTrackSzArrayType(
+                typeSignature: typeSignature.TypeArguments[0].MakeSzArrayType(),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             return;
         }
