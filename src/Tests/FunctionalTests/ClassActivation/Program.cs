@@ -158,6 +158,28 @@ unsafe
     }
 }
 
+unsafe
+{
+    void* asyncOperationPtr = WindowsRuntimeMarshal.ConvertToUnmanaged((Rect[])[]);
+
+    try
+    {
+        ComHelpers.EnsureQueryInterface(
+            unknownPtr: asyncOperationPtr,
+            iids: [
+                new Guid("8A444256-D661-5E9A-A72B-D8F1D7962D0C"),   // 'IReferenceArray<Rect>'
+                new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),   // 'IList'
+                new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
+                new Guid("CCA9612B-7B87-5AEA-AF49-82EA37B5265C"),   // 'IList<Rect>'
+                new Guid("F7A49934-2BCD-50B0-A10A-750045D95578"),   // 'IEnumerable<Rect>'
+                new Guid("ED2C6CB5-16F7-5AC2-B947-CD6D2F587A20")]); // 'IReadOnlyList<Rect>'
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(asyncOperationPtr);
+    }
+}
+
 sealed class TestComposable : Composable
 {
 }
