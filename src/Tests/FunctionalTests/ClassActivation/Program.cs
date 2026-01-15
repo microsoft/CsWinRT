@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -85,7 +85,7 @@ unsafe
             unknownPtr: constructedDerivedTypePtr,
             iids: [
                 new Guid("E2FCC7C1-3BFC-5A0B-B2B0-72E769D1CB7E"),   // 'IEnumerable<string>'
-                new Guid("07F69483-8097-5F92-BB53-068DC81F281A"),   // 'IEnumerable'
+                new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
                 new Guid("E8A8353A-767E-5C47-97CF-E0336C354311"),   // 'IClosable'
                 new Guid("8311ED02-4F46-5CAF-BF01-2AE354C04BF5")]); // 'IMapChangedEventArgs<IEnumerable>'
     }
@@ -107,7 +107,7 @@ unsafe
             unknownPtr: genericTypePtr,
             iids: [
                 new Guid("30160817-1D7D-54E9-99DB-D7636266A476"),   // 'IEnumerable<bool>'
-                new Guid("07F69483-8097-5F92-BB53-068DC81F281A"),   // 'IEnumerable'
+                new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
                 new Guid("907661AB-C065-5A14-9AC3-2FEB0D164DDA"),   // 'IReadOnlyDictionary<bool, float>'
                 new Guid("3631E370-2F65-5F4A-8364-1619C536DB12"),   // 'IEnumerable<KeyValuePair<bool, float>>'
                 new Guid("F61E8483-D7A0-5840-9DCF-40423CCC97D0")]); // 'IMapChangedEventArgs<float>'
