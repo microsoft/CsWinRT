@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -86,7 +86,7 @@ unsafe
             iids: [
                 new Guid("E2FCC7C1-3BFC-5A0B-B2B0-72E769D1CB7E"),   // 'IEnumerable<string>'
                 new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
-                new Guid("E8A8353A-767E-5C47-97CF-E0336C354311"),   // 'IClosable'
+                new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),   // 'IClosable'
                 new Guid("8311ED02-4F46-5CAF-BF01-2AE354C04BF5")]); // 'IMapChangedEventArgs<IEnumerable>'
     }
     finally
