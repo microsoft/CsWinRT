@@ -133,10 +133,8 @@ internal partial class InteropTypeDiscovery
         // They will all be needed later, because CCWs for array objects will need those vtable slots.
         foreach (GenericInstanceTypeSignature interfaceType in (ReadOnlySpan<GenericInstanceTypeSignature>)[
             interopReferences.IList1.MakeGenericReferenceType(typeSignature.BaseType),
-            interopReferences.ICollection1.MakeGenericReferenceType(typeSignature.BaseType),
             interopReferences.IEnumerable1.MakeGenericReferenceType(typeSignature.BaseType),
-            interopReferences.IReadOnlyList1.MakeGenericReferenceType(typeSignature.BaseType),
-            interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(typeSignature.BaseType)])
+            interopReferences.IReadOnlyList1.MakeGenericReferenceType(typeSignature.BaseType)])
         {
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
                 typeSignature: interfaceType,
