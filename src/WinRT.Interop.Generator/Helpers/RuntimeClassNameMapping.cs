@@ -31,8 +31,6 @@ internal class RuntimeClassNameMapping
 
             DefaultInterpolatedStringHandler handler = $"{mappedTypeName}<";
 
-
-
             handler.AppendLiteral(GetMappedGenericInstanceRuntimeClassName(genericInstanceType.TypeArguments[0], useWindowsUIXamlProjections));
 
             for (int i = 1; i < genericInstanceType.TypeArguments.Count; i++)
@@ -40,6 +38,7 @@ internal class RuntimeClassNameMapping
                 handler.AppendLiteral(", ");
                 handler.AppendLiteral(GetMappedGenericInstanceRuntimeClassName(genericInstanceType.TypeArguments[i], useWindowsUIXamlProjections));
             }
+
             handler.AppendLiteral(">");
 
             // TODO: Debug code; Will remove later ---------------------
