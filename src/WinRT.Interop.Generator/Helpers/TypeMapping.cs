@@ -84,7 +84,7 @@ internal static class TypeMapping
         new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")));
 
     /// <summary>
-    /// Mapping of System.* to their corresponding WinRT Fundamental Types
+    /// Mapping of built-in <c>System.*</c> to their corresponding Windows Runtime fundamental types.
     /// </summary>
     private static readonly FrozenDictionary<string, string> FundamentalTypeMapping = FrozenDictionary.Create<string, string>(comparer: null,
         new("System.Boolean", "Boolean"),
@@ -135,10 +135,8 @@ internal static class TypeMapping
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? mappedName)
     {
-        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out string? fundamentalMappedResult))
+        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out mappedName))
         {
-            mappedName = fundamentalMappedResult;
-
             return true;
         }
 
