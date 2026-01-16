@@ -93,7 +93,7 @@ file static unsafe class TimeSpanArrayPropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.InspectableArray;
+        *value = PropertyType.TimeSpanArray;
 
         return WellKnownErrorCodes.S_OK;
     }

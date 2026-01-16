@@ -93,7 +93,7 @@ file static unsafe class StringArrayPropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.InspectableArray;
+        *value = PropertyType.StringArray;
 
         return WellKnownErrorCodes.S_OK;
     }
