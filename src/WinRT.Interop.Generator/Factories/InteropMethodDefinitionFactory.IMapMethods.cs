@@ -156,7 +156,7 @@ internal partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>Remove</c> method for some <c>IMaplt;K, V&gt;</c> interface.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Remove</c> method for some <c>IMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The vtable type for <paramref name="dictionaryType"/>.</param>
