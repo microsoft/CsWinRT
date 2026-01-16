@@ -16,51 +16,46 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
-    /// Helpers for method types for constructed <c>IVectorView&lt;T&gt;</c> interfaces.
+    /// Helpers for method types for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> interfaces.
     /// </summary>
-    public static class IVectorViewMethods
+    public static class IMapChangedEventArgs1Methods
     {
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>GetAt</c> method for some <c>IVectorView&lt;T&gt;</c> interface.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>get_Key</c> export method.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="vftblType">The vtable type for <paramref name="readOnlyListType"/>.</param>
+        /// <param name="argsType">The <see cref="TypeSignature"/> for the args type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <remarks>
-        /// This method can also be used to define the <c>GetAt</c> method for <c>IVector&lt;T&gt;</c> interfaces.
-        /// </remarks>
-        public static MethodDefinition GetAt(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition vftblType,
+        public static MethodDefinition Key(
+            GenericInstanceTypeSignature argsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
+            TypeSignature keyType = argsType.TypeArguments[0];
+            TypeSignature keyAbiType = keyType.GetAbiType(interopReferences);
 
-            // Define the 'GetAt' method as follows:
+            // Define the 'Key' method as follows:
             //
-            // public static <TYPE_ARGUMENT> GetAt(WindowsRuntimeObjectReference thisReference, uint index)
-            MethodDefinition getAtMethod = new(
-                name: "GetAt"u8,
+            // public static <TYPE_ARGUMENT> Key(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition keyMethod = new(
+                name: "Key"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32]))
+                    returnType: keyType.Import(module),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             { NoInlining = true };
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
-            //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
+            //   [2]: '<ABI_KEY_TYPE>' (the native value that was retrieved)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_resultNative = new(elementAbiType.Import(module));
+            CilLocalVariable loc_2_keyNative = new(keyAbiType.Import(module));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -68,10 +63,10 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction nop_finallyEnd = new(Nop);
             CilInstruction nop_returnValueRewrite = new(Nop);
 
-            // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody()
+            // Create a method body for the 'Key' method
+            keyMethod.CilMethodBody = new CilMethodBody()
             {
-                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_resultNative },
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_keyNative },
                 Instructions =
                 {
                     // Initialize 'thisValue'
@@ -84,16 +79,12 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
                     { Stloc_1 },
                     { Ldloc_1 },
-                    { Ldarg_1 },
-                    { Ldloca_S, loc_2_resultNative },
+                    { Ldloca_S, loc_2_keyNative },
                     { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
-                    { Ldfld, vftblType.GetField("GetAt"u8) },
-
-                    // This 'calli' instruction is always using 'IReadOnlyList1GetAtImpl', but the signature for
-                    // the vtable slot for 'GetAt' for 'IVector<T>' is identical, so doing so is safe in this case.
-                    { Calli, WellKnownTypeSignatureFactory.IReadOnlyList1GetAtImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Ldfld, interopDefinitions.IMapChangedEventArgsVftbl.GetField("get_Key"u8) },
+                    { Calli, WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
@@ -102,6 +93,8 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
                     { Endfinally },
                     { nop_finallyEnd },
+
+                    // Marshal and return the result
                     { nop_returnValueRewrite }
                 },
                 ExceptionHandlers =
@@ -119,12 +112,12 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track rewriting the return value for this method
             emitState.TrackReturnValueMethodRewrite(
-                returnType: elementType,
-                method: getAtMethod,
+                returnType: keyType,
+                method: keyMethod,
                 marker: nop_returnValueRewrite,
-                source: loc_2_resultNative);
+                source: loc_2_keyNative);
 
-            return getAtMethod;
+            return keyMethod;
         }
     }
 }

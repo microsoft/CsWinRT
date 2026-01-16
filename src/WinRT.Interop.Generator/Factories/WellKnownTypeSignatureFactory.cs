@@ -204,26 +204,6 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
-    /// Creates a type signature for the get accessor for some property returning a typed value.
-    /// </summary>
-    /// <param name="returnValue">The type of return value.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static MethodSignature get_TypedRetVal(TypeSignature returnValue, InteropReferences interopReferences)
-    {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <RETURN_VALUE>*, HRESULT>'
-        return new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: interopReferences.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                returnValue.MakePointerType()]);
-    }
-
-    /// <summary>
     /// Creates a type signature for the get accessor for some property returning an untyped value (any type).
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -243,13 +223,18 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
-    /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate, taking objects for both parameters.
+    /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate.
     /// </summary>
+    /// <param name="senderType">The sender type for the vtable type.</param>
+    /// <param name="argsType">The args type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static MethodSignature InvokeImpl(InteropReferences interopReferences)
+    public static MethodSignature InvokeImpl(
+        TypeSignature senderType,
+        TypeSignature argsType,
+        InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT>'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <SENDER_TYPE>, <ARGS_TYPE>, HRESULT>'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -258,8 +243,8 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+                senderType,
+                argsType]);
     }
 
     /// <summary>
@@ -409,7 +394,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -418,7 +403,6 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CorLibTypeFactory.UInt32,
                 interopReferences.CorLibTypeFactory.UInt32,
                 elementType.MakePointerType(),
                 interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
@@ -598,7 +582,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, int, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
         // This is the same as 'IVectorView<T>.GetMany', so we can reuse that one here (like the methods above).
         return IReadOnlyList1GetManyImpl(elementType, interopReferences);
     }
@@ -803,6 +787,25 @@ internal static class WellKnownTypeSignatureFactory
     public static MethodSignature IDictionary2ClearImpl(InteropReferences interopReferences)
     {
         return IList1ClearImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>get_CollectionChange</c> vtable entry for some map changed event args.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IMapChangedEventArgs1get_CollectionChangeImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CollectionChange.MakePointerType()]);
     }
 
     /// <summary>

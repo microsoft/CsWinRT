@@ -70,6 +70,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     { Ldarg_0 },
                     { Ldloca_S, loc_0_resultNative },
+                    { Conv_U },
                     { Ldarg_0 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField(vftblMethodName) },

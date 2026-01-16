@@ -41,6 +41,11 @@ internal sealed class InteropGeneratorEmitState
     private readonly ConcurrentDictionary<(TypeSignature Key, TypeSignature Value), TypeDefinition> _mapVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
 
     /// <summary>
+    /// A map to allow reusing vtable types for applicable <c>IDelegate</c> interfaces.
+    /// </summary>
+    private readonly ConcurrentDictionary<(TypeSignature Sender, TypeSignature Args), TypeDefinition> _delegateVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
+
+    /// <summary>
     /// Indicates whether the current state is readonly.
     /// </summary>
     private volatile bool _isReadOnly;
@@ -88,7 +93,7 @@ internal sealed class InteropGeneratorEmitState
     /// <param name="returnType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
-    /// <param name="source"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Source" path="/node()"/></param>
+    /// <param name="source"><inheritdoc cref="MethodRewriteInfo.ReturnValue.Source" path="/node()"/></param>
     public void TrackReturnValueMethodRewrite(
         TypeSignature returnType,
         MethodDefinition method,
@@ -97,7 +102,7 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new ReturnTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.ReturnValue
         {
             Type = returnType,
             Method = method,
@@ -119,11 +124,65 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new RetValTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.RetVal
         {
             Type = retValType,
             Method = method,
             Marker = marker
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves loading a managed parameter in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.ManagedParameter.ParameterIndex" path="/node()"/></param>
+    public void TrackManagedParameterMethodRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction marker,
+        int parameterIndex)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.ManagedParameter
+        {
+            Type = parameterType,
+            Method = method,
+            Marker = marker,
+            ParameterIndex = parameterIndex
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves loading a native parameter in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="tryMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.TryMarker" path="/node()"/></param>
+    /// <param name="loadMarker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    /// <param name="finallyMarker"><inheritdoc cref="MethodRewriteInfo.NativeParameter.FinallyMarker" path="/node()"/></param>
+    /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.NativeParameter.ParameterIndex" path="/node()"/></param>
+    public void TrackNativeParameterMethodRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction tryMarker,
+        CilInstruction loadMarker,
+        CilInstruction finallyMarker,
+        int parameterIndex)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.NativeParameter
+        {
+            Type = parameterType,
+            Method = method,
+            TryMarker = tryMarker,
+            Marker = loadMarker,
+            FinallyMarker = finallyMarker,
+            ParameterIndex = parameterIndex
         });
     }
 
@@ -184,6 +243,32 @@ internal sealed class InteropGeneratorEmitState
         ThrowIfReadOnly();
 
         return _mapVftblTypes.GetOrAdd((keyType, valueType), vftblType);
+    }
+
+    /// <summary>
+    /// Tries to get a previously registered vtable type for an <c>IDelegate</c> interface.
+    /// </summary>
+    /// <param name="senderType">The sender type.</param>
+    /// <param name="argsType">The args type.</param>
+    /// <param name="vftblType">The resulting vtable type, if present.</param>
+    /// <returns>Whether <paramref name="vftblType"/> was successfully retrieved.</returns>
+    public bool TryGetDelegateVftblType(TypeSignature senderType, TypeSignature argsType, [NotNullWhen(true)] out TypeDefinition? vftblType)
+    {
+        return _delegateVftblTypes.TryGetValue((senderType, argsType), out vftblType);
+    }
+
+    /// <summary>
+    /// Gets or adds a vtable type for an <c>IDelegate</c> interface.
+    /// </summary>
+    /// <param name="senderType">The key type.</param>
+    /// <param name="argsType">The value type.</param>
+    /// <param name="vftblType">The created vtable type for <paramref name="senderType"/>.</param>
+    /// <returns>The vtable type that should be used.</returns>
+    public TypeDefinition GetOrAddDelegateVftblType(TypeSignature senderType, TypeSignature argsType, TypeDefinition vftblType)
+    {
+        ThrowIfReadOnly();
+
+        return _delegateVftblTypes.GetOrAdd((senderType, argsType), vftblType);
     }
 
     /// <summary>
