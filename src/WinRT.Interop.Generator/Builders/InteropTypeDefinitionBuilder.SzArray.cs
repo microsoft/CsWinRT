@@ -108,6 +108,15 @@ internal partial class InteropTypeDefinitionBuilder
 
                 module.TopLevelTypes.Add(marshallerType);
             }
+            else if (elementType.IsTypeOfObject())
+            {
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Object(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
             else if (elementType.IsTypeOfString())
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.String(
