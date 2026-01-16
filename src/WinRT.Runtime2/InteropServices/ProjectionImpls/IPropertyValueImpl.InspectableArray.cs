@@ -100,7 +100,7 @@ file static unsafe class InspectableArrayPropertyValueImpl
 
     /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getinspectablearray"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetInspectableArray(void* thisPtr, int* size, void*** value)
+    internal static HRESULT GetInspectableArray(void* thisPtr, uint* size, void*** value)
     {
         if (size is null || value is null)
         {
@@ -111,50 +111,14 @@ file static unsafe class InspectableArrayPropertyValueImpl
         {
             object[] thisObject = ComInterfaceDispatch.GetInstance<object[]>((ComInterfaceDispatch*)thisPtr);
 
-            *size = thisObject.Length;
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            static extern void ConvertToUnmanaged(
+                [UnsafeAccessorType("ABI.System.Object.<object>ArrayMarshaller, WinRT.Interop.dll")] object? _,
+                object[] source,
+                out uint size,
+                out void** array);
 
-            // Try to create and initialize the array locally first, we'll transfer it in case we succeed
-            void** arrayPtr = (void**)Marshal.AllocCoTaskMem(thisObject.Length * sizeof(void*));
-            int i = 0;
-            bool success = false;
-
-            try
-            {
-                // Marshal all elements in the managed array
-                for (; i < thisObject.Length; i++)
-                {
-                    arrayPtr[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(thisObject[i]).DetachThisPtrUnsafe();
-                }
-
-                success = true;
-            }
-            finally
-            {
-                if (!success)
-                {
-                    // Release all array elements marshalled so far
-                    for (int j = 0; j < i; j++)
-                    {
-                        void* objectPtr = arrayPtr[j];
-
-                        // Array elements can be 'null' even if marshalled correctly.
-                        // That is, it's completely normal for some objects in the
-                        // initial managed array to also be 'null' to begin with.
-                        if (objectPtr is not null)
-                        {
-                            _ = IUnknownVftbl.ReleaseUnsafe(objectPtr);
-                        }
-                    }
-
-                    // Also release the array itself (we're not giving ownership to the caller)
-                    Marshal.FreeCoTaskMem((nint)value);
-                }
-            }
-
-            // We only reach this point if we didn't throw an exception when trying to marshal the
-            // managed array. This means we own the array and all elements were correctly marshalled.
-            // We can now safely transfer ownership to the caller.
-            *value = arrayPtr;
+            ConvertToUnmanaged(null, thisObject, out *size, out *value);
 
             return WellKnownErrorCodes.S_OK;
         }
