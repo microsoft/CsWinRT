@@ -2984,6 +2984,11 @@ if (GetType() == typeof(%))
             }
         }
 
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         w.write(R"(
 protected %(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
   :base(_, activationFactoryObjectReference, in iid)
@@ -6333,7 +6338,7 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
     void write_static_composing_factory_method(writer& w, TypeDef const& iface, MethodDef const& method)
     {
-        if (is_special(method))
+        if (is_special(method) || settings.reference_projection)
         {
             return;
         }
@@ -6394,23 +6399,16 @@ public override unsafe void Invoke(
             callback_class,
             callback_class,
             bind([&](writer& w) {
-                if (settings.reference_projection)
-                {
-                    w.write("throw null;");
-                }
-                else
-                {
-                    w.write(R"(
+                w.write(R"(
 using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
 void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
 %
 %
 )",
-                    cache_object,
-                    bind(write_composable_constructor_params_as_variables, signature),
-                    bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
-                }
+                cache_object,
+                bind(write_composable_constructor_params_as_variables, signature),
+                bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
             }));
     }
 
@@ -8727,10 +8725,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 {
 %
 
-% %(WindowsRuntimeObjectReference nativeObjectReference)
-: base(nativeObjectReference)
-{
-%%}
+%
 
 %
 %
@@ -8752,25 +8747,39 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             // ObjectReference constructor
-            type.Flags().Sealed() ? "internal" : "protected internal",
-            type_name,
             [&](writer& w)
             {
-                if (!type.Flags().Sealed())
+                if (settings.reference_projection)
                 {
-                    w.write(R"(
+                   return;
+                }
+
+                w.write(R"(
+% %(WindowsRuntimeObjectReference nativeObjectReference)
+: base(nativeObjectReference)
+{
+%%}
+)",
+                type.Flags().Sealed() ? "internal" : "protected internal",
+                type_name,
+                [&](writer& w)
+                {
+                    if (!type.Flags().Sealed())
+                    {
+                        w.write(R"(
 if (GetType() == typeof(%))
 {
 % = NativeObjectReference;
 })",
-                    type.TypeName(),
-                    bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
-                }
-            },
-            [&](writer& w)
-            {
-                if (!gc_pressure_amount) return;
-                w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                        type.TypeName(),
+                        bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
+                    }
+                },
+                [&](writer& w)
+                {
+                    if (!gc_pressure_amount) return;
+                    w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                });
             },
             // Other constructors
             bind<write_attributed_types>(type),

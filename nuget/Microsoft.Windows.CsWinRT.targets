@@ -15,9 +15,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
     <DebugSymbols Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</DebugSymbols>
-    <ProduceReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceReferenceAssembly>
-    <ProduceReferenceAssemblyInOutDir Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceReferenceAssemblyInOutDir>
-    <TargetRefPath Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true' ">$([MSBuild]::NormalizePath($(TargetDir), 'ref', $(TargetFileName)))</TargetRefPath>      
+    <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
+    <ProduceReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</ProduceReferenceAssembly>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
 
     <!--
@@ -67,6 +66,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
+  </ItemGroup>
+
+  <!-- TODO: Remove once ProduceOnlyReferenceAssembly is set earlier for _DebugSymbolsIntermediatePath to be set correctly.
+             This only impacts incremental builds.
+    -->
+  <ItemGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
