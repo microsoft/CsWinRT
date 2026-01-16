@@ -56,7 +56,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTGeneratorForwarderAssemblyDirectory Condition="'$(CsWinRTGeneratorForwarderAssemblyDirectory)' == ''">$(IntermediateOutputPath)\forwarder\</CsWinRTGeneratorForwarderAssemblyDirectory>
     <_CsWinRTGeneratorForwarderAssemblyPath>$(CsWinRTGeneratorForwarderAssemblyDirectory)$(AssemblyName).dll</_CsWinRTGeneratorForwarderAssemblyPath>
-    <_CsWinRTRefAssembly>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)ref\$(AssemblyName).dll'))</_CsWinRTRefAssembly>
+    <_CsWinRTRefAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)$(AssemblyName).dll'))</_CsWinRTRefAssemblyPath>
 
     <!--
       Default property values for `cswinrtprojectiongen`.
@@ -218,31 +218,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target
-    Name="_CopyCsWinRTProjectionReferenceAssembly"
-    DependsOnTargets="Compile"
-    BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"    
-    Inputs="@(IntermediateAssembly)"
-    Outputs="$(_CsWinRTRefAssembly)"
-    Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
-
-    <MakeDir Directories="$(IntermediateOutputPath)ref" />
-
-    <Copy SourceFiles="@(IntermediateAssembly)"
-      DestinationFiles="$(_CsWinRTRefAssembly)" />
-
-    <ItemGroup>
-      <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
-      <FileWrites Include="$(_CsWinRTRefAssembly)"/>
-
-      <!-- Copy reference projection dll to ref folder in output. -->
-      <_SourceItemsToCopyToOutputDirectory
-        Include="$(_CsWinRTRefAssembly)"
-        TargetPath="ref\$(AssemblyName).dll" />
-    </ItemGroup>
-
-  </Target>  
-
   <!--
     ============================================================
                         _RunCsWinRTForwarderImplGenerator
@@ -253,10 +228,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTForwarderImplGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTForwarderImplGenerator"
-    DependsOnTargets="Compile;_ResolveCsWinRToolsDirectory;_CopyCsWinRTProjectionReferenceAssembly"
+    DependsOnTargets="Compile;_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"    
-    Inputs="@(ReferencePath);$(_CsWinRTRefAssembly)"
-    Outputs="@(IntermediateAssembly);$(_CsWinRTGeneratorForwarderAssemblyPath)"
+    Inputs="@(ReferencePath);@(IntermediateAssembly)"
+    Outputs="$(_CsWinRTGeneratorForwarderAssemblyPath)"
     Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
 
     <MakeDir Directories="$(CsWinRTGeneratorForwarderAssemblyDirectory)" />
@@ -264,7 +239,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Invoke 'cswinrtimplgen' -->
     <RunCsWinRTForwarderImplGenerator
       ReferenceAssemblyPaths="@(ReferencePath)"
-      OutputAssemblyPath="$(_CsWinRTRefAssembly)"
+      OutputAssemblyPath="@(IntermediateAssembly)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorForwarderAssemblyDirectory)"
       AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)"
       CsWinRTToolsDirectory="$(CsWinRTImplEffectiveToolsDirectory)"
@@ -276,6 +251,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
       <ItemGroup>
+        <!-- Copy reference assembly to ref folder in output. -->
+        <_SourceItemsToCopyToOutputDirectory
+          Include="@(IntermediateAssembly)"
+          TargetPath="ref\$(AssemblyName).dll" />
+          
         <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
         <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
 
@@ -298,7 +278,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           generator for project reference scenarios.
       -->
       <TargetPathWithTargetPlatformMoniker Update="$(TargetPath)">
-        <ReferenceAssembly>$(_CsWinRTRefAssembly)</ReferenceAssembly>
+        <ReferenceAssembly>$(_CsWinRTRefAssemblyPath)</ReferenceAssembly>
         <CsWinRTInputs>@(CsWinRTInputs)</CsWinRTInputs>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
