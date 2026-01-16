@@ -157,13 +157,13 @@ public static unsafe class INotifyCollectionChangedImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
 
             NotifyCollectionChangedEventHandler? managedHandler = NotifyCollectionChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = CollectionChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = CollectionChangedTable.GetOrCreateValue(thisObject).AddEventHandler(managedHandler);
 
-            unboxedValue.CollectionChanged += managedHandler;
+            thisObject.CollectionChanged += managedHandler;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -179,11 +179,11 @@ public static unsafe class INotifyCollectionChangedImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
 
-            if (unboxedValue is not null && CollectionChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out NotifyCollectionChangedEventHandler? managedHandler))
+            if (thisObject is not null && CollectionChangedTable.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out NotifyCollectionChangedEventHandler? managedHandler))
             {
-                unboxedValue.CollectionChanged -= managedHandler;
+                thisObject.CollectionChanged -= managedHandler;
             }
 
             return WellKnownErrorCodes.S_OK;

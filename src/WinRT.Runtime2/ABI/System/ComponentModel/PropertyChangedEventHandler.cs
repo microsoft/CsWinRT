@@ -222,9 +222,9 @@ file static unsafe class PropertyChangedEventHandlerImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue(
+            thisObject(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
                 PropertyChangedEventArgsMarshaller.ConvertToManaged(e)!);
 
@@ -293,9 +293,9 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+            *result = PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(thisObject).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

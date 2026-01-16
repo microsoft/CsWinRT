@@ -151,9 +151,9 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
-            object? item = unboxedValue.GetAt(index);
+            object? item = thisObject.GetAt(index);
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(item).DetachThisPtrUnsafe();
 
@@ -176,9 +176,9 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
-            *size = unboxedValue.Size;
+            *size = thisObject.Size;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -199,11 +199,11 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<BindableIReadOnlyListAdapter>((ComInterfaceDispatch*)thisPtr);
 
             object? target = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
-            *result = unboxedValue.IndexOf(target, out *index);
+            *result = thisObject.IndexOf(target, out *index);
 
             return WellKnownErrorCodes.S_OK;
         }

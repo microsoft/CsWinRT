@@ -227,9 +227,9 @@ file static unsafe class ExceptionReferenceImpl
 
         try
         {
-            global::System.Exception unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
+            global::System.Exception thisObject = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
 
-            *result = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue);
+            *result = ExceptionMarshaller.ConvertToUnmanaged(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }

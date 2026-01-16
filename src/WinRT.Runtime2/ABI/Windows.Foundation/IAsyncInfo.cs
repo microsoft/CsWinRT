@@ -189,9 +189,9 @@ public static unsafe class IAsyncInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(unboxedValue.ErrorCode);
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(thisObject.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -212,9 +212,9 @@ public static unsafe class IAsyncInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *id = unboxedValue.Id;
+            *id = thisObject.Id;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -235,9 +235,9 @@ public static unsafe class IAsyncInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *status = unboxedValue.Status;
+            *status = thisObject.Status;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -253,9 +253,9 @@ public static unsafe class IAsyncInfoImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue.Cancel();
+            thisObject.Cancel();
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -271,9 +271,9 @@ public static unsafe class IAsyncInfoImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue.Close();
+            thisObject.Close();
 
             return WellKnownErrorCodes.S_OK;
         }

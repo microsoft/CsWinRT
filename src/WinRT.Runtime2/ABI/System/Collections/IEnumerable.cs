@@ -165,9 +165,9 @@ public static unsafe class IEnumerableImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerable>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerable>((ComInterfaceDispatch*)thisPtr);
 
-            global::System.Collections.IEnumerator enumerator = unboxedValue.GetEnumerator();
+            global::System.Collections.IEnumerator enumerator = thisObject.GetEnumerator();
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(enumerator).DetachThisPtrUnsafe();
 

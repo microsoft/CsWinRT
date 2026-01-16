@@ -426,6 +426,33 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: readOnlyListType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
+                readOnlyListType: readOnlyListType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: readOnlyListType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: readOnlyListType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
@@ -435,7 +462,11 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    getAtMethod,
+                    sizeMethod,
+                    indexOfMethod,
+                    getManyMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");

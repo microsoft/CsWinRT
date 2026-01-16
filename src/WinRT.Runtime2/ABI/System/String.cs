@@ -217,9 +217,9 @@ file static unsafe class StringReferenceImpl
 
         try
         {
-            string unboxedValue = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
+            string thisObject = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
 
-            *result = HStringMarshaller.ConvertToUnmanaged(unboxedValue);
+            *result = HStringMarshaller.ConvertToUnmanaged(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -386,9 +386,9 @@ file static unsafe class StringPropertyValueImpl
 
         try
         {
-            string unboxedValue = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
+            string thisObject = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
 
-            *value = Guid.Parse(unboxedValue);
+            *value = Guid.Parse(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -413,11 +413,11 @@ file static unsafe class StringPropertyValueImpl
 
         try
         {
-            string unboxedValue = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
+            string thisObject = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
 
             try
             {
-                *value = T.Parse(unboxedValue, CultureInfo.InvariantCulture);
+                *value = T.Parse(thisObject, CultureInfo.InvariantCulture);
 
                 return WellKnownErrorCodes.S_OK;
             }

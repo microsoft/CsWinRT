@@ -137,7 +137,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track rewriting the two parameters for this method
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: keyType,
+                parameterType: keyType,
                 method: insertMethod,
                 tryMarker: nop_try_key,
                 loadMarker: nop_ld_key,
@@ -145,7 +145,7 @@ internal partial class InteropMethodDefinitionFactory
                 parameterIndex: 1);
 
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: valueType,
+                parameterType: valueType,
                 method: insertMethod,
                 tryMarker: nop_try_value,
                 loadMarker: nop_ld_value,
@@ -259,7 +259,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track rewriting the return value for this method
             emitState.TrackNativeParameterMethodRewrite(
-                paraneterType: keyType,
+                parameterType: keyType,
                 method: removeMethod,
                 tryMarker: nop_try_key,
                 loadMarker: nop_ld_key,

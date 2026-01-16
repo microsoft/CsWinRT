@@ -87,6 +87,13 @@ internal static partial class InteropMethodRewriteFactory
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module))]);
                 }
+                else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
+                {
+                    // When marshalling 'ReadOnlySpan<char>' values, we also use 'HStringMarshaller', but without materializing the 'string' object
+                    body.Instructions.ReferenceReplaceRange(marker, [
+                        CilInstruction.CreateLdarg(parameterIndex),
+                        new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe.Import(module))]);
+                }
                 else
                 {
                     // The last case handles all other value types. It doesn't matter if they possibly hold some unmanaged
