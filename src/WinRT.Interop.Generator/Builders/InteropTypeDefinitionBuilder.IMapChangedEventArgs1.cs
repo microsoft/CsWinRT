@@ -178,37 +178,6 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IMapChangedEventArgs&lt;K&gt;</c> interface.
-        /// </summary>
-        /// <param name="argsType">The <see cref="GenericInstanceTypeSignature"/> for the args type.</param>
-        /// <param name="argsComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="argsType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature argsType,
-            TypeDefinition argsComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: argsType,
-                interfaceComWrappersCallbackType: argsComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it's needed by 'IEnumerable<T>')
-            emitState.TrackTypeDefinition(marshallerType, argsType, "Marshaller");
-        }
-
-        /// <summary>
         /// Creates a new type definition for the interface implementation of some <c>IMapChangedEventArgs&lt;K&gt;</c> interface.
         /// </summary>
         /// <param name="argsType">The <see cref="GenericInstanceTypeSignature"/> for the args type.</param>

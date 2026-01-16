@@ -88,7 +88,7 @@ internal sealed class InteropGeneratorEmitState
     /// <param name="returnType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
     /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
     /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
-    /// <param name="source"><inheritdoc cref="ReturnTypeMethodRewriteInfo.Source" path="/node()"/></param>
+    /// <param name="source"><inheritdoc cref="MethodRewriteInfo.ReturnValue.Source" path="/node()"/></param>
     public void TrackReturnValueMethodRewrite(
         TypeSignature returnType,
         MethodDefinition method,
@@ -97,7 +97,7 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new ReturnTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.ReturnValue
         {
             Type = returnType,
             Method = method,
@@ -119,11 +119,35 @@ internal sealed class InteropGeneratorEmitState
     {
         ThrowIfReadOnly();
 
-        _methodRewriteInfos.Add(new RetValTypeMethodRewriteInfo
+        _methodRewriteInfos.Add(new MethodRewriteInfo.RetVal
         {
             Type = retValType,
             Method = method,
             Marker = marker
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves loading a parameter in the specified method.
+    /// </summary>
+    /// <param name="paraneterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    /// <param name="parameterIndex"><inheritdoc cref="MethodRewriteInfo.ManagedParameter.ParameterIndex" path="/node()"/></param>
+    public void TrackManagedParameterMethodRewrite(
+        TypeSignature paraneterType,
+        MethodDefinition method,
+        CilInstruction marker,
+        int parameterIndex)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.ManagedParameter
+        {
+            Type = paraneterType,
+            Method = method,
+            Marker = marker,
+            ParameterIndex = parameterIndex
         });
     }
 

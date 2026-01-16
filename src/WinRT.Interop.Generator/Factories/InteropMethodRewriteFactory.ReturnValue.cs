@@ -60,6 +60,12 @@ internal partial class InteropMethodRewriteFactory
                 throw WellKnownInteropExceptions.MethodRewriteSourceLocalNotFoundError(source, method);
             }
 
+            // Validate that the ABI type matches
+            if (!SignatureComparer.IgnoreVersion.Equals(source.VariableType, returnType.GetAbiType(interopReferences)))
+            {
+                throw WellKnownInteropExceptions.MethodRewriteSourceLocalTypeMismatchError(source.VariableType, returnType, method);
+            }
+
             if (returnType.IsValueType)
             {
                 // If the return type is blittable, we can always return it directly (simplest case)
