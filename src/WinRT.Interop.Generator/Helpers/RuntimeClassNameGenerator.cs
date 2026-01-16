@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
-internal class RuntimeClassNameMapping
+internal static class RuntimeClassNameGenerator
 {
     /// <summary>
     /// Builds the projected WinRT runtime class name for a (potentially generic) type,
@@ -25,37 +24,39 @@ internal class RuntimeClassNameMapping
     /// returns the mapped name with type arguments (e.g., <c>Namespace.Type&lt;TArg&gt;</c>).
     /// If no mapping exists, returns <paramref name="type"/>.<see cref="TypeSignature.FullName"/>.
     /// </returns>
-    public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
+    public static string GetGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[type.FullName.Length * 2]);
 
-        GetMappedGenericInstanceRuntimeClassNameHelper(type, useWindowsUIXamlProjections, ref handler);
+        GetGenericInstanceRuntimeClassNameHelper(type, useWindowsUIXamlProjections, ref handler);
 
         return handler.ToStringAndClear();
     }
 
-    private static void GetMappedGenericInstanceRuntimeClassNameHelper(TypeSignature type, bool useWindowsUIXamlProjections, ref DefaultInterpolatedStringHandler interpolatedStringHandler)
+    private static void GetGenericInstanceRuntimeClassNameHelper(TypeSignature type, bool useWindowsUIXamlProjections, ref DefaultInterpolatedStringHandler interpolatedStringHandler)
     {
         if (type is GenericInstanceTypeSignature genericInstanceTypeSignature)
         {
+            // If the generic type has a mapped name, use it; otherwise, use the full name.
             if (TypeMapping.TryFindMappedTypeName(genericInstanceTypeSignature.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
             {
                 interpolatedStringHandler.AppendLiteral(mappedTypeName);
-                interpolatedStringHandler.AppendLiteral("<");
             }
             else
             {
                 interpolatedStringHandler.AppendLiteral(genericInstanceTypeSignature.GenericType.FullName);
-                interpolatedStringHandler.AppendLiteral("<");
             }
 
-            GetMappedGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[0], useWindowsUIXamlProjections, ref interpolatedStringHandler);
+            interpolatedStringHandler.AppendLiteral("<");
+
+            // Recursively append each type argument.
+            GetGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[0], useWindowsUIXamlProjections, ref interpolatedStringHandler);
 
             for (int i = 1; i < genericInstanceTypeSignature.TypeArguments.Count; i++)
             {
                 interpolatedStringHandler.AppendLiteral(", ");
 
-                GetMappedGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections, ref interpolatedStringHandler);
+                GetGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections, ref interpolatedStringHandler);
             }
 
             interpolatedStringHandler.AppendLiteral(">");
@@ -63,6 +64,7 @@ internal class RuntimeClassNameMapping
             return;
         }
 
+        // Non-generic type: apply mapping if available.
         if (TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName))
         {
             interpolatedStringHandler.AppendLiteral(simpleMappedTypeName);

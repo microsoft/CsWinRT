@@ -352,7 +352,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameMapping.GetMappedGenericInstanceRuntimeClassName(readOnlyDictionaryType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetGenericInstanceRuntimeClassName(readOnlyDictionaryType, useWindowsUIXamlProjections),
                 typeSignature: readOnlyDictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
