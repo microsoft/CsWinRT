@@ -137,7 +137,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Lookup' method
             mapViewMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapViewMethodsImpl2Lookup(keyType, valueType).Import(module),
                 method: lookupMethod);
         }
 
