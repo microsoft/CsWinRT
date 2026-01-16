@@ -1,0 +1,176 @@
+<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".g.cs"#>
+<#
+// The mapping of all blittable types we should emit array marshalling code for
+var blittableTypes = new Dictionary<string, string>
+{
+    { "byte", "UInt8" },
+    { "short", "Int16" },
+    { "ushort", "UInt16" },
+    { "int", "Int32" },
+    { "uint", "UInt32" },
+    { "long", "Int64" },
+    { "ulong", "UInt64" },
+    { "float", "Single" },
+    { "double", "Double" },
+    { "char", "Char16" },
+    { "bool", "Boolean" },
+    { "Guid", "Guid" },
+    { "Point", "Point" },
+    { "Size", "Size" },
+    { "Rect", "Rect" }
+};
+
+// The set of vtable slots for array getters to be replaced with the appropriate stubs
+var arrayVtableSlots = new[]
+{
+    "Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, uint*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, uint*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, uint*, ushort**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, uint*, int**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, uint*, uint**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, uint*, long**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, uint*, ulong**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, uint*, float**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, uint*, double**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, uint*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, uint*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, uint*, void***, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;",
+    "Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Rect**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;"
+};
+#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Windows.Foundation;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
+
+#pragma warning disable IDE1006, CA1416
+
+namespace WindowsRuntime.InteropServices;
+<#
+// We want to generate a specialized 'IPropertyValue' implementation for each blittable array type
+foreach (var blittableType in blittableTypes)
+{
+    WriteLine("");
+#>
+/// <inheritdoc cref="IPropertyValueImpl"/>
+public unsafe partial class IPropertyValueImpl
+{
+    /// <summary>
+    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation, specifically for arrays of <see cref="PropertyType.<#=blittableType.Value#>Array"/> objects.
+    /// </summary>
+    public static nint <#=blittableType.Value#>ArrayVtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in <#=blittableType.Value#>ArrayPropertyValueImpl.Vftbl);
+    }
+}
+
+/// <summary>
+/// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.<#=blittableType.Value#>Array"/>.
+/// </summary>
+file static unsafe class <#=blittableType.Value#>ArrayPropertyValueImpl
+{
+    /// <summary>
+    /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
+    /// </summary>
+    [FixedAddressValueType]
+    public static readonly IPropertyValueVftbl Vftbl;
+
+    /// <summary>
+    /// Initializes <see cref="Vftbl"/>.
+    /// </summary>
+    static <#=blittableType.Value#>ArrayPropertyValueImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+
+        Vftbl.get_Type = &get_Type;
+        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
+        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;
+<#
+    // Add the array vtable slot, replacing the entry for the current blittable type with the
+    // property implementation that is generated below. All other entries will just throw.
+    foreach (var slot in arrayVtableSlots)
+    {
+        var updatedSlot = slot.StartsWith($"Vftbl.Get{blittableType.Value}Array")
+            ? $"Vftbl.Get{blittableType.Value}Array = &Get{blittableType.Value}Array;"
+            : slot;
+
+        PushIndent("        ");
+        WriteLine(updatedSlot);
+        PopIndent();
+    }
+#>
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_Type(void* thisPtr, PropertyType* value)
+    {
+        if (value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = PropertyType.<#=blittableType.Value#>Array;
+
+        return WellKnownErrorCodes.S_OK;
+    }
+
+    /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.get<#=blittableType.Value.ToLowerInvariant()#>array"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT Get<#=blittableType.Value#>Array(void* thisPtr, uint* size, <#=blittableType.Key#>** value)
+    {
+        if (size is null || value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            <#=blittableType.Key#>[] thisObject = ComInterfaceDispatch.GetInstance<<#=blittableType.Key#>[]>((ComInterfaceDispatch*)thisPtr);
+
+            WindowsRuntimeBlittableValueTypeArrayMarshaller<<#=blittableType.Key#>>.ConvertToUnmanaged(thisObject, out *size, out *value);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+}
+<#
+}
+#>
