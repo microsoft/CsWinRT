@@ -105,7 +105,7 @@ public static unsafe class ExceptionArrayMarshaller
         }
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, ABI.System.Exception* array)
     {
         if (size == 0)

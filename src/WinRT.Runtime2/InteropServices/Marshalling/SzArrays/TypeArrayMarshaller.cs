@@ -129,7 +129,7 @@ public static unsafe class TypeArrayMarshaller
         }
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, ABI.System.Type* array)
     {
         if (size == 0)

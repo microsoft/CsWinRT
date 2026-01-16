@@ -142,7 +142,7 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
         }
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static void Free<TElementMarshaller>(uint size, TAbi* array)
         where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>

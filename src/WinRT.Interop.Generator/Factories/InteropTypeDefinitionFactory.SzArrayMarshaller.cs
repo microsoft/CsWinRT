@@ -39,7 +39,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerConvertToManaged(elementType),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToUnmanaged(elementType),
                 copyToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToManaged(elementType),
-                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree(elementType),
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }

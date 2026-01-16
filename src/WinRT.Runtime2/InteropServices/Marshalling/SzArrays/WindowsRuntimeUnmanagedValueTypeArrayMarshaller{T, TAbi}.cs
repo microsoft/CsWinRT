@@ -120,7 +120,7 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
         }
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, TAbi* array)
     {
         if (size == 0)

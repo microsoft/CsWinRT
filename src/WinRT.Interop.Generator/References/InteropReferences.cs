@@ -919,6 +919,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeBlittableValueTypeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeBlittableValueTypeArrayMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller&lt;T&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeBlittableValueTypeArrayMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeBlittableValueTypeArrayMarshaller`1"u8);
@@ -1917,6 +1922,16 @@ internal sealed class InteropReferences
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller.Free</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeBlittableValueTypeArrayMarshallerFree => field ??= WindowsRuntimeBlittableValueTypeArrayMarshaller
+        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller.Free</c>.
     /// </summary>
     public MemberReference WindowsRuntimeUnknownArrayMarshallerFree => field ??= WindowsRuntimeUnknownArrayMarshaller
@@ -2422,22 +2437,6 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller&lt;T&gt;.Free</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference WindowsRuntimeBlittableValueTypeArrayMarshallerFree(TypeSignature elementType)
-    {
-        return WindowsRuntimeBlittableValueTypeArrayMarshaller1
-            .MakeGenericReferenceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Type, 0).MakePointerType()]));
     }
 
     /// <summary>
