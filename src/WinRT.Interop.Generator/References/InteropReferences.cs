@@ -944,6 +944,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeUnknownArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownArrayMarshaller"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeObjectArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectArrayMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeKeyValuePairTypeArrayMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeKeyValuePairTypeArrayMarshaller`2"u8);
@@ -1920,6 +1925,49 @@ internal sealed class InteropReferences
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
                 _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32.MakeByReferenceType(),
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerConvertToManaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Object.MakeSzArrayType(),
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.CopyToUnmanaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerCopyToUnmanaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.CopyToManaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerCopyToManaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                Span1.MakeGenericValueType(_corLibTypeFactory.Object)]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.ConvertToUnmanaged</c>.
