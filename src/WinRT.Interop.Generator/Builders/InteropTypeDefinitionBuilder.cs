@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -290,13 +291,15 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    private static void Marshaller(
+    public static void Marshaller(
         TypeSignature typeSignature,
         TypeDefinition interfaceComWrappersCallbackType,
         MethodDefinition get_IidMethod,
         InteropReferences interopReferences,
+        InteropGeneratorEmitState emitState,
         ModuleDefinition module,
         out TypeDefinition marshallerType)
     {
@@ -363,6 +366,9 @@ internal static partial class InteropTypeDefinitionBuilder
         };
 
         marshallerType.Methods.Add(convertToManagedMethod);
+
+        // Track the type (it may be needed to marshal parameters or return values)
+        emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
     }
 
     /// <summary>

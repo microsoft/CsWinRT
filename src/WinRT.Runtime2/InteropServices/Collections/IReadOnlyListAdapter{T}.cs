@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -39,6 +40,18 @@ public static class IReadOnlyListAdapter<T>
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Gets the number of items in the vector view.
+    /// </summary>
+    /// <param name="list">The wrapped <see cref="IReadOnlyList{T}"/> instance.</param>
+    /// <returns>The number of items in the vector view.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.size"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Size(IReadOnlyList<T> list)
+    {
+        return (uint)list.Count;
     }
 
     /// <summary>

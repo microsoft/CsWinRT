@@ -87,9 +87,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
-            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
-            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            // For types which use 'void*' as their ABI types, we can share the same vtable type definition
+            if (elementType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 
@@ -154,107 +153,57 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
                 method: getAtMethod);
 
-            // Define the 'SetAt' method as follows:
-            //
-            // public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition setAtMethod = new(
-                name: "SetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IVectorMethods.SetAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'SetAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1SetAt(elementType).Import(module),
                 method: setAtMethod);
 
-            // Create a method body for the 'SetAt' method
-            setAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Append' method as follows:
-            //
-            // public static void Append(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value)
-            MethodDefinition appendMethod = new(
-                name: "Append"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IVectorMethods.Append(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Append' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
                 method: appendMethod);
 
-            // Create a method body for the 'Append' method
-            appendMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'IndexOf' method as follows:
-            //
-            // public static bool IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value, out uint index)
-            MethodDefinition indexOfMethod = new(
-                name: "IndexOf"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module),
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
-            {
-                NoInlining = true,
-                CilOutParameterIndices = [3]
-            };
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IVectorMethods.IndexOf(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'IndexOf' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1IndexOf(elementType).Import(module),
                 method: indexOfMethod);
 
-            // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'InsertAt' method as follows:
-            //
-            // public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition insertAtMethod = new(
-                name: "InsertAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IVectorMethods.InsertAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'InsertAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1InsertAt(elementType).Import(module),
                 method: insertAtMethod);
-
-            // Create a method body for the 'InsertAt' method
-            insertAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
@@ -658,37 +607,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IVector&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="listComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature listType,
-            TypeDefinition listComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: listType,
-                interfaceComWrappersCallbackType: listComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, listType, "Marshaller");
         }
 
         /// <summary>

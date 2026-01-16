@@ -51,7 +51,7 @@ public struct Exception
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class ExceptionMarshaller
+public static unsafe class ExceptionMarshaller
 {
     /// <summary>
     /// Converts a managed <see cref="global::System.Exception"/> to an unmanaged <see cref="Exception"/>.
@@ -71,6 +71,20 @@ public static class ExceptionMarshaller
     public static global::System.Exception? ConvertToManaged(Exception value)
     {
         return RestrictedErrorInfo.GetExceptionForHR(value.Value);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Exception? value)
+    {
+        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException));
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Exception? UnboxToManaged(void* value)
+    {
+        Exception? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Exception>(value);
+
+        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
     }
 }
 
@@ -213,9 +227,9 @@ file static unsafe class ExceptionReferenceImpl
 
         try
         {
-            global::System.Exception unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
+            global::System.Exception thisObject = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
 
-            *result = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue);
+            *result = ExceptionMarshaller.ConvertToUnmanaged(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }

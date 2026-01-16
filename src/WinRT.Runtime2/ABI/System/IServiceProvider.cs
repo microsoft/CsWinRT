@@ -133,7 +133,7 @@ public static unsafe class IServiceProviderImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IServiceProvider>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IServiceProvider>((ComInterfaceDispatch*)thisPtr);
 
             global::System.Type? managedType = TypeMarshaller.ConvertToManaged(serviceType);
 
@@ -143,7 +143,7 @@ public static unsafe class IServiceProviderImpl
                 TypeExceptions.ThrowArgumentExceptionForNullType(serviceType);
             }
 
-            object? service = unboxedValue.GetService(managedType);
+            object? service = thisObject.GetService(managedType);
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(service).DetachThisPtrUnsafe();
 
