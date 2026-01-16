@@ -229,16 +229,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <MakeDir Directories="$(IntermediateOutputPath)ref" />
 
     <Copy SourceFiles="@(IntermediateAssembly)"
-        DestinationFiles="$(_CsWinRTRefAssembly)" />
+      DestinationFiles="$(_CsWinRTRefAssembly)" />
 
     <ItemGroup>
-        <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
-        <FileWrites Include="$(_CsWinRTRefAssembly)"/>
+      <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+      <FileWrites Include="$(_CsWinRTRefAssembly)"/>
 
-        <!-- Copy reference projection dll to ref folder in output. -->
-        <_SourceItemsToCopyToOutputDirectory
-            Include="$(_CsWinRTRefAssembly)"
-            TargetPath="ref\$(AssemblyName).dll" />
+      <!-- Copy reference projection dll to ref folder in output. -->
+      <_SourceItemsToCopyToOutputDirectory
+        Include="$(_CsWinRTRefAssembly)"
+        TargetPath="ref\$(AssemblyName).dll" />
     </ItemGroup>
 
   </Target>  
@@ -276,11 +276,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
       <ItemGroup>
-          <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
-          <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
+        <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+        <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
 
-          <!-- Replace the output dll with the forwarder DLL which is in another location. -->
-          <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+        <!-- Replace the output dll with the forwarder DLL which is in another location. -->
+        <IntermediateAssembly Remove="@(IntermediateAssembly)" />
         <IntermediateAssembly Include="$(_CsWinRTGeneratorForwarderAssemblyPath)" />
       </ItemGroup>
   </Target>
