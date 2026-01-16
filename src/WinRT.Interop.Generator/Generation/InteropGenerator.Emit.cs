@@ -2040,6 +2040,17 @@ internal partial class InteropGenerator
                             module: module);
                         break;
 
+                    // Rewrite managed values
+                    case MethodRewriteInfo.ManagedValue managedValueInfo:
+                        InteropMethodRewriteFactory.ManagedValue.RewriteMethod(
+                            parameterType: managedValueInfo.Type,
+                            method: managedValueInfo.Method,
+                            marker: managedValueInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
                     // Rewrite managed parameters
                     case MethodRewriteInfo.ManagedParameter managedParameterInfo:
                         InteropMethodRewriteFactory.ManagedParameter.RewriteMethod(
