@@ -12,7 +12,7 @@ using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
-#pragma warning disable CS1573
+#pragma warning disable CS1573, CS8620 // TODO: remove once Roslyn bug is fixed
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 

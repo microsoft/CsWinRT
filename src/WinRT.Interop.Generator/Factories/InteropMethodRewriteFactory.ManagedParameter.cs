@@ -130,7 +130,7 @@ internal partial class InteropMethodRewriteFactory
             else if (parameterType.IsTypeOfType(interopReferences))
             {
                 // When marshalling 'Type' values, we must use 'TypeMarshaller' (the ABI type is a value type)
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.TypeMarshallerConvertToManaged.Import(module))]);
             }
