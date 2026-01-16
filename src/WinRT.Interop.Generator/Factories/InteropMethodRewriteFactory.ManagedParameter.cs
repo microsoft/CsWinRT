@@ -11,6 +11,8 @@ using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
+#pragma warning disable CS8620 // TODO: remove once Roslyn bug is fixed
+
 namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <inheritdoc cref="InteropMethodRewriteFactory"/>
