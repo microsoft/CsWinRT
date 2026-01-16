@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 
 #pragma warning disable IDE0046
 
@@ -25,14 +26,48 @@ internal static class TypeDefinitionExtensions
         public bool IsStatic => type.IsAbstract && type.IsSealed;
 
         /// <summary>
+        /// Gets whether a given type has a base type other than <see cref="object"/>.
+        /// </summary>
+        /// <param name="baseType">The resulting base type, if available.</param>
+        public bool HasBaseType([NotNullWhen(true)] out ITypeDefOrRef? baseType)
+        {
+            baseType = type.BaseType;
+
+            return baseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object });
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether a given <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.
+        /// </summary>
+        /// <param name="failedResolutionBaseType">The <see cref="ITypeDefOrRef"/> for the first base type that failed resolution, if any.</param>
+        /// <returns>Whether the input <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.</returns>
+        public bool IsTypeHierarchyFullyResolvable([NotNullWhen(false)] out ITypeDefOrRef? failedResolutionBaseType)
+        {
+            TypeDefinition currentDefinition = type;
+
+            while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
+            {
+                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                {
+                    failedResolutionBaseType = baseType;
+
+                    return false;
+                }
+            }
+
+            failedResolutionBaseType = null;
+
+            return true;
+        }
+
+        /// <summary>
         /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, CorLibTypeFactory corLibTypeFactory)
+        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType)
         {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(corLibTypeFactory))
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf())
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -193,17 +228,23 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Enumerates all base types of the specified type, including itself.
         /// </summary>
-        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
         /// <returns>The sequence of base types for the input type, including itself.</returns>
-        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(CorLibTypeFactory corLibTypeFactory)
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf()
         {
             yield return type;
 
-            for (TypeDefinition? baseType = type.BaseType?.Resolve();
-                baseType is not null && !SignatureComparer.IgnoreVersion.Equals(baseType, corLibTypeFactory.Object);
-                baseType = baseType.BaseType?.Resolve())
+            TypeDefinition currentDefinition = type;
+
+            while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
-                yield return baseType;
+                // If we can't resolve the current base type, we have to stop.
+                // Callers should validate the type hierarchy before calling this.
+                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                {
+                    yield break;
+                }
+
+                yield return currentDefinition;
             }
         }
 
@@ -246,9 +287,9 @@ internal static class TypeDefinitionExtensions
                 yield return interfaceSignature;
 
                 // Also recurse on the base interfaces
-                if (interfaceSignature.IsFullyResolvable)
+                if (interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
                 {
-                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceSignature.Resolve()!.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
+                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceDefinition.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
                     {
                         yield return baseInterfaceImplementation;
                     }

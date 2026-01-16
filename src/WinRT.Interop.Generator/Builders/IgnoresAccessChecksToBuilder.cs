@@ -35,7 +35,7 @@ internal static partial class IgnoresAccessChecksToBuilder
             }
 
             // Drop the '.dll' extension from the assembly name
-            string assemblyName = Path.GetFileNameWithoutExtension(assemblyModule.Name!);
+            string assemblyName = Path.GetFileNameWithoutExtension(Path.Normalize(assemblyModule.Name!));
 
             // Create the attribute and add it to the assembly
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, module));

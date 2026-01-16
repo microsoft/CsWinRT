@@ -14,6 +14,7 @@ namespace WindowsRuntime;
 /// The implementation of a native object for <see cref="IAsyncAction"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.iasyncaction"/>
+[WindowsRuntimeManagedOnlyType]
 internal sealed class WindowsRuntimeAsyncAction : WindowsRuntimeObject,
     IAsyncAction,
     IWindowsRuntimeInterface<IAsyncAction>,

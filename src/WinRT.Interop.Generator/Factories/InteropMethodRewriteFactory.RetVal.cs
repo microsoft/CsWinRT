@@ -133,8 +133,8 @@ internal partial class InteropMethodRewriteFactory
                     IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
                         name: "ConvertToUnmanaged"u8,
                         signature: MethodSignature.CreateStatic(
-                            returnType: retValType,
-                            parameterTypes: [retValType.GetAbiType(interopReferences)]));
+                            returnType: retValType.GetAbiType(interopReferences),
+                            parameterTypes: [retValType]));
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReplaceRange(marker, [
@@ -142,7 +142,7 @@ internal partial class InteropMethodRewriteFactory
                         new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
                 }
             }
-            else if (retValType.IsTypeOfString(interopReferences))
+            else if (retValType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller'
                 body.Instructions.ReplaceRange(marker, [

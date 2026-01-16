@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -188,13 +189,15 @@ internal partial class InteropGenerator
         }
 
         // Get the loaded module for the runtime .dll (this should also always be available here)
-        if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value) is null)
+        if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("WinRT.Runtime2.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
         // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
+        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }
@@ -217,9 +220,14 @@ internal partial class InteropGenerator
             AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
             ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
 
+            // Add the assembly references to the interop module
             winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
             winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
             winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver);
+
+            // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
+            // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
+            winRTInteropModule.Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys);
 
             // Add the module to the parent assembly
             winRTInteropAssembly.Modules.Add(winRTInteropModule);
@@ -249,7 +257,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -285,6 +293,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     get_ReferenceIidMethod: get_ReferenceIidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -292,6 +301,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     implType: out TypeDefinition delegateImplType);
 
@@ -358,9 +368,6 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.VectorChangedEventHandler1))
                 {
-                    // We need the marshaller type for the 'IObservableVector<T>' implementation
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
-
                     InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
@@ -371,9 +378,6 @@ internal partial class InteropGenerator
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.MapChangedEventHandler2))
                 {
-                    // We need the marshaller type for the 'IObservableMap<K, V>' implementation
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
-
                     InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
@@ -381,15 +385,6 @@ internal partial class InteropGenerator
                         emitState: emitState,
                         module: module,
                         eventSourceType: out _);
-                }
-                else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionProgressHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationCompletedHandler1) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationProgressHandler2) ||
-                         SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.AsyncOperationWithProgressCompletedHandler2))
-                {
-                    // We need these marshaller types for the various async type implementations
-                    emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
                 }
             }
             catch (Exception e)
@@ -416,7 +411,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -469,9 +464,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumeratorComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IEnumerator1.Marshaller(
-                    enumeratorType: typeSignature,
-                    enumeratorComWrappersCallbackType: enumeratorComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: enumeratorComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -523,7 +518,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -592,9 +587,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition enumerableComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IEnumerable1.Marshaller(
-                    enumerableType: typeSignature,
-                    enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: enumerableComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -646,7 +641,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -715,9 +710,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyListComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyList1.Marshaller(
-                    readOnlyListType: typeSignature,
-                    readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: readOnlyListComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -770,7 +765,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -847,9 +842,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition listComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IList1.Marshaller(
-                    listType: typeSignature,
-                    listComWrappersCallbackType: listComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: listComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -902,7 +897,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -971,9 +966,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition readOnlyDictionaryComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Marshaller(
-                    readOnlyDictionaryType: typeSignature,
-                    readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1025,7 +1020,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1104,9 +1099,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition dictionaryComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.Marshaller(
-                    dictionaryType: typeSignature,
-                    dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: dictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1174,7 +1169,7 @@ internal partial class InteropGenerator
         }
 
         // Generate specialized code for all discovered instantiations
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1249,7 +1244,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1301,9 +1296,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition argsComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Marshaller(
-                    argsType: typeSignature,
-                    argsComWrappersCallbackType: argsComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: argsComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1355,7 +1350,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1418,11 +1413,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IObservableVector1.Marshaller(
-                    vectorType: typeSignature,
-                    vectorComWrappersCallbackType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1471,7 +1467,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1534,11 +1530,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IObservableMap2.Marshaller(
-                    mapType: typeSignature,
-                    mapComWrappersCallbackType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1587,7 +1584,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1640,11 +1637,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition actionComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Marshaller(
-                    actionType: typeSignature,
-                    operationComWrappersCallbackType: actionComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: actionComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1693,7 +1691,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1746,11 +1744,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperation1.Marshaller(
-                    operationType: typeSignature,
-                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1799,7 +1798,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types)
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1852,11 +1851,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Marshaller(
-                    operationType: typeSignature,
-                    operationComWrappersCallbackType: operationComWrappersCallbackType,
+                InteropTypeDefinitionBuilder.Marshaller(
+                    typeSignature: typeSignature,
+                    interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -1903,7 +1903,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes)
+        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.OrderByFullyQualifiedTypeName())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1990,7 +1990,14 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (MethodRewriteInfo rewriteInfo in emitState.EnumerateMethodRewriteInfos())
+        // We need to sort all items to a temporary list first, as the underlying items
+        // might otherwise change as we rewrite methods. This is because e.g. the target
+        // instructions will get replaced by marshalling code, meaning trying to compare
+        // different objects based on the index of those instructions in the target method
+        // would produce different results. This temporary list avoids that issue.
+        List<MethodRewriteInfo> rewriteInfos = [.. emitState.EnumerateMethodRewriteInfos().Order()];
+
+        foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1999,23 +2006,35 @@ internal partial class InteropGenerator
                 switch (rewriteInfo)
                 {
                     // Rewrite return values for managed types
-                    case ReturnTypeMethodRewriteInfo returnTypeInfo:
+                    case MethodRewriteInfo.ReturnValue returnValueInfo:
                         InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
-                            returnType: returnTypeInfo.Type,
-                            method: returnTypeInfo.Method,
-                            marker: returnTypeInfo.Marker,
-                            source: returnTypeInfo.Source,
+                            returnType: returnValueInfo.Type,
+                            method: returnValueInfo.Method,
+                            marker: returnValueInfo.Marker,
+                            source: returnValueInfo.Source,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);
                         break;
 
                     // Rewrite return values for native types
-                    case RetValTypeMethodRewriteInfo retValTypeInfo:
+                    case MethodRewriteInfo.RetVal retValInfo:
                         InteropMethodRewriteFactory.RetVal.RewriteMethod(
-                            retValType: retValTypeInfo.Type,
-                            method: retValTypeInfo.Method,
-                            marker: retValTypeInfo.Marker,
+                            retValType: retValInfo.Type,
+                            method: retValInfo.Method,
+                            marker: retValInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
+                    // Rewrite managed parameters
+                    case MethodRewriteInfo.ManagedParameter managedParameterInfo:
+                        InteropMethodRewriteFactory.ManagedParameter.RewriteMethod(
+                            parameterType: managedParameterInfo.Type,
+                            method: managedParameterInfo.Method,
+                            marker: managedParameterInfo.Marker,
+                            parameterIndex: managedParameterInfo.ParameterIndex,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);
@@ -2053,7 +2072,7 @@ internal partial class InteropGenerator
         Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
 
         // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
-        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes)
+        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes.Order())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2062,7 +2081,11 @@ internal partial class InteropGenerator
             try
             {
                 // Get the first user-defined with this vtable set as reference
-                typeSignature = discoveryState.UserDefinedAndVtableTypes.First(kvp => kvp.Value.Equals(vtableTypes)).Key;
+                typeSignature = discoveryState.UserDefinedAndVtableTypes
+                    .Where(kvp => kvp.Value.Equals(vtableTypes))
+                    .Select(static kvp => kvp.Key)
+                    .OrderByFullyQualifiedTypeName()
+                    .First();
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
@@ -2093,7 +2116,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes)
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderBy(static pair => pair.Key, TypeDescriptorComparer.Create<TypeSignature>()))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2171,7 +2194,7 @@ internal partial class InteropGenerator
         try
         {
             // Also emit all shared COM interface entries types that are programmatically generated
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
@@ -2223,7 +2246,10 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IgnoresAccessChecksToAttribute);
 
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
-            IgnoresAccessChecksToBuilder.AssemblyAttributes(discoveryState.ModuleDefinitions.Values, interopDefinitions, module);
+            IgnoresAccessChecksToBuilder.AssemblyAttributes(
+                referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
+                interopDefinitions: interopDefinitions,
+                module: module);
         }
         catch (Exception e)
         {

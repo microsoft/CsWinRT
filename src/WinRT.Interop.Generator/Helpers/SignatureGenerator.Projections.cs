@@ -24,7 +24,11 @@ internal partial class SignatureGenerator
     private static string? GenericInstance(GenericInstanceTypeSignature typeSignature, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
         // If we fail to get the IID of the generic interface, we can't do anything else
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeSignature.GenericType, interopReferences, out Guid interfaceIid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+            type: typeSignature.GenericType,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            iid: out Guid interfaceIid))
         {
             return null;
         }
@@ -129,7 +133,11 @@ internal partial class SignatureGenerator
     private static string? Delegate(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
         // Just like for generic instantiations, we need to resolve the IID for the type first
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+            type: typeDefinition,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            iid: out Guid iid))
         {
             return null;
         }
@@ -159,7 +167,11 @@ internal partial class SignatureGenerator
         }
 
         // Otherwise, get the IID from the type definition and use it
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+            type: typeDefinition,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            iid: out Guid iid))
         {
             return null;
         }
@@ -176,7 +188,11 @@ internal partial class SignatureGenerator
     private static string? Interface(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
     {
         // For all interface types, we should always be able to resolve their IID
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(typeDefinition, interopReferences, out Guid iid))
+        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+            type: typeDefinition,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            iid: out Guid iid))
         {
             return null;
         }
@@ -206,7 +222,11 @@ internal partial class SignatureGenerator
         }
 
         // Get the IID for 'Nullable<T>', which is the one we use for 'IReference<T>'
-        _ = WellKnownInterfaceIIDs.TryGetGUID(interopReferences.Nullable1, interopReferences, out Guid iid);
+        _ = WellKnownInterfaceIIDs.TryGetGUID(
+            interfaceType: interopReferences.Nullable1,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            guid: out Guid iid);
 
         // Construct the signature for the boxed delegate (the base type will be the possibly constructed delegate)
         return $"pinterface({{{iid}}};{GetSignature(typeSignature.BaseType, interopReferences, useWindowsUIXamlProjections)})";

@@ -9,11 +9,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
-using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -155,23 +155,7 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // We only care about projected Windows Runtime classes
-                if (!type.IsProjectedWindowsRuntimeClassType)
-                {
-                    continue;
-                }
-
-                // Ignore types that don't have another base class
-                if (type.BaseType is null || SignatureComparer.IgnoreVersion.Equals(type.BaseType, module.CorLibTypeFactory.Object))
-                {
-                    continue;
-                }
-
-                // If the base type is also a projected Windows Runtime type, track it
-                if (type.BaseType.IsProjectedWindowsRuntimeType)
-                {
-                    discoveryState.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
-                }
+                InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState);
             }
         }
         catch (Exception e)
@@ -202,73 +186,14 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // We only want to process non-generic user-defined types that are potentially exposed to Windows Runtime
-                if (!type.IsPossiblyWindowsRuntimeExposedType ||
-                    type.IsProjectedWindowsRuntimeType ||
-                    type.IsWindowsRuntimeManagedOnlyType(interopReferences))
-                {
-                    continue;
-                }
-
-                // Since we're reusing the builder for all types, make sure to clear it first
-                interfaces.Clear();
-
-                // We want to explicitly track whether the type implements any projected Windows Runtime
-                // interfaces, as we are only interested in such types. We want to also gather all
-                // implemented '[GeneratedComInterface]' interfaces, but if a type only implements
-                // those, we will ignore it. Such types should be marshalled via 'ComWrappers' directly.
-                bool hasAnyProjectedWindowsRuntimeInterfaces = false;
-
-                // Gather all implemented Windows Runtime interfaces for the current type
-                foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(module.CorLibTypeFactory))
-                {
-                    foreach (InterfaceImplementation implementation in currentType.Interfaces)
-                    {
-                        // Check for projected Windows Runtime interfaces first
-                        if (implementation.Interface?.IsProjectedWindowsRuntimeType is true ||
-                            implementation.Interface?.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) is true ||
-                            (implementation.Interface?.ToReferenceTypeSignature() is GenericInstanceTypeSignature genSig &&
-                            genSig.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
-                            genSig.TypeArguments.All(arg => arg.IsFullyResolvable && arg.Resolve()!.IsProjectedWindowsRuntimeType)))
-                        {
-                            hasAnyProjectedWindowsRuntimeInterfaces = true;
-
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
-                        }
-                        else if (implementation.Interface?.IsGeneratedComInterfaceType is true)
-                        {
-                            // To properly track '[GeneratedComInterface]' implementations, we need to be able to resolve those interface types
-                            if (implementation.Interface.Resolve() is not TypeDefinition interfaceType)
-                            {
-                                WellKnownInteropExceptions.GeneratedComInterfaceTypeNotResolvedWarning(implementation.Interface, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                                continue;
-                            }
-
-                            // We can only gather this type if we can find the generated 'InterfaceInformation' type.
-                            // If we can't find it, we can't add the interface to the list of interface entries. We
-                            // should warn if that's the (unlikely) case, so users can at least know that something
-                            // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
-                            if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
-                            {
-                                WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceType, type).LogOrThrow(args.TreatWarningsAsErrors);
-
-                                continue;
-                            }
-
-                            // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
-                            interfaces.Add(implementation.Interface.ToReferenceTypeSignature());
-                        }
-                    }
-                }
-
-                // If the user-defined type doesn't implement any Windows Runtime interfaces, it's not considered exposed
-                if (!hasAnyProjectedWindowsRuntimeInterfaces)
-                {
-                    continue;
-                }
-
-                discoveryState.TrackUserDefinedType(type.ToTypeSignature(), interfaces.ToEquatableSet());
+                // Track the type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackExposedUserDefinedType(
+                    typeDefinition: type,
+                    typeSignature: type.ToTypeSignature(),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)
@@ -296,78 +221,13 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Filter all constructed generic type signatures we have. We don't care about generic type
-                // definitions (eg. 'TypedEventHandler`1<!0, !1>') for the purposes of marshalling code.
-                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
-                {
-                    continue;
-                }
-
-                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
-                {
-                    continue;
-                }
-
-                // Check for all '[ReadOnly]Span<T>' types in particular, and track them as SZ array types.
-                // This is because "pass-array" and "fill-array" parameters are projected using spans, but
-                // those projections require the marshalling code produced when discovering SZ array types.
-                // So if we see any of these spans where the element type is a Windows Runtime type, we
-                // manually construct an SZ array type for it and add it to the set of tracked array types.
-                if (typeSignature.IsValueType &&
-                    typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
-                    typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
-                {
-                    discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
-
-                    continue;
-                }
-
-                // Ignore generic instantiations that are not Windows Runtime types. That is, those that
-                // have a generic type definition that's not a Windows Runtime type, or that have any type
-                // arguments that are not Windows Runtime types.
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
-                {
-                    continue;
-                }
-
-                // Gather all 'KeyValuePair<,>' instances
-                if (typeSignature.IsValueType && typeSignature.IsConstructedKeyValuePairType(interopReferences))
-                {
-                    discoveryState.TrackKeyValuePairType(typeSignature);
-
-                    continue;
-                }
-
-                TypeDefinition typeDefinition = typeSignature.Resolve()!;
-
-                // Gather all known delegate types. We want to gather all projected delegate types, plus any
-                // custom-mapped ones (e.g. 'EventHandler<TEventArgs>' and 'EventHandler<TSender, TEventArgs>').
-                // We need to check whether the type is a projected Windows Runtime type from the resolved type
-                // definition, and not from the generic type definition we can retrieve from the type signature.
-                // If we did the latter, the resulting type definition would not include any custom attributes.
-                if (typeDefinition.IsDelegate &&
-                    (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
-                     typeDefinition.IsProjectedWindowsRuntimeType))
-                {
-                    discoveryState.TrackGenericDelegateType(typeSignature);
-
-                    continue;
-                }
-
-                // Track all projected Windows Runtime generic interfaces
-                if (typeDefinition.IsInterface)
-                {
-                    discoveryState.TrackGenericInterfaceType(typeSignature, interopReferences);
-
-                    // We also want to crawl base interfaces
-                    foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
-                    {
-                        discoveryState.TrackGenericInterfaceType(interfaceSignature, interopReferences);
-                    }
-
-                    continue;
-                }
+                // Track the constructed generic type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackGenericTypeInstance(
+                    typeSignature: typeSignature,
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)
@@ -395,27 +255,13 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Filter all constructed generic type signatures we have. We don't care about
-                // generic type definitions (eg. '!0[]') for the purposes of marshalling code.
-                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
-                {
-                    continue;
-                }
-
-                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-                if (!typeSignature.IsFullyResolvable)
-                {
-                    continue;
-                }
-
-                // Ignore array types that are not Windows Runtime types
-                if (!typeSignature.IsWindowsRuntimeType(interopReferences))
-                {
-                    continue;
-                }
-
-                // Track all SZ array types, as we'll need to emit marshalling code for them
-                discoveryState.TrackSzArrayType(typeSignature);
+                // Track the SZ array type (if it's not applicable, it will be a no-op)
+                InteropTypeDiscovery.TryTrackSzArrayType(
+                    typeSignature: typeSignature,
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
             }
         }
         catch (Exception e)

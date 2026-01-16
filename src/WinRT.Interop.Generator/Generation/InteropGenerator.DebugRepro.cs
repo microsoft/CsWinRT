@@ -41,7 +41,7 @@ internal partial class InteropGenerator
         // Get all entries of interest
         ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtgen.rsp");
         ZipArchiveEntry originalPathsEntry = archive.Entries.Single(entry => entry.Name == "original-paths.json");
-        ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(entry.Name) == ".dll")];
+        ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(Path.Normalize(entry.Name)) == ".dll")];
 
         token.ThrowIfCancellationRequested();
 
@@ -68,16 +68,21 @@ internal partial class InteropGenerator
         List<string> referencePaths = [];
         string? outputAssemblyPath = null;
 
+        // Create another subdirectory for all the input assemblies. We don't put these in the top level
+        // temporary folder so that the number of files there remains very small. The reason is just to
+        // make inspecting the resulting .dll easier, without having to scroll past hundreds of folders.
+        string assembliesDirectory = Path.Combine(tempDirectory, "in");
+
         // Extract all .dll-s, one per directory, so we can ensure there's no name conflicts
         foreach ((int index, ZipArchiveEntry dllEntry) in dllEntries.Index())
         {
-            string destinationFolder = Path.Combine(tempDirectory, index.ToString("000"));
+            string destinationFolder = Path.Combine(assembliesDirectory, index.ToString("000"));
 
             _ = Directory.CreateDirectory(destinationFolder);
 
             // Construct the path in the temporary subfolder with the original .dll name
             string originalPath = originalPaths[dllEntry.Name];
-            string originalName = Path.GetFileName(originalPath);
+            string originalName = Path.GetFileName(Path.Normalize(originalPath));
             string destinationPath = Path.Combine(destinationFolder, originalName);
 
             // Extract the .dll to the new destination path
@@ -235,7 +240,7 @@ internal partial class InteropGenerator
     /// <returns>The hashed filename.</returns>
     private static string GetHashedFileName(string filePath)
     {
-        string fileName = Path.GetFileName(filePath);
+        string fileName = Path.GetFileName(Path.Normalize(filePath));
         byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
         byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
         string hash = Convert.ToHexString(hashData);

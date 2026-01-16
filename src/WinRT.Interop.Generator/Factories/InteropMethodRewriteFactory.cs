@@ -78,13 +78,15 @@ internal static partial class InteropMethodRewriteFactory
         }
 
         // Special case 'object', we'll directly use 'WindowsRuntimeObjectMarshaller' for it
-        if (type.IsTypeOfObject(interopReferences))
+        if (type.IsTypeOfObject())
         {
             return interopReferences.WindowsRuntimeObjectMarshaller;
         }
 
         // For custom-mapped types, get the marshaller type from 'WinRT.Runtime.dll'
-        if (type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+        if (type.IsTypeOfType(interopReferences) ||
+            type.IsTypeOfException(interopReferences) ||
+            type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
             type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences))
         {
             return interopReferences.WindowsRuntimeModule.CreateTypeReference(

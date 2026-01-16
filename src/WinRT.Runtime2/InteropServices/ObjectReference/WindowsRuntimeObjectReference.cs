@@ -10,6 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A managed, low-level wrapper for a native Windows Runtime object.
 /// </summary>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]

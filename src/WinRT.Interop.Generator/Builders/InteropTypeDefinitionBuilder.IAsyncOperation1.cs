@@ -181,32 +181,6 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
-        /// </summary>
-        /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
-        /// <param name="operationComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="operationType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature operationType,
-            TypeDefinition operationComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: operationType,
-                interfaceComWrappersCallbackType: operationComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-        }
-
-        /// <summary>
         /// Creates a new type definition for the interface implementation of some <c>IAsyncOperation1&lt;TResult&gt;</c> interface.
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
@@ -365,7 +339,12 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // TODO
+            MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncOperation1Impl.GetResults(
+                operationType: operationType,
+                getResultsMethod: interopReferences.IAsyncOperation1GetResults(resultType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
@@ -378,7 +357,8 @@ internal partial class InteropTypeDefinitionBuilder
                 implType: out implType,
                 vtableMethods: [
                     get_CompletedMethod,
-                    set_CompletedMethod]);
+                    set_CompletedMethod,
+                    getResultsMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, operationType, "Impl");

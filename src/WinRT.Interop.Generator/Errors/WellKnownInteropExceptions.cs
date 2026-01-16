@@ -430,11 +430,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve a '[GeneratedComInterface]' type.
+    /// Failed to resolve the type of an implemented interface.
     /// </summary>
-    public static WellKnownInteropWarning GeneratedComInterfaceTypeNotResolvedWarning(ITypeDefOrRef interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
     {
-        return Warning(49, $"Failed to resolve the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(49, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -523,6 +523,78 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException KeyValuePairTypeSharedCodeGenerationError(Exception exception)
     {
         return Exception(60, $"Failed to generate shared marshalling code for 'KeyValuePair<,>' types.", exception);
+    }
+
+    /// <summary>
+    /// Failed to resolve the '[Guid]' attribute for a given interface type.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceGuidAttributeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
+    {
+        return Warning(61, $"Failed to resolve the '[Guid]' attribute for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a base type for a user-defined type.
+    /// </summary>
+    public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
+    {
+        return Warning(62, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// A '[GeneratedComInterface]' type is attempting to implement a reserved interface (e.g. 'IUnknown').
+    /// </summary>
+    public static WellKnownInteropException GeneratedComInterfaceReservedGuidError(TypeDefinition interfaceType, TypeDefinition type, Guid iid, string interfaceName)
+    {
+        return Exception(63, $"The '[GeneratedComInterface]' type '{interfaceType}' found while processing type '{type}' is using IID '{iid.ToString().ToUpperInvariant()}' (which maps to the '{interfaceName}' interface): this interface is implicitly implemented and cannot be overridden.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a generic type signature.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(64, $"Failed to resolve the generic type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// Failed to resolve an SZ array type signature.
+    /// </summary>
+    public static WellKnownInteropWarning SzArrayTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(65, $"Failed to resolve the SZ array type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
+    /// Failed to resolve a base type for a Windows Runtime class type.
+    /// </summary>
+    public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
+    {
+        return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
+    }
+
+    /// <summary>
+    /// A parameter index was not valid in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteSourceLocalTypeMismatchError(TypeSignature localType, TypeSignature returnType, MethodDefinition method)
+    {
+        return Exception(67, $"Local variable of type '{localType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
+    }
+
+    /// <summary>
+    /// The type of a local was not valid in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteParameterIndexNotValidError(int parameterIndex, MethodDefinition method)
+    {
+        return Exception(68, $"Parameter index '{parameterIndex}' was not valid for generated interop method '{method}'.");
+    }
+
+    /// <summary>
+    /// The type of a parameter was not valid in a generated interop method.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteSourceParameterTypeMismatchError(TypeSignature parameterType, TypeSignature returnType, MethodDefinition method)
+    {
+        return Exception(69, $"Parameter variable of type '{parameterType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
     }
 
     /// <summary>
