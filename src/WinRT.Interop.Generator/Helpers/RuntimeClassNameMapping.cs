@@ -6,7 +6,7 @@ using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
-internal class RuntimeClassNameMapping
+internal static class RuntimeClassNameMapping
 {
     /// <summary>
     /// Builds the projected WinRT runtime class name for a (potentially generic) type,

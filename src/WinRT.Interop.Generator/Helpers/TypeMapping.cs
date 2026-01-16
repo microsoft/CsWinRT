@@ -135,9 +135,10 @@ internal static class TypeMapping
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? mappedName)
     {
-        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out string? primitiveMappedResult))
+        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out string? fundamentalMappedResult))
         {
-            mappedName = primitiveMappedResult;
+            mappedName = fundamentalMappedResult;
+
             return true;
         }
 
