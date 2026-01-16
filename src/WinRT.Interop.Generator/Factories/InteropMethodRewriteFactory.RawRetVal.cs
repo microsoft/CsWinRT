@@ -42,7 +42,6 @@ internal partial class InteropMethodRewriteFactory
             ModuleDefinition module)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
-            // Validate that we do have some IL body for the input method (this should always be thevv case)
             if (method.CilMethodBody is not CilMethodBody body)
             {
                 throw WellKnownInteropExceptions.MethodRewriteMissingBodyError(method);
