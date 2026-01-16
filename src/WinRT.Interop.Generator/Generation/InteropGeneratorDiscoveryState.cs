@@ -66,7 +66,7 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
     private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field to support <see cref="MarkUserDefinedType"/>.</summary>
+    /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
