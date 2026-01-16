@@ -142,7 +142,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <remarks>
-        /// This method can also be used to define the <c>GetAt</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// This method can also be used to define the <c>get_Size</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
         public static MethodDefinition get_Size(
             GenericInstanceTypeSignature readOnlyListType,
@@ -375,7 +375,7 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// /// <remarks>
+        /// <remarks>
         /// This method can also be used to define the <c>GetMany</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
         public static MethodDefinition GetMany(

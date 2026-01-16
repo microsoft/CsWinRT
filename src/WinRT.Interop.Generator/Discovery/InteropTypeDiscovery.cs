@@ -120,7 +120,7 @@ internal static partial class InteropTypeDiscovery
         // If the type has been seen before, it means that it either has already been fully processed, or that it
         // is currently being processed (possibly by another thread, if multi-threading discovery is enabled). The
         // reason for this check is not so much to improve performance (although it does avoid some repeated work),
-        // but most importantly to avoid stack overlows due to infinite recursion in cases where user-defined types
+        // but most importantly to avoid stack overflows due to infinite recursion in cases where user-defined types
         // implement interfaces that then transitively required the same user-defined type to be tracked.
         //
         // For instance, consider a scenario where 'List<int>' is being discovered. While processing the implemented

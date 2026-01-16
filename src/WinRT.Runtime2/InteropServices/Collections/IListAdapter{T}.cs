@@ -67,7 +67,7 @@ public static class IListAdapter<T>
     {
         // This list is not really read-only: once marshalled, native code could do
         // a 'QueryInterface' call back to 'IVector<T>', which would succeed, and would
-        // return a modifiable reference for this view. We believe this is accetable, as
+        // return a modifiable reference for this view. We believe this is acceptable, as
         // it allows us to gain some performance. For instance, in most situations (because
         // pretty much all built-in .NET collection types implementing 'IList<T>' also implement
         // 'IReadOnlyList<T>'), this allows us to not allocate anything. That is, when native
