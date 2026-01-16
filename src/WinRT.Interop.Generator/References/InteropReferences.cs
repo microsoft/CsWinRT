@@ -2626,23 +2626,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnmanagedValueTypeArrayMarshaller&lt;T, TAbi&gt;.Free</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    /// <param name="abiType">The ABI type.</param>
-    public MemberReference WindowsRuntimeUnmanagedValueTypeArrayMarshallerFree(TypeSignature elementType, TypeSignature abiType)
-    {
-        return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeReferenceTypeArrayMarshaller&lt;T&gt;.ConvertToUnmanaged&lt;TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>

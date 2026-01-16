@@ -119,17 +119,4 @@ public static unsafe class WindowsRuntimeUnmanagedValueTypeArrayMarshaller<T, TA
             destination[(int)i] = TElementMarshaller.ConvertToManaged(source[i]);
         }
     }
-
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
-    public static void Free(uint size, TAbi* array)
-    {
-        if (size == 0)
-        {
-            return;
-        }
-
-        ArgumentNullException.ThrowIfNull(array);
-
-        Marshal.FreeCoTaskMem((nint)array);
-    }
 }

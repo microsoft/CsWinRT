@@ -68,7 +68,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerConvertToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                freeMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerFree(elementType, elementAbiType),
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }
