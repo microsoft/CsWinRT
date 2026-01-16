@@ -152,107 +152,57 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
                 method: getAtMethod);
 
-            // Define the 'SetAt' method as follows:
-            //
-            // public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition setAtMethod = new(
-                name: "SetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IVectorMethods.SetAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'SetAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1SetAt(elementType).Import(module),
                 method: setAtMethod);
 
-            // Create a method body for the 'SetAt' method
-            setAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Append' method as follows:
-            //
-            // public static void Append(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value)
-            MethodDefinition appendMethod = new(
-                name: "Append"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IVectorMethods.Append(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Append' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
                 method: appendMethod);
 
-            // Create a method body for the 'Append' method
-            appendMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'IndexOf' method as follows:
-            //
-            // public static bool IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value, out uint index)
-            MethodDefinition indexOfMethod = new(
-                name: "IndexOf"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module),
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
-            {
-                NoInlining = true,
-                CilOutParameterIndices = [3]
-            };
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IVectorMethods.IndexOf(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'IndexOf' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1IndexOf(elementType).Import(module),
                 method: indexOfMethod);
 
-            // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'InsertAt' method as follows:
-            //
-            // public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition insertAtMethod = new(
-                name: "InsertAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IVectorMethods.InsertAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'InsertAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1InsertAt(elementType).Import(module),
                 method: insertAtMethod);
-
-            // Create a method body for the 'InsertAt' method
-            insertAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
