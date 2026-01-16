@@ -854,27 +854,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT>'
-        MethodSignature collectionChangeType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CollectionChange.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
-        MethodSignature keyType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
+        // Get the 'IMapChangedEventArgs`1' signatures
+        MethodSignature collectionChangeType = WellKnownTypeSignatureFactory.IMapChangedEventArgs1get_CollectionChangeImpl(interopReferences);
+        MethodSignature keyType = WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences);
 
         // The vtable layout for 'IMapChangedEventArgs`1<K>' looks like this:
         //

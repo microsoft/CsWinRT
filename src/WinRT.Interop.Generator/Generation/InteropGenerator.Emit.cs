@@ -1281,6 +1281,7 @@ internal partial class InteropGenerator
                     argsType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     argsMethodsType: out TypeDefinition argsMethodsType);
 

@@ -3,7 +3,6 @@
 
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
@@ -27,12 +26,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="argsType">The <see cref="GenericInstanceTypeSignature"/> for the args type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="argsMethodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature argsType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition argsMethodsType)
         {
@@ -70,30 +71,18 @@ internal partial class InteropTypeDefinitionBuilder
 
             argsMethodsType.Methods.Add(collectionChangeMethod);
 
-            // Define the 'Key' method as follows:
-            //
-            // public static <KEY_TYPE> Key(WindowsRuntimeObjectReference thisReference)
-            MethodDefinition keyMethod = new(
-                name: "Key"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
+            // Define the 'Key' method
+            MethodDefinition keyMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Methods.Key(
+                argsType: argsType,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Key' method
             argsMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapChangedEventArgsImpl1Key(elementType).Import(module),
                 method: keyMethod);
-
-            // Create a method body for the 'Key' method
-            keyMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
         }
 
         /// <summary>
