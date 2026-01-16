@@ -49,13 +49,13 @@ internal partial class InteropMethodRewriteFactory
 
             // If we didn't find the marker, it means the target method is either invalid, or the
             // supplied marker was incorrect (or the caller forgot to add it to the method body).
-            if (!body.Instructions.Contains(marker))
+            if (!body.Instructions.ReferenceContains(marker))
             {
                 throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }
 
             // Also validate that the target local variable is also actually part of the method
-            if (!body.LocalVariables.Contains(source))
+            if (!body.LocalVariables.ReferenceContains(source))
             {
                 throw WellKnownInteropExceptions.MethodRewriteSourceLocalNotFoundError(source, method);
             }
@@ -71,7 +71,7 @@ internal partial class InteropMethodRewriteFactory
                 // If the return type is blittable, we can always return it directly (simplest case)
                 if (returnType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
                         new CilInstruction(Ret)]);
                 }
@@ -161,7 +161,7 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [returnType.GetAbiType(interopReferences)]));
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
                         new CilInstruction(Call, marshallerMethod.Import(module)),
                         new CilInstruction(Ret)]);
@@ -194,7 +194,7 @@ internal partial class InteropMethodRewriteFactory
             else if (returnType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, though it's simple: the ABI type is an unmanaged value type
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdloc(source, body),
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged.Import(module)),
                     new CilInstruction(Ret)]);
@@ -263,7 +263,7 @@ internal partial class InteropMethodRewriteFactory
             CilInstruction ldloc_finallyEnd = CilInstruction.CreateLdloc(loc_returnValue, body);
 
             // Marshal the value and release the original interface pointer, or dispose the ABI value
-            body.Instructions.ReplaceRange(marker, [
+            body.Instructions.ReferenceReplaceRange(marker, [
                 ldloc_tryStart,
                 new CilInstruction(Call, marshallerMethod.Import(module)),
                 CilInstruction.CreateStloc(loc_returnValue, body),

@@ -93,6 +93,15 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is a <see cref="void"/> pointer type.
+        /// </summary>
+        /// <returns>Whether the type is a <see cref="void"/> pointer type.</returns>
+        public bool IsTypeOfVoidPointer()
+        {
+            return type is PointerTypeSignature { BaseType: CorLibTypeSignature { ElementType: ElementType.Void } };
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a fundamental Windows Runtime type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -478,10 +487,45 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Gets whether a given type has an ABI type that is a reference type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the input type has an ABI type that is a reference type.</returns>
+        public bool HasReferenceAbiType(InteropReferences interopReferences)
+        {
+            // All constructed generics will use 'void*' for the ABI type
+            if (type is GenericInstanceTypeSignature)
+            {
+                return true;
+            }
+
+            // All other value types will never have a reference type as the ABI type
+            if (type.IsValueType)
+            {
+                return false;
+            }
+
+            // 'Type' is a class, but is custom-mapped to the 'TypeName' struct type
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type))
+            {
+                return false;
+            }
+
+            // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
+            {
+                return false;
+            }
+
+            // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
+            return true;
+        }
+
+        /// <summary>
         /// Gets the ABI type for a given type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>The ABi type for the input type.</returns>
+        /// <returns>The ABI type for the input type.</returns>
         public TypeSignature GetAbiType(InteropReferences interopReferences)
         {
             // All constructed generics will use 'void*' for the ABI type. This applies to both reference

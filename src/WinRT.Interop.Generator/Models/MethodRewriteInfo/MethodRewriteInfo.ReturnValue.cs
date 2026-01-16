@@ -20,36 +20,23 @@ internal partial class MethodRewriteInfo
         /// <inheritdoc/>
         public override int CompareTo(MethodRewriteInfo? other)
         {
-            if (other is null)
-            {
-                return 1;
-            }
-
             if (ReferenceEquals(this, other))
             {
                 return 0;
             }
 
-            // If the input object is of a different type, just sort alphabetically based on the type name
-            if (other is not ReturnValue info)
-            {
-                return typeof(ReturnValue).FullName!.CompareTo(other.GetType().FullName!);
-            }
+            int result = CompareByMethodRewriteInfo<ReturnValue>(other);
 
-            int result = CompareByMethodRewriteInfo(other);
-
-            // If the two items are already not equal, we can stop here
+            // First, compare with the base state
             if (result != 0)
             {
                 return result;
             }
 
             int leftIndex = Method.CilMethodBody?.LocalVariables.IndexOf(Source) ?? -1;
-            int rightIndex = other.Method.CilMethodBody?.LocalVariables.IndexOf(info.Source) ?? -1;
+            int rightIndex = other!.Method.CilMethodBody?.LocalVariables.IndexOf(((ReturnValue)other).Source) ?? -1;
 
-            // Lastly, compare by order of instructions within the target method.
-            // There's no concern about stable sorting with respect to objects
-            // where the instructions are missing, as 'cswinrtgen' will fail.
+            // Lastly, compare by the order of the source variable
             return leftIndex.CompareTo(rightIndex);
         }
     }

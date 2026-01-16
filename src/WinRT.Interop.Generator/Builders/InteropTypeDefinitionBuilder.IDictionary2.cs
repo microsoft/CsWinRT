@@ -89,8 +89,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
 
-            bool isKeyReferenceType = !keyType.IsValueType || keyType.IsConstructedKeyValuePairType(interopReferences);
-            bool isValueReferenceType = !valueType.IsValueType || valueType.IsConstructedKeyValuePairType(interopReferences);
+            bool isKeyReferenceType = keyType.HasReferenceAbiType(interopReferences);
+            bool isValueReferenceType = valueType.HasReferenceAbiType(interopReferences);
 
             // We can share the vtable type for 'void*' when both key and value types are reference types
             if (isKeyReferenceType && isValueReferenceType)
@@ -135,14 +135,14 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedReadOnlyDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
+                TypeSignature sharedDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
                     displayKeyType,
                     displayValueType);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType),
+                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences,

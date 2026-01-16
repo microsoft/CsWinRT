@@ -49,13 +49,12 @@ internal partial class InteropMethodRewriteFactory
             }
 
             // If we didn't find the marker, it means the target method is either invalid
-            if (!body.Instructions.Contains(marker))
+            if (!body.Instructions.ReferenceContains(marker))
             {
                 throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }
 
-            // If we didn't find the marker, it means the target method is either invalid, or the
-            // supplied marker was incorrect (or the caller forgot to add it to the method body).
+            // Validate that the target parameter index is in range
             if ((uint)parameterIndex >= method.Parameters.Count)
             {
                 throw WellKnownInteropExceptions.MethodRewriteParameterIndexNotValidError(parameterIndex, method);
@@ -74,12 +73,12 @@ internal partial class InteropMethodRewriteFactory
                 // If the return type is blittable, we can just load it directly (simplest case)
                 if (parameterType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
+                    body.Instructions.ReferenceReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
                 }
                 else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
                 {
                     // If the type is some constructed 'KeyValuePair<,>' type, we use the generated marshaller
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
                 }
@@ -98,7 +97,7 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
                     // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerMethod.Import(module))]);
                 }
@@ -116,7 +115,7 @@ internal partial class InteropMethodRewriteFactory
                             parameterTypes: [parameterType.GetAbiType(interopReferences)]));
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerMethod.Import(module))]);
                 }
@@ -124,21 +123,21 @@ internal partial class InteropMethodRewriteFactory
             else if (parameterType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
                 // When marshalling 'Type' values, we must use 'TypeMarshaller' (the ABI type is a value type)
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.TypeMarshallerConvertToManaged.Import(module))]);
             }
             else if (parameterType is GenericInstanceTypeSignature)
             {
                 // This case (constructed interfaces or delegates) is effectively identical to marshalling 'KeyValuePair<,>' values
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
             }
@@ -155,7 +154,7 @@ internal partial class InteropMethodRewriteFactory
                         parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
                 // Marshal the value and release the original interface pointer
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, marshallerMethod.Import(module))]);
             }
