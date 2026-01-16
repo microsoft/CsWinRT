@@ -26,7 +26,7 @@ internal static class RuntimeClassNameGenerator
     /// </returns>
     public static string GetGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
-        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[type.FullName.Length * 2]);
+        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
         GetGenericInstanceRuntimeClassNameHelper(type, useWindowsUIXamlProjections, ref handler);
 
@@ -35,6 +35,25 @@ internal static class RuntimeClassNameGenerator
 
     private static void GetGenericInstanceRuntimeClassNameHelper(TypeSignature type, bool useWindowsUIXamlProjections, ref DefaultInterpolatedStringHandler interpolatedStringHandler)
     {
+        // Handle szArrayTypeSignature types as IReferenceArray<T>.
+        if (type is SzArrayTypeSignature szArrayTypeSignature)
+        {
+            interpolatedStringHandler.AppendLiteral("IReferenceArray<");
+
+            if (TypeMapping.TryFindMappedTypeName(szArrayTypeSignature.BaseType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
+            {
+                interpolatedStringHandler.AppendLiteral(mappedTypeName);
+            }
+            else
+            {
+                interpolatedStringHandler.AppendLiteral(szArrayTypeSignature.BaseType.FullName);
+            }
+
+            interpolatedStringHandler.AppendLiteral(">");
+            return;
+        }
+
+        // Generic type instance: recursively process generic arguments.
         if (type is GenericInstanceTypeSignature genericInstanceTypeSignature)
         {
             // If the generic type has a mapped name, use it; otherwise, use the full name.
