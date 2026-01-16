@@ -603,7 +603,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Stloc_0 },
                     { nop_try_this },
 
-                    // Arguments loading inside outer 'try/catch' block
+                    // Arguments loading inside outer 'try/finally' block
                     { nop_try_sender },
                     { nop_try_args },
 

@@ -88,12 +88,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="mapViewMethodsType">The resulting methods type.</param>
         public static void IMapViewMethods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition mapViewMethodsType)
         {
@@ -112,53 +114,31 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(mapViewMethodsType);
 
-            // Define the 'HasKey' method as follows:
-            //
-            // public static bool HasKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition hasKeyMethod = new(
-                name: "HasKey"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IMapViewMethods.HasKey(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'HasKey' method
             mapViewMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
                 method: hasKeyMethod);
 
-            // Create a method body for the 'HasKey' method
-            hasKeyMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Lookup' method as follows:
-            //
-            // public static <VALUE_TYPE> Lookup(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition lookupMethod = new(
-                name: "Lookup"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: valueType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IMapViewMethods.Lookup(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Lookup' method
             mapViewMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapViewMethodsImpl2Lookup(keyType, valueType).Import(module),
                 method: lookupMethod);
-
-            // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>

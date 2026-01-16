@@ -303,6 +303,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_resultNative },
+                    { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblField },
