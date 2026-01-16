@@ -1480,20 +1480,6 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_OtherTypeArrayVtable()</c>.
-    /// </summary>
-    public MemberReference IPropertyValueImplget_OtherTypeArrayVtable => field ??= IPropertyValueImpl
-        .CreateMemberReference("get_OtherTypeArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_InspectableArrayVtable()</c>.
-    /// </summary>
-    public MemberReference IPropertyValueImplget_InspectableArrayVtable => field ??= IPropertyValueImpl
-        .CreateMemberReference("get_InspectableArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
