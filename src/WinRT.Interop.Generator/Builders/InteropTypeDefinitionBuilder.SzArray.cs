@@ -381,6 +381,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 emitState: emitState);
 
+            var propertyValueImpl = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
+
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
@@ -395,7 +397,7 @@ internal partial class InteropTypeDefinitionBuilder
                     (list1Impl.get_IID, list1Impl.get_Vtable),
                     (enumerable1Impl.get_IID, enumerable1Impl.get_Vtable),
                     (readOnlyList1Impl.get_IID, readOnlyList1Impl.get_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue, interopReferences.IPropertyValueImplget_OtherTypeVtable), // TODO
+                    (propertyValueImpl.get_IID, propertyValueImpl.get_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
