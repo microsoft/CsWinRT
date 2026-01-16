@@ -27,7 +27,7 @@ internal class RuntimeClassNameMapping
     /// </returns>
     public static string GetMappedGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
-        DefaultInterpolatedStringHandler handler = default;
+        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[type.FullName.Length * 2]);
 
         GetMappedGenericInstanceRuntimeClassNameHelper(type, useWindowsUIXamlProjections, ref handler);
 
@@ -40,11 +40,13 @@ internal class RuntimeClassNameMapping
         {
             if (TypeMapping.TryFindMappedTypeName(genericInstanceTypeSignature.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
             {
-                interpolatedStringHandler.AppendLiteral($"{mappedTypeName}<");
+                interpolatedStringHandler.AppendLiteral(mappedTypeName);
+                interpolatedStringHandler.AppendLiteral("<");
             }
             else
             {
-                interpolatedStringHandler.AppendLiteral($"{genericInstanceTypeSignature.GenericType.FullName}<");
+                interpolatedStringHandler.AppendLiteral(genericInstanceTypeSignature.GenericType.FullName);
+                interpolatedStringHandler.AppendLiteral("<");
             }
 
             GetMappedGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[0], useWindowsUIXamlProjections, ref interpolatedStringHandler);
