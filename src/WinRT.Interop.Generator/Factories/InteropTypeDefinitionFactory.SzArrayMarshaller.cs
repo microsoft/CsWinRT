@@ -247,7 +247,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.ExceptionArrayMarshallerConvertToManaged,
                 copyToUnmanagedMethod: interopReferences.ExceptionArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.ExceptionArrayMarshallerCopyToManaged,
-                freeMethod: interopReferences.ExceptionArrayMarshallerFree,
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }

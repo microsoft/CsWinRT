@@ -104,17 +104,4 @@ public static unsafe class ExceptionArrayMarshaller
             destination[(int)i] = ABI.System.ExceptionMarshaller.ConvertToManaged(source[i]);
         }
     }
-
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
-    public static void Free(uint size, ABI.System.Exception* array)
-    {
-        if (size == 0)
-        {
-            return;
-        }
-
-        ArgumentNullException.ThrowIfNull(array);
-
-        Marshal.FreeCoTaskMem((nint)array);
-    }
 }

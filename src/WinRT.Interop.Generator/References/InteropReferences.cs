@@ -2134,16 +2134,6 @@ internal sealed class InteropReferences
                 Span1.MakeGenericValueType(Exception.ToReferenceTypeSignature())]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.ExceptionArrayMarshaller.Free</c>.
-    /// </summary>
-    public MemberReference ExceptionArrayMarshallerFree => field ??= ExceptionArrayMarshaller
-        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                _corLibTypeFactory.UInt32,
-                AbiException.ToValueTypeSignature().MakePointerType()]));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
     /// </summary>
     public MemberReference WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe => field ??= WindowsRuntimeValueTypeMarshaller
