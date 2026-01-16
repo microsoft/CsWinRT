@@ -40,14 +40,7 @@ internal static class RuntimeClassNameGenerator
         {
             interpolatedStringHandler.AppendLiteral("IReferenceArray<");
 
-            if (TypeMapping.TryFindMappedTypeName(szArrayTypeSignature.BaseType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
-            {
-                interpolatedStringHandler.AppendLiteral(mappedTypeName);
-            }
-            else
-            {
-                interpolatedStringHandler.AppendLiteral(szArrayTypeSignature.BaseType.FullName);
-            }
+            GetGenericInstanceRuntimeClassNameHelper(szArrayTypeSignature.BaseType, useWindowsUIXamlProjections, ref interpolatedStringHandler);
 
             interpolatedStringHandler.AppendLiteral(">");
             return;
