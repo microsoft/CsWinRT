@@ -239,6 +239,14 @@ internal partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Check if this is the first time that this constructed generic Windows Runtime interface, otherwise stop.
+        // This protects against infinite recursion when types depend on each other in a cycle. See notes in the
+        // logic to handle user-defined types, as the same check is also present there, for the same reason.
+        if (!discoveryState.TryMarkWindowsRuntimeGenericInterfaceTypeInstance(typeSignature))
+        {
+            return;
+        }
+
         if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
         {
             discoveryState.TrackIEnumerator1Type(typeSignature);
