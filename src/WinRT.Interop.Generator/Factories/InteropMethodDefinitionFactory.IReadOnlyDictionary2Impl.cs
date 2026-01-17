@@ -20,62 +20,79 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal static partial class InteropMethodDefinitionFactory
 {
     /// <summary>
-    /// Helpers for impl types for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> interfaces.
+    /// Helpers for impl types for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> interfaces.
     /// </summary>
-    public static class IReadOnlyList1Impl
+    public static class IReadOnlyDictionary2Impl
     {
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>GetAt</c> export method.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Lookup</c> export method.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="lookupMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <remarks>
-        /// This method can also be used to define the <c>GetAt</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// This method can also be used to define the <c>Lookup</c> method for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interfaces.
         /// </remarks>
-        public static MethodDefinition GetAt(
-            GenericInstanceTypeSignature readOnlyListType,
-            MemberReference getAtMethod,
+        public static MethodDefinition Lookup(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            MemberReference lookupMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
 
-            // Define the 'GetAt' method as follows:
+            // Define the 'Lookup' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int GetAt(void* thisPtr, uint index, <ABI_ELEMENT_TYPE>* result)
-            MethodDefinition getAtImplMethod = new(
-                name: "GetAt"u8,
+            // private static int Lookup(void* thisPtr, <ABI_KEY_TYPE> key, <ABI_ELEMENT_TYPE>* result)
+            MethodDefinition lookupImplMethod = new(
+                name: "Lookup"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
+                        keyType.GetAbiType(interopReferences).Import(module),
+                        valueType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
             // Declare the local variables:
-            //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(readOnlyListType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
-            // Create a method body for the 'GetAt' method
-            getAtImplMethod.CilMethodBody = new CilMethodBody()
+            IMethodDescriptor adapterLookupMethod;
+
+            // Get the target 'Lookup' method (we can optimize for 'string' types)
+            if (keyType.IsTypeOfString())
+            {
+                adapterLookupMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                    ? interopReferences.IReadOnlyDictionaryAdapterOfStringLookup(valueType)
+                    : interopReferences.IListAdapterOfStringIndexOf(); // TODO
+            }
+            else
+            {
+                // Otherwise use the provided method directly (it will always be valid)
+                adapterLookupMethod = lookupMethod;
+            }
+
+            // Create a method body for the 'Lookup' method
+            lookupImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -91,12 +108,12 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
                     { Stloc_0 },
                     { Ldarg_2 },
                     { Ldloc_0 },
-                    { Ldarg_1 },
-                    { Call, getAtMethod.Import(module) },
+                    { nop_parameter1Rewrite },
+                    { Call, adapterLookupMethod.Import(module) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -125,27 +142,39 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
+            // If the key type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = keyType.IsTypeOfString()
+                ? interopReferences.ReadOnlySpanChar
+                : keyType;
+
+            // Track rewriting the parameter for this method
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: parameterType,
+                method: lookupImplMethod,
+                marker: nop_parameter1Rewrite,
+                parameterIndex: 1);
+
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
-                retValType: elementType,
-                method: getAtImplMethod,
+                retValType: valueType,
+                method: lookupImplMethod,
                 marker: nop_convertToUnmanaged);
 
-            return getAtImplMethod;
+            return lookupImplMethod;
         }
 
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Size</c> export method.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="sizeMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="sizeMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <remarks>
-        /// This method can also be used to define the <c>get_Size</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// This method can also be used to define the <c>get_Size</c> method for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interfaces.
         /// </remarks>
         public static MethodDefinition get_Size(
-            GenericInstanceTypeSignature readOnlyListType,
+            GenericInstanceTypeSignature readOnlyDictionaryType,
             MemberReference sizeMethod,
             InteropReferences interopReferences,
             ModuleDefinition module)
@@ -167,9 +196,9 @@ internal static partial class InteropMethodDefinitionFactory
             };
 
             // Declare the local variables:
-            //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(readOnlyListType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
@@ -195,7 +224,7 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
@@ -232,101 +261,98 @@ internal static partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>IndexOf</c> export method.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>HasKey</c> export method.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="indexOfMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="hasKeyMethod">The interface method to invoke on <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <remarks>
-        /// This method can also be used to define the <c>IndexOf</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// This method can also be used to define the <c>HasKey</c> method for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interfaces.
         /// </remarks>
-        public static MethodDefinition IndexOf(
-            GenericInstanceTypeSignature readOnlyListType,
-            MemberReference indexOfMethod,
+        public static MethodDefinition HasKey(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            MemberReference hasKeyMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
 
-            // Define the 'IndexOf' method as follows:
+            // Define the 'HasKey' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int IndexOf(void* thisPtr, <ABI_ELEMENT_TYPE> value, uint* index, bool* result)
-            MethodDefinition indexOfImplMethod = new(
-                name: "IndexOf"u8,
+            // private static int HasKey(void* thisPtr, <ABI_KEY_TYPE> key, bool* result)
+            MethodDefinition hasKeyImplMethod = new(
+                name: "HasKey"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        elementType.GetAbiType(interopReferences).Import(module),
-                        module.CorLibTypeFactory.UInt32.MakePointerType(),
+                        keyType.GetAbiType(interopReferences).Import(module),
                         module.CorLibTypeFactory.Boolean.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
             // Declare the local variables:
-            //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(readOnlyListType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
-            CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction nop_convertToUnmanaged = new(Nop);
+            CilInstruction callHasKeyMethod;
 
-            MemberReference adapterIndexOfMethod;
-
-            // Get the target 'IndexOf' method (we can optimize for 'string' types)
-            if (elementType.IsTypeOfString())
+            // Get the target 'HasKey' method (we can optimize for 'string' types).
+            // We prepare the full instruction, as we need 'callvirt' in some cases.
+            if (keyType.IsTypeOfString())
             {
-                adapterIndexOfMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
-                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
-                    : interopReferences.IListAdapterOfStringIndexOf();
+                MethodSpecification hasKeyMethodSpecification = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                    ? interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType)
+                    : interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType); // TODO
+
+                callHasKeyMethod = new(Call, hasKeyMethodSpecification.Import(module));
             }
             else
             {
-                // Otherwise use the provided method directly (it will always be valid)
-                adapterIndexOfMethod = indexOfMethod;
+                // Otherwise just use 'ContainsKey' method passed as input
+                callHasKeyMethod = new(Callvirt, hasKeyMethod.Import(module));
             }
 
-            // Create a method body for the 'IndexOf' method
-            indexOfImplMethod.CilMethodBody = new CilMethodBody()
+            // Create a method body for the 'HasKey' method
+            hasKeyImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
                 {
-                    // Return 'E_POINTER' if either argument is 'null'
-                    { Ldarg_2 },
-                    { Ldc_I4_0 },
-                    { Conv_U },
-                    { Beq_S, ldc_i4_e_pointer.CreateLabel() },
+                    // Return 'E_POINTER' if the argument is 'null'
                     { Ldarg_2 },
                     { Ldc_I4_0 },
                     { Conv_U },
                     { Bne_Un_S, nop_beforeTry.CreateLabel() },
-                    { ldc_i4_e_pointer },
+                    { Ldc_I4, unchecked((int)0x80004003) },
                     { Ret },
                     { nop_beforeTry },
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
                     { Stloc_0 },
-                    { Ldarg_3 },
+                    { Ldarg_2 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
-                    { Ldarg_2 },
-                    { Call, adapterIndexOfMethod.Import(module) },
-                    { Stind_I1 },
+                    { callHasKeyMethod },
+                    { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -354,71 +380,146 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
-            // If the element type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
-            TypeSignature parameterType = elementType.IsTypeOfString()
+            // If the key type is 'string', we use 'ReadOnlySpan<char>' to avoid an allocation
+            TypeSignature parameterType = keyType.IsTypeOfString()
                 ? interopReferences.ReadOnlySpanChar
-                : elementType;
+                : keyType;
 
             // Track rewriting the parameter for this method
             emitState.TrackManagedParameterMethodRewrite(
                 parameterType: parameterType,
-                method: indexOfImplMethod,
+                method: hasKeyImplMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
 
-            return indexOfImplMethod;
+            // Track the method for rewrite to marshal the result value
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: module.CorLibTypeFactory.Boolean,
+                method: hasKeyImplMethod,
+                marker: nop_convertToUnmanaged);
+
+            return hasKeyImplMethod;
         }
 
-#pragma warning disable IDE0017
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>Split</c> export method.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <remarks>
-        /// This method can also be used to define the <c>GetMany</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
-        /// </remarks>
-        public static MethodDefinition GetMany(
-            GenericInstanceTypeSignature readOnlyListType,
-            MemberReference getAtMethod,
+        public static MethodDefinition Split(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
 
-            // Define the 'GetMany' method as follows:
+            // Define the 'Split' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int GetMany(void* thisPtr, uint size, <ABI_ELEMENT_TYPE>* items, uint* result)
-            MethodDefinition indexOfMethod = new(
-                name: "GetMany"u8,
+            // private static int Split(void* thisPtr, void** first, void** second)
+            MethodDefinition splitMethod = new(
+                name: "Split"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
-            // Create a method body for the 'GetMany' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
+            // Declare the local variables:
+            //   [0]: '<READONLY_DICTIONARY_TYPE>' (for 'thisObject')
+            //   [1]: '<READONLY_DICTIONARY_TYPE>' (for 'firstObject')
+            //   [2]: '<READONLY_DICTIONARY_TYPE>' (for 'secondObject')
+            //   [3]: 'int' (the 'HRESULT' to return)
+            CilLocalVariable loc_0_thisObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_1_firstObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_2_secondObject = new(readOnlyDictionaryType.Import(module));
+            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+
+            // Labels for jumps
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldloc_3_returnHResult = new(Ldloc_3);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction nop_firstObject_convertToUnmanaged = new(Nop);
+            CilInstruction nop_secondObject_convertToUnmanaged = new(Nop);
+
+            // Create a method body for the 'Split' method
+            splitMethod.CilMethodBody = new CilMethodBody()
             {
+                LocalVariables = { loc_0_thisObject, loc_1_firstObject, loc_2_secondObject, loc_3_hresult },
                 Instructions =
                 {
-                    { Ldnull },
-                    { Throw } // TODO
+                    // Return 'E_POINTER' if the argument is 'null'
+                    { Ldarg_2 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_0_tryStart },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType).Import(module) },
+                    { Stloc_0 },
+                    { Ldloc_0 },
+                    { Ldloca_S, loc_1_firstObject },
+                    { Ldloca_S, loc_2_secondObject },
+                    { Call, interopReferences.IReadOnlyDictionaryAdapter2Split(keyType, valueType).Import(module) },
+                    { Ldarg_1 },
+                    { Ldloc_1 },
+                    { nop_firstObject_convertToUnmanaged },
+                    { Ldarg_2 },
+                    { Ldloc_2 },
+                    { nop_secondObject_convertToUnmanaged },
+                    { Ldc_I4_0 },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_3 },
+                    { Leave_S, ldloc_3_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [1]
+                    { ldloc_3_returnHResult  },
+                    { Ret }
                 },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_3_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
             };
 
-            return indexOfMethod;
+            // Track the method for rewrite to marshal the two result values
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: readOnlyDictionaryType,
+                method: splitMethod,
+                marker: nop_firstObject_convertToUnmanaged);
+
+            emitState.TrackRetValValueMethodRewrite(
+                retValType: readOnlyDictionaryType,
+                method: splitMethod,
+                marker: nop_secondObject_convertToUnmanaged);
+
+            return splitMethod;
         }
     }
 }

@@ -134,6 +134,16 @@ internal sealed class InteropReferences
     public TypeReference Array => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}"/>.
+    /// </summary>
+    public TypeReference ArraySegment1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ArraySegment`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}.Enumerator"/>.
+    /// </summary>
+    public TypeReference ArraySegment1Enumerator => field ??= ArraySegment1.CreateTypeReference("Enumerator"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Nullable"/>.
     /// </summary>
     public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
@@ -702,6 +712,21 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryMethods&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference IDictionaryMethods2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IDictionaryMethods`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionaryAdapter2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryAdapter`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapterExtensions</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionaryAdapterExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryAdapterExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionarySplitAdapter2&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionarySplitAdapter2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionarySplitAdapter`2"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods</c>.
@@ -3693,6 +3718,96 @@ internal sealed class InteropReferences
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]))
             .MakeGenericInstanceMethod(mapViewMethods.ToReferenceTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Lookup(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    keyType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;string, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IReadOnlyDictionaryAdapterOfStringLookup(TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapterExtensions
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Size</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Size(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IReadOnlyDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;string, TValue&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IReadOnlyDictionaryAdapterOfStringHasKey(TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapterExtensions
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Split</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Split(TypeSignature keyType, TypeSignature valueType)
+    {
+        TypeSignature readOnlyDictionaryType = IReadOnlyDictionary2.MakeGenericReferenceType(
+            new GenericParameterSignature(GenericParameterType.Type, 0),
+            new GenericParameterSignature(GenericParameterType.Type, 1));
+
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Split"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    readOnlyDictionaryType,
+                    readOnlyDictionaryType.MakeByReferenceType(),
+                    readOnlyDictionaryType.MakeByReferenceType()]));
     }
 
     /// <summary>
