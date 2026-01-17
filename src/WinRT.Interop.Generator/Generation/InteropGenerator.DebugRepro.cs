@@ -66,9 +66,10 @@ internal partial class InteropGenerator
         token.ThrowIfCancellationRequested();
 
         List<string> referencePaths = [];
+        List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
 
-        // Create another subdirectory for all the input assemblies. We don't put these in the top level
+        // Create another subdirectory for all the input assemblyPaths. We don't put these in the top level
         // temporary folder so that the number of files there remains very small. The reason is just to
         // make inspecting the resulting .dll easier, without having to scroll past hundreds of folders.
         string assembliesDirectory = Path.Combine(tempDirectory, "in");
@@ -88,15 +89,19 @@ internal partial class InteropGenerator
             // Extract the .dll to the new destination path
             dllEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track all extracted reference paths, as well as the output assembly path.
+            // Track all extracted reference paths, as well as the output assemblyPath path.
             // Note that the debug repro only uses filenames, not full paths, for .dll-s.
             if (dllEntry.Name == args.OutputAssemblyPath)
             {
                 outputAssemblyPath = destinationPath;
             }
-            else
+            else if (Path.GetFileName(Path.GetDirectoryName(dllEntry.FullName)) == "references")
             {
                 referencePaths.Add(destinationPath);
+            }
+            else
+            {
+                implementationPaths.Add(destinationPath);
             }
         }
 
@@ -106,6 +111,7 @@ internal partial class InteropGenerator
         string rspText = new InteropGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. referencePaths],
+            ImplementationAssemblyPaths = [.. implementationPaths],
             OutputAssemblyPath = outputAssemblyPath!,
             GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
@@ -151,32 +157,24 @@ internal partial class InteropGenerator
         // Create a temporary directory to stage files for the ZIP
         string tempFolderName = $"cswinrtgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
         string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
+        string referencesDirectory = Path.Combine(tempDirectory, "references");
+        string implementationDirectory = Path.Combine(tempDirectory, "implementation");
 
         _ = Directory.CreateDirectory(tempDirectory);
-
-        // List to store the updated DLL names for the .rsp file
-        List<string> updatedDllNames = [];
+        _ = Directory.CreateDirectory(referencesDirectory);
+        _ = Directory.CreateDirectory(implementationDirectory);
 
         // Map with all the original paths
         Dictionary<string, string> originalPaths = new(args.ReferenceAssemblyPaths.Length + 1);
 
-        // Add all reference assemblies to the temp directory with hashed names
-        foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
-        {
-            args.Token.ThrowIfCancellationRequested();
-
-            string hashedName = GetHashedFileName(referenceAssemblyPath);
-            string destinationPath = Path.Combine(tempDirectory, hashedName);
-
-            File.Copy(referenceAssemblyPath, destinationPath, overwrite: true);
-
-            updatedDllNames.Add(hashedName);
-            originalPaths.Add(hashedName, referenceAssemblyPath);
-        }
+        // Add all reference and implementation assemblyPaths to the respective subdirectory under temp directory with hashed names
+        // and store them with the updated names in a list for the .rsp file
+        List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referencesDirectory, originalPaths, args.Token);
+        List<string> updatedImplementationDllNames = CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add the output assembly to the temp directory with a hashed name
+        // Add the output assemblyPath to the temp directory with a hashed name
         string outputAssemblyHashedName = GetHashedFileName(args.OutputAssemblyPath);
         string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
 
@@ -189,7 +187,8 @@ internal partial class InteropGenerator
         // Prepare the .rsp file with all updated arguments
         string rspText = new InteropGeneratorArgs
         {
-            ReferenceAssemblyPaths = [.. updatedDllNames],
+            ReferenceAssemblyPaths = [.. updatedReferenceDllNames],
+            ImplementationAssemblyPaths = [.. updatedImplementationDllNames],
             OutputAssemblyPath = outputAssemblyHashedName,
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
@@ -246,5 +245,25 @@ internal partial class InteropGenerator
         string hash = Convert.ToHexString(hashData);
 
         return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
+    }
+
+    private static List<string> CopyHashedFilesToDirectory(string[] assemblyPaths, string destinationDirectory, Dictionary<string, string> originalPaths, CancellationToken token)
+    {
+        List<string> updatedDllNames = [];
+
+        foreach (string assemblyPath in assemblyPaths)
+        {
+            token.ThrowIfCancellationRequested();
+
+            string hashedName = GetHashedFileName(assemblyPath);
+            string destinationPath = Path.Combine(destinationDirectory, hashedName);
+
+            File.Copy(assemblyPath, destinationPath, overwrite: true);
+
+            updatedDllNames.Add(hashedName);
+            originalPaths.Add(hashedName, assemblyPath);
+        }
+
+        return updatedDllNames;
     }
 }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -29,8 +30,10 @@ internal partial class InteropGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        string[] assembliesToProcess = GetAssembliesToProcess(args);
+
         // Initialize the assembly resolver (we need to reuse this to allow caching)
-        PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
+        PathAssemblyResolver pathAssemblyResolver = new(assembliesToProcess);
 
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
@@ -40,7 +43,7 @@ internal partial class InteropGenerator
         {
             // Load and process all modules, potentially in parallel
             ParallelLoopResult result = Parallel.ForEach(
-                source: args.ReferenceAssemblyPaths.Concat([args.OutputAssemblyPath]),
+                source: assembliesToProcess.Concat([args.OutputAssemblyPath]),
                 parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
                 body: path => LoadAndProcessModule(args, discoveryState, path));
 
@@ -323,5 +326,32 @@ internal partial class InteropGenerator
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
         return new(module.CorLibTypeFactory, windowsRuntimeAssembly.Import(module), windowsSdkProjectionAssembly.Import(module));
+    }
+
+    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args)
+    {
+        PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
+
+        HashSet<string> projectionFileNames = new(args.ReferenceAssemblyPaths.Length, StringComparer.OrdinalIgnoreCase);
+        List<string> assembliesToProcess = new(args.ImplementationAssemblyPaths.Length);
+        foreach (string path in args.ReferenceAssemblyPaths)
+        {
+            ModuleDefinition module = ModuleDefinition.FromFile(path, pathAssemblyResolver.ReaderParameters);
+            if (module.Assembly?.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeReferenceAssemblyAttribute"u8) is true)
+            {
+                _ = projectionFileNames.Add(Path.GetFileName(path));
+                assembliesToProcess.Add(path);
+            }
+        }
+
+        foreach (string path in args.ImplementationAssemblyPaths)
+        {
+            if (!projectionFileNames.Contains(Path.GetFileName(path)))
+            {
+                assembliesToProcess.Add(path);
+            }
+        }
+
+        return [.. assembliesToProcess];
     }
 }
