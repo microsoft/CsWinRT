@@ -1104,6 +1104,59 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
+                readOnlyDictionaryType: dictionaryType,
+                lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
+                readOnlyDictionaryType: dictionaryType,
+                sizeMethod: interopReferences.IDictionaryAdapter2Size(keyType, valueType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+                readOnlyDictionaryType: dictionaryType,
+                containsKeyMethod: interopReferences.IDictionary2ContainsKey(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'GetView' method
+            MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IDictionary2Impl.GetView(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Insert' method
+            MethodDefinition insertMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Insert(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Remove' method
+            MethodDefinition removeMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Remove(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Clear(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1113,7 +1166,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    lookupMethod,
+                    sizeMethod,
+                    hasKeyMethod,
+                    getViewMethod,
+                    insertMethod,
+                    removeMethod,
+                    clearMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");

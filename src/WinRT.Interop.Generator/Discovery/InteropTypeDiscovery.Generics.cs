@@ -268,6 +268,21 @@ internal partial class InteropTypeDiscovery
             // This is for the same reason why we need the other special cases in this method: members are not analyzed.
             discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
 
+            // Whenever we find an 'IDictionary<TKey, TValue>' instantiation, we also need to track the corresponding
+            // 'IReadOnlyDictionary<TKey, TValue>' instantiation. This is because that interface is needed to marshal
+            // the return value of the 'IMap<K, V>.GetView' method ('IMapView<K, V>'). Same as 'IVector<T>.GetView' above.
+            discoveryState.TrackIReadOnlyDictionary2Type(interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+
+            // We also need to track the constructed 'ReadOnlyDictionary<TKey, TValue>' type, as that is used by
+            // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, Tvalue>' instance doesn't implement
+            // 'IReadOnlyDictionary<TKey, TValue>' directly. Analogous to tracking 'ReadOnlyCollection<T>' above.
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.ReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
             // When we discover a constructed 'IDictionary<TKey, TValue>' instantiation, we'll be generating a native object type during
             // the emit phase, which is used to marshal anonymous objects. This derives from 'WindowsRuntimeDictionary<TKey, TValue, ...>'.
             // For the 'Keys' and 'Values' properties, that base type will return instances of the 'DictionaryKeyCollection<TKey, TValue>'
