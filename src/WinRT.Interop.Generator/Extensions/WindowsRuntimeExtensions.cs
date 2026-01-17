@@ -26,6 +26,12 @@ internal static class WindowsRuntimeExtensions
         public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
 
         /// <summary>
+        /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
+        /// </summary>
+        /// <returns>Whether the module represents a Windows Runtime reference assembly.</returns>
+        public bool IsWindowsRuntimeReferenceAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute);
+
+        /// <summary>
         /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -924,7 +930,17 @@ file static class WellKnownMetadataNames
     public static readonly Utf8String WindowsRuntime = "WindowsRuntime"u8;
 
     /// <summary>
+    /// The <c>"WindowsRuntime.InteropServices"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
+
+    /// <summary>
     /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
     /// </summary>
     public static readonly Utf8String WindowsRuntimeMetadataAttribute = "WindowsRuntimeMetadataAttribute"u8;
+
+    /// <summary>
+    /// The <c>"WindowsRuntimeReferenceAssemblyAttribute"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeReferenceAssemblyAttribute = "WindowsRuntimeReferenceAssemblyAttribute"u8;
 }
