@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "WinRT.Interop.Generator": {
-      "commandName": "Project",
-      "commandLineArgs": "\"D:\\src\\CsWinRT\\src\\Tests\\FunctionalTests\\debug\\debug-repro.zip\""
-    }
-  }
-}
