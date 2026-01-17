@@ -290,6 +290,14 @@ internal partial class InteropTypeDiscovery
             // the return value of the 'IMap<K, V>.GetView' method ('IMapView<K, V>'). Same as 'IVector<T>.GetView' above.
             discoveryState.TrackIReadOnlyDictionary2Type(interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
 
+            // We also need to track the 'IList<KeyValuePair<TKey, TValue>>' type, because we need part of the generated code for it from
+            // the 'IDynamicInterfaceCastable' implementation of dictionary types. That is, suppose we have an anonymous Windows Runtime
+            // object, and we try to do a dynamic cast for 'ICollection<KeyValuePair<string, string>>' on it. This interface (from the .NET
+            // perspective) can be implemented both by RCWs for 'IDictionary<string, string>', as well as for 'IList<KeyValuePair<string, string>>'.
+            // So to make this work, we need to perform 'QueryInterface' calls at runtime for both and then delegate to the right implementation.
+            // Because of this, we need to ensure that we have the 'KeyValuePair<TKey, TValue>' instantiation for 'IList<T>' also tracked.
+            discoveryState.TrackIList1Type(interopReferences.IList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])));
+
             // We also need to track the constructed 'ReadOnlyDictionary<TKey, TValue>' type, as that is used by
             // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, Tvalue>' instance doesn't implement
             // 'IReadOnlyDictionary<TKey, TValue>' directly. Analogous to tracking 'ReadOnlyCollection<T>' above.
@@ -327,6 +335,9 @@ internal partial class InteropTypeDiscovery
 
             // Same handling as above for constructed 'KeyValuePair<TKey, TValue>' types
             discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
+
+            // Also track 'IReadOnlyList<KeyValuePair<TKey, TValue>>' to enable dynamic casts (see notes above for 'IDictionary<TKey, TValue>')
+            discoveryState.TrackIList1Type(interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])));
 
             // Handle 'ReadOnlyDictionaryKeyCollection<TKey, TValue>' as above
             TryTrackGenericTypeInstance(
