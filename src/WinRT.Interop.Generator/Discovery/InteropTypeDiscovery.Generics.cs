@@ -247,6 +247,7 @@ internal partial class InteropTypeDiscovery
             return;
         }
 
+        // Match all well-known, custom-mapped, generic Windows Runtime interface types
         if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
         {
             discoveryState.TrackIEnumerator1Type(typeSignature);
@@ -259,7 +260,12 @@ internal partial class InteropTypeDiscovery
             // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
             // from other generated code, or projections. This special handling is needed because unlike with the other
             // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
-            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IEnumerator1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
         {
@@ -267,7 +273,12 @@ internal partial class InteropTypeDiscovery
 
             // Whenever we find an 'IList<T>' instantiation, we also need to track the corresponding 'IReadOnlyList<T>' instantiation.
             // This is because that interface is needed to marshal the return value of the 'IVector<T>.GetView' method ('IVectorView<T>').
-            discoveryState.TrackIReadOnlyList1Type(interopReferences.IReadOnlyList1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             // We also need to track the constructed 'ReadOnlyCollection<T>' type, as that is used by 'IListAdapter<T>.GetView' in case the
             // input 'IList<T>' instance doesn't implement 'IReadOnlyList<T>' directly. In that case, we return a 'ReadOnlyCollection<T>'
@@ -296,7 +307,12 @@ internal partial class InteropTypeDiscovery
             // Whenever we find an 'IDictionary<TKey, TValue>' instantiation, we also need to track the corresponding
             // 'IReadOnlyDictionary<TKey, TValue>' instantiation. This is because that interface is needed to marshal
             // the return value of the 'IMap<K, V>.GetView' method ('IMapView<K, V>'). Same as 'IVector<T>.GetView' above.
-            discoveryState.TrackIReadOnlyDictionary2Type(interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             // We also need to track the 'IList<KeyValuePair<TKey, TValue>>' type, because we need part of the generated code for it from
             // the 'IDynamicInterfaceCastable' implementation of dictionary types. That is, suppose we have an anonymous Windows Runtime
@@ -304,7 +320,12 @@ internal partial class InteropTypeDiscovery
             // perspective) can be implemented both by RCWs for 'IDictionary<string, string>', as well as for 'IList<KeyValuePair<string, string>>'.
             // So to make this work, we need to perform 'QueryInterface' calls at runtime for both and then delegate to the right implementation.
             // Because of this, we need to ensure that we have the 'KeyValuePair<TKey, TValue>' instantiation for 'IList<T>' also tracked.
-            discoveryState.TrackIList1Type(interopReferences.IList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             // We also need to track the constructed 'ReadOnlyDictionary<TKey, TValue>' type, as that is used by
             // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, Tvalue>' instance doesn't implement
@@ -345,7 +366,12 @@ internal partial class InteropTypeDiscovery
             discoveryState.TrackKeyValuePairType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments]));
 
             // Also track 'IReadOnlyList<KeyValuePair<TKey, TValue>>' to enable dynamic casts (see notes above for 'IDictionary<TKey, TValue>')
-            discoveryState.TrackIList1Type(interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module); ;
 
             // Handle 'ReadOnlyDictionaryKeyCollection<TKey, TValue>' as above
             TryTrackGenericTypeInstance(
@@ -398,7 +424,12 @@ internal partial class InteropTypeDiscovery
             discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
 
             // Also manually track the args type for 'MapChangedEventHandler<K,V>'
-            discoveryState.TrackIMapChangedEventArgs1Type(interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[1]));
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[1]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
