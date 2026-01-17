@@ -91,6 +91,7 @@ internal partial class InteropGenerator
 
             // Track all extracted reference paths, as well as the output assemblyPath path.
             // Note that the debug repro only uses filenames, not full paths, for .dll-s.
+            // We also split reference paths and implementation paths in different folders.
             if (dllEntry.Name == args.OutputAssemblyPath)
             {
                 outputAssemblyPath = destinationPath;
@@ -167,14 +168,14 @@ internal partial class InteropGenerator
         // Map with all the original paths
         Dictionary<string, string> originalPaths = new(args.ReferenceAssemblyPaths.Length + 1);
 
-        // Add all reference and implementation assemblyPaths to the respective subdirectory under temp directory with hashed names
-        // and store them with the updated names in a list for the .rsp file
+        // Add all reference and implementation paths with hashed names to the respective subdirectories under the
+        // temporary directory, and store them with the updated names in a list to use to build the .rsp file.
         List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referencesDirectory, originalPaths, args.Token);
         List<string> updatedImplementationDllNames = CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add the output assemblyPath to the temp directory with a hashed name
+        // Add the output assembly paths to the temporary directory with a hashed name
         string outputAssemblyHashedName = GetHashedFileName(args.OutputAssemblyPath);
         string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
 
@@ -247,7 +248,19 @@ internal partial class InteropGenerator
         return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
     }
 
-    private static List<string> CopyHashedFilesToDirectory(string[] assemblyPaths, string destinationDirectory, Dictionary<string, string> originalPaths, CancellationToken token)
+    /// <summary>
+    /// Copies all specified assemblies to a target folder, and returns the list of updated hashed filenames.
+    /// </summary>
+    /// <param name="assemblyPaths">The input assembly paths.</param>
+    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
+    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
+    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The list of updated hashed filenames.</returns>
+    private static List<string> CopyHashedFilesToDirectory(
+        string[] assemblyPaths,
+        string destinationDirectory,
+        Dictionary<string, string> originalPaths,
+        CancellationToken token)
     {
         List<string> updatedDllNames = [];
 

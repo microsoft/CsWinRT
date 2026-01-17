@@ -280,13 +280,17 @@ internal static partial class ImplGenerator
     /// This checks whether it is one of those by checking the namespace.
     /// </summary>
     /// <param name="exportedType">The type to check.</param>
-    /// <returns>True if the namespace is one of the forwarded internal types; otherwise, false.</returns>
+    /// <returns>Whether the namespace for <paramref name="exportedType"/> is one of the forwarded internal types.</returns>
     private static bool IsForwardedInternalType(TypeDefinition exportedType)
     {
-        return exportedType.IsClass &&
-               // Check not static class
-               !(exportedType.IsAbstract && exportedType.IsSealed) &&
-               exportedType.Namespace?.Value is "System.IO" or "Windows.Storage.Streams";
+        // Ignore all types which are not classes, as well as static classes ('abstract sealed' in IL)
+        if (!exportedType.IsClass || (exportedType.IsAbstract && exportedType.IsSealed))
+        {
+            return false;
+        }
+
+        // Match the special namespaces for well-known types
+        return exportedType.Namespace?.Value is "System.IO" or "Windows.Storage.Streams";
     }
 
     /// <summary>

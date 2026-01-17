@@ -20,7 +20,7 @@ public sealed class RunCsWinRTGenerator : ToolTask
     /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
     /// the entire surface area for compilation. These assemblies, specificaly the ones
-    /// for WinRT projections are the set of assemblies that will contribute
+    /// for Windows Runtime projections are the set of assemblies that will contribute
     /// to the interop .dll being generated.
     /// </summary>
     [Required]
@@ -229,6 +229,7 @@ public sealed class RunCsWinRTGenerator : ToolTask
 
         IEnumerable<string> referenceAssemblyPaths = ReferenceAssemblyPaths!.Select(static path => path.ItemSpec);
         string referenceAssemblyPathsArg = string.Join(",", referenceAssemblyPaths);
+
         IEnumerable<string> implementationAssemblyPaths = ImplementationAssemblyPaths!.Select(static path => path.ItemSpec);
         string implementationAssemblyPathsArg = string.Join(",", implementationAssemblyPaths);
 
