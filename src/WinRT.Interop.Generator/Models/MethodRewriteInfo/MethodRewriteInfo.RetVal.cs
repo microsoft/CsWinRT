@@ -15,20 +15,10 @@ internal partial class MethodRewriteInfo
         /// <inheritdoc/>
         public override int CompareTo(MethodRewriteInfo? other)
         {
-            if (other is null)
-            {
-                return 1;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return 0;
-            }
-
-            // Same logic as in 'ReturnValue', or just compare the base state
-            return other is not RetVal
-                ? typeof(RetVal).FullName!.CompareTo(other.GetType().FullName!)
-                : CompareByMethodRewriteInfo(other);
+            // 'RetVal' objects have no additional state, so just compare with the base state
+            return ReferenceEquals(this, other)
+                ? 0
+                : CompareByMethodRewriteInfo<RetVal>(other);
         }
     }
 }

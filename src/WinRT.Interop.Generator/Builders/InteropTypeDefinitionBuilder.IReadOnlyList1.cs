@@ -39,7 +39,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
             // Same logic as with 'IList1.Vftbl' (i.e. share for all reference types)
-            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            if (elementType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyList1Vftbl;
 
@@ -426,6 +426,39 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
+                readOnlyListType: readOnlyListType,
+                sizeMethod: interopReferences.IReadOnlyListAdapter1Size(elementType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: readOnlyListType,
+                indexOfMethod: interopReferences.IReadOnlyListAdapter1IndexOf(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
@@ -435,7 +468,11 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    getAtMethod,
+                    sizeMethod,
+                    indexOfMethod,
+                    getManyMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");

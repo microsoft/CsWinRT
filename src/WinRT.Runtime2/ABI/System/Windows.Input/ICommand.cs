@@ -190,13 +190,13 @@ public static unsafe class ICommandImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             EventHandler? managedHandler = EventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = CanExecuteChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = CanExecuteChangedTable.GetOrCreateValue(thisObject).AddEventHandler(managedHandler);
 
-            unboxedValue.CanExecuteChanged += managedHandler;
+            thisObject.CanExecuteChanged += managedHandler;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -212,7 +212,7 @@ public static unsafe class ICommandImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
             // This 'null' check on the unboxed object is intentional, and we're only do this specifically from 'remove_EventName' methods.
             // The reason is that for tracker objects (ie. in XAML scenarios), the framework will often mark objects as not rooted, and then
@@ -220,9 +220,9 @@ public static unsafe class ICommandImpl
             // count of the registered handlers is 0 (which is valid for tracked objects), 'ComWrappers' will allow the GC to collect them,
             // and just keep the CCW alive and in a special "destroyed" state. When that happens, trying to get the original managed object
             // back will just return 'null', which is why we have this additional check here. In all other ABI methods, it's not needed.
-            if (unboxedValue is not null && CanExecuteChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out EventHandler? managedHandler))
+            if (thisObject is not null && CanExecuteChangedTable.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out EventHandler? managedHandler))
             {
-                unboxedValue.CanExecuteChanged -= managedHandler;
+                thisObject.CanExecuteChanged -= managedHandler;
             }
 
             return WellKnownErrorCodes.S_OK;
@@ -241,9 +241,9 @@ public static unsafe class ICommandImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
-            *result = unboxedValue.CanExecute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
+            *result = thisObject.CanExecute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -259,9 +259,9 @@ public static unsafe class ICommandImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<ICommand>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue.Execute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
+            thisObject.Execute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
 
             return WellKnownErrorCodes.S_OK;
         }

@@ -67,9 +67,129 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the vtable for an <c>IDelegate</c> interface.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="vftblType">The resulting vtable type.</param>
+        public static void Vftbl(
+            GenericInstanceTypeSignature delegateType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition vftblType)
+        {
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+
+            // Prepare the sender and arguments types (same as for the 'Impl' type below)
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+
+            bool isSenderReferenceType = senderType.HasReferenceAbiType(interopReferences);
+            bool isArgsReferenceType = argsType.HasReferenceAbiType(interopReferences);
+
+            // We can share the vtable type for 'void*' when both sender and args types are reference types
+            if (isSenderReferenceType && isArgsReferenceType)
+            {
+                vftblType = interopDefinitions.DelegateVftbl;
+
+                return;
+            }
+
+            // If both the sender and the args types are not reference types, we can't possibly share
+            // the vtable type. So in this case, we just always construct a specialized new type.
+            if (!isSenderReferenceType && !isArgsReferenceType)
+            {
+                vftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
+                    ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+                    name: InteropUtf8NameFactory.TypeName(delegateType, "Vftbl"),
+                    senderType: senderType.GetAbiType(interopReferences),
+                    argsType: argsType.GetAbiType(interopReferences),
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(vftblType);
+
+                return;
+            }
+
+            // Helper to create vtable types that can be shared between multiple delegate types
+            static void GetOrCreateVftbl(
+                TypeSignature senderType,
+                TypeSignature argsType,
+                TypeSignature displaySenderType,
+                TypeSignature displayArgsType,
+                InteropReferences interopReferences,
+                InteropGeneratorEmitState emitState,
+                ModuleDefinition module,
+                out TypeDefinition vftblType)
+            {
+                // If we already have a vtable type for this pair, reuse that
+                if (emitState.TryGetDelegateVftblType(senderType, argsType, out vftblType!))
+                {
+                    return;
+                }
+
+                // Create a dummy signature just to generate the mangled name for the vtable type
+                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType(
+                    displaySenderType,
+                    displayArgsType);
+
+                // Construct a new specialized vtable type
+                TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedEventHandlerType),
+                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, "Vftbl"),
+                    senderType: senderType,
+                    argsType: argsType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                // Go through the lookup so that we can reuse the vtable later
+                vftblType = emitState.GetOrAddDelegateVftblType(senderType, argsType, newVftblType);
+
+                // If we won the race and this is the vtable type that was just created, we can add it to the module
+                if (vftblType == newVftblType)
+                {
+                    module.TopLevelTypes.Add(newVftblType);
+                }
+            }
+
+            // Get or create a shared vtable where the reference type is replaced with just 'void*'
+            if (isSenderReferenceType)
+            {
+                GetOrCreateVftbl(
+                    senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    argsType: argsType.GetAbiType(interopReferences),
+                    displaySenderType: interopReferences.CorLibTypeFactory.Object,
+                    displayArgsType: argsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out vftblType);
+            }
+            else
+            {
+                GetOrCreateVftbl(
+                    senderType: senderType.GetAbiType(interopReferences),
+                    argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    displaySenderType: senderType,
+                    displayArgsType: interopReferences.CorLibTypeFactory.Object,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out vftblType);
+            }
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -77,6 +197,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature delegateType,
+            TypeDefinition vftblType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
@@ -157,13 +278,13 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track rewriting the two parameters for this method
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: senderType,
+                parameterType: senderType,
                 method: invokeMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
 
             emitState.TrackManagedParameterMethodRewrite(
-                paraneterType: argsType,
+                parameterType: argsType,
                 method: invokeMethod,
                 marker: nop_parameter2Rewrite,
                 parameterIndex: 2);
@@ -172,7 +293,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
-                vftblType: interopDefinitions.DelegateVftbl,
+                vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
@@ -401,12 +522,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeDelegateType">The resulting callback type.</param>
         public static void NativeDelegateType(
             GenericInstanceTypeSignature delegateType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
@@ -436,14 +559,15 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module),
                         senderType.Import(module),
-                        argsType.Import(module)]))
-            { CilMethodBody = new CilMethodBody() };
+                        argsType.Import(module)]));
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
-            // Get the method body for the 'Invoke' method
-            CilMethodBody invokeBody = invokeMethod.CilMethodBody;
-            CilInstructionCollection invokeInstructions = invokeBody.Instructions;
+            // Prepare the 'Invoke' signature
+            MethodSignature invokeSignature = WellKnownTypeSignatureFactory.InvokeImpl(
+                senderType: senderType.GetAbiType(interopReferences),
+                argsType: argsType.GetAbiType(interopReferences),
+                interopReferences: interopReferences);
 
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue
@@ -452,93 +576,94 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
-            //   [1]: 'WindowsRuntimeObjectReferenceValue' (for 'senderValue')
-            //   [2]: 'WindowsRuntimeObjectReferenceValue' (for 'eValue')
-            //   [3]: 'void*' (for 'thisPtr')
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
-            invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Void.MakePointerType()));
+            //   [1]: 'void*' (for 'thisPtr')
+            CilLocalVariable loc_0_thisValue = new(windowsRuntimeObjectReferenceValueType);
+            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
 
+            // Jump labels
+            CilInstruction nop_try_this = new(Nop);
+            CilInstruction nop_try_sender = new(Nop);
+            CilInstruction nop_try_args = new(Nop);
+            CilInstruction nop_ld_sender = new(Nop);
+            CilInstruction nop_ld_args = new(Nop);
+            CilInstruction nop_finally_sender = new(Nop);
+            CilInstruction nop_finally_args = new(Nop);
+            CilInstruction ldloca_0_finally_0 = new(Ldloca_S, loc_0_thisValue);
             CilInstruction ret = new(Ret);
 
-            // Load the local [0]
-            _ = invokeInstructions.Add(Ldarg_0);
-            _ = invokeInstructions.Add(Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module));
-            _ = invokeInstructions.Add(Stloc_0);
-
-            // '.try' for local [0]
-            CilInstruction try_0 = invokeInstructions.Add(Ldarg_1);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.Import(module));
-            _ = invokeInstructions.Add(Stloc_1);
-
-            // '.try' for local [1]
-            CilInstruction try_1 = invokeInstructions.Add(Ldarg_2);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.Import(module));
-            _ = invokeInstructions.Add(Stloc_2);
-
-            // 'Invoke' call for the native delegate (and 'try' for local [2])
-            CilInstruction try_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Stloc_3);
-            _ = invokeInstructions.Add(Ldloc_3);
-            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module));
-            _ = invokeInstructions.Add(Ldloc_3);
-            _ = invokeInstructions.Add(Ldind_I);
-            _ = invokeInstructions.Add(Ldfld, interopDefinitions.DelegateVftbl.Fields[3]);
-            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(interopReferences).Import(module).MakeStandAloneSignature());
-            _ = invokeInstructions.Add(Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module));
-            _ = invokeInstructions.Add(Leave_S, ret.CreateLabel());
-
-            // 'finally' for local [2]
-            CilInstruction finally_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            // 'finally' for local [1]
-            CilInstruction finally_1 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            // 'finally' for local [0]
-            CilInstruction finally_0 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module));
-            _ = invokeInstructions.Add(Endfinally);
-
-            invokeInstructions.Add(ret);
-
-            // Setup 'try/finally' for local [0]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+            // Create a method body for the 'Invoke' method
+            invokeMethod.CilMethodBody = new CilMethodBody()
             {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_0.CreateLabel(),
-                TryEnd = finally_0.CreateLabel(),
-                HandlerStart = finally_0.CreateLabel(),
-                HandlerEnd = ret.CreateLabel()
-            });
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr },
+                Instructions =
+                {
+                    // Load the local [0]
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Stloc_0 },
+                    { nop_try_this },
 
-            // Setup 'try/finally' for local [1]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
-            {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_1.CreateLabel(),
-                TryEnd = finally_1.CreateLabel(),
-                HandlerStart = finally_1.CreateLabel(),
-                HandlerEnd = finally_0.CreateLabel()
-            });
+                    // Arguments loading inside outer 'try/finally' block
+                    { nop_try_sender },
+                    { nop_try_args },
 
-            // Setup 'try/finally' for local [2]
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
-            {
-                HandlerType = CilExceptionHandlerType.Finally,
-                TryStart = try_2.CreateLabel(),
-                TryEnd = finally_2.CreateLabel(),
-                HandlerStart = finally_2.CreateLabel(),
-                HandlerEnd = finally_1.CreateLabel()
-            });
+                    // 'Invoke' call for the native delegate (and 'try' for local [2])
+                    { Ldloca_S, loc_0_thisValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Stloc_1 },
+                    { Ldloc_1 },
+                    { nop_ld_sender },
+                    { nop_ld_args },
+                    { Ldloc_1 },
+                    { Ldind_I },
+                    { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
+                    { Calli, invokeSignature.Import(module).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Leave_S, ret.CreateLabel() },
+
+                    // Optional 'finally' blocks for the marshalled parameters. These are intentionally
+                    // in reverse order, as the inner-most parameter should be released first.
+                    { nop_finally_args },
+                    { nop_finally_sender },
+
+                    // 'finally' for local [0]
+                    { ldloca_0_finally_0 },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+
+                    // return;
+                    { ret }
+                },
+                ExceptionHandlers =
+                {
+                    // Setup 'try/finally' for local [0]
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = nop_try_this.CreateLabel(),
+                        TryEnd = ldloca_0_finally_0.CreateLabel(),
+                        HandlerStart = ldloca_0_finally_0.CreateLabel(),
+                        HandlerEnd = ret.CreateLabel()
+                    }
+                }
+            };
+
+            // Track rewriting the two parameters for this method
+            emitState.TrackNativeParameterMethodRewrite(
+                parameterType: senderType,
+                method: invokeMethod,
+                tryMarker: nop_try_sender,
+                loadMarker: nop_ld_sender,
+                finallyMarker: nop_finally_sender,
+                parameterIndex: 1);
+
+            emitState.TrackNativeParameterMethodRewrite(
+                parameterType: argsType,
+                method: invokeMethod,
+                tryMarker: nop_try_args,
+                loadMarker: nop_ld_args,
+                finallyMarker: nop_finally_args,
+                parameterIndex: 2);
         }
 
         /// <summary>

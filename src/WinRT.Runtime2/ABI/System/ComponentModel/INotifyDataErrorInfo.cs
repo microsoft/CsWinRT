@@ -213,9 +213,9 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
-            *result = unboxedValue.HasErrors;
+            *result = thisObject.HasErrors;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -233,7 +233,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
@@ -242,9 +242,9 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             EventHandler<DataErrorsChangedEventArgs>? managedHandler = ConvertToManaged(null, handler);
 
-            *token = ErrorsChanged.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = ErrorsChanged.GetOrCreateValue(thisObject).AddEventHandler(managedHandler);
 
-            unboxedValue.ErrorsChanged += managedHandler;
+            thisObject.ErrorsChanged += managedHandler;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -260,11 +260,11 @@ public static unsafe class INotifyDataErrorInfoImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
-            if (unboxedValue is not null && ErrorsChanged.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out EventHandler<DataErrorsChangedEventArgs>? managedHandler))
+            if (thisObject is not null && ErrorsChanged.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out EventHandler<DataErrorsChangedEventArgs>? managedHandler))
             {
-                unboxedValue.ErrorsChanged -= managedHandler;
+                thisObject.ErrorsChanged -= managedHandler;
             }
 
             return WellKnownErrorCodes.S_OK;
@@ -283,9 +283,9 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
-            IEnumerable managedResult = unboxedValue.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
+            IEnumerable managedResult = thisObject.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(

@@ -9,14 +9,17 @@ using AsmResolver.PE.DotNet.Cil;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS8620 // TODO: remove once Roslyn bug is fixed
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
-/// <inheritdoc cref="InteropMethodRewriteFactory"/>
-internal partial class InteropMethodRewriteFactory
+/// <summary>
+/// A factory to rewrite interop method definitons, and add marshalling code as needed.
+/// </summary>
+internal static partial class InteropMethodRewriteFactory
 {
     /// <summary>
     /// Contains the logic for marshalling managed parameters (i.e. parameters that are passed to managed methods).
@@ -49,13 +52,12 @@ internal partial class InteropMethodRewriteFactory
             }
 
             // If we didn't find the marker, it means the target method is either invalid
-            if (!body.Instructions.Contains(marker))
+            if (!body.Instructions.ReferenceContains(marker))
             {
                 throw WellKnownInteropExceptions.MethodRewriteMarkerInstructionNotFoundError(marker, method);
             }
 
-            // If we didn't find the marker, it means the target method is either invalid, or the
-            // supplied marker was incorrect (or the caller forgot to add it to the method body).
+            // Validate that the target parameter index is in range
             if ((uint)parameterIndex >= method.Parameters.Count)
             {
                 throw WellKnownInteropExceptions.MethodRewriteParameterIndexNotValidError(parameterIndex, method);
@@ -69,95 +71,50 @@ internal partial class InteropMethodRewriteFactory
                 throw WellKnownInteropExceptions.MethodRewriteSourceParameterTypeMismatchError(source.ParameterType, parameterType, method);
             }
 
+            // See comments in the marshalling code for 'ManagedValue' for additional details on the code below.
+            // The two are identical, the only difference is this method also loads the parameters on the stack.
             if (parameterType.IsValueType)
             {
-                // If the return type is blittable, we can just load it directly (simplest case)
                 if (parameterType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
-                }
-                else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
-                {
-                    // If the type is some constructed 'KeyValuePair<,>' type, we use the generated marshaller
-                    body.Instructions.ReplaceRange(marker, [
-                        CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
+                    body.Instructions.ReferenceReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
                 }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
-                    TypeSignature underlyingType = ((GenericInstanceTypeSignature)parameterType).TypeArguments[0];
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                    // For 'Nullable<T>' return types, we need the marshaller for the instantiated 'T' type (same as for return values)
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(underlyingType, interopReferences, emitState);
-
-                    // Get the right reference to the unboxing marshalling method to call
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "UnboxToManaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: parameterType,
-                            parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
-
-                    // Emit code similar to 'KeyValuePair<,>' above, to marshal the resulting 'Nullable<T>' value
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerMethod.Import(module))]);
+                        new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module))]);
+                }
+                else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
+                {
+                    body.Instructions.ReferenceReplaceRange(marker, [
+                        CilInstruction.CreateLdarg(parameterIndex),
+                        new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe.Import(module))]);
                 }
                 else
                 {
-                    // The last case handles all other value types. It doesn't matter if they possibly hold some unmanaged
-                    // resources, as they're only being used as parameters. That means the caller is responsible for disposal.
-                    ITypeDefOrRef marshallerType = GetValueTypeMarshallerType(parameterType, interopReferences, emitState);
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                    // Get the reference to 'ConvertToManaged' to produce the resulting value to return
-                    IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                        name: "ConvertToManaged"u8,
-                        signature: MethodSignature.CreateStatic(
-                            returnType: parameterType,
-                            parameterTypes: [parameterType.GetAbiType(interopReferences)]));
-
-                    // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
-                    body.Instructions.ReplaceRange(marker, [
+                    body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerMethod.Import(module))]);
+                        new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
                 }
             }
             else if (parameterType.IsTypeOfString())
             {
-                // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
-            else if (parameterType.IsTypeOfType(interopReferences))
-            {
-                // When marshalling 'Type' values, we must use 'TypeMarshaller' (the ABI type is a value type)
-                body.Instructions.ReplaceRange(marker, [
-                    CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToManaged.Import(module))]);
-            }
-            else if (parameterType is GenericInstanceTypeSignature)
-            {
-                // This case (constructed interfaces or delegates) is effectively identical to marshalling 'KeyValuePair<,>' values
-                body.Instructions.ReplaceRange(marker, [
-                    CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToManaged"))]);
-            }
             else
             {
-                // Get the marshaller type for all other reference types
-                ITypeDefOrRef marshallerType = GetReferenceTypeMarshallerType(parameterType, interopReferences, emitState);
+                InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                // Get the marshalling method, with the parameter type always just being 'void*' here too
-                IMethodDefOrRef marshallerMethod = marshallerType.GetMethodDefOrRef(
-                    name: "ConvertToManaged"u8,
-                    signature: MethodSignature.CreateStatic(
-                        returnType: parameterType,
-                        parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
-
-                // Marshal the value and release the original interface pointer
-                body.Instructions.ReplaceRange(marker, [
+                body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, marshallerMethod.Import(module))]);
+                    new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
             }
         }
     }

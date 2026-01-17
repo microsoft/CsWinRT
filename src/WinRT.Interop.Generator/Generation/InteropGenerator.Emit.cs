@@ -272,10 +272,19 @@ internal partial class InteropGenerator
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
 
+                InteropTypeDefinitionBuilder.Delegate.Vftbl(
+                    delegateType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    vftblType: out TypeDefinition vftblType);
+
                 InteropTypeDefinitionBuilder.Delegate.NativeDelegateType(
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 
@@ -299,6 +308,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.Delegate.ImplType(
                     delegateType: typeSignature,
+                    vftblType: vftblType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -932,6 +942,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
 
@@ -1270,6 +1281,7 @@ internal partial class InteropGenerator
                     argsType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     argsMethodsType: out TypeDefinition argsMethodsType);
 
@@ -2028,6 +2040,17 @@ internal partial class InteropGenerator
                             module: module);
                         break;
 
+                    // Rewrite managed values
+                    case MethodRewriteInfo.ManagedValue managedValueInfo:
+                        InteropMethodRewriteFactory.ManagedValue.RewriteMethod(
+                            parameterType: managedValueInfo.Type,
+                            method: managedValueInfo.Method,
+                            marker: managedValueInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
                     // Rewrite managed parameters
                     case MethodRewriteInfo.ManagedParameter managedParameterInfo:
                         InteropMethodRewriteFactory.ManagedParameter.RewriteMethod(
@@ -2035,6 +2058,20 @@ internal partial class InteropGenerator
                             method: managedParameterInfo.Method,
                             marker: managedParameterInfo.Marker,
                             parameterIndex: managedParameterInfo.ParameterIndex,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
+                    // Rewrite native parameters
+                    case MethodRewriteInfo.NativeParameter nativeParameterInfo:
+                        InteropMethodRewriteFactory.NativeParameter.RewriteMethod(
+                            parameterType: nativeParameterInfo.Type,
+                            method: nativeParameterInfo.Method,
+                            tryMarker: nativeParameterInfo.TryMarker,
+                            loadMarker: nativeParameterInfo.Marker,
+                            finallyMarker: nativeParameterInfo.FinallyMarker,
+                            parameterIndex: nativeParameterInfo.ParameterIndex,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);

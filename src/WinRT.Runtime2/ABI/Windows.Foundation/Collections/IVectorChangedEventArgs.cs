@@ -135,9 +135,9 @@ public static unsafe class IVectorChangedEventArgsImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
 
-            *result = unboxedValue.CollectionChange;
+            *result = thisObject.CollectionChange;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -153,9 +153,9 @@ public static unsafe class IVectorChangedEventArgsImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IVectorChangedEventArgs>((ComInterfaceDispatch*)thisPtr);
 
-            *result = unboxedValue.Index;
+            *result = thisObject.Index;
 
             return WellKnownErrorCodes.S_OK;
         }

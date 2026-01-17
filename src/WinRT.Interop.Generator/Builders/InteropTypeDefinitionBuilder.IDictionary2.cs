@@ -89,13 +89,13 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
 
-            bool isKeyReferenceType = !keyType.IsValueType || keyType.IsConstructedKeyValuePairType(interopReferences);
-            bool isValueReferenceType = !valueType.IsValueType || valueType.IsConstructedKeyValuePairType(interopReferences);
+            bool isKeyReferenceType = keyType.HasReferenceAbiType(interopReferences);
+            bool isValueReferenceType = valueType.HasReferenceAbiType(interopReferences);
 
             // We can share the vtable type for 'void*' when both key and value types are reference types
             if (isKeyReferenceType && isValueReferenceType)
             {
-                vftblType = interopDefinitions.IReadOnlyDictionary2Vftbl;
+                vftblType = interopDefinitions.IDictionary2Vftbl;
 
                 return;
             }
@@ -104,7 +104,7 @@ internal partial class InteropTypeDefinitionBuilder
             // the vtable type. So in this case, we just always construct a specialized new type.
             if (!isKeyReferenceType && !isValueReferenceType)
             {
-                vftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
+                vftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                     name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
                     keyType: keyType,
@@ -135,14 +135,14 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedReadOnlyDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
+                TypeSignature sharedDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
                     displayKeyType,
                     displayValueType);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType),
+                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences,
@@ -220,102 +220,57 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it's needed by 'IObservableMap<K, V>')
             emitState.TrackTypeDefinition(mapMethodsType, dictionaryType, "IMapMethods");
 
-            // Define the 'HasKey' method as follows:
-            //
-            // public static bool HasKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition hasKeyMethod = new(
-                name: "HasKey"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IMapViewMethods.HasKey(
+                readOnlyDictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'HasKey' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2HasKey(keyType, valueType).Import(module),
                 method: hasKeyMethod);
 
-            // Create a method body for the 'HasKey' method
-            hasKeyMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Lookup' method as follows:
-            //
-            // public static <VALUE_TYPE> Lookup(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition lookupMethod = new(
-                name: "Lookup"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: valueType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IMapViewMethods.Lookup(
+                readOnlyDictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Lookup' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2Lookup(keyType, valueType).Import(module),
                 method: lookupMethod);
 
-            // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Insert' method as follows:
-            //
-            // public static bool Insert(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, <VALUE_TYPE> value)
-            MethodDefinition insertMethod = new(
-                name: "Insert"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module),
-                        valueType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Insert' method
+            MethodDefinition insertMethod = InteropMethodDefinitionFactory.IMapMethods.Insert(
+                dictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Insert' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2Insert(keyType, valueType).Import(module),
                 method: insertMethod);
 
-            // Create a method body for the 'Insert' method
-            insertMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Remove' method as follows:
-            //
-            // public static void Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition removeMethod = new(
-                name: "Remove"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Remove' method
+            MethodDefinition removeMethod = InteropMethodDefinitionFactory.IMapMethods.Remove(
+                dictionaryType: dictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Remove' method
             mapMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapMethodsImpl2Remove(keyType, valueType).Import(module),
                 method: removeMethod);
-
-            // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
@@ -1149,6 +1104,59 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
+                readOnlyDictionaryType: dictionaryType,
+                lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
+                readOnlyDictionaryType: dictionaryType,
+                sizeMethod: interopReferences.IDictionaryAdapter2Size(keyType, valueType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+                readOnlyDictionaryType: dictionaryType,
+                containsKeyMethod: interopReferences.IDictionary2ContainsKey(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'GetView' method
+            MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IDictionary2Impl.GetView(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Insert' method
+            MethodDefinition insertMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Insert(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Remove' method
+            MethodDefinition removeMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Remove(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Clear(
+                dictionaryType: dictionaryType,
+                interopReferences: interopReferences,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
@@ -1158,7 +1166,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    lookupMethod,
+                    sizeMethod,
+                    hasKeyMethod,
+                    getViewMethod,
+                    insertMethod,
+                    removeMethod,
+                    clearMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, dictionaryType, "Impl");

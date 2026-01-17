@@ -303,10 +303,11 @@ internal partial class InteropMethodDefinitionFactory
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_resultNative },
+                    { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblField },
-                    { Calli, WellKnownTypeSignatureFactory.get_TypedRetVal(resultType.GetAbiType(interopReferences).MakePointerType(), interopReferences).Import(module).MakeStandAloneSignature() },
+                    { Calli, WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 

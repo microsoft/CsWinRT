@@ -109,21 +109,21 @@ file static unsafe class InspectableArrayPropertyValueImpl
 
         try
         {
-            object[] unboxedValue = ComInterfaceDispatch.GetInstance<object[]>((ComInterfaceDispatch*)thisPtr);
+            object[] thisObject = ComInterfaceDispatch.GetInstance<object[]>((ComInterfaceDispatch*)thisPtr);
 
-            *size = unboxedValue.Length;
+            *size = thisObject.Length;
 
             // Try to create and initialize the array locally first, we'll transfer it in case we succeed
-            void** arrayPtr = (void**)Marshal.AllocCoTaskMem(unboxedValue.Length * sizeof(void*));
+            void** arrayPtr = (void**)Marshal.AllocCoTaskMem(thisObject.Length * sizeof(void*));
             int i = 0;
             bool success = false;
 
             try
             {
                 // Marshal all elements in the managed array
-                for (; i < unboxedValue.Length; i++)
+                for (; i < thisObject.Length; i++)
                 {
-                    arrayPtr[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(unboxedValue[i]).DetachThisPtrUnsafe();
+                    arrayPtr[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(thisObject[i]).DetachThisPtrUnsafe();
                 }
 
                 success = true;

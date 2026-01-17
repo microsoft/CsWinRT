@@ -98,27 +98,27 @@ internal sealed class InteropReferences
         publicKeyOrToken: default);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Attribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.
     /// </summary>
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeTargets"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeTargets"/>.
     /// </summary>
     public TypeReference AttributeTargets => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "AttributeTargets"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
     /// </summary>
     public TypeReference AttributeUsageAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "AttributeUsageAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
     /// </summary>
     public TypeReference TypeMapAttribute1 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "TypeMapAttribute`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}"/>.
     /// </summary>
     public TypeReference GuidAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "GuidAttribute"u8);
 
@@ -128,7 +128,7 @@ internal sealed class InteropReferences
     public GenericInstanceTypeSignature TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}"/>.
     /// </summary>
     public TypeReference TypeMapAssociationAttribute1 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "TypeMapAssociationAttribute`1"u8);
 
@@ -138,67 +138,82 @@ internal sealed class InteropReferences
     public GenericInstanceTypeSignature TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup => field ??= TypeMapAttribute1.MakeGenericReferenceType(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Array"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Array"/>.
     /// </summary>
     public TypeReference Array => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Array"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Nullable"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}"/>.
+    /// </summary>
+    public TypeReference ArraySegment1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ArraySegment`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ArraySegment{T}.Enumerator"/>.
+    /// </summary>
+    public TypeReference ArraySegment1Enumerator => field ??= ArraySegment1.CreateTypeReference("Enumerator"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Nullable"/>.
     /// </summary>
     public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Type"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="Nullable{T}"/> of <see cref="int"/>.
+    /// </summary>
+    public GenericInstanceTypeSignature NullableInt32 => field ??= Nullable1.MakeGenericValueType(_corLibTypeFactory.Int32);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Type"/>.
     /// </summary>
     public TypeReference Type => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Type"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.RuntimeTypeHandle"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.RuntimeTypeHandle"/>.
     /// </summary>
     public TypeReference RuntimeTypeHandle => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "RuntimeTypeHandle"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Delegate"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Delegate"/>.
     /// </summary>
     public TypeReference Delegate => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Delegate"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ValueType"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ValueType"/>.
     /// </summary>
     public TypeReference ValueType => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ValueType"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.FlagsAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.FlagsAttribute"/>.
     /// </summary>
     public TypeReference FlagsAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "FlagsAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="Span{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="Span{T}"/>.
     /// </summary>
     public TypeReference Span1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Span`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="ReadOnlySpan{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="ReadOnlySpan{T}"/>.
     /// </summary>
     public TypeReference ReadOnlySpan1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "ReadOnlySpan`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanByte => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Byte);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Char);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="ushort"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="ushort"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.UInt16);
 
     /// <summary>
-    /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
+    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
     /// </summary>
     public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Int32);
 
@@ -213,824 +228,904 @@ internal sealed class InteropReferences
     public TypeReference Func3 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Func`3"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Exception"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Exception"/>.
     /// </summary>
     public TypeReference Exception => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Exception"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.NotSupportedException"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.NotSupportedException"/>.
     /// </summary>
     public TypeReference NotSupportedException => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "NotSupportedException"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Guid"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Guid"/>.
     /// </summary>
     public TypeReference Guid => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Guid"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.EventHandler"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.EventHandler"/>.
     /// </summary>
     public TypeReference EventHandler => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="EventHandler{TEventArgs}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="EventHandler{TEventArgs}"/>.
     /// </summary>
     public TypeReference EventHandler1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="EventHandler{TSender, TEventArgs}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="EventHandler{TSender, TEventArgs}"/>.
     /// </summary>
     public TypeReference EventHandler2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "EventHandler`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.IDisposable"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.IDisposable"/>.
     /// </summary>
     public TypeReference IDisposable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IDisposable"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.TimeSpan"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.TimeSpan"/>.
     /// </summary>
     public TypeReference TimeSpan => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "TimeSpan"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.DateTimeOffset"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.DateTimeOffset"/>.
     /// </summary>
     public TypeReference DateTimeOffset => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "DateTimeOffset"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.IServiceProvider"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
     public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
     /// </summary>
     public TypeReference ICommand => field ??= SystemObjectModel.CreateTypeReference("System.Windows.Input"u8, "ICommand"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged"/>.
     /// </summary>
     public TypeReference INotifyCollectionChanged => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "INotifyCollectionChanged"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyDataErrorInfo"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.INotifyDataErrorInfo"/>.
     /// </summary>
     public TypeReference INotifyDataErrorInfo => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "INotifyDataErrorInfo"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged"/>.
     /// </summary>
     public TypeReference INotifyPropertyChanged => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "INotifyPropertyChanged"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerator"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.IEnumerator"/>.
     /// </summary>
     public TypeReference IEnumerator => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections"u8, "IEnumerator"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}"/>.
     /// </summary>
     public TypeReference IEnumerator1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IEnumerator`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerable"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.IEnumerable"/>.
     /// </summary>
     public TypeReference IEnumerable => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections"u8, "IEnumerable"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}"/>.
     /// </summary>
     public TypeReference IEnumerable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IEnumerable`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.ICollection{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.ICollection{T}"/>.
     /// </summary>
     public TypeReference ICollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "ICollection`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
     /// </summary>
     public TypeReference IReadOnlyCollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyCollection`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IList"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.IList"/>.
     /// </summary>
     public TypeReference IList => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections"u8, "IList"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IList{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IList{T}"/>.
     /// </summary>
     public TypeReference IList1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IList`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyList{T}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyList{T}"/>.
     /// </summary>
     public TypeReference IReadOnlyList1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyList`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
     /// </summary>
     public TypeReference IDictionary2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IDictionary`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/>.
     /// </summary>
     public TypeReference IReadOnlyDictionary2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IReadOnlyDictionary`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair"/>.
     /// </summary>
     public TypeReference KeyValuePair => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.
     /// </summary>
     public TypeReference KeyValuePair2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "KeyValuePair`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.ObjectModel.ReadOnlyCollection{T}"/>.
+    /// </summary>
+    public TypeReference ReadOnlyCollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.ObjectModel"u8, "ReadOnlyCollection`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     public TypeReference NotifyCollectionChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventHandler"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
     /// </summary>
     public TypeReference NotifyCollectionChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventHandler"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventHandler"/>.
     /// </summary>
     public TypeReference PropertyChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventHandler"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
     /// </summary>
     public TypeReference PropertyChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.MemoryExtensions"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.MemoryExtensions"/>.
     /// </summary>
     public TypeReference MemoryExtensions => field ??= SystemMemory.CreateTypeReference("System"u8, "MemoryExtensions"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
     /// </summary>
     public TypeReference Interlocked => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
     /// </summary>
     public TypeReference MemoryMarshal => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "MemoryMarshal"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers"/>.
     /// </summary>
     public TypeReference ComWrappers => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "ComWrappers"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch"/>.
     /// </summary>
     public TypeReference ComInterfaceDispatch => field ??= ComWrappers.CreateTypeReference("ComInterfaceDispatch"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry"/>.
     /// </summary>
     public TypeReference ComInterfaceEntry => field ??= ComWrappers.CreateTypeReference("ComInterfaceEntry"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreateComInterfaceFlags"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.CreateComInterfaceFlags"/>.
     /// </summary>
     public TypeReference CreateComInterfaceFlags => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "CreateComInterfaceFlags"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreatedWrapperFlags"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.CreatedWrapperFlags"/>.
     /// </summary>
     public TypeReference CreatedWrapperFlags => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "CreatedWrapperFlags"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.InAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.InAttribute"/>.
     /// </summary>
     public TypeReference InAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices"u8, "InAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute"/>.
     /// </summary>
     public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "DynamicInterfaceCastableImplementationAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IUnknownDerivedAttribute{T, TImpl}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IUnknownDerivedAttribute{T, TImpl}"/>.
     /// </summary>
     public TypeReference IUnknownDerivedAttribute2 => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IUnknownDerivedAttribute`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType"/>.
     /// </summary>
     public TypeReference IIUnknownInterfaceType => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices.Marshalling"u8, "IIUnknownInterfaceType"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsVolatile"/>.
     /// </summary>
     public TypeReference IsVolatile => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "IsVolatile"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute"/>.
     /// </summary>
     public TypeReference IsReadOnlyAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "IsReadOnlyAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.FixedAddressValueTypeAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.FixedAddressValueTypeAttribute"/>.
     /// </summary>
     public TypeReference FixedAddressValueTypeAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "FixedAddressValueTypeAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.ScopedRefAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.ScopedRefAttribute"/>.
     /// </summary>
     public TypeReference ScopedRefAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "ScopedRefAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.CallConvMemberFunction"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.CallConvMemberFunction"/>.
     /// </summary>
     public TypeReference CallConvMemberFunction => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "CallConvMemberFunction"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}"/>.
     /// </summary>
     public TypeReference ConditionalWeakTable2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices"u8, "ConditionalWeakTable`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute"/>.
     /// </summary>
     public TypeReference UnmanagedCallersOnlyAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Type</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.Exception</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Exception</c>.
     /// </summary>
     public TypeReference AbiException => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Exception"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpan</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.TimeSpan</c>.
     /// </summary>
     public TypeReference AbiTimeSpan => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpan"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffset</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.DateTimeOffset</c>.
     /// </summary>
     public TypeReference AbiDateTimeOffset => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffset"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
     /// </summary>
     public TypeReference TypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TypeMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.TypeMarshaller</c>.
     /// </summary>
     public TypeReference ExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "ExceptionMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.TimeSpanMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.TimeSpanMarshaller</c>.
     /// </summary>
     public TypeReference TimeSpanMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "TimeSpanMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>ABI.System.DateTimeOffsetMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.DateTimeOffsetMarshaller</c>.
     /// </summary>
     public TypeReference DateTimeOffsetMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "DateTimeOffsetMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
     /// </summary>
     public TypeReference WindowsRuntimeDefaultInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDefaultInterfaceAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeManagedOnlyTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeManagedOnlyTypeAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersTypeMapGroup"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
     /// </summary>
     public TypeReference DynamicInterfaceCastableImplementationTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableImplementationTypeMapGroup"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs</c>.
     /// </summary>
     public TypeReference WellKnownInterfaceIIDs => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WellKnownInterfaceIIDs"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl</c>.
     /// </summary>
     public TypeReference IUnknownImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IUnknownImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl</c>.
     /// </summary>
     public TypeReference IInspectableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IInspectableImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl</c>.
     /// </summary>
     public TypeReference IPropertyValueImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IPropertyValueImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl</c>.
     /// </summary>
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
     /// </summary>
     public TypeReference IMarshalImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMarshalImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl</c>.
     /// </summary>
     public TypeReference IWeakReferenceSourceImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWeakReferenceSourceImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl</c>.
     /// </summary>
     public TypeReference IAgileObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAgileObjectImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncActionWithProgressMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncActionWithProgressMethods</c>.
     /// </summary>
     public TypeReference IAsyncActionWithProgressMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncActionWithProgressMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncActionWithProgressMethodsImpl&lt;TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncActionWithProgressMethodsImpl&lt;TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncActionWithProgressMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncActionWithProgressMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationMethodsImpl&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IAsyncOperationWithProgressMethodsImpl&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationWithProgressMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IAsyncOperationWithProgressMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IIterableMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IIterableMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIterableMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
     /// </summary>
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIteratorMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IIteratorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIteratorMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumeratorAdapter`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IVectorMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorViewMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference IMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapViewMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
     /// </summary>
     public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
     /// </summary>
     public TypeReference IListMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods</c>.
     /// </summary>
     public TypeReference IReadOnlyListMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListMethods`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IListAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListAdapter`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions</c>.
+    /// </summary>
+    public TypeReference IListAdapterExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListAdapterExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyListAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListAdapter`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions</c>.
+    /// </summary>
+    public TypeReference IReadOnlyListAdapterExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListAdapterExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListMethods`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IDictionaryAdapter2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IDictionaryAdapter`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapterExtensions</c>.
+    /// </summary>
+    public TypeReference IDictionaryAdapterExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IDictionaryAdapterExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryMethods</c>.
     /// </summary>
     public TypeReference IDictionaryMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IDictionaryMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryMethods&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryMethods&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference IDictionaryMethods2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IDictionaryMethods`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionaryAdapter2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryAdapter`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapterExtensions</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionaryAdapterExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryAdapterExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionarySplitAdapter2&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IReadOnlyDictionarySplitAdapter2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionarySplitAdapter`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods</c>.
     /// </summary>
     public TypeReference IReadOnlyDictionaryMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference IReadOnlyDictionaryMethods2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyDictionaryMethods`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethods</c>.
     /// </summary>
     public TypeReference IMapChangedEventArgsMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsMethods"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObject => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObject"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncActionWithProgress&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncActionWithProgress&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeAsyncActionWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncActionWithProgress`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperation&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperation&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeAsyncOperation2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncOperation`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperationWithProgress&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeAsyncOperationWithProgress&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeAsyncOperationWithProgress3 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeAsyncOperationWithProgress`3"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerator&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerator&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeEnumerator2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeEnumerator`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerable&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerable&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeEnumerable2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeEnumerable`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeList&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeList&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeList4 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeList`4"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyList&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyList&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeReadOnlyList4 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReadOnlyList`4"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeDictionary&lt;TKey, TValue, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeDictionary&lt;TKey, TValue, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDictionary`5"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyDictionary&lt;TKey, TValue, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyDictionary&lt;TKey, TValue, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeReadOnlyDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReadOnlyDictionary`5"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableVector&lt;T, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableVector&lt;T, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObservableVector6 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObservableVector`6"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableMap&lt;TKey, TValue, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeObservableMap&lt;TKey, TValue, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObservableMap7 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeObservableMap`7"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMapChangedEventArgs&lt;TKey, ...&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMapChangedEventArgs&lt;TKey, ...&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMapChangedEventArgs2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMapChangedEventArgs`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.DictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.DictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference DictionaryKeyCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "DictionaryKeyCollection`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.DictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.DictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference DictionaryValueCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "DictionaryValueCollection`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.ObjectModel.ReadOnlyDictionary{TKey, TValue}"/>.
+    /// </summary>
+    public TypeReference ReadOnlyDictionary2 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.ObjectModel"u8, "ReadOnlyDictionary`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference ReadOnlyDictionaryKeyCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "ReadOnlyDictionaryKeyCollection`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference ReadOnlyDictionaryValueCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "ReadOnlyDictionaryValueCollection`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter</c>.
     /// </summary>
     public TypeReference BindableIReadOnlyListAdapter => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "BindableIReadOnlyListAdapter"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface</c>.
     /// </summary>
     public TypeReference IWindowsRuntimeInterface => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeInterface"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeObjectComWrappersCallback</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeObjectComWrappersCallback</c>.
     /// </summary>
     public TypeReference IWindowsRuntimeObjectComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeObjectComWrappersCallback"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback</c>.
     /// </summary>
     public TypeReference IWindowsRuntimeUnsealedObjectComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeUnsealedObjectComWrappersCallback"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback</c>.
     /// </summary>
     public TypeReference IWindowsRuntimeArrayComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeArrayComWrappersCallback"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersMarshallerAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshallerAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObjectReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeObjectReference"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObjectReferenceValue => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeObjectReferenceValue"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersMarshal => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshal"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeUnknownMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnsealedObjectMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnsealedObjectMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeUnsealedObjectMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnsealedObjectMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeInterfaceMarshaller&lt;T&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeInterfaceMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeInterfaceMarshaller`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeDelegateMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeValueTypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeValueTypeMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeReference</c>.
+    /// </summary>
+    public TypeReference TypeReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "TypeReference"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.HStringReference</c>.
+    /// </summary>
+    public TypeReference HStringReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "HStringReference"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
     /// </summary>
     public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "HStringMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo</c>.
     /// </summary>
     public TypeReference RestrictedErrorInfo => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "RestrictedErrorInfo"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeArrayHelpers</c>.
     /// </summary>
     public TypeReference WindowsRuntimeArrayHelpers => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeArrayHelpers"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller</c>.
     /// </summary>
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "RestrictedErrorInfoExceptionMarshaller"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationToken</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationToken</c>.
     /// </summary>
     public TypeReference EventRegistrationToken => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationToken"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationTokenTable&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.EventRegistrationTokenTable&lt;T&gt;</c>.
     /// </summary>
     public TypeReference EventRegistrationTokenTable1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventRegistrationTokenTable`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.EventSource&lt;T&gt;</c>.
     /// </summary>
     public TypeReference EventSource1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventSource`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
     /// </summary>
     public TypeReference EventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;</c>.
     /// </summary>
     public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "EventHandlerEventSource`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IObservableVector1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableVector`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference IObservableMap2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IObservableMap`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c>.
     /// </summary>
     public TypeReference IMapChangedEventArgs1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IMapChangedEventArgs`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.IVectorChangedEventArgs&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.IVectorChangedEventArgs&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IVectorChangedEventArgs => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "IVectorChangedEventArgs"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.CollectionChange</c>.
     /// </summary>
     public TypeReference CollectionChange => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "CollectionChange"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.VectorChangedEventHandler&lt;T&gt;</c>.
     /// </summary>
     public TypeReference VectorChangedEventHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "VectorChangedEventHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
     /// </summary>
     public TypeReference VectorChangedEventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "VectorChangedEventHandlerEventSource`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
     /// </summary>
     public TypeReference MapChangedEventHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Collections"u8, "MapChangedEventHandler`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
     /// </summary>
     public TypeReference MapChangedEventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "MapChangedEventHandlerEventSource`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.TrustLevel</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.TrustLevel</c>.
     /// </summary>
     public TypeReference TrustLevel => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "TrustLevel"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Point</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Point</c>.
     /// </summary>
     public TypeReference Point => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Point"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Rect</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Rect</c>.
     /// </summary>
     public TypeReference Rect => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Rect"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.Size</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Size</c>.
     /// </summary>
     public TypeReference Size => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Size"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncStatus</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncStatus</c>.
     /// </summary>
     public TypeReference AsyncStatus => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncStatus"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncInfo</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IAsyncInfo</c>.
     /// </summary>
     public TypeReference IAsyncInfo => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncInfo"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncAction</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IAsyncAction</c>.
     /// </summary>
     public TypeReference IAsyncAction => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncAction"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncActionCompletedHandler</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncActionCompletedHandler</c>.
     /// </summary>
     public TypeReference AsyncActionCompletedHandler => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionCompletedHandler"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncActionWithProgress1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncActionWithProgress`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncActionProgressHandler&lt;TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncActionProgressHandler&lt;TProgress&gt;</c>.
     /// </summary>
     public TypeReference AsyncActionProgressHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionProgressHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncActionWithProgressCompletedHandler&lt;TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncActionWithProgressCompletedHandler&lt;TProgress&gt;</c>.
     /// </summary>
     public TypeReference AsyncActionWithProgressCompletedHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncActionWithProgressCompletedHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperation1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperation`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationCompletedHandler&lt;TResult&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncOperationCompletedHandler&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference AsyncOperationCompletedHandler1 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationCompletedHandler`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference IAsyncOperationWithProgress2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IAsyncOperationWithProgress`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncOperationProgressHandler&lt;TResult, TProgress&gt;</c>.
     /// </summary>
     public TypeReference AsyncOperationProgressHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationProgressHandler`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>Windows.Foundation.AsyncOperationWithProgressCompletedHandler&lt;TResult&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncOperationWithProgressCompletedHandler&lt;TResult&gt;</c>.
     /// </summary>
     public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="string.Length"/>.
+    /// </summary>
+    public MemberReference Stringget_Length => field ??= _corLibTypeFactory.String
+        .ToTypeDefOrRef()
+        .CreateMemberReference("get_Length"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Int32));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="string.GetPinnableReference"/>.
+    /// </summary>
+    public MemberReference StringGetPinnableReference => field ??= _corLibTypeFactory.String
+        .ToTypeDefOrRef()
+        .CreateMemberReference("GetPinnableReference"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Char.MakeByReferenceType().MakeModifierType(InAttribute, isRequired: true)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="Attribute.Attribute()"/>.
@@ -1063,24 +1158,24 @@ internal sealed class InteropReferences
             returnType: RuntimeTypeHandle.ToValueTypeSignature()));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
     /// </summary>
     public MemberReference AttributeUsageAttribute_ctor_AttributeTargets => field ??= AttributeUsageAttribute.CreateConstructorReference(
         corLibTypeFactory: _corLibTypeFactory,
         parameterTypes: [AttributeTargets.ToValueTypeSignature()]);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeComWrappersTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
 
@@ -1198,27 +1293,27 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Int32]));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.FixedAddressValueTypeAttribute.FixedAddressValueTypeAttribute()"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.FixedAddressValueTypeAttribute.FixedAddressValueTypeAttribute()"/>.
     /// </summary>
     public MemberReference FixedAddressValueTypeAttribute_ctor => field ??= FixedAddressValueTypeAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute.DynamicInterfaceCastableImplementationAttribute()"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute.DynamicInterfaceCastableImplementationAttribute()"/>.
     /// </summary>
     public MemberReference DynamicInterfaceCastableImplementationAttribute_ctor => field ??= DynamicInterfaceCastableImplementationAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute.IsReadOnlyAttribute()"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute.IsReadOnlyAttribute()"/>.
     /// </summary>
     public MemberReference IsReadOnlyAttribute_ctor => field ??= IsReadOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.ScopedRefAttribute.ScopedRefAttribute()"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.ScopedRefAttribute.ScopedRefAttribute()"/>.
     /// </summary>
     public MemberReference ScopedRefAttribute_ctor => field ??= ScopedRefAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
     /// </summary>
     public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
 
@@ -1462,14 +1557,14 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>get_NativeObjectReference</c> method.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>get_NativeObjectReference</c> method.
     /// </summary>
     public MemberReference WindowsRuntimeObjectget_NativeObjectReference => field ??= WindowsRuntimeObject
         .CreateMemberReference("get_NativeObjectReference"u8, MethodSignature.CreateInstance(
             returnType: WindowsRuntimeObjectReference.ToReferenceTypeSignature()));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>GetObjectReferenceForInterface</c> method.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>GetObjectReferenceForInterface</c> method.
     /// </summary>
     public MemberReference WindowsRuntimeObjectGetObjectReferenceForInterface => field ??= WindowsRuntimeObject
         .CreateMemberReference("GetObjectReferenceForInterface"u8, MethodSignature.CreateInstance(
@@ -1477,7 +1572,7 @@ internal sealed class InteropReferences
             parameterTypes: [RuntimeTypeHandle.ToValueTypeSignature()]));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface.get_IID()</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface.get_IID()</c>.
     /// </summary>
     public MemberReference IWindowsRuntimeInterfaceget_IID => field ??= IWindowsRuntimeInterface
         .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
@@ -1655,6 +1750,16 @@ internal sealed class InteropReferences
             parameterTypes: [Type.ToReferenceTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference TypeMarshallerConvertToUnmanagedUnsafe => field ??= TypeMarshaller
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                Type.ToReferenceTypeSignature(),
+                TypeReference.MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.Dispose</c>.
     /// </summary>
     public MemberReference TypeMarshallerDispose => field ??= TypeMarshaller
@@ -1767,6 +1872,27 @@ internal sealed class InteropReferences
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.TypeReference.GetPinnableReference</c>.
+    /// </summary>
+    public MemberReference TypeReferenceGetPinnableReference => field ??= TypeReference
+        .CreateMemberReference("GetPinnableReference"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Byte.MakeByReferenceType()));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.TypeReference.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference TypeReferenceConvertToUnmanagedUnsafe => field ??= TypeReference
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateInstance(
+            returnType: AbiType.ToValueTypeSignature()));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringReference.get_HString</c>.
+    /// </summary>
+    public MemberReference HStringReferenceget_HString => field ??= HStringReference
+        .CreateMemberReference("get_HString"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void.MakePointerType()));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
     /// </summary>
     public MemberReference HStringMarshallerConvertToUnmanaged => field ??= HStringMarshaller
@@ -1775,11 +1901,30 @@ internal sealed class InteropReferences
             parameterTypes: [ReadOnlySpanChar]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// </summary>
+    public MemberReference HStringMarshallerConvertToUnmanagedUnsafe => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.Char.MakePointerType(),
+                Nullable1.MakeGenericValueType(_corLibTypeFactory.Int32),
+                HStringReference.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManaged</c>.
     /// </summary>
     public MemberReference HStringMarshallerConvertToManaged => field ??= HStringMarshaller
         .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.String,
+            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManagedUnsafe</c>.
+    /// </summary>
+    public MemberReference HStringMarshallerConvertToManagedUnsafe => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToManagedUnsafe"u8, MethodSignature.CreateStatic(
+            returnType: ReadOnlySpanChar,
             parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
@@ -1875,6 +2020,22 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference Nullable1_ctor(TypeSignature valueType)
+    {
+        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
+        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
+        return Nullable1
+            .MakeGenericValueType(valueType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of an SZ array type).
     /// </summary>
     public MemberReference ReadOnlySpan1_ctor(SzArrayTypeSignature arrayType)
@@ -1886,7 +2047,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>.
     /// </summary>
     /// <param name="typeMapGroup">The type map group to use.</param>
     public MemberReference TypeMapAttribute1_ctor_TrimTarget(TypeSignature typeMapGroup)
@@ -1903,7 +2064,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>.
     /// </summary>
     /// <param name="typeMapGroup">The type map group to use.</param>
     public MemberReference TypeMapAssociationAttribute1_ctor(TypeSignature typeMapGroup)
@@ -2983,6 +3144,206 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.GetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1GetAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    _corLibTypeFactory.UInt32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.Size</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1Size(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.GetView</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1GetView(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetView"u8, MethodSignature.CreateStatic(
+                returnType: IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.IndexOf</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1IndexOf(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;string&gt;.IndexOf</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfStringIndexOf()
+    {
+        return IListAdapterExtensions
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                    ReadOnlySpanChar,
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.SetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1SetAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("SetAt"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    _corLibTypeFactory.UInt32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.InsertAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1InsertAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("InsertAt"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    _corLibTypeFactory.UInt32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.RemoveAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1RemoveAt(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("RemoveAt"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    _corLibTypeFactory.UInt32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;T&gt;.RemoveAtEnd</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IListAdapter1RemoveAtEnd(TypeSignature elementType)
+    {
+        return IListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("RemoveAtEnd"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [IList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.GetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListAdapter1GetAt(TypeSignature elementType)
+    {
+        return IReadOnlyListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    _corLibTypeFactory.UInt32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.Size</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListAdapter1Size(TypeSignature elementType)
+    {
+        return IReadOnlyListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;T&gt;.IndexOf</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListAdapter1IndexOf(TypeSignature elementType)
+    {
+        return IReadOnlyListAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;string&gt;.IndexOf</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfStringIndexOf()
+    {
+        return IReadOnlyListAdapterExtensions
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [
+                    IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                    ReadOnlySpanChar,
+                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;.Item</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -3323,6 +3684,146 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;TKey, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Lookup(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    keyType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IDictionaryAdapterOfStringLookup(TypeSignature valueType)
+    {
+        return IDictionaryAdapterExtensions
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;TKey, TValue&gt;.Size</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Size(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IDictionaryAdapterOfStringHasKey(TypeSignature valueType)
+    {
+        return IDictionaryAdapterExtensions
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.GetView</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2GetView(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetView"u8, MethodSignature.CreateStatic(
+                returnType: IReadOnlyDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Insert</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Insert(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionaryAdapter2Remove(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IDictionaryAdapter&lt;string, TValue&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IDictionaryAdapterOfStringRemove(TypeSignature valueType)
+    {
+        return IDictionaryAdapterExtensions
+            .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.Item</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
@@ -3381,6 +3882,96 @@ internal sealed class InteropReferences
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]))
             .MakeGenericInstanceMethod(mapViewMethods.ToReferenceTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Lookup(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    keyType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;string, TValue&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IReadOnlyDictionaryAdapterOfStringLookup(TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapterExtensions
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Size</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Size(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                parameterTypes: [IReadOnlyDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;string, TValue&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="valueType">The input value type.</param>
+    public MethodSpecification IReadOnlyDictionaryAdapterOfStringHasKey(TypeSignature valueType)
+    {
+        return IReadOnlyDictionaryAdapterExtensions
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    ReadOnlySpanChar]))
+            .MakeGenericInstanceMethod(valueType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryAdapter&lt;TKey, TValue&gt;.Split</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IReadOnlyDictionaryAdapter2Split(TypeSignature keyType, TypeSignature valueType)
+    {
+        TypeSignature readOnlyDictionaryType = IReadOnlyDictionary2.MakeGenericReferenceType(
+            new GenericParameterSignature(GenericParameterType.Type, 0),
+            new GenericParameterSignature(GenericParameterType.Type, 1));
+
+        return IReadOnlyDictionaryAdapter2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Split"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    readOnlyDictionaryType,
+                    readOnlyDictionaryType.MakeByReferenceType(),
+                    readOnlyDictionaryType.MakeByReferenceType()]));
     }
 
     /// <summary>

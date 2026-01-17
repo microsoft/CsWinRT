@@ -328,9 +328,9 @@ file static unsafe class TypeReferenceImpl
 
         try
         {
-            global::System.Type unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Type>((ComInterfaceDispatch*)thisPtr);
+            global::System.Type thisObject = ComInterfaceDispatch.GetInstance<global::System.Type>((ComInterfaceDispatch*)thisPtr);
 
-            *result = TypeMarshaller.ConvertToUnmanaged(unboxedValue);
+            *result = TypeMarshaller.ConvertToUnmanaged(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }

@@ -100,6 +100,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_currentNative },
+                    { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.IEnumerator1Vftbl.GetField("get_Current"u8) },
@@ -445,15 +446,13 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'get_HasCurrent' method
-            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
-                nameUtf8: "get_HasCurrent"u8,
+            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_HasCurrent(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
 
             // Define the 'MoveNext' method
-            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
-                nameUtf8: "MoveNext"u8,
+            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.MoveNext(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
