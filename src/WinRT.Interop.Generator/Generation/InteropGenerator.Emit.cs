@@ -135,7 +135,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for SZ array types
-        DefineSzArrayTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineSzArrayTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1905,12 +1905,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineSzArrayTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -1932,6 +1934,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.Marshaller(
                     arrayType: typeSignature,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -2017,6 +2020,17 @@ internal partial class InteropGenerator
             {
                 switch (rewriteInfo)
                 {
+                    // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
+                    case MethodRewriteInfo.RawRetVal rawRetValInfo:
+                        InteropMethodRewriteFactory.RawRetVal.RewriteMethod(
+                            parameterType: rawRetValInfo.Type,
+                            method: rawRetValInfo.Method,
+                            marker: rawRetValInfo.Marker,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
                     // Rewrite return values for managed types
                     case MethodRewriteInfo.ReturnValue returnValueInfo:
                         InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
@@ -2072,6 +2086,17 @@ internal partial class InteropGenerator
                             loadMarker: nativeParameterInfo.Marker,
                             finallyMarker: nativeParameterInfo.FinallyMarker,
                             parameterIndex: nativeParameterInfo.ParameterIndex,
+                            interopReferences: interopReferences,
+                            emitState: emitState,
+                            module: module);
+                        break;
+
+                    // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
+                    case MethodRewriteInfo.Dispose disposeInfo:
+                        InteropMethodRewriteFactory.Dispose.RewriteMethod(
+                            parameterType: disposeInfo.Type,
+                            method: disposeInfo.Method,
+                            marker: disposeInfo.Marker,
                             interopReferences: interopReferences,
                             emitState: emitState,
                             module: module);

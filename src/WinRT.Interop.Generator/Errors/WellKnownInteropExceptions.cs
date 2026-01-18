@@ -598,6 +598,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// A type doesn't have the <c>Dispose</c> method available.
+    /// </summary>
+    public static WellKnownInteropException MethodRewriteDisposeNotAvailableError(TypeSignature parameterType, MethodDefinition method)
+    {
+        return Exception(70, $"Value of type '{parameterType}' in generated interop method '{method}' cannot be disposed, as it is an unmanaged (or blittable) value type.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
