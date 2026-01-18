@@ -280,6 +280,21 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
+            // If the element type is some 'KeyValuePair<TKey, TValue>' type, we also need to track the corresponding 'IDictionary<TKey, TValue>'
+            // type, as the code for it will be used for dynamic casts to 'ICollection<KeyValuePair<TKey, TValue>>' types (see notes below).
+            if (typeSignature.TypeArguments[0].IsConstructedKeyValuePairType(
+                interopReferences: interopReferences,
+                keyType: out TypeSignature? keySignature,
+                valueType: out TypeSignature? valueSignature))
+            {
+                TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                    typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+
             // We also need to track the constructed 'ReadOnlyCollection<T>' type, as that is used by 'IListAdapter<T>.GetView' in case the
             // input 'IList<T>' instance doesn't implement 'IReadOnlyList<T>' directly. In that case, we return a 'ReadOnlyCollection<T>'
             // object instead. This needs special handling because we won't analyze indirect (generated) calls into that adapter type.
@@ -293,6 +308,20 @@ internal partial class InteropTypeDiscovery
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
         {
             discoveryState.TrackIReadOnlyList1Type(typeSignature);
+
+            // Also track 'IReadOnlyDictionary<TKey, TValue>' if the element type is 'KeyValuePair<TKey, TValue>' (same as above)
+            if (typeSignature.TypeArguments[0].IsConstructedKeyValuePairType(
+                interopReferences: interopReferences,
+                keyType: out TypeSignature? keySignature,
+                valueType: out TypeSignature? valueSignature))
+            {
+                TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                    typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
         {
