@@ -201,7 +201,7 @@ public abstract class WindowsRuntimeObservableMap<
     /// <inheritdoc/>
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        IDictionaryMethods<TKey, TValue>.CopyTo<TIMapMethods, TIIterableMethods>(
+        IDictionaryMethods<TKey, TValue>.CopyTo<TIIterableMethods>(
             thisIMapReference: NativeObjectReference,
             thisIIterableReference: IIterableObjectReference,
             array: array,

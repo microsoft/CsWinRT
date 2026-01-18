@@ -586,7 +586,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Ldarg_3 },
-                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, mapMethodsType, iterableMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, iterableMethodsType).Import(module) },
                     { Ret }
                 }
             };

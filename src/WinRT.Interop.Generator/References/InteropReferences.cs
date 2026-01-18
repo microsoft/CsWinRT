@@ -4502,12 +4502,10 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="keyType">The input key type.</param>
     /// <param name="valueType">The input value type.</param>
-    /// <param name="mapMethods">The <see cref="IMapMethodsImpl2"/> type.</param>
     /// <param name="iterableMethods">The <see cref="IIteratorMethodsImpl1"/> type.</param>
     public MethodSpecification IDictionaryMethods2CopyTo(
         TypeSignature keyType,
         TypeSignature valueType,
-        TypeDefinition mapMethods,
         TypeDefinition iterableMethods)
     {
         return IDictionaryMethods2
@@ -4515,7 +4513,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyTo"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
-                genericParameterCount: 2,
+                genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4523,7 +4521,7 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
                     _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature(), iterableMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod(iterableMethods.ToReferenceTypeSignature());
     }
 
     /// <summary>
