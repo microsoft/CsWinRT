@@ -162,10 +162,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
 
     <ItemGroup>
-        <!-- Filter the reference assemblies to ones where the implementation
-             and reference assembly are different as is with our projection DLLs.
-             This also avoids passing the same DLLs in both such as with .NET Core
-             assemblies.
+        <!--
+          Filter the reference assemblies to ones where the implementation
+          and reference assembly are different as is with our projection DLLs.
+          This also avoids passing the same DLLs in both such as with .NET Core
+          assemblies.
          -->
         <_ReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
         <_ReferenceAssemblyPaths Remove="@(ReferencePath)" />
@@ -307,7 +308,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTMergedProjectionGenerator"
     DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
 
