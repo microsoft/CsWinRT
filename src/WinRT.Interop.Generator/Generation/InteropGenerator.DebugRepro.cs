@@ -69,7 +69,7 @@ internal partial class InteropGenerator
         List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
 
-        // Create another subdirectory for all the input assemblyPaths. We don't put these in the top level
+        // Create another subdirectory for all the input assembly paths. We don't put these in the top level
         // temporary folder so that the number of files there remains very small. The reason is just to
         // make inspecting the resulting .dll easier, without having to scroll past hundreds of folders.
         string assembliesDirectory = Path.Combine(tempDirectory, "in");
@@ -89,7 +89,7 @@ internal partial class InteropGenerator
             // Extract the .dll to the new destination path
             dllEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track all extracted reference paths, as well as the output assemblyPath path.
+            // Track all extracted reference paths, as well as the output assembly path.
             // Note that the debug repro only uses filenames, not full paths, for .dll-s.
             // We also split reference paths and implementation paths in different folders.
             if (dllEntry.Name == args.OutputAssemblyPath)
