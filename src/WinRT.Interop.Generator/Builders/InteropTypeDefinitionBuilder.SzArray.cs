@@ -10,7 +10,10 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
+
+#pragma warning disable IDE0008, IDE0042
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -326,7 +329,9 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
             SzArrayTypeSignature arrayType,
@@ -334,9 +339,39 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceEntriesImplType)
         {
+            var listImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
+                type: interopReferences.IList.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+
+            var enumerableImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
+                type: interopReferences.IEnumerable.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+
+            var list1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IList1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            var enumerable1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IEnumerable1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            var readOnlyList1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IReadOnlyList1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
@@ -346,6 +381,11 @@ internal partial class InteropTypeDefinitionBuilder
                 implType: out interfaceEntriesImplType,
                 implTypes: [
                     (get_IidMethod, implType.GetMethod("get_Vtable"u8)),
+                    (listImpl.get_IID, listImpl.get_Vtable),
+                    (enumerableImpl.get_IID, enumerableImpl.get_Vtable),
+                    (list1Impl.get_IID, list1Impl.get_Vtable),
+                    (enumerable1Impl.get_IID, enumerable1Impl.get_Vtable),
+                    (readOnlyList1Impl.get_IID, readOnlyList1Impl.get_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue, interopReferences.IPropertyValueImplget_OtherTypeVtable), // TODO
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),

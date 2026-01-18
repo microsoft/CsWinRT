@@ -1959,7 +1959,9 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersMarshallerAttribute(
