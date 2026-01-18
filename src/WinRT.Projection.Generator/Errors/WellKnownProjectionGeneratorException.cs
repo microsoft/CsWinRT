@@ -6,7 +6,7 @@ using System;
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
 /// <summary>
-/// A well known exceptions for the interop generator.
+/// A well known exceptions for the projection generator.
 /// </summary>
 internal sealed class WellKnownProjectionGeneratorException : Exception
 {

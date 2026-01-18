@@ -7,7 +7,7 @@ using WindowsRuntime.ProjectionGenerator.Errors;
 namespace WindowsRuntime.ProjectionGenerator;
 
 /// <summary>
-/// Extensions for interop exceptions.
+/// Extensions for projection generator exceptions.
 /// </summary>
 internal static class ProjectionGeneratorExceptionExtensions
 {

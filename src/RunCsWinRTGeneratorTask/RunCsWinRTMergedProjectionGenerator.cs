@@ -17,7 +17,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
     /// the entire surface area for compilation. These assemblies are the full set of assemblies
-    /// that will contribute to the interop .dll being generated.
+    /// that will contribute to the merged projection .dll being generated.
     /// </summary>
     [Required]
     public ITaskItem[]? ReferenceAssemblyPaths { get; set; }
@@ -79,7 +79,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     [MemberNotNullWhen(true, nameof(WinMDPaths))]
     [MemberNotNullWhen(true, nameof(TargetFramework))]
     [MemberNotNullWhen(true, nameof(WindowsMetadata))]
-    [MemberNotNullWhen(true, nameof(CsWinRTPath))]
+    [MemberNotNullWhen(true, nameof(CsWinRTExePath))]
     [MemberNotNullWhen(true, nameof(CsWinRTToolsDirectory))]
 #endif
     protected override bool ValidateParameters()

@@ -175,7 +175,7 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add the output assembly paths to the temporary directory with a hashed name
+        // Add the output assembly to the temporary directory with a hashed name
         string outputAssemblyHashedName = GetHashedFileName(args.OutputAssemblyPath);
         string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
 

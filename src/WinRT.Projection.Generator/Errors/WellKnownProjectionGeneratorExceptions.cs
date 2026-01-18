@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis;
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
 /// <summary>
-/// Well known exceptions for the interop generator.
+/// Well known exceptions for the projection generator.
 /// </summary>
 internal static class WellKnownProjectionGeneratorExceptions
 {
@@ -23,7 +23,7 @@ internal static class WellKnownProjectionGeneratorExceptions
     /// </summary>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, "Failed to read the response file to run 'cswinrtgen'.", exception);
+        return Exception(1, "Failed to read the response file to run 'cswinrtprojectiongen'.", exception);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
-    /// Diagnostics when emitting the impl .dll to disk.
+    /// Diagnostics when emitting the projection .dll to disk.
     /// </summary>
     public static Exception EmitDllError(IEnumerable<Diagnostic> diagnostics)
     {
@@ -53,7 +53,7 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
-    /// Exception when emitting the impl .dll to disk.
+    /// Exception when emitting the projection .dll to disk.
     /// </summary>
     public static Exception EmitDllError(Exception exception)
     {
@@ -61,7 +61,7 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
-    /// Exception when emitting the impl .dll to disk.
+    /// Exception when emitting the projection .dll to disk.
     /// </summary>
     public static Exception CreateCompilationError(Exception exception)
     {
