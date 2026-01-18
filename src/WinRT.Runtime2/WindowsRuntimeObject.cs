@@ -378,7 +378,24 @@ public abstract unsafe class WindowsRuntimeObject :
         }
 
         return interfaceReference;
+    }
 
+    /// <summary>
+    /// Tries to retrieve a <see cref="WindowsRuntimeObjectReference"/> object for the specified interface.
+    /// </summary>
+    /// <param name="interfaceType">The type handle for the interface to retrieve the object reference for.</param>
+    /// <param name="interfaceReference">The resulting <see cref="WindowsRuntimeObjectReference"/> object, if the interface could be retrieved.</param>
+    /// <returns>Whether <paramref name="interfaceReference"/> could be retrieved successfully.</returns>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public bool TryGetObjectReferenceForInterface(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
+    {
+        return TryGetCastResult(
+            interfaceType: interfaceType,
+            implementationType: out _,
+            interfaceReference: out interfaceReference);
     }
 
     /// <inheritdoc/>
