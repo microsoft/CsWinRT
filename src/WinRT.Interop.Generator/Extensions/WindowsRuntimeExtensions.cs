@@ -565,7 +565,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
-                return typeDefinition.DeclaringModule!.CreateTypeReference(
+                return interopReferences.WinRTProjection.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
             }
