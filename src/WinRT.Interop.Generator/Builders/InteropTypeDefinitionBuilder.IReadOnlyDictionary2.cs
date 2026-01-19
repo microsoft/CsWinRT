@@ -585,6 +585,39 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                sizeMethod: interopReferences.IReadOnlyDictionaryAdapter2Size(keyType, valueType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                containsKeyMethod: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Split' method
+            MethodDefinition splitMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Split(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
@@ -594,7 +627,11 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    lookupMethod,
+                    sizeMethod,
+                    hasKeyMethod,
+                    splitMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyDictionaryType, "Impl");

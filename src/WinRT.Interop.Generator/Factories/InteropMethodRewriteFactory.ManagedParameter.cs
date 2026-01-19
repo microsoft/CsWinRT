@@ -71,9 +71,10 @@ internal static partial class InteropMethodRewriteFactory
                 throw WellKnownInteropExceptions.MethodRewriteSourceParameterTypeMismatchError(source.ParameterType, parameterType, method);
             }
 
+            // See comments in the marshalling code for 'ManagedValue' for additional details on the code below.
+            // The two are identical, the only difference is this method also loads the parameters on the stack.
             if (parameterType.IsValueType)
             {
-                // If the return type is blittable, we can just load it directly (simplest case)
                 if (parameterType.IsBlittable(interopReferences))
                 {
                     body.Instructions.ReferenceReplaceRange(marker, CilInstruction.CreateLdarg(parameterIndex));
@@ -82,26 +83,20 @@ internal static partial class InteropMethodRewriteFactory
                 {
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                    // For 'Nullable<T>' parameters (i.e. we have an 'IReference<T>' interface pointer), we unbox the underlying type
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module))]);
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
                 {
-                    // When marshalling 'ReadOnlySpan<char>' values, we also use 'HStringMarshaller', but without materializing the 'string' object
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe.Import(module))]);
                 }
                 else
                 {
-                    // The last case handles all other value types. It doesn't matter if they possibly hold some unmanaged
-                    // resources, as they're only being used as parameters. That means the caller is responsible for disposal.
-                    // This case can also handle 'KeyValuePair<,>' instantiations, which are just marshalled normally too.
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                    // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
@@ -109,17 +104,14 @@ internal static partial class InteropMethodRewriteFactory
             }
             else if (parameterType.IsTypeOfString())
             {
-                // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
             }
             else
             {
-                // Get the marshaller type for all other reference types (including generics)
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                // Marshal the value normally (the caller will own the native resource)
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
                     new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);

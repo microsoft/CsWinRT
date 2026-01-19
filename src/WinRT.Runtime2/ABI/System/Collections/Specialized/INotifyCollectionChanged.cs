@@ -48,7 +48,7 @@ public static unsafe class INotifyCollectionChangedMarshaller
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class INotifyCollectionChangedMethods
+public static class INotifyCollectionChangedMethods
 {
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="INotifyCollectionChanged.CollectionChanged"/>.

@@ -15,10 +15,8 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
-/// <summary>
-/// A factory for interop method definitions.
-/// </summary>
-internal static partial class InteropMethodDefinitionFactory
+/// <inheritdoc cref="InteropMethodDefinitionFactory"/>
+internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
     /// Helpers for impl types for <see cref="System.Collections.Generic.IEnumerator{T}"/> interfaces.
@@ -269,7 +267,7 @@ internal static partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for the <c>get_Current</c> export method.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>get_Current</c> or <c>MoveNext</c> export method.
         /// </summary>
         /// <param name="methodName">The name of the method to generate.</param>
         /// <param name="adapterMethod">The adapter method to forward the call to.</param>
@@ -307,7 +305,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
-            // Create a method body for the 'get_HasCurrent' method
+            // Create a method body for the method
             boolMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:

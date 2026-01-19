@@ -14,10 +14,8 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
-/// <summary>
-/// A factory for interop method definitions.
-/// </summary>
-internal static partial class InteropMethodDefinitionFactory
+/// <inheritdoc cref="InteropMethodDefinitionFactory"/>
+internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
     /// Helpers for impl types for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> interfaces.
@@ -28,11 +26,16 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetAt</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>GetAt</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition GetAt(
             GenericInstanceTypeSignature readOnlyListType,
+            MemberReference getAtMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
@@ -43,7 +46,7 @@ internal static partial class InteropMethodDefinitionFactory
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int GetAt(void* thisPtr, uint index, <ABI_ELEMENT_TYPE>* result)
-            MethodDefinition getAtMethod = new(
+            MethodDefinition getAtImplMethod = new(
                 name: "GetAt"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -70,7 +73,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'GetAt' method
-            getAtMethod.CilMethodBody = new CilMethodBody()
+            getAtImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -91,7 +94,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Ldarg_2 },
                     { Ldloc_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IReadOnlyListAdapter1GetAt(elementType).Import(module) },
+                    { Call, getAtMethod.Import(module) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -123,30 +126,33 @@ internal static partial class InteropMethodDefinitionFactory
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
                 retValType: elementType,
-                method: getAtMethod,
+                method: getAtImplMethod,
                 marker: nop_convertToUnmanaged);
 
-            return getAtMethod;
+            return getAtImplMethod;
         }
 
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Size</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="sizeMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>get_Size</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition get_Size(
             GenericInstanceTypeSignature readOnlyListType,
+            MemberReference sizeMethod,
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
-
             // Define the 'get_Size' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int get_Size(void* thisPtr, uint* result)
-            MethodDefinition sizeMethod = new(
+            MethodDefinition sizeImplMethod = new(
                 name: "get_Size"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -171,7 +177,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
             // Create a method body for the 'get_Size' method
-            sizeMethod.CilMethodBody = new CilMethodBody()
+            sizeImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -191,7 +197,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
-                    { Call, interopReferences.IReadOnlyListAdapter1Size(elementType).Import(module) },
+                    { Call, sizeMethod.Import(module) },
                     { Stind_I4 },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -220,18 +226,23 @@ internal static partial class InteropMethodDefinitionFactory
                 }
             };
 
-            return sizeMethod;
+            return sizeImplMethod;
         }
 
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>IndexOf</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="indexOfMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>IndexOf</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition IndexOf(
             GenericInstanceTypeSignature readOnlyListType,
+            MemberReference indexOfMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
@@ -242,7 +253,7 @@ internal static partial class InteropMethodDefinitionFactory
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int IndexOf(void* thisPtr, <ABI_ELEMENT_TYPE> value, uint* index, bool* result)
-            MethodDefinition indexOfMethod = new(
+            MethodDefinition indexOfImplMethod = new(
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -270,13 +281,23 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
+            MemberReference adapterIndexOfMethod;
+
             // Get the target 'IndexOf' method (we can optimize for 'string' types)
-            MemberReference adapterIndexOfMethod = elementType.IsTypeOfString()
-                ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
-                : interopReferences.IReadOnlyListAdapter1IndexOf(elementType);
+            if (elementType.IsTypeOfString())
+            {
+                adapterIndexOfMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
+                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
+                    : interopReferences.IListAdapterOfStringIndexOf();
+            }
+            else
+            {
+                // Otherwise use the provided method directly (it will always be valid)
+                adapterIndexOfMethod = indexOfMethod;
+            }
 
             // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
+            indexOfImplMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_thisObject, loc_1_hresult },
                 Instructions =
@@ -336,14 +357,14 @@ internal static partial class InteropMethodDefinitionFactory
                 ? interopReferences.ReadOnlySpanChar
                 : elementType;
 
-            // Track rewriting the two parameters for this method
+            // Track rewriting the parameter for this method
             emitState.TrackManagedParameterMethodRewrite(
                 parameterType: parameterType,
-                method: indexOfMethod,
+                method: indexOfImplMethod,
                 marker: nop_parameter1Rewrite,
                 parameterIndex: 1);
 
-            return indexOfMethod;
+            return indexOfImplMethod;
         }
 
 #pragma warning disable IDE0017
@@ -351,11 +372,16 @@ internal static partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <remarks>
+        /// This method can also be used to define the <c>GetMany</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
+        /// </remarks>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature readOnlyListType,
+            MemberReference getAtMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)

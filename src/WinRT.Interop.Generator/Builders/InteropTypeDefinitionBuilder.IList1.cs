@@ -985,6 +985,92 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: listType,
+                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
+                readOnlyListType: listType,
+                sizeMethod: interopReferences.IListAdapter1Size(elementType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'GetView' method
+            MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IList1Impl.GetView(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: listType,
+                indexOfMethod: interopReferences.IListAdapter1IndexOf(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IList1Impl.SetAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IList1Impl.InsertAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'RemoveAt' method
+            MethodDefinition removeAtMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IList1Impl.Append(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'RemoveAtEnd' method
+            MethodDefinition removeAtEndMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAtEnd(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IList1Impl.Clear(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: listType,
+                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'ReplaceAll' method
+            MethodDefinition replaceAllMethod = InteropMethodDefinitionFactory.IList1Impl.ReplaceAll(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -994,7 +1080,19 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    getAtMethod,
+                    sizeMethod,
+                    getViewMethod,
+                    indexOfMethod,
+                    setAtMethod,
+                    insertAtMethod,
+                    removeAtMethod,
+                    appendMethod,
+                    removeAtEndMethod,
+                    clearMethod,
+                    getManyMethod,
+                    replaceAllMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");

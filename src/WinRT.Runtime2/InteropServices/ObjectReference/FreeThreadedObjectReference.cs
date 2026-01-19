@@ -60,7 +60,7 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
     }
 
     /// <inheritdoc/>
-    private protected override unsafe void* GetThisPtrWithContextUnsafe()
+    private protected override void* GetThisPtrWithContextUnsafe()
     {
         // This method is never called for free-threaded objects
         return null;

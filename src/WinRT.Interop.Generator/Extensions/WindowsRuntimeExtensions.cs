@@ -583,6 +583,22 @@ internal static class WindowsRuntimeExtensions
             // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
             return interopReferences.CorLibTypeFactory.Void.MakePointerType();
         }
+
+        /// <summary>
+        /// Gets the raw ABI type for a given type (without unwrapping).
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>The raw ABI type for the input type.</returns>
+        public TypeSignature GetRawAbiType(InteropReferences interopReferences)
+        {
+            TypeSignature abiType = type.GetAbiType(interopReferences);
+
+            // If the ABI type is 'void*', the marshaller types return it as 'WindowsRuntimeObjectReferenceValue'.
+            // This allows callers to do proper lifetime management. For all other cases, the ABI type is the same.
+            return abiType.IsTypeOfVoidPointer()
+                ? interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature()
+                : abiType;
+        }
     }
 
     extension(TypeDefinition type)
@@ -780,6 +796,13 @@ internal static class WindowsRuntimeExtensions
             // Arrays are Windows Runtime types if the element type is one.
             if (signature is SzArrayTypeSignature arrayType)
             {
+                // Windows Runtime only allows single-dimensional (and not jagged) arrays
+                if (arrayType.BaseType is SzArrayTypeSignature)
+                {
+                    return false;
+                }
+
+                // Validate that the element type of the array is itself a Windows Runtime type
                 return arrayType.BaseType.IsWindowsRuntimeType(interopReferences);
             }
 

@@ -74,62 +74,41 @@ internal static class InteropUtf8NameFactory
                 return;
             }
 
-            // SZ arrays are enclosed in angle brackets
-            if (typeSignature is SzArrayTypeSignature)
+            // SZ arrays are enclosed in angle brackets, and have the 'Array' suffix at the end
+            if (typeSignature is SzArrayTypeSignature arrayTypeSignature)
             {
                 interpolatedStringHandler.AppendLiteral("<");
-            }
 
-            // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
-            interpolatedStringHandler.AppendLiteral("<");
-            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature));
-            interpolatedStringHandler.AppendLiteral(">");
+                AppendTypeName(ref interpolatedStringHandler, arrayTypeSignature.BaseType, depth);
 
-            // If the type is generic, append the definition name and the type arguments
-            if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
-            {
-                // Append the name of the generic type, without any type arguments (those are appended below)
-                AppendRawTypeName(ref interpolatedStringHandler, genericInstanceTypeSignature.GenericType, depth);
-
-                interpolatedStringHandler.AppendLiteral("<");
-
-                foreach ((int i, TypeSignature typeArgumentSignature) in genericInstanceTypeSignature.TypeArguments.Index())
-                {
-                    // We use '|' to separate generic type arguments
-                    if (i > 0)
-                    {
-                        interpolatedStringHandler.AppendLiteral("|");
-                    }
-
-                    // Append the type argument with the same format as the root type. This is
-                    // important to ensure that nested generic types will be handled correctly.
-                    AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, depth: depth + 1);
-                }
-
-                interpolatedStringHandler.AppendLiteral(">");
-            }
-            else if (typeSignature is SzArrayTypeSignature arrayTypeSignature)
-            {
-                // Same as below, but we use the element type name, not the array type name
-                AppendRawTypeName(ref interpolatedStringHandler, arrayTypeSignature.BaseType, depth);
+                interpolatedStringHandler.AppendLiteral(">Array");
             }
             else
             {
-                // Simple case for normal type signatures
-                AppendRawTypeName(ref interpolatedStringHandler, typeSignature, depth);
-            }
+                // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
+                interpolatedStringHandler.AppendLiteral("<");
+                interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature));
+                interpolatedStringHandler.AppendLiteral(">");
 
-            // Complete the name mangling for SZ arrays
-            if (typeSignature is SzArrayTypeSignature)
-            {
-                interpolatedStringHandler.AppendLiteral(">Array");
+                // Extract the generic type if we have a generic signature, or use the type signature directly
+                ITypeDescriptor originalTypeDescriptor = ((typeSignature as GenericInstanceTypeSignature)?.GenericType) ?? (ITypeDescriptor)typeSignature;
+
+                // Append the original type name first, regardless of whether it's an array or a constructed generic
+                AppendRawTypeName(ref interpolatedStringHandler, originalTypeDescriptor, depth);
+
+                // If the type is generic, append the definition name and the type arguments. We pass the original
+                // type descriptor here, because we also want to detect arrays with an element type that's generic.
+                if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+                {
+                    AppendTypeArguments(ref interpolatedStringHandler, genericInstanceTypeSignature, depth);
+                }
             }
         }
 
         // Helper to recursively build the type name (to handle nested generic types too)
         static void AppendRawTypeName(
             ref DefaultInterpolatedStringHandler interpolatedStringHandler,
-            IMemberDescriptor type,
+            ITypeDescriptor type,
             int depth)
         {
             // We can skip the namespace when the indentation level is '0', as that means
@@ -164,6 +143,30 @@ internal static class InteropUtf8NameFactory
 
                 interpolatedStringHandler.AppendLiteral(type.Name!);
             }
+        }
+
+        // Helper to iteratively print the type arguments for a constructed type
+        static void AppendTypeArguments(
+            ref DefaultInterpolatedStringHandler interpolatedStringHandler,
+            GenericInstanceTypeSignature type,
+            int depth)
+        {
+            interpolatedStringHandler.AppendLiteral("<");
+
+            foreach ((int i, TypeSignature typeArgumentSignature) in type.TypeArguments.Index())
+            {
+                // We use '|' to separate generic type arguments
+                if (i > 0)
+                {
+                    interpolatedStringHandler.AppendLiteral("|");
+                }
+
+                // Append the type argument with the same format as the root type. This is
+                // important to ensure that nested generic types will be handled correctly.
+                AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, depth: depth + 1);
+            }
+
+            interpolatedStringHandler.AppendLiteral(">");
         }
 
         // Append the full type name first
