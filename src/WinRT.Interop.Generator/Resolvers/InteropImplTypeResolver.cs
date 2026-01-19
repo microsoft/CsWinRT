@@ -80,12 +80,12 @@ internal static class InteropImplTypeResolver
         TypeDefinition type,
         InteropReferences interopReferences)
     {
-        // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types. In this
-        // case, the marshalling code will be in the merged projection.
+        // Finally, we have the base scenario of simple non-generic projected Windows Runtime
+        // interface types. In this case, the marshalling code will be in the merged projection.
         TypeReference ImplTypeReference = interopReferences.WinRTProjection.CreateTypeReference($"ABI.{type.Namespace}", $"{type.Name}Impl");
         MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
 
-        // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the merged projection.
+        // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the merged projection
         string get_IIDMethodName = $"get_IID_{type.FullName.Replace('.', '_')}";
         TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
         TypeReference interfaceIIDsTypeReference = interopReferences.WinRTProjection.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
