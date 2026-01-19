@@ -8,19 +8,20 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller for arrays of some Windows Runtime types represented as unknown COM interfaces.
+/// A marshaller for arrays of blittable Windows Runtime types.
 /// </summary>
-/// <remarks>
-/// This type mirrors <see cref="WindowsRuntimeUnknownMarshaller"/>, but for arrays.
-/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class WindowsRuntimeUnknownArrayMarshaller
+public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
-    public static void Free(uint size, void** array)
+    /// <summary>
+    /// Frees the specified array.
+    /// </summary>
+    /// <param name="size">The size of the array.</param>
+    /// <param name="array">The input array.</param>
+    public static void Free(uint size, void* array)
     {
         if (size == 0)
         {
@@ -28,11 +29,6 @@ public static unsafe class WindowsRuntimeUnknownArrayMarshaller
         }
 
         ArgumentNullException.ThrowIfNull(array);
-
-        for (uint i = 0; i < size; i++)
-        {
-            WindowsRuntimeUnknownMarshaller.Free(array[i]);
-        }
 
         Marshal.FreeCoTaskMem((nint)array);
     }

@@ -5,6 +5,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006, CA1416
 
@@ -14,19 +16,19 @@ namespace WindowsRuntime.InteropServices;
 public unsafe partial class IPropertyValueImpl
 {
     /// <summary>
-    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation, specifically for <see cref="PropertyType.OtherType"/> objects.
+    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation, specifically for arrays of <see cref="PropertyType.TimeSpanArray"/> objects.
     /// </summary>
-    public static nint OtherTypeVtable
+    public static nint TimeSpanArrayVtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in OtherTypePropertyValueImpl.Vftbl);
+        get => (nint)Unsafe.AsPointer(in TimeSpanArrayPropertyValueImpl.Vftbl);
     }
 }
 
 /// <summary>
-/// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.OtherType"/>.
+/// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.TimeSpanArray"/>.
 /// </summary>
-file static unsafe class OtherTypePropertyValueImpl
+file static unsafe class TimeSpanArrayPropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
@@ -37,7 +39,7 @@ file static unsafe class OtherTypePropertyValueImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static OtherTypePropertyValueImpl()
+    static TimeSpanArrayPropertyValueImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -76,7 +78,7 @@ file static unsafe class OtherTypePropertyValueImpl
         Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, uint*, void***, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetTimeSpanArray = &GetTimeSpanArray;
         Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Rect**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
@@ -91,8 +93,38 @@ file static unsafe class OtherTypePropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.OtherType;
+        *value = PropertyType.TimeSpanArray;
 
         return WellKnownErrorCodes.S_OK;
+    }
+
+    /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.gettimespanarray"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT GetTimeSpanArray(void* thisPtr, uint* size, ABI.System.TimeSpan** value)
+    {
+        if (size is null || value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            TimeSpan[] thisObject = ComInterfaceDispatch.GetInstance<TimeSpan[]>((ComInterfaceDispatch*)thisPtr);
+
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            static extern void ConvertToUnmanaged(
+                [UnsafeAccessorType("ABI.System.<#corlib>TimeSpanArrayMarshaller, WinRT.Interop.dll")] object? _,
+                TimeSpan[] source,
+                out uint size,
+                out ABI.System.TimeSpan* array);
+
+            ConvertToUnmanaged(null, thisObject, out *size, out *value);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 }

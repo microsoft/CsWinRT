@@ -97,21 +97,4 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
 
         new ReadOnlySpan<T>(source, (int)size).CopyTo(destination);
     }
-
-    /// <summary>
-    /// Frees the specified array.
-    /// </summary>
-    /// <param name="size">The size of the array.</param>
-    /// <param name="array">The input array.</param>
-    public static void Free(uint size, T* array)
-    {
-        if (size == 0)
-        {
-            return;
-        }
-
-        ArgumentNullException.ThrowIfNull(array);
-
-        Marshal.FreeCoTaskMem((nint)array);
-    }
 }

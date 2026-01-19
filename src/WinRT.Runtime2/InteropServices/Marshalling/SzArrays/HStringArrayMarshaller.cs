@@ -129,7 +129,7 @@ public static unsafe class HStringArrayMarshaller
         }
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.Free"/>
+    /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, void** array)
     {
         if (size == 0)

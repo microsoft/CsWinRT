@@ -39,7 +39,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerConvertToManaged(elementType),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToUnmanaged(elementType),
                 copyToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToManaged(elementType),
-                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree(elementType),
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -68,7 +68,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerConvertToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
-                freeMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerFree(elementType, elementAbiType),
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -161,6 +161,29 @@ internal partial class InteropTypeDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="System.Object"/> type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <returns>The resulting marshaller type.</returns>
+        public static TypeDefinition Object(
+            SzArrayTypeSignature arrayType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            return Marshaller(
+                arrayType: arrayType,
+                convertToUnmanagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerConvertToUnmanaged,
+                convertToManagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerConvertToManaged,
+                copyToUnmanagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerCopyToUnmanaged,
+                copyToManagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerCopyToManaged,
+                freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopReferences: interopReferences,
+                module: module);
+        }
+
+        /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="string"/> type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
@@ -224,7 +247,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.ExceptionArrayMarshallerConvertToManaged,
                 copyToUnmanagedMethod: interopReferences.ExceptionArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.ExceptionArrayMarshallerCopyToManaged,
-                freeMethod: interopReferences.ExceptionArrayMarshallerFree,
+                freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
         }

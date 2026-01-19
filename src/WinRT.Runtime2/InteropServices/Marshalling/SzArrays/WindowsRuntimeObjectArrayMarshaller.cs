@@ -8,16 +8,16 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller for arrays of the Windows Runtime <see cref="Exception"/> type.
+/// A marshaller for arrays of Windows Runtime objects.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class ExceptionArrayMarshaller
+public static unsafe class WindowsRuntimeObjectArrayMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToUnmanaged"/>
-    public static void ConvertToUnmanaged(ReadOnlySpan<Exception?> source, out uint size, out ABI.System.Exception* array)
+    public static void ConvertToUnmanaged(ReadOnlySpan<object?> source, out uint size, out void** array)
     {
         if (source.IsEmpty)
         {
@@ -27,19 +27,27 @@ public static unsafe class ExceptionArrayMarshaller
             return;
         }
 
-        ABI.System.Exception* destination = (ABI.System.Exception*)Marshal.AllocCoTaskMem(sizeof(ABI.System.Exception) * source.Length);
+        void** destination = (void**)Marshal.AllocCoTaskMem(sizeof(void*) * source.Length);
+
+        int i = 0;
 
         try
         {
-            // Marshal all input 'Exception'-s with 'ExceptionMarshaller' (note that 'HResult' is blittable)
-            for (int i = 0; i < source.Length; i++)
+            // Marshal all array elements as 'IInspectable' objects
+            for (; i < source.Length; i++)
             {
-                destination[i] = ABI.System.ExceptionMarshaller.ConvertToUnmanaged(source[i]);
+                destination[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
             }
         }
         catch
         {
-            // Release the allocated array to avoid leaking (this shouldn't really happen)
+            // Make sure to release all marshalled objects so far (this shouldn't ever throw)
+            for (int j = 0; j < i; j++)
+            {
+                WindowsRuntimeUnknownMarshaller.Free(destination[j]);
+            }
+
+            // Also release the allocated array to avoid leaking
             Marshal.FreeCoTaskMem((nint)destination);
 
             throw;
@@ -50,7 +58,7 @@ public static unsafe class ExceptionArrayMarshaller
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.ConvertToManaged"/>
-    public static Exception?[] ConvertToManaged(uint size, ABI.System.Exception* value)
+    public static object?[] ConvertToManaged(uint size, void** value)
     {
         if (size == 0)
         {
@@ -59,18 +67,18 @@ public static unsafe class ExceptionArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(value);
 
-        Exception?[] array = new Exception[(int)size];
+        object?[] array = new object[(int)size];
 
         for (int i = 0; i < size; i++)
         {
-            array[i] = ABI.System.ExceptionMarshaller.ConvertToManaged(value[i]);
+            array[i] = WindowsRuntimeObjectMarshaller.ConvertToManaged(value[i]);
         }
 
         return array;
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToUnmanaged"/>
-    public static void CopyToUnmanaged(ReadOnlySpan<Exception?> source, uint size, ABI.System.Exception* destination)
+    public static void CopyToUnmanaged(ReadOnlySpan<object?> source, uint size, void** destination)
     {
         WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);
 
@@ -81,14 +89,30 @@ public static unsafe class ExceptionArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        for (int i = 0; i < source.Length; i++)
+        int i = 0;
+
+        try
         {
-            destination[i] = ABI.System.ExceptionMarshaller.ConvertToUnmanaged(source[i]);
+            // Marshal the items in the input span
+            for (; i < source.Length; i++)
+            {
+                destination[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
+            }
+        }
+        catch
+        {
+            // Release resources for any items, if we failed
+            for (int j = 0; j < i; j++)
+            {
+                WindowsRuntimeUnknownMarshaller.Free(destination[j]);
+            }
+
+            throw;
         }
     }
 
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller{T}.CopyToManaged"/>
-    public static void CopyToManaged(uint size, ABI.System.Exception* source, Span<Exception?> destination)
+    public static void CopyToManaged(uint size, void** source, Span<object?> destination)
     {
         WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(size, destination.Length);
 
@@ -101,7 +125,7 @@ public static unsafe class ExceptionArrayMarshaller
 
         for (uint i = 0; i < size; i++)
         {
-            destination[(int)i] = ABI.System.ExceptionMarshaller.ConvertToManaged(source[i]);
+            destination[(int)i] = WindowsRuntimeObjectMarshaller.ConvertToManaged(source[i]);
         }
     }
 }

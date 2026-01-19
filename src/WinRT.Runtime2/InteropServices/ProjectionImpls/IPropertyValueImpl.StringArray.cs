@@ -5,6 +5,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006, CA1416
 
@@ -14,19 +16,19 @@ namespace WindowsRuntime.InteropServices;
 public unsafe partial class IPropertyValueImpl
 {
     /// <summary>
-    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation, specifically for <see cref="PropertyType.OtherType"/> objects.
+    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation, specifically for arrays of <see cref="PropertyType.StringArray"/> objects.
     /// </summary>
-    public static nint OtherTypeVtable
+    public static nint StringArrayVtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in OtherTypePropertyValueImpl.Vftbl);
+        get => (nint)Unsafe.AsPointer(in StringArrayPropertyValueImpl.Vftbl);
     }
 }
 
 /// <summary>
-/// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.OtherType"/>.
+/// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.StringArray"/>.
 /// </summary>
-file static unsafe class OtherTypePropertyValueImpl
+file static unsafe class StringArrayPropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
@@ -37,7 +39,7 @@ file static unsafe class OtherTypePropertyValueImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static OtherTypePropertyValueImpl()
+    static StringArrayPropertyValueImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -72,7 +74,7 @@ file static unsafe class OtherTypePropertyValueImpl
         Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, uint*, double**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, uint*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, uint*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetStringArray = &GetStringArray;
         Vftbl.GetInspectableArray = (delegate* unmanaged[MemberFunction]<void*, uint*, void***, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
@@ -91,8 +93,31 @@ file static unsafe class OtherTypePropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.OtherType;
+        *value = PropertyType.StringArray;
 
         return WellKnownErrorCodes.S_OK;
+    }
+
+    /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getstringarray"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT GetStringArray(void* thisPtr, uint* size, HSTRING** value)
+    {
+        if (size is null || value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            string[] thisObject = ComInterfaceDispatch.GetInstance<string[]>((ComInterfaceDispatch*)thisPtr);
+
+            HStringArrayMarshaller.ConvertToUnmanaged(thisObject, out *size, out *value);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 }

@@ -919,6 +919,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeArrayMarshaller"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeBlittableValueTypeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeBlittableValueTypeArrayMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller&lt;T&gt;</c>.
     /// </summary>
     public TypeReference WindowsRuntimeBlittableValueTypeArrayMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeBlittableValueTypeArrayMarshaller`1"u8);
@@ -942,6 +947,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeUnknownArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeUnknownArrayMarshaller"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeObjectArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeObjectArrayMarshaller"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeKeyValuePairTypeArrayMarshaller&lt;TKey, TValue&gt;</c>.
@@ -1470,20 +1480,6 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_OtherTypeArrayVtable()</c>.
-    /// </summary>
-    public MemberReference IPropertyValueImplget_OtherTypeArrayVtable => field ??= IPropertyValueImpl
-        .CreateMemberReference("get_OtherTypeArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_InspectableArrayVtable()</c>.
-    /// </summary>
-    public MemberReference IPropertyValueImplget_InspectableArrayVtable => field ??= IPropertyValueImpl
-        .CreateMemberReference("get_InspectableArrayVtable"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
@@ -1912,6 +1908,16 @@ internal sealed class InteropReferences
                 Guid.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller.Free</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeBlittableValueTypeArrayMarshallerFree => field ??= WindowsRuntimeBlittableValueTypeArrayMarshaller
+        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller.Free</c>.
     /// </summary>
     public MemberReference WindowsRuntimeUnknownArrayMarshallerFree => field ??= WindowsRuntimeUnknownArrayMarshaller
@@ -1920,6 +1926,49 @@ internal sealed class InteropReferences
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
                 _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32.MakeByReferenceType(),
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerConvertToManaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Object.MakeSzArrayType(),
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.CopyToUnmanaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerCopyToUnmanaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                ReadOnlySpan1.MakeGenericValueType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectArrayMarshaller.CopyToManaged</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectArrayMarshallerCopyToManaged => field ??= WindowsRuntimeObjectArrayMarshaller
+        .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                Span1.MakeGenericValueType(_corLibTypeFactory.Object)]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.ConvertToUnmanaged</c>.
@@ -2069,16 +2118,6 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.UInt32,
                 AbiException.ToValueTypeSignature().MakePointerType(),
                 Span1.MakeGenericValueType(Exception.ToReferenceTypeSignature())]));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.ExceptionArrayMarshaller.Free</c>.
-    /// </summary>
-    public MemberReference ExceptionArrayMarshallerFree => field ??= ExceptionArrayMarshaller
-        .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Void,
-            parameterTypes: [
-                _corLibTypeFactory.UInt32,
-                AbiException.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
@@ -2377,22 +2416,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeBlittableValueTypeArrayMarshaller&lt;T&gt;.Free</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference WindowsRuntimeBlittableValueTypeArrayMarshallerFree(TypeSignature elementType)
-    {
-        return WindowsRuntimeBlittableValueTypeArrayMarshaller1
-            .MakeGenericReferenceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Type, 0).MakePointerType()]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeManagedValueTypeArrayMarshaller&lt;T, TAbi&gt;.ConvertToUnmanaged&lt;TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -2576,23 +2599,6 @@ internal sealed class InteropReferences
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]))
             .MakeGenericInstanceMethod(elementMarshallerType);
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnmanagedValueTypeArrayMarshaller&lt;T, TAbi&gt;.Free</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    /// <param name="abiType">The ABI type.</param>
-    public MemberReference WindowsRuntimeUnmanagedValueTypeArrayMarshallerFree(TypeSignature elementType, TypeSignature abiType)
-    {
-        return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Void,
-                parameterTypes: [
-                    _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]));
     }
 
     /// <summary>
