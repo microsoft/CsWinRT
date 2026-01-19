@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A helper for marshaller types for Windows Runtime arrays.
 /// </summary>
-internal static unsafe class WindowsRuntimeArrayMarshallerHelpers
+internal static class WindowsRuntimeArrayMarshallerHelpers
 {
     /// <summary>
     /// Validates that the specified destination span has the required number of elements.

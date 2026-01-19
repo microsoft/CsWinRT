@@ -23,7 +23,7 @@ namespace WindowsRuntime;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
     where TIIteratorMethods : IIteratorMethodsImpl<T>
 {
     /// <summary>

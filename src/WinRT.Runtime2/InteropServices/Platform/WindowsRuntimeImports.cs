@@ -18,7 +18,7 @@ internal static unsafe partial class WindowsRuntimeImports
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/combaseapi/nf-combaseapi-coincrementmtausage"/>
     [LibraryImport("api-ms-win-core-com-l1-1-0.dll")]
-    public static unsafe partial HRESULT CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE* cookie);
+    public static partial HRESULT CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE* cookie);
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/combaseapi/nf-combaseapi-codecrementmtausage"/>
     [LibraryImport("api-ms-win-core-com-l1-1-0.dll")]

@@ -48,7 +48,7 @@ public static unsafe class IAsyncActionMarshaller
 file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
     /// <inheritdoc/>
-    public static unsafe bool TryCreateObject(
+    public static bool TryCreateObject(
         void* value,
         ReadOnlySpan<char> runtimeClassName,
         [NotNullWhen(true)] out object? wrapperObject,

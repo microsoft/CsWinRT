@@ -111,7 +111,7 @@ file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeCom
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IListMethods
+public static class IListMethods
 {
     /// <inheritdoc cref="ICollection.Count"/>
     public static int Count(WindowsRuntimeObjectReference thisReference)
