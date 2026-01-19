@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -126,6 +127,22 @@ internal partial class InteropTypeDiscovery
 
         // Track all SZ array types, as we'll need to emit marshalling code for them
         discoveryState.TrackSzArrayType(typeSignature);
+
+        // Each SZ array also gets a series of interfaces automatically implemented by the runtime.
+        // The set is fixed, so we can just hardcode those here to make sure they are also discovered.
+        // They will all be needed later, because CCWs for array objects will need those vtable slots.
+        foreach (GenericInstanceTypeSignature interfaceType in (ReadOnlySpan<GenericInstanceTypeSignature>)[
+            interopReferences.IList1.MakeGenericReferenceType(typeSignature.BaseType),
+            interopReferences.IEnumerable1.MakeGenericReferenceType(typeSignature.BaseType),
+            interopReferences.IReadOnlyList1.MakeGenericReferenceType(typeSignature.BaseType)])
+        {
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interfaceType,
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 
     /// <summary>
@@ -420,7 +437,12 @@ internal partial class InteropTypeDiscovery
             typeSignature.IsConstructedSpanOrReadOnlySpanType(interopReferences) &&
             typeSignature.TypeArguments[0].IsWindowsRuntimeType(interopReferences))
         {
-            discoveryState.TrackSzArrayType(typeSignature.TypeArguments[0].MakeSzArrayType());
+            TryTrackSzArrayType(
+                typeSignature: typeSignature.TypeArguments[0].MakeSzArrayType(),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             return;
         }

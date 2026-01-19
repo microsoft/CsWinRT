@@ -74,7 +74,7 @@ public unsafe partial class IPropertyValueImpl
     /// </summary>
     /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32array"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT ThrowStubForGetArrayOverloads(void* thisPtr, int* size, void** value)
+    internal static HRESULT ThrowStubForGetArrayOverloads(void* thisPtr, uint* size, void** value)
     {
         if (size is null || value is null)
         {

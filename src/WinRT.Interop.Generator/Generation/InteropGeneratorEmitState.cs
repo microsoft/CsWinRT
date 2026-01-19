@@ -133,6 +133,27 @@ internal sealed class InteropGeneratorEmitState
     }
 
     /// <summary>
+    /// Tracks a method rewrite that involves emitting direct calls to <c>ConvertToUnmanaged</c> in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    public void TrackRawRetValMethodRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction marker)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.RawRetVal
+        {
+            Type = parameterType,
+            Method = method,
+            Marker = marker
+        });
+    }
+
+    /// <summary>
     /// Tracks a method rewrite that involves loading a managed parameter in the specified method.
     /// </summary>
     /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
@@ -204,6 +225,27 @@ internal sealed class InteropGeneratorEmitState
             Marker = loadMarker,
             FinallyMarker = finallyMarker,
             ParameterIndex = parameterIndex
+        });
+    }
+
+    /// <summary>
+    /// Tracks a method rewrite that involves emitting calls to dispose (or release) a given value in the specified method.
+    /// </summary>
+    /// <param name="parameterType"><inheritdoc cref="MethodRewriteInfo.Type" path="/node()"/></param>
+    /// <param name="method"><inheritdoc cref="MethodRewriteInfo.Method" path="/node()"/></param>
+    /// <param name="marker"><inheritdoc cref="MethodRewriteInfo.Marker" path="/node()"/></param>
+    public void TrackDisposeRewrite(
+        TypeSignature parameterType,
+        MethodDefinition method,
+        CilInstruction marker)
+    {
+        ThrowIfReadOnly();
+
+        _methodRewriteInfos.Add(new MethodRewriteInfo.Dispose
+        {
+            Type = parameterType,
+            Method = method,
+            Marker = marker
         });
     }
 

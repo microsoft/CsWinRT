@@ -72,7 +72,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     /// Converts an unmanaged pointer to a Windows Runtime object to a managed object.
     /// </summary>
     /// <param name="value">The input object to convert to managed.</param>
-    /// <returns>The resulting managed managed object.</returns>
+    /// <returns>The resulting managed object.</returns>
     public static object? ConvertToManaged(void* value)
     {
         if (value is null)

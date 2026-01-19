@@ -8,8 +8,12 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
+
+#pragma warning disable IDE0008, IDE0042
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -26,121 +30,138 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
             TypeSignature elementType = arrayType.BaseType;
-            TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
-            // We're declaring an 'internal static class' type
-            marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "Marshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(marshallerType);
-
-            // Define the 'ConvertToUnmanaged' method as follows:
-            //
-            // public static void ConvertToUnmanaged(ReadOnlySpan<<ELEMENT_TYPE>>, out uint size, out <ABI_ELEMENT_TYPE>* array)
-            MethodDefinition convertToUnmanagedMethod = new(
-                name: "ConvertToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType(),
-                        elementAbiType.Import(module).MakePointerType().MakeByReferenceType()]))
+            // Emit the right marshaller based on the element type. We special case all different
+            // kinds of element types because some need specialized marshallers, and some need
+            // a generated element marshaller type. The marshaller itself just forwards all calls.
+            if (elementType.IsBlittable(interopReferences))
             {
-                CilOutParameterIndices = [2, 3],
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.BlittableValueType(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
 
-            marshallerType.Methods.Add(convertToUnmanagedMethod);
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static <ELEMENT_TYPE>[] ConvertToManaged(uint size, <ABI_ELEMENT_TYPE>* value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: arrayType.Import(module),
-                    parameterTypes: [
-                        module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsConstructedKeyValuePairType(interopReferences))
             {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+                TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.KeyValuePair(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
 
-            marshallerType.Methods.Add(convertToManagedMethod);
+                module.TopLevelTypes.Add(elementMarshallerType);
 
-            // Define the 'CopyToManaged' method as follows:
-            //
-            // public static void CopyToManaged(uint size, <ABI_ELEMENT_TYPE>* value, Span<<ELEMENT_TYPE>> destination)
-            MethodDefinition copyToManagedMethod = new(
-                name: "CopyToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType(),
-                        interopReferences.Span1.MakeGenericValueType(elementType).Import(module)]))
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.KeyValuePair(
+                    arrayType: arrayType,
+                    elementMarshallerType: elementMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsManagedValueType(interopReferences))
             {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+                TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ManagedValueType(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
 
-            marshallerType.Methods.Add(copyToManagedMethod);
+                module.TopLevelTypes.Add(elementMarshallerType);
 
-            // Define the 'CopyToUnmanaged' method as follows:
-            //
-            // public static void CopyToUnmanaged(ReadOnlySpan<<ELEMENT_TYPE>> value, uint size, <ABI_ELEMENT_TYPE>* destination)
-            MethodDefinition copyToUnmanagedMethod = new(
-                name: "CopyToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
-                        module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ManagedValueType(
+                    arrayType: arrayType,
+                    elementMarshallerType: elementMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsValueType)
             {
-                CilInstructions =
-                {
-                    { Ldnull },
-                    { Throw } // TODO
-                }
-            };
+                TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.UnmanagedValueType(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
 
-            marshallerType.Methods.Add(copyToUnmanagedMethod);
+                module.TopLevelTypes.Add(elementMarshallerType);
 
-            // Define the 'Free' method
-            MethodDefinition freeMethod = InteropMethodDefinitionFactory.SzArrayMarshaller.Free(
-                arrayType,
-                interopReferences,
-                module);
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.UnmanagedValueType(
+                    arrayType: arrayType,
+                    elementMarshallerType: elementMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module);
 
-            marshallerType.Methods.Add(freeMethod);
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsTypeOfObject())
+            {
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Object(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsTypeOfString())
+            {
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.String(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsTypeOfType(interopReferences))
+            {
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Type(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else if (elementType.IsTypeOfException(interopReferences))
+            {
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Exception(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
+            else
+            {
+                TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ReferenceType(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ReferenceType(
+                    arrayType: arrayType,
+                    elementMarshallerType: elementMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
         }
 
         /// <summary>
@@ -317,7 +338,9 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
             SzArrayTypeSignature arrayType,
@@ -325,9 +348,41 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceEntriesImplType)
         {
+            var listImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
+                type: interopReferences.IList.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+
+            var enumerableImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
+                type: interopReferences.IEnumerable.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+
+            var list1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IList1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            var enumerable1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IEnumerable1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            var readOnlyList1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
+                type: interopReferences.IReadOnlyList1.MakeGenericReferenceType(arrayType.BaseType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            var propertyValueImpl = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
+
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
@@ -337,7 +392,12 @@ internal partial class InteropTypeDefinitionBuilder
                 implType: out interfaceEntriesImplType,
                 implTypes: [
                     (get_IidMethod, implType.GetMethod("get_Vtable"u8)),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue, interopReferences.IPropertyValueImplget_OtherTypeVtable), // TODO
+                    (listImpl.get_IID, listImpl.get_Vtable),
+                    (enumerableImpl.get_IID, enumerableImpl.get_Vtable),
+                    (list1Impl.get_IID, list1Impl.get_Vtable),
+                    (enumerable1Impl.get_IID, enumerable1Impl.get_Vtable),
+                    (readOnlyList1Impl.get_IID, readOnlyList1Impl.get_Vtable),
+                    (propertyValueImpl.get_IID, propertyValueImpl.get_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
