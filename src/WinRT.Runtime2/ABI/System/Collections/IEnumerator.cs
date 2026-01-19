@@ -111,7 +111,7 @@ file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRunt
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IEnumeratorMethods
+public static class IEnumeratorMethods
 {
     /// <inheritdoc cref="global::System.Collections.IEnumerator.Current"/>
     public static object? Current(WindowsRuntimeObjectReference thisReference)
