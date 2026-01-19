@@ -28,7 +28,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// </remarks>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void ActivateInstanceUnsafe(WindowsRuntimeObjectReference activationFactoryObjectReference, out void* defaultInterface)
+    public static void ActivateInstanceUnsafe(WindowsRuntimeObjectReference activationFactoryObjectReference, out void* defaultInterface)
     {
         using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
 
@@ -50,7 +50,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// <param name="defaultInterface">The resulting default interface pointer.</param>
     /// <exception cref="Exception">Thrown if activating the instance fails.</exception>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void ActivateInstanceUnsafe(
+    public static void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         string? param0,
         out void* defaultInterface)
@@ -85,7 +85,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// </remarks>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void ActivateInstanceUnsafe(
+    public static void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         WindowsRuntimeObject? baseInterface,
         out void* innerInterface,
@@ -113,7 +113,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// </remarks>
     /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, WindowsRuntimeObject?, out void*, out void*)"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void ActivateInstanceUnsafe(
+    public static void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         string? param0,
         WindowsRuntimeObject? baseInterface,
@@ -150,7 +150,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// </remarks>
     /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, WindowsRuntimeObject?, out void*, out void*)"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void ActivateInstanceUnsafe(
+    public static void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         NotifyCollectionChangedAction param0,
         IList? param1,
