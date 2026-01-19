@@ -1,89 +1,85 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
+/// <summary>
+/// A generator for runtime class names of Windows Runtime types, or user-defined types exposed to native consumers.
+/// </summary>
 internal static class RuntimeClassNameGenerator
 {
     /// <summary>
-    /// Builds the projected WinRT runtime class name for a (potentially generic) type,
+    /// Generates the Windows Runtime class name for a (potentially generic) type,
     /// applying known type-name mappings and recursively formatting generic arguments.
-    /// When <paramref name="type"/> is a generic instance whose generic type has a mapped
-    /// name, the result is <c>MappedName&lt;Arg1, Arg2, ...&gt;</c>. Otherwise, this returns
-    /// the mapped simple name (if any) or the original <see cref="TypeSignature.FullName"/>.
     /// </summary>
-    /// <param name="type">
-    /// The type to map. May be a simple type or a <c>GenericInstanceTypeSignature</c>.
-    /// Generic arguments are also mapped recursively
-    /// </param>
+    /// <param name="type">The <see cref="TypeSignature"/> to generate the Windows Runtime class name for.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    /// <returns>
-    /// The mapped runtime class name. For generic instances with a mapped generic type,
-    /// returns the mapped name with type arguments (e.g., <c>Namespace.Type&lt;TArg&gt;</c>).
-    /// If no mapping exists, returns <paramref name="type"/>.<see cref="TypeSignature.FullName"/>.
-    /// </returns>
-    public static string GetGenericInstanceRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
+    /// <returns>The resulting Windows Runtime class name for <paramref name="type"/>.</returns>
+    public static string GetRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
-        GetGenericInstanceRuntimeClassNameHelper(type, useWindowsUIXamlProjections, ref handler);
-
-        return handler.ToStringAndClear();
-    }
-
-    private static void GetGenericInstanceRuntimeClassNameHelper(TypeSignature type, bool useWindowsUIXamlProjections, ref DefaultInterpolatedStringHandler interpolatedStringHandler)
-    {
-        // Handle szArrayTypeSignature types as IReferenceArray<T>.
-        if (type is SzArrayTypeSignature szArrayTypeSignature)
+        // Helper to format a full type signature into a target interpolated handler
+        static void AppendRuntimeClassName(
+            ref DefaultInterpolatedStringHandler interpolatedStringHandler,
+            TypeSignature type,
+            bool useWindowsUIXamlProjections)
         {
-            interpolatedStringHandler.AppendLiteral("IReferenceArray<");
-
-            GetGenericInstanceRuntimeClassNameHelper(szArrayTypeSignature.BaseType, useWindowsUIXamlProjections, ref interpolatedStringHandler);
-
-            interpolatedStringHandler.AppendLiteral(">");
-            return;
-        }
-
-        // Generic type instance: recursively process generic arguments.
-        if (type is GenericInstanceTypeSignature genericInstanceTypeSignature)
-        {
-            // If the generic type has a mapped name, use it; otherwise, use the full name.
-            if (TypeMapping.TryFindMappedTypeName(genericInstanceTypeSignature.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
+            // Handle SZ array types and map them to 'IReferenceArray<T>' type names
+            if (type is SzArrayTypeSignature szArrayTypeSignature)
             {
-                interpolatedStringHandler.AppendLiteral(mappedTypeName);
+                interpolatedStringHandler.AppendLiteral("IReferenceArray<");
+
+                AppendRuntimeClassName(ref interpolatedStringHandler, szArrayTypeSignature.BaseType, useWindowsUIXamlProjections);
+
+                interpolatedStringHandler.AppendLiteral(">");
+            }
+            else if (type is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            {
+                // For constructed generic types, we first format the generic type (with a mapped
+                // name, if applicable), and then recursively process all generic type arguments.
+                if (TypeMapping.TryFindMappedTypeName(genericInstanceTypeSignature.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
+                {
+                    interpolatedStringHandler.AppendLiteral(mappedTypeName);
+                }
+                else
+                {
+                    interpolatedStringHandler.AppendLiteral(genericInstanceTypeSignature.GenericType.FullName);
+                }
+
+                interpolatedStringHandler.AppendLiteral("<");
+
+                // Recursively format each type argument
+                for (int i = 0; i < genericInstanceTypeSignature.TypeArguments.Count; i++)
+                {
+                    // Add the ', ' separator after the first type argument
+                    if (i > 0)
+                    {
+                        interpolatedStringHandler.AppendLiteral(", ");
+                    }
+
+                    AppendRuntimeClassName(ref interpolatedStringHandler, genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections);
+                }
+
+                interpolatedStringHandler.AppendLiteral(">");
+            }
+            else if (TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName))
+            {
+                // We have a simple, non-generic type, so format its mapped type if available
+                interpolatedStringHandler.AppendLiteral(simpleMappedTypeName);
             }
             else
             {
-                interpolatedStringHandler.AppendLiteral(genericInstanceTypeSignature.GenericType.FullName);
+                // Otherwise the type must be a projected type, so just format the full name
+                interpolatedStringHandler.AppendLiteral(type.FullName);
             }
-
-            interpolatedStringHandler.AppendLiteral("<");
-
-            // Recursively append each type argument.
-            GetGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[0], useWindowsUIXamlProjections, ref interpolatedStringHandler);
-
-            for (int i = 1; i < genericInstanceTypeSignature.TypeArguments.Count; i++)
-            {
-                interpolatedStringHandler.AppendLiteral(", ");
-
-                GetGenericInstanceRuntimeClassNameHelper(genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections, ref interpolatedStringHandler);
-            }
-
-            interpolatedStringHandler.AppendLiteral(">");
-
-            return;
         }
 
-        // Non-generic type: apply mapping if available.
-        if (TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName))
-        {
-            interpolatedStringHandler.AppendLiteral(simpleMappedTypeName);
-        }
-        else
-        {
-            interpolatedStringHandler.AppendLiteral(type.FullName);
-        }
+        AppendRuntimeClassName(ref handler, type, useWindowsUIXamlProjections);
+
+        return handler.ToStringAndClear();
     }
 }

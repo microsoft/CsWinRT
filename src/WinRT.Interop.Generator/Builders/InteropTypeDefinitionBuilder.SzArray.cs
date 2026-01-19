@@ -514,7 +514,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetGenericInstanceRuntimeClassName(arrayType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: arrayType,
                 proxyTypeMapSourceType: arrayType,

@@ -922,7 +922,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
-                runtimeClassName: RuntimeClassNameGenerator.GetGenericInstanceRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,
@@ -945,7 +945,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetGenericInstanceRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: delegateType,
                 proxyTypeMapSourceType: delegateType,
