@@ -84,6 +84,24 @@ internal static class TypeMapping
         new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")));
 
     /// <summary>
+    /// Mapping of built-in <c>System.*</c> to their corresponding Windows Runtime fundamental types.
+    /// </summary>
+    private static readonly FrozenDictionary<string, string> FundamentalTypeMapping = FrozenDictionary.Create<string, string>(comparer: null,
+        new("System.Boolean", "Boolean"),
+        new("System.Byte", "UInt8"),
+        new("System.Char", "Char"),
+        new("System.Double", "Double"),
+        new("System.Guid", "Guid"),
+        new("System.Int16", "Int16"),
+        new("System.Int32", "Int32"),
+        new("System.Int64", "Int64"),
+        new("System.Object", "Object"),
+        new("System.Single", "Single"),
+        new("System.String", "String"),
+        new("System.UInt16", "UInt16"),
+        new("System.UInt32", "UInt32"));
+
+    /// <summary>
     /// Mapping of projected <c>Microsoft.UI.Xaml</c> types to their corresponding <c>Windows.UI.Xaml</c> types.
     /// </summary>
     /// <remarks>
@@ -117,6 +135,11 @@ internal static class TypeMapping
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? mappedName)
     {
+        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out mappedName))
+        {
+            return true;
+        }
+
         if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out MappedType result))
         {
             mappedName = null;

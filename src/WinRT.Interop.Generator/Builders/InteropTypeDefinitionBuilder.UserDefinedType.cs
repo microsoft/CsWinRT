@@ -9,8 +9,10 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
@@ -253,29 +255,73 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="proxyType">The resulting proxy type.</param>
         public static void Proxy(
             TypeSignature userDefinedType,
             TypeDefinition comWrappersMarshallerAttributeType,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
-                name: InteropUtf8NameFactory.TypeName(userDefinedType),
-                runtimeClassName: "", // TODO
-                comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
+            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve()!;
+
+            // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
+            // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
+            // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
+            if (userDefinedTypeDefinition.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute))
+            {
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                    mappedType: userDefinedType,
+                    runtimeClassName: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
+            else
+            {
+                TypeSignature? interfaceType = null;
+
+                // Go through all implemented interfaces, and find the first Windows Runtime interface
+                foreach (TypeSignature interfaceSignature in userDefinedType.EnumerateAllInterfaces())
+                {
+                    if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
+                    {
+                        interfaceType = interfaceSignature;
+
+                        break;
+                    }
+                }
+
+                // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
+                // been added to the set of exposed types during discovery. However, let's validate that here too.
+                if (interfaceType is null)
+                {
+                    throw WellKnownInteropExceptions.PrimaryWindowsRuntimeInterfaceNotFoundError(userDefinedType);
+                }
+
+                // Otherwise, we'll use the runtime class name of the first implemented Windows Runtime interface
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                    mappedType: userDefinedType,
+                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
         }
 
         /// <summary>
         /// Creates the type map attributes for some user-defined type.
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         public static void TypeMapAttributes(
