@@ -1973,10 +1973,13 @@ internal partial class InteropGenerator
                 continue;
             }
 
+            // Construct the 'IReadOnlyCollection<KeyValuePair<,>>' type for processing
+            GenericInstanceTypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+
             try
             {
                 InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.ForwarderAttribute(
-                    readOnlyCollectionType: typeSignature,
+                    readOnlyCollectionType: readOnlyCollectionType,
                     interopReferences: interopReferences,
                     module: module,
                     forwarderAttributeType: out TypeDefinition forwarderAttributeType);
@@ -2013,10 +2016,13 @@ internal partial class InteropGenerator
                 continue;
             }
 
+            // Construct the 'ICollection<KeyValuePair<,>>' type for processing
+            GenericInstanceTypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+
             try
             {
                 InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.ForwarderAttribute(
-                    collectionType: typeSignature,
+                    collectionType: collectionType,
                     interopReferences: interopReferences,
                     module: module,
                     forwarderAttributeType: out TypeDefinition forwarderAttributeType);
