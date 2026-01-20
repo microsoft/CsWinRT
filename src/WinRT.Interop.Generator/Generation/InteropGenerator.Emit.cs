@@ -344,9 +344,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition delegateComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.Delegate.Proxy(
-                    delegateType: typeSignature,
-                    delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -493,11 +493,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IEnumerator1.Proxy(
-                    enumeratorType: typeSignature,
-                    enumeratorComWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IEnumerator1.TypeMapAttributes(
@@ -617,11 +618,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IEnumerable1.Proxy(
-                    enumerableType: typeSignature,
-                    enumerableComWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.TypeMapAttributes(
@@ -742,11 +744,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyList1.Proxy(
-                    readOnlyListType: typeSignature,
-                    readOnlyListComWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
@@ -875,11 +878,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IList1.Proxy(
-                    listType: typeSignature,
-                    listComWrappersMarshallerAttributeType: listComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: listComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
@@ -1000,11 +1004,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Proxy(
-                    readOnlyDictionaryType: typeSignature,
-                    readOnlyDictionaryComWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.TypeMapAttributes(
@@ -1134,11 +1139,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.Proxy(
-                    dictionaryType: typeSignature,
-                    dictionaryComWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IDictionary2.TypeMapAttributes(
@@ -1333,11 +1339,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.Proxy(
-                    argsType: typeSignature,
-                    argsComWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.TypeMapAttributes(
@@ -1451,11 +1458,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IObservableVector1.Proxy(
-                    vectorType: typeSignature,
-                    vectorComWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IObservableVector1.TypeMapAttributes(
@@ -1569,11 +1577,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IObservableMap2.Proxy(
-                    mapType: typeSignature,
-                    mapComWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IObservableMap2.TypeMapAttributes(
@@ -1677,11 +1686,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.Proxy(
-                    actionType: typeSignature,
-                    actionComWrappersMarshallerAttributeType: actionComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: actionComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.TypeMapAttributes(
@@ -1785,11 +1795,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperation1.Proxy(
-                    operationType: typeSignature,
-                    operationComWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IAsyncOperation1.TypeMapAttributes(
@@ -1893,11 +1904,12 @@ internal partial class InteropGenerator
                     module: module,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.Proxy(
-                    operationType: typeSignature,
-                    operationComWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.TypeMapAttributes(
@@ -1988,11 +2000,12 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.SzArray.Proxy(
-                    arrayType: typeSignature,
-                    arrayComWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.SzArray.TypeMapAttributes(

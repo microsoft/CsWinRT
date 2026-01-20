@@ -479,41 +479,10 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IObservableMap&lt;K,V&gt;</c> interface.
-        /// </summary>
-        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
-        /// <param name="mapComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature mapType,
-            TypeDefinition mapComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            TypeSignature keyType = mapType.TypeArguments[0];
-            TypeSignature valueType = mapType.TypeArguments[1];
-
-            string runtimeClassName = $"Windows.Foundation.Collections.IObservableMap`2<{keyType},{valueType}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType),
-                mappedType: mapType,
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: mapComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
         /// Creates the type map attributes for some <c>IObservableMap&lt;K,V&gt;</c> interface.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
         /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>

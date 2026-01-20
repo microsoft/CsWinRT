@@ -681,6 +681,34 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <summary>
     /// Creates a new type definition for the proxy type of some managed type.
     /// </summary>
+    /// <param name="mappedType">Ther <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="marshallerType">The resulting proxy type.</param>
+    public static void Proxy(
+        TypeSignature mappedType,
+        TypeDefinition comWrappersMarshallerAttributeType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections,
+        out TypeDefinition marshallerType)
+    {
+        Proxy(
+            ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
+            name: InteropUtf8NameFactory.TypeName(mappedType),
+            mappedType: mappedType,
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
+            comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+            interopReferences: interopReferences,
+            module: module,
+            marshallerType: out marshallerType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the proxy type of some managed type.
+    /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="mappedType">Ther <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
