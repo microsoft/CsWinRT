@@ -437,7 +437,6 @@ public abstract unsafe class WindowsRuntimeObject :
             interfaceType: type.TypeHandle,
             performTypeHandleCacheLookup: true,
             throwOnQueryInterfaceFailure: true,
-            retrieveCastResult: true,
             castResult: out GeneratedComInterfaceCastResult? castResult) is not CustomQueryInterfaceResult.Handled)
         {
             [DoesNotReturn]
@@ -514,7 +513,6 @@ public abstract unsafe class WindowsRuntimeObject :
         // First, check for 'IDynamicInterfaceCastable' casts through the Windows Runtime infrastructure
         if (LookupDynamicInterfaceCastableImplementationInfo(
             interfaceType: interfaceType,
-            retrieveCastResult: true,
             castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult))
         {
             implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
@@ -528,7 +526,6 @@ public abstract unsafe class WindowsRuntimeObject :
             interfaceType: interfaceType,
             performTypeHandleCacheLookup: false,
             throwOnQueryInterfaceFailure: false,
-            retrieveCastResult: true,
             castResult: out GeneratedComInterfaceCastResult? generatedComInterfaceCastResult);
 
         // Return the appropriate result based on the 'QueryInterface' result, if handled
@@ -559,16 +556,12 @@ public abstract unsafe class WindowsRuntimeObject :
     /// Looks up whether the input interface type is implemented for an <see cref="IDynamicInterfaceCastable"/> cast.
     /// </summary>
     /// <param name="interfaceType">The input interface type.</param>
-    /// <param name="retrieveCastResult">Whether to retrieve <paramref name="castResult"/> for successful lookups.</param>
     /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
     /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="DynamicInterfaceCastableResult"/> value into <see cref="TypeHandleCache"/>.
     /// </remarks>
-    private bool LookupDynamicInterfaceCastableImplementationInfo(
-        RuntimeTypeHandle interfaceType,
-        bool retrieveCastResult,
-        out DynamicInterfaceCastableResult? castResult)
+    private bool LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
     {
         castResult = null;
 
@@ -629,19 +622,11 @@ public abstract unsafe class WindowsRuntimeObject :
         {
             interfaceReference.Dispose();
 
-            // If we lost a race but callers need the cast result, look it up manually here
-            if (retrieveCastResult)
-            {
-                _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
+            // Look up the result manually again, to ensure we return the correct value
+            _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
 
-                // We can rely on this never being 'null' here
-                castResult = (DynamicInterfaceCastableResult)newCastResult!;
-            }
-            else
-            {
-                // Reset the result to ensure nobody can see a stale value
-                castResult = null;
-            }
+            // We can rely on this never being 'null' here
+            castResult = (DynamicInterfaceCastableResult)newCastResult!;
         }
 
         return true;
@@ -653,7 +638,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="interfaceType">The input interface type.</param>
     /// <param name="performTypeHandleCacheLookup">Whether to lookup into <see cref="TypeHandleCache"/> first.</param>
     /// <param name="throwOnQueryInterfaceFailure">Whether to throw an exception of <c>QueryInterface</c> fails.</param>
-    /// <param name="retrieveCastResult">Whether to retrieve <paramref name="castResult"/> for successful lookups.</param>
     /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
     /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
     /// <remarks>
@@ -663,7 +647,6 @@ public abstract unsafe class WindowsRuntimeObject :
         RuntimeTypeHandle interfaceType,
         bool performTypeHandleCacheLookup,
         bool throwOnQueryInterfaceFailure,
-        bool retrieveCastResult,
         out GeneratedComInterfaceCastResult? castResult)
     {
         castResult = null;
@@ -725,21 +708,12 @@ public abstract unsafe class WindowsRuntimeObject :
                 // We can also manually dispose our object reference, as it will never be used
                 interfaceObjectReference.Dispose();
 
-                // Only do the additional lookup if callers actually need te value
-                if (retrieveCastResult)
-                {
-                    // If we raced against another thread and lost, we load the new cache result
-                    // added by that thread, and return that one to callers. Ours is not needed.
-                    _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
+                // If we raced against another thread and lost, we load the new cache result
+                // added by that thread, and return that one to callers. Ours is not needed.
+                _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
 
-                    // We can rely on this never being 'null' here
-                    castResult = (GeneratedComInterfaceCastResult)newCastResult!;
-                }
-                else
-                {
-                    // Reset the result, to ensure nobody reads a stale value
-                    castResult = null;
-                }
+                // We can rely on this never being 'null' here
+                castResult = (GeneratedComInterfaceCastResult)newCastResult!;
             }
 
             return CustomQueryInterfaceResult.Handled;
