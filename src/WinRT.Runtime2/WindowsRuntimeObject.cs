@@ -413,38 +413,10 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
-        ConcurrentDictionary<RuntimeTypeHandle, object> typeHandleCache = TypeHandleCache;
-
-        // If we already have cached info for this interface type, it means we already checked
-        // that it's implemented. The value can be eg. a 'WindowsRuntimeObjectReference' instance.
-        if (typeHandleCache.TryGetValue(interfaceType, out object? value))
-        {
-            return value is not DynamicInterfaceCastFailure;
-        }
-
-        // First, check to see if the target interface is a generated COM interface
-        CustomQueryInterfaceResult queryInterfaceResult = LookupGeneratedVTableInfo(
+        return TryGetCastResult(
             interfaceType: interfaceType,
-            performTypeHandleCacheLookup: false,
-            throwOnQueryInterfaceFailure: throwIfNotImplemented,
-            retrieveCastResult: false,
-            castResult: out _);
-
-        // We can stop early both if the cast succeeded, or if it was handled and just failed. In that case
-        // there's no point doing anything else, as we already checked that the interface is not implemented.
-        switch (queryInterfaceResult)
-        {
-            case CustomQueryInterfaceResult.Handled: return true;
-            case CustomQueryInterfaceResult.Failed: return false;
-            case CustomQueryInterfaceResult.NotHandled:
-            default: break;
-        }
-
-        // Do the normal check for all other 'IDynamicInterfaceCastable' casts
-        return LookupDynamicInterfaceCastableImplementationInfo(
-            interfaceType: interfaceType,
-            retrieveCastResult: false,
-            castResult: out _);
+            implementationType: out _,
+            interfaceReference: out _);
     }
 
     /// <inheritdoc/>
