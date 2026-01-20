@@ -162,6 +162,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: trimTarget.Name!,
+            mappedType: trimTarget,
             runtimeClassName: runtimeClassName,
             comWrappersMarshallerAttributeType: comWrappersMarshallerType,
             interopReferences: interopReferences,

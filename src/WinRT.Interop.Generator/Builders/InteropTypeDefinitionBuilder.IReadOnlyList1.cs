@@ -480,59 +480,5 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");
         }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IVectorView&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition readOnlyListComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            string runtimeClassName = $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IVectorView&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: readOnlyListType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: readOnlyListType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
-        }
     }
 }

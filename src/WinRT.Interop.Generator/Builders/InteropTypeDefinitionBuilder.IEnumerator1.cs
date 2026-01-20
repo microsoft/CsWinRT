@@ -484,59 +484,5 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, enumeratorType, "Impl");
         }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="enumeratorComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature enumeratorType,
-            TypeDefinition enumeratorComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            string runtimeClassName = $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature enumeratorType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: enumeratorType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: enumeratorType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
-        }
     }
 }

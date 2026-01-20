@@ -903,37 +903,10 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
-        /// Creates a new type definition for the proxy type of some <see cref="Delegate"/> type.
-        /// </summary>
-        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="delegateComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature delegateType,
-            TypeDefinition delegateComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            bool useWindowsUIXamlProjections,
-            out TypeDefinition proxyType)
-        {
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType),
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
-                comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
         /// Creates the type map attributes for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
