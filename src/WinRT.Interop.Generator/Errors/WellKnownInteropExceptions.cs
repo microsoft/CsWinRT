@@ -616,6 +616,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <see cref="IReadOnlyCollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    public static WellKnownInteropException IReadOnlyCollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    {
+        return Exception(72, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <see cref="ICollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    public static WellKnownInteropException ICollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
+    {
+        return Exception(72, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
