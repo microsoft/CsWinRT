@@ -1831,6 +1831,14 @@ internal sealed class InteropReferences
             parameterTypes: [Exception.ToReferenceTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeClassNameAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeClassNameAttribute_ctor => field ??= WindowsRuntimeClassNameAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectMarshallerConvertToManaged => field ??= WindowsRuntimeObjectMarshaller
