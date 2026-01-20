@@ -236,7 +236,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             *result = thisObject.HasErrors;
 
@@ -256,7 +256,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
@@ -283,7 +283,7 @@ public static unsafe class INotifyDataErrorInfoImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             if (thisObject is not null && ErrorsChanged.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out EventHandler<DataErrorsChangedEventArgs>? managedHandler))
             {
@@ -306,7 +306,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             IEnumerable managedResult = thisObject.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 

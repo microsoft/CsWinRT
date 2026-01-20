@@ -156,7 +156,7 @@ public static unsafe class IServiceProviderImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<IServiceProvider>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.IServiceProvider>((ComInterfaceDispatch*)thisPtr);
 
             global::System.Type? managedType = TypeMarshaller.ConvertToManaged(serviceType);
 
