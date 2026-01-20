@@ -349,12 +349,14 @@ internal partial class InteropGenerator
                     delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.Delegate.TypeMapAttributes(
                     delegateType: typeSignature,
                     proxyType: proxyType,
                     interopReferences: interopReferences,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     module: module);
 
                 // Define the 'EventSource' types (for when the delegate types are used for events on projected types)
@@ -464,6 +466,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition enumeratorComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersMarshallerAttribute(
@@ -587,6 +590,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition enumerableComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersMarshallerAttribute(
@@ -710,6 +714,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition readOnlyListComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.ComWrappersMarshallerAttribute(
@@ -842,6 +847,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition listComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IList1.ComWrappersMarshallerAttribute(
@@ -967,6 +973,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition readOnlyDictionaryComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersMarshallerAttribute(
@@ -1100,6 +1107,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition dictionaryComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IDictionary2.ComWrappersMarshallerAttribute(
@@ -1298,6 +1306,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition argsComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.ComWrappersMarshallerAttribute(
@@ -1415,6 +1424,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition comWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IObservableVector1.ComWrappersMarshallerAttribute(
@@ -1532,6 +1542,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition comWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IObservableMap2.ComWrappersMarshallerAttribute(
@@ -1639,6 +1650,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition actionComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.ComWrappersMarshallerAttribute(
@@ -1746,6 +1758,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition operationComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IAsyncOperation1.ComWrappersMarshallerAttribute(
@@ -1853,6 +1866,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition operationComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.ComWrappersMarshallerAttribute(
@@ -1985,6 +1999,7 @@ internal partial class InteropGenerator
                     arrayType: typeSignature,
                     proxyType: proxyType,
                     interopReferences: interopReferences,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     module: module);
             }
             catch (Exception e)
