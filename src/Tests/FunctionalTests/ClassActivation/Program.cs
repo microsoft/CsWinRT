@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
@@ -13,6 +14,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Tasks;
 using WindowsRuntime.InteropServices;
+
 
 CustomDisposableTest customDisposableTest = new();
 customDisposableTest.Dispose();
@@ -78,6 +80,7 @@ ConstructedDerivedType constructedDerivedType = new();
 unsafe
 {
     void* constructedDerivedTypePtr = WindowsRuntimeMarshal.ConvertToUnmanaged(constructedDerivedType);
+    IDs.CheckRuntimeClassName(constructedDerivedTypePtr, "ExpectedRuntimeClassName");
 
     try
     {
@@ -96,6 +99,7 @@ unsafe
 }
 
 object genericType = GenericFactory.Make();
+
 
 unsafe
 {
@@ -210,6 +214,58 @@ class GenericBaseType<T> : IEnumerable<T>, IDisposable
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+}
+
+public static class IDs
+{
+    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+    static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+    static extern int WindowsDeleteString(IntPtr hstring);
+
+    public static ref readonly Guid IID_IInspectable
+    {
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xE0, 0xE2, 0x86, 0xAF,
+                0x2D, 0xB1,
+                0x6A, 0x4C,
+                0x9C,
+                0x5A,
+                0xD7,
+                0xAA,
+                0x65,
+                0x10,
+                0x1E,
+                0x90
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    public static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
+    {
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IDs.IID_IInspectable, out nint inspectablePtr));
+
+        void* __retval = default;
+        try
+        {
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
+
+            uint length;
+            char* buffer = WindowsGetStringRawBuffer((IntPtr)__retval, &length);
+            string result = new string(buffer, 0, (int)length);
+            return expected == result;
+        }
+        finally
+        {
+            WindowsDeleteString((IntPtr)__retval);
+        }
     }
 }
 

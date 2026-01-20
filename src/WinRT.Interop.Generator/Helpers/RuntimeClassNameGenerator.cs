@@ -3,6 +3,8 @@
 
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
+using System.Collections.Generic;
+using System.IO;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -11,6 +13,13 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 /// </summary>
 internal static class RuntimeClassNameGenerator
 {
+    // TODO: Debug code; Will remove later ---------------------
+#pragma warning disable IDE0044 // Add readonly modifier
+    private static readonly string printPath = @"C:\Users\kythant\staging\MappedRuntimeClassNames.txt";
+    private static HashSet<string> seenStrings = [];
+    private static StreamWriter writer = new(printPath, append: false);
+#pragma warning restore IDE0044 // Add readonly modifier
+
     /// <summary>
     /// Generates the Windows Runtime class name for a (potentially generic) type,
     /// applying known type-name mappings and recursively formatting generic arguments.
@@ -79,7 +88,13 @@ internal static class RuntimeClassNameGenerator
         }
 
         AppendRuntimeClassName(ref handler, type, useWindowsUIXamlProjections);
-
+        if (!seenStrings.Contains(type.FullName))
+        {
+            writer.WriteLine(type.FullName);
+            writer.WriteLine(handler.ToString());
+            writer.WriteLine();
+            _ = seenStrings.Add(type.FullName);
+        }
         return handler.ToStringAndClear();
     }
 }
