@@ -401,13 +401,24 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
     {
-        _ = TryGetCastResult(
-            interfaceType: interfaceType,
-            implementationType: out RuntimeTypeHandle implementationType,
-            interfaceReference: out _);
+        Type type = Type.GetTypeFromHandle(interfaceType)!;
 
-        // Always just return the resulting implementation type, which will be 'default' if not available
-        return implementationType;
+        // If we can resolve the implementation type through the Windows Runtime infrastructure, return it
+        if (DynamicInterfaceCastableImplementationInfo.TryGetInfo(
+            interfaceType: type,
+            info: out DynamicInterfaceCastableImplementationInfo? implementationInfo))
+        {
+            return implementationInfo.ImplementationType.TypeHandle;
+        }
+
+        // If the interface is a generated COM interface, return the implementation type from there
+        if (StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(interfaceType) is IIUnknownDerivedDetails details)
+        {
+            return details.Implementation.TypeHandle;
+        }
+
+        // Otherwise we don't have an implementation type, so this cast can't possibly succeed
+        return default;
     }
 
     /// <inheritdoc/>
@@ -500,7 +511,19 @@ public abstract unsafe class WindowsRuntimeObject :
             }
         }
 
-        // First, check to see if the target interface is a generated COM interface
+        // First, check for 'IDynamicInterfaceCastable' casts through the Windows Runtime infrastructure
+        if (LookupDynamicInterfaceCastableImplementationInfo(
+            interfaceType: interfaceType,
+            retrieveCastResult: true,
+            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult))
+        {
+            implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
+            interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
+
+            return true;
+        }
+
+        // Next, check to see if the target interface is a generated COM interface
         CustomQueryInterfaceResult queryInterfaceResult = LookupGeneratedVTableInfo(
             interfaceType: interfaceType,
             performTypeHandleCacheLookup: false,
@@ -508,7 +531,7 @@ public abstract unsafe class WindowsRuntimeObject :
             retrieveCastResult: true,
             castResult: out GeneratedComInterfaceCastResult? generatedComInterfaceCastResult);
 
-        // Return the appropriate result based on the 'QueryInterface' result, if handled (same as below)
+        // Return the appropriate result based on the 'QueryInterface' result, if handled
         switch (queryInterfaceResult)
         {
             case CustomQueryInterfaceResult.Handled:
@@ -521,18 +544,6 @@ public abstract unsafe class WindowsRuntimeObject :
                 return false;
             case CustomQueryInterfaceResult.NotHandled:
             default: break;
-        }
-
-        // Do the normal check for all other 'IDynamicInterfaceCastable' casts
-        if (LookupDynamicInterfaceCastableImplementationInfo(
-            interfaceType: interfaceType,
-            retrieveCastResult: true,
-            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult))
-        {
-            implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
-            interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
-
-            return true;
         }
 
         implementationType = default;
