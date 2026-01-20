@@ -33,9 +33,9 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
     private static readonly Func<Type, DynamicInterfaceCastableImplementationInfo?> CreateImplementationInfoCallback = new(CreateImplementationInfo);
 
     /// <summary>
-    /// The cached <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance (possibly a placeholder).
+    /// The cached <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    private volatile DynamicInterfaceCastableImplementationForwarderAttribute? _implementationForwarder;
+    private volatile DynamicInterfaceCastableForwarderAttribute? _implementationForwarder;
 
     /// <summary>
     /// Creates a new <see cref="DynamicInterfaceCastableImplementationInfo"/> instance with the specified parameters.
@@ -91,13 +91,13 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance associated with the current metadata provider type.
+    /// Gets the <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <returns>The resulting <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance could be resolved.</exception>
-    public DynamicInterfaceCastableImplementationForwarderAttribute GetDynamicInterfaceCastableImplementationForwarder()
+    /// <returns>The resulting <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance could be resolved.</exception>
+    public DynamicInterfaceCastableForwarderAttribute GetDynamicInterfaceCastableForwarder()
     {
-        if (!TryGetDynamicInterfaceCastableImplementationForwarder(out DynamicInterfaceCastableImplementationForwarderAttribute? forwarder))
+        if (!TryGetDynamicInterfaceCastableForwarder(out DynamicInterfaceCastableForwarderAttribute? forwarder))
         {
             [DoesNotReturn]
             [StackTraceHidden]
@@ -115,23 +115,23 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
     }
 
     /// <summary>
-    /// Tries to get the <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance associated with the current metadata provider type.
+    /// Tries to get the <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <param name="forwarder">The resulting <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> instance, if available.</param>
+    /// <param name="forwarder">The resulting <see cref="DynamicInterfaceCastableForwarderAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="forwarder"/> was retrieved successfully.</returns>
-    public bool TryGetDynamicInterfaceCastableImplementationForwarder([NotNullWhen(true)] out DynamicInterfaceCastableImplementationForwarderAttribute? forwarder)
+    public bool TryGetDynamicInterfaceCastableForwarder([NotNullWhen(true)] out DynamicInterfaceCastableForwarderAttribute? forwarder)
     {
-        // Initializes the 'DynamicInterfaceCastableImplementationForwarderAttribute' instance, if present
+        // Initializes the 'DynamicInterfaceCastableForwarderAttribute' instance, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out DynamicInterfaceCastableImplementationForwarderAttribute? forwarder)
+        bool Load([NotNullWhen(true)] out DynamicInterfaceCastableForwarderAttribute? forwarder)
         {
-            DynamicInterfaceCastableImplementationForwarderAttribute? value = ImplementationType.GetCustomAttribute<DynamicInterfaceCastableImplementationForwarderAttribute>(inherit: false);
+            DynamicInterfaceCastableForwarderAttribute? value = ImplementationType.GetCustomAttribute<DynamicInterfaceCastableForwarderAttribute>(inherit: false);
 
-            value ??= PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute.Instance;
+            value ??= PlaceholderDynamicInterfaceCastableForwarderAttribute.Instance;
 
             _implementationForwarder = value;
 
-            if (value is not (null or PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute))
+            if (value is not (null or PlaceholderDynamicInterfaceCastableForwarderAttribute))
             {
                 forwarder = value;
 
@@ -143,12 +143,12 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
             return false;
         }
 
-        DynamicInterfaceCastableImplementationForwarderAttribute? value = _implementationForwarder;
+        DynamicInterfaceCastableForwarderAttribute? value = _implementationForwarder;
 
         // We have a cached forwarder, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute)
+            if (value is PlaceholderDynamicInterfaceCastableForwarderAttribute)
             {
                 forwarder = null;
 
@@ -182,23 +182,19 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
 }
 
 /// <summary>
-/// A placeholder <see cref="DynamicInterfaceCastableImplementationForwarderAttribute"/> type.
+/// A placeholder <see cref="DynamicInterfaceCastableForwarderAttribute"/> type.
 /// </summary>
-file sealed class PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute : DynamicInterfaceCastableImplementationForwarderAttribute
+file sealed class PlaceholderDynamicInterfaceCastableForwarderAttribute : DynamicInterfaceCastableForwarderAttribute
 {
     /// <summary>
     /// The shared placeholder instance.
     /// </summary>
-    public static PlaceholderDynamicInterfaceCastableImplementationForwarderAttribute Instance = new();
+    public static PlaceholderDynamicInterfaceCastableForwarderAttribute Instance = new();
 
     /// <inheritdoc/>
-    public override bool TryGetImplementationType(
-        WindowsRuntimeObjectReference thisReference,
-        [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference,
-        [NotNullWhen(true)] out Type? implementationType)
+    public override bool IsInterfaceImplemented(WindowsRuntimeObject thisReference, [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
     {
         interfaceReference = null;
-        implementationType = null;
 
         return false;
     }

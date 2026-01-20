@@ -549,6 +549,9 @@ public abstract unsafe class WindowsRuntimeObject :
         implementationType = default;
         interfaceReference = null;
 
+        // Before returning, cache the fact the cast failed, so future calls will be faster
+        _ = typeHandleCache.TryAdd(interfaceType, DynamicInterfaceCastFailure.Instance);
+
         return false;
     }
 
@@ -579,7 +582,6 @@ public abstract unsafe class WindowsRuntimeObject :
             return false;
         }
 
-        Type? implementationType;
         WindowsRuntimeObjectReference? interfaceReference;
 
         // Special case generic interface types that can be implemented via multiple types. For instance, a cast to
@@ -589,25 +591,25 @@ public abstract unsafe class WindowsRuntimeObject :
         // to the generated forwarder attribute to check that.
         if (type.IsGenericType && (
             type.GetGenericTypeDefinition() == typeof(ICollection<>) ||
-            type.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
+            type.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)) &&
+            type.GenericTypeArguments[0].IsGenericType &&
+            type.GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
         {
-            // If we can't resolve an implemented type, the cast failed
-            if (!implementationInfo.GetDynamicInterfaceCastableImplementationForwarder().TryGetImplementationType(
-                thisReference: NativeObjectReference,
-                interfaceReference: out interfaceReference,
-                implementationType: out implementationType))
+            // Invoke 'IsInterfaceImplemented' on the implementation type, which will perform a series of calls
+            // to 'TryGetObjectReferenceForInterface' for all the compatible Windows Runtime interfaces. The
+            // resulting object references will be for the interface that actually exists on the native object.
+            // This interface shouldn't really be needed from this key for the lookup, but we still store it.
+            if (!implementationInfo.GetDynamicInterfaceCastableForwarder().IsInterfaceImplemented(this, out interfaceReference))
             {
                 return false;
             }
         }
         else
         {
-            implementationType = implementationInfo.ImplementationType;
-
             // Try to cast to the IID specified by the interface, and stop if that failed.
             // In this case we can just get the IID directly from the implementation type.
             if (!NativeObjectReference.TryAs(
-                iid: implementationType.GUID,
+                iid: implementationInfo.ImplementationType.GUID,
                 objectReference: out interfaceReference))
             {
                 return false;
@@ -617,7 +619,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // Initialize the cache result to return to callers
         castResult = new DynamicInterfaceCastableResult()
         {
-            ImplementationType = implementationType,
+            ImplementationType = implementationInfo.ImplementationType,
             InterfaceObjectReference = interfaceReference
         };
 
