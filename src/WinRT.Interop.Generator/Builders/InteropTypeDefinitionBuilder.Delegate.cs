@@ -697,12 +697,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
