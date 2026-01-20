@@ -135,12 +135,12 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'IReadOnlyCollection<KeyValuePair<TKey, TValue>>' types
-        DefineIReadOnlyCollectionKeyValuePair2Types(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+        DefineIReadOnlyCollectionKeyValuePair2Types(args, discoveryState, emitState, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'ICollection<KeyValuePair<TKey, TValue>>' types
-        DefineICollectionKeyValuePair2Types(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+        DefineICollectionKeyValuePair2Types(args, discoveryState, emitState, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1954,14 +1954,12 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIReadOnlyCollectionKeyValuePair2Types(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -1977,7 +1975,11 @@ internal partial class InteropGenerator
 
             try
             {
-                // TODO
+                InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.ForwarderAttribute(
+                    readOnlyCollectionType: typeSignature,
+                    interopReferences: interopReferences,
+                    module: module,
+                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
             }
             catch (Exception e)
             {
@@ -1992,14 +1994,12 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineICollectionKeyValuePair2Types(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -2015,7 +2015,11 @@ internal partial class InteropGenerator
 
             try
             {
-                // TODO
+                InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.ForwarderAttribute(
+                    collectionType: typeSignature,
+                    interopReferences: interopReferences,
+                    module: module,
+                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
             }
             catch (Exception e)
             {
