@@ -15,8 +15,6 @@ using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0046
 
-#pragma warning disable CS8618, IDE0059, IDE0060 // TODO
-
 namespace WindowsRuntime;
 
 /// <summary>
@@ -91,10 +89,12 @@ public abstract unsafe class WindowsRuntimeObject :
             activationFactoryObjectReference: activationFactoryObjectReference,
             defaultInterface: out void* defaultInterface);
 
+        // The inner interface pointer isn't used for non-composable types, so we just pass 'null'
+        void* innerInterface = null;
+
         // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
         // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
         // reference tracker infrastructure, in case the native object implements the 'IReferenceTracker' interface.
-        void* innerInterface = null; // unused for sealed scenarios
         NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
             isAggregation: false,
             thisInstance: this,
@@ -211,7 +211,16 @@ public abstract unsafe class WindowsRuntimeObject :
             additionalParameters: additionalParameters,
             defaultInterface: out void* defaultInterface);
 
-        // TODO
+        // The inner interface pointer isn't used for non-composable types, so we just pass 'null'
+        void* innerInterface = null;
+
+        // Initialize the 'WindowsRuntimeObjectReference' for the default interface (same as above)
+        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+            isAggregation: false,
+            thisInstance: this,
+            newInstanceUnknown: ref defaultInterface,
+            innerInstanceUnknown: ref innerInterface,
+            newInstanceIid: in iid);
     }
 
     /// <summary>
