@@ -606,6 +606,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve the primary Windows Runtime interface for a user-defined type.
+    /// </summary>
+    public static WellKnownInteropException PrimaryWindowsRuntimeInterfaceNotFoundError(TypeSignature userDefinedType)
+    {
+        return Exception(71, $"Failed to resolve primary Windows Runtime interface for user-defined type '{userDefinedType}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

@@ -2206,6 +2206,7 @@ internal partial class InteropGenerator
                     comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
