@@ -681,7 +681,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <summary>
     /// Creates a new type definition for the proxy type of some managed type.
     /// </summary>
-    /// <param name="mappedType">Ther <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -711,7 +711,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="mappedType">Ther <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="runtimeClassName">The runtime class name for the managed type (if null, the source type will be used).</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
