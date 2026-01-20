@@ -505,6 +505,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                mappedType: enumeratorType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

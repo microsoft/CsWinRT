@@ -488,6 +488,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType),
+                mappedType: vectorType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: vectorComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

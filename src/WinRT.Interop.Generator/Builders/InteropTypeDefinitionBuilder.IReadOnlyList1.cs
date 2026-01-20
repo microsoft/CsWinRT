@@ -501,6 +501,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType),
+                mappedType: readOnlyListType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

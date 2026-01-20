@@ -264,6 +264,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
                 name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                mappedType: userDefinedType,
                 runtimeClassName: "", // TODO
                 comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

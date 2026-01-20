@@ -1205,6 +1205,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType),
+                mappedType: dictionaryType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

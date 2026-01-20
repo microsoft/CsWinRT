@@ -526,6 +526,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType),
+                mappedType: operationType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: operationComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

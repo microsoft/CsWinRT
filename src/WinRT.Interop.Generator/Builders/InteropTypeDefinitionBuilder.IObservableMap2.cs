@@ -501,6 +501,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType),
+                mappedType: mapType,
                 runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: mapComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,

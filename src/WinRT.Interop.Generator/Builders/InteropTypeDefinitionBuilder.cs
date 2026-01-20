@@ -683,7 +683,8 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
+    /// <param name="mappedType">Ther <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if null, the source type will be used).</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -691,7 +692,8 @@ internal static partial class InteropTypeDefinitionBuilder
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
-        string runtimeClassName,
+        TypeSignature mappedType,
+        string? runtimeClassName,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -706,19 +708,25 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(marshallerType);
 
-        // Get the constructor for '[WindowsRuntimeClassName]'
-        MemberReference windowsRuntimeClassNameAttributeCtor = interopReferences.WindowsRuntimeClassNameAttribute
-            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                returnType: module.CorLibTypeFactory.Void,
-                parameterTypes: [module.CorLibTypeFactory.String]))
-            .Import(module);
-
-        // Add the attribute with the name of the runtime class
-        marshallerType.CustomAttributes.Add(new CustomAttribute(
-            constructor: windowsRuntimeClassNameAttributeCtor,
-            signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                argumentType: module.CorLibTypeFactory.String,
-                value: runtimeClassName))));
+        if (runtimeClassName is not null)
+        {
+            // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name
+            marshallerType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: runtimeClassName))));
+        }
+        else
+        {
+            // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type. This allows
+            // the runtime to retrieve the user-provided runtime class name from the original type.
+            marshallerType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
+                    value: mappedType.Import(module)))));
+        }
 
         // Add the generated marshaller attribute
         marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));

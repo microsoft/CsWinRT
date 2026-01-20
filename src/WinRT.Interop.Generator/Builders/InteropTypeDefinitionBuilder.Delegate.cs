@@ -922,6 +922,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
+                mappedType: delegateType,
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
