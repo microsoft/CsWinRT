@@ -883,6 +883,11 @@ internal sealed class InteropReferences
     public TypeReference IWindowsRuntimeArrayComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IWindowsRuntimeArrayComWrappersCallback"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableForwarderAttribute</c>.
+    /// </summary>
+    public TypeReference DynamicInterfaceCastableForwarderAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableForwarderAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersMarshallerAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshallerAttribute"u8);
@@ -1633,6 +1638,16 @@ internal sealed class InteropReferences
             parameterTypes: [RuntimeTypeHandle.ToValueTypeSignature()]));
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>TryGetObjectReferenceForInterface</c> method.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectTryGetObjectReferenceForInterface => field ??= WindowsRuntimeObject
+        .CreateMemberReference("TryGetObjectReferenceForInterface"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Boolean,
+            parameterTypes: [
+                RuntimeTypeHandle.ToValueTypeSignature(),
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface.get_IID()</c>.
     /// </summary>
     public MemberReference IWindowsRuntimeInterfaceget_IID => field ??= IWindowsRuntimeInterface
@@ -1686,6 +1701,11 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeObjectReferenceValueDispose => field ??= WindowsRuntimeObjectReferenceValue
         .CreateMemberReference("Dispose"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableForwarderAttribute.ctor()</c>.
+    /// </summary>
+    public MemberReference DynamicInterfaceCastableForwarderAttribute_ctor => field ??= DynamicInterfaceCastableForwarderAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
