@@ -21,6 +21,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIMapViewMethods">The <c>Windows.Foundation.Collections.IMapView&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -88,9 +89,15 @@ public abstract class WindowsRuntimeReadOnlyDictionary<
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/>.
+    /// </remarks>
     public IEnumerable<TKey> Keys => _keys ??= new ReadOnlyDictionaryKeyCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="ReadOnlyDictionaryValueCollection{TKey, TValue}"/>.
+    /// </remarks>
     public IEnumerable<TValue> Values => _values ??= new ReadOnlyDictionaryValueCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>

@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -14,39 +17,60 @@ namespace WindowsRuntime.InteropGenerator;
 /// </summary>
 internal static class WindowsRuntimeExtensions
 {
-    extension(IHasCustomAttribute type)
+    extension(IHasCustomAttribute member)
     {
         /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => type.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+
+        /// <summary>
+        /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+        /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+        public bool TryGetGuidAttribute(InteropReferences interopReferences, out Guid iid)
+        {
+            if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
+            {
+                if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
+                {
+                    return Guid.TryParse(guidString.Value, out iid);
+                }
+            }
+
+            iid = Guid.Empty;
+
+            return false;
+        }
     }
 
     extension(ITypeDescriptor type)
     {
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Guid"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Guid"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>
         public bool IsTypeOfGuid(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
         }
 
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Type"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Type"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Type"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Type"/> type.</returns>
         public bool IsTypeOfType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type);
         }
 
         /// <summary>
-        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="System.Exception"/> type.
+        /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Exception"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="System.Exception"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Exception"/> type.</returns>
         public bool IsTypeOfException(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception);
@@ -55,19 +79,27 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="string"/> type.
         /// </summary>
-        /// <returns>Whether the type is some <see cref="string"/> type.</returns>
-        public bool IsTypeOfString(InteropReferences interopReferences)
+        public bool IsTypeOfString()
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String);
+            return type is CorLibTypeSignature { ElementType: ElementType.String };
         }
 
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="object"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="object"/> type.</returns>
-        public bool IsTypeOfObject(InteropReferences interopReferences)
+        public bool IsTypeOfObject()
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object);
+            return type is CorLibTypeSignature { ElementType: ElementType.Object };
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> is a <see cref="void"/> pointer type.
+        /// </summary>
+        /// <returns>Whether the type is a <see cref="void"/> pointer type.</returns>
+        public bool IsTypeOfVoidPointer()
+        {
+            return type is PointerTypeSignature { BaseType: CorLibTypeSignature { ElementType: ElementType.Void } };
         }
 
         /// <summary>
@@ -117,6 +149,24 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime non-generic struct or class type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime non-generic struct or class type.</returns>
+        /// <remarks>
+        /// This method doesn't check for interface types and delegate types. Use the other variants below for that.
+        /// </remarks>
+        public bool IsManuallyProjectedWindowsRuntimeNonGenericStructOrClassType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CollectionChange) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncStatus) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime generic interface type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -133,6 +183,22 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime generic interface type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime generic interface type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncActionWithProgress1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperation1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperationWithProgress2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IMapChangedEventArgs1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableMap2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableVector1);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic interface type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -143,11 +209,25 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDisposable) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IServiceProvider) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICommand) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyCollectionChanged) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyDataErrorInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime non-generic interface type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime non-generic interface type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs);
         }
 
         /// <summary>
@@ -163,6 +243,23 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime generic delegate type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime generic delegate type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeGenericDelegateType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionProgressHandler1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationCompletedHandler1) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationProgressHandler2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.MapChangedEventHandler2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.VectorChangedEventHandler1);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic delegate type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -173,6 +270,16 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventHandler) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventHandler) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler);
+        }
+
+        /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> represents a manually-projected Windows Runtime non-generic delegate type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime non-generic delegate type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionCompletedHandler);
         }
 
         /// <summary>
@@ -310,7 +417,7 @@ internal static class WindowsRuntimeExtensions
             if (!type.IsValueType)
             {
                 // 'string' objects don't need tracker support, as they can't reference anything
-                if (type.IsTypeOfString(interopReferences))
+                if (type.IsTypeOfString())
                 {
                     return false;
                 }
@@ -381,10 +488,45 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Gets whether a given type has an ABI type that is a reference type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the input type has an ABI type that is a reference type.</returns>
+        public bool HasReferenceAbiType(InteropReferences interopReferences)
+        {
+            // All constructed generics will use 'void*' for the ABI type
+            if (type is GenericInstanceTypeSignature)
+            {
+                return true;
+            }
+
+            // All other value types will never have a reference type as the ABI type
+            if (type.IsValueType)
+            {
+                return false;
+            }
+
+            // 'Type' is a class, but is custom-mapped to the 'TypeName' struct type
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type))
+            {
+                return false;
+            }
+
+            // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
+            {
+                return false;
+            }
+
+            // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
+            return true;
+        }
+
+        /// <summary>
         /// Gets the ABI type for a given type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>The ABi type for the input type.</returns>
+        /// <returns>The ABI type for the input type.</returns>
         public TypeSignature GetAbiType(InteropReferences interopReferences)
         {
             // All constructed generics will use 'void*' for the ABI type. This applies to both reference
@@ -441,6 +583,22 @@ internal static class WindowsRuntimeExtensions
             // For all other cases (e.g. interfaces, classes, delegates, etc.), the ABI type is always a pointer
             return interopReferences.CorLibTypeFactory.Void.MakePointerType();
         }
+
+        /// <summary>
+        /// Gets the raw ABI type for a given type (without unwrapping).
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>The raw ABI type for the input type.</returns>
+        public TypeSignature GetRawAbiType(InteropReferences interopReferences)
+        {
+            TypeSignature abiType = type.GetAbiType(interopReferences);
+
+            // If the ABI type is 'void*', the marshaller types return it as 'WindowsRuntimeObjectReferenceValue'.
+            // This allows callers to do proper lifetime management. For all other cases, the ABI type is the same.
+            return abiType.IsTypeOfVoidPointer()
+                ? interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature()
+                : abiType;
+        }
     }
 
     extension(TypeDefinition type)
@@ -452,6 +610,12 @@ internal static class WindowsRuntimeExtensions
         {
             get
             {
+                // Projected Windows Runtime classes can't be generic
+                if (type.HasGenericParameters)
+                {
+                    return false;
+                }
+
                 // We only care about classes
                 if (type is not { IsClass: true, IsValueType: false, IsDelegate: false })
                 {
@@ -500,7 +664,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the input type is a Windows Runtime managed-only type.</returns>
         public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
         {
-            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.CorLibTypeFactory);
+            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute);
         }
 
         /// <summary>
@@ -528,20 +692,50 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Nullable{T}"/> type.
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether the type is some <see cref="System.Nullable{T}"/> type.</returns>
+        /// <returns>Whether the type is some <see cref="Nullable{T}"/> type.</returns>
         public bool IsConstructedNullableValueType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
         }
 
         /// <summary>
-        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.
+        /// Tries to extract the underlying type from a constructed <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether the type is some <see cref="System.Span{T}"/> or <see cref="System.ReadOnlySpan{T}"/> type.</returns>
+        /// <param name="underlyingType">The underlying nullable type, if the input type is a constructed <see cref="Nullable{T}"/> type.</param>
+        /// <returns>Whether <paramref name="underlyingType"/> was successfully retrieved.</returns>
+        public bool TryGetNullableUnderlyingType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? underlyingType)
+        {
+            // First check that we have some constructed generic value type.
+            // We also check that we have a single type argument to narrow down.
+            if (signature is not GenericInstanceTypeSignature { IsValueType: true, TypeArguments: [TypeSignature typeArgument] } genericSignature)
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            // Check that we actually have a constructed 'Nullable<T>' type
+            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable1))
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            underlyingType = typeArgument;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="Span{T}"/> or <see cref="ReadOnlySpan{T}"/> type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is some <see cref="Span{T}"/> or <see cref="ReadOnlySpan{T}"/> type.</returns>
         public bool IsConstructedSpanOrReadOnlySpanType(InteropReferences interopReferences)
         {
             if (signature is not GenericInstanceTypeSignature genericSignature)
@@ -568,6 +762,18 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> represents a manually-projected Windows Runtime interface type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a manually-projected Windows Runtime interface type.</returns>
+        public bool IsManuallyProjectedWindowsRuntimeInterfaceType(InteropReferences interopReferences)
+        {
+            return signature is GenericInstanceTypeSignature genericSignature
+                ? genericSignature.GenericType.IsManuallyProjectedWindowsRuntimeGenericInterfaceType(interopReferences)
+                : signature.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences);
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeSignature"/> represents a custom-mapped Windows Runtime delegate type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -590,6 +796,13 @@ internal static class WindowsRuntimeExtensions
             // Arrays are Windows Runtime types if the element type is one.
             if (signature is SzArrayTypeSignature arrayType)
             {
+                // Windows Runtime only allows single-dimensional (and not jagged) arrays
+                if (arrayType.BaseType is SzArrayTypeSignature)
+                {
+                    return false;
+                }
+
+                // Validate that the element type of the array is itself a Windows Runtime type
                 return arrayType.BaseType.IsWindowsRuntimeType(interopReferences);
             }
 
@@ -600,6 +813,8 @@ internal static class WindowsRuntimeExtensions
                 // No other generic instantiations are valid (and 3rd party components can't define generic types).
                 if (!genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericDelegateType(interopReferences) &&
                     !genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                    !genericInstance.GenericType.IsManuallyProjectedWindowsRuntimeGenericDelegateType(interopReferences) &&
+                    !genericInstance.GenericType.IsManuallyProjectedWindowsRuntimeGenericInterfaceType(interopReferences) &&
                     !genericInstance.IsConstructedKeyValuePairType(interopReferences) &&
                     !genericInstance.IsConstructedNullableValueType(interopReferences))
                 {
@@ -630,7 +845,10 @@ internal static class WindowsRuntimeExtensions
             if (signature.IsFundamentalWindowsRuntimeType(interopReferences) ||
                 signature.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
                 signature.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
-                signature.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences))
+                signature.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(interopReferences))
             {
                 return true;
             }

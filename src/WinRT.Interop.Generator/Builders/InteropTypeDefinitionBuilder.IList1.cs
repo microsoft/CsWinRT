@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -86,9 +87,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
-            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
-            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            // For types which use 'void*' as their ABI types, we can share the same vtable type definition
+            if (elementType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 
@@ -153,107 +153,57 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
                 method: getAtMethod);
 
-            // Define the 'SetAt' method as follows:
-            //
-            // public static void SetAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition setAtMethod = new(
-                name: "SetAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IVectorMethods.SetAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'SetAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1SetAt(elementType).Import(module),
                 method: setAtMethod);
 
-            // Create a method body for the 'SetAt' method
-            setAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Append' method as follows:
-            //
-            // public static void Append(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value)
-            MethodDefinition appendMethod = new(
-                name: "Append"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IVectorMethods.Append(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Append' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
                 method: appendMethod);
 
-            // Create a method body for the 'Append' method
-            appendMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'IndexOf' method as follows:
-            //
-            // public static bool IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> value, out uint index)
-            MethodDefinition indexOfMethod = new(
-                name: "IndexOf"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module),
-                        module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
-            {
-                NoInlining = true,
-                CilOutParameterIndices = [3]
-            };
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IVectorMethods.IndexOf(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'IndexOf' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1IndexOf(elementType).Import(module),
                 method: indexOfMethod);
 
-            // Create a method body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'InsertAt' method as follows:
-            //
-            // public static void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, <TYPE_ARGUMENT> value)
-            MethodDefinition insertAtMethod = new(
-                name: "InsertAt"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IVectorMethods.InsertAt(
+                listType: listType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'InsertAt' method
             vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1InsertAt(elementType).Import(module),
                 method: insertAtMethod);
-
-            // Create a method body for the 'InsertAt' method
-            insertAtMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
@@ -612,6 +562,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature listType,
@@ -619,10 +570,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: listType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
                 typeSignature: listType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -655,37 +607,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IVector&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="listComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature listType,
-            TypeDefinition listComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: listType,
-                interfaceComWrappersCallbackType: listComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, listType, "Marshaller");
         }
 
         /// <summary>
@@ -1064,6 +985,92 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: listType,
+                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
+                readOnlyListType: listType,
+                sizeMethod: interopReferences.IListAdapter1Size(elementType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'GetView' method
+            MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IList1Impl.GetView(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: listType,
+                indexOfMethod: interopReferences.IListAdapter1IndexOf(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'SetAt' method
+            MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IList1Impl.SetAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'InsertAt' method
+            MethodDefinition insertAtMethod = InteropMethodDefinitionFactory.IList1Impl.InsertAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'RemoveAt' method
+            MethodDefinition removeAtMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAt(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'Append' method
+            MethodDefinition appendMethod = InteropMethodDefinitionFactory.IList1Impl.Append(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'RemoveAtEnd' method
+            MethodDefinition removeAtEndMethod = InteropMethodDefinitionFactory.IList1Impl.RemoveAtEnd(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'Clear' method
+            MethodDefinition clearMethod = InteropMethodDefinitionFactory.IList1Impl.Clear(
+                listType: listType,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: listType,
+                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'ReplaceAll' method
+            MethodDefinition replaceAllMethod = InteropMethodDefinitionFactory.IList1Impl.ReplaceAll(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
@@ -1073,64 +1080,22 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    getAtMethod,
+                    sizeMethod,
+                    getViewMethod,
+                    indexOfMethod,
+                    setAtMethod,
+                    insertAtMethod,
+                    removeAtMethod,
+                    appendMethod,
+                    removeAtEndMethod,
+                    clearMethod,
+                    getManyMethod,
+                    replaceAllMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IVector&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="listComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature listType,
-            TypeDefinition listComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            string runtimeClassName = $"Windows.Foundation.Collections.IVector`1<{listType.TypeArguments[0]}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: listComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IVector&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature listType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IVector`1<{listType.TypeArguments[0]}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: listType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: listType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
         }
     }
 }

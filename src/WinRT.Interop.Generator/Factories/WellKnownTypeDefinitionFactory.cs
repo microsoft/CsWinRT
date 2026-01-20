@@ -96,13 +96,43 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    /// <remarks>This method always assumes the <see cref="Delegate"/> type will take two objects as input parameters.</remarks>
+    /// <remarks>
+    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// this overload just uses <see cref="void"/><c>*</c> as sender and args types, so it can be shared across reference types (for both types).
+    /// </remarks>
     public static TypeDefinition DelegateVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        return DelegateVftbl(
+            ns: null,
+            name: "<DelegateVftbl>"u8,
+            senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="senderType">The sender type for the vtable type.</param>
+    /// <param name="argsType">The args type for the vtable type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition DelegateVftbl(
+        Utf8String? ns,
+        Utf8String name,
+        TypeSignature senderType,
+        TypeSignature argsType,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
-            ns: null,
-            name: "<DelegateVftbl>"u8,
+            ns: ns,
+            name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.ValueType.Import(module));
 
@@ -112,14 +142,17 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
 
         // Also get the 'Invoke' signature
-        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(interopReferences);
+        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(
+            senderType: senderType,
+            argsType: argsType,
+            interopReferences: interopReferences);
 
         // The vtable layout for 'IDelegate' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT> Invoke;
+        // public delegate* unmanaged[MemberFunction]<void*, <SENDER_TYPE>, <ARGS_TYPE>, HRESULT> Invoke;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
@@ -486,18 +519,18 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, HSTRING*, HRESULT> GetAt;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, HRESULT> GetAt;
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetView;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, uint*, bool*, HRESULT> IndexOf;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, HSTRING, HRESULT> SetAt;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, HSTRING, HRESULT> InsertAt;
+        // public delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, bool*, HRESULT> IndexOf;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>, HRESULT> SetAt;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>, HRESULT> InsertAt;
         // public delegate* unmanaged[MemberFunction]<void*, uint, HRESULT> RemoveAt;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HRESULT> Append;
+        // public delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, HRESULT> Append;
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> RemoveAtEnd;
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, uint, HSTRING*, uint*, HRESULT> GetMany;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, HSTRING*, HRESULT> ReplaceAll;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, HRESULT> ReplaceAll;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
@@ -589,9 +622,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HSTRING*, HRESULT> Lookup;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>*, HRESULT> Lookup;
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, bool*, HRESULT> HasKey;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, bool*, HRESULT> HasKey;
         // public delegate* unmanaged[MemberFunction]<void*, void**, void**, HRESULT> Split;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
@@ -679,12 +712,12 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HSTRING*, HRESULT> Lookup;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>*, HRESULT> Lookup;
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, bool*, HRESULT> HasKey;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, bool*, HRESULT> HasKey;
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetView;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HSTRING, bool*, HRESULT> Insert;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HRESULT> Remove;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>, bool*, HRESULT> Insert;
+        // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, HRESULT> Remove;
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
@@ -779,14 +812,14 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // The type layout looks like this:
         //
-        // public ComInterfaceEntry IKeyValuePair;
+        // public ComInterfaceEntry IKeyValuePair'2;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
         // public ComInterfaceEntry IAgileObject;
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair'2"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -821,27 +854,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT>'
-        MethodSignature collectionChangeType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                interopReferences.CollectionChange.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>'
-        MethodSignature keyType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
+        // Get the 'IMapChangedEventArgs`1' signatures
+        MethodSignature collectionChangeType = WellKnownTypeSignatureFactory.IMapChangedEventArgs1get_CollectionChangeImpl(interopReferences);
+        MethodSignature keyType = WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences);
 
         // The vtable layout for 'IMapChangedEventArgs`1<K>' looks like this:
         //
@@ -1227,7 +1242,12 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // The type layout looks like this:
         //
-        // public ComInterfaceEntry Array;
+        // public ComInterfaceEntry IReferenceArray'1;
+        // public ComInterfaceEntry IBindableVector;
+        // public ComInterfaceEntry IBindableIterable;
+        // public ComInterfaceEntry IVector'1;
+        // public ComInterfaceEntry IIterable'1;
+        // public ComInterfaceEntry IVectorView'1;
         // public ComInterfaceEntry IPropertyValue;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
@@ -1235,7 +1255,12 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IAgileObject;
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("Array"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IReferenceArray'1"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableVector"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableIterable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IVector'1"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IIterable'1"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IVectorView'1"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));

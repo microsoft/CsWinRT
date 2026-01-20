@@ -88,7 +88,7 @@ public abstract unsafe class EventSource<T>
             // That CCW will point the event invoker, ie. a stub on the event source state object.
             // This stub captures the event source state, and just invokes the target delegate.
             // If we don't need to register the handler, we still just add the new handler here.
-            // THe existing CCW will just pick it up the next time the native event is invoked.
+            // The existing CCW will just pick it up the next time the native event is invoked.
             state!.AddHandler(handler);
 
             if (registerHandler)

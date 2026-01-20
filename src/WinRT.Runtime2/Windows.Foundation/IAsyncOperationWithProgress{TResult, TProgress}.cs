@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -20,6 +21,7 @@ namespace Windows.Foundation;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperationwithprogress-2"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[Guid("B5D036D7-E297-498F-BA60-0289E76E23DD")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncOperationWithProgress<TResult, TProgress> : IAsyncInfo
 {

@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IAgileObjectImpl
+public static class IAgileObjectImpl
 {
     /// <summary>
     /// Gets a pointer to the managed <c>IAgileObject</c> implementation.

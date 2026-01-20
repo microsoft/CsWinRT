@@ -15,7 +15,8 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IEnumerator"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
-internal sealed unsafe class WindowsRuntimeIterator : WindowsRuntimeObject, IEnumerator, IWindowsRuntimeInterface<IEnumerator>
+[WindowsRuntimeManagedOnlyType]
+internal sealed class WindowsRuntimeIterator : WindowsRuntimeObject, IEnumerator, IWindowsRuntimeInterface<IEnumerator>
 {
     /// <summary>
     /// Indicates whether the underlying enumerator has been initialized.

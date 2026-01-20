@@ -32,6 +32,16 @@ internal static class SignatureComparerExtensions
         {
             return new SignatureValueTupleComparer(comparer);
         }
+
+        /// <summary>
+        /// Creates an <see cref="IEqualityComparer{T}"/> instance for a <see cref="TypeSignature"/> value in a tuple, on the left.
+        /// </summary>
+        /// <typeparam name="TRight">The type of the right item in the tuple.</typeparam>
+        /// <returns>The resulting <see cref="IEqualityComparer{T}"/> instance.</returns>
+        public IEqualityComparer<(TypeSignature, TRight)> MakeValueTupleLeftComparer<TRight>()
+        {
+            return new SignatureValueTupleLeftComparer<TRight>(comparer);
+        }
     }
 }
 
@@ -64,5 +74,40 @@ file sealed class SignatureValueTupleComparer : IEqualityComparer<(TypeSignature
     public int GetHashCode((TypeSignature, TypeSignature) obj)
     {
         return HashCode.Combine(_comparer.GetHashCode(obj.Item1), _comparer.GetHashCode(obj.Item2));
+    }
+}
+
+/// <summary>
+/// An <see cref="IEqualityComparer{T}"/> for a <see cref="TypeSignature"/> value in a tuple, on the left.
+/// </summary>
+/// <typeparam name="TRight">The type of the right item in the tuple.</typeparam>
+file sealed class SignatureValueTupleLeftComparer<TRight> : IEqualityComparer<(TypeSignature, TRight)>
+{
+    /// <summary>
+    /// The wrapped <see cref="SignatureComparer"/> instance used for comparison.
+    /// </summary>
+    private readonly SignatureComparer _comparer;
+
+    /// <summary>
+    /// Creates a new <see cref="SignatureValueTupleLeftComparer{TRight}"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="comparer">The <see cref="SignatureComparer"/> instance to wrap.</param>
+    public SignatureValueTupleLeftComparer(SignatureComparer comparer)
+    {
+        _comparer = comparer;
+    }
+
+    /// <inheritdoc/>
+    public bool Equals((TypeSignature, TRight) x, (TypeSignature, TRight) y)
+    {
+        return _comparer.Equals(x.Item1, y.Item1) && EqualityComparer<TRight>.Default.Equals(x.Item2, y.Item2);
+    }
+
+    /// <inheritdoc/>
+    public int GetHashCode((TypeSignature, TRight) obj)
+    {
+        return HashCode.Combine(
+            value1: _comparer.GetHashCode(obj.Item1),
+            value2: obj.Item2 is null ? 0 : EqualityComparer<TRight>.Default.GetHashCode(obj.Item2));
     }
 }

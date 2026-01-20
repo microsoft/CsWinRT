@@ -9,6 +9,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -100,6 +101,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_currentNative },
+                    { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.IEnumerator1Vftbl.GetField("get_Current"u8) },
@@ -211,6 +213,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumeratorType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature enumeratorType,
@@ -218,10 +221,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: enumeratorType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumeratorType, useWindowsUIXamlProjections),
                 typeSignature: enumeratorType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -254,37 +258,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="enumeratorComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumeratorType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature enumeratorType,
-            TypeDefinition enumeratorComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: enumeratorType,
-                interfaceComWrappersCallbackType: enumeratorComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it's needed by 'IEnumerable<T>')
-            emitState.TrackTypeDefinition(marshallerType, enumeratorType, "Marshaller");
         }
 
         /// <summary>
@@ -476,15 +449,13 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'get_HasCurrent' method
-            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
-                nameUtf8: "get_HasCurrent"u8,
+            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.get_HasCurrent(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
 
             // Define the 'MoveNext' method
-            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
-                nameUtf8: "MoveNext"u8,
+            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.MoveNext(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
@@ -512,60 +483,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, enumeratorType, "Impl");
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="enumeratorComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature enumeratorType,
-            TypeDefinition enumeratorComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            string runtimeClassName = $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IIterator&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature enumeratorType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: enumeratorType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: enumeratorType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
         }
     }
 }

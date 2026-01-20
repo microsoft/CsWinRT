@@ -34,6 +34,17 @@ internal static class ImportExtensions
     }
 
     /// <summary>
+    /// Imports a method descriptor or reference into a module using the default reference importer.
+    /// </summary>
+    /// <param name="methodDescriptor">The <see cref="IMethodDescriptor"/> instance to import.</param>
+    /// <param name="module">The module to import into.</param>
+    /// <returns>The imported <see cref="IMethodDescriptor"/>.</returns>
+    public static IMethodDescriptor Import(this IMethodDescriptor methodDescriptor, ModuleDefinition module)
+    {
+        return (IMethodDescriptor)methodDescriptor.ImportWith(module.DefaultImporter);
+    }
+
+    /// <summary>
     /// Imports a type signature into a module using the default reference importer.
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> instance to import.</param>

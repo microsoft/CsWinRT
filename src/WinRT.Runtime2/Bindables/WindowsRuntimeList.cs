@@ -14,6 +14,7 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IList"/> types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector"/>
+[WindowsRuntimeManagedOnlyType]
 internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
     IList,
     IWindowsRuntimeInterface<IList>,

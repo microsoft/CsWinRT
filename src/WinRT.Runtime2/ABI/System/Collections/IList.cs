@@ -111,7 +111,7 @@ file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeCom
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IListMethods
+public static class IListMethods
 {
     /// <inheritdoc cref="ICollection.Count"/>
     public static int Count(WindowsRuntimeObjectReference thisReference)
@@ -234,9 +234,9 @@ public static unsafe class IListImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            object? value = BindableIListAdapter.GetAt(unboxedValue, index);
+            object? value = BindableIListAdapter.GetAt(thisObject, index);
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
 
@@ -259,9 +259,9 @@ public static unsafe class IListImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            *size = BindableIListAdapter.Size(unboxedValue);
+            *size = BindableIListAdapter.Size(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -282,9 +282,9 @@ public static unsafe class IListImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(unboxedValue);
+            BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(thisObject);
 
             *view = WindowsRuntime.InteropServices.BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
 
@@ -307,11 +307,11 @@ public static unsafe class IListImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
-            *result = BindableIListAdapter.IndexOf(unboxedValue, item, out *index);
+            *result = BindableIListAdapter.IndexOf(thisObject, item, out *index);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -327,11 +327,11 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
-            BindableIListAdapter.SetAt(unboxedValue, index, item);
+            BindableIListAdapter.SetAt(thisObject, index, item);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -347,11 +347,11 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
-            BindableIListAdapter.InsertAt(unboxedValue, index, item);
+            BindableIListAdapter.InsertAt(thisObject, index, item);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -367,9 +367,9 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            BindableIListAdapter.RemoveAt(unboxedValue, index);
+            BindableIListAdapter.RemoveAt(thisObject, index);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -385,11 +385,11 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
-            BindableIListAdapter.Append(unboxedValue, item);
+            BindableIListAdapter.Append(thisObject, item);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -405,9 +405,9 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            BindableIListAdapter.RemoveAtEnd(unboxedValue);
+            BindableIListAdapter.RemoveAtEnd(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -423,9 +423,9 @@ public static unsafe class IListImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
 
-            BindableIListAdapter.Clear(unboxedValue);
+            BindableIListAdapter.Clear(thisObject);
 
             return WellKnownErrorCodes.S_OK;
         }

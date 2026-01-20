@@ -51,6 +51,7 @@ internal static class TypeMapping
         new("System.ComponentModel.PropertyChangedEventHandler", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler")),
         new("System.Windows.Input.ICommand", new("Microsoft.UI.Xaml.Input", "ICommand")),
         new("System.Collections.IEnumerable", new("Microsoft.UI.Xaml.Interop", "IBindableIterable")),
+        new("System.Collections.IEnumerator", new("Microsoft.UI.Xaml.Interop", "IBindableIterator")),
         new("System.Collections.IList", new("Microsoft.UI.Xaml.Interop", "IBindableVector")),
         new("System.Collections.Specialized.INotifyCollectionChanged", new("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged")),
         new("System.Collections.Specialized.NotifyCollectionChangedAction", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
@@ -83,6 +84,24 @@ internal static class TypeMapping
         new("Windows.Foundation.Rect", new("Windows.Foundation", "Rect", "struct(Windows.Foundation.Rect;f4;f4;f4;f4)")));
 
     /// <summary>
+    /// Mapping of built-in <c>System.*</c> to their corresponding Windows Runtime fundamental types.
+    /// </summary>
+    private static readonly FrozenDictionary<string, string> FundamentalTypeMapping = FrozenDictionary.Create<string, string>(comparer: null,
+        new("System.Boolean", "Boolean"),
+        new("System.Byte", "UInt8"),
+        new("System.Char", "Char"),
+        new("System.Double", "Double"),
+        new("System.Guid", "Guid"),
+        new("System.Int16", "Int16"),
+        new("System.Int32", "Int32"),
+        new("System.Int64", "Int64"),
+        new("System.Object", "Object"),
+        new("System.Single", "Single"),
+        new("System.String", "String"),
+        new("System.UInt16", "UInt16"),
+        new("System.UInt32", "UInt32"));
+
+    /// <summary>
     /// Mapping of projected <c>Microsoft.UI.Xaml</c> types to their corresponding <c>Windows.UI.Xaml</c> types.
     /// </summary>
     /// <remarks>
@@ -94,6 +113,7 @@ internal static class TypeMapping
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
         new("Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", new("Windows.UI.Xaml.Interop", "INotifyCollectionChanged")),
         new("Microsoft.UI.Xaml.Interop.IBindableIterable", new("Windows.UI.Xaml.Interop", "IBindableIterable")),
+        new("Microsoft.UI.Xaml.Interop.IBindableIterator", new("Windows.UI.Xaml.Interop", "IBindableIterator")),
         new("Microsoft.UI.Xaml.Interop.IBindableVector", new("Windows.UI.Xaml.Interop", "IBindableVector")),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
         new("Microsoft.UI.Xaml.Input.ICommand", new("Windows.UI.Xaml.Input", "ICommand")),
@@ -115,6 +135,11 @@ internal static class TypeMapping
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? mappedName)
     {
+        if (FundamentalTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out mappedName))
+        {
+            return true;
+        }
+
         if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out MappedType result))
         {
             mappedName = null;

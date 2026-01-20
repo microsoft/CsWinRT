@@ -47,7 +47,7 @@ public static unsafe class INotifyPropertyChangedMarshaller
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class INotifyPropertyChangedMethods
+public static class INotifyPropertyChangedMethods
 {
     /// <summary>
     /// The <see cref="EventSource{T}"/> table for <see cref="INotifyPropertyChanged.PropertyChanged"/>.
@@ -158,13 +158,13 @@ public static unsafe class INotifyPropertyChangedImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
 
             PropertyChangedEventHandler? managedHandler = PropertyChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = PropertyChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = PropertyChangedTable.GetOrCreateValue(thisObject).AddEventHandler(managedHandler);
 
-            unboxedValue.PropertyChanged += managedHandler;
+            thisObject.PropertyChanged += managedHandler;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -180,11 +180,11 @@ public static unsafe class INotifyPropertyChangedImpl
     {
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
 
-            if (unboxedValue is not null && PropertyChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out PropertyChangedEventHandler? managedHandler))
+            if (thisObject is not null && PropertyChangedTable.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out PropertyChangedEventHandler? managedHandler))
             {
-                unboxedValue.PropertyChanged -= managedHandler;
+                thisObject.PropertyChanged -= managedHandler;
             }
 
             return WellKnownErrorCodes.S_OK;

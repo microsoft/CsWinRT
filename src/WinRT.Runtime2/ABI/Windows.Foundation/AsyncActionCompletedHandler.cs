@@ -234,9 +234,9 @@ file static unsafe class AsyncActionCompletedHandlerImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<AsyncActionCompletedHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<AsyncActionCompletedHandler>((ComInterfaceDispatch*)thisPtr);
 
-            unboxedValue(IAsyncActionMarshaller.ConvertToManaged(asyncInfo)!, asyncStatus);
+            thisObject(IAsyncActionMarshaller.ConvertToManaged(asyncInfo)!, asyncStatus);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -303,9 +303,9 @@ file static unsafe class AsyncActionCompletedHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = ComInterfaceDispatch.GetInstance<AsyncActionCompletedHandler>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<AsyncActionCompletedHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+            *result = AsyncActionCompletedHandlerMarshaller.ConvertToUnmanaged(thisObject).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

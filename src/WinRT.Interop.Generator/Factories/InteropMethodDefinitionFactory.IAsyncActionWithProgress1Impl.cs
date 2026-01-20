@@ -55,7 +55,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
 
-            // Create a method body for the 'get_Current' method
+            // Create a method body for the 'GetResults' method
             getResultsMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult },

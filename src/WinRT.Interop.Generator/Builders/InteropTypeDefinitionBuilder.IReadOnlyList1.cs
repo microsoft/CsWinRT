@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -39,7 +40,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
             // Same logic as with 'IList1.Vftbl' (i.e. share for all reference types)
-            if (!elementType.IsValueType || elementType.IsConstructedKeyValuePairType(interopReferences))
+            if (elementType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyList1Vftbl;
 
@@ -224,6 +225,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature readOnlyListType,
@@ -231,10 +233,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: readOnlyListType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
                 typeSignature: readOnlyListType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -267,37 +270,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IVectorView&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyListType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition readOnlyListComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: readOnlyListType,
-                interfaceComWrappersCallbackType: readOnlyListComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, readOnlyListType, "Marshaller");
         }
 
         /// <summary>
@@ -457,6 +429,39 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
+            // Define the 'GetAt' method
+            MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetAt(
+                readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
+                readOnlyListType: readOnlyListType,
+                sizeMethod: interopReferences.IReadOnlyListAdapter1Size(elementType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'IndexOf' method
+            MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
+                readOnlyListType: readOnlyListType,
+                indexOfMethod: interopReferences.IReadOnlyListAdapter1IndexOf(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
+                readOnlyListType: readOnlyListType,
+                getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
@@ -466,64 +471,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    getAtMethod,
+                    sizeMethod,
+                    indexOfMethod,
+                    getManyMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IVectorView&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition readOnlyListComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            string runtimeClassName = $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IVectorView&lt;T&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: readOnlyListType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: readOnlyListType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
         }
     }
 }

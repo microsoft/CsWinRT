@@ -57,7 +57,9 @@ internal static class MethodDefinitionExtensions
         /// <summary>
         /// Sets the indices of the parameters that are to be marshalled as <c>out</c> parameters in the CIL method body.
         /// </summary>
-
+        /// <remarks>
+        /// Note that the indices are 1-based (as index 0 would represent the implicit <see langword="this"/> parameter).
+        /// </remarks>
         public ReadOnlySpan<ushort> CilOutParameterIndices
         {
             set

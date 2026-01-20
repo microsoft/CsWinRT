@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -290,13 +291,15 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
-    private static void Marshaller(
+    public static void Marshaller(
         TypeSignature typeSignature,
         TypeDefinition interfaceComWrappersCallbackType,
         MethodDefinition get_IidMethod,
         InteropReferences interopReferences,
+        InteropGeneratorEmitState emitState,
         ModuleDefinition module,
         out TypeDefinition marshallerType)
     {
@@ -363,6 +366,9 @@ internal static partial class InteropTypeDefinitionBuilder
         };
 
         marshallerType.Methods.Add(convertToManagedMethod);
+
+        // Track the type (it may be needed to marshal parameters or return values)
+        emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
     }
 
     /// <summary>
@@ -455,7 +461,7 @@ internal static partial class InteropTypeDefinitionBuilder
         }
 
         // Enforce that we did initialize all vtable entries
-        //ArgumentOutOfRangeException.ThrowIfNotEqual(vtableOffset, vftblType.Fields.Count, nameof(vtableMethods)); // TODO
+        ArgumentOutOfRangeException.ThrowIfNotEqual(vtableOffset, vftblType.Fields.Count, nameof(vtableMethods));
 
         // Don't forget the 'ret' at the end of the static constructor
         _ = cctor.CilMethodBody.Instructions.Add(Ret);
@@ -675,9 +681,38 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <summary>
     /// Creates a new type definition for the proxy type of some managed type.
     /// </summary>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="marshallerType">The resulting proxy type.</param>
+    public static void Proxy(
+        TypeSignature mappedType,
+        TypeDefinition comWrappersMarshallerAttributeType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections,
+        out TypeDefinition marshallerType)
+    {
+        Proxy(
+            ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
+            name: InteropUtf8NameFactory.TypeName(mappedType),
+            mappedType: mappedType,
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
+            comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+            interopReferences: interopReferences,
+            module: module,
+            marshallerType: out marshallerType);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the proxy type of some managed type.
+    /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if null, the source type will be used).</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -685,7 +720,8 @@ internal static partial class InteropTypeDefinitionBuilder
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
-        string runtimeClassName,
+        TypeSignature mappedType,
+        string? runtimeClassName,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -700,22 +736,57 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(marshallerType);
 
-        // Get the constructor for '[WindowsRuntimeClassName]'
-        MemberReference windowsRuntimeClassNameAttributeCtor = interopReferences.WindowsRuntimeClassNameAttribute
-            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                returnType: module.CorLibTypeFactory.Void,
-                parameterTypes: [module.CorLibTypeFactory.String]))
-            .Import(module);
-
-        // Add the attribute with the name of the runtime class
-        marshallerType.CustomAttributes.Add(new CustomAttribute(
-            constructor: windowsRuntimeClassNameAttributeCtor,
-            signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                argumentType: module.CorLibTypeFactory.String,
-                value: runtimeClassName))));
+        if (runtimeClassName is not null)
+        {
+            // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name
+            marshallerType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: runtimeClassName))));
+        }
+        else
+        {
+            // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type. This allows
+            // the runtime to retrieve the user-provided runtime class name from the original type.
+            marshallerType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
+                    value: mappedType.Import(module)))));
+        }
 
         // Add the generated marshaller attribute
         marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+    }
+
+    /// <summary>
+    /// Creates the type map attributes for a given interface type.
+    /// </summary>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the target interface type for this type map entry.</param>
+    /// <param name="proxyType">The <see cref="TypeDefinition"/> for the proxy type to use as value for this type map entry.</param>
+    /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> for the interface implementation type for <paramref name="interfaceType"/>.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    public static void TypeMapAttributes(
+        TypeSignature interfaceType,
+        TypeDefinition proxyType,
+        TypeDefinition interfaceImplType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
+    {
+        TypeMapAttributes(
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+            externalTypeMapTrimTargetType: interfaceType,
+            proxyTypeMapSourceType: null,
+            proxyTypeMapProxyType: null,
+            interfaceTypeMapSourceType: interfaceType,
+            interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+            interopReferences: interopReferences,
+            module: module);
     }
 
     /// <summary>
@@ -730,7 +801,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    private static void TypeMapAttributes(
+    public static void TypeMapAttributes(
         string? runtimeClassName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,

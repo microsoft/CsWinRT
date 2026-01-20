@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -43,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
             // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
             // The 'IMapView<K, V>' interface doesn't use 'V' as a by-value parameter anywhere in the vtable,
             // so we can aggressively share vtable types for all cases where 'K' is a reference type.
-            if (!keyType.IsValueType || keyType.IsConstructedKeyValuePairType(interopReferences))
+            if (keyType.HasReferenceAbiType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyDictionary2Vftbl;
 
@@ -88,12 +89,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="mapViewMethodsType">The resulting methods type.</param>
         public static void IMapViewMethods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition mapViewMethodsType)
         {
@@ -112,53 +115,31 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(mapViewMethodsType);
 
-            // Define the 'HasKey' method as follows:
-            //
-            // public static bool HasKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition hasKeyMethod = new(
-                name: "HasKey"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IMapViewMethods.HasKey(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'HasKey' method
             mapViewMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
                 method: hasKeyMethod);
 
-            // Create a method body for the 'HasKey' method
-            hasKeyMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
-
-            // Define the 'Lookup' method as follows:
-            //
-            // public static <VALUE_TYPE> Lookup(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
-            MethodDefinition lookupMethod = new(
-                name: "Lookup"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: valueType.Import(module),
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
-            { NoInlining = true };
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IMapViewMethods.Lookup(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                vftblType: vftblType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
 
             // Add and implement the 'Lookup' method
             mapViewMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapViewMethodsImpl2HasKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapViewMethodsImpl2Lookup(keyType, valueType).Import(module),
                 method: lookupMethod);
-
-            // Create a method body for the 'Lookup' method
-            lookupMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions = { { Ldnull }, { Throw } } // TODO
-            };
         }
 
         /// <summary>
@@ -339,6 +320,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature readOnlyDictionaryType,
@@ -346,10 +328,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: readOnlyDictionaryType.FullName, // TODO
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyDictionaryType, useWindowsUIXamlProjections),
                 typeSignature: readOnlyDictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -382,37 +365,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the marshaller of some <c>IMapView&lt;K, V&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="readOnlyDictionaryComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
-        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyDictionaryType"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting marshaller type.</param>
-        public static void Marshaller(
-            GenericInstanceTypeSignature readOnlyDictionaryType,
-            TypeDefinition readOnlyDictionaryComWrappersCallbackType,
-            MethodDefinition get_IidMethod,
-            InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
-            out TypeDefinition marshallerType)
-        {
-            InteropTypeDefinitionBuilder.Marshaller(
-                typeSignature: readOnlyDictionaryType,
-                interfaceComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
-                get_IidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out marshallerType);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, readOnlyDictionaryType, "Marshaller");
         }
 
         /// <summary>
@@ -633,6 +585,39 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            // Define the 'Lookup' method
+            MethodDefinition lookupMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Lookup(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'get_Size' method
+            MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                sizeMethod: interopReferences.IReadOnlyDictionaryAdapter2Size(keyType, valueType),
+                interopReferences: interopReferences,
+                module: module);
+
+            // Define the 'HasKey' method
+            MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                containsKeyMethod: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType),
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
+            // Define the 'Split' method
+            MethodDefinition splitMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.Split(
+                readOnlyDictionaryType: readOnlyDictionaryType,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
@@ -642,70 +627,14 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
-                vtableMethods: []);
+                vtableMethods: [
+                    lookupMethod,
+                    sizeMethod,
+                    hasKeyMethod,
+                    splitMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyDictionaryType, "Impl");
-        }
-
-        /// <summary>
-        /// Creates a new type definition for the proxy type of some <c>IMapView&lt;K, V&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="readOnlyDictionaryComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="proxyType">The resulting proxy type.</param>
-        public static void Proxy(
-            GenericInstanceTypeSignature readOnlyDictionaryType,
-            TypeDefinition readOnlyDictionaryComWrappersMarshallerAttributeType,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition proxyType)
-        {
-            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
-            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
-
-            string runtimeClassName = $"Windows.Foundation.Collections.IMapView`2<{keyType},{valueType}>"; // TODO
-
-            InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType),
-                runtimeClassName: runtimeClassName,
-                comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerAttributeType,
-                interopReferences: interopReferences,
-                module: module,
-                out proxyType);
-        }
-
-        /// <summary>
-        /// Creates the type map attributes for some <c>IMapView&lt;K, V&gt;</c> interface.
-        /// </summary>
-        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="InteropTypeDefinitionBuilder.Proxy"/>.</param>
-        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        public static void TypeMapAttributes(
-            GenericInstanceTypeSignature readOnlyDictionaryType,
-            TypeDefinition proxyType,
-            TypeDefinition interfaceImplType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
-        {
-            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
-            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
-
-            InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: $"Windows.Foundation.Collections.IMapView`2<{keyType},{valueType}>", // TODO
-                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
-                externalTypeMapTrimTargetType: readOnlyDictionaryType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
-                interfaceTypeMapSourceType: readOnlyDictionaryType,
-                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                module: module);
         }
     }
 }

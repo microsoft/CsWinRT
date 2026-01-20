@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
@@ -18,6 +19,7 @@ namespace Windows.Foundation;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncOperation<TResult> : IAsyncInfo
 {

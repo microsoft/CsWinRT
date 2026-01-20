@@ -136,9 +136,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(marshallerType);
 
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
-
             // Prepare the external types we need in the implemented methods
             TypeSignature typeSignature2 = keyValuePairType.Import(module);
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
@@ -214,6 +211,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             marshallerType.Methods.Add(convertToManagedMethod);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, keyValuePairType, "Marshaller");
         }
 
         /// <summary>

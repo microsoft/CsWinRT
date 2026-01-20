@@ -3,11 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -228,6 +231,73 @@ internal static class ModuleDefinitionExtensions
                     yield return result;
                 }
             }
+
+            IReadOnlyList<CilInstruction> instructions = specification.Method!.Resolve()?.CilMethodBody?.Instructions ?? (IReadOnlyList<CilInstruction>)[];
+
+            // Go through instruction to look for new objects
+            foreach (CilInstruction instruction in instructions)
+            {
+                // We only care for 'newobj' instructions
+                if (instruction.OpCode != CilOpCodes.Newobj)
+                {
+                    continue;
+                }
+
+                // Check that we can retrieve the target object type
+                if (instruction.Operand is not IMethodDefOrRef { DeclaringType: ITypeDefOrRef objectType })
+                {
+                    continue;
+                }
+
+                // Instantiate the object type and enumerate all signatures
+                foreach (TResult result in EnumerateTypeSignatures(
+                    objectType.ToTypeSignature().InstantiateGenericTypes(genericContext),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
+
+            // Go through instruction to look for new arrays
+            foreach (CilInstruction instruction in instructions)
+            {
+                // We only care for 'newarr' instructions
+                if (instruction.OpCode != CilOpCodes.Newarr)
+                {
+                    continue;
+                }
+
+                // Check that we can retrieve the target object type
+                if (instruction.Operand is not ITypeDefOrRef arrayType)
+                {
+                    continue;
+                }
+
+                // Instantiate the object type and enumerate all signatures
+                foreach (TResult result in EnumerateTypeSignatures(
+                    arrayType.ToTypeSignature().InstantiateGenericTypes(genericContext),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
         }
+    }
+
+    /// <summary>
+    /// Sorts the <see cref="ModuleDefinition"/> values of a sequence in ascending order, based on their fully qualified names.
+    /// </summary>
+    /// <returns>An <see cref="IEnumerable{T}"/> whose elements are sorted.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="modules"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// This method is implemented by using deferred execution. The immediate return value is an object that stores all the
+    /// information that is required to perform the action. The query represented by this method is not executed until the
+    /// object is enumerated by calling its <see cref="IEnumerable{T}.GetEnumerator"/> method.
+    /// </remarks>
+    public static IEnumerable<ModuleDefinition> OrderByFullyQualifiedName(this IEnumerable<ModuleDefinition> modules)
+    {
+        return modules.Order(ModuleDefinitionComparer.Instance);
     }
 }

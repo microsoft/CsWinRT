@@ -26,6 +26,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIMapMethods">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIObservableMapMethods">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
+[WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -123,15 +124,23 @@ public abstract class WindowsRuntimeObservableMap<
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="DictionaryKeyCollection{TKey, TValue}"/>.
+    /// </remarks>
     public ICollection<TKey> Keys => _keys ??= new DictionaryKeyCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
+    /// <remarks><inheritdoc cref="Keys" path="/remarks/node()"/></remarks>
     IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The resulting object will be of type <see cref="DictionaryValueCollection{TKey, TValue}"/>.
+    /// </remarks>
     public ICollection<TValue> Values => _values ??= new DictionaryValueCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
+    /// <remarks><inheritdoc cref="Values" path="/remarks/node()"/></remarks>
     IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     /// <inheritdoc/>

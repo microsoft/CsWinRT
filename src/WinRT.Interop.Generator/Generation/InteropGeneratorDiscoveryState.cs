@@ -66,11 +66,22 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
     private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
+    /// <remarks>
+    /// The value is also <see cref="TypeSignatureEquatableSet"/> so we can de-duplicate equivalent sets across different maps (e.g. <see cref="_userDefinedTypes"/>).
+    /// </remarks>
     private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _userDefinedVtableTypes = [];
+
+    /// <summary>
+    /// The mapping of all types that failed resolution.
+    /// </summary>
+    private readonly ConcurrentDictionary<(TypeSignature, ModuleDefinition), byte> _failedResolutionTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleLeftComparer<ModuleDefinition>());
 
     /// <summary>
     /// Indicates whether the current state is readonly.
@@ -382,6 +393,17 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
+    /// Tries to mark a user-defined type as having been seen the first time,
+    /// and indicating that it's in the process of being processed.
+    /// </summary>
+    /// <param name="userDefinedType">The user-defined type.</param>
+    /// <returns>Whether this was the first time that <paramref name="userDefinedType"/> was seen.</returns>
+    public bool TryMarkUserDefinedType(TypeSignature userDefinedType)
+    {
+        return _markedUserDefinedTypes.TryAdd(userDefinedType, 0);
+    }
+
+    /// <summary>
     /// Tracks a user-defined type.
     /// </summary>
     /// <param name="userDefinedType">The user-defined type.</param>
@@ -397,6 +419,19 @@ internal sealed class InteropGeneratorDiscoveryState
         TypeSignatureEquatableSet cachedVtableTypes = _userDefinedVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
 
         _ = _userDefinedTypes.TryAdd(userDefinedType, cachedVtableTypes);
+    }
+
+    /// <summary>
+    /// Tracks a type that failed resolution.
+    /// </summary>
+    /// <param name="failedType">The type that failed resolution.</param>
+    /// <param name="module">The module in which the type resolution was attempted.</param>
+    /// <returns>Whether this is the first time this type failed resolution.</returns>
+    public bool TrackFailedResolutionType(TypeSignature failedType, ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        return _failedResolutionTypes.TryAdd((failedType, module), 0);
     }
 
     /// <summary>
