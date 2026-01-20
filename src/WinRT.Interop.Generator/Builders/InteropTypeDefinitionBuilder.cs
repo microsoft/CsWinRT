@@ -761,6 +761,35 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
+    /// Creates the type map attributes for a given interface type.
+    /// </summary>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the target interface type for this type map entry.</param>
+    /// <param name="proxyType">The <see cref="TypeDefinition"/> for the proxy type to use as value for this type map entry.</param>
+    /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> for the interface implementation type for <paramref name="interfaceType"/>.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    public static void TypeMapAttributes(
+        TypeSignature interfaceType,
+        TypeDefinition proxyType,
+        TypeDefinition interfaceImplType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
+    {
+        TypeMapAttributes(
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+            externalTypeMapTrimTargetType: interfaceType,
+            proxyTypeMapSourceType: null,
+            proxyTypeMapProxyType: null,
+            interfaceTypeMapSourceType: interfaceType,
+            interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
     /// Creates the type map attributes for a given type.
     /// </summary>
     /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
@@ -772,7 +801,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    private static void TypeMapAttributes(
+    public static void TypeMapAttributes(
         string? runtimeClassName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,

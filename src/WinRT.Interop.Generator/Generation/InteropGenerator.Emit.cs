@@ -501,12 +501,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IEnumerator1.TypeMapAttributes(
-                    enumeratorType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -626,12 +627,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IEnumerable1.TypeMapAttributes(
-                    enumerableType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -752,12 +754,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
-                    readOnlyListType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -886,12 +889,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
-                    listType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1012,12 +1016,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.TypeMapAttributes(
-                    readOnlyDictionaryType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1147,12 +1152,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.TypeMapAttributes(
-                    dictionaryType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1347,12 +1353,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IMapChangedEventArgs1.TypeMapAttributes(
-                    argsType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1466,12 +1473,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IObservableVector1.TypeMapAttributes(
-                    vectorType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1585,12 +1593,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IObservableMap2.TypeMapAttributes(
-                    mapType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1694,12 +1703,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.TypeMapAttributes(
-                    actionType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1803,12 +1813,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperation1.TypeMapAttributes(
-                    operationType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
@@ -1912,12 +1923,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.TypeMapAttributes(
-                    operationType: typeSignature,
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    interfaceType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
-                    module: module);
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
