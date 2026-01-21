@@ -5295,7 +5295,7 @@ internal sealed class InteropReferences
     {
         return enumeratorType
             .ToTypeDefOrRef()
-            .CreateConstructorReference(_corLibTypeFactory, WindowsRuntimeObjectReference.ToReferenceTypeSignature()!); // TODO: file issue
+            .CreateConstructorReference(_corLibTypeFactory, [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
