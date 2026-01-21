@@ -352,7 +352,7 @@ internal partial class InteropTypeDefinitionBuilder
             interfaceImplType.Properties.Add(itemProperty);
 
             // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>',
-            // as in that case we'll be using a sepatate implementation to handle mixed scenarios.
+            // as in that case we'll be using a separate implementation to handle mixed scenarios.
             if (!elementType.IsConstructedKeyValuePairType(interopReferences))
             {
                 // Create the 'get_Count' getter method
