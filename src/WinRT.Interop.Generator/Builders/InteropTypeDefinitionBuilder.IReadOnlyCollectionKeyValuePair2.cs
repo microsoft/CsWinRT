@@ -63,7 +63,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
             TypeSignature readOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keyType, valueType);
-            TypeSignature readOnlyList = interopReferences.IReadOnlyList1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature readOnlyListType = interopReferences.IReadOnlyList1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 
             // We're declaring an 'internal interface class' type
@@ -98,10 +98,10 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a body for the 'get_Count' method
             get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                 interfaceType1: readOnlyDictionaryType,
-                interfaceType2: readOnlyList,
+                interfaceType2: readOnlyListType,
                 implementationMethod: get_CountMethod,
-                forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "IReadOnlyDictionaryMethods").GetMethod("Count"),
-                forwardedMethod2: emitState.LookupTypeDefinition(readOnlyList, "IReadOnlyListMethods").GetMethod("Count"),
+                forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "IReadOnlyDictionaryMethods").GetMethod("Count"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(readOnlyListType, "IReadOnlyListMethods").GetMethod("Count"u8),
                 interopReferences: interopReferences,
                 module: module);
 

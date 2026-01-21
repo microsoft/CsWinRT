@@ -212,12 +212,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vectorMethodsType">The type returned by <see cref="IVectorMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="listMethodsType">The resulting methods type.</param>
         public static void IListMethods(
             GenericInstanceTypeSignature listType,
             TypeDefinition vectorMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition listMethodsType)
         {
@@ -231,6 +233,9 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(listMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(listMethodsType, listType, "IListMethods");
 
             // Define the 'Item' getter method as follows:
             //

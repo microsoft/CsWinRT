@@ -847,6 +847,7 @@ internal partial class InteropGenerator
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     listMethodsType: out TypeDefinition listMethodsType);
 
@@ -2034,7 +2035,14 @@ internal partial class InteropGenerator
                     collectionType: collectionType,
                     interopReferences: interopReferences,
                     module: module,
-                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
+                    forwarderAttributeType: out _);
+
+                InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.InterfaceImpl(
+                    collectionType: collectionType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceImplType: out _);
             }
             catch (Exception e)
             {
