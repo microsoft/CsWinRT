@@ -4,8 +4,8 @@ namespace Windows.UI.Xaml.Media.Animation
     using global::Windows.Foundation;
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.RepeatBehavior>")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.RepeatBehavior>")]
     [ABI.Windows.UI.Xaml.Media.Animation.RepeatBehaviorComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]

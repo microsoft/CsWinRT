@@ -4772,6 +4772,11 @@ R"(#pragma warning disable IL2026
 
     void write_struct_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference<%.%>\")]\n",
             type.TypeNamespace(), type.TypeName());
     }

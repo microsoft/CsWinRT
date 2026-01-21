@@ -4,8 +4,8 @@ namespace Windows.UI.Xaml.Media.Animation
     using global::Windows.Foundation;
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.KeyTime>")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Animation.KeyTime>")]
     [ABI.Windows.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]

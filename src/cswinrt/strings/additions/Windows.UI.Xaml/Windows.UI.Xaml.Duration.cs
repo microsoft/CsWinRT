@@ -4,8 +4,8 @@ namespace Windows.UI.Xaml
     using global::Windows.Foundation;
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
     [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]
