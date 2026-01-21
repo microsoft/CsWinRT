@@ -751,7 +751,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_2 },
-                    { Ldc_I4_1 },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.TrackerObject) },
                     { Stind_I4 },
                     { Ldarg_1 },
                     { Call, get_ReferenceIidMethod },
