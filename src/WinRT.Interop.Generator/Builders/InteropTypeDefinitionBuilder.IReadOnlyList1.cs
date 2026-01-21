@@ -372,47 +372,6 @@ internal partial class InteropTypeDefinitionBuilder
             { GetMethod = get_CountMethod };
 
             interfaceImplType.Properties.Add(countProperty);
-
-            // Create the 'IEnumerable<T>.GetEnumerator' method
-            MethodDefinition enumerable1GetEnumeratorMethod = new(
-                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
-
-            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                method: enumerable1GetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: enumerableType,
-                implementationMethod: enumerable1GetEnumeratorMethod,
-                forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'IEnumerable.GetEnumerator' method
-            MethodDefinition enumerableGetEnumeratorMethod = new(
-                name: "System.Collections.IEnumerable.GetEnumerator"u8,
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
-
-            // Add and implement the 'IEnumerable.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                method: enumerableGetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
-                    { Ret }
-                }
-            };
         }
 
         /// <summary>
