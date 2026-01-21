@@ -545,9 +545,6 @@ public abstract unsafe class WindowsRuntimeObject :
                 interfaceReference = generatedComInterfaceCastResult.InterfaceObjectReference;
                 return true;
             case CustomQueryInterfaceResult.Failed:
-                implementationType = default;
-                interfaceReference = null;
-                return false;
             case CustomQueryInterfaceResult.NotHandled:
             default: break;
         }
@@ -680,11 +677,8 @@ public abstract unsafe class WindowsRuntimeObject :
             // If the 'QueryInterface' call failed, we know the interface can't possibly be implemented.
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
             // rest of the 'IDynamicInterfaceCastable' logic to run, as the cast can never succeed.
-            // So we can just pre-cache the failure result here, to speedup future identical casts.
             if (hresult.Failed())
             {
-                _ = TypeHandleCache.TryAdd(interfaceType, DynamicInterfaceCastFailure.Instance);
-
                 // Throw only if requested by callers
                 if (throwOnQueryInterfaceFailure)
                 {
