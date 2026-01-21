@@ -768,8 +768,8 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.TypeMapAttributes(
-                    interfaceType: typeSignature,
+                InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
+                    readOnlyListType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
@@ -905,8 +905,8 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     out TypeDefinition proxyType);
 
-                InteropTypeDefinitionBuilder.TypeMapAttributes(
-                    interfaceType: typeSignature,
+                InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
+                    listType: typeSignature,
                     proxyType: proxyType,
                     interfaceImplType: interfaceImplType,
                     interopReferences: interopReferences,
