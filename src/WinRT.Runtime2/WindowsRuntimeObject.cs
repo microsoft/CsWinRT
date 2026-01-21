@@ -625,17 +625,16 @@ public abstract unsafe class WindowsRuntimeObject :
             InterfaceObjectReference = interfaceReference
         };
 
-        // Track the result for later. If we raced against a thread and lost,
-        // we can just discard our object reference. The result is still valid.
-        if (!TypeHandleCache.TryAdd(interfaceType, castResult))
+        // Add the cast result to the cache, or get the updated value if we raced against another thread
+        object effectiveCastResult = TypeHandleCache.GetOrAdd(interfaceType, castResult);
+
+        // If the result is different than the one we tried to add, it means we lost a race against another
+        // thread. In this case we just discard our object reference. The updated result is perfectly valid.
+        if (effectiveCastResult != castResult)
         {
             interfaceReference.Dispose();
 
-            // Look up the result manually again, to ensure we return the correct value
-            _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
-
-            // We can rely on this never being 'null' here
-            castResult = (DynamicInterfaceCastableResult)newCastResult!;
+            castResult = (DynamicInterfaceCastableResult)effectiveCastResult;
         }
 
         return true;
@@ -676,7 +675,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // resolve the 'IIUnknownDerivedDetails' value for the interface, we have nothing to do.
         if (StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(interfaceType) is IIUnknownDerivedDetails details)
         {
-            HRESULT hresult = NativeObjectReference.DerivedTryAsNative(details.Iid, out WindowsRuntimeObjectReference? interfaceObjectReference);
+            HRESULT hresult = NativeObjectReference.DerivedTryAsNative(details.Iid, out WindowsRuntimeObjectReference? interfaceReference);
 
             // If the 'QueryInterface' call failed, we know the interface can't possibly be implemented.
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
@@ -697,7 +696,7 @@ public abstract unsafe class WindowsRuntimeObject :
 
             // Here we are intentionally getting the pointer without incrementing its reference count.
             // The target native object will be kept alive by the cached 'WindowsRuntimeObjectReference'.
-            void* interfacePtr = interfaceObjectReference!.GetThisPtrUnsafe();
+            void* interfacePtr = interfaceReference!.GetThisPtrUnsafe();
 
             // Initialize the cache result to return to callers
             castResult = new GeneratedComInterfaceCastResult
@@ -708,21 +707,19 @@ public abstract unsafe class WindowsRuntimeObject :
                     Table = *(void***)interfacePtr,
                     ManagedType = details.Implementation.TypeHandle
                 },
-                InterfaceObjectReference = interfaceObjectReference
+                InterfaceObjectReference = interfaceReference
             };
 
-            // Try to add the new cache result to the cache
-            if (!TypeHandleCache.TryAdd(interfaceType, castResult))
+            // Try to add the cast result to the cache
+            object effectiveCastResult = TypeHandleCache.GetOrAdd(interfaceType, castResult);
+
+            // If we lost a thread, dispose the reference and return the updated result we
+            // just retrieved from the cache. This is the same logic as for other casts.
+            if (effectiveCastResult != castResult)
             {
-                // We can also manually dispose our object reference, as it will never be used
-                interfaceObjectReference.Dispose();
+                interfaceReference.Dispose();
 
-                // If we raced against another thread and lost, we load the new cache result
-                // added by that thread, and return that one to callers. Ours is not needed.
-                _ = TypeHandleCache.TryGetValue(interfaceType, out object? newCastResult);
-
-                // We can rely on this never being 'null' here
-                castResult = (GeneratedComInterfaceCastResult)newCastResult!;
+                castResult = (GeneratedComInterfaceCastResult)effectiveCastResult;
             }
 
             return CustomQueryInterfaceResult.Handled;
