@@ -11,10 +11,10 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for a managed return value.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod"/>
     public sealed class ReturnValue : MethodRewriteInfo
     {
-        /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='source']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='source']/node()"/></summary>
         public required CilLocalVariable Source { get; init; }
 
         /// <inheritdoc/>

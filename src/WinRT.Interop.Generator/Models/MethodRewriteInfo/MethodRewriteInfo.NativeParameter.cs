@@ -13,16 +13,16 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for a native parameter.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.NativeParameter.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod"/>
     public sealed class NativeParameter : MethodRewriteInfo
     {
-        /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='tryMarker']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='tryMarker']/node()"/></summary>
         public required CilInstruction TryMarker { get; init; }
 
-        /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='finallyMarker']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='finallyMarker']/node()"/></summary>
         public required CilInstruction FinallyMarker { get; init; }
 
-        /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.NativeParameter.RewriteMethod" path="/param[@name='parameterIndex']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod" path="/param[@name='parameterIndex']/node()"/></summary>
         public required int ParameterIndex { get; init; }
 
         /// <inheritdoc/>

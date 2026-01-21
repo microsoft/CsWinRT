@@ -13,10 +13,10 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS1573, IDE0072
 
-namespace WindowsRuntime.InteropGenerator.Factories;
+namespace WindowsRuntime.InteropGenerator.Rewriters;
 
-/// <inheritdoc cref="InteropMethodRewriteFactory"/>
-internal partial class InteropMethodRewriteFactory
+/// <inheritdoc cref="InteropMethodRewriter"/>
+internal partial class InteropMethodRewriter
 {
     /// <summary>
     /// Contains the logic for marshalling native <c>[retval]</c> values.

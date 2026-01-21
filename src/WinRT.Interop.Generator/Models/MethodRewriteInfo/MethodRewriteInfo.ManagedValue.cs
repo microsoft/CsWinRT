@@ -9,7 +9,7 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for a managed value.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.ManagedParameter.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.ManagedParameter.RewriteMethod"/>
     public sealed class ManagedValue : MethodRewriteInfo
     {
         /// <inheritdoc/>

@@ -10,10 +10,10 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Rewriters;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -2177,7 +2177,7 @@ internal partial class InteropGenerator
                 {
                     // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
                     case MethodRewriteInfo.RawRetVal rawRetValInfo:
-                        InteropMethodRewriteFactory.RawRetVal.RewriteMethod(
+                        InteropMethodRewriter.RawRetVal.RewriteMethod(
                             parameterType: rawRetValInfo.Type,
                             method: rawRetValInfo.Method,
                             marker: rawRetValInfo.Marker,
@@ -2188,7 +2188,7 @@ internal partial class InteropGenerator
 
                     // Rewrite return values for managed types
                     case MethodRewriteInfo.ReturnValue returnValueInfo:
-                        InteropMethodRewriteFactory.ReturnValue.RewriteMethod(
+                        InteropMethodRewriter.ReturnValue.RewriteMethod(
                             returnType: returnValueInfo.Type,
                             method: returnValueInfo.Method,
                             marker: returnValueInfo.Marker,
@@ -2200,7 +2200,7 @@ internal partial class InteropGenerator
 
                     // Rewrite return values for native types
                     case MethodRewriteInfo.RetVal retValInfo:
-                        InteropMethodRewriteFactory.RetVal.RewriteMethod(
+                        InteropMethodRewriter.RetVal.RewriteMethod(
                             retValType: retValInfo.Type,
                             method: retValInfo.Method,
                             marker: retValInfo.Marker,
@@ -2211,7 +2211,7 @@ internal partial class InteropGenerator
 
                     // Rewrite managed values
                     case MethodRewriteInfo.ManagedValue managedValueInfo:
-                        InteropMethodRewriteFactory.ManagedValue.RewriteMethod(
+                        InteropMethodRewriter.ManagedValue.RewriteMethod(
                             parameterType: managedValueInfo.Type,
                             method: managedValueInfo.Method,
                             marker: managedValueInfo.Marker,
@@ -2222,7 +2222,7 @@ internal partial class InteropGenerator
 
                     // Rewrite managed parameters
                     case MethodRewriteInfo.ManagedParameter managedParameterInfo:
-                        InteropMethodRewriteFactory.ManagedParameter.RewriteMethod(
+                        InteropMethodRewriter.ManagedParameter.RewriteMethod(
                             parameterType: managedParameterInfo.Type,
                             method: managedParameterInfo.Method,
                             marker: managedParameterInfo.Marker,
@@ -2234,7 +2234,7 @@ internal partial class InteropGenerator
 
                     // Rewrite native parameters
                     case MethodRewriteInfo.NativeParameter nativeParameterInfo:
-                        InteropMethodRewriteFactory.NativeParameter.RewriteMethod(
+                        InteropMethodRewriter.NativeParameter.RewriteMethod(
                             parameterType: nativeParameterInfo.Type,
                             method: nativeParameterInfo.Method,
                             tryMarker: nativeParameterInfo.TryMarker,
@@ -2248,7 +2248,7 @@ internal partial class InteropGenerator
 
                     // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
                     case MethodRewriteInfo.Dispose disposeInfo:
-                        InteropMethodRewriteFactory.Dispose.RewriteMethod(
+                        InteropMethodRewriter.Dispose.RewriteMethod(
                             parameterType: disposeInfo.Type,
                             method: disposeInfo.Method,
                             marker: disposeInfo.Marker,

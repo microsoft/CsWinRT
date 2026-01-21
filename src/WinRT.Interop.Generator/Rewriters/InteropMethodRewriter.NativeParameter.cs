@@ -15,10 +15,10 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS1573, CS8620 // TODO: remove once Roslyn bug is fixed
 
-namespace WindowsRuntime.InteropGenerator.Factories;
+namespace WindowsRuntime.InteropGenerator.Rewriters;
 
-/// <inheritdoc cref="InteropMethodRewriteFactory"/>
-internal partial class InteropMethodRewriteFactory
+/// <inheritdoc cref="InteropMethodRewriter"/>
+internal partial class InteropMethodRewriter
 {
     /// <summary>
     /// Contains the logic for marshalling native parameters (i.e. parameters that are passed to native methods).

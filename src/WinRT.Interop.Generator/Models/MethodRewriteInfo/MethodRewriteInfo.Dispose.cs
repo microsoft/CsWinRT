@@ -9,7 +9,7 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, to dispose (or release) a given value.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.Dispose.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.Dispose.RewriteMethod"/>
     public sealed class Dispose : MethodRewriteInfo
     {
         /// <inheritdoc/>

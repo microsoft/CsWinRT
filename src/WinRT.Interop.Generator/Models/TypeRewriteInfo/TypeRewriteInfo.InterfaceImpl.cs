@@ -9,7 +9,7 @@ internal partial class TypeRewriteInfo
     /// <summary>
     /// Contains info for a target type for two-pass IL generation, for interface implementation types.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.Dispose.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.Dispose.RewriteMethod"/>
     public sealed class InterfaceImpl : TypeRewriteInfo
     {
         /// <inheritdoc/>

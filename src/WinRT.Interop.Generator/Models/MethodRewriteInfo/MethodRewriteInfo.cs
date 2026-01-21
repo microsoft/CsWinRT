@@ -19,10 +19,10 @@ internal abstract partial class MethodRewriteInfo : IComparable<MethodRewriteInf
     /// </summary>
     public required TypeSignature Type { get; init; }
 
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='method']/node()"/></summary>
+    /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='method']/node()"/></summary>
     public required MethodDefinition Method { get; init; }
 
-    /// <summary><inheritdoc cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod" path="/param[@name='marker']/node()"/></summary>
+    /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='marker']/node()"/></summary>
     public required CilInstruction Marker { get; init; }
 
     /// <inheritdoc/>
