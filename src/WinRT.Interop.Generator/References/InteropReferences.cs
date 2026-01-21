@@ -1939,6 +1939,16 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller.Dispose</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeUnknownArrayMarshallerDispose => field ??= WindowsRuntimeUnknownArrayMarshaller
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownArrayMarshaller.Free</c>.
     /// </summary>
     public MemberReference WindowsRuntimeUnknownArrayMarshallerFree => field ??= WindowsRuntimeUnknownArrayMarshaller
@@ -2033,6 +2043,16 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.UInt32,
                 AbiType.ToValueTypeSignature().MakePointerType(),
                 Span1.MakeGenericValueType(Type.ToTypeSignature())]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.Dispose</c>.
+    /// </summary>
+    public MemberReference TypeArrayMarshallerDispose => field ??= TypeArrayMarshaller
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                AbiType.ToValueTypeSignature().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.Free</c>.
@@ -2516,6 +2536,26 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]))
+            .MakeGenericInstanceMethod(elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeManagedValueTypeArrayMarshaller&lt;T, TAbi&gt;.Dispose&lt;TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerDispose(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
+    {
+        return WindowsRuntimeManagedValueTypeArrayMarshaller2
+            .MakeGenericReferenceType(elementType, abiType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    _corLibTypeFactory.UInt32,
+                    new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
             .MakeGenericInstanceMethod(elementMarshallerType);
     }
 
