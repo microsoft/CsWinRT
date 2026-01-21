@@ -28,7 +28,7 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeMarshaller
     /// This method should only be used to marshal pre-boxed <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>
     /// values. It is not generic to reduce binary size, and so that the boxing stub can always be inlined in the caller. Note
     /// that the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> is special, in that it's a custom-mapped
-    /// value type in C#, but it's an interface type (i.e. <c>IKeyValuePair&lt;K, V&gt;</c> on the Windows Runtime native side.
+    /// value type in C#, but it's an interface type (i.e. <c>IKeyValuePair&lt;K, V&gt;</c>) on the Windows Runtime native side.
     /// </remarks>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(object value, CreateComInterfaceFlags flags, scoped in Guid iid)
     {
