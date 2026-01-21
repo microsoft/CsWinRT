@@ -1286,7 +1286,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    proxyType: out _);
+                    proxyType: out TypeDefinition proxyType);
+
+                InteropTypeDefinitionBuilder.KeyValuePair.TypeMapAttributes(
+                    keyValuePairType: typeSignature,
+                    proxyType: proxyType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
             }
             catch (Exception e)
             {
