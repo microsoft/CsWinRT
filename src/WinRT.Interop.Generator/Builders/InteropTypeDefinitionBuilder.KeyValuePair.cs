@@ -398,7 +398,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue.Import(module) },
                     { Stloc_0 },
 
-                    // return <MARSHALLER_TYPE>.ConvertToManaged(interfaceValue.GetThisPtrUnsafe());
+                    // object managedValue = <MARSHALLER_TYPE>.ConvertToManaged(interfaceValue.GetThisPtrUnsafe());
                     { ldloca_s_interfaceValue },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
                     { Call, keyValuePairMarshallerType.GetMethod("ConvertToManaged"u8) },
@@ -411,7 +411,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
                     { Endfinally },
 
-                    // return (object)managedValue;
+                    // return managedValue;
                     { ldloc_1_epilogue },
                     { Ret }
                 },
