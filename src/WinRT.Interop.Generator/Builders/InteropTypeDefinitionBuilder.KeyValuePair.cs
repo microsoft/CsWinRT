@@ -161,7 +161,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
                     { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeKeyValuePairTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
                     { Ret }
                 }
             };
