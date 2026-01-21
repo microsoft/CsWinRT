@@ -328,6 +328,8 @@
       <Platform Solution="*|ARM64" Project="x64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
   </Folder>
   <Folder Name="/Tests/FunctionalTests/PublishProfiles/">
