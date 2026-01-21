@@ -1809,6 +1809,16 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReferenceValue</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue => field ??= WindowsRuntimeComWrappersMarshal
+        .CreateMemberReference("CreateObjectReferenceValue"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeUnknownMarshallerFree => field ??= WindowsRuntimeUnknownMarshaller

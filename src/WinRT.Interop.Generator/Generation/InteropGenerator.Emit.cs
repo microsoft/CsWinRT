@@ -1248,7 +1248,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    implType: out _);
+                    implType: out TypeDefinition interfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.KeyValuePair.Accessors(
                     keyValuePairType: typeSignature,
@@ -1269,6 +1269,16 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                InteropTypeDefinitionBuilder.KeyValuePair.ComWrappersMarshallerAttribute(
+                    keyValuePairType: typeSignature,
+                    keyValuePairMarshallerType: marshallerType,
+                    keyValuePairInterfaceEntriesImplType: interfaceEntriesImplType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerAttributeType: out _);
             }
             catch (Exception e)
             {
