@@ -400,7 +400,7 @@ internal partial class InteropTypeDiscovery
                 args: args,
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
-                module: module); ;
+                module: module);
 
             // Handle 'ReadOnlyDictionaryKeyCollection<TKey, TValue>' as above
             TryTrackGenericTypeInstance(
