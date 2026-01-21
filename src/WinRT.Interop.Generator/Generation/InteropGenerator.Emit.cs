@@ -2005,7 +2005,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.TypeMapAttributes(
+                    readOnlyCollectionType: readOnlyCollectionType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e)
             {
@@ -2056,7 +2062,13 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    interfaceImplType: out _);
+                    interfaceImplType: out TypeDefinition interfaceImplType);
+
+                InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.TypeMapAttributes(
+                    collectionType: collectionType,
+                    interfaceImplType: interfaceImplType,
+                    interopReferences: interopReferences,
+                    module: module);
             }
             catch (Exception e)
             {

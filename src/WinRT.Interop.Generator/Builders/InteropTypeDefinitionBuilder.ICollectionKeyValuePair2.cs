@@ -234,5 +234,30 @@ internal partial class InteropTypeDefinitionBuilder
 
             interfaceImplType.Properties.Add(isReadOnlyProperty);
         }
+
+        /// <summary>
+        /// Creates the type map attributes for some <see cref="System.Collections.Generic.ICollection{T}"/> of <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+        /// </summary>
+        /// <param name="collectionType">The <see cref="GenericInstanceTypeSignature"/> for the generic interface type.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature collectionType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: null,
+                externalTypeMapTargetType: null,
+                externalTypeMapTrimTargetType: null,
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
+                interfaceTypeMapSourceType: collectionType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+        }
     }
 }
