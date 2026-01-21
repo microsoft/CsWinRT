@@ -1985,10 +1985,11 @@ internal partial class InteropGenerator
                     readOnlyCollectionType: readOnlyCollectionType,
                     interopReferences: interopReferences,
                     module: module,
-                    forwarderAttributeType: out _);
+                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.InterfaceImpl(
                     readOnlyCollectionType: readOnlyCollectionType,
+                    forwarderAttributeType: forwarderAttributeType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -2035,10 +2036,11 @@ internal partial class InteropGenerator
                     collectionType: collectionType,
                     interopReferences: interopReferences,
                     module: module,
-                    forwarderAttributeType: out _);
+                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
 
                 InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.InterfaceImpl(
                     collectionType: collectionType,
+                    forwarderAttributeType: forwarderAttributeType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
