@@ -15,23 +15,46 @@ namespace winrt::TestComponentCSharp::implementation
 
     }
 
-    winrt::hstring SetTypeProperties::GetPropertyInfoWithIType(IType testObject)
+    winrt::hstring SetTypeProperties::GetPropertyInfoTestTypeTrimmed(IType testObject)
     {
-        testObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestType1>());
+        testObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestTypeTrimmed>());
         winrt::hstring kind;
         switch (testObject.TypeProperty().Kind)
         {
             case Windows::UI::Xaml::Interop::TypeKind::Custom:
                 kind = winrt::hstring(L"Custom");
+                break;
             case Windows::UI::Xaml::Interop::TypeKind::Metadata:
                 kind = winrt::hstring(L"Metadata");
+                break;
             default:
                 kind = winrt::hstring(L"Primitive");
+                break;
         }
         return testObject.TypeProperty().Name + L" " + kind;
     }
 
-    winrt::hstring SetTypeProperties::GetPropertyInfoFromCustomType(winrt::Windows::UI::Xaml::Interop::TypeName typeName)
+    winrt::hstring SetTypeProperties::GetPropertyInfoTestType(IType testObject)
+    {
+        testObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestType>());
+        winrt::hstring kind;
+        switch (testObject.TypeProperty().Kind)
+        {
+        case Windows::UI::Xaml::Interop::TypeKind::Custom:
+            kind = winrt::hstring(L"Custom");
+            break;
+        case Windows::UI::Xaml::Interop::TypeKind::Metadata:
+            kind = winrt::hstring(L"Metadata");
+            break;
+        default:
+            kind = winrt::hstring(L"Primitive");
+            break;
+        }
+        return testObject.TypeProperty().Name + L" " + kind;
+    }
+
+
+    winrt::hstring SetTypeProperties::GetPropertyInfoWithType(winrt::Windows::UI::Xaml::Interop::TypeName typeName)
     {
         TestComponentCSharp::Class TestObject;
         TestObject.TypeProperty(typeName);

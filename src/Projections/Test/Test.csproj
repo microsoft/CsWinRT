@@ -21,6 +21,7 @@
   <PropertyGroup>
     <CsWinRTExcludes>
       TestComponentCSharp.AnotherAssembly;
+      TestComponentCSharp.TestTypeTrimmed;
     </CsWinRTExcludes>
     <CsWinRTIncludes>
       TestComponent;
