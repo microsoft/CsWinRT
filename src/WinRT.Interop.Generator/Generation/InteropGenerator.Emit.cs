@@ -1278,7 +1278,15 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    marshallerAttributeType: out _);
+                    marshallerAttributeType: out TypeDefinition marshallerAttributeType);
+
+                InteropTypeDefinitionBuilder.Proxy(
+                    mappedType: typeSignature,
+                    comWrappersMarshallerAttributeType: marshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    proxyType: out _);
             }
             catch (Exception e)
             {
