@@ -2108,6 +2108,16 @@ internal sealed class InteropReferences
                 Span1.MakeGenericValueType(_corLibTypeFactory.String)]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.HStringArrayMarshaller.Dispose</c>.
+    /// </summary>
+    public MemberReference HStringArrayMarshallerDispose => field ??= HStringArrayMarshaller
+        .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.HStringArrayMarshaller.Free</c>.
     /// </summary>
     public MemberReference HStringArrayMarshallerFree => field ??= HStringArrayMarshaller
