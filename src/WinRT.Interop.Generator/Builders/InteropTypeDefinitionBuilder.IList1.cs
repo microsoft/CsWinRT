@@ -622,6 +622,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
             GenericInstanceTypeSignature listType,
@@ -629,6 +630,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
@@ -642,7 +644,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes =
+                {
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    InteropCustomAttributeFactory.Guid(listType, interopReferences, module, useWindowsUIXamlProjections)
+                },
                 Interfaces =
                 {
                     new InterfaceImplementation(listType.Import(module).ToTypeDefOrRef()),

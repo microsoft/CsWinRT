@@ -501,6 +501,7 @@ internal partial class InteropGenerator
                     iteratorMethodsType: iteratorMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -627,6 +628,7 @@ internal partial class InteropGenerator
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -755,6 +757,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -891,6 +894,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1019,6 +1023,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1155,6 +1160,7 @@ internal partial class InteropGenerator
                     dictionaryMethodsType: dictionaryMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1356,6 +1362,7 @@ internal partial class InteropGenerator
                     argsMethodsType: argsMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1476,6 +1483,7 @@ internal partial class InteropGenerator
                     vectorMethodsType: methodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1596,6 +1604,7 @@ internal partial class InteropGenerator
                     mapMethodsType: methodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1706,6 +1715,7 @@ internal partial class InteropGenerator
                     actionMethodsType: actionMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1816,6 +1826,7 @@ internal partial class InteropGenerator
                     operationMethodsType: operationMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
@@ -1926,6 +1937,7 @@ internal partial class InteropGenerator
                     operationMethodsType: operationMethodsType,
                     interopReferences: interopReferences,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
