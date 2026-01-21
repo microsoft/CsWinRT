@@ -39,6 +39,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerConvertToManaged(elementType),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToUnmanaged(elementType),
                 copyToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToManaged(elementType),
+                disposeMethod: null,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -68,6 +69,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerConvertToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
+                disposeMethod: null,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -97,6 +99,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerConvertToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerCopyToUnmanaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
+                disposeMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerDispose(elementType, elementAbiType, elementMarshallerTypeSignature),
                 freeMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerFree(elementType, elementAbiType, elementMarshallerTypeSignature),
                 interopReferences: interopReferences,
                 module: module);
@@ -127,6 +130,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToManaged(keyType, valueType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToUnmanaged(keyType, valueType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(keyType, valueType, elementMarshallerTypeSignature),
+                disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -155,6 +159,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerConvertToManaged(elementType, elementMarshallerTypeSignature),
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToUnmanaged(elementType, elementMarshallerTypeSignature),
                 copyToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToManaged(elementType, elementMarshallerTypeSignature),
+                disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -178,6 +183,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerConvertToManaged,
                 copyToUnmanagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerCopyToManaged,
+                disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -201,6 +207,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.HStringArrayMarshallerConvertToManaged,
                 copyToUnmanagedMethod: interopReferences.HStringArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.HStringArrayMarshallerCopyToManaged,
+                disposeMethod: interopReferences.HStringArrayMarshallerDispose,
                 freeMethod: interopReferences.HStringArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -224,6 +231,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedMethod: interopReferences.TypeArrayMarshallerConvertToManaged,
                 copyToUnmanagedMethod: interopReferences.TypeArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.TypeArrayMarshallerCopyToManaged,
+                disposeMethod: interopReferences.TypeArrayMarshallerDispose,
                 freeMethod: interopReferences.TypeArrayMarshallerFree,
                 interopReferences: interopReferences,
                 module: module);
@@ -248,6 +256,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToUnmanagedMethod: interopReferences.ExceptionArrayMarshallerCopyToUnmanaged,
                 copyToManagedMethod: interopReferences.ExceptionArrayMarshallerCopyToManaged,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
+                disposeMethod: null,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -260,6 +269,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="convertToManagedMethod"> The <c>ConvertToManaged</c> implementation method to call.</param>
         /// <param name="copyToUnmanagedMethod"> The <c>CopyToUnmanaged</c> implementation method to call.</param>
         /// <param name="copyToManagedMethod"> The <c>CopyToManaged</c> implementation method to call.</param>
+        /// <param name="disposeMethod">The <c>Dispose</c> implementation method to call, if applicable.</param>
         /// <param name="freeMethod"> The <c>Free</c> implementation method to call.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -270,6 +280,7 @@ internal partial class InteropTypeDefinitionFactory
             IMethodDescriptor convertToManagedMethod,
             IMethodDescriptor copyToUnmanagedMethod,
             IMethodDescriptor copyToManagedMethod,
+            IMethodDescriptor? disposeMethod,
             IMethodDescriptor freeMethod,
             InteropReferences interopReferences,
             ModuleDefinition module)
@@ -383,9 +394,35 @@ internal partial class InteropTypeDefinitionFactory
 
             marshallerType.Methods.Add(copyToUnmanagedForwarderMethod);
 
+            if (disposeMethod is not null)
+            {
+                // Define the 'Dispose' method as follows:
+                //
+                // public static void Dispose(uint size, <ABI_ELEMENT_TYPE>* array)
+                MethodDefinition disposeForwarderMethod = new(
+                    name: "Dispose"u8,
+                    attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                    signature: MethodSignature.CreateStatic(
+                        returnType: module.CorLibTypeFactory.Void,
+                        parameterTypes: [
+                            module.CorLibTypeFactory.UInt32,
+                            elementAbiType.Import(module).MakePointerType()]))
+                {
+                    CilInstructions =
+                    {
+                        { Ldarg_0 },
+                        { Ldarg_1 },
+                        { Call, disposeMethod.Import(module) },
+                        { Ret }
+                    }
+                };
+
+                marshallerType.Methods.Add(disposeForwarderMethod);
+            }
+
             // Define the 'Free' method as follows:
             //
-            // public static void Free(uint size, <ABI_ELEMENT_TYPE>* destination)
+            // public static void Free(uint size, <ABI_ELEMENT_TYPE>* array)
             MethodDefinition freeForwarderMethod = new(
                 name: "Free"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
