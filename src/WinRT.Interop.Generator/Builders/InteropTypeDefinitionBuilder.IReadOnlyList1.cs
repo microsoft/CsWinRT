@@ -345,33 +345,38 @@ internal partial class InteropTypeDefinitionBuilder
 
             interfaceImplType.Properties.Add(itemProperty);
 
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+            // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>',
+            // as in that case we'll be using a sepatate implementation to handle mixed scenarios.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
+            {
+                // Create the 'get_Count' getter method
+                MethodDefinition get_CountMethod = new(
+                    name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
-                method: get_CountMethod);
+                // Add and implement the 'get_Count' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
+                    method: get_CountMethod);
 
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: readOnlyListType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'get_Count' method
+                get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: readOnlyListType,
+                    implementationMethod: get_CountMethod,
+                    forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
+                // Create the 'Count' property
+                PropertyDefinition countProperty = new(
+                    name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.Count",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_CountMethod))
+                { GetMethod = get_CountMethod };
 
-            interfaceImplType.Properties.Add(countProperty);
+                interfaceImplType.Properties.Add(countProperty);
+            }
         }
 
         /// <summary>

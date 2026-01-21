@@ -772,162 +772,167 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
-
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
-                method: get_CountMethod);
-
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: listMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
-
-            interfaceImplType.Properties.Add(countProperty);
-
-            // Create the 'get_IsReadOnly' getter method
-            MethodDefinition get_IsReadOnlyMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
-
-            // Add and implement the 'get_IsReadOnly' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_IsReadOnly(elementType).Import(module),
-                method: get_IsReadOnlyMethod);
-
-            // Create a body for the 'get_IsReadOnly' method
-            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
+            // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>'.
+            // Same logic as for 'IReadOnlyList<T>' types, see additional notes there for context.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
             {
-                Instructions =
+                // Create the 'get_Count' getter method
+                MethodDefinition get_CountMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+                // Add and implement the 'get_Count' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
+                    method: get_CountMethod);
+
+                // Create a body for the 'get_Count' method
+                get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: get_CountMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Count"u8),
+                    interopReferences: interopReferences,
+                    module: module);
+
+                // Create the 'Count' property
+                PropertyDefinition countProperty = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_CountMethod))
+                { GetMethod = get_CountMethod };
+
+                interfaceImplType.Properties.Add(countProperty);
+
+                // Create the 'get_IsReadOnly' getter method
+                MethodDefinition get_IsReadOnlyMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+
+                // Add and implement the 'get_IsReadOnly' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1get_IsReadOnly(elementType).Import(module),
+                    method: get_IsReadOnlyMethod);
+
+                // Create a body for the 'get_IsReadOnly' method
+                get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
                 {
-                    { Ldc_I4_0 },
-                    { Ret }
-                }
-            };
+                    Instructions =
+                    {
+                        { Ldc_I4_0 },
+                        { Ret }
+                    }
+                };
 
-            // Create the 'IsReadOnly' property
-            PropertyDefinition isReadOnlyProperty = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.IsReadOnly",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
-            { GetMethod = get_IsReadOnlyMethod };
+                // Create the 'IsReadOnly' property
+                PropertyDefinition isReadOnlyProperty = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.IsReadOnly",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
+                { GetMethod = get_IsReadOnlyMethod };
 
-            interfaceImplType.Properties.Add(isReadOnlyProperty);
+                interfaceImplType.Properties.Add(isReadOnlyProperty);
 
-            // Create the 'Add' method
-            MethodDefinition addMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
+                // Create the 'Add' method
+                MethodDefinition addMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
 
-            // Add and implement the 'Add' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Add(elementType).Import(module),
-                method: addMethod);
+                // Add and implement the 'Add' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Add(elementType).Import(module),
+                    method: addMethod);
 
-            // Create a body for the 'Add' method
-            addMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: addMethod,
-                forwardedMethod: listMethodsType.GetMethod("Add"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Add' method
+                addMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: addMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Add"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Clear' method
-            MethodDefinition clearMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                // Create the 'Clear' method
+                MethodDefinition clearMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
-            // Add and implement the 'Clear' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Clear(elementType).Import(module),
-                method: clearMethod);
+                // Add and implement the 'Clear' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Clear(elementType).Import(module),
+                    method: clearMethod);
 
-            // Create a body for the 'Clear' method
-            clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: clearMethod,
-                forwardedMethod: listMethodsType.GetMethod("Clear"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Clear' method
+                clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: clearMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Clear"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Contains' method
-            MethodDefinition containsMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+                // Create the 'Contains' method
+                MethodDefinition containsMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            // Add and implement the 'Contains' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Contains(elementType).Import(module),
-                method: containsMethod);
+                // Add and implement the 'Contains' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Contains(elementType).Import(module),
+                    method: containsMethod);
 
-            // Create a body for the 'Contains' method
-            containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: containsMethod,
-                forwardedMethod: listMethodsType.GetMethod("Contains"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Contains' method
+                containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: containsMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Contains"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'CopyTo' method
-            MethodDefinition copyToMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        elementType.MakeSzArrayType().Import(module),
-                        module.CorLibTypeFactory.Int32]));
+                // Create the 'CopyTo' method
+                MethodDefinition copyToMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(
+                        returnType: module.CorLibTypeFactory.Void,
+                        parameterTypes: [
+                            elementType.MakeSzArrayType().Import(module),
+                            module.CorLibTypeFactory.Int32]));
 
-            // Add and implement the 'CopyTo' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
-                method: copyToMethod);
+                // Add and implement the 'CopyTo' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
+                    method: copyToMethod);
 
-            // Create a body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: copyToMethod,
-                forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'CopyTo' method
+                copyToMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: copyToMethod,
+                    forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Remove' method
-            MethodDefinition removeMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+                // Create the 'Remove' method
+                MethodDefinition removeMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            // Add and implement the 'Remove' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Remove(elementType).Import(module),
-                method: removeMethod);
+                // Add and implement the 'Remove' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Remove(elementType).Import(module),
+                    method: removeMethod);
 
-            // Create a body for the 'Remove' method
-            removeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: removeMethod,
-                forwardedMethod: listMethodsType.GetMethod("Remove"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Remove' method
+                removeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: removeMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Remove"u8),
+                    interopReferences: interopReferences,
+                    module: module);
+            }
         }
 
         /// <summary>
