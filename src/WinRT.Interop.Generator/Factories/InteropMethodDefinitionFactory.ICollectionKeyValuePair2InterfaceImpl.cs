@@ -91,7 +91,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, emitState.LookupTypeDefinition(dictionaryType, "IDictionaryMethods").GetMethod("CopyTo"u8) },
+                    { Call, emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("CopyTo"u8) },
                     { Ret },
 
                     // interfaceReference = thisObject.GetObjectReferenceForInterface(typeof(<INTERFACE_TYPE2>));
@@ -106,7 +106,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldloc_1 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, emitState.LookupTypeDefinition(listType, "IListMethods").GetMethod("CopyTo"u8) },
+                    { Call, emitState.LookupTypeDefinition(listType, "Methods").GetMethod("CopyTo"u8) },
                     { Ret }
                 }
             };

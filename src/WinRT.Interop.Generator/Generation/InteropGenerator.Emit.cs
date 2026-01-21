@@ -709,7 +709,7 @@ internal partial class InteropGenerator
                     module: module,
                     vectorViewMethodsType: out TypeDefinition vectorViewMethodsType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyList1.IReadOnlyListMethods(
+                InteropTypeDefinitionBuilder.IReadOnlyList1.Methods(
                     readOnlyListType: typeSignature,
                     vectorViewMethodsType: vectorViewMethodsType,
                     interopReferences: interopReferences,
@@ -846,7 +846,7 @@ internal partial class InteropGenerator
                     module: module,
                     vectorMethodsType: out TypeDefinition vectorMethodsType);
 
-                InteropTypeDefinitionBuilder.IList1.IListMethods(
+                InteropTypeDefinitionBuilder.IList1.Methods(
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
                     interopReferences: interopReferences,
@@ -976,7 +976,7 @@ internal partial class InteropGenerator
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IReadOnlyDictionaryMethods(
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Methods(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
                     interopReferences: interopReferences,
@@ -1113,7 +1113,7 @@ internal partial class InteropGenerator
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.IDictionaryMethods(
+                InteropTypeDefinitionBuilder.IDictionary2.Methods(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
                     interopReferences: interopReferences,

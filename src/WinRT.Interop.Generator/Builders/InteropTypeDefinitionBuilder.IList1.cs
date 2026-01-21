@@ -215,7 +215,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="listMethodsType">The resulting methods type.</param>
-        public static void IListMethods(
+        public static void Methods(
             GenericInstanceTypeSignature listType,
             TypeDefinition vectorMethodsType,
             InteropReferences interopReferences,
@@ -228,14 +228,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IListMethods"),
+                name: InteropUtf8NameFactory.TypeName(listType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(listMethodsType);
 
             // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
-            emitState.TrackTypeDefinition(listMethodsType, listType, "IListMethods");
+            emitState.TrackTypeDefinition(listMethodsType, listType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -618,7 +618,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IListMethods"/>.</param>
+        /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>

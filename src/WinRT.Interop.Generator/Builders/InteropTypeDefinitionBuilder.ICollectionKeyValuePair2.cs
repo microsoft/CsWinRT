@@ -93,8 +93,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // There's two 'Add' and 'Remove' overloads, one from 'IDictionary<,>' and one from 'ICollection<>'.
             // They are always emitted in this relative order in the "Methods" type, so get them in advance here.
-            MethodDefinition[] dictionaryAddMethods = emitState.LookupTypeDefinition(dictionaryType, "IDictionaryMethods").GetMethods("Add"u8);
-            MethodDefinition[] dictionaryRemoveMethods = emitState.LookupTypeDefinition(dictionaryType, "IDictionaryMethods").GetMethods("Remove"u8);
+            MethodDefinition[] dictionaryAddMethods = emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethods("Add"u8);
+            MethodDefinition[] dictionaryRemoveMethods = emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethods("Remove"u8);
 
             // Create the 'Add' ('KeyValuePair<,>') method
             MethodDefinition addKeyValuePairMethod = new(
@@ -115,7 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType2: listType,
                 implementationMethod: addKeyValuePairMethod,
                 forwardedMethod1: dictionaryAddMethods[1],
-                forwardedMethod2: emitState.LookupTypeDefinition(listType, "IListMethods").GetMethod("Add"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Add"u8),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -138,7 +138,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType2: listType,
                 implementationMethod: removeKeyValuePairMethod,
                 forwardedMethod1: dictionaryRemoveMethods[1],
-                forwardedMethod2: emitState.LookupTypeDefinition(listType, "IListMethods").GetMethod("Remove"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Remove"u8),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -160,8 +160,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType1: dictionaryType,
                 interfaceType2: listType,
                 implementationMethod: containsMethod,
-                forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "IDictionaryMethods").GetMethod("Contains"u8),
-                forwardedMethod2: emitState.LookupTypeDefinition(listType, "IListMethods").GetMethod("Contains"u8),
+                forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Contains"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Contains"u8),
                 interopReferences: interopReferences,
                 module: module);
 
@@ -193,8 +193,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType1: dictionaryType,
                 interfaceType2: listType,
                 implementationMethod: get_CountMethod,
-                forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "IDictionaryMethods").GetMethod("Count"u8),
-                forwardedMethod2: emitState.LookupTypeDefinition(listType, "IListMethods").GetMethod("Count"u8),
+                forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Count"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Count"u8),
                 interopReferences: interopReferences,
                 module: module);
 

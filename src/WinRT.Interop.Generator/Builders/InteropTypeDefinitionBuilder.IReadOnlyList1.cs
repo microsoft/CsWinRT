@@ -115,7 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="readOnlyListMethodsType">The resulting methods type.</param>
-        public static void IReadOnlyListMethods(
+        public static void Methods(
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition vectorViewMethodsType,
             InteropReferences interopReferences,
@@ -128,14 +128,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             readOnlyListMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
 
             // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
-            emitState.TrackTypeDefinition(readOnlyListMethodsType, readOnlyListType, "IReadOnlyListMethods");
+            emitState.TrackTypeDefinition(readOnlyListMethodsType, readOnlyListType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -191,7 +191,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the native object for an <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -281,7 +281,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>

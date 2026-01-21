@@ -151,7 +151,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="readOnlyDictionaryMethodsType">The resulting methods type.</param>
-        public static void IReadOnlyDictionaryMethods(
+        public static void Methods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition mapViewMethodsType,
             InteropReferences interopReferences,
@@ -165,14 +165,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             readOnlyDictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IReadOnlyDictionaryMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyDictionaryMethodsType);
 
             // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
-            emitState.TrackTypeDefinition(readOnlyDictionaryMethodsType, readOnlyDictionaryType, "IReadOnlyDictionaryMethods");
+            emitState.TrackTypeDefinition(readOnlyDictionaryMethodsType, readOnlyDictionaryType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -376,7 +376,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IMapView&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="readOnlyDictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyDictionaryMethods"/>.</param>
+        /// <param name="readOnlyDictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>

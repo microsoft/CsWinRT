@@ -282,7 +282,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="dictionaryMethodsType">The resulting methods type.</param>
-        public static void IDictionaryMethods(
+        public static void Methods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
             InteropReferences interopReferences,
@@ -296,14 +296,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             dictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IDictionaryMethods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(dictionaryMethodsType);
 
             // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
-            emitState.TrackTypeDefinition(dictionaryMethodsType, dictionaryType, "IDictionaryMethods");
+            emitState.TrackTypeDefinition(dictionaryMethodsType, dictionaryType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -693,7 +693,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="dictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IDictionaryMethods"/>.</param>
+        /// <param name="dictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>

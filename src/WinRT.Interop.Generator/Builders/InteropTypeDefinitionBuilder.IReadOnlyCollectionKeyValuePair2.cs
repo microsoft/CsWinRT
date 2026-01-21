@@ -106,8 +106,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType1: readOnlyDictionaryType,
                 interfaceType2: readOnlyListType,
                 implementationMethod: get_CountMethod,
-                forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "IReadOnlyDictionaryMethods").GetMethod("Count"u8),
-                forwardedMethod2: emitState.LookupTypeDefinition(readOnlyListType, "IReadOnlyListMethods").GetMethod("Count"u8),
+                forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "Methods").GetMethod("Count"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(readOnlyListType, "Methods").GetMethod("Count"u8),
                 interopReferences: interopReferences,
                 module: module);
 
