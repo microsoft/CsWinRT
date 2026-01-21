@@ -360,7 +360,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.Delegate.TypeMapAttributes(
                     delegateType: typeSignature,
@@ -468,7 +468,7 @@ internal partial class InteropGenerator
                     iteratorMethodsType: iteratorMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition nativeObjectType);
+                    nativeObjectType: out TypeDefinition nativeObjectType);
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersCallbackType(
                     enumeratorType: typeSignature,
@@ -477,7 +477,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition enumeratorComWrappersCallbackType);
+                    callbackType: out TypeDefinition enumeratorComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersMarshallerAttribute(
                     enumeratorType: typeSignature,
@@ -485,7 +485,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition enumeratorComWrappersMarshallerType);
+                    marshallerType: out TypeDefinition enumeratorComWrappersMarshallerType);
 
                 InteropTypeDefinitionBuilder.Marshaller(
                     typeSignature: typeSignature,
@@ -510,7 +510,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -595,7 +595,7 @@ internal partial class InteropGenerator
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition nativeObjectType);
+                    nativeObjectType: out TypeDefinition nativeObjectType);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersCallbackType(
                     enumerableType: typeSignature,
@@ -604,7 +604,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition enumerableComWrappersCallbackType);
+                    callbackType: out TypeDefinition enumerableComWrappersCallbackType);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersMarshallerAttribute(
                     enumerableType: typeSignature,
@@ -612,7 +612,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition enumerableComWrappersMarshallerType);
+                    marshallerType: out TypeDefinition enumerableComWrappersMarshallerType);
 
                 InteropTypeDefinitionBuilder.Marshaller(
                     typeSignature: typeSignature,
@@ -637,7 +637,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -766,7 +766,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.TypeMapAttributes(
                     readOnlyListType: typeSignature,
@@ -903,7 +903,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.IList1.TypeMapAttributes(
                     listType: typeSignature,
@@ -1032,7 +1032,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1169,7 +1169,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1389,7 +1389,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1510,7 +1510,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1631,7 +1631,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1742,7 +1742,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1853,7 +1853,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -1964,7 +1964,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     interfaceType: typeSignature,
@@ -2175,7 +2175,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.SzArray.TypeMapAttributes(
                     arrayType: typeSignature,
@@ -2389,7 +2389,7 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    out TypeDefinition proxyType);
+                    proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
                     userDefinedType: typeSignature,
