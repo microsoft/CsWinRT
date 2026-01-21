@@ -1393,6 +1393,11 @@ internal sealed class InteropReferences
     public MemberReference ScopedRefAttribute_ctor => field ??= ScopedRefAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.GuidAttribute.GuidAttribute(string)"/>.
+    /// </summary>
+    public MemberReference GuidAttribute_ctor => field ??= GuidAttribute.CreateConstructorReference(_corLibTypeFactory, _corLibTypeFactory.String);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
     /// </summary>
     public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);

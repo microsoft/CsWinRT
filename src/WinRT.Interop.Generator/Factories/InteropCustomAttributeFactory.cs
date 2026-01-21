@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
@@ -15,6 +16,45 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// </summary>
 internal static class InteropCustomAttributeFactory
 {
+    /// <summary>
+    /// Creates a new custom attribute value for <see cref="GuidAttribute"/> (and imports all metadata elements for it).
+    /// </summary>
+    /// <param name="type">The type to generate the IID for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <remarks>The resulting <see cref="GuidAttribute"/> value.</remarks>
+    public static CustomAttribute Guid(
+        TypeSignature type,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
+    {
+        return Guid(
+            guid: GuidGenerator.CreateIID(type, interopReferences, useWindowsUIXamlProjections),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new custom attribute value for <see cref="GuidAttribute"/> (and imports all metadata elements for it).
+    /// </summary>
+    /// <param name="guid">The value to encode.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <remarks>The resulting <see cref="GuidAttribute"/> value.</remarks>
+    public static CustomAttribute Guid(Guid guid, InteropReferences interopReferences, ModuleDefinition module)
+    {
+        // Create the following attribute:
+        //
+        // [Guid("<GUID>")]
+        return new(interopReferences.GuidAttribute_ctor.Import(module), new CustomAttributeSignature(
+            fixedArguments: [new CustomAttributeArgument(
+                argumentType: module.CorLibTypeFactory.String,
+                value: guid.ToString().ToUpperInvariant())],
+            namedArguments: []));
+    }
+
     /// <summary>
     /// Creates a new custom attribute value for <see cref="UnmanagedCallersOnlyAttribute"/> (and imports all metadata elements for it).
     /// </summary>
