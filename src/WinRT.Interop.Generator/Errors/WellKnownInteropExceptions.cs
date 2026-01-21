@@ -628,7 +628,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ICollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(72, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
+        return Exception(72, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
