@@ -711,6 +711,7 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     vectorViewMethodsType: vectorViewMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     readOnlyListMethodsType: out TypeDefinition readOnlyListMethodsType);
 
@@ -974,6 +975,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
 
@@ -1982,7 +1984,14 @@ internal partial class InteropGenerator
                     readOnlyCollectionType: readOnlyCollectionType,
                     interopReferences: interopReferences,
                     module: module,
-                    forwarderAttributeType: out TypeDefinition forwarderAttributeType);
+                    forwarderAttributeType: out _);
+
+                InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.InterfaceImpl(
+                    readOnlyCollectionType: readOnlyCollectionType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceImplType: out _);
             }
             catch (Exception e)
             {

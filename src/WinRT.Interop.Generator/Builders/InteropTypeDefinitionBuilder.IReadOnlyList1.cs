@@ -112,12 +112,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="vectorViewMethodsType">The type returned by <see cref="IVectorViewMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="readOnlyListMethodsType">The resulting methods type.</param>
         public static void IReadOnlyListMethods(
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition vectorViewMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition readOnlyListMethodsType)
         {
@@ -131,6 +133,9 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(readOnlyListMethodsType, readOnlyListType, "IReadOnlyListMethods");
 
             // Define the 'Item' getter method as follows:
             //

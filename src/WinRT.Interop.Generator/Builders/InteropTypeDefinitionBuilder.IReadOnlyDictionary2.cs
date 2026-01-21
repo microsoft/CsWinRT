@@ -148,12 +148,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapViewMethodsType">The type returned by <see cref="IMapViewMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="readOnlyDictionaryMethodsType">The resulting methods type.</param>
         public static void IReadOnlyDictionaryMethods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition mapViewMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition readOnlyDictionaryMethodsType)
         {
@@ -168,6 +170,9 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyDictionaryMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(readOnlyDictionaryMethodsType, readOnlyDictionaryType, "IReadOnlyDictionaryMethods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -386,6 +391,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
             TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -398,7 +404,9 @@ internal partial class InteropTypeDefinitionBuilder
                 Interfaces =
                 {
                     new InterfaceImplementation(readOnlyDictionaryType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module).ToTypeDefOrRef())
                 }
             };
 
@@ -536,34 +544,6 @@ internal partial class InteropTypeDefinitionBuilder
                 forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("TryGetValue"u8),
                 interopReferences: interopReferences,
                 module: module);
-
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
-
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType).Import(module),
-                method: get_CountMethod);
-
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: readOnlyCollectionType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
-
-            interfaceImplType.Properties.Add(countProperty);
         }
 
         /// <summary>

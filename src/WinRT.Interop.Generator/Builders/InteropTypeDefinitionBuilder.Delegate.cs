@@ -796,6 +796,9 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(marshallerType);
 
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
+
             // Prepare the external types we need in the implemented methods
             TypeSignature delegateType2 = delegateType.Import(module);
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
@@ -894,9 +897,6 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             marshallerType.Methods.Add(unboxToUnmanagedMethod);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
         }
 
         /// <summary>

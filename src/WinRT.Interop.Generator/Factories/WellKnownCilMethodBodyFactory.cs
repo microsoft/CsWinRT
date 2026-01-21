@@ -133,7 +133,7 @@ internal static class WellKnownCilMethodBodyFactory
                 { Ret },
 
                 // interfaceReference = thisObject.GetObjectReferenceForInterface(typeof(<INTERFACE_TYPE2>));
-                { Ldloc_0 },
+                { ldloc_0_type2Check },
                 { Ldtoken, interfaceType2.Import(module).ToTypeDefOrRef() },
                 { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
                 { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
