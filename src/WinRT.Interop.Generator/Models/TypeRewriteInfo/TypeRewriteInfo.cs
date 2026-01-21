@@ -33,7 +33,7 @@ internal abstract partial class TypeRewriteInfo : IComparable<TypeRewriteInfo>
     /// <param name="other">The input <see cref="TypeRewriteInfo"/> instance.</param>
     /// <returns>The comparison result.</returns>
     protected int CompareByTypeRewriteInfo<T>(TypeRewriteInfo? other)
-        where T : MethodRewriteInfo
+        where T : TypeRewriteInfo
     {
         if (other is null)
         {
