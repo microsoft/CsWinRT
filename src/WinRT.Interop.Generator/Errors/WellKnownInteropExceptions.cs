@@ -456,6 +456,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the IID for some Windows Runtime type.
     /// </summary>
+    [Obsolete]
     public static Exception TypeIIDResolutionError(TypeDefinition type)
     {
         return Exception(52, $"Failed to resolve the IID for projected type '{type}'.");
@@ -464,6 +465,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the IID for some Windows Runtime type.
     /// </summary>
+    [Obsolete]
     public static Exception TypeIIDInvalidDataError(TypeDefinition type)
     {
         return Exception(53, $"The IID data for projected type '{type}' is invalid.");
