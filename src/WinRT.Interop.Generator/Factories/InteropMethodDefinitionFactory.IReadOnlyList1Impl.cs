@@ -391,7 +391,7 @@ internal partial class InteropMethodDefinitionFactory
             // Define the 'GetMany' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int GetMany(void* thisPtr, uint size, <ABI_ELEMENT_TYPE>* items, uint* result)
+            // private static int GetMany(void* thisPtr, uint startIndex, uint itemsSize, <ABI_ELEMENT_TYPE>* items, uint* result)
             MethodDefinition indexOfMethod = new(
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -399,6 +399,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
+                        module.CorLibTypeFactory.UInt32,
                         module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))

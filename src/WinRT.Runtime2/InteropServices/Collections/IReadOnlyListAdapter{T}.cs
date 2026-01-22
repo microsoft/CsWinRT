@@ -91,7 +91,7 @@ public static class IReadOnlyListAdapter<T>
     /// <param name="items">The target <see cref="Span{T}"/> to write items into.</param>
     /// <returns>The number of items that were retrieved. This value can be less than the size of <paramref name="items"/> if the end of the list is reached.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getmany"/>
-    public static int GetMany(IReadOnlyList<T> list, uint startIndex, Span<T> items)
+    public static uint GetMany(IReadOnlyList<T> list, uint startIndex, Span<T> items)
     {
         int count = list.Count;
 
@@ -119,6 +119,6 @@ public static class IReadOnlyListAdapter<T>
             items[i] = list[i + (int)startIndex];
         }
 
-        return itemCount;
+        return (uint)itemCount;
     }
 }
