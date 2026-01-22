@@ -1048,6 +1048,26 @@ internal sealed class InteropReferences
     public TypeReference IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeReferenceTypeElementMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeReferenceTypeElementMarshaller`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeManagedValueTypeElementMarshaller&lt;T, TAbi&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeManagedValueTypeElementMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeManagedValueTypeElementMarshaller`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeUnmanagedValueTypeElementMarshaller&lt;T, TAbi&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeUnmanagedValueTypeElementMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeUnmanagedValueTypeElementMarshaller`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeKeyValuePairTypeElementMarshaller&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeKeyValuePairTypeElementMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeKeyValuePairTypeElementMarshaller`2"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller</c>.
     /// </summary>
     public TypeReference TypeArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "TypeArrayMarshaller"u8);
@@ -2496,6 +2516,83 @@ internal sealed class InteropReferences
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)),
                 parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IWindowsRuntimeReferenceTypeElementMarshallerConvertToUnmanaged(TypeSignature elementType)
+    {
+        return IWindowsRuntimeReferenceTypeElementMarshaller1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeManagedValueTypeElementMarshaller&lt;T, TAbi&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    public MemberReference IWindowsRuntimeManagedValueTypeElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
+    {
+        return IWindowsRuntimeManagedValueTypeElementMarshaller2
+            .MakeGenericReferenceType(elementType, abiType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeManagedValueTypeElementMarshaller&lt;T, TAbi&gt;.Dispose</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    public MemberReference IWindowsRuntimeManagedValueTypeElementMarshallerDispose(TypeSignature elementType, TypeSignature abiType)
+    {
+        return IWindowsRuntimeManagedValueTypeElementMarshaller2
+            .MakeGenericReferenceType(elementType, abiType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeUnmanagedValueTypeElementMarshaller&lt;T, TAbi&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    public MemberReference IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
+    {
+        return IWindowsRuntimeUnmanagedValueTypeElementMarshaller2
+            .MakeGenericReferenceType(elementType, abiType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeKeyValuePairTypeElementMarshaller&lt;TKey, TValue&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IWindowsRuntimeKeyValuePairTypeElementMarshaller2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [
+                    KeyValuePair2.MakeGenericValueType(
+                        new GenericParameterSignature(GenericParameterType.Type, 0),
+                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
     }
 
     /// <summary>
