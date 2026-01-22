@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable CS0419 // TODO: fix XML docs once supported for extensions
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -104,7 +102,7 @@ public static class IReadOnlyListAdapterExtensions
 
     extension(IReadOnlyListAdapter<Exception>)
     {
-        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany"/>
+        /// <inheritdoc cref="GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
         public static unsafe uint GetMany(IReadOnlyList<Exception> list, uint startIndex, uint itemsSize, ABI.System.Exception* items)
         {
             int count = list.Count;
@@ -136,7 +134,7 @@ public static class IReadOnlyListAdapterExtensions
 
     extension(IReadOnlyListAdapter<Type>)
     {
-        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany"/>
+        /// <inheritdoc cref="GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
         public static unsafe uint GetMany(IReadOnlyList<Type> list, uint startIndex, uint itemsSize, ABI.System.Type* items)
         {
             int count = list.Count;
@@ -172,6 +170,269 @@ public static class IReadOnlyListAdapterExtensions
                 for (int j = 0; j < i; j++)
                 {
                     ABI.System.TypeMarshaller.Dispose(items[j]);
+                }
+
+                throw;
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for blittable value types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterBlittableValueTypeExtensions
+{
+    extension<T>(IReadOnlyListAdapter<T>)
+        where T : unmanaged
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany(IReadOnlyList<T> list, uint startIndex, uint itemsSize, T* items)
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                items[i] = list[i + (int)startIndex];
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for unmanaged value types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterUnmanagedValueTypeExtensions
+{
+    extension<T, TAbi>(IReadOnlyListAdapter<T>)
+        where T : unmanaged
+        where TAbi : unmanaged
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany<TElementMarshaller>(IReadOnlyList<T> list, uint startIndex, uint itemsSize, TAbi* items)
+            where TElementMarshaller : IWindowsRuntimeUnmanagedValueTypeElementMarshaller<T, TAbi>
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]);
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for managed value types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterManagedValueTypeExtensions
+{
+    extension<T, TAbi>(IReadOnlyListAdapter<T>)
+        where T : struct
+        where TAbi : unmanaged
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany<TElementMarshaller>(IReadOnlyList<T> list, uint startIndex, uint itemsSize, TAbi* items)
+            where TElementMarshaller : IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+            int i = 0;
+
+            try
+            {
+                // Same as with 'string' above, but with the provided marshaller marshaller
+                for (; i < itemCount; i++)
+                {
+                    items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]);
+                }
+            }
+            catch
+            {
+                // Make sure to dispose all marshalled values so far (this shouldn't ever throw)
+                for (int j = 0; j < i; j++)
+                {
+                    TElementMarshaller.Dispose(items[j]);
+                }
+
+                throw;
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for <see cref="KeyValuePair{TKey, TValue}"/> types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterKeyValuePairTypeExtensions
+{
+    extension<TKey, TValue>(IReadOnlyListAdapter<KeyValuePair<TKey, TValue>>)
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany<TElementMarshaller>(IReadOnlyList<KeyValuePair<TKey, TValue>> list, uint startIndex, uint itemsSize, void** items)
+            where TElementMarshaller : IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+            int i = 0;
+
+            try
+            {
+                // Same as with 'string' above, but with the provided marshaller marshaller
+                for (; i < itemCount; i++)
+                {
+                    items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();
+                }
+            }
+            catch
+            {
+                // Make sure to release all marshalled values so far (this shouldn't ever throw)
+                for (int j = 0; j < i; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
+                }
+
+                throw;
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for reference types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterReferenceTypeExtensions
+{
+    extension<T>(IReadOnlyListAdapter<T>)
+        where T : class
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany<TElementMarshaller>(IReadOnlyList<T> list, uint startIndex, uint itemsSize, void** items)
+            where TElementMarshaller : IWindowsRuntimeReferenceTypeElementMarshaller<T>
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+            int i = 0;
+
+            try
+            {
+                for (; i < itemCount; i++)
+                {
+                    items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();
+                }
+            }
+            catch
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
                 }
 
                 throw;
