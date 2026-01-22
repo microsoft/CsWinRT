@@ -104,6 +104,7 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
             {
                 _ = builder.AppendLine($"""
                     [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("{assemblyName}")]
+                    [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("{assemblyName}")]
                     """);
             }
 
@@ -129,6 +130,8 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
                 //[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Projection")]
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
+                [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Interop")]
+                [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Runtime2")]
                 """;
 
             context.AddSource("TypeMapAssemblyTarget.g.cs", source);
