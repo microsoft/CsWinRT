@@ -571,6 +571,8 @@ namespace UnitTest
         [InlineData(typeof(bool), "Boolean", "Primitive")]
         [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
         [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
+        [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference<Int64>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
