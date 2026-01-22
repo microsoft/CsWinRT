@@ -20,6 +20,7 @@ namespace cswinrt
         bool public_exclusiveto{};
         bool idic_exclusiveto{};
         bool partial_factory{};
+        bool reference_projection{};
     };
 
     extern settings_type settings;

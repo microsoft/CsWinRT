@@ -56,8 +56,8 @@ namespace UnitTest
         public void TestMockDragDropManager()
         {
             var interop = (WinRT.Interop.IDragDropManagerInterop)Class.ComInterop;
-            Guid iid = typeof(ICoreDragDropManager).GUID;
-            var manager = interop.GetForWindow(new IntPtr(0), iid);
+            Guid iid_ICoreDragDropManager = new("7D56D344-8464-4FAF-AA49-37EA6E2D7BD1");
+            var manager = interop.GetForWindow(new IntPtr(0), iid_ICoreDragDropManager);
             Assert.NotNull(manager);
         }
 

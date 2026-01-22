@@ -51,11 +51,14 @@ internal static class InteropMarshallerTypeResolver
             return new(type, interopReferences, interopReferences.WindowsRuntimeObjectMarshaller);
         }
 
-        // For custom-mapped types, get the marshaller type from 'WinRT.Runtime.dll'
+        // For custom-mapped types and manually projected types, get the marshaller type from 'WinRT.Runtime.dll'
         if (type.IsFundamentalWindowsRuntimeType(interopReferences) ||
             type.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
             type.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
-            type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
+            type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
+            type.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+            type.IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+            type.IsManuallyProjectedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
         {
             ITypeDefOrRef marshallerType = interopReferences.WindowsRuntimeModule.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
@@ -65,11 +68,8 @@ internal static class InteropMarshallerTypeResolver
         }
         else
         {
-            // In all other cases, the marshaller type will be in the declared assembly. Note that this
-            // also includes special manually projected types, such as 'AsyncActionCompletedHandler'.
-            // Even though those types are in 'WinRT.Runtime.dll', the marshaller type will also be
-            // there, so trying to resolve it via the declaring module like for other types is fine.
-            ITypeDefOrRef marshallerType = type.Resolve()!.DeclaringModule!.CreateTypeReference(
+            // In all other cases, the marshaller type will be in the merged projection.
+            ITypeDefOrRef marshallerType = interopReferences.WinRTProjection.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
                 name: $"{type.Name}Marshaller");
 

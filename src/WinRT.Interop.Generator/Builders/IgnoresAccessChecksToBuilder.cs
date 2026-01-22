@@ -40,5 +40,9 @@ internal static partial class IgnoresAccessChecksToBuilder
             // Create the attribute and add it to the assembly
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, module));
         }
+
+        // We also always add an attribute for 'WinRT.Projection', which is the merged Windows Runtime projection assembly.
+        // This assembly is generated at compile time by another task, and will not be present in the set of reference paths.
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo("WinRT.Projection", interopDefinitions, module));
     }
 }

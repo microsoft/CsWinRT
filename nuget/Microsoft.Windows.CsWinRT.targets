@@ -13,6 +13,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
+    <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
+    <DebugSymbols Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</DebugSymbols>
+    <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
+    <ProduceReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</ProduceReferenceAssembly>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
 
     <!--
@@ -62,6 +66,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
+  </ItemGroup>
+
+  <!-- TODO: Remove once ProduceOnlyReferenceAssembly is set earlier for _DebugSymbolsIntermediatePath to be set correctly.
+             This only impacts incremental builds.
+    -->
+  <ItemGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -259,6 +270,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
       <CsWinRTPublicExclusiveTo Condition="'$(CsWinRTPublicExclusiveToInterfaces)' == 'true'">-public_exclusiveto</CsWinRTPublicExclusiveTo>
       <CsWinRTDynamicallyInterfaceCastableExclusiveTo Condition="'$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)' == 'true'">-idic_exclusiveto</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
+      <CsWinRTReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">-reference_projection</CsWinRTReferenceProjection>
 
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
@@ -272,6 +284,7 @@ $(CsWinRTEmbeddedProjection)
 $(CsWinRTEmbeddedEnums)
 $(CsWinRTPublicExclusiveTo)
 $(CsWinRTDynamicallyInterfaceCastableExclusiveTo)
+$(CsWinRTReferenceProjection)
       </CsWinRTParams>
 
       <CsWinRTPrivateParams Condition="'$(CsWinRTPrivateParams)' == ''">

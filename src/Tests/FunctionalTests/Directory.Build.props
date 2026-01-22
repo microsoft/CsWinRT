@@ -1,9 +1,12 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
 
+  <PropertyGroup>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+  </PropertyGroup>
+
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
 
   <PropertyGroup>
-    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

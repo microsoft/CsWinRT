@@ -98,6 +98,7 @@ internal partial class InteropGeneratorArgs
         return new()
         {
             ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ReferenceAssemblyPaths)),
+            ImplementationAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ImplementationAssemblyPaths)),
             OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
