@@ -82,43 +82,4 @@ public static class IReadOnlyListAdapter<T>
 
         return false;
     }
-
-    /// <summary>
-    /// Retrieves multiple items from the vector view beginning at the given index.
-    /// </summary>
-    /// <param name="list">The wrapped <see cref="IReadOnlyList{T}"/> instance.</param>
-    /// <param name="startIndex">The zero-based index to start at.</param>
-    /// <param name="items">The target <see cref="Span{T}"/> to write items into.</param>
-    /// <returns>The number of items that were retrieved. This value can be less than the size of <paramref name="items"/> if the end of the list is reached.</returns>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getmany"/>
-    public static uint GetMany(IReadOnlyList<T> list, uint startIndex, Span<T> items)
-    {
-        int count = list.Count;
-
-        // The spec says:
-        //   "Calling 'GetMany' with 'startIndex' equal to the length of the vector (last valid index + 1)
-        //   and any specified capacity will succeed and return zero actual elements."
-        if (startIndex == count)
-        {
-            return 0;
-        }
-
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
-
-        // Empty spans are supported, we just stop immediately
-        if (items.IsEmpty)
-        {
-            return 0;
-        }
-
-        int itemCount = int.Min(items.Length, count - (int)startIndex);
-
-        // Copy all items to the target span
-        for (int i = 0; i < itemCount; ++i)
-        {
-            items[i] = list[i + (int)startIndex];
-        }
-
-        return (uint)itemCount;
-    }
 }
