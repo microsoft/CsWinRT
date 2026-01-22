@@ -4,7 +4,7 @@ namespace Windows.UI.Xaml
     using global::Windows.Foundation;
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Duration>")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Duration>")]
     [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Duration : IEquatable<Duration>

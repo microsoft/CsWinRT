@@ -16,7 +16,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector2>",
+    value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector2>",
     target: typeof(ABI.System.Numerics.Vector2),
     trimTarget: typeof(Vector2))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -29,7 +29,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Vector2"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector2"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector2>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector2>")]
 [Vector2ComWrappersMarshaller]
 file static class Vector2;
 

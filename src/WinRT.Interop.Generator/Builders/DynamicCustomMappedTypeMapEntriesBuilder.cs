@@ -76,16 +76,16 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         WindowsRuntimeExposedType(
             args: args,
-            windowsUIXamlTypeName: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-            microsoftUIXamlTypeName: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
+            windowsUIXamlTypeName: "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
+            microsoftUIXamlTypeName: "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
             trimTarget: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module);
 
         WindowsRuntimeExposedType(
             args: args,
-            windowsUIXamlTypeName: "Windows.Foundation.IReference<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
-            microsoftUIXamlTypeName: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>",
+            windowsUIXamlTypeName: "Windows.Foundation.IReference`1<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
+            microsoftUIXamlTypeName: "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>",
             trimTarget: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module);

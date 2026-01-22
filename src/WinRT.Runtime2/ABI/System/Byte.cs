@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt8>",
+    value: "Windows.Foundation.IReference`1<UInt8>",
     target: typeof(ABI.System.Byte),
     trimTarget: typeof(byte))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="byte"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt8>")]
 [ByteComWrappersMarshaller]
 file static class Byte;
 

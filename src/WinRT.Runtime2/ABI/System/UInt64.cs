@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt64>",
+    value: "Windows.Foundation.IReference`1<UInt64>",
     target: typeof(ABI.System.UInt64),
     trimTarget: typeof(ulong))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="ulong"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt64>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt64>")]
 [UInt64ComWrappersMarshaller]
 file static class UInt64;
 

@@ -416,7 +416,7 @@ namespace cswinrt
 
     void write_interop_assembly_name(writer& w, TypeDef const& type)
     {
-		auto typeNamespace = type.TypeNamespace();
+        auto typeNamespace = type.TypeNamespace();
         if (auto proj = get_mapped_type(typeNamespace, type.TypeName()))
         {
             typeNamespace = proj->mapped_namespace;
@@ -444,7 +444,7 @@ namespace cswinrt
         else
         {
             std::filesystem::path db_path(type.get_database().path());
-			auto metadata = db_path.stem().string();
+            auto metadata = db_path.stem().string();
 
             // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
             std::replace(metadata.begin(), metadata.end(), '.', '-');
@@ -472,7 +472,7 @@ namespace cswinrt
             if (auto proj = get_mapped_type(typeNamespace, typeName))
             {
                 typeNamespace = std::string(proj->mapped_namespace);
-				typeName = std::string(proj->mapped_name);
+                typeName = std::string(proj->mapped_name);
             }
 
             // Replace generic arity with ' due to that is what interop dll uses.
@@ -482,7 +482,7 @@ namespace cswinrt
             if (nameType == typedef_name_type::ArrayMarshaller)
             {
                 w.write("%.<%%", typeNamespace, bind<write_interop_assembly_name>(type), typeName);
-			}
+            }
             else if (nameType == typedef_name_type::Projected)
             {
                 // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
@@ -501,7 +501,7 @@ namespace cswinrt
             {
                 w.write("<%>",
                     bind_list<write_interop_dll_type_name>("|", generic_args, typedef_name_type::Projected));
-			}
+            }
             else
             {
                 separator s{ w, "|" };
@@ -562,7 +562,7 @@ namespace cswinrt
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
-				write_interop_dll_type_name_for_typedef(w, type.generic_type, nameType, type.generic_args);
+                write_interop_dll_type_name_for_typedef(w, type.generic_type, nameType, type.generic_args);
             },
             [&](fundamental_type const& type)
             {
@@ -4543,11 +4543,28 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %);
+        return %;
     }
 }
 
-)", name, use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None", name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name);
+)", name,
+    use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None",
+    name,
+    bind([&](writer& w) {
+        if (is_type_blittable(type))
+        {
+            w.write("WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %)",
+                projection_name,
+                iid_property_name);
+        }
+        else
+        {
+            w.write("%Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %))",
+                name,
+                abi_name,
+                iid_property_name);
+        }
+    }));
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -4678,7 +4695,7 @@ R"(#pragma warning disable IL2026
 
     void write_struct_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
-        w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference<%.%>\")]\n",
+        w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<%.%>\")]\n",
             type.TypeNamespace(), type.TypeName());
     }
 
@@ -5753,7 +5770,7 @@ CopyToUnmanagedUnsafe_%(
                 if (is_array())
                 {
                     // HStringReference doesn't need to be freed.
-                    if (is_ref() || marshaler_type != "HStringMarshaller")
+                    if ((is_ref() || marshaler_type != "HStringMarshaller") && !skip_disposer)
                     {
                         write_interop_dispose_function(w);
 
@@ -5818,6 +5835,17 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
             return w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
         };
 
+        auto set_skip_disposer_if_needed = [&](abi_marshaler& m)
+        {
+            // These are types which are custom mapped and don't have disposers.
+            if (m.local_type == "global::ABI.System.DateTimeOffset" ||
+                m.local_type == "global::ABI.System.TimeSpan" ||
+                m.local_type == "global::ABI.System.Exception")
+            {
+                m.skip_disposer = true;
+            }
+        };
+
         auto set_simple_marshaler_type = [&](abi_marshaler& m, TypeDef const& type)
         {
             if (m.is_array())
@@ -5826,6 +5854,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+                set_skip_disposer_if_needed(m);
             }
             else if (!is_type_blittable(type))
             {
@@ -5837,11 +5866,9 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 {
                     m.is_pinnable = (m.category == param_category::in);
                 }
-                else if (m.marshaler_type == "global::ABI.System.DateTimeOffsetMarshaller" || 
-                         m.marshaler_type == "global::ABI.System.TimeSpanMarshaller" ||
-                         m.marshaler_type == "global::ABI.System.ExceptionMarshaller")
+                else
                 {
-                    m.skip_disposer = true;
+                    set_skip_disposer_if_needed(m);
                 }
             }
         };
@@ -5988,6 +6015,10 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                             m.local_type = m.is_out() ? "void*" : "MarshalString";
                             m.is_pinnable = (m.category == param_category::in);
                         }
+                    }
+                    else if (type == fundamental_type::Char)
+                    {
+                        m.skip_disposer = true;
                     }
                 },
                 [&](auto const&) {});
@@ -6201,7 +6232,7 @@ finally
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
-		auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
+        auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
 private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
 {

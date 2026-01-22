@@ -31,7 +31,7 @@ internal static class RuntimeClassNameGenerator
             // Handle SZ array types and map them to 'IReferenceArray<T>' type names
             if (type is SzArrayTypeSignature szArrayTypeSignature)
             {
-                interpolatedStringHandler.AppendLiteral("IReferenceArray<");
+                interpolatedStringHandler.AppendLiteral("Windows.Foundation.IReferenceArray`1<");
 
                 AppendRuntimeClassName(ref interpolatedStringHandler, szArrayTypeSignature.BaseType, useWindowsUIXamlProjections);
 

@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Double>",
+    value: "Windows.Foundation.IReference`1<Double>",
     target: typeof(ABI.System.Double),
     trimTarget: typeof(double))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="double"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Double>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Double>")]
 [DoubleComWrappersMarshaller]
 file static class Double;
 
