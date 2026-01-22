@@ -142,6 +142,24 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
         }
     }
 
+    /// <inheritdoc cref="WindowsRuntimeUnknownArrayMarshaller.Dispose"/>
+    /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
+    public static void Dispose<TElementMarshaller>(uint size, TAbi* array)
+        where TElementMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (int i = 0; i < size; i++)
+        {
+            TElementMarshaller.Dispose(array[i]);
+        }
+    }
+
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     /// <typeparam name="TElementMarshaller">The type of marshaller for each managed array element.</typeparam>
     public static void Free<TElementMarshaller>(uint size, TAbi* array)
