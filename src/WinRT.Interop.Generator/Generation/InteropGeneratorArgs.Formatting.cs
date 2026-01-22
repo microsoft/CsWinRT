@@ -20,6 +20,10 @@ internal partial class InteropGeneratorArgs
         _ = builder.Append(' ');
         _ = builder.AppendLine(string.Join(',', ReferenceAssemblyPaths));
 
+        _ = builder.Append(GetCommandLineArgumentName(nameof(ImplementationAssemblyPaths)));
+        _ = builder.Append(' ');
+        _ = builder.AppendLine(string.Join(',', ImplementationAssemblyPaths));
+
         _ = builder.Append(GetCommandLineArgumentName(nameof(OutputAssemblyPath)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(OutputAssemblyPath);

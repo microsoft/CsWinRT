@@ -4,8 +4,10 @@ namespace Microsoft.UI.Xaml.Media.Animation
     using global::Windows.Foundation;
 
     [WindowsRuntimeMetadata("Microsoft.UI")]
+#if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Media.Animation.KeyTime>")]
     [ABI.Microsoft.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
+#endif
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct KeyTime : IEquatable<KeyTime>
     {

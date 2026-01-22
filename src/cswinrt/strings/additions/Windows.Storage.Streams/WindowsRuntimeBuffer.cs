@@ -217,6 +217,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     }  // class WindowsRuntimeBuffer
 }  // namespace
 
+#if !CSWINRT_REFERENCE_PROJECTION
 namespace ABI.System.Runtime.InteropServices.WindowsRuntime
 {
     [WindowsRuntimeClassName("Windows.Storage.Streams.IBuffer")]
@@ -282,5 +283,6 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
         }
     }
 }
+#endif
 
 // WindowsRuntimeBuffer.cs
