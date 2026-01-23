@@ -9,7 +9,7 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for an unmanaged <c>[retval]</c> value.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.ReturnValue.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod"/>
     public sealed class RetVal : MethodRewriteInfo
     {
         /// <inheritdoc/>

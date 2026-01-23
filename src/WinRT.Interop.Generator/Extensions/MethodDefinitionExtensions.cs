@@ -45,6 +45,23 @@ internal static class MethodDefinitionExtensions
             };
         }
 
+        /// <summary>
+        /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// </summary>
+        /// <param name="module">The target module the method will be added to.</param>
+        /// <param name="constructorMethod">The <see cref="MemberReference"/> for the base constructor to invoke.</param>
+        /// <returns>The constructor.</returns>
+        public static MethodDefinition CreateDefaultConstructor(ModuleDefinition module, MemberReference constructorMethod)
+        {
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+            // Emit a call to the base constructor ('CreateConstructor' already adds the 'ret' instruction)
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, constructorMethod.Import(module));
+
+            return ctor;
+        }
+
         /// <inheritdoc cref="CilMethodBody.Instructions"/>
         public CilInstructionCollection CilInstructions => (method.CilMethodBody ??= new CilMethodBody()).Instructions;
 

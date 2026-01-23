@@ -9,7 +9,7 @@ internal partial class MethodRewriteInfo
     /// <summary>
     /// Contains info for a target method for two-pass IL generation, for emitting direct calls to <c>ConvertToUnmanaged</c>.
     /// </summary>
-    /// <see cref="Factories.InteropMethodRewriteFactory.RawRetVal.RewriteMethod"/>
+    /// <see cref="Rewriters.InteropMethodRewriter.RawRetVal.RewriteMethod"/>
     public sealed class RawRetVal : MethodRewriteInfo
     {
         /// <inheritdoc/>

@@ -697,12 +697,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
@@ -798,6 +795,9 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(marshallerType);
+
+            // Track the type (it may be needed to marshal parameters or return values)
+            emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
 
             // Prepare the external types we need in the implemented methods
             TypeSignature delegateType2 = delegateType.Import(module);
@@ -897,9 +897,6 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             marshallerType.Methods.Add(unboxToUnmanagedMethod);
-
-            // Track the type (it may be needed to marshal parameters or return values)
-            emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
         }
 
         /// <summary>

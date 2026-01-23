@@ -69,6 +69,9 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field to support <see cref="TryMarkWindowsRuntimeGenericInterfaceTypeInstance"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedWindowsRuntimeGenericInterfaceTypeInstances = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
@@ -401,6 +404,17 @@ internal sealed class InteropGeneratorDiscoveryState
     public bool TryMarkUserDefinedType(TypeSignature userDefinedType)
     {
         return _markedUserDefinedTypes.TryAdd(userDefinedType, 0);
+    }
+
+    /// <summary>
+    /// Tries to mark a constructed generic Windows Runtime interface type as having been seen the first time,
+    /// and indicating that it's in the process of being processed.
+    /// </summary>
+    /// <param name="interfaceType">The constructed generic Windows Runtime interface type.</param>
+    /// <returns>Whether this was the first time that <paramref name="interfaceType"/> was seen.</returns>
+    public bool TryMarkWindowsRuntimeGenericInterfaceTypeInstance(TypeSignature interfaceType)
+    {
+        return _markedWindowsRuntimeGenericInterfaceTypeInstances.TryAdd(interfaceType, 0);
     }
 
     /// <summary>

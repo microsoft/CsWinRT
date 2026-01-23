@@ -697,6 +697,39 @@ internal static class WindowsRuntimeExtensions
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
         }
 
+        /// <inheritdoc cref="IsConstructedKeyValuePairType(TypeSignature, InteropReferences)"/>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="keyType">The resulting key type, if the type did represent a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="valueType">The resulting value type, if the type did represent a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        public bool IsConstructedKeyValuePairType(
+            InteropReferences interopReferences,
+            [NotNullWhen(true)] out TypeSignature? keyType,
+            [NotNullWhen(true)] out TypeSignature? valueType)
+        {
+            // If the signature is not generic, it can't possibly be a 'KeyValuePair<TKey, TValue>' instantiation
+            if (signature is not GenericInstanceTypeSignature genericSignature)
+            {
+                keyType = null;
+                valueType = null;
+
+                return false;
+            }
+
+            // Same check as overload above
+            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.KeyValuePair2))
+            {
+                keyType = null;
+                valueType = null;
+
+                return false;
+            }
+
+            keyType = genericSignature.TypeArguments[0];
+            valueType = genericSignature.TypeArguments[1];
+
+            return true;
+        }
+
         /// <summary>
         /// Checks whether a <see cref="TypeSignature"/> is some <see cref="Nullable{T}"/> type.
         /// </summary>

@@ -112,12 +112,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="vectorViewMethodsType">The type returned by <see cref="IVectorViewMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="readOnlyListMethodsType">The resulting methods type.</param>
-        public static void IReadOnlyListMethods(
+        public static void Methods(
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition vectorViewMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition readOnlyListMethodsType)
         {
@@ -126,11 +128,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             readOnlyListMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(readOnlyListMethodsType, readOnlyListType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -186,7 +191,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the native object for an <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -276,10 +281,11 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
             GenericInstanceTypeSignature readOnlyListType,
@@ -287,6 +293,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
@@ -300,7 +307,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes =
+                {
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    InteropCustomAttributeFactory.Guid(readOnlyListType, interopReferences, module, useWindowsUIXamlProjections)
+                },
                 Interfaces =
                 {
                     new InterfaceImplementation(readOnlyListType.Import(module).ToTypeDefOrRef()),
@@ -340,74 +351,38 @@ internal partial class InteropTypeDefinitionBuilder
 
             interfaceImplType.Properties.Add(itemProperty);
 
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
-
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
-                method: get_CountMethod);
-
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: readOnlyListType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
-
-            interfaceImplType.Properties.Add(countProperty);
-
-            // Create the 'IEnumerable<T>.GetEnumerator' method
-            MethodDefinition enumerable1GetEnumeratorMethod = new(
-                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
-
-            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                method: enumerable1GetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: enumerableType,
-                implementationMethod: enumerable1GetEnumeratorMethod,
-                forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'IEnumerable.GetEnumerator' method
-            MethodDefinition enumerableGetEnumeratorMethod = new(
-                name: "System.Collections.IEnumerable.GetEnumerator"u8,
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
-
-            // Add and implement the 'IEnumerable.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                method: enumerableGetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
+            // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>',
+            // as in that case we'll be using a separate implementation to handle mixed scenarios.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
             {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
-                    { Ret }
-                }
-            };
+                // Create the 'get_Count' getter method
+                MethodDefinition get_CountMethod = new(
+                    name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+                // Add and implement the 'get_Count' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
+                    method: get_CountMethod);
+
+                // Create a body for the 'get_Count' method
+                get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: readOnlyListType,
+                    implementationMethod: get_CountMethod,
+                    forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
+                    interopReferences: interopReferences,
+                    module: module);
+
+                // Create the 'Count' property
+                PropertyDefinition countProperty = new(
+                    name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.Count",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_CountMethod))
+                { GetMethod = get_CountMethod };
+
+                interfaceImplType.Properties.Add(countProperty);
+            }
         }
 
         /// <summary>
@@ -479,6 +454,54 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, readOnlyListType, "Impl");
+        }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: readOnlyListType,
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
+                interfaceTypeMapSourceType: readOnlyListType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
+            // If the element type is not 'KeyValuePair<TKey, TValue>', also register the interface implementation type
+            // as the 'IDynamicInterfaceCastable' implementation for 'IReadOnlyCollection<T>'. This is because in this
+            // case there is only one possible Windows Runtime native interface that can map to this generic type.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
+            {
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    runtimeClassName: null,
+                    externalTypeMapTargetType: null,
+                    externalTypeMapTrimTargetType: null,
+                    proxyTypeMapSourceType: null,
+                    proxyTypeMapProxyType: null,
+                    interfaceTypeMapSourceType: interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(elementType),
+                    interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                    interopReferences: interopReferences,
+                    module: module);
+            }
         }
     }
 }
