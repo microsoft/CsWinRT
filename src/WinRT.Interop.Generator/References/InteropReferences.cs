@@ -3940,10 +3940,10 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterBlittableValueTypeExtensions.GetMany&lt;T&gt;</c>.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterBlittableValueTypeExtensions.GetMany&lt;T&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    public MemberReference IEnumeratorAdapterBlittableValueTypeGetMany(TypeSignature elementType)
+    public MethodSpecification IEnumeratorAdapterBlittableValueTypeGetMany(TypeSignature elementType)
     {
         return IEnumeratorAdapterBlittableValueTypeExtensions
             .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
@@ -3952,11 +3952,12 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IEnumeratorAdapter1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                     _corLibTypeFactory.UInt32,
-                    new GenericParameterSignature(GenericParameterType.Method, 0).MakePointerType()]));
+                    new GenericParameterSignature(GenericParameterType.Method, 0).MakePointerType()]))
+            .MakeGenericInstanceMethod(elementType);
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterUnmanagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterUnmanagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     /// <param name="abiType">The ABI type.</param>
@@ -3975,7 +3976,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterManagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterManagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     /// <param name="abiType">The ABI type.</param>
@@ -3994,7 +3995,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterKeyValuePairTypeExtensions.GetMany&lt;TKey, TValue, TElementMarshaller&gt;</c>.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterKeyValuePairTypeExtensions.GetMany&lt;TKey, TValue, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
     /// <param name="valueType">The input value type.</param>
@@ -4015,7 +4016,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterReferenceTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterReferenceTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     /// <param name="elementMarshallerType">The element marshaller type.</param>

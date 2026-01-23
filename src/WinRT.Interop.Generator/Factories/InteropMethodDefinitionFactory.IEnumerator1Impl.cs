@@ -168,19 +168,46 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
+
+            // Get the appropriate 'GetMany' method descriptor to delegate the logic to
+            IMethodDescriptor getManyMethod = elementType switch
+            {
+                _ when elementType.IsBlittable(interopReferences) => interopReferences.IEnumeratorAdapterBlittableValueTypeGetMany(enumeratorType),
+                _ when elementType.IsConstructedKeyValuePairType(interopReferences) => interopReferences.IEnumeratorAdapterKeyValuePairTypeGetMany(
+                    keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsManagedValueType(interopReferences) => interopReferences.IEnumeratorAdapterManagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsValueType => interopReferences.IEnumeratorAdapterUnmanagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsTypeOfObject() => interopReferences.IEnumeratorAdapterOfObjectGetMany,
+                _ when elementType.IsTypeOfString() => interopReferences.IEnumeratorAdapterOfStringGetMany,
+                _ when elementType.IsTypeOfType(interopReferences) => interopReferences.IEnumeratorAdapterOfTypeGetMany,
+                _ when elementType.IsTypeOfException(interopReferences) => interopReferences.IEnumeratorAdapterOfExceptionGetMany,
+                _ => interopReferences.IEnumeratorAdapterReferenceTypeGetMany(
+                    elementType: elementType,
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature())
+            };
 
             // Define the 'GetMany' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int GetMany(void* thisPtr, uint itemsSize, <ABI_ELEMENT_TYPE>* items, uint* writtenCount)
-            MethodDefinition currentMethod = new(
+            MethodDefinition getManyImplMethod = new(
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -197,22 +224,16 @@ internal partial class InteropMethodDefinitionFactory
             // Labels for jumps
             CilInstruction ldc_I4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
             CilInstruction nop_beforeTry = new(Nop);
-            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
+            CilInstruction ldarg_3_tryStart = new(Ldarg_3);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
-            CilInstruction nop_implementation = new(Nop);
 
             // Create a method body for the 'get_Current' method
-            currentMethod.CilMethodBody = new CilMethodBody()
+            getManyImplMethod.CilMethodBody = new CilMethodBody()
             {
-                // Declare 2 variables:
+                // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                //   [1]: 'IEnumeratorAdapter<<ELEMENT_TYPE>>' (the adapter instance)
-                LocalVariables =
-                {
-                    new CilLocalVariable(module.CorLibTypeFactory.Int32),
-                    new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType(elementType).Import(module))
-                },
+                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if either pointer argument is 'null'
@@ -229,11 +250,14 @@ internal partial class InteropMethodDefinitionFactory
                     { nop_beforeTry },
 
                     // '.try' code
-                    { ldarg_0_tryStart },
+                    { ldarg_3_tryStart },
+                    { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType).Import(module) },
                     { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType).Import(module) },
-                    { Stloc_1 },
-                    { nop_implementation },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, getManyMethod.Import(module) },
+                    { Stind_I4 },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -252,7 +276,7 @@ internal partial class InteropMethodDefinitionFactory
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Exception,
-                        TryStart = ldarg_0_tryStart.CreateLabel(),
+                        TryStart = ldarg_3_tryStart.CreateLabel(),
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
@@ -261,9 +285,7 @@ internal partial class InteropMethodDefinitionFactory
                 }
             };
 
-            // TODO: replace 'nop_implementation' with the actual implementation of the method
-
-            return currentMethod;
+            return getManyImplMethod;
         }
 
         /// <summary>

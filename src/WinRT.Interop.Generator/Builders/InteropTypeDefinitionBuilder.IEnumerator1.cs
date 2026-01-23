@@ -545,6 +545,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.GetMany(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
+                emitState: emitState,
                 module: module);
 
             Impl(
