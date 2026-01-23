@@ -98,6 +98,51 @@ public static class IListAdapterExtensions
         }
     }
 
+    extension(IListAdapter<object>)
+    {
+        /// <inheritdoc cref="GetMany(IList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany(IList<object> list, uint startIndex, uint itemsSize, void** items)
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+            int i = 0;
+
+            try
+            {
+                for (; i < itemCount; i++)
+                {
+                    items[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();
+                }
+            }
+            catch
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
+                }
+
+                throw;
+            }
+
+            return (uint)itemCount;
+        }
+    }
+
     extension(IListAdapter<Exception>)
     {
         /// <inheritdoc cref="GetMany(IList{string}, uint, uint, void**)"/>

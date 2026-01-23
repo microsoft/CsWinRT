@@ -66,6 +66,43 @@ public static class IEnumeratorAdapterExtensions
         }
     }
 
+    extension(IEnumeratorAdapter<object> adapter)
+    {
+        /// <inheritdoc cref="GetMany(IEnumeratorAdapter{string}, uint, void**)"/>
+        public unsafe uint GetMany(uint itemsSize, void** items)
+        {
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            uint index = 0;
+
+            try
+            {
+                for (; index < itemsSize & adapter.HasCurrent; index++)
+                {
+                    items[index] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(adapter.Current).DetachThisPtrUnsafe();
+
+                    _ = adapter.MoveNext();
+                }
+            }
+            catch
+            {
+                for (uint j = 0; j < index; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
+                }
+
+                throw;
+            }
+
+            return index;
+        }
+    }
+
     extension(IEnumeratorAdapter<Exception> adapter)
     {
         /// <inheritdoc cref="GetMany(IEnumeratorAdapter{string}, uint, void**)"/>
