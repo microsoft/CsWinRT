@@ -58,7 +58,7 @@ public static class IListAdapterExtensions
         {
             int count = list.Count;
 
-            // See notes in 'GetMany' for 'IList<string>'
+            // See notes in 'GetMany' for 'IReadOnlyList<string>' in 'IReadOnlyListAdapterExtensions'
             if (startIndex == count)
             {
                 return 0;
@@ -66,7 +66,7 @@ public static class IListAdapterExtensions
 
             IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
 
-            // Empty spans are supported, we just stop immediately
+            // Zero-size arrays are supported, we just stop immediately
             if (itemsSize == 0)
             {
                 return 0;
@@ -349,7 +349,7 @@ public static class IListAdapterManagedValueTypeExtensions
 
             try
             {
-                // Same as with 'string' above, but with the provided marshaller marshaller
+                // Same as with 'string' above, but with the provided marshaller
                 for (; i < itemCount; i++)
                 {
                     items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]);
@@ -407,7 +407,7 @@ public static class IListAdapterKeyValuePairTypeExtensions
 
             try
             {
-                // Same as with 'string' above, but with the provided marshaller marshaller
+                // Same as with 'string' above, but with the provided marshaller
                 for (; i < itemCount; i++)
                 {
                     items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();

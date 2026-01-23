@@ -17,18 +17,18 @@ namespace WindowsRuntime.InteropServices;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterExtensions
 {
-    // Note: all the extensions in this file match the ones in 'IEnumeratorAdapterExtensions',
+    // Note: all the extensions in this file match the ones in 'IReadOnlyListAdapterExtensions',
     // just adapted for 'IEnumerator<T>'. Any changes to these methods should be kept in sync.
 
     extension(IEnumeratorAdapter<string> adapter)
     {
         /// <summary>
-        /// Retrieves multiple items from the vector view beginning at the given index.
+        /// Retrieves multiple items from the iterator.
         /// </summary>
         /// <param name="itemsSize">The length of <paramref name="items"/>.</param>
         /// <param name="items">The target items to write.</param>
-        /// <returns>The number of items that were retrieved. This value can be less than the size of <paramref name="items"/> if the end of the list is reached.</returns>
-        /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getmany"/>
+        /// <returns>The number of items that were retrieved. This value can be less than the size of <paramref name="items"/> if the end of the iterator is reached.</returns>
+        /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.getmany"/>
         public unsafe uint GetMany(uint itemsSize, HSTRING* items)
         {
             // If the target array is empty, we just stop immediately
@@ -43,7 +43,7 @@ public static class IEnumeratorAdapterExtensions
 
             try
             {
-                // Copy all items into the target span
+                // Copy all items into the target buffer
                 for (; index < itemsSize & adapter.HasCurrent; index++)
                 {
                     items[index] = HStringMarshaller.ConvertToUnmanaged(adapter.Current);

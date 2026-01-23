@@ -351,7 +351,7 @@ public static class IReadOnlyListAdapterManagedValueTypeExtensions
 
             try
             {
-                // Same as with 'string' above, but with the provided marshaller marshaller
+                // Same as with 'string' above, but with the provided marshaller
                 for (; i < itemCount; i++)
                 {
                     items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]);
@@ -409,7 +409,7 @@ public static class IReadOnlyListAdapterKeyValuePairTypeExtensions
 
             try
             {
-                // Same as with 'string' above, but with the provided marshaller marshaller
+                // Same as with 'string' above, but with the provided marshaller
                 for (; i < itemCount; i++)
                 {
                     items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();

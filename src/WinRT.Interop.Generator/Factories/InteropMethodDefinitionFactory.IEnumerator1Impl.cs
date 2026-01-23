@@ -228,7 +228,7 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
-            // Create a method body for the 'get_Current' method
+            // Create a method body for the 'GetMany' method
             getManyImplMethod.CilMethodBody = new CilMethodBody()
             {
                 // Declare 1 variable:

@@ -144,7 +144,7 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeKeyValuePairTypeElementMarshaller2
                 .MakeGenericReferenceType(keyType, valueType);
 
-            // Specializae if both type arguments are value types (same logic as in the array element marshaller)
+            // Specialize if both type arguments are value types (same logic as in the array element marshaller)
             bool isValueType = keyType.IsValueType && valueType.IsValueType;
 
             return ElementMarshaller(
