@@ -17,6 +17,20 @@ internal static class TypeSignatureExtensions
     extension(TypeSignature signature)
     {
         /// <summary>
+        /// Determines whether the current type is assignable from the provided type.
+        /// </summary>
+        /// <param name="other">The other type.</param>
+        /// <param name="comparer">The comparer to use for comparing type signatures.</param>
+        /// <returns>Whether the current type is assignable from <paramref name="other" />.</returns>
+        /// <remarks>
+        /// Type compatibility is determined according to the rules in ECMA-335 I.8.7.3.
+        /// </remarks>
+        public bool IsAssignableFrom(TypeSignature other, SignatureComparer comparer)
+        {
+            return other.IsAssignableTo(signature, comparer);
+        }
+
+        /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeSignature"/> instance can be fully resolved to type definitions.
         /// </summary>
         /// <param name="definition">The resulting <see cref="TypeDefinition"/>, if the type can be resolved.</param>
