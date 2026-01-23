@@ -75,6 +75,25 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     }
 
     /// <summary>
+    /// Creates a <see cref="WindowsRuntimeObjectReferenceValue"/> value for a given COM pointer, using <c>QueryInterface</c>.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
+    /// <param name="iid">The IID that represents the interface implemented by <paramref name="externalComObject"/>.</param>
+    /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> wrapping <paramref name="externalComObject"/>.</returns>
+    /// <exception cref="NullReferenceException">Thrown if <paramref name="externalComObject"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// This method should only be used to create <see cref="WindowsRuntimeObjectReferenceValue"/> in projection scenarios.
+    /// </remarks>
+    public static WindowsRuntimeObjectReferenceValue CreateObjectReferenceValue(void* externalComObject, in Guid iid)
+    {
+        // Do a 'QueryInterface' to actually get the interface pointer we're looking for. We don't need
+        // an explicit 'null' check: the 'QueryInterface' call will trigger it if the pointer is 'null'.
+        IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr).Assert();
+
+        return new(interfacePtr);
+    }
+
+    /// <summary>
     /// Marshals a given object as a COM pointer that can be passed to native code through the Windows Runtime ABI.
     /// </summary>
     /// <param name="instance">The managed object to expose outside the .NET runtime.</param>

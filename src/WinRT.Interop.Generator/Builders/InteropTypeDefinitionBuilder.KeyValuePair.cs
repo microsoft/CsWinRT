@@ -10,6 +10,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -161,7 +162,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
                     { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeKeyValuePairTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
                     { Ret }
                 }
             };
@@ -293,6 +294,172 @@ internal partial class InteropTypeDefinitionBuilder
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
                     (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller attribute of some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="keyValuePairMarshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Marshaller"/>.</param>
+        /// <param name="keyValuePairInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImplType(GenericInstanceTypeSignature, TypeDefinition, MethodDefinition, InteropDefinitions, InteropReferences, ModuleDefinition, out TypeDefinition)"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerAttributeType">The resulting marshaller attribute type.</param>
+        public static void ComWrappersMarshallerAttribute(
+            GenericInstanceTypeSignature keyValuePairType,
+            TypeDefinition keyValuePairMarshallerType,
+            TypeDefinition keyValuePairInterfaceEntriesImplType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerAttributeType)
+        {
+            // We're declaring an 'internal sealed class' type
+            marshallerAttributeType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, "ComWrappersMarshallerAttribute"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+
+            module.TopLevelTypes.Add(marshallerAttributeType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
+
+            marshallerAttributeType.Methods.Add(ctor);
+
+            // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+
+            // Define the 'ComputeVtables' method as follows:
+            //
+            // public override ComInterfaceEntry* ComputeVtables(out int count)
+            MethodDefinition computeVtablesMethod = new(
+                name: "ComputeVtables"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: computeVtablesReturnType,
+                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+            {
+                CilOutParameterIndices = [1],
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4(interopDefinitions.IKeyValuePairInterfaceEntries.Fields.Count) },
+                    { Stind_I4 },
+                    { Call, keyValuePairInterfaceEntriesImplType.GetMethod("get_Vtables"u8) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'ComputeVtables' method
+            marshallerAttributeType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
+                method: computeVtablesMethod);
+
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'interfaceValue')
+            //   [1]: 'object' (for 'managedValue')
+            CilLocalVariable loc_0_interfaceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_1_managedValue = new(module.CorLibTypeFactory.Object);
+
+            // Jump labels
+            CilInstruction ldloca_s_interfaceValue = new(Ldloca_S, loc_0_interfaceValue);
+            CilInstruction ldloca_0_finally = new(Ldloca_S, loc_0_interfaceValue);
+            CilInstruction ldloc_1_epilogue = new(Ldloc_1);
+
+            // Define the 'CreateObject' method as follows:
+            //
+            // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+            MethodDefinition createObjectMethod = new(
+                name: "CreateObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Object,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+            {
+                CilOutParameterIndices = [2],
+                CilLocalVariables = { loc_0_interfaceValue, loc_1_managedValue },
+                CilInstructions =
+                {
+                    // wrapperFlags = CreatedWrapperFlags.NonWrapping;
+                    { Ldarg_2 },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.NonWrapping) },
+                    { Stind_I4 },
+
+                    // WindowsRuntimeObjectReferenceValue interfaceValue = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceValue(value, in <KEY_VALUE_PAIR_TYPE_IID>);
+                    { Ldarg_1 },
+                    { Call, get_IidMethod },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue.Import(module) },
+                    { Stloc_0 },
+
+                    // object managedValue = <MARSHALLER_TYPE>.ConvertToManaged(interfaceValue.GetThisPtrUnsafe());
+                    { ldloca_s_interfaceValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, keyValuePairMarshallerType.GetMethod("ConvertToManaged"u8) },
+                    { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Stloc_1 },
+                    { Leave_S, ldloc_1_epilogue.CreateLabel() },
+
+                    // 'finally' for local [0]
+                    { ldloca_0_finally },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Endfinally },
+
+                    // return managedValue;
+                    { ldloc_1_epilogue },
+                    { Ret }
+                },
+                CilExceptionHandlers =
+                {
+                    // Setup 'try/finally' for local [0]
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = ldloca_s_interfaceValue.CreateLabel(),
+                        TryEnd = ldloca_0_finally.CreateLabel(),
+                        HandlerStart = ldloca_0_finally.CreateLabel(),
+                        HandlerEnd = ldloc_1_epilogue.CreateLabel()
+                    }
+                }
+            };
+
+            // Add and implement the 'CreateObject' method
+            marshallerAttributeType.AddMethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
+                method: createObjectMethod);
+        }
+
+        /// <summary>
+        /// Creates the type map attributes for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature keyValuePairType,
+            TypeDefinition proxyType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(keyValuePairType, useWindowsUIXamlProjections),
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: keyValuePairType,
+                proxyTypeMapSourceType: keyValuePairType,
+                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                interfaceTypeMapSourceType: null,
+                interfaceTypeMapProxyType: null,
+                interopReferences: interopReferences,
+                module: module);
         }
     }
 }

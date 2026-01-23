@@ -686,14 +686,14 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    /// <param name="marshallerType">The resulting proxy type.</param>
+    /// <param name="proxyType">The resulting proxy type.</param>
     public static void Proxy(
         TypeSignature mappedType,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections,
-        out TypeDefinition marshallerType)
+        out TypeDefinition proxyType)
     {
         Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
@@ -703,7 +703,7 @@ internal static partial class InteropTypeDefinitionBuilder
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
-            marshallerType: out marshallerType);
+            proxyType: out proxyType);
     }
 
     /// <summary>
@@ -716,7 +716,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    /// <param name="marshallerType">The resulting proxy type.</param>
+    /// <param name="proxyType">The resulting proxy type.</param>
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
@@ -725,21 +725,21 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
-        out TypeDefinition marshallerType)
+        out TypeDefinition proxyType)
     {
         // We're declaring an 'internal static class' type
-        marshallerType = new(
+        proxyType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
-        module.TopLevelTypes.Add(marshallerType);
+        module.TopLevelTypes.Add(proxyType);
 
         if (runtimeClassName is not null)
         {
             // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name
-            marshallerType.CustomAttributes.Add(new CustomAttribute(
+            proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
@@ -749,7 +749,7 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type. This allows
             // the runtime to retrieve the user-provided runtime class name from the original type.
-            marshallerType.CustomAttributes.Add(new CustomAttribute(
+            proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
@@ -757,7 +757,7 @@ internal static partial class InteropTypeDefinitionBuilder
         }
 
         // Add the generated marshaller attribute
-        marshallerType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+        proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
     }
 
     /// <summary>

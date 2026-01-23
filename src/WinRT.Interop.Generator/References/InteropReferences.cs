@@ -1013,6 +1013,11 @@ internal sealed class InteropReferences
     public TypeReference ExceptionArrayMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "ExceptionArrayMarshaller"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeKeyValuePairTypeMarshaller</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeKeyValuePairTypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeKeyValuePairTypeMarshaller"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller</c>.
     /// </summary>
     public TypeReference WindowsRuntimeValueTypeMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeValueTypeMarshaller"u8);
@@ -1804,6 +1809,16 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateObjectReferenceValue</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue => field ??= WindowsRuntimeComWrappersMarshal
+        .CreateMemberReference("CreateObjectReferenceValue"u8, MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
+                Guid.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeUnknownMarshaller.Free(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeUnknownMarshallerFree => field ??= WindowsRuntimeUnknownMarshaller
@@ -2205,9 +2220,9 @@ internal sealed class InteropReferences
                 Span1.MakeGenericValueType(Exception.ToReferenceTypeSignature())]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeValueTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeKeyValuePairTypeMarshaller.ConvertToUnmanagedUnsafe</c>.
     /// </summary>
-    public MemberReference WindowsRuntimeValueTypeMarshallerConvertToUnmanagedUnsafe => field ??= WindowsRuntimeValueTypeMarshaller
+    public MemberReference WindowsRuntimeKeyValuePairTypeMarshallerConvertToUnmanagedUnsafe => field ??= WindowsRuntimeKeyValuePairTypeMarshaller
         .CreateMemberReference("ConvertToUnmanagedUnsafe"u8, MethodSignature.CreateStatic(
             returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
             parameterTypes: [
@@ -5280,7 +5295,7 @@ internal sealed class InteropReferences
     {
         return enumeratorType
             .ToTypeDefOrRef()
-            .CreateConstructorReference(_corLibTypeFactory, WindowsRuntimeObjectReference.ToReferenceTypeSignature()!); // TODO: file issue
+            .CreateConstructorReference(_corLibTypeFactory, [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
