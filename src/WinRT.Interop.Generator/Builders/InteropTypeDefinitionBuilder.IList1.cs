@@ -1032,9 +1032,8 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'GetMany' method
-            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
-                readOnlyListType: listType,
-                getAtMethod: null!, // TODO
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IList1Impl.GetMany(
+                listType: listType,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
