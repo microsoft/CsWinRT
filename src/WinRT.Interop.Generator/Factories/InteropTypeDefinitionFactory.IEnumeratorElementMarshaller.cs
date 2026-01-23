@@ -210,7 +210,7 @@ internal partial class InteropTypeDefinitionFactory
         {
             // Select the attributes and base type depending on whether we want a value type or not
             (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
-                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType)
+                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType.Import(module))
                 : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             // We're declaring an 'internal abstract class' type
