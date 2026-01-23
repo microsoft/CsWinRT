@@ -1389,6 +1389,50 @@ internal sealed class InteropReferences
         .CreateMemberReference("Reset"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IEnumeratorAdapterOfStringGetMany => field ??= IEnumeratorAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IEnumeratorAdapterOfExceptionGetMany => field ??= IEnumeratorAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IEnumeratorAdapter1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                AbiException.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IEnumeratorAdapterOfTypeGetMany => field ??= IEnumeratorAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IEnumeratorAdapter1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                AbiType.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IEnumeratorAdapterOfObjectGetMany => field ??= IEnumeratorAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerable.GetEnumerator"/>.
     /// </summary>
     public MemberReference IEnumerableGetEnumerator => field ??= IEnumerable
@@ -1693,12 +1737,130 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Int32]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;string&gt;.IndexOf</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfStringIndexOf => field ??= IListAdapterExtensions
+        .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Boolean,
+            parameterTypes: [
+                IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                ReadOnlySpanChar,
+                _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfStringGetMany => field ??= IListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfExceptionGetMany => field ??= IListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IList1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                AbiException.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfTypeGetMany => field ??= IListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IList1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                AbiType.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IListAdapterOfObjectGetMany => field ??= IListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IList1.MakeGenericReferenceType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods.Count</c>.
     /// </summary>
     public MemberReference IReadOnlyListMethodsCount => field ??= IReadOnlyListMethods
         .CreateMemberReference("Count"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Int32,
             parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;string&gt;.IndexOf</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfStringIndexOf => field ??= IReadOnlyListAdapterExtensions
+        .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Boolean,
+            parameterTypes: [
+                IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                ReadOnlySpanChar,
+                _corLibTypeFactory.UInt32.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfStringGetMany => field ??= IReadOnlyListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfExceptionGetMany => field ??= IReadOnlyListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IReadOnlyList1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                AbiException.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfTypeGetMany => field ??= IReadOnlyListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IReadOnlyList1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                AbiType.ToValueTypeSignature().MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IReadOnlyListAdapterOfObjectGetMany => field ??= IReadOnlyListAdapterExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.UInt32,
+            parameterTypes: [
+                IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.Object),
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IDictionary.Count</c>.
@@ -3778,62 +3940,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IEnumeratorAdapterOfStringGetMany()
-    {
-        return IEnumeratorAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.String),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IEnumeratorAdapterOfExceptionGetMany()
-    {
-        return IEnumeratorAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    AbiException.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IEnumeratorAdapterOfTypeGetMany()
-    {
-        return IEnumeratorAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    AbiType.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IEnumeratorAdapterOfObjectGetMany()
-    {
-        return IEnumeratorAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.Object),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterBlittableValueTypeExtensions.GetMany&lt;T&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -4436,80 +4542,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapter&lt;string&gt;.IndexOf</c>.
-    /// </summary>
-    public MemberReference IListAdapterOfStringIndexOf()
-    {
-        return IListAdapterExtensions
-            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Boolean,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
-                    ReadOnlySpanChar,
-                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IListAdapterOfStringGetMany()
-    {
-        return IListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IListAdapterOfExceptionGetMany()
-    {
-        return IListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    AbiException.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IListAdapterOfTypeGetMany()
-    {
-        return IListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    AbiType.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IListAdapterOfObjectGetMany()
-    {
-        return IListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IList1.MakeGenericReferenceType(_corLibTypeFactory.Object),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterBlittableValueTypeExtensions.GetMany&lt;T&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -4716,80 +4748,6 @@ internal sealed class InteropReferences
                     IReadOnlyList1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     _corLibTypeFactory.UInt32.MakeByReferenceType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapter&lt;string&gt;.IndexOf</c>.
-    /// </summary>
-    public MemberReference IReadOnlyListAdapterOfStringIndexOf()
-    {
-        return IReadOnlyListAdapterExtensions
-            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Boolean,
-                parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
-                    ReadOnlySpanChar,
-                    _corLibTypeFactory.UInt32.MakeByReferenceType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IReadOnlyListAdapterOfStringGetMany()
-    {
-        return IReadOnlyListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IReadOnlyListAdapterOfExceptionGetMany()
-    {
-        return IReadOnlyListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(Exception.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    AbiException.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IReadOnlyListAdapterOfTypeGetMany()
-    {
-        return IReadOnlyListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(Type.ToReferenceTypeSignature()),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    AbiType.ToValueTypeSignature().MakePointerType()]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
-    /// </summary>
-    public MemberReference IReadOnlyListAdapterOfObjectGetMany()
-    {
-        return IReadOnlyListAdapterExtensions
-            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.Object),
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.UInt32,
-                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
     }
 
     /// <summary>

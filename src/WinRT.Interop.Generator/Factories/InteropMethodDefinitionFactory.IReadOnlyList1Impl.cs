@@ -287,8 +287,8 @@ internal partial class InteropMethodDefinitionFactory
             if (elementType.IsTypeOfString())
             {
                 adapterIndexOfMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
-                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
-                    : interopReferences.IListAdapterOfStringIndexOf();
+                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf
+                    : interopReferences.IListAdapterOfStringIndexOf;
             }
             else
             {
