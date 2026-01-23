@@ -452,9 +452,9 @@ internal partial class InteropTypeDiscovery
             // Same handling as above for 'MapChangedEventHandler<K,V>' types
             discoveryState.TrackGenericDelegateType(interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
 
-            // Also manually track the args type for 'MapChangedEventHandler<K,V>'
+            // Also manually track the args type for 'MapChangedEventHandler<K,V>' (i.e. 'IMapChangedEventArgs<K>')
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[1]),
+                typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[0]),
                 args: args,
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
