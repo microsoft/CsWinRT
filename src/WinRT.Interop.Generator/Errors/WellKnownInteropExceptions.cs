@@ -454,21 +454,19 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to resolve the IID for some Windows Runtime type.
+    /// Failed to generate marshalling code for an <see cref="IReadOnlyCollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    [Obsolete]
-    public static Exception TypeIIDResolutionError(TypeDefinition type)
+    public static WellKnownInteropException IReadOnlyCollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(52, $"Failed to resolve the IID for projected type '{type}'.");
+        return Exception(52, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
-    /// Failed to resolve the IID for some Windows Runtime type.
+    /// Failed to generate marshalling code for an <see cref="ICollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    [Obsolete]
-    public static Exception TypeIIDInvalidDataError(TypeDefinition type)
+    public static WellKnownInteropException ICollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(53, $"The IID data for projected type '{type}' is invalid.");
+        return Exception(53, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
@@ -613,22 +611,6 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException PrimaryWindowsRuntimeInterfaceNotFoundError(TypeSignature userDefinedType)
     {
         return Exception(71, $"Failed to resolve primary Windows Runtime interface for user-defined type '{userDefinedType}'.");
-    }
-
-    /// <summary>
-    /// Failed to generate marshalling code for an <see cref="IReadOnlyCollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
-    /// </summary>
-    public static WellKnownInteropException IReadOnlyCollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
-    {
-        return Exception(72, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
-    }
-
-    /// <summary>
-    /// Failed to generate marshalling code for an <see cref="ICollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> type.
-    /// </summary>
-    public static WellKnownInteropException ICollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
-    {
-        return Exception(72, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
