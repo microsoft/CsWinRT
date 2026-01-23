@@ -8,9 +8,9 @@ using WindowsRuntime.InteropGenerator.References;
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
 /// <summary>
-/// A class that provides logic to analyze user-defined types.
+/// A class that provides logic to analyze types implementing Windows Runtime interfaces.
 /// </summary>
-internal static class UserDefinedTypeAnalyzer
+internal static class WindowsRuntimeTypeAnalyzer
 {
     /// <summary>
     /// Tries to retrieve the most derived Windows Runtime interface type implemented by the specified user-defined type.
