@@ -5,7 +5,7 @@ namespace Windows.UI.Xaml
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #if !CSWINRT_REFERENCE_PROJECTION
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.GridLength>")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.GridLength>")]
     [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]

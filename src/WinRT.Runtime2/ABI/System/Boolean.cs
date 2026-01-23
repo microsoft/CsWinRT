@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Boolean>",
+    value: "Windows.Foundation.IReference`1<Boolean>",
     target: typeof(ABI.System.Boolean),
     trimTarget: typeof(bool))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="bool"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Boolean>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Boolean>")]
 [BooleanComWrappersMarshaller]
 file static class Boolean;
 

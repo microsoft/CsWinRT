@@ -28,7 +28,7 @@ namespace ABI.System;
 // To fix this, we treat 'EventHandler' as a custom mapped type with special semantics. Specifically:
 //   - We support marshalling 'EventHandler' instances as CCWs, which will implement 'EventHandler<Object>' at the ABI level.
 //   - We don't support creating RCWs in the opaque 'object' scenario, ie. when we don't have statically visible type information.
-//     All native objects reporting their runtime class name as 'Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>'
+//     All native objects reporting their runtime class name as 'Windows.Foundation.IReference`1<Windows.Foundation.EventHandler<Object>>'
 //     will be marshalled as 'EventHandler<Object>'. We only special case marshalling to managed from an exact pointer to a native
 //     delegate instance. This is mostly just needed to allow implementing 'ICommand.CanExecuteChanged' over native objects.
 //
@@ -38,7 +38,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.EventHandler"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventhandler-1"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.EventHandler<Object>>")]
 [EventHandlerComWrappersMarshaller]
 file static class EventHandler;
 

@@ -5,7 +5,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 
     [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #if !CSWINRT_REFERENCE_PROJECTION
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Media.Matrix3D>")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Media.Media3D.Matrix3D>")]
     [ABI.Windows.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]

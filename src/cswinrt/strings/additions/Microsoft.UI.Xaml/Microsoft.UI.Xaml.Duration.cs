@@ -5,7 +5,7 @@ namespace Microsoft.UI.Xaml
 
     [WindowsRuntimeMetadata("Microsoft.UI")]
 #if !CSWINRT_REFERENCE_PROJECTION
-    [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Duration>")]
+    [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Duration>")]
     [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
 #endif
     [StructLayout(LayoutKind.Sequential)]

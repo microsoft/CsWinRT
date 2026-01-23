@@ -15,7 +15,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Char16>",
+    value: "Windows.Foundation.IReference`1<Char16>",
     target: typeof(ABI.System.Char),
     trimTarget: typeof(char))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -27,7 +27,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="char"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Char16>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Char16>")]
 [CharComWrappersMarshaller]
 file static class Char;
 

@@ -104,6 +104,7 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
             {
                 _ = builder.AppendLine($"""
                     [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("{assemblyName}")]
+                    [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("{assemblyName}")]
                     """);
             }
 

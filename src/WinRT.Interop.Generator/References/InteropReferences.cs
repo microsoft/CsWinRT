@@ -2906,7 +2906,9 @@ internal sealed class InteropReferences
         return ReadOnlySpan1
             .MakeGenericValueType(arrayType.BaseType)
             .ToTypeDefOrRef()
-            .CreateConstructorReference(_corLibTypeFactory, [arrayType]);
+            .CreateConstructorReference(
+                _corLibTypeFactory,
+                [new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType()]);
     }
 
     /// <summary>
