@@ -122,34 +122,6 @@ public sealed class IEnumeratorAdapter<T>
 
         return _hasCurrent;
     }
-
-    /// <summary>
-    /// Retrieves multiple items from the iterator.
-    /// </summary>
-    /// <param name="items">The target <see cref="Span{T}"/> to write items into.</param>
-    /// <remarks>
-    /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.GetMany</c> method.
-    /// </remarks>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.getmany"/>
-    public int GetMany(Span<T> items)
-    {
-        if (items.IsEmpty)
-        {
-            return 0;
-        }
-
-        int index = 0;
-
-        // Copy all items into the target span
-        for (; index < items.Length & HasCurrent; index++)
-        {
-            items[index] = Current;
-
-            _ = MoveNext();
-        }
-
-        return index;
-    }
 }
 
 /// <summary>

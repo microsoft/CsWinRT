@@ -17,37 +17,39 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal partial class InteropTypeDefinitionFactory
 {
     /// <summary>
-    /// Helpers for element marshaller types for SZ array types.
+    /// Helpers for element marshaller types for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
     /// </summary>
-    public static class SzArrayElementMarshaller
+    /// <remarks>
+    /// The resulting element marshaller types can also be reused for other generic collection types.
+    /// </remarks>
+    public static class IEnumeratorElementMarshaller
     {
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for an unmanaged value type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
-            SzArrayTypeSignature arrayType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = arrayType.BaseType;
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
-            // Get the constructed 'IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>' interface type
+            // Get the constructed 'IWindowsRuntimeUnmanagedValueTypeElementMarshaller<T, TAbi>' interface type
             TypeSignature interfaceType = interopReferences
-                .IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller2
+                .IWindowsRuntimeUnmanagedValueTypeElementMarshaller2
                 .MakeGenericReferenceType(elementType, elementAbiType);
 
             return ElementMarshaller(
-                arrayType: arrayType,
+                elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
-                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
@@ -57,31 +59,30 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a managed value type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
-            SzArrayTypeSignature arrayType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = arrayType.BaseType;
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
-            // Get the constructed 'IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>' interface type
+            // Get the constructed 'IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>' interface type
             TypeSignature interfaceType = interopReferences
-                .IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
+                .IWindowsRuntimeManagedValueTypeElementMarshaller2
                 .MakeGenericReferenceType(elementType, elementAbiType);
 
             // Get the element marshaller type with the common method implementations
             TypeDefinition elementMarshallerType = ElementMarshaller(
-                arrayType: arrayType,
+                elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
-                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
@@ -108,7 +109,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'Dispose' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerDispose(elementType, elementAbiType).Import(module),
+                declaration: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerDispose(elementType, elementAbiType).Import(module),
                 method: disposeMethod);
 
             // Track rewriting the disposal for 'Dispose'
@@ -123,37 +124,33 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
-            SzArrayTypeSignature arrayType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
+            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)enumeratorType.TypeArguments[0];
             TypeSignature keyType = elementType.TypeArguments[0];
             TypeSignature valueType = elementType.TypeArguments[1];
 
-            // Get the constructed 'IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>' interface type
+            // Get the constructed 'IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>' interface type
             TypeSignature interfaceType = interopReferences
-                .IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
+                .IWindowsRuntimeKeyValuePairTypeElementMarshaller2
                 .MakeGenericReferenceType(keyType, valueType);
 
-            // If both the key and the value types are value types, it means the whole marshaller will be specialized.
-            // In that case we can emit the element marshaller type as a value type as well, so the whole thing can be
-            // fully specialized and inlined. We don't do this if either type is a reference type, because that means
-            // the generic instantiation could still be shared between different types, so we prefer to save size there.
+            // Specialize if both type arguments are value types (same logic as in the array element marshaller)
             bool isValueType = keyType.IsValueType && valueType.IsValueType;
 
             return ElementMarshaller(
-                arrayType: arrayType,
+                elementType: elementType,
                 interfaceType: interfaceType,
-                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(keyType, valueType),
-                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType),
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(keyType, valueType),
                 isValueType: isValueType,
                 interopReferences: interopReferences,
                 emitState: emitState,
@@ -163,29 +160,28 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a reference type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
-            SzArrayTypeSignature arrayType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = arrayType.BaseType;
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
 
-            // Get the constructed 'IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>' interface type
+            // Get the constructed 'IWindowsRuntimeReferenceTypeElementMarshaller<T>' interface type
             TypeSignature interfaceType = interopReferences
-                .IWindowsRuntimeReferenceTypeArrayElementMarshaller1
+                .IWindowsRuntimeReferenceTypeElementMarshaller1
                 .MakeGenericReferenceType(elementType);
 
             return ElementMarshaller(
-                arrayType: arrayType,
+                elementType: elementType,
                 interfaceType: interfaceType,
-                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToUnmanaged(elementType),
-                convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType),
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerConvertToUnmanaged(elementType),
                 isValueType: false,
                 interopReferences: interopReferences,
                 emitState: emitState,
@@ -195,27 +191,23 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for some element type.
         /// </summary>
-        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="elementType">The <see cref="TypeSignature"/> for the element type.</param>
         /// <param name="interfaceType">The interface type the element marshaller type should implement.</param>
         /// <param name="convertToUnmanagedInterfaceMethod">The <c>ConvertToUnmanaged</c> interface method being implemented.</param>
-        /// <param name="convertToManagedInterfaceMethod">The <c>ConvertToManaged</c> interface method being implemented.</param>
         /// <param name="isValueType">Indicates whether the element marshaller type should be emitted as a value type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ElementMarshaller(
-            SzArrayTypeSignature arrayType,
+            TypeSignature elementType,
             TypeSignature interfaceType,
             MemberReference convertToUnmanagedInterfaceMethod,
-            MemberReference convertToManagedInterfaceMethod,
             bool isValueType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = arrayType.BaseType;
-
             // Select the attributes and base type depending on whether we want a value type or not
             (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
                 ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType.Import(module))
@@ -223,8 +215,8 @@ internal partial class InteropTypeDefinitionFactory
 
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
+                ns: InteropUtf8NameFactory.TypeNamespace(elementType),
+                name: InteropUtf8NameFactory.TypeName(elementType, "ElementMarshaller"),
                 attributes: attributes,
                 baseType: baseType)
             {
@@ -233,7 +225,6 @@ internal partial class InteropTypeDefinitionFactory
 
             // Rewriting labels
             CilInstruction nop_convertToUnmanaged = new(Nop);
-            CilInstruction nop_convertToManaged = new(Nop);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -263,35 +254,6 @@ internal partial class InteropTypeDefinitionFactory
                 parameterType: elementType,
                 method: convertToUnmanagedMethod,
                 marker: nop_convertToUnmanaged);
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static <ELEMENT_TYPE> ConvertToManaged(<ABI_ELEMENT_TYPE> value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [elementType.GetAbiType(interopReferences).Import(module)]))
-            {
-                CilInstructions =
-                {
-                    { nop_convertToManaged },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'ConvertToManaged' method
-            elementMarshallerType.AddMethodImplementation(
-                declaration: convertToManagedInterfaceMethod.Import(module),
-                method: convertToManagedMethod);
-
-            // Track rewriting the managed value for 'ConvertToManaged'
-            emitState.TrackManagedParameterMethodRewrite(
-                parameterType: elementType,
-                method: convertToManagedMethod,
-                marker: nop_convertToManaged,
-                parameterIndex: 0);
 
             return elementMarshallerType;
         }
