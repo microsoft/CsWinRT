@@ -17,28 +17,28 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal partial class InteropTypeDefinitionFactory
 {
     /// <summary>
-    /// Helpers for element marshaller types for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
+    /// Helpers for element marshaller types for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
     /// </summary>
     /// <remarks>
     /// The resulting element marshaller types can also be reused for other generic collection types.
     /// </remarks>
-    public static class IReadOnlyListElementMarshaller
+    public static class IEnumeratorElementMarshaller
     {
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for an unmanaged value type.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
-            GenericInstanceTypeSignature readOnlyListType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
             // Get the constructed 'IWindowsRuntimeUnmanagedValueTypeElementMarshaller<T, TAbi>' interface type
@@ -59,18 +59,18 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a managed value type.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
-            SzArrayTypeSignature readOnlyListType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.BaseType;
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
 
             // Get the constructed 'IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>' interface type
@@ -124,18 +124,18 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
-            SzArrayTypeSignature readOnlyListType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)readOnlyListType.BaseType;
+            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)enumeratorType.TypeArguments[0];
             TypeSignature keyType = elementType.TypeArguments[0];
             TypeSignature valueType = elementType.TypeArguments[1];
 
@@ -160,18 +160,18 @@ internal partial class InteropTypeDefinitionFactory
         /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a reference type.
         /// </summary>
-        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
-            SzArrayTypeSignature readOnlyListType,
+            GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
-            TypeSignature elementType = readOnlyListType.BaseType;
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
 
             // Get the constructed 'IWindowsRuntimeReferenceTypeElementMarshaller<T>' interface type
             TypeSignature interfaceType = interopReferences
