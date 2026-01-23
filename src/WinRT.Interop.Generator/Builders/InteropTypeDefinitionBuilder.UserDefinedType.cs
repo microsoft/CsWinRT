@@ -281,23 +281,14 @@ internal partial class InteropTypeDefinitionBuilder
             }
             else
             {
-                TypeSignature? interfaceType = null;
-
-                // Go through all implemented interfaces, and find the first Windows Runtime interface
-                foreach (TypeSignature interfaceSignature in userDefinedType.EnumerateAllInterfaces())
+                // Get the most derived Windows Runtime interface for the type, to use for the runtime class name
+                if (!UserDefinedTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
+                    userDefinedType: userDefinedType,
+                    interopReferences: interopReferences,
+                    interfaceType: out TypeSignature? interfaceType))
                 {
-                    if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
-                    {
-                        interfaceType = interfaceSignature;
-
-                        break;
-                    }
-                }
-
-                // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
-                // been added to the set of exposed types during discovery. However, let's validate that here too.
-                if (interfaceType is null)
-                {
+                    // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
+                    // been added to the set of exposed types during discovery. However, let's validate that here too.
                     throw WellKnownInteropExceptions.PrimaryWindowsRuntimeInterfaceNotFoundError(userDefinedType);
                 }
 
