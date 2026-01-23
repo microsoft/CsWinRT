@@ -8,7 +8,11 @@ using Windows.Foundation;
 
 #pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
 
+#if CSWINRT_REFERENCE_PROJECTION
 [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
+#else
+[assembly: System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute]
+#endif
 
 namespace WindowsRuntime.InteropServices;
 

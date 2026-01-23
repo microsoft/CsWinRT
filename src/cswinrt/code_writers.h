@@ -113,8 +113,7 @@ namespace cswinrt
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String) &&
-                    (type != fundamental_type::Char);
+                return (type != fundamental_type::String);
             },
             [&](auto&&)
             {
@@ -1210,10 +1209,6 @@ namespace cswinrt
                 }
                 else
                 {
-                    if (type == fundamental_type::Char)
-                    {
-                        type = fundamental_type::UInt16;
-                    }
                     write_fundamental_type(w, type);
                 }
             });
@@ -1526,9 +1521,6 @@ namespace cswinrt
         case fundamental_type::String:
             w.write("%.Handle", name);
             break;
-        case fundamental_type::Char:
-            w.write("(ushort)%", name);
-            break;
         default:
             w.write("%", name);
             break;
@@ -1540,10 +1532,6 @@ namespace cswinrt
         if (type == fundamental_type::String)
         {
             w.write(R"(MarshalString.FromAbi(%))", name);
-        }
-        else if (type == fundamental_type::Char)
-        {
-            w.write(is_boxed ? "(char)(ushort)(object)%" : "(char)%", name);
         }
         else if (is_boxed)
         {
@@ -4250,11 +4238,7 @@ return %.AsValue();
                     },
                     [&](fundamental_type const& td)
                     {
-                        if (td == fundamental_type::Char)
-                        {
-                            w.write("    % = (ushort)value.%", field_name, field_name);
-                        }
-                        else if (td == fundamental_type::String)
+                        if (td == fundamental_type::String)
                         {
                             // TODO: replace with cswinrt 3.0
                             w.write("    % = HStringMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
@@ -4351,11 +4335,7 @@ return %.AsValue();
                     },
                     [&](fundamental_type const& td)
                     {
-                        if (td == fundamental_type::Char)
-                        {
-                            w.write("    (char)value.%", field_name);
-                        }
-                        else if (td == fundamental_type::String)
+                        if (td == fundamental_type::String)
                         {
                             w.write("    HStringMarshaller.ConvertToManaged(value.%)", field_name);
                         }
@@ -5666,12 +5646,6 @@ CopyToUnmanagedUnsafe_%(
 
                 if (marshaler_type.empty())
                 {
-                    if (param_type == "char")
-                    {
-                        w.write("(ushort)%%",
-                            source, bind<write_escaped_identifier>(param_name));
-                        return;
-                    }
                     w.write("%%%",
                         category == param_category::ref ? "_" : "",
                         source, bind<write_escaped_identifier>(param_name));
@@ -5738,11 +5712,6 @@ CopyToUnmanagedUnsafe_%(
                     w.write("%.FromAbi(%)", param_type, source);
                     return;
                 }
-                if (param_type == "char")
-                {
-                    w.write(is_generic() ? "(char)(ushort)%" : "(char)%", source);
-                    return;
-                }
                 w.write("%%", param_cast, source);
                 return;
             }
@@ -5772,11 +5741,6 @@ CopyToUnmanagedUnsafe_%(
                 if (local_type == "void*")
                 {
                     w.write("%.FromManaged(%)", param_type, source);
-                    return;
-                }
-                if (param_type == "char")
-                {
-                    w.write("(ushort)%", source);
                     return;
                 }
                 w.write("%%", param_cast, source);
@@ -6109,10 +6073,6 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                             m.local_type = m.is_out() ? "void*" : "MarshalString";
                             m.is_pinnable = (m.category == param_category::in);
                         }
-                    }
-                    else if (type == fundamental_type::Char)
-                    {
-                        m.skip_disposer = true;
                     }
                 },
                 [&](auto const&) {});
@@ -7253,11 +7213,7 @@ static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] obje
             else if (marshaler_type.empty())
             {
                 std::string_view format_string;
-                if (param_type == "char")
-                {
-                    format_string = "(char)%";
-                }
-                else if (category == param_category::ref)
+                if (category == param_category::ref)
                 {
                     format_string = "*%";
                 }
@@ -7345,14 +7301,7 @@ CopyToUnmanaged_%(null, __%, __%Size, (%*)%);
                     }
                     else
                     {
-                        if (param_type == "char")
-                        {
-                            w.write("(ushort)%;", param_local);
-                        }
-                        else
-                        {
-                            w.write("%;", param_local);
-                        }
+                        w.write("%;", param_local);
                     }
                 }
                 else if (is_boxed_value)
