@@ -899,7 +899,7 @@ internal partial class InteropGenerator
             }
             catch (Exception e)
             {
-                WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
+                WellKnownInteropExceptions.IList1TypeCodeGenerationError(typeSignature, e).ThrowOrAttach(e);
             }
         }
     }

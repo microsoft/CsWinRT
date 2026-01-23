@@ -96,7 +96,7 @@ internal partial class InteropGenerator
             {
                 outputAssemblyPath = destinationPath;
             }
-            else if (Path.GetFileName(Path.GetDirectoryName(dllEntry.FullName)) == "references")
+            else if (Path.IsWithinDirectoryName(dllEntry.FullName, "references"))
             {
                 referencePaths.Add(destinationPath);
             }
