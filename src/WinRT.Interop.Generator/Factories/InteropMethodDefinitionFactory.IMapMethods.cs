@@ -175,12 +175,12 @@ internal partial class InteropMethodDefinitionFactory
 
             // Define the 'Remove' method as follows:
             //
-            // public static bool Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            // public static void Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
             MethodDefinition removeMethod = new(
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module)]))
@@ -189,10 +189,8 @@ internal partial class InteropMethodDefinitionFactory
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
-            //   [2]: 'bool' (for 'result')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_result = new(interopReferences.CorLibTypeFactory.Boolean);
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);
@@ -200,12 +198,12 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction nop_ld_key = new(Nop);
             CilInstruction nop_finally_key = new(Nop);
             CilInstruction ldloca_s_0_finally_this = new(Ldloca_S, loc_0_thisValue);
-            CilInstruction ldloc_2_finally_end_this = new(Ldloc_2);
+            CilInstruction ret_finally_end_this = new(Ret);
 
             // Create a method body for the 'Remove' method
             removeMethod.CilMethodBody = new CilMethodBody()
             {
-                LocalVariables = { loc_0_thisValue, loc_1_thisPtr, loc_2_result },
+                LocalVariables = { loc_0_thisValue, loc_1_thisPtr },
                 Instructions =
                 {
                     // Initialize 'thisValue'
@@ -223,14 +221,12 @@ internal partial class InteropMethodDefinitionFactory
                     { Stloc_1 },
                     { Ldloc_1 },
                     { nop_ld_key },
-                    { Ldloca_S, loc_2_result },
-                    { Conv_U },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField("Remove"u8) },
                     { Calli, WellKnownTypeSignatureFactory.IDictionary2RemoveImpl(keyAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
-                    { Leave_S, ldloc_2_finally_end_this.CreateLabel() },
+                    { Leave_S, ret_finally_end_this.CreateLabel() },
 
                     // Optional 'finally' block for the marshalled key
                     { nop_finally_key },
@@ -241,8 +237,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Endfinally },
 
                     // return result;
-                    { ldloc_2_finally_end_this },
-                    { Ret }
+                    { ret_finally_end_this }
                 },
                 ExceptionHandlers =
                 {
@@ -252,7 +247,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryStart = nop_try_this.CreateLabel(),
                         TryEnd = ldloca_s_0_finally_this.CreateLabel(),
                         HandlerStart = ldloca_s_0_finally_this.CreateLabel(),
-                        HandlerEnd = ldloc_2_finally_end_this.CreateLabel()
+                        HandlerEnd = ret_finally_end_this.CreateLabel()
                     }
                 }
             };
