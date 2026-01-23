@@ -181,7 +181,7 @@ internal partial class InteropMethodDefinitionFactory
             // Get the appropriate 'GetMany' method descriptor to delegate the logic to
             IMethodDescriptor getManyMethod = elementType switch
             {
-                _ when elementType.IsBlittable(interopReferences) => interopReferences.IEnumeratorAdapterBlittableValueTypeGetMany(enumeratorType),
+                _ when elementType.IsBlittable(interopReferences) => interopReferences.IEnumeratorAdapterBlittableValueTypeGetMany(elementType),
                 _ when elementType.IsConstructedKeyValuePairType(interopReferences) => interopReferences.IEnumeratorAdapterKeyValuePairTypeGetMany(
                     keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
                     valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
