@@ -447,6 +447,13 @@ internal partial class InteropGenerator
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
+                InteropTypeDefinitionBuilder.IEnumerator1.ElementMarshaller(
+                    enumeratorType: typeSignature,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    elementMarshallerType: out _);
+
                 InteropTypeDefinitionBuilder.IEnumerator1.ImplType(
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,

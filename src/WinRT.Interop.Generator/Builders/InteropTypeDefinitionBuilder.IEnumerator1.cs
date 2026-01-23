@@ -431,6 +431,81 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the element marshaller for some <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="elementMarshallerType">The resulting element marshaller type.</param>
+        public static void ElementMarshaller(
+            GenericInstanceTypeSignature enumeratorType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition? elementMarshallerType)
+        {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+
+            // Immediately skip element types that don't require generated element marshallers
+            if (elementType.IsBlittable(interopReferences) ||
+                elementType.IsTypeOfObject() ||
+                elementType.IsTypeOfString() ||
+                elementType.IsTypeOfType(interopReferences) ||
+                elementType.IsTypeOfException(interopReferences))
+            {
+                elementMarshallerType = null;
+
+                return;
+            }
+
+            // Emit the right marshaller based on the element type (same as for SZ arrays, see notes there)
+            if (elementType.IsConstructedKeyValuePairType(interopReferences))
+            {
+                elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.KeyValuePair(
+                    enumeratorType: enumeratorType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+            }
+            else if (elementType.IsManagedValueType(interopReferences))
+            {
+                elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.ManagedValueType(
+                    enumeratorType: enumeratorType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+            }
+            else if (elementType.IsValueType)
+            {
+                elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.UnmanagedValueType(
+                    enumeratorType: enumeratorType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+            }
+            else
+            {
+                elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.ReferenceType(
+                    enumeratorType: enumeratorType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+            }
+
+            // Track the element marshaller type (needed for 'GetMany' for 'IEnumerator<T>', 'IReadOnlyList<T>' and 'IList<T>')
+            emitState.TrackTypeDefinition(elementMarshallerType, elementType, "ElementMarshaller");
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
