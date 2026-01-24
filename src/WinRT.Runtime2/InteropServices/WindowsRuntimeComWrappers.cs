@@ -106,7 +106,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             return true;
         }
 
-        comObject = (nint)null;
+        comObject = default;
 
         return false;
     }

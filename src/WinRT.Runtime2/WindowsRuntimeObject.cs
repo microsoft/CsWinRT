@@ -468,7 +468,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // We explicitly don't handle overridable interfaces and 'IInspectable'
         if (IsOverridableInterface(in iid) || WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid || WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid)
         {
-            ppv = (nint)null;
+            ppv = default;
 
             return CustomQueryInterfaceResult.NotHandled;
         }

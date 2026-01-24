@@ -151,7 +151,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <inheritdoc cref="TryAsNative(in Guid, out void*)"/>
     internal HRESULT TryAsNative(in Guid iid, out nint ppv)
     {
-        ppv = (nint)null;
+        ppv = default;
 
         AddRefUnsafe();
 
