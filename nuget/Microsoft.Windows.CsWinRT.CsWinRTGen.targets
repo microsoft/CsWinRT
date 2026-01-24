@@ -170,12 +170,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
          -->
         <_ReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
         <_ReferenceAssemblyPaths Remove="@(ReferencePath)" />
+
+        <_ImplementationAssemblyPaths Include="@(ReferencePath)" />
+        <_ImplementationAssemblyPaths Remove="@(_ImplementationAssemblyPaths)" Condition="'@(RuntimePackAsset -> '%(Filename)%(Extension)')' == '%(Filename)%(Extension)'" />
+        <_ImplementationAssemblyPaths Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.AssetType)' == 'runtime'"/>
     </ItemGroup>
 
     <!-- Invoke 'cswinrtgen' -->
     <RunCsWinRTGenerator
       ReferenceAssemblyPaths="@(_ReferenceAssemblyPaths)"
-      ImplementationAssemblyPaths="@(ReferencePath)"      
+      ImplementationAssemblyPaths="@(_ImplementationAssemblyPaths)"      
       OutputAssemblyPath="@(IntermediateAssembly)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
