@@ -590,11 +590,10 @@ internal partial class InteropGenerator
                     module: module,
                     iterableMethodsType: out TypeDefinition iterableMethodsType);
 
-                InteropTypeDefinitionBuilder.IEnumerable1.IEnumerableMethods(
+                InteropTypeDefinitionBuilder.IEnumerable1.Methods(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     enumerableMethodsType: out TypeDefinition enumerableMethodsType);
 
