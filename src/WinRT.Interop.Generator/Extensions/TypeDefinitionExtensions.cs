@@ -226,6 +226,27 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Enumerates all base types of the specified type.
+        /// </summary>
+        /// <returns>The sequence of base types for the input type.</returns>
+        public IEnumerable<TypeDefinition> EnumerateBaseTypes()
+        {
+            TypeDefinition currentDefinition = type;
+
+            while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
+            {
+                // If we can't resolve the current base type, we have to stop.
+                // Callers should validate the type hierarchy before calling this.
+                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                {
+                    yield break;
+                }
+
+                yield return currentDefinition;
+            }
+        }
+
+        /// <summary>
         /// Enumerates all base types of the specified type, including itself.
         /// </summary>
         /// <returns>The sequence of base types for the input type, including itself.</returns>
@@ -237,8 +258,7 @@ internal static class TypeDefinitionExtensions
 
             while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
-                // If we can't resolve the current base type, we have to stop.
-                // Callers should validate the type hierarchy before calling this.
+                // Same logic as above
                 if (!baseType.IsFullyResolvable(out currentDefinition!))
                 {
                     yield break;
