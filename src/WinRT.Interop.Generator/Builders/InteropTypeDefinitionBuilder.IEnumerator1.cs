@@ -32,7 +32,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The interop module being built.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-        /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.
+        /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.</param>
         public static void IID(
             GenericInstanceTypeSignature enumeratorType,
             InteropDefinitions interopDefinitions,
