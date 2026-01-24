@@ -7337,7 +7337,15 @@ CopyToUnmanaged_%(null, __%, __%Size, (%*)%);
                 return;
             }
 
-            w.write("global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);\n", param_type, param_name);
+            w.write(R"(
+if (__%_arrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
+}
+)",
+                param_name,
+                param_type,
+                param_name);
         }
     };
 
