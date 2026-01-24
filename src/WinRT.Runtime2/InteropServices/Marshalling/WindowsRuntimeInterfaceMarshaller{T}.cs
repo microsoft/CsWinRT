@@ -105,7 +105,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
     /// <param name="result">The resulting <see cref="WindowsRuntimeObjectReferenceValue"/> for the marshalled interface.</param>
     /// <returns>Whether <paramref name="result"/> was successfully retrieved (otherwise it will be just <see langword="default"/>).</returns>
     /// <remarks><inheritdoc cref="ConvertToUnmanaged" path="/remarks/node()"/></remarks>
-    public static bool TryConvertToUnmanagedExact(T? value, scoped in Guid iid, out WindowsRuntimeObjectReferenceValue result)
+    internal static bool TryConvertToUnmanagedExact(T? value, scoped in Guid iid, out WindowsRuntimeObjectReferenceValue result)
     {
         if (value is null)
         {
