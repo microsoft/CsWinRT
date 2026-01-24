@@ -15,7 +15,6 @@
     <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />	
-    <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>

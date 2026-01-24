@@ -26,7 +26,7 @@ internal partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetAt</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="getAtMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -136,7 +136,7 @@ internal partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Size</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="sizeMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="sizeMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <remarks>
@@ -233,7 +233,7 @@ internal partial class InteropMethodDefinitionFactory
         /// Creates a <see cref="MethodDefinition"/> for the <c>IndexOf</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="indexOfMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="indexOfMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -287,8 +287,8 @@ internal partial class InteropMethodDefinitionFactory
             if (elementType.IsTypeOfString())
             {
                 adapterIndexOfMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
-                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf()
-                    : interopReferences.IListAdapterOfStringIndexOf();
+                    ? interopReferences.IReadOnlyListAdapterOfStringIndexOf
+                    : interopReferences.IListAdapterOfStringIndexOf;
             }
             else
             {
@@ -367,12 +367,11 @@ internal partial class InteropMethodDefinitionFactory
             return indexOfImplMethod;
         }
 
-#pragma warning disable IDE0017
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="getAtMethod">The interface method to invoke on <paramref name="readOnlyListType"/>.</param>
+        /// <param name="getManyMethod">The adapter method to invoke on <paramref name="readOnlyListType"/> (if <see langword="null"/>, will be automatically selected).</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -381,18 +380,43 @@ internal partial class InteropMethodDefinitionFactory
         /// </remarks>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature readOnlyListType,
-            MemberReference getAtMethod,
+            IMethodDescriptor? getManyMethod,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
+            // Get the appropriate 'GetMany' method descriptor if the caller hasn't provided one
+            getManyMethod ??= elementType switch
+            {
+                _ when elementType.IsBlittable(interopReferences) => interopReferences.IReadOnlyListAdapterBlittableValueTypeGetMany(elementType),
+                _ when elementType.IsConstructedKeyValuePairType(interopReferences) => interopReferences.IReadOnlyListAdapterKeyValuePairTypeGetMany(
+                    keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsManagedValueType(interopReferences) => interopReferences.IReadOnlyListAdapterManagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsValueType => interopReferences.IReadOnlyListAdapterUnmanagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsTypeOfObject() => interopReferences.IReadOnlyListAdapterOfObjectGetMany,
+                _ when elementType.IsTypeOfString() => interopReferences.IReadOnlyListAdapterOfStringGetMany,
+                _ when elementType.IsTypeOfType(interopReferences) => interopReferences.IReadOnlyListAdapterOfTypeGetMany,
+                _ when elementType.IsTypeOfException(interopReferences) => interopReferences.IReadOnlyListAdapterOfExceptionGetMany,
+                _ => interopReferences.IReadOnlyListAdapterReferenceTypeGetMany(
+                    elementType: elementType,
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature())
+            };
+
             // Define the 'GetMany' method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            // private static int GetMany(void* thisPtr, uint size, <ABI_ELEMENT_TYPE>* items, uint* result)
-            MethodDefinition indexOfMethod = new(
+            // private static int GetMany(void* thisPtr, uint startIndex, uint itemsSize, <ABI_ELEMENT_TYPE>* items, uint* writtenCount)
+            MethodDefinition getManyImplMethod = new(
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -400,23 +424,78 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32,
+                        module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences).Import(module).MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
 
+            // Labels for jumps
+            CilInstruction ldc_I4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_s_4_tryStart = CilInstruction.CreateLdarg(4);
+            CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
             // Create a method body for the 'GetMany' method
-            indexOfMethod.CilMethodBody = new CilMethodBody()
+            getManyImplMethod.CilMethodBody = new CilMethodBody()
             {
+                // Declare 1 variable:
+                //   [0]: 'int' (the 'HRESULT' to return)
+                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
                 Instructions =
                 {
-                    { Ldnull },
-                    { Throw } // TODO
+                    // Return 'E_POINTER' if either pointer argument is 'null'
+                    { Ldarg_3 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Beq_S, ldc_I4_e_pointer.CreateLabel() },
+                    { CilInstruction.CreateLdarg(4) },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { ldc_I4_e_pointer },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_s_4_tryStart },
+                    { Ldarg_0 },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType).Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Ldarg_3 },
+                    { Call, getManyMethod.Import(module) },
+                    { Stind_I4 },
+                    { Ldc_I4_0 },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [0]
+                    { ldloc_0_returnHResult  },
+                    { Ret }
                 },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_s_4_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                        ExceptionType = interopReferences.Exception.Import(module)
+                    }
+                }
             };
 
-            return indexOfMethod;
+            return getManyImplMethod;
         }
     }
 }

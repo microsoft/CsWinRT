@@ -113,9 +113,7 @@ namespace cswinrt
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String) && 
-                    (type != fundamental_type::Char) &&
-                    (type != fundamental_type::Boolean);
+                return (type != fundamental_type::String);
             },
             [&](auto&&)
             {
@@ -417,7 +415,7 @@ namespace cswinrt
 
     void write_interop_assembly_name(writer& w, TypeDef const& type)
     {
-		auto typeNamespace = type.TypeNamespace();
+        auto typeNamespace = type.TypeNamespace();
         if (auto proj = get_mapped_type(typeNamespace, type.TypeName()))
         {
             typeNamespace = proj->mapped_namespace;
@@ -445,7 +443,7 @@ namespace cswinrt
         else
         {
             std::filesystem::path db_path(type.get_database().path());
-			auto metadata = db_path.stem().string();
+            auto metadata = db_path.stem().string();
 
             // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
             std::replace(metadata.begin(), metadata.end(), '.', '-');
@@ -473,7 +471,7 @@ namespace cswinrt
             if (auto proj = get_mapped_type(typeNamespace, typeName))
             {
                 typeNamespace = std::string(proj->mapped_namespace);
-				typeName = std::string(proj->mapped_name);
+                typeName = std::string(proj->mapped_name);
             }
 
             // Replace generic arity with ' due to that is what interop dll uses.
@@ -482,10 +480,9 @@ namespace cswinrt
             // Arrays types are enclosed in <>
             if (nameType == typedef_name_type::ArrayMarshaller)
             {
-                w.write("<");
-			}
-
-            if (nameType == typedef_name_type::Projected)
+                w.write("%.<%%", typeNamespace, bind<write_interop_assembly_name>(type), typeName);
+            }
+            else if (nameType == typedef_name_type::Projected)
             {
                 // Replace namespace seperator with _ within the generic due to that is what interop dll uses.
                 std::replace(typeNamespace.begin(), typeNamespace.end(), '.', '-');
@@ -503,7 +500,7 @@ namespace cswinrt
             {
                 w.write("<%>",
                     bind_list<write_interop_dll_type_name>("|", generic_args, typedef_name_type::Projected));
-			}
+            }
             else
             {
                 separator s{ w, "|" };
@@ -535,7 +532,7 @@ namespace cswinrt
                 }
                 else
                 {
-                    w.write("ABI.System.<<#corlib>Object>");
+                    w.write("ABI.System.<object>");
                 }
             },
             [&](guid_type)
@@ -564,7 +561,7 @@ namespace cswinrt
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
-				write_interop_dll_type_name_for_typedef(w, type.generic_type, nameType, type.generic_args);
+                write_interop_dll_type_name_for_typedef(w, type.generic_type, nameType, type.generic_args);
             },
             [&](fundamental_type const& type)
             {
@@ -574,7 +571,7 @@ namespace cswinrt
                 }
                 else
                 {
-                    w.write("ABI.System.<<#corlib>%>", bind<write_fundamental_non_projected_type>(type));
+                    w.write("ABI.System.<%>", bind<write_fundamental_type>(type));
                 }
             },
             [&](auto const&) {});
@@ -1212,14 +1209,6 @@ namespace cswinrt
                 }
                 else
                 {
-                    if (type == fundamental_type::Boolean)
-                    {
-                        type = fundamental_type::UInt8;
-                    }
-                    if (type == fundamental_type::Char)
-                    {
-                        type = fundamental_type::UInt16;
-                    }
                     write_fundamental_type(w, type);
                 }
             });
@@ -1245,7 +1234,7 @@ namespace cswinrt
             w.write(", uint __%Size, void* %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(", uint* __%Size, void** %", param_name, param_name);
+            w.write(", uint* __%Size, %** %", param_name, bind<write_abi_type>(semantics), param_name);
             break;
         }
     }
@@ -1293,7 +1282,7 @@ namespace cswinrt
             w.write(", uint, void*");
             break;
         case param_category::receive_array:
-            w.write(", uint*, void**");
+            w.write(", uint*, %**", bind<write_abi_type>(semantics));
             break;
         }
     }
@@ -1305,7 +1294,7 @@ namespace cswinrt
             auto semantics = get_type_semantics(return_sig.Type());
             auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
             return_sig.Type().is_szarray() ?
-                w.write(", uint* __%Size, void** %", signature.return_param_name(), return_param) :
+                w.write(", uint* __%Size, %** %", signature.return_param_name(), bind<write_abi_type>(semantics), return_param) :
                 w.write(", %* %", bind<write_abi_type>(semantics), return_param);
         }
     }
@@ -1327,7 +1316,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", uint*, void**") :
+                w.write(", uint*, %**", bind<write_abi_type>(semantics)) :
                 w.write(", %*", bind<write_abi_type>(semantics));
         }
     }
@@ -1532,12 +1521,6 @@ namespace cswinrt
         case fundamental_type::String:
             w.write("%.Handle", name);
             break;
-        case fundamental_type::Boolean:
-            w.write("(byte)(% ? 1 : 0)", name);
-            break;
-        case fundamental_type::Char:
-            w.write("(ushort)%", name);
-            break;
         default:
             w.write("%", name);
             break;
@@ -1549,14 +1532,6 @@ namespace cswinrt
         if (type == fundamental_type::String)
         {
             w.write(R"(MarshalString.FromAbi(%))", name);
-        }
-        else if (type == fundamental_type::Boolean)
-        {
-            w.write(is_boxed ? "((byte)(object)% != 0)" : "(% != 0)", name);
-        }
-        else if (type == fundamental_type::Char)
-        {
-            w.write(is_boxed ? "(char)(ushort)(object)%" : "(char)%", name);
         }
         else if (is_boxed)
         {
@@ -1588,6 +1563,12 @@ namespace cswinrt
 
     void write_abi_static_method_call(writer& w, type_semantics const& iface, MethodDef const& method, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         method_signature signature{ method };
         w.write("%.%(%%%)", bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             method.Name(),
@@ -1598,6 +1579,12 @@ namespace cswinrt
 
     void write_unsafe_accessor_static_method_call(writer& w, std::string const& unsafeAccessorMethod, MethodDef const& method, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         method_signature signature{ method };
         w.write("%(null, %%%)",
             unsafeAccessorMethod,
@@ -1608,6 +1595,12 @@ namespace cswinrt
 
     void write_abi_get_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%.%(%)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
@@ -1616,6 +1609,12 @@ namespace cswinrt
 
     void write_abi_set_property_static_method_call(writer& w, type_semantics const& iface, Property const& prop, std::string const& targetObjRef)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%.%(%, value)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             prop.Name(),
@@ -1624,6 +1623,12 @@ namespace cswinrt
 
     void write_unsafe_accessor_property_static_method_call(writer& w, std::string const& unsafeAccessorMethod, std::string const& targetObjRef, bool get)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         w.write("%(null, %%)",
             unsafeAccessorMethod,
             targetObjRef,
@@ -1632,6 +1637,12 @@ namespace cswinrt
 
     void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
     {
+        if (settings.reference_projection)
+        {
+            w.write("throw null");
+            return;
+        }
+
         bool is_unsafe_accessor_call = false;
         w.write("%(%, %).%(value)",
             bind([&](writer& w) {
@@ -2611,6 +2622,22 @@ private static % _% = new %("%.%", %.IID);
     void write_activation_factory_objref_definition(writer& w, TypeDef const& classType)
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
+        if (settings.reference_projection)
+        {
+            w.write(R"(
+private static WindowsRuntimeObjectReference %
+{
+    get
+    {
+        throw null;
+    }
+}
+)",
+            objrefname);
+            return;
+        }
+
+
         w.write(R"(
 private static WindowsRuntimeObjectReference %
 {
@@ -2636,6 +2663,22 @@ private static WindowsRuntimeObjectReference %
     void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
+        if (settings.reference_projection)
+        {
+            w.write(R"(
+private static WindowsRuntimeObjectReference %
+{
+    get
+    {
+        throw null;
+    }
+}
+)",
+            objrefname);
+            return;
+        }
+
+
         w.write(R"(
 private static WindowsRuntimeObjectReference %
 {
@@ -2914,6 +2957,11 @@ if (GetType() == typeof(%))
             {
                 write_static_composing_factory_method(w, composable_type, method);
             }
+        }
+
+        if (settings.reference_projection)
+        {
+            return;
         }
 
         w.write(R"(
@@ -4190,15 +4238,7 @@ return %.AsValue();
                     },
                     [&](fundamental_type const& td)
                     {
-                        if (td == fundamental_type::Boolean)
-                        {
-                            w.write("    % = value.% ? (byte)1 : (byte)0", field_name, field_name);
-                        }
-                        else if (td == fundamental_type::Char)
-                        {
-                            w.write("    % = (ushort)value.%", field_name, field_name);
-                        }
-                        else if (td == fundamental_type::String)
+                        if (td == fundamental_type::String)
                         {
                             // TODO: replace with cswinrt 3.0
                             w.write("    % = HStringMarshaller.ConvertToUnmanaged(value.%)", field_name, field_name);
@@ -4295,15 +4335,7 @@ return %.AsValue();
                     },
                     [&](fundamental_type const& td)
                     {
-                        if (td == fundamental_type::Boolean)
-                        {
-                            w.write("    value.% != 0", field_name);
-                        }
-                        else if (td == fundamental_type::Char)
-                        {
-                            w.write("    (char)value.%", field_name);
-                        }
-                        else if (td == fundamental_type::String)
+                        if (td == fundamental_type::String)
                         {
                             w.write("    HStringMarshaller.ConvertToManaged(value.%)", field_name);
                         }
@@ -4564,11 +4596,28 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %);
+        return %;
     }
 }
 
-)", name, use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None", name, is_type_blittable(type) ? projection_name : abi_name, iid_property_name);
+)", name,
+    use_tracker_object_support(type) ? "CreateComInterfaceFlags.TrackerSupport" : "CreateComInterfaceFlags.None",
+    name,
+    bind([&](writer& w) {
+        if (is_type_blittable(type))
+        {
+            w.write("WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %)",
+                projection_name,
+                iid_property_name);
+        }
+        else
+        {
+            w.write("%Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<%>(value, in %))",
+                name,
+                abi_name,
+                iid_property_name);
+        }
+    }));
     }
 
     void write_interface_entries_impl(writer& w, TypeDef const& type)
@@ -4734,12 +4783,33 @@ R"(
 
     void write_struct_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
-        w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference<%.%>\")]\n",
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
+        w.write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<%.%>\")]\n",
             type.TypeNamespace(), type.TypeName());
+    }
+
+    void write_class_winrt_classname_attribute(writer& w, TypeDef const& type)
+    {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
+        w.write("[WindowsRuntimeClassName(%.RuntimeClassName)]\n",
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
     }
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         w.write("[ABI.%.%ComWrappersMarshaller]\n",
             type.TypeNamespace(), type.TypeName());
     }
@@ -5140,7 +5210,6 @@ event % %;)",
         bool marshal_by_object_reference_value;
         bool has_generic_instantiation;
         std::vector<generic_type_instance> generic_instantiations;
-        std::string interface_guid;
         std::string interface_init_rcw_helper;
         std::string interop_dll_type;
         bool skip_disposer;
@@ -5207,7 +5276,7 @@ event % %;)",
             if (!is_generic())
             {
                 return is_array() ?
-                    w.write_temp("__%_length, &__%_data",
+                    w.write_temp("__%_length, __%_data",
                         param_name, param_name) :
                     get_marshaler_local(w);
             }
@@ -5215,6 +5284,18 @@ event % %;)",
                 w.write_temp("(__params[%], __params[%])",
                     param_index, param_index + 1) :
                 w.write_temp("__params[%]", param_index);
+        }
+
+        std::string get_inline_array_type() const
+        {
+            if (local_type == "void*")
+            {
+                return "nint";
+            }
+            else
+            {
+                return local_type;
+            }
         }
 
         void write_convert_to_managed_function(writer& w) const
@@ -5225,12 +5306,13 @@ event % %;)",
                 {
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-static extern %[] ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, void** data);
+static extern %[] ConvertToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, %* data);
 
 )",
 param_type,
 param_name,
-interop_dll_type);
+interop_dll_type,
+local_type);
                 }
                 else
                 {
@@ -5252,11 +5334,12 @@ interop_dll_type);
             {
                 w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-static extern void Dispose_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, void** data);
+static extern void Dispose_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, %* data);
 
 )",
 param_name,
-interop_dll_type);
+interop_dll_type,
+local_type);
             }
         }
 
@@ -5266,11 +5349,12 @@ interop_dll_type);
             {
                 w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
-static extern void Free_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, void** data);
+static extern void Free_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, %* data);
 
 )",
 param_name,
-interop_dll_type);
+interop_dll_type,
+local_type);
             }
         }
 
@@ -5282,12 +5366,13 @@ interop_dll_type);
                 {
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+static extern void ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, out uint length, out %* data);
 
 )",
 param_name,
 interop_dll_type,
-param_type);
+param_type,
+local_type);
                 }
                 else
                 {
@@ -5309,7 +5394,7 @@ param_type);
             {
                 w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanagedUnsafe")]
-static extern void CopyToUnmanagedUnsafe_%([UnsafeAccessorType("string_ArrayMarshaller, WinRT.Interop")] object _, ReadOnlySpan<string> value, uint destinationSize, void* destination, uint headersSize, void* headers);
+static extern void CopyToUnmanagedUnsafe_%([UnsafeAccessorType("ABI.System.<string>ArrayMarshaller, WinRT.Interop")] object _, ReadOnlySpan<string> value, uint destinationSize, void* destination, uint headersSize, void* headers);
 
 )",
 param_name);
@@ -5320,12 +5405,13 @@ param_name);
                 {
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, uint length, void** data);
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, uint length, %* data);
 
 )",
 param_name,
 interop_dll_type,
-param_type);
+param_type,
+local_type);
                 }
             }
         }
@@ -5338,11 +5424,12 @@ param_type);
                 {
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, void** data, Span<%> span);
+static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, %* data, Span<%> span);
 
 )",
 param_name,
 interop_dll_type,
+local_type,
 param_type);
                 }
             }
@@ -5361,7 +5448,7 @@ param_type);
                 if (is_out())
                 {
                     w.write("uint __%_length = default;\n", param_name);
-                    w.write("void* __%_data = default;\n", param_name);
+                    w.write("%* __%_data = default;\n", local_type, param_name);
                 }
                 else
                 {
@@ -5373,19 +5460,19 @@ Span<%> __%_span = %.Length <= 16
     : (__%_arrayFromPool = global::System.Buffers.ArrayPool<%>.Shared.Rent(%.Length));
 )",
                         // SkipInit
-                        local_type,
+                        get_inline_array_type(),
                         param_name,
                         // array
-                        local_type,
+                        get_inline_array_type(),
                         param_name,
                         // span
-                        local_type,
+                        get_inline_array_type(),
                         param_name,
                         get_escaped_param_name(w),
                         param_name,
                         get_escaped_param_name(w),
                         param_name,
-                        local_type,
+                        get_inline_array_type(),
                         get_escaped_param_name(w));
 
                     if (!is_ref() && marshaler_type == "HStringMarshaller")
@@ -5552,7 +5639,12 @@ CopyToUnmanagedUnsafe_%(
             else if (!is_pinnable && is_pinnable_array_data() && !is_ref())
             {
                 write_copy_to_unmanaged_function(w);
-                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, &_%);\n", param_name, get_escaped_param_name(w), get_escaped_param_name(w), param_name);
+                w.write("CopyToUnmanaged_%(null, %, (uint)%.Length, (%*)_%);\n",
+                    param_name,
+                    get_escaped_param_name(w),
+                    get_escaped_param_name(w),
+                    local_type,
+                    param_name);
             }
         }
 
@@ -5589,18 +5681,6 @@ CopyToUnmanagedUnsafe_%(
 
                 if (marshaler_type.empty())
                 {
-                    if (param_type == "bool")
-                    {
-                        w.write("(byte)(%% ? 1 : 0)",
-                            source, bind<write_escaped_identifier>(param_name));
-                        return;
-                    }
-                    if (param_type == "char")
-                    {
-                        w.write("(ushort)%%",
-                            source, bind<write_escaped_identifier>(param_name));
-                        return;
-                    }
                     w.write("%%%",
                         category == param_category::ref ? "_" : "",
                         source, bind<write_escaped_identifier>(param_name));
@@ -5667,16 +5747,6 @@ CopyToUnmanagedUnsafe_%(
                     w.write("%.FromAbi(%)", param_type, source);
                     return;
                 }
-                if (param_type == "bool")
-                {
-                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source);
-                    return;
-                }
-                if (param_type == "char")
-                {
-                    w.write(is_generic() ? "(char)(ushort)%" : "(char)%", source);
-                    return;
-                }
                 w.write("%%", param_cast, source);
                 return;
             }
@@ -5708,16 +5778,6 @@ CopyToUnmanagedUnsafe_%(
                     w.write("%.FromManaged(%)", param_type, source);
                     return;
                 }
-                if (param_type == "bool")
-                {
-                    w.write("(byte)(% ? 1 : 0)", source);
-                    return;
-                }
-                if (param_type == "char")
-                {
-                    w.write("(ushort)%", source);
-                    return;
-                }
                 w.write("%%", param_cast, source);
                 return;
             }
@@ -5737,9 +5797,10 @@ CopyToUnmanagedUnsafe_%(
                 if (!is_pinnable)
                 {
                     write_copy_to_managed_function(w);
-                    w.write("CopyToManaged_%(null, (uint)__%_span.Length, &_%, %);\n",
+                    w.write("CopyToManaged_%(null, (uint)__%_span.Length, (%*)_%, %);\n",
                         param_name,
                         param_name,
+                        local_type,
                         param_name,
                         bind<write_escaped_identifier>(param_name));
                 }
@@ -5802,20 +5863,32 @@ CopyToUnmanagedUnsafe_%(
                 if (is_array())
                 {
                     // HStringReference doesn't need to be freed.
-                    if (is_ref() || marshaler_type != "HStringMarshaller")
+                    if ((is_ref() || marshaler_type != "HStringMarshaller") && !skip_disposer)
                     {
                         write_interop_dispose_function(w);
 
                         w.write(R"(
-fixed(void* _% = __%_span)
+fixed(%% _% = __%_span)
 {
-Dispose_%(null, (uint) __%_span.Length, &_%);
+Dispose_%(null, (uint) __%_span.Length, %_%);
 }
 )",
+                            local_type,
+                            // If it is already a pointer type,
+                            // we can pass the pointer from the fixed expression.
+                            // And this allows us to handle that the span is of type nint.
+                            local_type == "void*" ? "" : "*",
                             param_name,
                             param_name,
                             param_name,
                             param_name,
+                            bind([&](writer& w)
+                            {
+                                if (local_type == "void*")
+                                {
+                                    w.write("(void**)");
+                                }
+                            }),
                             param_name);
                     }
 
@@ -5826,7 +5899,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
 }
 )",
                         param_name,
-                        local_type,
+                        get_inline_array_type(),
                         param_name);
                 }
                 else
@@ -5855,6 +5928,17 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
             return w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
         };
 
+        auto set_skip_disposer_if_needed = [&](abi_marshaler& m)
+        {
+            // These are types which are custom mapped and don't have disposers.
+            if (m.local_type == "global::ABI.System.DateTimeOffset" ||
+                m.local_type == "global::ABI.System.TimeSpan" ||
+                m.local_type == "global::ABI.System.Exception")
+            {
+                m.skip_disposer = true;
+            }
+        };
+
         auto set_simple_marshaler_type = [&](abi_marshaler& m, TypeDef const& type)
         {
             if (m.is_array())
@@ -5863,6 +5947,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+                set_skip_disposer_if_needed(m);
             }
             else if (!is_type_blittable(type))
             {
@@ -5874,11 +5959,9 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 {
                     m.is_pinnable = (m.category == param_category::in);
                 }
-                else if (m.marshaler_type == "global::ABI.System.DateTimeOffsetMarshaller" || 
-                         m.marshaler_type == "global::ABI.System.TimeSpanMarshaller" ||
-                         m.marshaler_type == "global::ABI.System.ExceptionMarshaller")
+                else
                 {
-                    m.skip_disposer = true;
+                    set_skip_disposer_if_needed(m);
                 }
             }
         };
@@ -5898,16 +5981,11 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 {
                     m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                     m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
-                    if (m.local_type == "void*")
-                    {
-                        m.local_type = "nint";
-                    }
                 }
                 else
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "void*" : "ObjectReferenceValue";
-                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
 
                     if (is_projected_as_nullable(type))
                     {
@@ -5943,7 +6021,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 if (m.is_array())
                 {
                     m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
-                    m.local_type = "nint";
+                    m.local_type = "void*";
                 }
                 else
                 {
@@ -5956,7 +6034,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                 if (m.is_array())
                 {
                     m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
-                    m.local_type = "nint";
+                    m.local_type = "void*";
                 }
                 else
                 {
@@ -5980,7 +6058,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                     if (m.is_array())
                     {
                         m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
-                        m.local_type = "nint";
+                        m.local_type = "void*";
                     }
                     else
                     {
@@ -6020,8 +6098,8 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
                         if (m.is_array())
                         {
                             m.marshaler_type = "HStringMarshaller";
-                            m.local_type = "nint";
-                            m.interop_dll_type = "string";
+                            m.local_type = "void*";
+                            m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                             // m.is_pinnable = !m.is_out();
                         }
                         else
@@ -6243,7 +6321,7 @@ finally
         // The last abi marshaler is the return value which we want to treat as an out.
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
-		auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
+        auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
         w.write(R"(
 private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
 {
@@ -6254,25 +6332,37 @@ public override unsafe void Invoke(
   ReadOnlySpan<object> additionalParameters,
   out void* retval)
 {
-using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
-void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-
-%
 %
 }
 }
 )",
             callback_class,
             callback_class,
-            cache_object,
-            bind(write_constructor_params_as_variables, signature),
-            bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+            bind([&](writer& w) {
+                if (settings.reference_projection)
+                {
+                    w.write("throw null;");
+                }
+                else
+                {
+                    w.write(R"(
+using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
+void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+
+%
+%
+)",
+                        cache_object,
+                        bind(write_constructor_params_as_variables, signature),
+                        bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+                }
+            }));
     }
 
 
     void write_static_composing_factory_method(writer& w, TypeDef const& iface, MethodDef const& method)
     {
-        if (is_special(method))
+        if (is_special(method) || settings.reference_projection)
         {
             return;
         }
@@ -6326,20 +6416,24 @@ public override unsafe void Invoke(
   out void* innerInterface,
   out void* retval)
 {
-using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
-void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-
-%
 %
 }
 }
 )",
             callback_class,
             callback_class,
-            cache_object,
-            bind(write_composable_constructor_params_as_variables, signature),
-            bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method))
-);
+            bind([&](writer& w) {
+                w.write(R"(
+using WindowsRuntimeObjectReferenceValue activationFactoryValue = %.AsValue();
+void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+
+%
+%
+)",
+                cache_object,
+                bind(write_composable_constructor_params_as_variables, signature),
+                bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
+            }));
     }
 
     void write_interface_members(writer& w, TypeDef const& type)
@@ -6962,7 +7056,7 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
         std::string param_type;
         std::string local_type;
         std::string marshaler_type;
-        std::string interface_guid;
+        std::string abi_type;
         bool abi_boxed;
         std::string interop_dll_type;
         bool marshal_by_object_reference_value;
@@ -7100,12 +7194,13 @@ interop_dll_type);
                 {
                     w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, out uint length, out void** data);
+static extern void ConvertToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, out uint length, out %* data);
 
 )",
 param_name,
 interop_dll_type,
-param_type);
+param_type,
+abi_type);
                 }
                 else
                 {
@@ -7127,16 +7222,18 @@ param_type);
             {
                 w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, void** data, Span<%> span);
+static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, uint length, %* data, Span<%> span);
 
 )",
                     param_name,
                     interop_dll_type,
+                    abi_type,
                     param_type);
 
-                w.write("CopyToManaged_%(null, __%Size, &%, __%);",
+                w.write("CopyToManaged_%(null, __%Size, (%*)%, __%);",
                     param_name,
                     param_name,
+                    abi_type,
                     bind<write_escaped_identifier>(param_name),
                     param_name);
             }
@@ -7151,15 +7248,7 @@ static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] obje
             else if (marshaler_type.empty())
             {
                 std::string_view format_string;
-                if (param_type == "bool")
-                {
-                    format_string = "% != 0";
-                } 
-                else if (param_type == "char")
-                {
-                    format_string = "(char)%";
-                }
-                else if (category == param_category::ref)
+                if (category == param_category::ref)
                 {
                     format_string = "*%";
                 }
@@ -7209,19 +7298,21 @@ static extern void CopyToManaged_%([UnsafeAccessorType("%, WinRT.Interop")] obje
 
                 w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, uint length, void** data);
+static extern void CopyToUnmanaged_%([UnsafeAccessorType("%, WinRT.Interop")] object _, ReadOnlySpan<%> span, uint length, %* data);
 
-CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
+CopyToUnmanaged_%(null, __%, __%Size, (%*)%);
 
 )",
                     // CopyToUnmanaged function
                     param_name,
                     interop_dll_type,
                     param_type,
+                    abi_type,
                     // function call
                     param_name,
                     param_name,
                     param_name,
+                    abi_type,
                     bind<write_escaped_identifier>(param_name));
 
                 return;
@@ -7229,7 +7320,7 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
 
             if (is_array())
             {
-                w.write("ConvertToUnmanaged_%(null, __%, out *__%Size, out *(void***)%);\n", param_name, param_name, param_name, bind<write_escaped_identifier>(param_name));
+                w.write("ConvertToUnmanaged_%(null, __%, out *__%Size, out *%);\n", param_name, param_name, param_name, bind<write_escaped_identifier>(param_name));
             }
             else
             {
@@ -7245,18 +7336,7 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                     }
                     else
                     {
-                        if (param_type == "bool")
-                        {
-                            w.write("(byte)(% ? 1 : 0);", param_local);
-                        }
-                        else if (param_type == "char")
-                        {
-                            w.write("(ushort)%;", param_local);
-                        }
-                        else
-                        {
-                            w.write("%;", param_local);
-                        }
+                        w.write("%;", param_local);
                     }
                 }
                 else if (is_boxed_value)
@@ -7330,7 +7410,6 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                 case category::interface_type:
                     m.marshaler_type = w.write_temp("%Marshaller", bind<write_type_name>(type, typedef_name_type::ABI, true));
                     m.local_type = m.param_type;
-                    m.interface_guid = w.write_temp("%", bind<write_iid_guid>(type));
                     m.marshal_by_object_reference_value = true;
                     if (is_projected_as_nullable(type))
                     {
@@ -7430,6 +7509,7 @@ CopyToUnmanaged_%(null, __%, __%Size, (void**)%);
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
+                m.abi_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
         };
 
@@ -8492,12 +8572,14 @@ public static nint Vtable
 
         w.write(R"(
 [DynamicInterfaceCastableImplementation]
+%
 file interface % : %
 {
 %
 %
 }
 )",
+            bind<write_guid_attribute>(type),
             type.TypeName(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_interface_members>(type),
@@ -8649,15 +8731,11 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(
-%[WindowsRuntimeClassName(%.RuntimeClassName)]
-%%%% %class %%
+%%%%%% %class %%
 {
 %
 
-% %(WindowsRuntimeObjectReference nativeObjectReference)
-: base(nativeObjectReference)
-{
-%%}
+%
 
 %
 %
@@ -8667,7 +8745,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 }
 )",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_type_name>(type, typedef_name_type::ABI, false),
+            bind<write_class_winrt_classname_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             bind<write_comwrapper_marshaller_attribute>(type),
             bind<write_default_interface_attribute>(type),
@@ -8679,25 +8757,39 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             // ObjectReference constructor
-            type.Flags().Sealed() ? "internal" : "protected internal",
-            type_name,
             [&](writer& w)
             {
-                if (!type.Flags().Sealed())
+                if (settings.reference_projection)
                 {
-                    w.write(R"(
+                   return;
+                }
+
+                w.write(R"(
+% %(WindowsRuntimeObjectReference nativeObjectReference)
+: base(nativeObjectReference)
+{
+%%}
+)",
+                type.Flags().Sealed() ? "internal" : "protected internal",
+                type_name,
+                [&](writer& w)
+                {
+                    if (!type.Flags().Sealed())
+                    {
+                        w.write(R"(
 if (GetType() == typeof(%))
 {
 % = NativeObjectReference;
 })",
-                    type.TypeName(),
-                    bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
-                }
-            },
-            [&](writer& w)
-            {
-                if (!gc_pressure_amount) return;
-                w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                        type.TypeName(),
+                        bind<write_objref_type_name>(get_type_semantics(get_default_interface(type))));
+                    }
+                },
+                [&](writer& w)
+                {
+                    if (!gc_pressure_amount) return;
+                    w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                });
             },
             // Other constructors
             bind<write_attributed_types>(type),
@@ -8943,11 +9035,19 @@ return false;
     {
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(
-%%%% delegate % %(%);
+%%%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind([&](writer& w)
+            {
+                if (settings.reference_projection)
+                {
+                    write_guid_attribute(w, type);
+                    w.write("\n");
+                }
+            }),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),

@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(float))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Single>",
+    value: "Windows.Foundation.IReference`1<Single>",
     target: typeof(ABI.System.Single),
     trimTarget: typeof(float))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="float"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Single>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Single>")]
 [WindowsRuntimeMetadataTypeName("Single")]
 [WindowsRuntimeMappedType(typeof(float))]
 [WindowsRuntimeReferenceType(typeof(float?))]

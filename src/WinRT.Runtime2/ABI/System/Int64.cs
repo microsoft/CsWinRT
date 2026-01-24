@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(long))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Int64>",
+    value: "Windows.Foundation.IReference`1<Int64>",
     target: typeof(ABI.System.Int64),
     trimTarget: typeof(long))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="long"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Int64>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Int64>")]
 [WindowsRuntimeMetadataTypeName("Int64")]
 [WindowsRuntimeMappedType(typeof(long))]
 [WindowsRuntimeReferenceType(typeof(long?))]

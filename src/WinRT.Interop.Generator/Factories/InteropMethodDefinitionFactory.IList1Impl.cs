@@ -511,6 +511,55 @@ internal partial class InteropMethodDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> export method.
+        /// </summary>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        public static MethodDefinition GetMany(
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Get the appropriate 'GetMany' method descriptor for 'IList<T>' types
+            IMethodDescriptor getManyMethod = elementType switch
+            {
+                _ when elementType.IsBlittable(interopReferences) => interopReferences.IListAdapterBlittableValueTypeGetMany(elementType),
+                _ when elementType.IsConstructedKeyValuePairType(interopReferences) => interopReferences.IListAdapterKeyValuePairTypeGetMany(
+                    keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsManagedValueType(interopReferences) => interopReferences.IListAdapterManagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsValueType => interopReferences.IListAdapterUnmanagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsTypeOfObject() => interopReferences.IListAdapterOfObjectGetMany,
+                _ when elementType.IsTypeOfString() => interopReferences.IListAdapterOfStringGetMany,
+                _ when elementType.IsTypeOfType(interopReferences) => interopReferences.IListAdapterOfTypeGetMany,
+                _ when elementType.IsTypeOfException(interopReferences) => interopReferences.IListAdapterOfExceptionGetMany,
+                _ => interopReferences.IListAdapterReferenceTypeGetMany(
+                    elementType: elementType,
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature())
+            };
+
+            // Reuse the logic for the implementation method for 'IReadOnlyList<T>' types
+            return IReadOnlyList1Impl.GetMany(
+                readOnlyListType: listType,
+                getManyMethod: getManyMethod,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module);
+        }
+
+        /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>ReplaceAll</c> export method.
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>

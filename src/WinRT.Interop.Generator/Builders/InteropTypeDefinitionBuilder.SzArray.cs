@@ -438,12 +438,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
             CreateComInterfaceFlags flags = arrayType.IsTrackerSupportRequired(interopReferences)

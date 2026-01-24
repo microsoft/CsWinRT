@@ -175,8 +175,7 @@
     </Project>
     <Project Path="Tests/HostTest/HostTest.vcxproj" Id="b511b7c9-c8e2-47ed-a0d1-538c00747d30">
       <Platform Solution="*|ARM" Project="Win32" />
-      <Build Solution="*|ARM" Project="false" />
-      <Build Solution="*|ARM64" Project="false" />
+      <Build Project="false" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
       <Platform Solution="*|ARM" Project="ARM" />
@@ -364,6 +363,7 @@
   </Project>
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+  <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
   <Project Path="WinRT.Runtime/WinRT.Runtime.csproj">
     <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
   </Project>

@@ -19,6 +19,26 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeUnknownArrayMarshaller
 {
+    /// <summary>
+    /// Disposes all values in the specified array.
+    /// </summary>
+    /// <param name="size">The size of the array.</param>
+    /// <param name="array">The input array.</param>
+    public static void Dispose(uint size, void** array)
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (uint i = 0; i < size; i++)
+        {
+            WindowsRuntimeUnknownMarshaller.Free(array[i]);
+        }
+    }
+
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, void** array)
     {

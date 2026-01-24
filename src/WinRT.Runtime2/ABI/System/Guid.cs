@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(Guid))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Guid>",
+    value: "Windows.Foundation.IReference`1<Guid>",
     target: typeof(ABI.System.Guid),
     trimTarget: typeof(Guid))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Guid"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Guid>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Guid>")]
 [WindowsRuntimeMetadataTypeName("Guid")]
 [WindowsRuntimeMappedType(typeof(global::System.Guid))]
 [WindowsRuntimeReferenceType(typeof(global::System.Guid?))]

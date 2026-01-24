@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(uint))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt32>",
+    value: "Windows.Foundation.IReference`1<UInt32>",
     target: typeof(ABI.System.UInt32),
     trimTarget: typeof(uint))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="uint"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt32>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt32>")]
 [WindowsRuntimeMetadataTypeName("UInt32")]
 [WindowsRuntimeMappedType(typeof(uint))]
 [WindowsRuntimeReferenceType(typeof(uint?))]

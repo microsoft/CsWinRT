@@ -188,12 +188,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
@@ -284,23 +281,14 @@ internal partial class InteropTypeDefinitionBuilder
             }
             else
             {
-                TypeSignature? interfaceType = null;
-
-                // Go through all implemented interfaces, and find the first Windows Runtime interface
-                foreach (TypeSignature interfaceSignature in userDefinedType.EnumerateAllInterfaces())
+                // Get the most derived Windows Runtime interface for the type, to use for the runtime class name
+                if (!UserDefinedTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
+                    userDefinedType: userDefinedType,
+                    interopReferences: interopReferences,
+                    interfaceType: out TypeSignature? interfaceType))
                 {
-                    if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
-                    {
-                        interfaceType = interfaceSignature;
-
-                        break;
-                    }
-                }
-
-                // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
-                // been added to the set of exposed types during discovery. However, let's validate that here too.
-                if (interfaceType is null)
-                {
+                    // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
+                    // been added to the set of exposed types during discovery. However, let's validate that here too.
                     throw WellKnownInteropExceptions.PrimaryWindowsRuntimeInterfaceNotFoundError(userDefinedType);
                 }
 

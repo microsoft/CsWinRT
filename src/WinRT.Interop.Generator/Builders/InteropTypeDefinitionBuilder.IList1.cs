@@ -212,12 +212,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vectorMethodsType">The type returned by <see cref="IVectorMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="listMethodsType">The resulting methods type.</param>
-        public static void IListMethods(
+        public static void Methods(
             GenericInstanceTypeSignature listType,
             TypeDefinition vectorMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition listMethodsType)
         {
@@ -226,11 +228,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IListMethods"),
+                name: InteropUtf8NameFactory.TypeName(listType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(listMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(listMethodsType, listType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -613,10 +618,11 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IListMethods"/>.</param>
+        /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
             GenericInstanceTypeSignature listType,
@@ -624,6 +630,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
@@ -637,7 +644,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes =
+                {
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    InteropCustomAttributeFactory.Guid(listType, interopReferences, module, useWindowsUIXamlProjections)
+                },
                 Interfaces =
                 {
                     new InterfaceImplementation(listType.Import(module).ToTypeDefOrRef()),
@@ -767,203 +778,167 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
-
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
-                method: get_CountMethod);
-
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: listMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
-
-            interfaceImplType.Properties.Add(countProperty);
-
-            // Create the 'get_IsReadOnly' getter method
-            MethodDefinition get_IsReadOnlyMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
-
-            // Add and implement the 'get_IsReadOnly' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_IsReadOnly(elementType).Import(module),
-                method: get_IsReadOnlyMethod);
-
-            // Create a body for the 'get_IsReadOnly' method
-            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
+            // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>'.
+            // Same logic as for 'IReadOnlyList<T>' types, see additional notes there for context.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
             {
-                Instructions =
+                // Create the 'get_Count' getter method
+                MethodDefinition get_CountMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+                // Add and implement the 'get_Count' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
+                    method: get_CountMethod);
+
+                // Create a body for the 'get_Count' method
+                get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: get_CountMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Count"u8),
+                    interopReferences: interopReferences,
+                    module: module);
+
+                // Create the 'Count' property
+                PropertyDefinition countProperty = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_CountMethod))
+                { GetMethod = get_CountMethod };
+
+                interfaceImplType.Properties.Add(countProperty);
+
+                // Create the 'get_IsReadOnly' getter method
+                MethodDefinition get_IsReadOnlyMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+
+                // Add and implement the 'get_IsReadOnly' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1get_IsReadOnly(elementType).Import(module),
+                    method: get_IsReadOnlyMethod);
+
+                // Create a body for the 'get_IsReadOnly' method
+                get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
                 {
-                    { Ldc_I4_0 },
-                    { Ret }
-                }
-            };
+                    Instructions =
+                    {
+                        { Ldc_I4_0 },
+                        { Ret }
+                    }
+                };
 
-            // Create the 'IsReadOnly' property
-            PropertyDefinition isReadOnlyProperty = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.IsReadOnly",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
-            { GetMethod = get_IsReadOnlyMethod };
+                // Create the 'IsReadOnly' property
+                PropertyDefinition isReadOnlyProperty = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.IsReadOnly",
+                    attributes: PropertyAttributes.None,
+                    signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
+                { GetMethod = get_IsReadOnlyMethod };
 
-            interfaceImplType.Properties.Add(isReadOnlyProperty);
+                interfaceImplType.Properties.Add(isReadOnlyProperty);
 
-            // Create the 'Add' method
-            MethodDefinition addMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
+                // Create the 'Add' method
+                MethodDefinition addMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
 
-            // Add and implement the 'Add' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Add(elementType).Import(module),
-                method: addMethod);
+                // Add and implement the 'Add' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Add(elementType).Import(module),
+                    method: addMethod);
 
-            // Create a body for the 'Add' method
-            addMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: addMethod,
-                forwardedMethod: listMethodsType.GetMethod("Add"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Add' method
+                addMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: addMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Add"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Clear' method
-            MethodDefinition clearMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                // Create the 'Clear' method
+                MethodDefinition clearMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
-            // Add and implement the 'Clear' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Clear(elementType).Import(module),
-                method: clearMethod);
+                // Add and implement the 'Clear' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Clear(elementType).Import(module),
+                    method: clearMethod);
 
-            // Create a body for the 'Clear' method
-            clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: clearMethod,
-                forwardedMethod: listMethodsType.GetMethod("Clear"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Clear' method
+                clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: clearMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Clear"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Contains' method
-            MethodDefinition containsMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+                // Create the 'Contains' method
+                MethodDefinition containsMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            // Add and implement the 'Contains' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Contains(elementType).Import(module),
-                method: containsMethod);
+                // Add and implement the 'Contains' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Contains(elementType).Import(module),
+                    method: containsMethod);
 
-            // Create a body for the 'Contains' method
-            containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: containsMethod,
-                forwardedMethod: listMethodsType.GetMethod("Contains"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'Contains' method
+                containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: containsMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Contains"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'CopyTo' method
-            MethodDefinition copyToMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        elementType.MakeSzArrayType().Import(module),
-                        module.CorLibTypeFactory.Int32]));
+                // Create the 'CopyTo' method
+                MethodDefinition copyToMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(
+                        returnType: module.CorLibTypeFactory.Void,
+                        parameterTypes: [
+                            elementType.MakeSzArrayType().Import(module),
+                            module.CorLibTypeFactory.Int32]));
 
-            // Add and implement the 'CopyTo' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
-                method: copyToMethod);
+                // Add and implement the 'CopyTo' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
+                    method: copyToMethod);
 
-            // Create a body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: copyToMethod,
-                forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
-                interopReferences: interopReferences,
-                module: module);
+                // Create a body for the 'CopyTo' method
+                copyToMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: copyToMethod,
+                    forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
+                    interopReferences: interopReferences,
+                    module: module);
 
-            // Create the 'Remove' method
-            MethodDefinition removeMethod = new(
-                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+                // Create the 'Remove' method
+                MethodDefinition removeMethod = new(
+                    name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
+                    attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            // Add and implement the 'Remove' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Remove(elementType).Import(module),
-                method: removeMethod);
+                // Add and implement the 'Remove' method
+                interfaceImplType.AddMethodImplementation(
+                    declaration: interopReferences.ICollection1Remove(elementType).Import(module),
+                    method: removeMethod);
 
-            // Create a body for the 'Remove' method
-            removeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: listType,
-                implementationMethod: removeMethod,
-                forwardedMethod: listMethodsType.GetMethod("Remove"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'IEnumerable<T>.GetEnumerator' method
-            MethodDefinition enumerable1GetEnumeratorMethod = new(
-                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
-
-            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                method: enumerable1GetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: enumerableType,
-                implementationMethod: enumerable1GetEnumeratorMethod,
-                forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'IEnumerable.GetEnumerator' method
-            MethodDefinition enumerableGetEnumeratorMethod = new(
-                name: "System.Collections.IEnumerable.GetEnumerator"u8,
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
-
-            // Add and implement the 'IEnumerable.GetEnumerator' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                method: enumerableGetEnumeratorMethod);
-
-            // Create a method body for the 'IEnumerable.GetEnumerator' method
-            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
-                    { Ret }
-                }
-            };
+                // Create a body for the 'Remove' method
+                removeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                    interfaceType: listType,
+                    implementationMethod: removeMethod,
+                    forwardedMethod: listMethodsType.GetMethod("Remove"u8),
+                    interopReferences: interopReferences,
+                    module: module);
+            }
         }
 
         /// <summary>
@@ -1057,9 +1032,8 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module);
 
             // Define the 'GetMany' method
-            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
-                readOnlyListType: listType,
-                getAtMethod: interopReferences.IListAdapter1GetAt(elementType),
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IList1Impl.GetMany(
+                listType: listType,
                 interopReferences: interopReferences,
                 emitState: emitState,
                 module: module);
@@ -1096,6 +1070,53 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Track the type (it may be needed by COM interface entries for user-defined types)
             emitState.TrackTypeDefinition(implType, listType, "Impl");
+        }
+
+        /// <summary>
+        /// Creates the type map attributes for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        public static void TypeMapAttributes(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition proxyType,
+            TypeDefinition interfaceImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections)
+        {
+            InteropTypeDefinitionBuilder.TypeMapAttributes(
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
+                externalTypeMapTrimTargetType: listType,
+                proxyTypeMapSourceType: null,
+                proxyTypeMapProxyType: null,
+                interfaceTypeMapSourceType: listType,
+                interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                interopReferences: interopReferences,
+                module: module);
+
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // Register the interface implementation type for 'ICollection<T>' too, if applicable.
+            // This is the same as for 'IReadOnlyList<T>' types, see additional comments there.
+            if (!elementType.IsConstructedKeyValuePairType(interopReferences))
+            {
+                InteropTypeDefinitionBuilder.TypeMapAttributes(
+                    runtimeClassName: null,
+                    externalTypeMapTargetType: null,
+                    externalTypeMapTrimTargetType: null,
+                    proxyTypeMapSourceType: null,
+                    proxyTypeMapProxyType: null,
+                    interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType(elementType),
+                    interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
+                    interopReferences: interopReferences,
+                    module: module);
+            }
         }
     }
 }

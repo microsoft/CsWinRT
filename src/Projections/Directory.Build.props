@@ -25,7 +25,8 @@
 
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
-    <IsAotCompatible>true</IsAotCompatible>        
+    <IsAotCompatible>true</IsAotCompatible>
+    <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />

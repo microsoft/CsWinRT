@@ -26,6 +26,12 @@ internal static class WindowsRuntimeExtensions
         public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
 
         /// <summary>
+        /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
+        /// </summary>
+        /// <returns>Whether the module represents a Windows Runtime reference assembly.</returns>
+        public bool IsWindowsRuntimeReferenceAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute);
+
+        /// <summary>
         /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -559,7 +565,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
-                return typeDefinition.DeclaringModule!.CreateTypeReference(
+                return interopReferences.WinRTProjection.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
             }
@@ -689,6 +695,39 @@ internal static class WindowsRuntimeExtensions
         public bool IsConstructedKeyValuePairType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
+        }
+
+        /// <inheritdoc cref="IsConstructedKeyValuePairType(TypeSignature, InteropReferences)"/>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="keyType">The resulting key type, if the type did represent a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="valueType">The resulting value type, if the type did represent a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        public bool IsConstructedKeyValuePairType(
+            InteropReferences interopReferences,
+            [NotNullWhen(true)] out TypeSignature? keyType,
+            [NotNullWhen(true)] out TypeSignature? valueType)
+        {
+            // If the signature is not generic, it can't possibly be a 'KeyValuePair<TKey, TValue>' instantiation
+            if (signature is not GenericInstanceTypeSignature genericSignature)
+            {
+                keyType = null;
+                valueType = null;
+
+                return false;
+            }
+
+            // Same check as overload above
+            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.KeyValuePair2))
+            {
+                keyType = null;
+                valueType = null;
+
+                return false;
+            }
+
+            keyType = genericSignature.TypeArguments[0];
+            valueType = genericSignature.TypeArguments[1];
+
+            return true;
         }
 
         /// <summary>
@@ -947,7 +986,17 @@ file static class WellKnownMetadataNames
     public static readonly Utf8String WindowsRuntime = "WindowsRuntime"u8;
 
     /// <summary>
+    /// The <c>"WindowsRuntime.InteropServices"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
+
+    /// <summary>
     /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
     /// </summary>
     public static readonly Utf8String WindowsRuntimeMetadataAttribute = "WindowsRuntimeMetadataAttribute"u8;
+
+    /// <summary>
+    /// The <c>"WindowsRuntimeReferenceAssemblyAttribute"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeReferenceAssemblyAttribute = "WindowsRuntimeReferenceAssemblyAttribute"u8;
 }

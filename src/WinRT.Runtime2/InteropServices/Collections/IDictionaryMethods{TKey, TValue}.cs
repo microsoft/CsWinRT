@@ -166,15 +166,13 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="ICollection{T}.Add"/>
-    /// <typeparam name="TIMapMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <typeparam name="TIIterableMethods">The <see cref="IIterableMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisIMapReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method (for <c>IMap&lt;K, V&gt;</c>).</param>
     /// <param name="thisIIterableReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method (for <c>IEnumerable&lt;T&gt;</c>).</param>
-    public static void CopyTo<TIMapMethods, TIIterableMethods>(
+    public static void CopyTo<TIIterableMethods>(
         WindowsRuntimeObjectReference thisIMapReference,
         WindowsRuntimeObjectReference thisIIterableReference,
         KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-        where TIMapMethods : IMapMethodsImpl<TKey, TValue>
         where TIIterableMethods : IIterableMethodsImpl<KeyValuePair<TKey, TValue>>
     {
         ArgumentNullException.ThrowIfNull(array);

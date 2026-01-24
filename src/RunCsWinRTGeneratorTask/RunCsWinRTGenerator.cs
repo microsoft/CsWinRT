@@ -19,11 +19,20 @@ public sealed class RunCsWinRTGenerator : ToolTask
 {
     /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
-    /// the entire surface area for compilation. These assemblies are the full set of assemblies
-    /// that will contribute to the interop .dll being generated.
+    /// the entire surface area for compilation. These assemblies, specificaly the ones
+    /// for Windows Runtime projections are the set of assemblies that will contribute
+    /// to the interop .dll being generated.
     /// </summary>
     [Required]
     public ITaskItem[]? ReferenceAssemblyPaths { get; set; }
+
+    /// <summary>
+    /// Gets or sets the paths to implementation assembly files.
+    /// These assemblies are the full set of assemblies
+    /// that will contribute to the interop .dll being generated.
+    /// </summary>
+    [Required]
+    public ITaskItem[]? ImplementationAssemblyPaths { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the output assembly that was produced by the build (for the current project).
@@ -126,6 +135,13 @@ public sealed class RunCsWinRTGenerator : ToolTask
             return false;
         }
 
+        if (ImplementationAssemblyPaths is not { Length: > 0 })
+        {
+            Log.LogWarning("Invalid 'ImplementationAssemblyPaths' input(s).");
+
+            return false;
+        }
+
         if (OutputAssemblyPath is not { Length: 1 })
         {
             Log.LogWarning("Invalid 'OutputAssemblyPath' input.");
@@ -214,7 +230,11 @@ public sealed class RunCsWinRTGenerator : ToolTask
         IEnumerable<string> referenceAssemblyPaths = ReferenceAssemblyPaths!.Select(static path => path.ItemSpec);
         string referenceAssemblyPathsArg = string.Join(",", referenceAssemblyPaths);
 
+        IEnumerable<string> implementationAssemblyPaths = ImplementationAssemblyPaths!.Select(static path => path.ItemSpec);
+        string implementationAssemblyPathsArg = string.Join(",", implementationAssemblyPaths);
+
         AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
+        AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);

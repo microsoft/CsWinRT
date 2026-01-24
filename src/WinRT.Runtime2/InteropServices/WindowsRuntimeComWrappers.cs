@@ -163,6 +163,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>
     public nint GetOrCreateComInterfaceForObject(object instance, CreateComInterfaceFlags flags, in Guid iid)
     {
+        MarshallingInfo = null;
+
         // Marshal the object ('ComputeVtables' will lookup the proxy type to resolve the right vtable for it)
         void* thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, flags);
 

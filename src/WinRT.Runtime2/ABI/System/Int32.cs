@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(int))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Int32>",
+    value: "Windows.Foundation.IReference`1<Int32>",
     target: typeof(ABI.System.Int32),
     trimTarget: typeof(int))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="int"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Int32>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Int32>")]
 [WindowsRuntimeMetadataTypeName("Int32")]
 [WindowsRuntimeMappedType(typeof(int))]
 [WindowsRuntimeReferenceType(typeof(int?))]

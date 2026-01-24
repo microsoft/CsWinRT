@@ -27,7 +27,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(Type))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>",
+    value: "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>",
     target: typeof(ABI.System.Type),
     trimTarget: typeof(Type))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -41,7 +41,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")]
 [WindowsRuntimeMetadataTypeName("Windows.UI.Xaml.Interop.TypeName")]
 [WindowsRuntimeMappedType(typeof(global::System.Type))]
 [TypeComWrappersMarshaller]

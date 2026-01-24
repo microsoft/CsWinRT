@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(Exception))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.HResult>",
+    value: "Windows.Foundation.IReference`1<Windows.Foundation.HResult>",
     target: typeof(ABI.System.Exception),
     trimTarget: typeof(Exception))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -34,7 +34,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.HResult>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.HResult>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.HResult")]
 [WindowsRuntimeMappedType(typeof(global::System.Exception))]
 [ExceptionComWrappersMarshaller]

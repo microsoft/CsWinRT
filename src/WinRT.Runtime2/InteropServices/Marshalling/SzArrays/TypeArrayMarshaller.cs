@@ -129,6 +129,22 @@ public static unsafe class TypeArrayMarshaller
         }
     }
 
+    /// <inheritdoc cref="WindowsRuntimeUnknownArrayMarshaller.Dispose"/>
+    public static void Dispose(uint size, ABI.System.Type* array)
+    {
+        if (size == 0)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(array);
+
+        for (uint i = 0; i < size; i++)
+        {
+            ABI.System.TypeMarshaller.Dispose(array[i]);
+        }
+    }
+
     /// <inheritdoc cref="WindowsRuntimeBlittableValueTypeArrayMarshaller.Free"/>
     public static void Free(uint size, ABI.System.Type* array)
     {

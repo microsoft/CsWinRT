@@ -3,7 +3,6 @@
 
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
@@ -283,7 +282,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="dictionaryMethodsType">The resulting methods type.</param>
-        public static void IDictionaryMethods(
+        public static void Methods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
             InteropReferences interopReferences,
@@ -297,11 +296,14 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             dictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IDictionaryMethods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(dictionaryMethodsType);
+
+            // Track the type (needed for the 'IDynamicInterfaceImplementation' support)
+            emitState.TrackTypeDefinition(dictionaryMethodsType, dictionaryType, "Methods");
 
             // Define the 'Item' getter method as follows:
             //
@@ -586,7 +588,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Ldarg_3 },
-                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, mapMethodsType, iterableMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, iterableMethodsType).Import(module) },
                     { Ret }
                 }
             };
@@ -691,15 +693,17 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the interface implementation of some <c>IMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
-        /// <param name="dictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IDictionaryMethods"/>.</param>
+        /// <param name="dictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition dictionaryMethodsType,
             InteropReferences interopReferences,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
@@ -715,7 +719,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
-                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                CustomAttributes =
+                {
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    InteropCustomAttributeFactory.Guid(dictionaryType, interopReferences, module, useWindowsUIXamlProjections)
+                },
                 Interfaces =
                 {
                     new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
@@ -927,165 +935,6 @@ internal partial class InteropTypeDefinitionBuilder
                 forwardedMethod: removeMethods[0],
                 interopReferences: interopReferences,
                 module: module);
-
-            // Create the 'Add' ('KeyValuePair<,>') method
-            MethodDefinition addKeyValuePairMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Add",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [keyValuePairType.Import(module)]));
-
-            // Add and implement the 'Add' ('KeyValuePair<,>') method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Add(keyValuePairType).Import(module),
-                method: addKeyValuePairMethod);
-
-            // Create a body for the 'Add' ('KeyValuePair<,>') method
-            addKeyValuePairMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: collectionType,
-                implementationMethod: addKeyValuePairMethod,
-                forwardedMethod: addMethods[1],
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Remove' ('KeyValuePair<,>') method
-            MethodDefinition removeKeyValuePairMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Remove",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyValuePairType.Import(module)]));
-
-            // Add and implement the 'Remove' ('KeyValuePair<,>') method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Remove(keyValuePairType).Import(module),
-                method: removeKeyValuePairMethod);
-
-            // Create a body for the 'Remove' ('KeyValuePair<,>') method
-            removeKeyValuePairMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: dictionaryType,
-                implementationMethod: removeKeyValuePairMethod,
-                forwardedMethod: removeMethods[1],
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Contains' method
-            MethodDefinition containsMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Contains",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyValuePairType.Import(module)]));
-
-            // Add and implement the 'Contains' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Contains(keyValuePairType).Import(module),
-                method: containsMethod);
-
-            // Create a body for the 'Contains' method
-            containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: collectionType,
-                implementationMethod: containsMethod,
-                forwardedMethod: dictionaryMethodsType.GetMethod("Contains"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'CopyTo' method
-            MethodDefinition copyToMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.CopyTo",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [
-                        keyValuePairType.MakeSzArrayType().Import(module),
-                        module.CorLibTypeFactory.Int32]))
-            {
-                // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
-                // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
-                // are emitting code manually, to save the current 'WindowsRuntimeObject', resolve the two references, and forward the call.
-                CilLocalVariables = { new CilLocalVariable(interopReferences.WindowsRuntimeObject.Import(module).ToReferenceTypeSignature()) },
-                CilInstructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Stloc_0 },
-                    { Ldloc_0 },
-                    { Ldtoken, dictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldloc_0 },
-                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Ldarg_2 },
-                    { Call, dictionaryMethodsType.GetMethod("CopyTo"u8) },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'CopyTo' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1CopyTo(keyValuePairType).Import(module),
-                method: copyToMethod);
-
-            // Create the 'get_Count' getter method
-            MethodDefinition get_CountMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
-
-            // Add and implement the 'get_Count' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_Count(keyValuePairType).Import(module),
-                method: get_CountMethod);
-
-            // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: collectionType,
-                implementationMethod: get_CountMethod,
-                forwardedMethod: dictionaryMethodsType.GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
-
-            // Create the 'Count' property
-            PropertyDefinition countProperty = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Count",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_CountMethod))
-            { GetMethod = get_CountMethod };
-
-            interfaceImplType.Properties.Add(countProperty);
-
-            // Create the 'get_IsReadOnly' getter method
-            MethodDefinition get_IsReadOnlyMethod = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_IsReadOnly",
-                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean))
-            {
-                CilInstructions =
-                {
-                    { Ldc_I4_0 },
-                    { Ret }
-                }
-            };
-
-            // Add and implement the 'get_IsReadOnly' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_IsReadOnly(keyValuePairType).Import(module),
-                method: get_IsReadOnlyMethod);
-
-            // Create the 'IsReadOnly' property
-            PropertyDefinition isReadOnlyProperty = new(
-                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.IsReadOnly",
-                attributes: PropertyAttributes.None,
-                signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
-            { GetMethod = get_IsReadOnlyMethod };
-
-            interfaceImplType.Properties.Add(isReadOnlyProperty);
         }
 
         /// <summary>

@@ -12,7 +12,6 @@
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
-    <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>

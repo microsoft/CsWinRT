@@ -129,15 +129,15 @@ public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
                 #pragma warning disable
 
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
-                //[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Projection")]
+                [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Projection")]
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime2")]
-
+                
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup>("WinRT.Interop")]
-                //[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup>("WinRT.Projection")]
+                [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup>("WinRT.Projection")]
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup>("WinRT.Runtime2")]
 
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Interop")]
-                //[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Projection")]
+                [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Projection")]
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Runtime2")]
                 """;
 

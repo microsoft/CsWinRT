@@ -21,7 +21,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(Vector2))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector2>",
+    value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector2>",
     target: typeof(ABI.System.Numerics.Vector2),
     trimTarget: typeof(Vector2))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -35,7 +35,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector2"/>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector2>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector2>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Vector2")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Vector2))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Vector2?))]

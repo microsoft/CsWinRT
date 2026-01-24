@@ -13,10 +13,10 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable CS8620 // TODO: remove once Roslyn bug is fixed
 
-namespace WindowsRuntime.InteropGenerator.Factories;
+namespace WindowsRuntime.InteropGenerator.Rewriters;
 
-/// <inheritdoc cref="InteropMethodRewriteFactory"/>
-internal partial class InteropMethodRewriteFactory
+/// <inheritdoc cref="InteropMethodRewriter"/>
+internal partial class InteropMethodRewriter
 {
     /// <summary>
     /// Contains the logic for emitting direct calls to <c>ConvertToUnmanaged</c> for a given value (already on the stack).

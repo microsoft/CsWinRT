@@ -21,7 +21,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(Matrix3x2))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>",
+    value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Matrix3x2>",
     target: typeof(ABI.System.Numerics.Matrix3x2),
     trimTarget: typeof(Matrix3x2))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -35,7 +35,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Matrix3x2>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Matrix3x2")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Matrix3x2))]
 [WindowsRuntimeReferenceType(typeof(global::System.Numerics.Matrix3x2?))]

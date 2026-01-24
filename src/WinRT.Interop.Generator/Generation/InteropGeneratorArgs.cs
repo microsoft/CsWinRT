@@ -11,9 +11,13 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// </summary>
 internal sealed partial class InteropGeneratorArgs
 {
-    /// <summary>Gets the input .dll paths.</summary>
+    /// <summary>Gets the input reference .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
     public required string[] ReferenceAssemblyPaths { get; init; }
+
+    /// <summary>Gets the input implementation .dll paths.</summary>
+    [CommandLineArgumentName("--implementation-assembly-paths")]
+    public required string[] ImplementationAssemblyPaths { get; init; }
 
     /// <summary>Gets the path of the assembly that was built.</summary>
     [CommandLineArgumentName("--output-assembly-path")]

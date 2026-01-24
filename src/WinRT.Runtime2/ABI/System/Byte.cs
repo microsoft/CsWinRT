@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(byte))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt8>",
+    value: "Windows.Foundation.IReference`1<UInt8>",
     target: typeof(ABI.System.Byte),
     trimTarget: typeof(byte))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="byte"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt8>")]
 [WindowsRuntimeMetadataTypeName("UInt8")]
 [WindowsRuntimeMappedType(typeof(byte))]
 [WindowsRuntimeReferenceType(typeof(byte?))]

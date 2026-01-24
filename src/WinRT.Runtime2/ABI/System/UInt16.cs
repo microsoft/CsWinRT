@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(ushort))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt16>",
+    value: "Windows.Foundation.IReference`1<UInt16>",
     target: typeof(ABI.System.UInt16),
     trimTarget: typeof(ushort))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -33,7 +33,7 @@ namespace ABI.System;
 /// ABI type for <see cref="ushort"/>.
 /// </summary>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt16>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt16>")]
 [WindowsRuntimeMetadataTypeName("UInt16")]
 [WindowsRuntimeMappedType(typeof(ushort))]
 [WindowsRuntimeReferenceType(typeof(ushort?))]

@@ -20,7 +20,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     trimTarget: typeof(TimeSpan))]
 
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.TimeSpan>",
+    value: "Windows.Foundation.IReference`1<Windows.Foundation.TimeSpan>",
     target: typeof(ABI.System.TimeSpan),
     trimTarget: typeof(TimeSpan))]
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
@@ -34,7 +34,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
 [WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.TimeSpan>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.TimeSpan")]
 [WindowsRuntimeMappedType(typeof(global::System.TimeSpan))]
 [WindowsRuntimeReferenceType(typeof(global::System.TimeSpan?))]

@@ -49,5 +49,16 @@ internal static class PathExtensions
 
             return buffer;
         }
+
+        /// <summary>
+        /// Checks whether a given path represents a file or folder contained within a folder with a given name.
+        /// </summary>
+        /// <param name="path">The input path to check.</param>
+        /// <param name="directoryName">The directory name to check.</param>
+        /// <returns>Whether the input item is within a directory with the given name.</returns>
+        public static bool IsWithinDirectoryName(ReadOnlySpan<char> path, ReadOnlySpan<char> directoryName)
+        {
+            return Path.GetFileName(Path.GetDirectoryName(path)).SequenceEqual(directoryName);
+        }
     }
 }
