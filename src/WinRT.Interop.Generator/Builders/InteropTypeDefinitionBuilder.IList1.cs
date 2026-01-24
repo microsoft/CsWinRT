@@ -725,7 +725,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IndexOf' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IList1get_Item(elementType).Import(module),
+                declaration: interopReferences.IList1IndexOf(elementType).Import(module),
                 method: indexOfMethod);
 
             // Create a body for the 'IndexOf' method
