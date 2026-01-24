@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -13,21 +15,21 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 internal static class WindowsRuntimeTypeAnalyzer
 {
     /// <summary>
-    /// Tries to retrieve the most derived Windows Runtime interface type implemented by the specified user-defined type.
+    /// Tries to retrieve the most derived Windows Runtime interface type implemented by the specified type.
     /// </summary>
-    /// <param name="userDefinedType">The user-defined type for which to find the most derived Windows Runtime interface type.</param>
+    /// <param name="type">The type for which to find the most derived Windows Runtime interface type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="interfaceType">The resulting Windows Runtime interface, if found.</param>
     /// <returns>Whether <paramref name="interfaceType"/> was successfully retrieved.</returns>
     public static bool TryGetMostDerivedWindowsRuntimeInterfaceType(
-        TypeSignature userDefinedType,
+        TypeSignature type,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? interfaceType)
     {
         interfaceType = null;
 
         // Go through all implemented interfaces for the user-defined type
-        foreach (TypeSignature interfaceSignature in userDefinedType.EnumerateAllInterfaces())
+        foreach (TypeSignature interfaceSignature in type.EnumerateAllInterfaces())
         {
             // If the current interface is not a Windows Runtime type, just skip it.
             // We can only use Windows Runtime interfaces for the runtime class name.
@@ -37,9 +39,9 @@ internal static class WindowsRuntimeTypeAnalyzer
             }
 
             // Track the current interface if we haven't seen any other Windows Runtime interfaces
-            // before, or if the current interface is more derived than the previous one. That is
-            // because we want to try to always find the most derived Windows Runtime interface for
-            // a given user-defined type (e.g. 'IDictionary<string, string>', not 'IEnumerable').
+            // before, or if the current interface is more derived than the previous one. That is,
+            // if for instance a type implements the 'IDictionary<string, string>' interface, we
+            // want to make sure to find that type signature, and not just 'IEnumerable'.
             if (interfaceType is null ||
                 interfaceType.IsAssignableFrom(interfaceSignature, SignatureComparer.IgnoreVersion))
             {
@@ -48,5 +50,61 @@ internal static class WindowsRuntimeTypeAnalyzer
         }
 
         return interfaceType is not null;
+    }
+
+    /// <summary>
+    /// Enumerates all covariant interface types that can be derived from a given interface type, if applicable.
+    /// </summary>
+    /// <param name="interfaceType">The input interface type to expand.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The derived covariant interface types derived from <paramref name="interfaceType"/>, if any.</returns>
+    /// <remarks>
+    /// The returned sequence can contain duplicate types, callers should take care of deduplicating them if needed.
+    /// </remarks>
+    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
+    {
+        // The only Windows Runtime interfaces that support covariance have a single type parameter.
+        // In practice, it's just 'IEnumerable<T>', 'IEnumerator<T>', and 'IReadOnlyList<T>'.
+        if (interfaceType is not GenericInstanceTypeSignature
+            {
+                IsValueType: false,
+                GenericType: ITypeDefOrRef genericInterfaceType,
+                TypeArguments: [TypeSignature { IsValueType: false } elementType]
+            })
+        {
+            yield break;
+        }
+
+        // Make sure the interface type itself is one of the valid ones
+        if (!SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerable1) &&
+            !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
+            !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
+        {
+            yield break;
+        }
+
+        // First gather all combinations from interfaces implemented by the element type
+        foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
+        {
+            // Construct the generic interface with the current element type
+            yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
+
+            // Also track any covariant combinations derived from the current element type
+            foreach (TypeSignature elementCovariantInterfaceType in EnumerateCovariantInterfaceTypes(elementInterfaceType, interopReferences))
+            {
+                yield return genericInterfaceType.MakeGenericReferenceType(elementCovariantInterfaceType);
+            }
+        }
+
+        // Next, also gather all base types for the element type
+        foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
+        {
+            yield return genericInterfaceType.MakeGenericReferenceType(baseType);
+        }
+
+        // Lastly, make sure to also always track 'object' as a base type. This would be
+        // skipped for element types being interfaces, as they have no base type. However,
+        // with respect to variant conversions, 'object' is always a valid covariant type.
+        yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.CorLibTypeFactory.Object);
     }
 }
