@@ -84,7 +84,6 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, emitState.LookupMethodDefinition(enumeratorType, "get_IID") },
                     { Ldarg_1 },
                     { Call, interopReferences.IEnumerableAdapter1First(elementType).Import(module) },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
