@@ -39,7 +39,7 @@ public static class IEnumerableAdapter<T>
         // in practice we can't always assume this information will be available here.
         //
         // Note: technically speaking, the same can happen with any interface type. However, we only have
-        // this special handling for 'IEnumerator<T>' types, because they're particular critical and used
+        // this special handling for 'IEnumerator<T>' types, because they're particularly critical and used
         // everywhere, and also because it's much more likely for them to be internal and harder to see.
         // This also makes arrays work, which have a special internal enumerator type we can't ever track.
         if (WindowsRuntimeInterfaceMarshaller<IEnumerator<T>>.TryConvertToUnmanagedExact(
@@ -57,7 +57,7 @@ public static class IEnumerableAdapter<T>
 
             // Marshal the adapter, with the assumption that we'll always have marshalling info for it. This time
             // we can actually rely on this, because we will manually track those adapter types for each generic
-            // instantiation that 'IEnumerable<T>' that is discovered. Meaning if we get here, we'll have that info.
+            // instantiation of 'IEnumerable<T>' that is discovered. Meaning if we get here, we'll have that info.
             *enumerator = (void*)WindowsRuntimeComWrappers.GetOrCreateComInterfaceForObjectExact(enumeratorAdapter, in iid);
         }
     }

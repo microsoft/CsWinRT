@@ -58,10 +58,12 @@ public sealed class IEnumeratorAdapter<T> : IEnumerator<T>
     public static IEnumeratorAdapter<T> GetInstance(IEnumerator<T> enumerator)
     {
         // Check if the input enumerator is already an 'IEnumeratorAdapter<T>' instance. If so,
-        // we can just unwrap the original enumerator and return it. Otherwise, we create a new
-        // adapter for it. The input value could potentially be an adapter already if has been
-        // previously marshalled to native on a managed type that had no marshalling info available
-        // for it. See additional notes in 'IEnumerableAdapter<T>.First' for more context on this.
+        // we can just return it directly instead of round-tripping through another one. This
+        // also avoids the overhead of registering a new entry in the global adapters table.
+        // Otherwise, we just wrap the new enumerator into a new adapter instance and use that.
+        // Note: the input value could potentially be an adapter already if has been previously
+        // marshalled to native on a managed type that had no marshalling info available for it.
+        // See additional notes in 'IEnumerableAdapter<T>.First' for more context on this.
         return enumerator as IEnumeratorAdapter<T> ?? IEnumeratorAdapterTable<T>.Table.GetOrAdd(enumerator, IEnumeratorAdapterFactory<T>.Callback);
     }
 
