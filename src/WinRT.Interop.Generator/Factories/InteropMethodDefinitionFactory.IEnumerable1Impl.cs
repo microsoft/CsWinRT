@@ -34,6 +34,7 @@ internal partial class InteropMethodDefinitionFactory
             ModuleDefinition module)
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
+            TypeSignature enumeratorType = interopReferences.IEnumerator1.MakeGenericReferenceType(elementType);
 
             // Define the 'First' method as follows:
             //
@@ -54,7 +55,6 @@ internal partial class InteropMethodDefinitionFactory
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
-            CilInstruction nop_convertToUnmanaged = new(Nop);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
@@ -81,8 +81,10 @@ internal partial class InteropMethodDefinitionFactory
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumerableType).Import(module) },
+                    { Call, emitState.LookupMethodDefinition(enumeratorType, "get_IID") },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IEnumerableAdapter1First(elementType).Import(module) },
                     { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
-                    { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -109,12 +111,6 @@ internal partial class InteropMethodDefinitionFactory
                     }
                 }
             };
-
-            // Track the method for rewrite to marshal the result value
-            emitState.TrackRetValValueMethodRewrite(
-                retValType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType),
-                method: firstMethod,
-                marker: nop_convertToUnmanaged);
 
             return firstMethod;
         }

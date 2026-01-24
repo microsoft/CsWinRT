@@ -256,7 +256,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, iterableMethodsType.GetMethod("First"u8) },
+                    { Call, interopReferences.IEnumerableMethods1GetEnumerator(elementType, iterableMethodsType.ToTypeSignature()).Import(module) },
                     { Ret }
                 },
             };
