@@ -90,7 +90,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <returns>Whether <paramref name="comObject"/> was retrieved successfully.</returns>
     /// <remarks>
     /// This method differs from <see cref="GetOrCreateComInterfaceForObject(object)"/> in that it will only succeed if
-    /// exact  marshalling info is available for <paramref name="instance"/>. Otherwise, it will fail and not marshal the
+    /// exact marshalling info is available for <paramref name="instance"/>. Otherwise, it will fail and not marshal the
     /// managed object at all, rather than trying to marshal it with an approximate type (e.g. as an opaque <c>IInspectable</c>).
     /// </remarks>
     public static bool TryGetOrCreateComInterfaceForObjectExact(object instance, out nint comObject)
@@ -109,6 +109,47 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         comObject = (nint)null;
 
         return false;
+    }
+
+    /// <summary>
+    /// Marshals a managed object using the appropriate marshaller, assuming that exact marshalling info is available for that type.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
+    /// <remarks><inheritdoc cref="TryGetOrCreateComInterfaceForObjectExact" path="/remarks/node()"/></remarks>
+    public static nint GetOrCreateComInterfaceForObjectExact(object instance)
+    {
+        WindowsRuntimeMarshallingInfo info = WindowsRuntimeMarshallingInfo.GetInfo(instance.GetType());
+
+        MarshallingInfo = info;
+
+        return (nint)info.GetComWrappersMarshaller().GetOrCreateComInterfaceForObject(instance);
+    }
+
+    /// <summary>
+    /// Marshals a managed object using the appropriate marshaller, assuming that exact marshalling info is available for that type.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <param name="iid">The IID of the interface to query after creating the object wrapper.</param>
+    /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
+    /// <exception cref="Exception">Thrown if <paramref name="instance"/> cannot be marshalled.</exception>
+    /// <remarks><inheritdoc cref="TryGetOrCreateComInterfaceForObjectExact" path="/remarks/node()"/></remarks>
+    public static nint GetOrCreateComInterfaceForObjectExact(object instance, in Guid iid)
+    {
+        void* thisPtr = (void*)GetOrCreateComInterfaceForObjectExact(instance);
+
+        // 'ComWrappers' always returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface'
+        // for the interface IID. This is always the case, even if we know the exact type being marshalled.
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
+
+        // We can release the 'IUnknown' reference now, it's no longer needed.
+        // The 'thisPtr' value is always guaranteed to not be 'null' here.
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return (nint)interfacePtr;
     }
 
     /// <summary>
@@ -173,10 +214,10 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the interface IID
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
 
-        // We can release the 'IUnknown' reference now, it's no longer needed
+        // Release the original 'IUnknown' reference (same as above)
         _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
 
-        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
+        // Ensure the 'QueryInterface' succeeded (same as above)
         Marshal.ThrowExceptionForHR(hresult);
 
         return (nint)interfacePtr;
@@ -201,9 +242,10 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // Do the 'QueryInterface' call for the target interface IID, same as above
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
 
-        // Release the original pointer, once again same as above (this is always guaranteed to not be 'null')
+        // Release the original 'IUnknown' reference (same as above)
         _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
 
+        // Ensure the 'QueryInterface' succeeded (same as above)
         Marshal.ThrowExceptionForHR(hresult);
 
         return (nint)interfacePtr;
