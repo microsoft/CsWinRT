@@ -83,6 +83,35 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     }
 
     /// <summary>
+    /// Tries to marshal a managed object using the appropriate marshaller, only if exact marshalling info is available for that type.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <param name="comObject">The generated COM interface that can be passed outside the .NET runtime.</param>
+    /// <returns>Whether <paramref name="comObject"/> was retrieved successfully.</returns>
+    /// <remarks>
+    /// This method differs from <see cref="GetOrCreateComInterfaceForObject(object)"/> in that it will only succeed if
+    /// exact  marshalling info is available for <paramref name="instance"/>. Otherwise, it will fail and not marshal the
+    /// managed object at all, rather than trying to marshal it with an approximate type (e.g. as an opaque <c>IInspectable</c>).
+    /// </remarks>
+    public static bool TryGetOrCreateComInterfaceForObjectExact(object instance, out nint comObject)
+    {
+        // Try to retrieve the marshalling info for exactly the current type, and use it to marshal the info if available.
+        // If we don't have an exact match, we stop here and fail rather than marshalling as an opaque 'IInspectable' object.
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(instance.GetType(), out WindowsRuntimeMarshallingInfo? info))
+        {
+            MarshallingInfo = info;
+
+            comObject = (nint)info.GetComWrappersMarshaller().GetOrCreateComInterfaceForObject(instance);
+
+            return true;
+        }
+
+        comObject = (nint)null;
+
+        return false;
+    }
+
+    /// <summary>
     /// Calls <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> with the appropriate marshaller and <see cref="CreateComInterfaceFlags"/> value.
     /// </summary>
     /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
