@@ -439,11 +439,12 @@ internal partial class InteropGenerator
 
             try
             {
-                InteropTypeDefinitionBuilder.IID(
-                    interfaceType: typeSignature,
+                InteropTypeDefinitionBuilder.IEnumerator1.IID(
+                    enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    emitState: emitState,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 

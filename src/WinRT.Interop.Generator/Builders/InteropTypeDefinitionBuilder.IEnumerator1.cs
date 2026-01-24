@@ -24,6 +24,37 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IEnumerator1
     {
         /// <summary>
+        /// Creates the 'IID' properties for an <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.
+        public static void IID(
+            GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            InteropGeneratorEmitState emitState,
+            bool useWindowsUIXamlProjections,
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
+                out get_IidMethod);
+
+            // Track the IID method, as it's needed to marshal enumerators from the 'IIterable<T>.First' implementation
+            emitState.TrackMethodDefinition(get_IidMethod, enumeratorType, "get_IID");
+        }
+
+        /// <summary>
         /// Creates a new type definition for the methods for an <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
