@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -167,66 +168,85 @@ internal static partial class InteropTypeDiscovery
                 continue;
             }
 
-            // Check for projected Windows Runtime interfaces first
-            if (interfaceSignature.IsWindowsRuntimeType(interopReferences))
+            // Enumerate both the current interface, as well as all covariant combinations derived from it.
+            // This is because we want entries in the vtable to match what users expect in the .NET world.
+            // For instance, consider this scenario:
+            //
+            // class A : IDisposable;
+            // class B : A, IEnumerable<string>
+            // class C<T> : IEnumerable<T>;
+            //
+            // If we see e.g. a 'C<B>' instantiation, we want the following vtables being generated:
+            // - 'IEnumerable<IEnumerable<string>>'
+            // - 'IEnumerable<IEnumerable<object>>'
+            // - 'IEnumerable<IEnumerable>'
+            // - 'IEnumerable<IDisposable>'
+            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovariantInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
-                hasAnyProjectedWindowsRuntimeInterfaces = true;
-
-                interfaces.Add(interfaceSignature);
-
-                // If the current interface is generic, also make sure that it's tracked. This is needed
-                // to fully cover all possible constructed generic interface types that might be needed.
-                // For instance, consider this case:
-                //
-                // class A<T> : IEnumerable<T>;
-                // class B : A<int>;
-                //
-                // While processing 'B', we'll discover the constructed 'IEnumerable<int>' interface.
-                // This interface would not have been discovered when processing 'A<T>', as it's not
-                // in the 'TypeSpec' metadata table, and only appears as unconstructed on 'A<T>'.
-                // So the discovery logic for generic instantiations below would otherwise miss it.
-                if (interfaceSignature is GenericInstanceTypeSignature constructedSignature)
+                // Check for projected Windows Runtime interfaces first. We want to explicitly ignore
+                // '[exclusiveto]' interfaces too, which might still show up as part of the covariant
+                // expansion. However, those would then either fail to resolve or just result in
+                // unnecessary binary size increase, since nobody would ever use them from here.
+                if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
                 {
-                    TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                        typeSignature: constructedSignature,
-                        args: args,
-                        discoveryState,
-                        interopReferences: interopReferences,
-                        module: module);
+                    hasAnyProjectedWindowsRuntimeInterfaces = true;
+
+                    interfaces.Add(covariantInterfaceSignature);
+
+                    // If the current interface is generic, also make sure that it's tracked. This is needed
+                    // to fully cover all possible constructed generic interface types that might be needed.
+                    // For instance, consider this case:
+                    //
+                    // class A<T> : IEnumerable<T>;
+                    // class B : A<int>;
+                    //
+                    // While processing 'B', we'll discover the constructed 'IEnumerable<int>' interface.
+                    // This interface would not have been discovered when processing 'A<T>', as it's not
+                    // in the 'TypeSpec' metadata table, and only appears as unconstructed on 'A<T>'.
+                    // So the discovery logic for generic instantiations below would otherwise miss it.
+                    if (covariantInterfaceSignature is GenericInstanceTypeSignature constructedSignature)
+                    {
+                        TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                            typeSignature: constructedSignature,
+                            args: args,
+                            discoveryState,
+                            interopReferences: interopReferences,
+                            module: module);
+                    }
                 }
-            }
-            else if (interfaceDefinition.IsGeneratedComInterfaceType)
-            {
-                // We can only gather this type if we can find the generated 'InterfaceInformation' type.
-                // If we can't find it, we can't add the interface to the list of interface entries. We
-                // should warn if that's the (unlikely) case, so users can at least know that something
-                // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
-                if (!interfaceDefinition.TryGetInterfaceInformationType(interopReferences, out _))
+                else if (interfaceDefinition.IsGeneratedComInterfaceType)
                 {
-                    WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceDefinition, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+                    // We can only gather this type if we can find the generated 'InterfaceInformation' type.
+                    // If we can't find it, we can't add the interface to the list of interface entries. We
+                    // should warn if that's the (unlikely) case, so users can at least know that something
+                    // is wrong. Otherwise we'd just silently ignore these types, resulting in runtime failures.
+                    if (!interfaceDefinition.TryGetInterfaceInformationType(interopReferences, out _))
+                    {
+                        WellKnownInteropExceptions.GeneratedComInterfaceImplementationTypeNotFoundWarning(interfaceDefinition, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
-                    continue;
+                        continue;
+                    }
+
+                    // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
+                    // so we can check against some specific IID which might affect how we construct the COM
+                    // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
+                    if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out Guid iid))
+                    {
+                        WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceDefinition, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+
+                        continue;
+                    }
+
+                    // Validate that the current interface isn't trying to implement a reserved interface.
+                    // For instance, it's not allowed to try to explicitly implement 'IUnknown' or 'IInspectable'.
+                    if (WellKnownInterfaceIIDs.ReservedIIDsMap.TryGetValue(iid, out string? interfaceName))
+                    {
+                        throw WellKnownInteropExceptions.GeneratedComInterfaceReservedGuidError(interfaceDefinition, typeDefinition, iid, interfaceName);
+                    }
+
+                    // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
+                    interfaces.Add(covariantInterfaceSignature);
                 }
-
-                // Ensure we can get the '[GuidAttribute]' from the interface. We need this at compile time
-                // so we can check against some specific IID which might affect how we construct the COM
-                // interface entries. For instance, we need to check whether 'IMarshal' is implemented.
-                if (!interfaceDefinition.TryGetGuidAttribute(interopReferences, out Guid iid))
-                {
-                    WellKnownInteropExceptions.GeneratedComInterfaceGuidAttributeNotFoundWarning(interfaceDefinition, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
-
-                    continue;
-                }
-
-                // Validate that the current interface isn't trying to implement a reserved interface.
-                // For instance, it's not allowed to try to explicitly implement 'IUnknown' or 'IInspectable'.
-                if (WellKnownInterfaceIIDs.ReservedIIDsMap.TryGetValue(iid, out string? interfaceName))
-                {
-                    throw WellKnownInteropExceptions.GeneratedComInterfaceReservedGuidError(interfaceDefinition, typeDefinition, iid, interfaceName);
-                }
-
-                // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
-                interfaces.Add(interfaceSignature);
             }
         }
 

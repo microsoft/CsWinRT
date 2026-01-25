@@ -69,7 +69,7 @@ internal static class TypeSignatureExtensions
         /// </remarks>
         public IEnumerable<TypeSignature> EnumerateAllInterfaces()
         {
-            TypeSignature currentSignature = signature;
+            TypeSignature? currentSignature = signature;
 
             while (currentSignature is not null)
             {
@@ -117,6 +117,39 @@ internal static class TypeSignatureExtensions
                 // Note that the base type will always be a reference type, even for
                 // struct types (in that case, the base type will be 'System.ValueType').
                 currentSignature = baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context);
+            }
+        }
+
+        /// <summary>
+        /// Enumerates all base types of a given type.
+        /// </summary>
+        /// <returns>The sequence of base types of the input type.</returns>
+        public IEnumerable<TypeSignature> EnumerateBaseTypes()
+        {
+            TypeSignature? currentSignature = signature;
+
+            while (currentSignature is not null)
+            {
+                // Same validation as above, callers should ensure the type can be resolved
+                if (!currentSignature.IsFullyResolvable(out TypeDefinition? currentDefinition))
+                {
+                    yield break;
+                }
+
+                GenericContext context = new(currentSignature as GenericInstanceTypeSignature, null);
+
+                ITypeDefOrRef? baseType = currentDefinition.BaseType;
+
+                // Stop if we have no available base type
+                if (baseType is null)
+                {
+                    yield break;
+                }
+
+                // Get the signature for the base type, same as in the method above
+                currentSignature = baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context);
+
+                yield return currentSignature;
             }
         }
     }

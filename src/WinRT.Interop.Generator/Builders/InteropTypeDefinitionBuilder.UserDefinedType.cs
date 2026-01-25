@@ -282,8 +282,8 @@ internal partial class InteropTypeDefinitionBuilder
             else
             {
                 // Get the most derived Windows Runtime interface for the type, to use for the runtime class name
-                if (!UserDefinedTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
-                    userDefinedType: userDefinedType,
+                if (!WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
+                    type: userDefinedType,
                     interopReferences: interopReferences,
                     interfaceType: out TypeSignature? interfaceType))
                 {
