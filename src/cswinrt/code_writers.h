@@ -3989,9 +3989,11 @@ visibility, self, objref_name);
             auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type);
             auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
-            // Write IWindowsRuntimeInterface implementation for non-default interfaces and for the default interface if it isn't exclusive.
-            // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_exclusive_to(interface_type) || is_overridable_interface)
+            // Write the 'IWindowsRuntimeInterface<T>' implementation for non-default interfaces and for the
+            // default interface if it isn't exclusive. Also skip this when generating reference projections,
+            // since in this case we omit declaring the 'IWindowsRuntimeInterface<T>' types entirely. Otherwise,
+            // write the default interface in composable scenarios using its own function.
+            if ((!is_exclusive_to(interface_type) || is_overridable_interface) && !settings.reference_projection)
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
