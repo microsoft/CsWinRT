@@ -266,6 +266,15 @@ internal partial class InteropTypeDiscovery
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
                 module: module);
+
+            // Also track the constructed 'IEnumeratorAdapter<T>' type, as that is used by 'IEnumerableAdapter<T>.First' in
+            // case we don't have available marshalling info for the 'IEnumerator<T>' instance returned by 'GetEnumerator'.
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
         }
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
         {
@@ -357,7 +366,7 @@ internal partial class InteropTypeDiscovery
                 module: module);
 
             // We also need to track the constructed 'ReadOnlyDictionary<TKey, TValue>' type, as that is used by
-            // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, Tvalue>' instance doesn't implement
+            // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, TValue>' instance doesn't implement
             // 'IReadOnlyDictionary<TKey, TValue>' directly. Analogous to tracking 'ReadOnlyCollection<T>' above.
             TryTrackGenericTypeInstance(
                 typeSignature: interopReferences.ReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),

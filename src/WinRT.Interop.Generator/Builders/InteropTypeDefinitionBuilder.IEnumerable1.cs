@@ -213,14 +213,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="iterableMethodsType">The type returned by <see cref="IIterableMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="enumerableMethodsType">The resulting methods type.</param>
-        public static void IEnumerableMethods(
+        public static void Methods(
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition iterableMethodsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition enumerableMethodsType)
         {
@@ -229,14 +227,11 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             enumerableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "IEnumerableMethods"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(enumerableMethodsType);
-
-            // Track the type (it's needed by interface implementations)
-            emitState.TrackTypeDefinition(enumerableMethodsType, enumerableType, "IEnumerableMethods");
 
             // Define the 'GetEnumerator' method as follows:
             //
@@ -246,20 +241,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            enumerableMethodsType.Methods.Add(getEnumeratorMethod);
-
-            // Create a method body for the 'GetEnumerator' method
-            getEnumeratorMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, iterableMethodsType.GetMethod("First"u8) },
+                    { Call, interopReferences.IEnumerableMethods1GetEnumerator(elementType, iterableMethodsType.ToTypeSignature()).Import(module) },
                     { Ret }
-                },
+                }
             };
+
+            enumerableMethodsType.Methods.Add(getEnumeratorMethod);
         }
 
         /// <summary>

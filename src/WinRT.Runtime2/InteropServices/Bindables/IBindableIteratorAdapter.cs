@@ -46,7 +46,7 @@ internal sealed class IBindableIteratorAdapter
     /// <returns>The <see cref="IBindableIteratorAdapter"/> instance associated to <paramref name="enumerator"/>.</returns>
     public static IBindableIteratorAdapter GetInstance(IEnumerator enumerator)
     {
-        return IBindableIteratorAdapterTable.Table.GetValue(enumerator, static enumerator => new IBindableIteratorAdapter(enumerator));
+        return IBindableIteratorAdapterTable.Table.GetOrAdd(enumerator, static enumerator => new IBindableIteratorAdapter(enumerator));
     }
 
     /// <summary>

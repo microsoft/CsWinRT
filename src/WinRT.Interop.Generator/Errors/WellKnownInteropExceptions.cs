@@ -614,6 +614,26 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Registering a tracked method definition multiple times for the same signature.
+    /// </summary>
+    /// <param name="typeSignature">The type signature.</param>
+    /// <param name="key">The key.</param>
+    public static WellKnownInteropException AddingDuplicateTrackedMethodDefinition(TypeSignature typeSignature, string key)
+    {
+        return Exception(72, $"Duplicate tracked method definition for signature '{typeSignature}' and key '{key}'.");
+    }
+
+    /// <summary>
+    /// Failed to find a tracked method definition.
+    /// </summary>
+    /// <param name="typeSignature">The type signature.</param>
+    /// <param name="key">The key.</param>
+    public static WellKnownInteropException TrackedMethodDefinitionLookupError(TypeSignature typeSignature, string key)
+    {
+        return Exception(73, $"Failed to find a tracked method definition for signature '{typeSignature}' and key '{key}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
