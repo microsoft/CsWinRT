@@ -241,20 +241,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            enumerableMethodsType.Methods.Add(getEnumeratorMethod);
-
-            // Create a method body for the 'GetEnumerator' method
-            getEnumeratorMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IEnumerableMethods1GetEnumerator(elementType, iterableMethodsType.ToTypeSignature()).Import(module) },
                     { Ret }
-                },
+                }
             };
+
+            enumerableMethodsType.Methods.Add(getEnumeratorMethod);
         }
 
         /// <summary>
