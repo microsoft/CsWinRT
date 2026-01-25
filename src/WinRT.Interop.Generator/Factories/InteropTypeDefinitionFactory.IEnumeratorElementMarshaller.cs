@@ -49,7 +49,7 @@ internal partial class InteropTypeDefinitionFactory
             return ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
-                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
@@ -82,7 +82,7 @@ internal partial class InteropTypeDefinitionFactory
             TypeDefinition elementMarshallerType = ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
-                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
                 emitState: emitState,
