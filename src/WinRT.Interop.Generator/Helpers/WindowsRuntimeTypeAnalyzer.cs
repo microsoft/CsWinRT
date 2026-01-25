@@ -60,6 +60,7 @@ internal static class WindowsRuntimeTypeAnalyzer
     /// <returns>The derived covariant interface types derived from <paramref name="interfaceType"/>, if any.</returns>
     /// <remarks>
     /// The returned sequence can contain duplicate types, callers should take care of deduplicating them if needed.
+    /// Callers should also validate what returned generic instantiations are actually valid Windows Runtime types.
     /// </remarks>
     public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
     {

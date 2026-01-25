@@ -183,8 +183,11 @@ internal static partial class InteropTypeDiscovery
             // - 'IEnumerable<IDisposable>'
             foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovariantInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
-                // Check for projected Windows Runtime interfaces first
-                if (covariantInterfaceSignature.IsWindowsRuntimeType(interopReferences))
+                // Check for projected Windows Runtime interfaces first. We want to explicitly ignore
+                // '[exclusiveto]' interfaces too, which might still show up as part of the covariant
+                // expansion. However, those would then either fail to resolve or just result in
+                // unnecessary binary size increase, since nobody would ever use them from here.
+                if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
