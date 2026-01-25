@@ -6827,7 +6827,10 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
                     write_delimiter();
                     w.write("%", bind<write_type_name>(type, typedef_name_type::CCW, false));
 
-                    if (includeWindowsRuntimeObject)
+                    // If we're emitting a reference assembly, skip declaring the 'IWindowsRuntimeInterface<T>' types.
+                    // These are only needed at runtime to support the interface marshaller, and it shouldn't be part
+                    // of the public API surface of projection assemblies.
+                    if (includeWindowsRuntimeObject && !settings.reference_projection)
                     {
                         write_delimiter();
                         w.write("IWindowsRuntimeInterface<%>", bind<write_type_name>(type, typedef_name_type::CCW, false));
