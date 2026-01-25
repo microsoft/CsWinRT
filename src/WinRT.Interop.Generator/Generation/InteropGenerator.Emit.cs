@@ -471,6 +471,13 @@ internal partial class InteropGenerator
                     module: module,
                     iteratorMethodsType: out TypeDefinition iteratorMethodsType);
 
+                InteropTypeDefinitionBuilder.IEnumerator1.Methods(
+                    enumeratorType: typeSignature,
+                    iteratorMethodsType: iteratorMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    enumeratorMethodsType: out _);
+
                 InteropTypeDefinitionBuilder.IEnumerator1.NativeObject(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
@@ -595,7 +602,7 @@ internal partial class InteropGenerator
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
                     module: module,
-                    enumerableMethodsType: out TypeDefinition enumerableMethodsType);
+                    enumerableMethodsType: out _);
 
                 InteropTypeDefinitionBuilder.IEnumerable1.NativeObject(
                     enumerableType: typeSignature,
