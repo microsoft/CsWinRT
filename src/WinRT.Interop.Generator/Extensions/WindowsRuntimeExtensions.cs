@@ -829,6 +829,27 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the type represents a Windows Runtime type.</returns>
+        public bool IsNotExclusiveToWindowsRuntimeType(InteropReferences interopReferences)
+        {
+            // Check if the type is a Windows Runtime type, and stop immediately if not
+            if (!signature.IsWindowsRuntimeType(interopReferences))
+            {
+                return false;
+            }
+
+            TypeDefinition type = signature.Resolve()!;
+
+            // We don't really have a way to check for '[exclusiveto]' interfaces directly, since they
+            // don't have anything in metadata that states that. However, '[exclusiveto]' interfaces
+            // are not public, so we can just use that to determine if that's the case for this type.
+            return !type.IsInterface || type.Attributes.HasFlag(TypeAttributes.Public);
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> represents a Windows Runtime type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a Windows Runtime type.</returns>
         public bool IsWindowsRuntimeType(InteropReferences interopReferences)
         {
             // Check SZ arrays first, as that's the simplest case to handle.
