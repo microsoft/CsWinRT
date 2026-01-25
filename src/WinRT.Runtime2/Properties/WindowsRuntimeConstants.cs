@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
+
 namespace WindowsRuntime;
 
 /// <summary>
-/// Internal constants for various scenarios.
+/// A type containing constants for various scenarios related to Windows Runtime functionality and projections.
 /// </summary>
-internal static class WindowsRuntimeConstants
+[Obsolete(PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class WindowsRuntimeConstants
 {
     /// <summary>
     /// A message for private implementation detail types.
