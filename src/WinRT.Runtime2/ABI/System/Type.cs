@@ -183,10 +183,23 @@ public static unsafe class TypeMarshaller
                     return;
                 }
 
+                // If the type is 'KeyValuePair<,>', we are guaranteed to have a runtime class name on the proxy type.
+                // Note that because this type is a reference type in the Windows Runtime type system, the runtime class
+                // name will be the correct name to use here, as it will just be the 'IKeyValuePair<,>' interface type.
+                // This is why we don't need additional attributes for the metadata type name in this specific scenario.
+                if (typeOrUnderlyingType.IsValueType &&
+                    typeOrUnderlyingType.IsGenericType &&
+                    typeOrUnderlyingType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                {
+                    reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
+
+                    return;
+                }
+
                 // If we don't have a metadata type name, check if we have a value type or a delegate type.
-                // Note that this path can only be reached for those if either is true:
-                //   - The value type is not generic (otherwise the proxy type would've had the metadata name)
-                //   - The delegate is not generic (for the same reason as above, or we would've had a proxy)
+                // Note that this path can only be reached for those if either of these is true:
+                //   - The value type is not generic (the only possible case would've been 'KeyValuePair<,>')
+                //   - The delegate is not generic (or the proxy type would've had a metadata name on it)
                 // So in either case, we can just use the fully qualified type name here, which will match
                 // the .winmd type name. We don't have to worry about custom-mapped types here, as those will
                 // have already been handled above. This special case ensures we don't get the boxed type name.
@@ -197,8 +210,6 @@ public static unsafe class TypeMarshaller
 
                     return;
                 }
-
-                // TODO: Skip 'KVP<,>'.
             }
 
             // We don't support marshalling a 'KeyValuePair<,>?' type, as that is not a valid Windows Runtime
