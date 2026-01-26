@@ -3989,9 +3989,11 @@ visibility, self, objref_name);
             auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type);
             auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
-            // Write IWindowsRuntimeInterface implementation for non-default interfaces and for the default interface if it isn't exclusive.
-            // Otherwise, write the default interface in composable scenarios using its own function.
-            if (!is_exclusive_to(interface_type) || is_overridable_interface)
+            // Write the 'IWindowsRuntimeInterface<T>' implementation for non-default interfaces and for the
+            // default interface if it isn't exclusive. Also skip this when generating reference projections,
+            // since in this case we omit declaring the 'IWindowsRuntimeInterface<T>' types entirely. Otherwise,
+            // write the default interface in composable scenarios using its own function.
+            if ((!is_exclusive_to(interface_type) || is_overridable_interface) && !settings.reference_projection)
             {
                 w.write(R"(
 WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<%>.GetInterface()
@@ -6862,7 +6864,10 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
                     write_delimiter();
                     w.write("%", bind<write_type_name>(type, typedef_name_type::CCW, false));
 
-                    if (includeWindowsRuntimeObject)
+                    // If we're emitting a reference assembly, skip declaring the 'IWindowsRuntimeInterface<T>' types.
+                    // These are only needed at runtime to support the interface marshaller, and it shouldn't be part
+                    // of the public API surface of projection assemblies.
+                    if (includeWindowsRuntimeObject && !settings.reference_projection)
                     {
                         write_delimiter();
                         w.write("IWindowsRuntimeInterface<%>", bind<write_type_name>(type, typedef_name_type::CCW, false));
@@ -7372,7 +7377,15 @@ CopyToUnmanaged_%(null, __%, __%Size, (%*)%);
                 return;
             }
 
-            w.write("global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);\n", param_type, param_name);
+            w.write(R"(
+if (__%_arrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
+}
+)",
+                param_name,
+                param_type,
+                param_name);
         }
     };
 
@@ -8650,7 +8663,9 @@ public static unsafe class %Marshaller
         bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
         separator s{ w, " || " };
         w.write(R"(
-[Obsolete]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool IsOverridableInterface(in Guid iid) => %%;
 )",
@@ -8810,7 +8825,9 @@ GC.RemoveMemoryPressure(%);
                 if (!type.Flags().Sealed())
                 {
                     w.write(R"(
-[Obsolete]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => GetType() == typeof(%);)",
                         type.TypeName());
@@ -8818,7 +8835,9 @@ protected override bool HasUnwrappableNativeObjectReference => GetType() == type
                 else
                 {
                     w.write(R"(
-[Obsolete]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => true;)");
                 }

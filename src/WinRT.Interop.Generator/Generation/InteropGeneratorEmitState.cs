@@ -26,6 +26,11 @@ internal sealed class InteropGeneratorEmitState
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<TypeSignature, TypeDefinition>> _typeDefinitionLookup = [];
 
     /// <summary>
+    /// A map to provide fast lookup for generated methods that need to be referenced in different parts of the emit phase.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<TypeSignature, MethodDefinition>> _methodDefinitionLookup = [];
+
+    /// <summary>
     /// The collection of method rewrite infos to process for two-pass code generation.
     /// </summary>
     private readonly ConcurrentBag<MethodRewriteInfo> _methodRewriteInfos = [];
@@ -85,6 +90,43 @@ internal sealed class InteropGeneratorEmitState
         }
 
         throw WellKnownInteropExceptions.TrackedTypeDefinitionLookupError(typeSignature, key);
+    }
+
+    /// <summary>
+    /// Tracks a new method generation for a given signature and key, for fast lookup.
+    /// </summary>
+    /// <param name="methodDefinition">The <see cref="MethodDefinition"/> to track.</param>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> associated with <paramref name="methodDefinition"/>.</param>
+    /// <param name="key">The key for <paramref name="methodDefinition"/>.</param>
+    public void TrackMethodDefinition(MethodDefinition methodDefinition, TypeSignature typeSignature, string key)
+    {
+        ThrowIfReadOnly();
+
+        ConcurrentDictionary<TypeSignature, MethodDefinition> innerLookup = _methodDefinitionLookup.GetOrAdd(
+            key: key,
+            valueFactory: static _ => new ConcurrentDictionary<TypeSignature, MethodDefinition>(SignatureComparer.IgnoreVersion));
+
+        if (!innerLookup.TryAdd(typeSignature, methodDefinition))
+        {
+            throw WellKnownInteropExceptions.AddingDuplicateTrackedMethodDefinition(typeSignature, key);
+        }
+    }
+
+    /// <summary>
+    /// Looks up a method definition previously registered with <see cref="TrackMethodDefinition"/>.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> to use for lookup.</param>
+    /// <param name="key">The key to use for lookup.</param>
+    /// <returns>The resulting <see cref="MethodDefinition"/> instance.</returns>
+    public MethodDefinition LookupMethodDefinition(TypeSignature typeSignature, string key)
+    {
+        if (_methodDefinitionLookup.TryGetValue(key, out ConcurrentDictionary<TypeSignature, MethodDefinition>? innerLookup) &&
+            innerLookup.TryGetValue(typeSignature, out MethodDefinition? methodDefinition))
+        {
+            return methodDefinition;
+        }
+
+        throw WellKnownInteropExceptions.TrackedMethodDefinitionLookupError(typeSignature, key);
     }
 
     /// <summary>

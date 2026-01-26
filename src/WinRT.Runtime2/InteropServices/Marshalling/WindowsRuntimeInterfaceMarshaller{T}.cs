@@ -67,28 +67,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             // This is unlikely to fail, since we'd only get here with an object that passed a cast to the interface type
             if (hresult.Failed())
             {
-                // Helper to throw the exception without increasing the codegen in the fast path.
-                // The JIT can already optimize throw helpers, but that's only when they contain
-                // a 'throw new Exception(...)' body. Because this method is more complex, chances
-                // are that optimization would not kick in. So we're just manually not inlining it.
-                [StackTraceHidden]
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static void ThrowException(object value, in Guid iid, HRESULT hresult)
-                {
-                    // Special case 'E_NOINTERFACE' to provide a better exception message. It is intentional that this exception is
-                    // thrown inline like this and without setting up the 'IErrorInfo' infrastructure. That is because APIs do not
-                    // typically originate the 'IErrorInfo' data for 'E_NOINTERFACE', so that is not necessary here for consistency.
-                    if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
-                    {
-                        throw new InvalidCastException(
-                            $"Failed to resolve a native interface pointer from an object of type '{value.GetType()}' for interface " +
-                            $"'{typeof(T)}' (IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
-                    }
-
-                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-                }
-
-                ThrowException(value, in iid, hresult);
+                ThrowInvalidCastExceptionNative(value, in iid, hresult);
             }
 
             return new(interfacePtr);
@@ -111,25 +90,133 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             // or something else happened that is not really supported). Still, we can produce a nice error message for it.
             if (hresult.Failed())
             {
-                // Same exception logic as above, see notes there
-                [StackTraceHidden]
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static void ThrowException(object value, in Guid iid, HRESULT hresult)
-                {
-                    if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
-                    {
-                        throw new InvalidCastException(
-                            $"Failed to create a CCW for object of type '{value.GetType()}' for interface '{typeof(T)}' " +
-                            $"(IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
-                    }
-
-                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-                }
-
-                ThrowException(value, in iid, hresult);
+                ThrowInvalidCastExceptionManaged(value, in iid, hresult);
             }
 
             return new(interfacePtr);
         }
+    }
+
+    /// <summary>
+    /// Tries to marshal a Windows Runtime interface to a <see cref="WindowsRuntimeObjectReferenceValue"/> instance.
+    /// </summary>
+    /// <param name="value">The input <typeparamref name="T"/> object to marshal.</param>
+    /// <param name="iid">The IID for the interface being marshalled.</param>
+    /// <param name="result">The resulting <see cref="WindowsRuntimeObjectReferenceValue"/> for the marshalled interface.</param>
+    /// <returns>Whether <paramref name="result"/> was successfully retrieved (otherwise it will be just <see langword="default"/>).</returns>
+    /// <remarks><inheritdoc cref="ConvertToUnmanaged" path="/remarks/node()"/></remarks>
+    internal static bool TryConvertToUnmanagedExact(T? value, scoped in Guid iid, out WindowsRuntimeObjectReferenceValue result)
+    {
+        if (value is null)
+        {
+            result = default;
+
+            return false;
+        }
+
+        // Check for 'IWindowsRuntimeInterface<T>' first, same as the variant above
+        if (value is IWindowsRuntimeInterface<T> windowsRuntimeInterface)
+        {
+            result = windowsRuntimeInterface.GetInterface();
+
+            return true;
+        }
+
+        // Next, try to unwrap the object, with the same logic as the variant above again. The "try"
+        // semantics of this method only refer to managed object being marshalled, not to unwrapping.
+        if (value is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
+        {
+            HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
+
+            if (hresult.Failed())
+            {
+                ThrowInvalidCastExceptionNative(value, in iid, hresult);
+            }
+
+            result = new(interfacePtr);
+
+            return true;
+        }
+        else
+        {
+            void* thisPtr = null;
+
+            // Try to marshal the managed object, if we have available marshalling info for it.
+            // If we don't, this method will fail, and we'll just stop here. We know that in
+            // that case, the following 'QueryInterface' call would've failed anyway for sure.
+            if (!WindowsRuntimeComWrappers.TryGetOrCreateComInterfaceForObjectExact(value, out *(nint*)&thisPtr))
+            {
+                result = default;
+
+                return false;
+            }
+
+            // Perform the 'QueryInterface' call, which should likely succeed because we have marshalling info
+            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
+
+            // Release the original 'IUnknown', same as the variant above
+            _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+            if (hresult.Failed())
+            {
+                ThrowInvalidCastExceptionManaged(value, in iid, hresult);
+            }
+
+            result = new(interfacePtr);
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Throws an <see cref="InvalidCastException"/> when a <c>QueryInterface</c> call fails on a native object.
+    /// </summary>
+    /// <param name="value">The type of the unwrapped managed object.</param>
+    /// <param name="iid">The IID for the interface being marshalled.</param>
+    /// <param name="hresult">The <c>HRESULT</c> retrieved from the <c>QueryInterface</c> call.</param>
+    /// <exception cref="InvalidCastException">Thrown if <paramref name="hresult"/> is exactly <see cref="WellKnownErrorCodes.E_NOINTERFACE"/>.</exception>
+    /// <remarks>
+    /// This helper is used to throw the exception without increasing the codegen in the fast
+    /// path. The JIT can already optimize throw helpers, but that's only when they contain
+    /// a <c>throw new Exception(...)</c> body. Because this method is more complex, chances
+    /// are that optimization would not kick in. So we're just manually not inlining it.
+    /// </remarks>
+    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowInvalidCastExceptionNative(object value, in Guid iid, HRESULT hresult)
+    {
+        // Special case 'E_NOINTERFACE' to provide a better exception message. It is intentional that this exception is
+        // thrown inline like this and without setting up the 'IErrorInfo' infrastructure. That is because APIs do not
+        // typically originate the 'IErrorInfo' data for 'E_NOINTERFACE', so that is not necessary here for consistency.
+        if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+        {
+            throw new InvalidCastException(
+                $"Failed to resolve a native interface pointer from an object of type '{value.GetType()}' for interface " +
+                $"'{typeof(T)}' (IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
+        }
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+    }
+
+    /// <summary>
+    /// Throws an <see cref="InvalidCastException"/> when a <c>QueryInterface</c> call fails on a managed object.
+    /// </summary>
+    /// <param name="value">The type of the managed object.</param>
+    /// <param name="iid">The IID for the interface being marshalled.</param>
+    /// <param name="hresult">The <c>HRESULT</c> retrieved from the <c>QueryInterface</c> call.</param>
+    /// <exception cref="InvalidCastException">Thrown if <paramref name="hresult"/> is exactly <see cref="WellKnownErrorCodes.E_NOINTERFACE"/>.</exception>
+    /// <remarks><inheritdoc cref="ThrowInvalidCastExceptionNative(object, in Guid, int)" path="/remarks/node()"/></remarks>
+    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowInvalidCastExceptionManaged(object value, in Guid iid, HRESULT hresult)
+    {
+        if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+        {
+            throw new InvalidCastException(
+                $"Failed to create a CCW for object of type '{value.GetType()}' for interface '{typeof(T)}' " +
+                $"(IID '{iid.ToString().ToUpperInvariant()}'): the specified cast is not valid.");
+        }
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
     }
 }

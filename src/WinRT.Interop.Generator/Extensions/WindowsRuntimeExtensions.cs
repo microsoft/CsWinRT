@@ -860,7 +860,7 @@ internal static class WindowsRuntimeExtensions
                     return false;
                 }
 
-                // Check whether all type arguments are also Windows Runtime type (otherwise the whole type is not)
+                // Check whether all type arguments are also Windows Runtime types (otherwise the whole type is not)
                 foreach (TypeSignature typeArgument in genericInstance.TypeArguments)
                 {
                     // While arrays can be Windows Runtime types, they are not allowed to be used
@@ -880,7 +880,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            // If the type is a fundamental or custom mapped type, then it's a Windows Runtime type
+            // If the type is a fundamental or custom-mapped type, then it's a Windows Runtime type
             if (signature.IsFundamentalWindowsRuntimeType(interopReferences) ||
                 signature.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
                 signature.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
@@ -897,6 +897,80 @@ internal static class WindowsRuntimeExtensions
             // For all other cases, just check that the type is projected. This will also include
             // manually projected types that are defined in 'WinRT.Runtime.dll' (same attributes).
             return type.IsProjectedWindowsRuntimeType;
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> represents a Windows Runtime type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a Windows Runtime type.</returns>
+        public bool IsNotExclusiveToWindowsRuntimeType(InteropReferences interopReferences)
+        {
+            // Same checks as above for SZ arrays, except that we also filter out '[exclusiveto]' interfaces
+            if (signature is SzArrayTypeSignature arrayType)
+            {
+                return
+                    arrayType.BaseType is not SzArrayTypeSignature &&
+                    arrayType.BaseType.IsNotExclusiveToWindowsRuntimeType(interopReferences);
+            }
+
+            // Check constructed generics next, (same as above)
+            if (signature is GenericInstanceTypeSignature genericInstance)
+            {
+                // Filter out invalid generic instantiations (same as above)
+                if (!genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericDelegateType(interopReferences) &&
+                    !genericInstance.GenericType.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                    !genericInstance.GenericType.IsManuallyProjectedWindowsRuntimeGenericDelegateType(interopReferences) &&
+                    !genericInstance.GenericType.IsManuallyProjectedWindowsRuntimeGenericInterfaceType(interopReferences) &&
+                    !genericInstance.IsConstructedKeyValuePairType(interopReferences) &&
+                    !genericInstance.IsConstructedNullableValueType(interopReferences))
+                {
+                    return false;
+                }
+
+                // Check whether all type arguments are also not '[exclusiveto]' Windows Runtime types
+                foreach (TypeSignature typeArgument in genericInstance.TypeArguments)
+                {
+                    // Arrays are disallowed as type arguments (same as above)
+                    if (typeArgument is SzArrayTypeSignature)
+                    {
+                        return false;
+                    }
+
+                    // Otherwise, do the usual validation for all type arguments
+                    if (!typeArgument.IsNotExclusiveToWindowsRuntimeType(interopReferences))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // Check for fundamental or custom-mapped types (same as above)
+            if (signature.IsFundamentalWindowsRuntimeType(interopReferences) ||
+                signature.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
+                signature.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+                signature.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+                signature.IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(interopReferences))
+            {
+                return true;
+            }
+
+            TypeDefinition type = signature.Resolve()!;
+
+            // For all other cases, first check that the type is projected (same as above)
+            if (!type.IsProjectedWindowsRuntimeType)
+            {
+                return false;
+            }
+
+            // We don't really have a way to check for '[exclusiveto]' interfaces directly, since they
+            // don't have anything in metadata that states that. However, '[exclusiveto]' interfaces
+            // are not public, so we can just use that to determine if that's the case for this type.
+            return !type.IsInterface || type.Attributes.HasFlag(TypeAttributes.Public);
         }
 
         /// <summary>

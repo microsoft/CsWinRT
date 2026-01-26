@@ -24,6 +24,37 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IEnumerator1
     {
         /// <summary>
+        /// Creates the 'IID' properties for an <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.</param>
+        public static void IID(
+            GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            InteropGeneratorEmitState emitState,
+            bool useWindowsUIXamlProjections,
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
+                out get_IidMethod);
+
+            // Track the IID method, as it's needed to marshal enumerators from the 'IIterable<T>.First' implementation
+            emitState.TrackMethodDefinition(get_IidMethod, enumeratorType, "get_IID");
+        }
+
+        /// <summary>
         /// Creates a new type definition for the methods for an <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
@@ -175,6 +206,73 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             iteratorMethodsType.Methods.Add(moveNextMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IEnumerator{T}"/> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="iteratorMethodsType">The type returned by <see cref="IIteratorMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="enumeratorMethodsType">The resulting methods type.</param>
+        public static void Methods(
+            GenericInstanceTypeSignature enumeratorType,
+            TypeDefinition iteratorMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition enumeratorMethodsType)
+        {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+
+            // We're declaring an 'internal static class' type
+            enumeratorMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Methods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(enumeratorMethodsType);
+
+            // Define the 'Current' method as follows:
+            //
+            // public static <TYPE_ARGUMENT> Current(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition currentMethod = new(
+                name: "Current"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: elementType.Import(module),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, iteratorMethodsType.GetMethod("Current"u8) },
+                    { Ret }
+                }
+            };
+
+            enumeratorMethodsType.Methods.Add(currentMethod);
+
+            // Define the 'MoveNext' method as follows:
+            //
+            // public static bool MoveNext(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition moveNextMethod = new(
+                name: "MoveNext"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, iteratorMethodsType.GetMethod("MoveNext"u8) },
+                    { Ret }
+                }
+            };
+
+            enumeratorMethodsType.Methods.Add(moveNextMethod);
         }
 
         /// <summary>

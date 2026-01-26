@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
+#pragma warning disable IDE0032
 
 namespace WindowsRuntime.InteropServices;
 
@@ -17,7 +20,7 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class IEnumeratorAdapter<T>
+public sealed class IEnumeratorAdapter<T> : IEnumerator<T>
 {
     /// <summary>
     /// The wrapped <see cref="IEnumerator{T}"/> instance.
@@ -39,7 +42,7 @@ public sealed class IEnumeratorAdapter<T>
     /// </summary>
     /// <param name="enumerator">The wrapped <see cref="IEnumerator{T}"/> instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerator"/> is <see langword="null"/>.</exception>
-    private IEnumeratorAdapter(IEnumerator<T> enumerator)
+    internal IEnumeratorAdapter(IEnumerator<T> enumerator)
     {
         ArgumentNullException.ThrowIfNull(enumerator);
 
@@ -51,9 +54,26 @@ public sealed class IEnumeratorAdapter<T>
     /// </summary>
     /// <param name="enumerator">The input <see cref="IEnumerator{T}"/> object.</param>
     /// <returns>The <see cref="IEnumeratorAdapter{T}"/> instance associated to <paramref name="enumerator"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumeratorAdapter<T> GetInstance(IEnumerator<T> enumerator)
     {
-        return IEnumeratorAdapterTable<T>.Table.GetValue(enumerator, static enumerator => new IEnumeratorAdapter<T>(enumerator));
+        // Check if the input enumerator is already an 'IEnumeratorAdapter<T>' instance. If so,
+        // we can just return it directly instead of round-tripping through another one. This
+        // also avoids the overhead of registering a new entry in the global adapters table.
+        // Otherwise, we just wrap the new enumerator into a new adapter instance and use that.
+        // Note: the input value could potentially be an adapter already if has been previously
+        // marshalled to native on a managed type that had no marshalling info available for it.
+        // See additional notes in 'IEnumerableAdapter<T>.First' for more context on this.
+        return enumerator as IEnumeratorAdapter<T> ?? IEnumeratorAdapterTable<T>.Table.GetOrAdd(enumerator, IEnumeratorAdapterFactory<T>.Callback);
+    }
+
+    /// <summary>
+    /// Gets the wrapped <see cref="IEnumerator{T}"/> instance.
+    /// </summary>
+    internal IEnumerator<T> Enumerator
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _enumerator;
     }
 
     /// <summary>
@@ -122,6 +142,30 @@ public sealed class IEnumeratorAdapter<T>
 
         return _hasCurrent;
     }
+
+    /// <inheritdoc/>
+    T IEnumerator<T>.Current => _enumerator.Current;
+
+    /// <inheritdoc/>
+    object IEnumerator.Current => _enumerator.Current!;
+
+    /// <inheritdoc/>
+    bool IEnumerator.MoveNext()
+    {
+        return _enumerator.MoveNext();
+    }
+
+    /// <inheritdoc/>
+    void IEnumerator.Reset()
+    {
+        _enumerator.Reset();
+    }
+
+    /// <inheritdoc/>
+    void IDisposable.Dispose()
+    {
+        _enumerator.Dispose();
+    }
 }
 
 /// <summary>
@@ -134,4 +178,27 @@ file static class IEnumeratorAdapterTable<T>
     /// The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance for the mapping table.
     /// </summary>
     public static readonly ConditionalWeakTable<IEnumerator<T>, IEnumeratorAdapter<T>> Table = [];
+}
+
+/// <summary>
+/// A factory type for <see cref="IEnumeratorAdapter{T}"/> instances.
+/// </summary>
+/// <typeparam name="T">The type of objects to enumerate.</typeparam>
+file sealed class IEnumeratorAdapterFactory<T>
+{
+    /// <summary>
+    /// The singleton <see cref="IEnumeratorAdapterFactory{T}"/> instance.
+    /// </summary>
+    private static readonly IEnumeratorAdapterFactory<T> Instance = new();
+
+    /// <summary>
+    /// The singleton <see cref="Func{T, TResult}"/> callback instance for the factory.
+    /// </summary>
+    public static readonly Func<IEnumerator<T>, IEnumeratorAdapter<T>> Callback = new(Instance.Create);
+
+    /// <inheritdoc cref="IEnumeratorAdapter{T}.IEnumeratorAdapter(IEnumerator{T})"/>
+    private IEnumeratorAdapter<T> Create(IEnumerator<T> enumerator)
+    {
+        return new(enumerator);
+    }
 }

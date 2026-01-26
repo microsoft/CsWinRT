@@ -633,6 +633,16 @@ internal sealed class InteropReferences
     public TypeReference IIteratorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IIteratorMethodsImpl`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableAdapter&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IEnumerableAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumerableAdapter`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethods&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IEnumerableMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumerableMethods`1"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;</c>.
     /// </summary>
     public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumeratorAdapter`1"u8);
@@ -1824,7 +1834,7 @@ internal sealed class InteropReferences
                 IReadOnlyList1.MakeGenericReferenceType(_corLibTypeFactory.String),
                 _corLibTypeFactory.UInt32,
                 _corLibTypeFactory.UInt32,
-                _corLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterExtensions.GetMany</c>.
@@ -3887,6 +3897,40 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableAdapter&lt;T&gt;.First</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumerableAdapter1First(TypeSignature elementType)
+    {
+        return IEnumerableAdapter1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("First"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                parameterTypes: [
+                    IEnumerable1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                    WellKnownTypeSignatureFactory.InGuid(this),
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethods&lt;T&gt;.GetEnumerator</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="iterableMethods">The <see cref="IIterableMethodsImpl1"/> type.</param>
+    public MethodSpecification IEnumerableMethods1GetEnumerator(TypeSignature elementType, TypeSignature iterableMethods)
+    {
+        return IEnumerableMethods1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetEnumerator"u8, MethodSignature.CreateStatic(
+                returnType: IEnumerator1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                genericParameterCount: 1,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+            .MakeGenericInstanceMethod(iterableMethods);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.GetInstance</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -5145,7 +5189,7 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="keyType">The input key type.</param>
     /// <param name="valueType">The input value type.</param>
-    /// <param name="iterableMethods">The <see cref="IIteratorMethodsImpl1"/> type.</param>
+    /// <param name="iterableMethods">The <see cref="IIterableMethodsImpl1"/> type.</param>
     public MethodSpecification IDictionaryMethods2CopyTo(
         TypeSignature keyType,
         TypeSignature valueType,
