@@ -302,9 +302,6 @@ public static unsafe class TypeMarshaller
 
         global::System.Type? type = null;
 
-        // TODO: put type map entries for non-generic interfaces in the metadata type map.
-        // This also needs to have entries for all value types and delegate types
-
         // If the type was handled by the metadata lookup, get the public type from there
         if (WindowsRuntimeMetadataInfo.TryGetInfo(typeName, out WindowsRuntimeMetadataInfo? metadataInfo))
         {
