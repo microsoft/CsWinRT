@@ -89,9 +89,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(vectorViewMethodsType);
 
-            // Track the type
-            emitState.TrackTypeDefinition(vectorViewMethodsType, readOnlyListType, "IVectorViewMethods");
-
             // Define the 'GetAt' method
             MethodDefinition getAtMethod = InteropMethodDefinitionFactory.IVectorViewMethods.GetAt(
                 readOnlyListType: readOnlyListType,
