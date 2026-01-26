@@ -560,9 +560,9 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(containsMethod);
 
             // We need to pass the 'IIterableMethods' type as a second type argument, as it's needed to enumerate key-value pairs
-            TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)),
-                key: "IIterableMethods");
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(enumerableType, "IIterableMethods");
 
             // Define the 'CopyTo' method as follows:
             //
