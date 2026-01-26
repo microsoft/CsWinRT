@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -180,7 +181,7 @@ internal static partial class InteropTypeDiscovery
             // - 'IEnumerable<IEnumerable<object>>'
             // - 'IEnumerable<IEnumerable>'
             // - 'IEnumerable<IDisposable>'
-            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences))
+            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
                 // Check for projected Windows Runtime interfaces first. We want to explicitly ignore
                 // '[exclusiveto]' interfaces too, which might still show up as part of the covariant

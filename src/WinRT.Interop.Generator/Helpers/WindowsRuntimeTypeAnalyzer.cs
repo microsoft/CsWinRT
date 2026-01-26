@@ -113,7 +113,9 @@ internal static class WindowsRuntimeTypeAnalyzer
                 yield break;
             }
 
-            // First return the current constructed interface too, as it's a valid generic instantiation
+            // First return the current constructed interface too, as it's a valid generic instantiation.
+            // Even if callers are already checking the original input interface as well, this item is
+            // still needed, as it might result in additional combinations when used in a recursive call.
             yield return interfaceType;
 
             // Next, gather all combinations from interfaces implemented by the element type
