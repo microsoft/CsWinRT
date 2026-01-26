@@ -54,6 +54,7 @@ internal static class WindowsRuntimeTypeAnalyzer
 
     /// <summary>
     /// Enumerates all covariant interface types that can be derived from a given interface type, if applicable.
+    /// It also includes the input interface itself in the returned sequence, as that's also a valid interface.
     /// </summary>
     /// <param name="interfaceType">The input interface type to expand.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -62,7 +63,7 @@ internal static class WindowsRuntimeTypeAnalyzer
     /// The returned sequence can contain duplicate types, callers should take care of deduplicating them if needed.
     /// Callers should also validate what returned generic instantiations are actually valid Windows Runtime types.
     /// </remarks>
-    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
+    public static IEnumerable<TypeSignature> EnumerateCovarianceExpandedInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
     {
         // Helper method also taking an 'HashSet<TypeSignature>' to track visited types (see notes below)
         static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypesCore(
@@ -101,9 +102,12 @@ internal static class WindowsRuntimeTypeAnalyzer
             //   - 'IEnumerable<IEnumerable<object>>'
             //   - 'IEnumerable<IEnumerable>'
             //   - 'IEnumerable<object>'
-            // Without this check, the 'IEnumerable<Node>' part would keep expanding forever, since 'Node' appears
-            // recursively as a type argument. By tracking visited types instead, we stop as soon as we see 'Node'
-            // appearing again as an individual type argument, meaning we'll only yield the set above in this case.
+            //
+            // Without this check, the 'IEnumerable<Node>' part would keep expanding forever, as expanding its
+            // covariant interfaces would eventually bring us back to the same constructed interface signature
+            // (for example, 'IEnumerable<Node>') again. By tracking visited constructed interface types instead,
+            // we stop as soon as we encounter the same constructed covariant interface a second time, meaning
+            // we'll only yield the set above in this case.
             if (!visitedTypes.Add(interfaceType))
             {
                 yield break;
