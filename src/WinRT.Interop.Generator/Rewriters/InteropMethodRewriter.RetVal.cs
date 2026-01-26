@@ -110,6 +110,8 @@ internal partial class InteropMethodRewriter
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller'
                 body.Instructions.ReferenceReplaceRange(marker, [
+                    // HStringMarshaller.ConvertToUnmanaged expects a ReadOnlySpan<char>, so we need to convert to a span first.
+                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stind_I)]);
             }

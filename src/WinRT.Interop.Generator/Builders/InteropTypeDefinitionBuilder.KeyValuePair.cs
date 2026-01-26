@@ -355,10 +355,8 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'ComputeVtables' method
-            marshallerAttributeType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-                method: computeVtablesMethod);
+            // Add the 'ComputeVtables' method
+            marshallerAttributeType.Methods.Add(computeVtablesMethod);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'interfaceValue')
@@ -429,10 +427,8 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'CreateObject' method
-            marshallerAttributeType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-                method: createObjectMethod);
+            // Add the 'CreateObject' method
+            marshallerAttributeType.Methods.Add(createObjectMethod);
         }
 
         /// <summary>

@@ -108,7 +108,7 @@ internal partial class InteropMethodDefinitionFactory
                     memberName: methodName,
                     signature: MethodSignature.CreateInstance(new GenericParameterSignature(
                         parameterType: GenericParameterType.Type,
-                        index: keyValuePairType.TypeArguments.IndexOf(keyOrValueType))));
+                        index: methodName == "get_Key" ? 0 : 1)));
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
