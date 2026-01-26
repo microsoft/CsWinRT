@@ -191,14 +191,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the native object for an <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
-        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="vectorViewMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IVectorViewMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature readOnlyListType,
-            TypeDefinition readOnlyListMethodsType,
+            TypeDefinition vectorViewMethodsType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -212,7 +212,7 @@ internal partial class InteropTypeDefinitionBuilder
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                emitState.LookupTypeDefinition(readOnlyListType, "IVectorViewMethods").ToReferenceTypeSignature());
+                vectorViewMethodsType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: readOnlyListType,
