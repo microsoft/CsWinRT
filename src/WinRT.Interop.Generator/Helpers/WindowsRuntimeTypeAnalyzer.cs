@@ -52,8 +52,19 @@ internal static class WindowsRuntimeTypeAnalyzer
         return interfaceType is not null;
     }
 
-    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes2(TypeSignature interfaceType, InteropReferences interopReferences)
+    /// <summary>
+    /// Enumerates all covariant interface types that can be derived from a given interface type, if applicable.
+    /// </summary>
+    /// <param name="interfaceType">The input interface type to expand.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The derived covariant interface types derived from <paramref name="interfaceType"/>, if any.</returns>
+    /// <remarks>
+    /// The returned sequence can contain duplicate types, callers should take care of deduplicating them if needed.
+    /// Callers should also validate what returned generic instantiations are actually valid Windows Runtime types.
+    /// </remarks>
+    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
     {
+        // Helper method also taking an 'HashSet<TypeSignature>' to track visited types (see notes below)
         static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypesCore(
             TypeSignature interfaceType,
             InteropReferences interopReferences,
@@ -87,7 +98,6 @@ internal static class WindowsRuntimeTypeAnalyzer
             //
             // While analyzing it, we'll see 'IEnumerable<Node>'. Which then leads to the following covariant types:
             //   - 'IEnumerable<Node>'
-            //   - 'IEnumerable<IEnumerable<Node>>'
             //   - 'IEnumerable<IEnumerable<object>>'
             //   - 'IEnumerable<IEnumerable>'
             //   - 'IEnumerable<object>'
@@ -137,62 +147,5 @@ internal static class WindowsRuntimeTypeAnalyzer
             interfaceType: interfaceType,
             interopReferences: interopReferences,
             visitedTypes: new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion));
-    }
-
-    /// <summary>
-    /// Enumerates all covariant interface types that can be derived from a given interface type, if applicable.
-    /// </summary>
-    /// <param name="interfaceType">The input interface type to expand.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <returns>The derived covariant interface types derived from <paramref name="interfaceType"/>, if any.</returns>
-    /// <remarks>
-    /// The returned sequence can contain duplicate types, callers should take care of deduplicating them if needed.
-    /// Callers should also validate what returned generic instantiations are actually valid Windows Runtime types.
-    /// </remarks>
-    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
-    {
-        // The only Windows Runtime interfaces that support covariance have a single type parameter.
-        // In practice, it's just 'IEnumerable<T>', 'IEnumerator<T>', and 'IReadOnlyList<T>'.
-        if (interfaceType is not GenericInstanceTypeSignature
-            {
-                IsValueType: false,
-                GenericType: ITypeDefOrRef genericInterfaceType,
-                TypeArguments: [TypeSignature { IsValueType: false } elementType]
-            })
-        {
-            yield break;
-        }
-
-        // Make sure the interface type itself is one of the valid ones
-        if (!SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerable1) &&
-            !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
-            !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
-        {
-            yield break;
-        }
-
-        // First gather all combinations from interfaces implemented by the element type
-        foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
-        {
-            // Construct the generic interface with the current element type
-            yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
-
-            // Also track any covariant combinations derived from the current element type
-            foreach (TypeSignature elementCovariantInterfaceType in EnumerateCovariantInterfaceTypes(elementInterfaceType, interopReferences))
-            {
-                yield return genericInterfaceType.MakeGenericReferenceType(elementCovariantInterfaceType);
-            }
-        }
-
-        // Next, also gather all base types for the element type
-        foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
-        {
-            yield return genericInterfaceType.MakeGenericReferenceType(baseType);
-        }
-
-        // Lastly, make sure to also always track 'object' as a base type. This would be
-        // skipped for element types being interfaces, as they have no base type. However,
-        // with respect to variant conversions, 'object' is always a valid covariant type.
-        yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.CorLibTypeFactory.Object);
     }
 }
