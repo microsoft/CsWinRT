@@ -733,7 +733,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IReadOnlyList1.NativeObject(
                     readOnlyListType: typeSignature,
-                    readOnlyListMethodsType: readOnlyListMethodsType,
+                    vectorViewMethodsType: vectorViewMethodsType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
