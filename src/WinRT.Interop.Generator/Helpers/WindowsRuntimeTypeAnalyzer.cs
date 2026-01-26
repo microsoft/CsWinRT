@@ -52,13 +52,12 @@ internal static class WindowsRuntimeTypeAnalyzer
         return interfaceType is not null;
     }
 
-    public static IReadOnlySet<TypeSignature> EnumerateCovariantInterfaceTypes2(TypeSignature interfaceType, InteropReferences interopReferences)
+    public static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypes2(TypeSignature interfaceType, InteropReferences interopReferences)
     {
-        static void EnumerateCovariantInterfaceTypesCore(
+        static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypesCore(
             TypeSignature interfaceType,
             InteropReferences interopReferences,
-            HashSet<TypeSignature> visitedTypes,
-            HashSet<TypeSignature> compatibleTypes)
+            HashSet<TypeSignature> visitedTypes)
         {
             // The only Windows Runtime interfaces that support covariance have a single type parameter.
             // In practice, it's just 'IEnumerable<T>', 'IEnumerator<T>', and 'IReadOnlyList<T>'.
@@ -69,7 +68,7 @@ internal static class WindowsRuntimeTypeAnalyzer
                     TypeArguments: [TypeSignature { IsValueType: false } elementType]
                 })
             {
-                return;
+                yield break;
             }
 
             // Make sure the interface type itself is one of the valid ones
@@ -77,54 +76,44 @@ internal static class WindowsRuntimeTypeAnalyzer
                 !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
                 !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
             {
-                return;
+                yield break;
             }
 
             if (!visitedTypes.Add(interfaceType))
             {
-                return;
+                yield break;
             }
 
-            HashSet<TypeSignature> covariantTypeArguments = new(SignatureComparer.IgnoreVersion);
-
             // f
-            covariantTypeArguments.Add(elementType);
+            yield return genericInterfaceType.MakeGenericReferenceType(elementType);
 
             foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
             {
-                covariantTypeArguments.Add(elementInterfaceType);
+                yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
 
-                EnumerateCovariantInterfaceTypesCore(
+                foreach (TypeSignature elementCovariantInterfaceType in EnumerateCovariantInterfaceTypesCore(
                     elementInterfaceType,
                     interopReferences,
-                    visitedTypes,
-                    covariantTypeArguments);
+                    visitedTypes))
+                {
+                    yield return genericInterfaceType.MakeGenericReferenceType(elementCovariantInterfaceType);
+                }
             }
 
             foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
             {
-                covariantTypeArguments.Add(baseType);
+                yield return genericInterfaceType.MakeGenericReferenceType(baseType);
             }
 
-            covariantTypeArguments.Add(interopReferences.CorLibTypeFactory.Object);
+            yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.CorLibTypeFactory.Object);
 
             visitedTypes.Remove(interfaceType);
-
-            foreach (TypeSignature covariantTypeArgument in covariantTypeArguments)
-            {
-                compatibleTypes.Add(genericInterfaceType.MakeGenericReferenceType(covariantTypeArgument));
-            }
         }
 
-        HashSet<TypeSignature> compatibleTypes = new(SignatureComparer.IgnoreVersion);
-
-        EnumerateCovariantInterfaceTypesCore(
+        return EnumerateCovariantInterfaceTypesCore(
             interfaceType,
             interopReferences,
-            new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion),
-            compatibleTypes);
-
-        return compatibleTypes;
+            new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>
