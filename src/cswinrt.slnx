@@ -200,7 +200,8 @@
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="TestWinRT/TestComponent/TestComponent.vcxproj" Id="2954f343-85a7-46f5-a3f3-f106fdd13900">
       <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
