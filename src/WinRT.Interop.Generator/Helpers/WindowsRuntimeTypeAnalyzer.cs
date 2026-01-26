@@ -79,41 +79,64 @@ internal static class WindowsRuntimeTypeAnalyzer
                 yield break;
             }
 
+            // Track the current constructed interface as visited, and stop immediately if we have already visited
+            // it before. This check is necessary to avoid infinite recursion on types that have circular references.
+            // For instance, consider this type declaration:
+            //
+            // class Node : IEnumerable<Node>;
+            //
+            // While analyzing it, we'll see 'IEnumerable<Node>'. Which then leads to the following covariant types:
+            //   - 'IEnumerable<Node>'
+            //   - 'IEnumerable<IEnumerable<Node>>'
+            //   - 'IEnumerable<IEnumerable<object>>'
+            //   - 'IEnumerable<IEnumerable>'
+            //   - 'IEnumerable<object>'
+            // Without this check, the 'IEnumerable<Node>' part would keep expanding forever, since 'Node' appears
+            // recursively as a type argument. By tracking visited types instead, we stop as soon as we see 'Node'
+            // appearing again as an individual type argument, meaning we'll only yield the set above in this case.
             if (!visitedTypes.Add(interfaceType))
             {
                 yield break;
             }
 
-            // f
-            yield return genericInterfaceType.MakeGenericReferenceType(elementType);
+            // First return the current constructed interface too, as it's a valid generic instantiation
+            yield return interfaceType;
 
+            // Next, gather all combinations from interfaces implemented by the element type
             foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
             {
+                // Construct the generic interface with the current element type
                 yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
 
+                // Also track any covariant combinations derived from the current element type
                 foreach (TypeSignature elementCovariantInterfaceType in EnumerateCovariantInterfaceTypesCore(
-                    elementInterfaceType,
-                    interopReferences,
-                    visitedTypes))
+                    interfaceType: elementInterfaceType,
+                    interopReferences: interopReferences,
+                    visitedTypes: visitedTypes))
                 {
                     yield return genericInterfaceType.MakeGenericReferenceType(elementCovariantInterfaceType);
                 }
             }
 
+            // Then, also gather all base types for the element type
             foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
             {
                 yield return genericInterfaceType.MakeGenericReferenceType(baseType);
             }
 
+            // Lastly, make sure to also always track 'object' as a base type. This would be
+            // skipped for element types being interfaces, as they have no base type. However,
+            // with respect to variant conversions, 'object' is always a valid covariant type.
             yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.CorLibTypeFactory.Object);
 
-            visitedTypes.Remove(interfaceType);
+            // We're closing this recursive sub-tree, so we can remove the current interface type
+            _ = visitedTypes.Remove(interfaceType);
         }
 
         return EnumerateCovariantInterfaceTypesCore(
-            interfaceType,
-            interopReferences,
-            new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion));
+            interfaceType: interfaceType,
+            interopReferences: interopReferences,
+            visitedTypes: new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>
