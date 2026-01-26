@@ -65,7 +65,7 @@ internal static class WindowsRuntimeTypeAnalyzer
     /// </remarks>
     public static IEnumerable<TypeSignature> EnumerateCovarianceExpandedInterfaceTypes(TypeSignature interfaceType, InteropReferences interopReferences)
     {
-        // Helper method also taking an 'HashSet<TypeSignature>' to track visited types (see notes below)
+        // Helper method also taking a 'HashSet<TypeSignature>' to track visited types (see notes below)
         static IEnumerable<TypeSignature> EnumerateCovariantInterfaceTypesCore(
             TypeSignature interfaceType,
             InteropReferences interopReferences,
