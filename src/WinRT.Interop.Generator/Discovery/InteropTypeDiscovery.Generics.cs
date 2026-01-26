@@ -289,6 +289,15 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
+            // Then, we also need to track the 'IEnumerable<T>' type, as it's needed by the 'NativeObject' type for the list type.
+            // This is because that specialized RCW type will also need to be able to project this interface in metadata.
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
             // If the element type is some 'KeyValuePair<TKey, TValue>' type, we also need to track the corresponding 'IDictionary<TKey, TValue>'
             // type, as the code for it will be used for dynamic casts to 'ICollection<KeyValuePair<TKey, TValue>>' types (see notes below).
             if (typeSignature.TypeArguments[0].IsConstructedKeyValuePairType(
@@ -317,6 +326,14 @@ internal partial class InteropTypeDiscovery
         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
         {
             discoveryState.TrackIReadOnlyList1Type(typeSignature);
+
+            // Also track 'IEnumerable<T>', like for 'IList<T>' (see notes above)
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
 
             // Also track 'IReadOnlyDictionary<TKey, TValue>' if the element type is 'KeyValuePair<TKey, TValue>' (same as above)
             if (typeSignature.TypeArguments[0].IsConstructedKeyValuePairType(
@@ -365,6 +382,15 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
+            // Then, we also need to track the 'IEnumerable<KeyValuePair<TKey, TValue>>' type, as it's needed by the 'NativeObject' type for
+            // the dictionary type. This is because that specialized RCW type will also need to be able to project this interface in metadata.
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
             // We also need to track the constructed 'ReadOnlyDictionary<TKey, TValue>' type, as that is used by
             // 'IDictionaryAdapter<TKey, TValue>.GetView' in case the input 'IDictionary<TKey, TValue>' instance doesn't implement
             // 'IReadOnlyDictionary<TKey, TValue>' directly. Analogous to tracking 'ReadOnlyCollection<T>' above.
@@ -406,6 +432,14 @@ internal partial class InteropTypeDiscovery
             // Also track 'IReadOnlyList<KeyValuePair<TKey, TValue>>' to enable dynamic casts (see notes above for 'IDictionary<TKey, TValue>')
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
                 typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Also track 'IEnumerable<KeyValuePair<TKey, TValue>>', like for 'IDictionary<TKey, TValue>' (see notes above)
+            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
