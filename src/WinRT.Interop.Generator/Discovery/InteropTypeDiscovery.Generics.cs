@@ -289,8 +289,8 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
-            // Then, we also need to track the 'IEnumerable<KeyValuePair<TKey, TValue>>' type, as it's needed by the 'NativeObject' type for
-            // the list type. This is because that specialized RCW type will also need to be able to project this interface in metadata.
+            // Then, we also need to track the 'IEnumerable<T>' type, as it's needed by the 'NativeObject' type for the list type.
+            // This is because that specialized RCW type will also need to be able to project this interface in metadata.
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
@@ -327,7 +327,7 @@ internal partial class InteropTypeDiscovery
         {
             discoveryState.TrackIReadOnlyList1Type(typeSignature);
 
-            // Also track 'IEnumerable<KeyValuePair<TKey, TValue>>', like for 'IList<T>' (see notes above)
+            // Also track 'IEnumerable<T>', like for 'IList<T>' (see notes above)
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
