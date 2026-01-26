@@ -90,7 +90,19 @@ internal sealed class WindowsRuntimeMetadataInfo
             {
                 WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>(inherit: false)!;
 
-                Debug.Assert(mappedTypeAttribute is not null);
+                [DoesNotReturn]
+                [StackTraceHidden]
+                void ThrowNotSupportedException()
+                {
+                    throw new NotSupportedException(
+                        $"The metadata provider type '{_metadataProviderType}' does not have an associated public type. " +
+                        $"This code path should have never been reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
+                }
+
+                if (mappedTypeAttribute is null)
+                {
+                    ThrowNotSupportedException();
+                }
 
                 return _publicType ??= mappedTypeAttribute.PublicType;
             }
