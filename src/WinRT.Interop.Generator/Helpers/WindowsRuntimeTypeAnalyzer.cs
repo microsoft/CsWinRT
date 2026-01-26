@@ -52,6 +52,81 @@ internal static class WindowsRuntimeTypeAnalyzer
         return interfaceType is not null;
     }
 
+    public static IReadOnlySet<TypeSignature> EnumerateCovariantInterfaceTypes2(TypeSignature interfaceType, InteropReferences interopReferences)
+    {
+        static void EnumerateCovariantInterfaceTypesCore(
+            TypeSignature interfaceType,
+            InteropReferences interopReferences,
+            HashSet<TypeSignature> visitedTypes,
+            HashSet<TypeSignature> compatibleTypes)
+        {
+            // The only Windows Runtime interfaces that support covariance have a single type parameter.
+            // In practice, it's just 'IEnumerable<T>', 'IEnumerator<T>', and 'IReadOnlyList<T>'.
+            if (interfaceType is not GenericInstanceTypeSignature
+                {
+                    IsValueType: false,
+                    GenericType: ITypeDefOrRef genericInterfaceType,
+                    TypeArguments: [TypeSignature { IsValueType: false } elementType]
+                })
+            {
+                return;
+            }
+
+            // Make sure the interface type itself is one of the valid ones
+            if (!SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerable1) &&
+                !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
+                !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
+            {
+                return;
+            }
+
+            if (!visitedTypes.Add(interfaceType))
+            {
+                return;
+            }
+
+            HashSet<TypeSignature> covariantTypeArguments = new(SignatureComparer.IgnoreVersion);
+
+            // f
+            covariantTypeArguments.Add(elementType);
+
+            foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
+            {
+                covariantTypeArguments.Add(elementInterfaceType);
+
+                EnumerateCovariantInterfaceTypesCore(
+                    elementInterfaceType,
+                    interopReferences,
+                    visitedTypes,
+                    covariantTypeArguments);
+            }
+
+            foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
+            {
+                covariantTypeArguments.Add(baseType);
+            }
+
+            covariantTypeArguments.Add(interopReferences.CorLibTypeFactory.Object);
+
+            visitedTypes.Remove(interfaceType);
+
+            foreach (TypeSignature covariantTypeArgument in covariantTypeArguments)
+            {
+                compatibleTypes.Add(genericInterfaceType.MakeGenericReferenceType(covariantTypeArgument));
+            }
+        }
+
+        HashSet<TypeSignature> compatibleTypes = new(SignatureComparer.IgnoreVersion);
+
+        EnumerateCovariantInterfaceTypesCore(
+            interfaceType,
+            interopReferences,
+            new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion),
+            compatibleTypes);
+
+        return compatibleTypes;
+    }
+
     /// <summary>
     /// Enumerates all covariant interface types that can be derived from a given interface type, if applicable.
     /// </summary>
