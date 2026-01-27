@@ -62,7 +62,7 @@ public static unsafe class IEnumerableMarshaller
 file abstract class IEnumerableComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
     /// <inheritdoc/>
-	public static unsafe bool TryCreateObject(
+    public static unsafe bool TryCreateObject(
         void* value,
         ReadOnlySpan<char> runtimeClassName,
         [NotNullWhen(true)] out object? wrapperObject,
