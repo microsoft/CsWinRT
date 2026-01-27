@@ -236,6 +236,8 @@ internal static class InteropUtf8NameFactory
                 ElementType.U8 => "ulong"u8,
                 ElementType.R4 => "float"u8,
                 ElementType.R8 => "double"u8,
+                ElementType.I => "nint"u8,
+                ElementType.U => "nuint"u8,
                 ElementType.String => "string"u8,
                 ElementType.Object => "object"u8,
                 _ => null
