@@ -108,8 +108,11 @@ internal partial class InteropMethodRewriter
             }
             else if (retValType.IsTypeOfString())
             {
-                // When marshalling 'string' values, we must use 'HStringMarshaller'
+                // When marshalling 'string' values, we must use 'HStringMarshaller'. Note that the
+                // 'HStringMarshaller.ConvertToUnmanaged' method actually takes a 'ReadOnlySpan<char>',
+                // so we first also need to create one from the 'string' value loaded on the stack.
                 body.Instructions.ReferenceReplaceRange(marker, [
+                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
                     new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stind_I)]);
             }
