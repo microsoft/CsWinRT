@@ -700,6 +700,8 @@ internal static partial class InteropTypeDefinitionBuilder
             name: InteropUtf8NameFactory.TypeName(mappedType),
             mappedType: mappedType,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
+            metadataTypeName: null,
+            referenceMappedType: false,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
@@ -712,7 +714,9 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
-    /// <param name="runtimeClassName">The runtime class name for the managed type (if null, the source type will be used).</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="referenceMappedType">Indicates whether to emit an attribute to reference the original managed type.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -722,6 +726,8 @@ internal static partial class InteropTypeDefinitionBuilder
         Utf8String name,
         TypeSignature mappedType,
         string? runtimeClassName,
+        string? metadataTypeName,
+        bool referenceMappedType,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -736,19 +742,30 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(proxyType);
 
+        // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name, if available
         if (runtimeClassName is not null)
         {
-            // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: runtimeClassName))));
         }
-        else
+
+        // Add the '[WindowsRuntimeMetadataTypeName]' attribute with the provided metadata type name, if available
+        if (metadataTypeName is not null)
         {
-            // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type. This allows
-            // the runtime to retrieve the user-provided runtime class name from the original type.
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: runtimeClassName))));
+        }
+
+        // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type, if requested.
+        // This allows retrieving the user-provided runtime class name from the original managed type.
+        if (referenceMappedType)
+        {
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(

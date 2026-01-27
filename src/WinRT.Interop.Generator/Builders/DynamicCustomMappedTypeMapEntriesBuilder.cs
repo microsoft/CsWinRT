@@ -164,6 +164,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: trimTarget.Name!,
             mappedType: trimTarget,
             runtimeClassName: runtimeClassName,
+            metadataTypeName: null,
+            referenceMappedType: false,
             comWrappersMarshallerAttributeType: comWrappersMarshallerType,
             interopReferences: interopReferences,
             module: module,
