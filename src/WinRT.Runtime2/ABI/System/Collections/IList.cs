@@ -75,7 +75,7 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
                 wrapperFlags: out wrapperFlags);
 
-            wrapperObject = new WindowsRuntimeEnumerable(valueReference);
+            wrapperObject = new WindowsRuntimeList(valueReference);
 
             return true;
         }
@@ -100,7 +100,7 @@ file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeCom
             iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
             wrapperFlags: out wrapperFlags);
 
-        return new WindowsRuntimeEnumerable(valueReference);
+        return new WindowsRuntimeList(valueReference);
     }
 }
 
