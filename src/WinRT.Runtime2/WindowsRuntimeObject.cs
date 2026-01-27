@@ -413,10 +413,10 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <returns>The resulting <see cref="WindowsRuntimeObjectReference"/> object.</returns>
     /// <exception cref="Exception">Thrown if the <see cref="IEnumerable"/> interface is not implemented.</exception>
-    internal WindowsRuntimeObjectReference GetObjectReferenceForIEnumerableInterface()
+    internal WindowsRuntimeObjectReference GetObjectReferenceForIEnumerableInterfaceInstance()
     {
         // Throw an exception if we couldn't resolve the 'IEnumerable' interface reference
-        if (!TryGetObjectReferenceForIEnumerableInterface(out WindowsRuntimeObjectReference? interfaceReference))
+        if (!TryGetObjectReferenceForIEnumerableInterfaceInstance(out WindowsRuntimeObjectReference? interfaceReference))
         {
             [DoesNotReturn]
             [StackTraceHidden]
@@ -437,7 +437,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="interfaceReference">The resulting <see cref="WindowsRuntimeObjectReference"/> object, if the interface could be retrieved.</param>
     /// <returns>Whether <paramref name="interfaceReference"/> could be retrieved successfully.</returns>
-    internal bool TryGetObjectReferenceForIEnumerableInterface([NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
+    internal bool TryGetObjectReferenceForIEnumerableInterfaceInstance([NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
     {
         ConcurrentDictionary<RuntimeTypeHandle, object> typeHandleCache = TypeHandleCache;
 
@@ -871,7 +871,7 @@ public abstract unsafe class WindowsRuntimeObject :
     }
 
     /// <summary>
-    /// A dummy type to use for caching adaptive <see cref="System.Collections.IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterface"/>.
+    /// A dummy type to use for caching adaptive <see cref="System.Collections.IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
     /// </summary>
     private static class IEnumerableInstance;
 }

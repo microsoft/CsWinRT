@@ -121,6 +121,18 @@ public static class IEnumerableMethods
 }
 
 /// <summary>
+/// Interop methods for <see cref="global::System.Collections.IEnumerable"/> invoked over constructed iterator types.
+/// </summary>
+file static class IEnumerableInstanceMethods
+{
+    /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
+    public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
+    {
+        return IEnumerableMethods.GetEnumerator(thisReference);
+    }
+}
+
+/// <summary>
 /// The <see cref="global::System.Collections.IEnumerable"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -188,8 +200,21 @@ file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
 {
     global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IEnumerable).TypeHandle);
+        WindowsRuntimeObject thisObject = (WindowsRuntimeObject)this;
 
-        return IEnumerableMethods.GetEnumerator(thisReference);
+        // First, try to lookup for the actual 'IEnumerable' interface being implemented
+        if (thisObject.TryGetObjectReferenceForInterface(
+            interfaceType: typeof(global::System.Collections.IEnumerable).TypeHandle,
+            interfaceReference: out WindowsRuntimeObjectReference? interfaceReference))
+        {
+            return IEnumerableMethods.GetEnumerator(interfaceReference);
+        }
+
+        // If that fails, try to get an object reference to some 'IEnumerable<T>' instance
+        interfaceReference = thisObject.GetObjectReferenceForIEnumerableInterfaceInstance();
+
+        // Return an enumerator through that. We don't know the 'T', so we need to marshal without type info.
+        // However, this in practice is fine, as the RCW would also always implement 'IEnumerable' in metadata.
+        return IEnumerableInstanceMethods.GetEnumerator(interfaceReference);
     }
 }
