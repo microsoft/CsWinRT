@@ -18,6 +18,10 @@ using static System.Runtime.InteropServices.ComWrappers;
     typeof(IList),
     typeof(ABI.System.Collections.IListInterfaceImpl))]
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    typeof(ICollection),
+    typeof(ABI.System.Collections.IListInterfaceImpl))]
+
 namespace ABI.System.Collections;
 
 /// <summary>
@@ -62,7 +66,7 @@ public static unsafe class IListMarshaller
 file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
     /// <inheritdoc/>
-	public static unsafe bool TryCreateObject(
+    public static unsafe bool TryCreateObject(
         void* value,
         ReadOnlySpan<char> runtimeClassName,
         [NotNullWhen(true)] out object? wrapperObject,
@@ -526,7 +530,7 @@ file interface IListInterfaceImpl : global::System.Collections.IList
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(ICollection).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
 
             return BindableIListMethods.Count(thisReference);
         }
@@ -541,7 +545,7 @@ file interface IListInterfaceImpl : global::System.Collections.IList
     /// <inheritdoc/>
     void ICollection.CopyTo(Array array, int index)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(ICollection).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
 
         BindableIListMethods.CopyTo(thisReference, array, index);
     }
