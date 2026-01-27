@@ -128,7 +128,7 @@ file static class IEnumerableInstanceMethods
     /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
     public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
-        return IEnumerableMethods.GetEnumerator(thisReference);
+        return global::WindowsRuntime.InteropServices.IEnumerableMethods.GetEnumerator(thisReference);
     }
 }
 

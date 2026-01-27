@@ -37,7 +37,7 @@ internal static unsafe class IEnumerableMethods
             // Because we don't know the 'T' type for the current enumerable, we will just marshal the
             // resulting enumerator without type information. This means that we'll either unwrap the
             // CCW for the managed object, or marshal the type as some RCW for a native object.
-            object enumerator = WindowsRuntimeObjectMarshaller.ConvertToManaged(thisPtr)!;
+            object enumerator = WindowsRuntimeObjectMarshaller.ConvertToManaged(result)!;
 
             // It's possible to get back some 'IEnumeratorAdapter<T>' instance here, so we
             // can unwrap the original managed enumerator object from that in this case.
@@ -54,7 +54,7 @@ internal static unsafe class IEnumerableMethods
         }
         finally
         {
-            WindowsRuntimeUnknownMarshaller.Free(thisPtr);
+            WindowsRuntimeUnknownMarshaller.Free(result);
         }
     }
 }
