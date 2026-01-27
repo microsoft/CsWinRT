@@ -3280,7 +3280,7 @@ namespace UnitTest
             Assert.Equal(0, nativeObservable.Count);
         }
 
-        [Fact(Skip = "InvalidOperationException due to missing non-generic IEnumerator #1302")]
+        [Fact]
         public void TestIterator()
         {
             CustomIteratorTest iterator = new CustomIteratorTest();

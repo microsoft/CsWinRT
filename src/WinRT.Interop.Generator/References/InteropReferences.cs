@@ -2035,7 +2035,7 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeComputeVtables => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("ComputeVtables"u8, MethodSignature.CreateStatic(
-            returnType: ComInterfaceEntry.MakePointerType(),
+            returnType: ComInterfaceEntry.ToValueTypeSignature().MakePointerType(),
             parameterTypes: [_corLibTypeFactory.Int32.MakeByReferenceType()]));
 
     /// <summary>
@@ -3909,7 +3909,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     IEnumerable1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
-                    WellKnownTypeSignatureFactory.InGuid(this),
+                    Guid.ToValueTypeSignature().MakeByReferenceType(),
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
     }
 
@@ -4153,7 +4153,7 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("InsertAt"u8, MethodSignature.CreateInstance(
-                returnType: _corLibTypeFactory.Boolean,
+                returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     _corLibTypeFactory.UInt32,
@@ -4993,7 +4993,7 @@ internal sealed class InteropReferences
         return IMapViewMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("HasKey"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -5010,7 +5010,7 @@ internal sealed class InteropReferences
         return IMapViewMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Lookup"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),

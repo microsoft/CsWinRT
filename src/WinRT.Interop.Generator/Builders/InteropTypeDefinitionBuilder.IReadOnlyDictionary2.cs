@@ -540,7 +540,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'TryGetValue' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IReadOnlyDictionary2TryGetValue(keyType, valueType).Import(module),
                 method: tryGetValueMethod);
 
             // Create a body for the 'TryGetValue' method
