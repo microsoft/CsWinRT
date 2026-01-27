@@ -528,6 +528,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataTypeNameAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataTypeNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataTypeNameAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
     /// </summary>
     public TypeReference WindowsRuntimeDefaultInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDefaultInterfaceAttribute"u8);
@@ -551,6 +556,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersTypeMapGroup"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMetadataTypeMapGroup"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
@@ -1370,6 +1380,16 @@ internal sealed class InteropReferences
     public MemberReference TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeMetadataTypeMapGroup"/>.
+    /// </summary>
+    public MemberReference TypeMapAttributeWindowsRuntimeMetadataTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeMetadataTypeMapGroup"/>.
+    /// </summary>
+    public MemberReference TypeMapAssociationAttributeWindowsRuntimeMetadataTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
@@ -2160,6 +2180,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeClassNameAttribute"/>'s constructor.
     /// </summary>
     public MemberReference WindowsRuntimeClassNameAttribute_ctor => field ??= WindowsRuntimeClassNameAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMetadataTypeNameAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeMetadataTypeNameAttribute_ctor => field ??= WindowsRuntimeMetadataTypeNameAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [_corLibTypeFactory.String]));

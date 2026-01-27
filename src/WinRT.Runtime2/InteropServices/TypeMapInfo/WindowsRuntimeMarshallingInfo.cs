@@ -175,10 +175,23 @@ internal sealed class WindowsRuntimeMarshallingInfo
                 // public type yet. We can do that here.
                 WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>(inherit: false)!;
 
+                // Analogous validation as for when retrieving the marshaller attribute
+                [DoesNotReturn]
+                [StackTraceHidden]
+                void ThrowNotSupportedException()
+                {
+                    throw new NotSupportedException(
+                        $"The metadata provider type '{_metadataProviderType}' does not have an associated public type. " +
+                        $"This code path should have never been reached. Please file an issue at https://github.com/microsoft/CsWinRT.");
+                }
+
                 // In this scenario, it is guaranteed that the '[WindowsRuntimeMappedType]' attribute will be present on the
                 // metadata provider type, as we would not have any way to go back to the associated public type otherwise,
                 // which is needed in some cases. The attribute being missing would indicate some code generation error.
-                Debug.Assert(mappedTypeAttribute is not null);
+                if (mappedTypeAttribute is null)
+                {
+                    ThrowNotSupportedException();
+                }
 
                 // Cache the public type for later. We don't need a compare exchange here, as even if we did concurrent
                 // queries for this value, the result would always be the same. So we can skip that small overhead here.

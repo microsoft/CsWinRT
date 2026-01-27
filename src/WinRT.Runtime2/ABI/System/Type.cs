@@ -117,28 +117,30 @@ public static unsafe class TypeMarshaller
         // would be the 'IReference<T>' type name for boxed instances of this type.
         global::System.Type? nullableUnderlyingType = Nullable.GetUnderlyingType(value);
 
-        // For projected types (not custom-mapped, but possibly manually projected, like e.g. 'IAsyncInfo'), we
-        // can always just use the fully qualified type name (as it will always match the one in the .winmd file).
-        // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeMetadata]'.
-        // Note that we're intentionally skipping generic types, as for those we need the 'cswinrtgen' info.
-        // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too.
-        if (nullableUnderlyingType is null && !value.IsGenericType && value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+        // Special handling for some types which can never be used in a 'Nullable<T>' instantiation (e.g. interfaces)
+        if (nullableUnderlyingType is null)
         {
-            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Metadata };
+            // For projected types (not custom-mapped, but possibly manually projected, like e.g. 'IAsyncInfo'), we
+            // can always just use the fully qualified type name (as it will always match the one in the .winmd file).
+            // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeMetadata]'.
+            // Note that we're intentionally skipping generic types, as for those we need the 'cswinrtgen' info.
+            // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too.
+            if (!value.IsGenericType && value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+            {
+                reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Metadata };
 
-            return;
-        }
+                return;
+            }
 
-        // TODO: for generic interfaces, 'cswinrtgen' will emit an entry with the metadata name in the metadata type map.
+            // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
+            // type map entry for normal marshalling (because they're interfaces), and they would also not show up as
+            // being projected types from there. So we handle them here first to get the right metadata type name.
+            if (WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
+            {
+                reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = TypeKind.Metadata };
 
-        // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
-        // type map entry for normal marshalling (because they're interfaces), and they would also not show up as
-        // being projected types from there. So we handle them here first to get the right metadata type name.
-        if (nullableUnderlyingType is null && WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
-        {
-            reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = TypeKind.Metadata };
-
-            return;
+                return;
+            }
         }
 
         // Special case 'Exception' types, since we also need to handle all derived types (e.g. user-defined)
@@ -301,9 +303,6 @@ public static unsafe class TypeMarshaller
         }
 
         global::System.Type? type = null;
-
-        // TODO: put type map entries for non-generic interfaces in the metadata type map.
-        // This also needs to have entries for all value types and delegate types
 
         // If the type was handled by the metadata lookup, get the public type from there
         if (WindowsRuntimeMetadataInfo.TryGetInfo(typeName, out WindowsRuntimeMetadataInfo? metadataInfo))
