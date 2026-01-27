@@ -1215,7 +1215,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for the event source type for <see cref="VectorChangedEventHandler1"/>.
     /// </summary>
-    public TypeReference VectorChangedEventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "VectorChangedEventHandlerEventSource`1"u8);
+    public TypeReference VectorChangedEventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.Windows.Foundation.Collections"u8, "VectorChangedEventHandlerEventSource`1"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Collections.MapChangedEventHandler&lt;K, V&gt;</c>.
@@ -1225,7 +1225,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for the event source type for <see cref="MapChangedEventHandler2"/>.
     /// </summary>
-    public TypeReference MapChangedEventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "MapChangedEventHandlerEventSource`2"u8);
+    public TypeReference MapChangedEventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.Windows.Foundation.Collections"u8, "MapChangedEventHandlerEventSource`2"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.TrustLevel</c>.
@@ -4086,7 +4086,7 @@ internal sealed class InteropReferences
         return IVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("GetAt"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("GetAt"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4102,7 +4102,7 @@ internal sealed class InteropReferences
         return IVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("SetAt"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("SetAt"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4119,7 +4119,7 @@ internal sealed class InteropReferences
         return IVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Append"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Append"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4135,7 +4135,7 @@ internal sealed class InteropReferences
         return IVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("IndexOf"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4152,7 +4152,7 @@ internal sealed class InteropReferences
         return IVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("InsertAt"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("InsertAt"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4924,7 +4924,7 @@ internal sealed class InteropReferences
         return IMapMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("HasKey"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4941,7 +4941,7 @@ internal sealed class InteropReferences
         return IMapMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Lookup"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4958,7 +4958,7 @@ internal sealed class InteropReferences
         return IMapMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Insert"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -4976,7 +4976,7 @@ internal sealed class InteropReferences
         return IMapMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("Remove"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
@@ -5760,7 +5760,7 @@ internal sealed class InteropReferences
         return IObservableVectorMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateStatic(
                 returnType: VectorChangedEventHandler1EventSource.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                 parameterTypes: [
                     WindowsRuntimeObject.ToReferenceTypeSignature(),
@@ -5811,7 +5811,7 @@ internal sealed class InteropReferences
         return IObservableMapMethodsImpl2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
-            .CreateMemberReference("MapChanged"u8, MethodSignature.CreateInstance(
+            .CreateMemberReference("MapChanged"u8, MethodSignature.CreateStatic(
                 returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)),
