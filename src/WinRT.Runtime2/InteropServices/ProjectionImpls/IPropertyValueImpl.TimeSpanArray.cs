@@ -113,7 +113,7 @@ file static unsafe class TimeSpanArrayPropertyValueImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern void ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>TimeSpanArrayMarshaller, WinRT.Interop.dll")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>TimeSpanArrayMarshaller, WinRT.Interop")] object? _,
                 TimeSpan[] source,
                 out uint size,
                 out ABI.System.TimeSpan* array);

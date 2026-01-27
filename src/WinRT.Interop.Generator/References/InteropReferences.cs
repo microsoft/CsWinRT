@@ -2026,7 +2026,7 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateStatic(
+        .CreateMemberReference("GetOrCreateComInterfaceForObject"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void.MakePointerType(),
             parameterTypes: [_corLibTypeFactory.Object]));
 
@@ -2034,7 +2034,7 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ComputeVtables(out int)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeComputeVtables => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference("ComputeVtables"u8, MethodSignature.CreateStatic(
+        .CreateMemberReference("ComputeVtables"u8, MethodSignature.CreateInstance(
             returnType: ComInterfaceEntry.ToValueTypeSignature().MakePointerType(),
             parameterTypes: [_corLibTypeFactory.Int32.MakeByReferenceType()]));
 
@@ -2042,7 +2042,7 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.CreateObject(void*)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeCreateObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
+        .CreateMemberReference("CreateObject"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Object,
             parameterTypes: [
                 _corLibTypeFactory.Void.MakePointerType(),
@@ -5957,9 +5957,9 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]);
     }
 
     /// <summary>
@@ -5974,9 +5974,9 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1))]);
     }
 
     /// <summary>
