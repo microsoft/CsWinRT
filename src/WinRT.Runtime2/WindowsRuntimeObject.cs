@@ -480,8 +480,8 @@ public abstract unsafe class WindowsRuntimeObject :
             // also guarantees that even if we have race conditions, the same implementation is always used.
             object cachedResult = typeHandleCache.GetOrAdd(typeof(IEnumerableInstance).TypeHandle, result);
 
-            // Return the resulting object reference from the cached result. Note that this might in the event
-            // of a lost race, possibly result in us reporting a failure even though this thread had actually
+            // Return the resulting object reference from the cached result. Note that in the event of a lost
+            // race, this might possibly result in us reporting a failure even though this thread had actually
             // found an object reference. This is intentional, as we want to make sure that we don't return
             // different implementations at different callsites, as that could lead to hard to debug problems.
             // In practice, this doesn't matter, as we always expect 'IEnumerable' casts to be done after some
