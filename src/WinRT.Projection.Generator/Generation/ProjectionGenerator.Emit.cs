@@ -68,7 +68,12 @@ internal partial class ProjectionGenerator
                 ProjectionAssemblyName,
                 syntaxTrees,
                 references,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
+                new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary,
+                    allowUnsafe: true,
+                    optimizationLevel: OptimizationLevel.Release,
+                    deterministic: true,
+                    generalDiagnosticOption: ReportDiagnostic.Info));
 
             return compilation;
         }
@@ -82,9 +87,14 @@ internal partial class ProjectionGenerator
     {
         try
         {
+            // Configure emit options for embedded symbols
+            EmitOptions emitOptions = new(
+                debugInformationFormat: DebugInformationFormat.Embedded,
+                includePrivateMembers: true);
+
             // Emit the compilation to a file
             using FileStream fileStream = new(dllPath, FileMode.Create);
-            EmitResult result = compilation.Emit(fileStream);
+            EmitResult result = compilation.Emit(fileStream, options: emitOptions);
 
             if (!result.Success)
             {
