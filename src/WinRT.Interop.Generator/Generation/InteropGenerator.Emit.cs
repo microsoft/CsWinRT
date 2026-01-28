@@ -1294,8 +1294,8 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerAttributeType: out TypeDefinition marshallerAttributeType);
 
-                InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                InteropTypeDefinitionBuilder.KeyValuePair.Proxy(
+                    keyValuePairType: typeSignature,
                     comWrappersMarshallerAttributeType: marshallerAttributeType,
                     interopReferences: interopReferences,
                     module: module,
