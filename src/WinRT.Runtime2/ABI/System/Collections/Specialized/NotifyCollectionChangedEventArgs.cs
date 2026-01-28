@@ -75,7 +75,7 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
         // Helper for 'get_NewItems'
-        static WindowsRuntimeObjectReferenceValue GetNewItems(void* value)
+        static global::System.Collections.IList? GetNewItems(void* value)
         {
             void* newItems;
 
@@ -83,11 +83,18 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-            return new(newItems);
+            try
+            {
+                return IListMarshaller.ConvertToManaged(newItems);
+            }
+            finally
+            {
+                WindowsRuntimeUnknownMarshaller.Free(newItems);
+            }
         }
 
         // Helper for 'get_OldItems'
-        static WindowsRuntimeObjectReferenceValue GetOldItems(void* value)
+        static global::System.Collections.IList? GetOldItems(void* value)
         {
             void* oldItems;
 
@@ -95,7 +102,14 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-            return new(oldItems);
+            try
+            {
+                return IListMarshaller.ConvertToManaged(oldItems);
+            }
+            finally
+            {
+                WindowsRuntimeUnknownMarshaller.Free(oldItems);
+            }
         }
 
         // Helper for 'get_NewStartingIndex'
@@ -127,28 +141,20 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
         {
             case NotifyCollectionChangedAction.Add:
             {
-                using WindowsRuntimeObjectReferenceValue newItemsValue = GetNewItems(value);
-
-                return new(action, null, GetNewStartingIndex(value));
+                return new(action, GetNewItems(value), GetNewStartingIndex(value));
             }
             case NotifyCollectionChangedAction.Remove:
             {
-                using WindowsRuntimeObjectReferenceValue oldItemsValue = GetOldItems(value);
-
-                return new(action, null, GetOldStartingIndex(value));
+                return new(action, GetOldItems(value), GetOldStartingIndex(value));
             }
             case NotifyCollectionChangedAction.Replace:
             {
-                using WindowsRuntimeObjectReferenceValue newItemsValue = GetNewItems(value);
-                using WindowsRuntimeObjectReferenceValue oldItemsValue = GetOldItems(value);
-
-                return new(action, null, GetNewStartingIndex(value));
+                // The 'NotifyCollectionChangedEventArgs' constructor will perform 'null' checks for us
+                return new(action, GetNewItems(value)!, GetOldItems(value)!, GetNewStartingIndex(value));
             }
             case NotifyCollectionChangedAction.Move:
             {
-                using WindowsRuntimeObjectReferenceValue newItemsValue = GetNewItems(value);
-
-                return new(action, null, GetNewStartingIndex(value), GetOldStartingIndex(value));
+                return new(action, GetNewItems(value), GetNewStartingIndex(value), GetOldStartingIndex(value));
             }
             case NotifyCollectionChangedAction.Reset:
                 return new(action);

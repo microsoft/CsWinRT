@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -108,7 +109,7 @@ internal partial class InteropMethodDefinitionFactory
                     memberName: methodName,
                     signature: MethodSignature.CreateInstance(new GenericParameterSignature(
                         parameterType: GenericParameterType.Type,
-                        index: keyValuePairType.TypeArguments.IndexOf(keyOrValueType))));
+                        index: methodName.AsSpan().SequenceEqual("get_Key"u8) ? 0 : 1)));
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)

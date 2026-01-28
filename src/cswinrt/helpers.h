@@ -1286,7 +1286,8 @@ namespace cswinrt
         EventSource,
         // Used only with interop dll name
         Marshaller,
-        ArrayMarshaller
+        ArrayMarshaller,
+        InteropIID
     };
 
     std::string get_mapped_element_type(ElementType elementType)

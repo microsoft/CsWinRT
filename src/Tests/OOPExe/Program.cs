@@ -4,7 +4,7 @@ using System.Threading;
 using Windows.Foundation;
 using Windows.Win32;
 using Windows.Win32.System.Com;
-using WinRT;
+using WindowsRuntime.InteropServices;
 
 namespace OOPExe
 {
@@ -12,7 +12,7 @@ namespace OOPExe
     {
         public static ManualResetEvent done = new ManualResetEvent(false);
 
-        static void Main(string[] args)
+        static unsafe void Main(string[] args)
         {
             object obj;
             int hr = PInvoke.CoCreateInstance(new Guid("15F1005B-E23A-4154-9417-CCD083D452BB"), null, CLSCTX.CLSCTX_LOCAL_SERVER, typeof(IAsyncAction).GUID, out obj);
@@ -21,7 +21,7 @@ namespace OOPExe
                 Marshal.ThrowExceptionForHR(hr);
             }
 
-            var asyncAction = MarshalInterface<IAsyncAction>.FromAbi(Marshal.GetIUnknownForObject(obj));
+            var asyncAction = (IAsyncAction) WindowsRuntimeMarshal.ConvertToManaged((void*)Marshal.GetIUnknownForObject(obj));
             asyncAction.Completed = Completed;
 
             if (done.WaitOne(20000))
