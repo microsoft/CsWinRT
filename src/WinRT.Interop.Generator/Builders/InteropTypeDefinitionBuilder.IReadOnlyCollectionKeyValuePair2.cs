@@ -136,6 +136,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: null,
+                metadataTypeName: null,
                 externalTypeMapTargetType: null,
                 externalTypeMapTrimTargetType: null,
                 proxyTypeMapSourceType: null,

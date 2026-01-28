@@ -472,6 +472,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: readOnlyListType,
                 proxyTypeMapSourceType: null,
@@ -490,6 +491,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     runtimeClassName: null,
+                    metadataTypeName: null,
                     externalTypeMapTargetType: null,
                     externalTypeMapTrimTargetType: null,
                     proxyTypeMapSourceType: null,

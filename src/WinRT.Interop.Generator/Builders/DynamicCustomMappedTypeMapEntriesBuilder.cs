@@ -128,6 +128,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         //     For those, the IDIC attributes are in 'WinRT.Runtime.dll', so here we again only need the external type map.
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
+            metadataTypeName: null,
             externalTypeMapTargetType: target,
             externalTypeMapTrimTargetType: trimTarget,
             proxyTypeMapSourceType: null,

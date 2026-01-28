@@ -809,6 +809,7 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         TypeMapAttributes(
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
             externalTypeMapTrimTargetType: interfaceType,
             proxyTypeMapSourceType: null,
@@ -822,7 +823,8 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <summary>
     /// Creates the type map attributes for a given type.
     /// </summary>
-    /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="externalTypeMapTargetType">The target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
     /// <param name="externalTypeMapTrimTargetType">The trim target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
     /// <param name="proxyTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
@@ -833,6 +835,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="module">The module that will contain the type being created.</param>
     public static void TypeMapAttributes(
         string? runtimeClassName,
+        string? metadataTypeName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
         [NotNullIfNotNull(nameof(proxyTypeMapProxyType))] TypeSignature? proxyTypeMapSourceType,
@@ -843,11 +846,23 @@ internal static partial class InteropTypeDefinitionBuilder
         ModuleDefinition module)
     {
         // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the external type map.
-        // This is optional, only needed for projected types.
+        // This is optional, only needed for custom-mapped or projected types.
         if (runtimeClassName is not null)
         {
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
                 value: runtimeClassName,
+                target: externalTypeMapTargetType!,
+                trimTarget: externalTypeMapTrimTargetType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
+
+        // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the metadata type map.
+        // This is also optional, only needed for some 'TypeName' marshalling cases.
+        if (metadataTypeName is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeMetadataTypeMapGroup(
+                value: metadataTypeName,
                 target: externalTypeMapTargetType!,
                 trimTarget: externalTypeMapTrimTargetType!,
                 interopReferences: interopReferences,

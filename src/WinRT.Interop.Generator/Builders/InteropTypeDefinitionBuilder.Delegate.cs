@@ -925,7 +925,7 @@ internal partial class InteropTypeDefinitionBuilder
                 mappedType: delegateType,
                 mappedMetadata: "Windows.Foundation.FoundationContract",
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
-                metadataTypeName: MetadataTypeNameGenerator.GetMetadataTyoeName(delegateType, useWindowsUIXamlProjections),
+                metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
                 referenceMappedType: true,
                 comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
@@ -948,8 +948,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             bool useWindowsUIXamlProjections)
         {
+            // For delegate types, we also need to pass the metadata type name when setting up the type map
+            // attributes, as we need '[TypeMap<TTypeMapGroup>]' entries in the metadata type map as well.
+            // This allows marshalling a 'TypeName' representing a Windows Runtime delegate type correctly.
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: delegateType,
                 proxyTypeMapSourceType: delegateType,
