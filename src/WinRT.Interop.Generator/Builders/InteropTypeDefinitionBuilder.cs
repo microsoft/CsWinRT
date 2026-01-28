@@ -812,8 +812,10 @@ internal static partial class InteropTypeDefinitionBuilder
             metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
             externalTypeMapTrimTargetType: interfaceType,
-            proxyTypeMapSourceType: null,
-            proxyTypeMapProxyType: null,
+            marshallingTypeMapSourceType: null,
+            marshallingTypeMapProxyType: null,
+            metadataTypeMapSourceType: null,
+            metadataTypeMapProxyType: null,
             interfaceTypeMapSourceType: interfaceType,
             interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
@@ -827,8 +829,10 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="externalTypeMapTargetType">The target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
     /// <param name="externalTypeMapTrimTargetType">The trim target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
-    /// <param name="proxyTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
-    /// <param name="proxyTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="marshallingTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="marshallingTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="metadataTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="metadataTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interfaceTypeMapSourceType">The IDIC source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -838,8 +842,10 @@ internal static partial class InteropTypeDefinitionBuilder
         string? metadataTypeName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
-        [NotNullIfNotNull(nameof(proxyTypeMapProxyType))] TypeSignature? proxyTypeMapSourceType,
-        [NotNullIfNotNull(nameof(proxyTypeMapSourceType))] TypeSignature? proxyTypeMapProxyType,
+        [NotNullIfNotNull(nameof(marshallingTypeMapProxyType))] TypeSignature? marshallingTypeMapSourceType,
+        [NotNullIfNotNull(nameof(marshallingTypeMapSourceType))] TypeSignature? marshallingTypeMapProxyType,
+        [NotNullIfNotNull(nameof(metadataTypeMapProxyType))] TypeSignature? metadataTypeMapSourceType,
+        [NotNullIfNotNull(nameof(metadataTypeMapSourceType))] TypeSignature? metadataTypeMapProxyType,
         [NotNullIfNotNull(nameof(interfaceTypeMapProxyType))] TypeSignature? interfaceTypeMapSourceType,
         [NotNullIfNotNull(nameof(interfaceTypeMapSourceType))] TypeSignature? interfaceTypeMapProxyType,
         InteropReferences interopReferences,
@@ -870,12 +876,23 @@ internal static partial class InteropTypeDefinitionBuilder
         }
 
         // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the proxy type map.
-        // This is only needed for types that can actually be instantiated.
-        if (proxyTypeMapSourceType is not null)
+        // This is only needed for types that can actually be instantiated (e.g. classes).
+        if (marshallingTypeMapSourceType is not null)
         {
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
-                source: proxyTypeMapSourceType,
-                proxy: proxyTypeMapProxyType!,
+                source: marshallingTypeMapSourceType,
+                proxy: marshallingTypeMapProxyType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
+
+        // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the metadata type map.
+        // This is not always needed, but it is for types that cannot actually be instantiated.
+        if (metadataTypeMapSourceType is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeMetadataTypeMapGroup(
+                source: metadataTypeMapSourceType,
+                proxy: metadataTypeMapProxyType!,
                 interopReferences: interopReferences,
                 module: module));
         }
