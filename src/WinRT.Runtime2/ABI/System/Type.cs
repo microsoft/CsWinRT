@@ -178,6 +178,7 @@ public static unsafe class TypeMarshaller
                 // Special case primitive types that are of types that can be boxed. That is, if the input type is not
                 // some 'Nullable<T>' type, check if we have an explicit metadata type name, and use that if so. This
                 // will ensure that e.g. 'typeof(int)' will report 'Int32', not 'Windows.Foundation.IReference<Int32>'.
+                // This will also handle generic delegate types, which will also use '[WindowsRuntimeMetadataTypeName]'.
                 if (marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
                 {
                     reference = new TypeReference { Name = metadataTypeName, Kind = kind };
