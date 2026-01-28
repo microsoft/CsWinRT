@@ -87,7 +87,7 @@ unsafe
                 new Guid("E2FCC7C1-3BFC-5A0B-B2B0-72E769D1CB7E"),   // 'IEnumerable<string>'
                 new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
                 new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),   // 'IClosable'
-                new Guid("8311ED02-4F46-5CAF-BF01-2AE354C04BF5")]); // 'IMapChangedEventArgs<IEnumerable>'
+                new Guid("6C86CA1A-5AB2-56DB-AA47-AA58C8807F36")]); // 'IMapChangedEventArgs<IEnumerable>'
     }
     finally
     {
@@ -108,7 +108,7 @@ unsafe
             iids: [
                 new Guid("30160817-1D7D-54E9-99DB-D7636266A476"),   // 'IEnumerable<bool>'
                 new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
-                new Guid("907661AB-C065-5A14-9AC3-2FEB0D164DDA"),   // 'IReadOnlyDictionary<bool, float>'
+                new Guid("5C36F92F-CF36-50F5-8E8C-19CDFD96A755"),   // 'IReadOnlyDictionary<bool, float>'
                 new Guid("3631E370-2F65-5F4A-8364-1619C536DB12"),   // 'IEnumerable<KeyValuePair<bool, float>>'
                 new Guid("F61E8483-D7A0-5840-9DCF-40423CCC97D0")]); // 'IMapChangedEventArgs<float>'
     }
@@ -129,7 +129,7 @@ unsafe
         ComHelpers.EnsureQueryInterface(
             unknownPtr: asyncActionWithProgressPtr,
             iids: [
-                new Guid("0EDE398F-0090-574E-AD30-E152B433BF6A"),   // 'IAsyncActionWithProgress<int>'
+                new Guid("62137500-F56F-5DFF-9A74-8575B9170E8E"),   // 'IAsyncActionWithProgress<int>'
                 new Guid("00000036-0000-0000-C000-000000000046")]); // 'IAsyncInfo'
     }
     finally
@@ -149,7 +149,7 @@ unsafe
         ComHelpers.EnsureQueryInterface(
             unknownPtr: asyncOperationPtr,
             iids: [
-                new Guid("1AE01209-1ACA-51D3-A080-8B1214E0A39E"),   // 'IAsyncOperation<TimeSpan>'
+                new Guid("154A8B46-06E5-56E2-B8D8-03B724CD9E47"),   // 'IAsyncOperation<TimeSpan>'
                 new Guid("00000036-0000-0000-C000-000000000046")]); // 'IAsyncInfo'
     }
     finally
@@ -170,9 +170,9 @@ unsafe
                 new Guid("8A444256-D661-5E9A-A72B-D8F1D7962D0C"),   // 'IReferenceArray<Rect>'
                 new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),   // 'IList'
                 new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),   // 'IEnumerable'
-                new Guid("CCA9612B-7B87-5AEA-AF49-82EA37B5265C"),   // 'IList<Rect>'
+                new Guid("EC699315-2109-545A-8425-26F721372FD3"),   // 'IList<Rect>'
                 new Guid("F7A49934-2BCD-50B0-A10A-750045D95578"),   // 'IEnumerable<Rect>'
-                new Guid("ED2C6CB5-16F7-5AC2-B947-CD6D2F587A20")]); // 'IReadOnlyList<Rect>'
+                new Guid("0B651AD6-9755-5BE5-8918-6BD61EED3795")]); // 'IReadOnlyList<Rect>'
     }
     finally
     {

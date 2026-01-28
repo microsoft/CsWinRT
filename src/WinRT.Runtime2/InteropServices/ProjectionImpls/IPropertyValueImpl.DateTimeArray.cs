@@ -113,7 +113,7 @@ file static unsafe class DateTimeArrayPropertyValueImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern void ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>DateTimeOffsetArrayMarshaller, WinRT.Interop.dll")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>DateTimeOffsetArrayMarshaller, WinRT.Interop")] object? _,
                 DateTimeOffset[] source,
                 out uint size,
                 out ABI.System.DateTimeOffset* array);
