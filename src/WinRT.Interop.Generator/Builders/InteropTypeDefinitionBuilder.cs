@@ -772,7 +772,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
-                    value: runtimeClassName))));
+                    value: metadataTypeName))));
         }
 
         // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type, if requested.
