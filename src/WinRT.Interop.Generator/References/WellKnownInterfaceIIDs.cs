@@ -199,9 +199,9 @@ internal static class WellKnownInterfaceIIDs
 
             // XAML types
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
-                => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
+                => new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
-                => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
+                => new Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
                 => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
