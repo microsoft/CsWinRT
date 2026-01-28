@@ -43,7 +43,7 @@ internal static class RuntimeClassNameGenerator
 
         // Aside from the possible "IReference`1<...>" prefix, the runtime class name will be the same
         // as the metadata type name for all cases, so here we just forward to that to generate it.
-        MetadataTypeNameGenerator.AppendMetadataTyoeName(ref handler, type, useWindowsUIXamlProjections);
+        MetadataTypeNameGenerator.AppendMetadataTypeName(ref handler, type, useWindowsUIXamlProjections);
 
         if (isReference)
         {

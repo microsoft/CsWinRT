@@ -18,11 +18,11 @@ internal static class MetadataTypeNameGenerator
     /// <param name="type">The <see cref="TypeSignature"/> to generate the Windows Runtime metadata type name for.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting Windows Runtime metadata type name for <paramref name="type"/>.</returns>
-    public static string GetMetadataTyoeName(TypeSignature type, bool useWindowsUIXamlProjections)
+    public static string GetMetadataTypeName(TypeSignature type, bool useWindowsUIXamlProjections)
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
-        AppendMetadataTyoeName(ref handler, type, useWindowsUIXamlProjections);
+        AppendMetadataTypeName(ref handler, type, useWindowsUIXamlProjections);
 
         return handler.ToStringAndClear();
     }
@@ -35,7 +35,7 @@ internal static class MetadataTypeNameGenerator
     /// <param name="type">The <see cref="TypeSignature"/> to generate the Windows Runtime metadata type name for.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting Windows Runtime metadata type name for <paramref name="type"/>.</returns>
-    public static void AppendMetadataTyoeName(
+    public static void AppendMetadataTypeName(
         ref DefaultInterpolatedStringHandler interpolatedStringHandler,
         TypeSignature type,
         bool useWindowsUIXamlProjections)
@@ -45,7 +45,7 @@ internal static class MetadataTypeNameGenerator
         {
             interpolatedStringHandler.AppendLiteral("Windows.Foundation.IReferenceArray`1<");
 
-            AppendMetadataTyoeName(ref interpolatedStringHandler, szArrayTypeSignature.BaseType, useWindowsUIXamlProjections);
+            AppendMetadataTypeName(ref interpolatedStringHandler, szArrayTypeSignature.BaseType, useWindowsUIXamlProjections);
 
             interpolatedStringHandler.AppendLiteral(">");
         }
@@ -73,7 +73,7 @@ internal static class MetadataTypeNameGenerator
                     interpolatedStringHandler.AppendLiteral(", ");
                 }
 
-                AppendMetadataTyoeName(ref interpolatedStringHandler, genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections);
+                AppendMetadataTypeName(ref interpolatedStringHandler, genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections);
             }
 
             interpolatedStringHandler.AppendLiteral(">");
