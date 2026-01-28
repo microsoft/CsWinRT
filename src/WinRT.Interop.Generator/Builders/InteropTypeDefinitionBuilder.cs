@@ -699,6 +699,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
             name: InteropUtf8NameFactory.TypeName(mappedType),
             mappedType: mappedType,
+            mappedMetadata: null,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
             metadataTypeName: null,
             referenceMappedType: false,
@@ -714,6 +715,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="mappedMetadata">The name of the mapped metadata for the proxy type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="referenceMappedType">Indicates whether to emit an attribute to reference the original managed type.</param>
@@ -725,6 +727,7 @@ internal static partial class InteropTypeDefinitionBuilder
         Utf8String ns,
         Utf8String name,
         TypeSignature mappedType,
+        string? mappedMetadata,
         string? runtimeClassName,
         string? metadataTypeName,
         bool referenceMappedType,
@@ -741,6 +744,16 @@ internal static partial class InteropTypeDefinitionBuilder
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(proxyType);
+
+        // Add the '[WindowsRuntimeMappedMetadata]' attribute with the provided .winmd name, if available
+        if (mappedMetadata is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: mappedMetadata))));
+        }
 
         // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name, if available
         if (runtimeClassName is not null)

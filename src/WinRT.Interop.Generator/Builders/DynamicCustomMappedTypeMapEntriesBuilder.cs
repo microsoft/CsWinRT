@@ -175,6 +175,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: trimTarget.Name!,
             mappedType: trimTarget,
+            mappedMetadata: null,
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,
             referenceMappedType: false,

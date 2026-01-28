@@ -543,6 +543,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMappedMetadataAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMappedMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMappedMetadataAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeManagedOnlyTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeManagedOnlyTypeAttribute"u8);
@@ -2188,6 +2193,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMetadataTypeNameAttribute"/>'s constructor.
     /// </summary>
     public MemberReference WindowsRuntimeMetadataTypeNameAttribute_ctor => field ??= WindowsRuntimeMetadataTypeNameAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedMetadataAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeMappedMetadataAttribute_ctor => field ??= WindowsRuntimeMappedMetadataAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [_corLibTypeFactory.String]));
