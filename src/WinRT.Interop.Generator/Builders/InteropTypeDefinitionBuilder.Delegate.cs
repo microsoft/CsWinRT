@@ -900,6 +900,40 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the proxy type for some <see cref="Delegate"/> type.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            TypeSignature delegateType,
+            TypeDefinition comWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
+            out TypeDefinition proxyType)
+        {
+            // For delegate types, we need to both specify the mapped metadata name, so that when marshalling 'Type' instances to
+            // native we can correctly detect the mapped type to be a metadata type, and also annotate the proxy types with the
+            // '[WindowsRuntimeMetadataTypeName]', as that's different than the runtime class name (which uses 'IReference<T>').
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+                name: InteropUtf8NameFactory.TypeName(delegateType),
+                mappedType: delegateType,
+                mappedMetadata: "Windows.Foundation.FoundationContract",
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                metadataTypeName: MetadataTypeNameGenerator.GetMetadataTyoeName(delegateType, useWindowsUIXamlProjections),
+                referenceMappedType: true,
+                comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
+
+        /// <summary>
         /// Creates the type map attributes for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
@@ -908,7 +942,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         public static void TypeMapAttributes(
-            GenericInstanceTypeSignature delegateType,
+            TypeSignature delegateType,
             TypeDefinition proxyType,
             InteropReferences interopReferences,
             ModuleDefinition module,

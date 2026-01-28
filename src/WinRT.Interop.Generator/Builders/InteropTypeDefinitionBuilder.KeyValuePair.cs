@@ -8,7 +8,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -475,7 +474,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         public static void TypeMapAttributes(
-            GenericInstanceTypeSignature keyValuePairType,
+            TypeSignature keyValuePairType,
             TypeDefinition proxyType,
             InteropReferences interopReferences,
             ModuleDefinition module,

@@ -354,8 +354,8 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition delegateComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                InteropTypeDefinitionBuilder.Delegate.Proxy(
+                    delegateType: typeSignature,
                     comWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
