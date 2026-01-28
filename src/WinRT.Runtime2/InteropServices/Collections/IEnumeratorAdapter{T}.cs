@@ -20,7 +20,7 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class IEnumeratorAdapter<T> : IEnumerator<T>
+public sealed class IEnumeratorAdapter<T> : IEnumerator<T>, IEnumeratorAdapter
 {
     /// <summary>
     /// The wrapped <see cref="IEnumerator{T}"/> instance.
@@ -166,6 +166,9 @@ public sealed class IEnumeratorAdapter<T> : IEnumerator<T>
     {
         _enumerator.Dispose();
     }
+
+    /// <inheritdoc/>
+    IEnumerator IEnumeratorAdapter.Enumerator => _enumerator;
 }
 
 /// <summary>

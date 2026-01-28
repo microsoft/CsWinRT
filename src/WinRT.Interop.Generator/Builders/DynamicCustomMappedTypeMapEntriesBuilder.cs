@@ -118,12 +118,24 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
-            value: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
-            target: target,
-            trimTarget: trimTarget,
+        // This method is used for two kinds of custom-mapped types:
+        //   - "Managed-only" types (such as 'PropertyChangedEventArgs'), which don't need CCW support, because they are
+        //     marshalled by activating a fully native instance. Because of this, the proxy type for these types doesn't
+        //     need the runtime class name annotation on them, which allows it to be defined in 'WinRT.Runtime.dll'. That
+        //     in turn also allows the '[TypeMapAssociation<TTypeMapGroup>]' attribute to be defined there. So here we
+        //     only need the '[TypeMap<TTypeMapGroup>]' attribute to handle untyped native to managed marshalling.
+        //   - Interface types (such as 'IEnumerable'), which also don't need CCW support (because they are interfaces).
+        //     For those, the IDIC attributes are in 'WinRT.Runtime.dll', so here we again only need the external type map.
+        InteropTypeDefinitionBuilder.TypeMapAttributes(
+            runtimeClassName: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
+            externalTypeMapTargetType: target,
+            externalTypeMapTrimTargetType: trimTarget,
+            proxyTypeMapSourceType: null,
+            proxyTypeMapProxyType: null,
+            interfaceTypeMapSourceType: null,
+            interfaceTypeMapProxyType: null,
             interopReferences: interopReferences,
-            module: module));
+            module: module);
     }
 
     /// <summary>

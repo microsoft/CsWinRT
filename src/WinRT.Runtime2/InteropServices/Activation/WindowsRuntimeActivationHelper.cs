@@ -164,14 +164,17 @@ internal static unsafe class WindowsRuntimeActivationHelper
         using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
 
+        using WindowsRuntimeObjectReferenceValue param1Value = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(param1);
+        using WindowsRuntimeObjectReferenceValue param2Value = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(param2);
+
         fixed (void** innerInterfacePtr = &innerInterface)
         fixed (void** defaultInterfacePtr = &defaultInterface)
         {
             HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
                 param0: param0,
-                param1: null, // TODO
-                param2: null, // TODO
+                param1: param1Value.GetThisPtrUnsafe(),
+                param2: param2Value.GetThisPtrUnsafe(),
                 param3: param3,
                 param4: param4,
                 baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),

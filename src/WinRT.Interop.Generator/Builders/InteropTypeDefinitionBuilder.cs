@@ -829,7 +829,7 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        // Emit the '[TypeMap]' attribute for the external type map.
+        // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the external type map.
         // This is optional, only needed for projected types.
         if (runtimeClassName is not null)
         {
@@ -841,7 +841,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 module: module));
         }
 
-        // Emit the '[TypeMapAssociation]' attribute for the proxy type map.
+        // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the proxy type map.
         // This is only needed for types that can actually be instantiated.
         if (proxyTypeMapSourceType is not null)
         {
@@ -852,7 +852,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 module: module));
         }
 
-        // Emit the '[TypeMapAssociation]' attribute for 'IDynamicInterfaceCastable' scenarios.
+        // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for 'IDynamicInterfaceCastable' scenarios.
         // This is not always needed, as it is specifically only for interface types.
         if (interfaceTypeMapSourceType is not null)
         {
