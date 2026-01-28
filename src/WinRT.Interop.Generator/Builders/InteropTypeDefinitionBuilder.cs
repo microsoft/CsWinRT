@@ -679,7 +679,7 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
-    /// Creates a new type definition for the proxy type of some managed type.
+    /// Creates a new type definition for the proxy type of some interface or SZ array type.
     /// </summary>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
@@ -695,6 +695,9 @@ internal static partial class InteropTypeDefinitionBuilder
         bool useWindowsUIXamlProjections,
         out TypeDefinition proxyType)
     {
+        // This method is only used with either interface types, or with SZ array types. Because of this,
+        // we need also emit the '[WindowsRuntimeMappedType]' attribute, so that 'TypeName' marshalling
+        // can retrieve the proxy type containing the runtime class name from the input managed type.
         Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
             name: InteropUtf8NameFactory.TypeName(mappedType),
@@ -702,7 +705,7 @@ internal static partial class InteropTypeDefinitionBuilder
             mappedMetadata: null,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
             metadataTypeName: null,
-            referenceMappedType: false,
+            referenceMappedType: true,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
