@@ -89,6 +89,15 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.Numerics.Vectors.dll</c>.
+    /// </summary>
+    public AssemblyReference SystemNumericsVectors => field ??= new AssemblyReference(
+        name: "System.Numerics.Vectors"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors);
+
+    /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
     public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
@@ -273,6 +282,46 @@ internal sealed class InteropReferences
     public TypeReference DateTimeOffset => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "DateTimeOffset"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Uri"/>.
+    /// </summary>
+    public TypeReference Uri => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Uri"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Matrix3x2"/>.
+    /// </summary>
+    public TypeReference Matrix3x2 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Matrix3x2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Matrix4x4"/>.
+    /// </summary>
+    public TypeReference Matrix4x4 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Matrix4x4"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Plane"/>.
+    /// </summary>
+    public TypeReference Plane => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Plane"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Quaternion"/>.
+    /// </summary>
+    public TypeReference Quaternion => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Quaternion"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector2"/>.
+    /// </summary>
+    public TypeReference Vector2 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector3"/>.
+    /// </summary>
+    public TypeReference Vector3 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector3"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector4"/>.
+    /// </summary>
+    public TypeReference Vector4 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector4"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
     public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
@@ -386,6 +435,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
     /// </summary>
     public TypeReference PropertyChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.DataErrorsChangedEventArgs"/>.
+    /// </summary>
+    public TypeReference DataErrorsChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "DataErrorsChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.MemoryExtensions"/>.
