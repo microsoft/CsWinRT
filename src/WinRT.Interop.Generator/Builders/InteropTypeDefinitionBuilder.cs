@@ -679,31 +679,31 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
-    /// Creates a new type definition for the proxy type of some interface or SZ array type.
+    /// Creates a new type definition for the proxy type of some interface type.
     /// </summary>
-    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="proxyType">The resulting proxy type.</param>
     public static void Proxy(
-        TypeSignature mappedType,
+        TypeSignature interfaceType,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections,
         out TypeDefinition proxyType)
     {
-        // This method is only used with either interface types, or with SZ array types. Because of this,
-        // we need also emit the '[WindowsRuntimeMappedType]' attribute, so that 'TypeName' marshalling
-        // can retrieve the proxy type containing the runtime class name from the input managed type.
+        // This method is only used with interface types. Because of this, we need also emit the
+        // '[WindowsRuntimeMappedType]' attribute, so that 'TypeName' marshalling can retrieve
+        // the proxy type containing the runtime class name from the input managed type.
         Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
-            name: InteropUtf8NameFactory.TypeName(mappedType),
-            mappedType: mappedType,
+            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
+            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            mappedType: interfaceType,
             mappedMetadata: null,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
             metadataTypeName: null,
             referenceMappedType: true,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
