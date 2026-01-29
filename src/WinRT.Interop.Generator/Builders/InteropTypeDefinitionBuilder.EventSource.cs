@@ -37,7 +37,7 @@ internal partial class InteropTypeDefinitionBuilder
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler1EventSource,
-                baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor,
+                baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor([.. delegateType.TypeArguments]),
                 baseEventSourceConvertToUnmanaged: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
@@ -63,7 +63,7 @@ internal partial class InteropTypeDefinitionBuilder
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler2EventSource,
-                baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor,
+                baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor([.. delegateType.TypeArguments]),
                 baseEventSourceConvertToUnmanaged: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
@@ -91,7 +91,7 @@ internal partial class InteropTypeDefinitionBuilder
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
-                baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor,
+                baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor([.. delegateType.TypeArguments]),
                 baseEventSourceConvertToUnmanaged: interopReferences.VectorChangedEventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
@@ -204,10 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'ConvertToUnmanaged' method
-            eventSourceType.AddMethodImplementation(
-                declaration: baseEventSourceConvertToUnmanaged.Import(module),
-                method: convertToUnmanagedMethod);
+            eventSourceType.Methods.Add(convertToUnmanagedMethod);
         }
     }
 }

@@ -2049,27 +2049,6 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
-    /// </summary>
-    public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
-    /// </summary>
-    public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
-    /// </summary>
-    public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
     /// </summary>
     public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource.CreateConstructorReference(
@@ -3324,6 +3303,49 @@ internal sealed class InteropReferences
                     EventRegistrationToken.ToValueTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakeByReferenceType()]));
     }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of <see cref="EventHandler1EventSource" />
+    /// </summary>
+    /// <param name="typeArguments">The input type argument type.</param>
+    public MemberReference EventHandler1EventSource_ctor(TypeSignature[] typeArguments)
+    {
+        return EventHandler1EventSource
+            .MakeGenericReferenceType(typeArguments)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
+    /// </summary>
+    /// <param name="typeArguments">The input type argument type.</param>
+    public MemberReference EventHandler2EventSource_ctor(TypeSignature[] typeArguments)
+    {
+        return EventHandler2EventSource
+            .MakeGenericReferenceType(typeArguments)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="typeArguments">The input type argument type.</param>
+    public MemberReference VectorChangedEventHandler1EventSource_ctor(TypeSignature[] typeArguments)
+    {
+        return VectorChangedEventHandler1EventSource
+            .MakeGenericReferenceType(typeArguments)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.
