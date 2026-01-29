@@ -697,14 +697,16 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // This method is only used with interface types. Because of this, we need also emit the
         // '[WindowsRuntimeMappedType]' attribute, so that 'TypeName' marshalling can retrieve
-        // the proxy type containing the runtime class name from the input managed type.
+        // the proxy type containing the runtime class name from the input managed type. We also
+        // emit '[WindowsRuntimeMetadataTypeName]', to support mapping the generic interface name
+        // when marshalling 'TypeName' instances. Nobody would need a runtime class name here.
         Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
             name: InteropUtf8NameFactory.TypeName(interfaceType),
             mappedType: interfaceType,
             mappedMetadata: null,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
-            metadataTypeName: null,
+            runtimeClassName: null,
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
             referenceMappedType: true,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
