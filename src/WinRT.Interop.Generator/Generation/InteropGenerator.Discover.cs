@@ -327,7 +327,7 @@ internal partial class InteropGenerator
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
         // Import both assembly references, so the resolution scope for them is set correctly during discovery.
-        // This is requires so that all kinds of signature comparisons during discovery actually work correctly.
+        // This is required so that all kinds of signature comparisons during discovery actually work correctly.
         return new(module.CorLibTypeFactory, windowsRuntimeAssembly.Import(module), windowsSdkProjectionAssembly.Import(module));
     }
 
