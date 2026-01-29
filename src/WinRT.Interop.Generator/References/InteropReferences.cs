@@ -3429,7 +3429,7 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
+    public MemberReference DelegateInvokeInstantiated(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
         MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
@@ -3446,6 +3446,33 @@ internal sealed class InteropReferences
                 returnType: invokeSignature.ReturnType,
                 parameterTypes: invokeSignature.ParameterTypes));
     }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
+    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
+    {
+        // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
+        MethodDefinition invokeMethod = delegateType.MakeGenericReferenceType().Resolve(module)!.GetMethod("Invoke"u8);
+
+        // Construct the generic signature for the method with the context of the input delegate.
+        // We can use this to get all the parameters, which might be any combination of explicitly
+        // declared types, and constructed generic type parameters. Also, any number of them.
+        MethodSignature invokeSignature = invokeMethod.Signature!;
+
+
+        MethodSignature memberRefSig = MethodSignature.CreateInstance(
+                returnType: invokeSignature.ReturnType,
+                parameterTypes: invokeSignature.ParameterTypes);
+
+        // Create the actual member reference to use when emitting calls to the 'Invoke' method
+        return delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Invoke"u8, memberRefSig);
+    }
+
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.GetOrCreateValue"/>.
