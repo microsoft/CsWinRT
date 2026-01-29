@@ -96,20 +96,22 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Numerics.Vectors.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference SystemNumericsVectors => field ??= new AssemblyReference(
         name: "System.Numerics.Vectors"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
         name: "WinRT.Projection"u8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.
