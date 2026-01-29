@@ -548,16 +548,22 @@ namespace UnitTest
         }
 
         [Theory]
+        // Projected Metadata Types
         [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
         [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
         [InlineData(typeof(TestComponent.Param7Handler), "TestComponent.Param7Handler", "Metadata")]
         [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
         [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        // Custom Mapped Metadata Types
         [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
         [InlineData(typeof(Guid), "Guid", "Metadata")]
         [InlineData(typeof(Object), "Object", "Metadata")]
         [InlineData(typeof(String), "String", "Metadata")]
         [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
+        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
+        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Primitive")]
+        // Primitive Types
         [InlineData(typeof(long), "Int64", "Primitive")]
         [InlineData(typeof(int), "Int32", "Primitive")]
         [InlineData(typeof(short), "Int16", "Primitive")]
@@ -569,11 +575,23 @@ namespace UnitTest
         [InlineData(typeof(float), "Single", "Primitive")]
         [InlineData(typeof(double), "Double", "Primitive")]
         [InlineData(typeof(bool), "Boolean", "Primitive")]
+        // Metadata Interfaces
         [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
         [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        // HResult Special Case
         [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
+        // Custom Types
         [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        // Nullbale types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
+        // Generic Interfaces
+        [InlineData(typeof(IList<long>), "IList<Int64>", "Primitive")]
+        [InlineData(typeof(IList<TestComponentCSharp.EventWithGuid>), "IList<TestComponentCSharp.EventWithGuid>", "Metadata")]
+        [InlineData(typeof(IEnumerator<TestComponentCSharp.Class>), "IEnumerator<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData(typeof(IEnumerable<TestComponentCSharp.Class>), "IEnumerable<TestComponentCSharp.Class>", "Metadata")]
+        // KVP types
+        [InlineData(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.KeyValuePair<Object, Object>", "Metadata")]
+        [InlineData(typeof(KeyValuePair<String, TestCSharp>), "Windows.Foundation.Collections.KeyValuePair<Object, Object>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
