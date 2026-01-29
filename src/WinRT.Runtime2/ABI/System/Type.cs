@@ -327,21 +327,28 @@ public static unsafe class TypeMarshaller
                 return NoMetadataTypeInfo.GetOrCreate(typeName);
             }
 
-            // Special case 'KeyValuePair<,>' instances, where we always want to return the public type
-            // directly here, and not its nullable version. This is because 'KeyValuePair<,>' is an
-            // interface type in the Windows Runtime type system, so the type name we got here from
-            // the marshalling type map wouldn't actually represent an 'IReference<T>' instantiation.
-            if (publicType.IsValueType &&
-                publicType.IsGenericType &&
-                publicType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            if (publicType.IsValueType)
             {
-                type = publicType;
+                // Special case 'KeyValuePair<,>' instances, where we always want to return the public type
+                // directly here, and not its nullable version. This is because 'KeyValuePair<,>' is an
+                // interface type in the Windows Runtime type system, so the type name we got here from
+                // the marshalling type map wouldn't actually represent an 'IReference<T>' instantiation.
+                if (publicType.IsGenericType &&
+                    publicType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                {
+                    type = publicType;
+                }
+                else
+                {
+                    // For other value types, we get the reference type (i.e. the constructed 'Nullable<T>' type)
+                    // from the marshalling info. This will perform a lookup for '[WindowsRuntimeReferenceType]'.
+                    type = marshallingInfo.ReferenceType;
+                }
             }
             else
             {
-                // For value types, we get the reference type (i.e. the constructed 'Nullable<T>' type)
-                // from the marshalling info. This will perform a lookup for '[WindowsRuntimeReferenceType]'.
-                type = publicType.IsValueType ? marshallingInfo.ReferenceType : publicType;
+                // Otherwise, just use the public type directly
+                type = publicType;
             }
         }
 
