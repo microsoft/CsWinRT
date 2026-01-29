@@ -91,6 +91,17 @@ internal static class ImportExtensions
     /// <summary>
     /// Imports a member reference into a module using the default reference importer.
     /// </summary>
+    /// <param name="assemblyReference">The <see cref="AssemblyReference"/> instance to import.</param>
+    /// <param name="scope">The scope to import into.</param>
+    /// <returns>The imported <see cref="AssemblyReference"/>.</returns>
+    public static AssemblyReference Import(this AssemblyReference assemblyReference, IResolutionScope scope)
+    {
+        return assemblyReference.ImportWith(scope.ContextModule!.DefaultImporter);
+    }
+
+    /// <summary>
+    /// Imports a member reference into a module using the default reference importer.
+    /// </summary>
     /// <param name="memberReference">The <see cref="MemberReference"/> instance to import.</param>
     /// <param name="module">The module to import into.</param>
     /// <returns>The imported <see cref="MemberReference"/>.</returns>
