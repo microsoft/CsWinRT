@@ -12,6 +12,8 @@ using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.InteropGenerator.Builders;
 
 /// <summary>
@@ -54,23 +56,21 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        ManagedOnlyTypeOrInterface(
-            args: args,
-            windowsUIXamlTypeName: "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-            microsoftUIXamlTypeName: "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-            target: interopReferences.WindowsRuntimeModule.CreateTypeReference("ABI.System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8).ToReferenceTypeSignature(),
+        ManagedOnlyType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
-            module: module);
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        ManagedOnlyTypeOrInterface(
-            args: args,
-            windowsUIXamlTypeName: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
-            microsoftUIXamlTypeName: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
-            target: interopReferences.WindowsRuntimeModule.CreateTypeReference("ABI.System.ComponentModel"u8, "PropertyChangedEventArgs"u8).ToReferenceTypeSignature(),
+        ManagedOnlyType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
-            module: module);
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         WindowsRuntimeExposedType(
             args: args,
@@ -116,17 +116,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     {
         string metadata = useWindowsUIXamlProjections ? windowsUIXamlMetadata : microsoftUIXamlMetadata;
 
-        // Retrieve the '[ComWrappersMarshaller]' type from 'WinRT.Runtime.dll', which always follows this naming convention
-        TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: (Utf8String)$"{trimTarget.Name}ComWrappersMarshallerAttribute");
-
-        // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
-        {
-            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
-        }
-
         // Define the proxy type for the interface. Because the metadata type name depends on the XAML configuration
         // being used, we can't define this proxy type in advance even if the interface type itself is not generic.
         InteropTypeDefinitionBuilder.Proxy(
@@ -137,7 +126,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             referenceMappedType: true,
-            comWrappersMarshallerAttributeType: comWrappersMarshallerType,
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
             proxyType: out TypeDefinition proxyType);
@@ -162,23 +151,21 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     }
 
     /// <summary>
-    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for a given custom-mapped type that is never marshalled or instantiated.
+    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for a given custom-mapped type that is never marshalled.
     /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="windowsUIXamlTypeName">The runtime class name for <c>Windows.UI.Xaml</c>.</param>
-    /// <param name="microsoftUIXamlTypeName">The runtime class name for <c>Microsoft.UI.Xaml</c>.</param>
-    /// <param name="target"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='target']/node()"/></param>
+    /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
+    /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
-    private static void ManagedOnlyTypeOrInterface(
-        InteropGeneratorArgs args,
-        string windowsUIXamlTypeName,
-        string microsoftUIXamlTypeName,
-        TypeSignature target,
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    private static void ManagedOnlyType(
+        string windowsUIXamlMetadata,
+        string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
         InteropReferences interopReferences,
-        ModuleDefinition module)
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
         // This method is used for two kinds of custom-mapped types:
         //   - "Managed-only" types (such as 'PropertyChangedEventArgs'), which don't need CCW support, because they are
@@ -188,19 +175,19 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         //     only need the '[TypeMap<TTypeMapGroup>]' attribute to handle untyped native to managed marshalling.
         //   - Interface types (such as 'IEnumerable'), which also don't need CCW support (because they are interfaces).
         //     For those, the IDIC attributes are in 'WinRT.Runtime.dll', so here we again only need the external type map.
-        InteropTypeDefinitionBuilder.TypeMapAttributes(
-            runtimeClassName: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
-            metadataTypeName: null,
-            externalTypeMapTargetType: target,
-            externalTypeMapTrimTargetType: trimTarget,
-            marshallingTypeMapSourceType: null,
-            marshallingTypeMapProxyType: null,
-            metadataTypeMapSourceType: null,
-            metadataTypeMapProxyType: null,
-            interfaceTypeMapSourceType: null,
-            interfaceTypeMapProxyType: null,
-            interopReferences: interopReferences,
-            module: module);
+        //InteropTypeDefinitionBuilder.TypeMapAttributes(
+        //    runtimeClassName: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
+        //    metadataTypeName: null,
+        //    externalTypeMapTargetType: target,
+        //    externalTypeMapTrimTargetType: trimTarget,
+        //    marshallingTypeMapSourceType: null,
+        //    marshallingTypeMapProxyType: null,
+        //    metadataTypeMapSourceType: null,
+        //    metadataTypeMapProxyType: null,
+        //    interfaceTypeMapSourceType: null,
+        //    interfaceTypeMapProxyType: null,
+        //    interopReferences: interopReferences,
+        //    module: module);
     }
 
     /// <summary>
@@ -222,17 +209,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     {
         string runtimeClassName = args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName;
 
-        // Retrieve the '[ComWrappersMarshaller]' type from 'WinRT.Runtime.dll', which always follows this naming convention
-        TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: (Utf8String)$"{trimTarget.Name}ComWrappersMarshallerAttribute");
-
-        // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
-        {
-            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
-        }
-
         // Because these types can be instantiated and marshalled to native, but their runtime class name changes between 'Windows.UI.Xaml' and
         // 'Microsoft.UI.Xaml', we also need to generate a proxy type for them, so that we can annotate it with '[WindowsRuntimeClassName]' with
         // the correct runtime class name for the configuration actually being used at runtime by the current application or published library.
@@ -244,7 +220,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,
             referenceMappedType: false,
-            comWrappersMarshallerAttributeType: comWrappersMarshallerType,
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
             out TypeDefinition proxyType);
@@ -255,5 +231,33 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: trimTarget,
             interopReferences: interopReferences,
             module: module));
+    }
+
+    /// <summary>
+    /// Retrieves the marshaller attribute associated with a specified custom-mapped type.
+    /// interop.
+    /// </summary>
+    /// <param name="type">The custom-mapped type to retrieve the marshaller attribute for.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The marshaller attribute type for the input type.</returns>
+    /// <exception cref="WellKnownInteropException">Thrown if resolving the marshaller attribute type fails.</exception>
+    private static TypeDefinition GetMarshallerAttributeType(
+        TypeSignature type,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Retrieve the '[ComWrappersMarshaller]' type from 'WinRT.Runtime.dll', which always follows this naming convention
+        TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
+            ns: InteropUtf8NameFactory.TypeNamespace(type),
+            name: (Utf8String)$"{type.Name}ComWrappersMarshallerAttribute");
+
+        // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
+        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
+        {
+            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
+        }
+
+        return comWrappersMarshallerType;
     }
 }
