@@ -554,11 +554,10 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType),
-                mappedType: arrayType,
                 mappedMetadata: "Windows.Foundation.FoundationContract",
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
                 metadataTypeName: null,
-                referenceMappedType: true,
+                mappedType: arrayType,
                 comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,
