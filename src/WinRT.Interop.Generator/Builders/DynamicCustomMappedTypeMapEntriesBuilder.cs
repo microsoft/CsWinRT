@@ -318,7 +318,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             out TypeDefinition nativeObjectProxyType);
 
-        // Define the tye map entries. We only need one in the marshalling external type map. We can use 'IEnumerable'
+        // Define the type map entries. We only need one in the marshalling external type map. We can use 'IEnumerable'
         // as the trim target for the specialized RCW type (since the 'IReadOnlyList' interface does not exist in .NET).
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: runtimeClassName,
