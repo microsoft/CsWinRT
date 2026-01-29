@@ -56,7 +56,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        ManagedOnlyDelegateType(
+        DelegateType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
@@ -64,7 +64,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        ManagedOnlyDelegateType(
+        DelegateType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
@@ -72,21 +72,21 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        WindowsRuntimeExposedType(
-            args: args,
-            windowsUIXamlTypeName: "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
-            microsoftUIXamlTypeName: "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
+        DelegateType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
-            module: module);
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        WindowsRuntimeExposedType(
-            args: args,
-            windowsUIXamlTypeName: "Windows.Foundation.IReference`1<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
-            microsoftUIXamlTypeName: "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>",
+        DelegateType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
-            module: module);
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         WindowsRuntimeExposedType(
             args: args,
@@ -159,7 +159,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    private static void ManagedOnlyDelegateType(
+    private static void DelegateType(
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
