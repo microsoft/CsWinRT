@@ -731,7 +731,7 @@ internal static partial class InteropTypeDefinitionBuilder
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
-        TypeSignature mappedType,
+        [NotNullIfNotNull(nameof(referenceMappedType))] TypeSignature? mappedType,
         string? mappedMetadata,
         string? runtimeClassName,
         string? metadataTypeName,
@@ -788,7 +788,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: mappedType.Import(module)))));
+                    value: mappedType!.Import(module)))));
         }
 
         // Add the generated marshaller attribute

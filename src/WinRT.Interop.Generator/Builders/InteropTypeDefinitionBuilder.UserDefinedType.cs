@@ -299,7 +299,7 @@ internal partial class InteropTypeDefinitionBuilder
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType),
-                    mappedType: userDefinedType,
+                    mappedType: null,
                     mappedMetadata: null,
                     runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
                     metadataTypeName: null,
