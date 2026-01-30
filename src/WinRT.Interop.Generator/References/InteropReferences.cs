@@ -3447,7 +3447,7 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvokeInstantiated(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
+    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
         MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
@@ -3464,27 +3464,6 @@ internal sealed class InteropReferences
                 returnType: invokeSignature.ReturnType,
                 parameterTypes: invokeSignature.ParameterTypes));
     }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
-    {
-        // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-        MethodDefinition invokeMethod = delegateType.MakeGenericReferenceType().Resolve(module)!.GetMethod("Invoke"u8);
-
-        MethodSignature invokeSignature = invokeMethod.Signature!;
-
-        // Create the actual member reference to use when emitting calls to the 'Invoke' method
-        return delegateType
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Invoke"u8, MethodSignature.CreateInstance(
-                returnType: invokeSignature.ReturnType,
-                parameterTypes: invokeSignature.ParameterTypes));
-    }
-
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}.GetOrCreateValue"/>.

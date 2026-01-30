@@ -83,11 +83,11 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition vftblType)
         {
-            MemberReference delegateInvokeMethodInstantiated = interopReferences.DelegateInvokeInstantiated(delegateType, module);
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type below)
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[1];
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
 
             bool isSenderReferenceType = senderType.HasReferenceAbiType(interopReferences);
             bool isArgsReferenceType = argsType.HasReferenceAbiType(interopReferences);
@@ -205,12 +205,11 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition implType)
         {
             MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
-            MemberReference delegateInvokeMethodInstantiated = interopReferences.DelegateInvokeInstantiated(delegateType, module);
 
             // Prepare the sender and arguments types. This path is only ever reached for valid
             // generic Windows Runtime delegate types, and they all have exactly two type arguments.
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[1];
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
 
             // Define the 'Invoke' method as follows:
             //
@@ -534,11 +533,11 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
-            MemberReference delegateInvokeMethodInstantiated = interopReferences.DelegateInvokeInstantiated(delegateType, module);
+            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type above)
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethodInstantiated.Signature!).ParameterTypes[1];
+            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
+            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
 
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
