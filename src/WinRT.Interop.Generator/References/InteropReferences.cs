@@ -537,6 +537,11 @@ internal sealed class InteropReferences
     public TypeReference UnmanagedCallersOnlyAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute"/>.
+    /// </summary>
+    public TypeReference DisableRuntimeMarshallingAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.CompilerServices"u8, "DisableRuntimeMarshallingAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
@@ -1614,6 +1619,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
     /// </summary>
     public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute.UnmanagedCallersOnlyAttribute()"/>.
+    /// </summary>
+    public MemberReference DisableRuntimeMarshallingAttribute_ctor => field ??= DisableRuntimeMarshallingAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance"/>.

@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -174,8 +175,17 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        EmitMetadataAssemblyAttributes(interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
+    }
+
+    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
     }
 
     /// <summary>
