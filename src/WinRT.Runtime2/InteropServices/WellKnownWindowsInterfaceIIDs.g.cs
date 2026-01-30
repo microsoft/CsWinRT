@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -2204,6 +2204,31 @@ internal static class WellKnownWindowsInterfaceIIDs
                 0x84,
                 0x16,
                 0xDB
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfPropertyType</c> (ECEBDE54-FAC0-5AEB-9BA9-9E1FE17E31D5).</summary>
+    public static ref readonly Guid IID_IReferenceOfPropertyType
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x54, 0xDE, 0xEB, 0xEC,
+                0xC0, 0xFA,
+                0xEB, 0x5A,
+                0x9B,
+                0xA9,
+                0x9E,
+                0x1F,
+                0xE1,
+                0x7E,
+                0x31,
+                0xD5
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));

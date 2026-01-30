@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ output extension=".g.cs"#>
@@ -105,6 +105,7 @@ var entries = new (string Name, string IID)[]
     ("IReferenceOfVector3", "1EE770FF-C954-59CA-A754-6199A9BE282C"),
     ("IReferenceOfVector4", "A5E843C9-ED20-5339-8F8D-9FE404CF3654"),
     ("IReferenceOfEventRegistrationToken", "A9B18291-CE2A-5DAE-8A23-B7F7388416DB"),
+    ("IReferenceOfPropertyType", "ECEBDE54-FAC0-5AEB-9BA9-9E1FE17E31D5"),
     ("IReferenceOfCollectionChange", "25BCAF91-880D-537D-82FC-9BBF0CACCB8B"),
     ("IReferenceOfAsyncActionCompletedHandler", "F31DBB29-606D-5A89-A23A-C09AB9605B8F"),
     ("IReferenceArrayOfInt32", "A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7"),
