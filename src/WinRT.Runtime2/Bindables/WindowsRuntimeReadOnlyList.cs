@@ -61,7 +61,7 @@ internal sealed class WindowsRuntimeReadOnlyList : WindowsRuntimeObject,
         DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
         UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
+    protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public IEnumerator GetEnumerator()
@@ -80,7 +80,7 @@ internal sealed class WindowsRuntimeReadOnlyList : WindowsRuntimeObject,
         DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
         UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    protected sealed override bool IsOverridableInterface(in Guid iid)
+    protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }
