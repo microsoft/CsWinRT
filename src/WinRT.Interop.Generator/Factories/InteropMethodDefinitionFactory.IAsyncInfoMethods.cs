@@ -224,14 +224,7 @@ internal partial class InteropMethodDefinitionFactory
                 },
                 ExceptionHandlers =
                 {
-                    new CilExceptionHandler
-                    {
-                        HandlerType = CilExceptionHandlerType.Finally,
-                        TryStart = ldarg_1_tryStart.CreateLabel(),
-                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerEnd = ret_finallyEnd.CreateLabel()
-                    },
+                    // TODO: Reverse order once AsmResolver ordering issue is resolved
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Finally,
@@ -239,6 +232,14 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = ldloca_s_1_finallyStart.CreateLabel(),
                         HandlerStart = ldloca_s_1_finallyStart.CreateLabel(),
                         HandlerEnd = ldloca_s_0_finallyStart.CreateLabel()
+                    },
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = ldarg_1_tryStart.CreateLabel(),
+                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerEnd = ret_finallyEnd.CreateLabel()
                     }
                 }
             };
