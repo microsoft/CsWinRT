@@ -301,6 +301,15 @@ public static unsafe class TypeMarshaller
             {
                 return typeof(global::System.Type);
             }
+
+            // 'IBindableVectorView' has no equivalent .NET type, so we just return 'null' here. This needs
+            // to be special-cased, or it would end up resolving a marshalling info instance (because the
+            // external type map still has an entry for this name, for marshalling), and then fail because
+            // there's no associated public type for the resulting proxy type retrieved from the type map.
+            if (typeName.SequenceEqual(WellKnownXamlRuntimeClassNames.IBindableVectorView))
+            {
+                return null;
+            }
         }
 
         global::System.Type? type = null;

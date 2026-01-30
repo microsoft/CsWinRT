@@ -61,7 +61,7 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
                 wrapperFlags: out wrapperFlags);
 
-            wrapperObject = new WindowsRuntimeIterator(valueReference);
+            wrapperObject = new WindowsRuntimeEnumerator(valueReference);
 
             return true;
         }
@@ -90,7 +90,7 @@ public sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRu
             iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
             wrapperFlags: out wrapperFlags);
 
-        return new WindowsRuntimeIterator(valueReference);
+        return new WindowsRuntimeEnumerator(valueReference);
     }
 }
 
