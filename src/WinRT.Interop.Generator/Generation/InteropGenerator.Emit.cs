@@ -2552,7 +2552,14 @@ internal partial class InteropGenerator
     /// <param name="module">The interop module being built.</param>
     private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
     {
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+        try
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.EmitMetadataAssemblyAttributesError(e).ThrowOrAttach(e);
+        }
     }
 
     /// <summary>
