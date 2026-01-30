@@ -224,6 +224,7 @@ internal partial class InteropMethodDefinitionFactory
                 },
                 ExceptionHandlers =
                 {
+                    // TODO: Reverse order once AsmResolver ordering issue is resolved
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Finally,
