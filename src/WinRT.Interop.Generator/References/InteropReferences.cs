@@ -3336,7 +3336,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of <see cref="EventHandler2EventSource" />
     /// </summary>
     /// <param name="typeArguments">The input type argument type.</param>
     public MemberReference EventHandler2EventSource_ctor(TypeSignature[] typeArguments)
