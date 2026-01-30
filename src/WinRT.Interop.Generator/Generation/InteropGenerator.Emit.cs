@@ -183,11 +183,6 @@ internal partial class InteropGenerator
         WriteInteropModuleToDisk(args, module);
     }
 
-    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
-    {
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
-    }
-
     /// <summary>
     /// Defines the interop module to emit.
     /// </summary>
@@ -2548,6 +2543,16 @@ internal partial class InteropGenerator
         {
             WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e).ThrowOrAttach(e);
         }
+    }
+
+    /// <summary>
+    /// Emits assembly attributes for the interop assembly being generated.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
     }
 
     /// <summary>
