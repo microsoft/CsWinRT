@@ -3435,7 +3435,7 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
+    /// Gets the <see cref="MemberReference"/> for the instantiated <c>Invoke</c> method of a given delegate type.
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
@@ -3467,20 +3467,14 @@ internal sealed class InteropReferences
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
         MethodDefinition invokeMethod = delegateType.MakeGenericReferenceType().Resolve(module)!.GetMethod("Invoke"u8);
 
-        // Construct the generic signature for the method with the context of the input delegate.
-        // We can use this to get all the parameters, which might be any combination of explicitly
-        // declared types, and constructed generic type parameters. Also, any number of them.
         MethodSignature invokeSignature = invokeMethod.Signature!;
-
-
-        MethodSignature memberRefSig = MethodSignature.CreateInstance(
-                returnType: invokeSignature.ReturnType,
-                parameterTypes: invokeSignature.ParameterTypes);
 
         // Create the actual member reference to use when emitting calls to the 'Invoke' method
         return delegateType
             .ToTypeDefOrRef()
-            .CreateMemberReference("Invoke"u8, memberRefSig);
+            .CreateMemberReference("Invoke"u8, MethodSignature.CreateInstance(
+                returnType: invokeSignature.ReturnType,
+                parameterTypes: invokeSignature.ParameterTypes));
     }
 
 
