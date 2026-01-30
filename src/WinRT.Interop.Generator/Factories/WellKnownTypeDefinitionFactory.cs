@@ -1040,10 +1040,10 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
@@ -1097,8 +1097,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
@@ -1158,10 +1158,10 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;

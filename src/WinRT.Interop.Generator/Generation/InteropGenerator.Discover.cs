@@ -312,12 +312,12 @@ internal partial class InteropGenerator
     private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module)
     {
         // Create the interop references scoped to this module, which we need to lookup some references from
-        // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here here, so we can't use the real
+        // the 'WinRT.Runtime.dll' assembly. We haven't loaded it just here, so we can't use the real
         // module definition for it. Instead, we just create an empty one here. This is only used to create
         // type and member references to APIs defined in that module, so this is good enough for this scenario.
         // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
         Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime2"u8, new Version(3, 0, 0, 0));
+        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime2"u8, windowsRuntimeVersion);
         AssemblyReference windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET"u8, new Version(10, 0, 0, 0));
 
         // Set the public keys, as it's needed to ensure references compare as equals as expected

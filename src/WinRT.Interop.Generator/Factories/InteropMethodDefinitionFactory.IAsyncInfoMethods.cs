@@ -227,18 +227,18 @@ internal partial class InteropMethodDefinitionFactory
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Finally,
-                        TryStart = ldarg_1_tryStart.CreateLabel(),
-                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
-                        HandlerEnd = ret_finallyEnd.CreateLabel()
-                    },
-                    new CilExceptionHandler
-                    {
-                        HandlerType = CilExceptionHandlerType.Finally,
                         TryStart = ldloca_s_0_tryStart.CreateLabel(),
                         TryEnd = ldloca_s_1_finallyStart.CreateLabel(),
                         HandlerStart = ldloca_s_1_finallyStart.CreateLabel(),
                         HandlerEnd = ldloca_s_0_finallyStart.CreateLabel()
+                    },
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = ldarg_1_tryStart.CreateLabel(),
+                        TryEnd = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerStart = ldloca_s_0_finallyStart.CreateLabel(),
+                        HandlerEnd = ret_finallyEnd.CreateLabel()
                     }
                 }
             };
