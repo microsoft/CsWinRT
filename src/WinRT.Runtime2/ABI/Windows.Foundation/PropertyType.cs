@@ -76,7 +76,7 @@ file static class PropertyTypeInterfaceEntriesImpl
     static PropertyTypeInterfaceEntriesImpl()
     {
         Entries.IReferenceOfPropertyType.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPropertyType;
-        Entries.IReferenceOfPropertyType.Vtable = IReferenceImpl.UInt32Enum;
+        Entries.IReferenceOfPropertyType.Vtable = IReferenceImpl.Int32Enum;
         Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;

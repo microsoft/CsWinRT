@@ -76,7 +76,7 @@ file static class AsyncStatusInterfaceEntriesImpl
     static AsyncStatusInterfaceEntriesImpl()
     {
         Entries.IReferenceOfAsyncStatus.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus;
-        Entries.IReferenceOfAsyncStatus.Vtable = IReferenceImpl.UInt32Enum;
+        Entries.IReferenceOfAsyncStatus.Vtable = IReferenceImpl.Int32Enum;
         Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
