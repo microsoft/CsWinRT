@@ -300,9 +300,9 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: "IReadOnlyListComWrappersMarshallerAttribute"u8);
 
         // Verify that this marshaller attribute does exist correctly and can be resolved
-        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
+        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
         {
-            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
+            throw WellKnownInteropExceptions.NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference, "IBindableVectorView");
         }
 
         // Create the proxy type to support RCW marshalling as well
@@ -355,9 +355,9 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: (Utf8String)$"{type.Name}ComWrappersMarshallerAttribute");
 
         // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
+        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
         {
-            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
+            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(type);
         }
 
         return comWrappersMarshallerType;
