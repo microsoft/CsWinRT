@@ -3447,22 +3447,18 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
+    public MemberReference DelegateInvoke(TypeSignature delegateType, ModuleDefinition module)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
         MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
 
-        // Construct the generic signature for the method with the context of the input delegate.
-        // We can use this to get all the parameters, which might be any combination of explicitly
-        // declared types, and constructed generic type parameters. Also, any number of them.
-        MethodSignature invokeSignature = invokeMethod.Signature!.InstantiateGenericTypes(new GenericContext(delegateType, null));
-
-        // Create the actual member reference to use when emitting calls to the 'Invoke' method
-        return delegateType
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Invoke"u8, MethodSignature.CreateInstance(
-                returnType: invokeSignature.ReturnType,
-                parameterTypes: invokeSignature.ParameterTypes));
+        // Create the actual member reference to use when emitting calls to the 'Invoke' method.
+        // This has to be on the input (potentially constructed) delegate type, but not using
+        // any constructed type arguments (as they're just derived from the constructed type).
+        // For instance, if the input delegate type were an 'EventHandler<Foo, BarArgs>' generic
+        // instantiation, this 'Invoke' reference would be 'void EventHandler<Foo, BarArgs>::Invoke(!0, !1)'.
+        // This is also why the method reference can directly reuse the signature from the method definition.
+        return delegateType.ToTypeDefOrRef().CreateMemberReference("Invoke"u8, invokeMethod.Signature!);
     }
 
     /// <summary>
