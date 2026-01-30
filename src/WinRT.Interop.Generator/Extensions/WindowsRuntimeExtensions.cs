@@ -151,7 +151,18 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Uri) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Matrix3x2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Matrix4x4) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Plane) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Quaternion) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector2) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector3) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector4) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DataErrorsChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventArgs);
         }
 
         /// <summary>
@@ -169,7 +180,8 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncStatus) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken);
         }
 
         /// <summary>

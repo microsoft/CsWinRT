@@ -354,8 +354,8 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition delegateComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                InteropTypeDefinitionBuilder.Delegate.Proxy(
+                    delegateType: typeSignature,
                     comWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -520,7 +520,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -646,7 +646,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -775,7 +775,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -912,7 +912,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: listComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1041,7 +1041,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1178,7 +1178,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1294,8 +1294,8 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerAttributeType: out TypeDefinition marshallerAttributeType);
 
-                InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                InteropTypeDefinitionBuilder.KeyValuePair.Proxy(
+                    keyValuePairType: typeSignature,
                     comWrappersMarshallerAttributeType: marshallerAttributeType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1405,7 +1405,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1526,7 +1526,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: comWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1647,7 +1647,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: comWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1758,7 +1758,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: actionComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1869,7 +1869,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -1980,7 +1980,7 @@ internal partial class InteropGenerator
                     interfaceImplType: out TypeDefinition interfaceImplType);
 
                 InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                    interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,
@@ -2190,8 +2190,8 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
 
-                InteropTypeDefinitionBuilder.Proxy(
-                    mappedType: typeSignature,
+                InteropTypeDefinitionBuilder.SzArray.Proxy(
+                    arrayType: typeSignature,
                     comWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
                     interopReferences: interopReferences,
                     module: module,

@@ -634,6 +634,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate the runtime class name of some Windows Runtime type.
+    /// </summary>
+    public static Exception RuntimeClassNameGenerationError(TypeSignature type)
+    {
+        return Exception(74, $"Failed to generate the runtime class name for type '{type}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

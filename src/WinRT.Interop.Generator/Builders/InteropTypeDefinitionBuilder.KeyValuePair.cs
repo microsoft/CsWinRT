@@ -432,15 +432,49 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the proxy type of some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            TypeSignature keyValuePairType,
+            TypeDefinition comWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
+            out TypeDefinition proxyType)
+        {
+            // For 'KeyValuePair<TKey, TValue>' types, we need to specify the mapped metadata name, so that when marshalling
+            // 'Type' instances to native we can correctly detect the mapped type to be a metadata type. We also need to
+            // reference the mapped type, so that we can retrieve the original 'Type' instance when marshalling from native.
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType),
+                mappedType: keyValuePairType,
+                mappedMetadata: "Windows.Foundation.FoundationContract",
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(keyValuePairType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
+                referenceMappedType: true,
+                comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
+
+        /// <summary>
         /// Creates the type map attributes for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         public static void TypeMapAttributes(
-            GenericInstanceTypeSignature keyValuePairType,
+            TypeSignature keyValuePairType,
             TypeDefinition proxyType,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -448,10 +482,13 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(keyValuePairType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: keyValuePairType,
-                proxyTypeMapSourceType: keyValuePairType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                marshallingTypeMapSourceType: keyValuePairType,
+                marshallingTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                metadataTypeMapSourceType: null,
+                metadataTypeMapProxyType: null,
                 interfaceTypeMapSourceType: null,
                 interfaceTypeMapProxyType: null,
                 interopReferences: interopReferences,

@@ -64,38 +64,54 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
     /// </summary>
+    /// <remarks>
+    /// This <see cref="AssemblyReference"/> will use the same scope as <see cref="_corLibTypeFactory"/>, to enable correct resolution.
+    /// </remarks>
     public AssemblyReference SystemRuntimeInteropServices => field ??= new AssemblyReference(
         name: "System.Runtime.InteropServices"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference SystemObjectModel => field ??= new AssemblyReference(
         name: "System.ObjectModel"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference SystemMemory => field ??= new AssemblyReference(
         name: "System.Memory"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.Numerics.Vectors.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference SystemNumericsVectors => field ??= new AssemblyReference(
+        name: "System.Numerics.Vectors"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
         name: "WinRT.Projection"u8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.
@@ -273,6 +289,46 @@ internal sealed class InteropReferences
     public TypeReference DateTimeOffset => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "DateTimeOffset"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Uri"/>.
+    /// </summary>
+    public TypeReference Uri => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Uri"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Matrix3x2"/>.
+    /// </summary>
+    public TypeReference Matrix3x2 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Matrix3x2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Matrix4x4"/>.
+    /// </summary>
+    public TypeReference Matrix4x4 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Matrix4x4"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Plane"/>.
+    /// </summary>
+    public TypeReference Plane => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Plane"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Quaternion"/>.
+    /// </summary>
+    public TypeReference Quaternion => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Quaternion"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector2"/>.
+    /// </summary>
+    public TypeReference Vector2 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector3"/>.
+    /// </summary>
+    public TypeReference Vector3 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector3"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Numerics.Vector4"/>.
+    /// </summary>
+    public TypeReference Vector4 => field ??= SystemNumericsVectors.CreateTypeReference("System.Numerics"u8, "Vector4"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
     public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
@@ -386,6 +442,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventArgs"/>.
     /// </summary>
     public TypeReference PropertyChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "PropertyChangedEventArgs"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.DataErrorsChangedEventArgs"/>.
+    /// </summary>
+    public TypeReference DataErrorsChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.ComponentModel"u8, "DataErrorsChangedEventArgs"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.MemoryExtensions"/>.
@@ -541,6 +602,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMappedMetadataAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMappedMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMappedMetadataAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
@@ -2188,6 +2254,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMetadataTypeNameAttribute"/>'s constructor.
     /// </summary>
     public MemberReference WindowsRuntimeMetadataTypeNameAttribute_ctor => field ??= WindowsRuntimeMetadataTypeNameAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedMetadataAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeMappedMetadataAttribute_ctor => field ??= WindowsRuntimeMappedMetadataAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [_corLibTypeFactory.String]));

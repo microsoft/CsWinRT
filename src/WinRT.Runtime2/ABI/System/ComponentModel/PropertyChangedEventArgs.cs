@@ -9,26 +9,10 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(PropertyChangedEventArgs),
-    typeof(ABI.System.ComponentModel.PropertyChangedEventArgs))]
-
 namespace ABI.System.ComponentModel;
 
 /// <summary>
-/// ABI type for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventargs"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventargs"/>
-[PropertyChangedEventArgsComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static class PropertyChangedEventArgs;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
+/// Marshaller for <see cref="PropertyChangedEventArgs"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -37,14 +21,14 @@ public static class PropertyChangedEventArgs;
 public static unsafe class PropertyChangedEventArgsMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventArgs? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventArgs? value)
     {
         return value is null ? default : new(PropertyChangedEventArgsRuntimeClassFactory.CreateInstance(value.PropertyName));
     }
 
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToManaged"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static global::System.ComponentModel.PropertyChangedEventArgs? ConvertToManaged(void* value)
+    public static PropertyChangedEventArgs? ConvertToManaged(void* value)
     {
         if (value is null)
         {
@@ -59,7 +43,7 @@ public static unsafe class PropertyChangedEventArgsMarshaller
         // Convert to a managed 'string' and create the managed object for the args as well
         try
         {
-            return new global::System.ComponentModel.PropertyChangedEventArgs(HStringMarshaller.ConvertToManaged(propertyName));
+            return new PropertyChangedEventArgs(HStringMarshaller.ConvertToManaged(propertyName));
         }
         finally
         {
@@ -69,14 +53,18 @@ public static unsafe class PropertyChangedEventArgsMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="PropertyChangedEventArgs"/>.
 /// </summary>
-file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        return PropertyChangedEventArgsRuntimeClassFactory.CreateInstance(((global::System.ComponentModel.PropertyChangedEventArgs)value).PropertyName);
+        return PropertyChangedEventArgsRuntimeClassFactory.CreateInstance(((PropertyChangedEventArgs)value).PropertyName);
     }
 
     /// <inheritdoc/>
@@ -102,7 +90,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
 }
 
 /// <summary>
-/// The runtime class factory for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
+/// The runtime class factory for <see cref="PropertyChangedEventArgs"/>.
 /// </summary>
 file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
 {
@@ -114,10 +102,10 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
         iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
-    /// Creates a new native instance for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.
+    /// Creates a new native instance for <see cref="PropertyChangedEventArgs"/>.
     /// </summary>
     /// <param name="propertyName">The property name to use.</param>
-    /// <returns>The new native instance for <see cref="global::System.ComponentModel.PropertyChangedEventArgs"/>.</returns>
+    /// <returns>The new native instance for <see cref="PropertyChangedEventArgs"/>.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* CreateInstance(string? propertyName)
     {
