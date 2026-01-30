@@ -36,12 +36,33 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime;
 using System.Runtime.InteropServices.Marshalling;
 using Windows.Foundation.Tasks;
+using Xunit.Sdk;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 
 namespace UnitTest
 {
+    [CLSCompliant(false)]
+    [DataDiscoverer("Xunit.Sdk.InlineDataDiscoverer", "xunit.core")]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public sealed class InlineDataAttribute<T> : DataAttribute
+    {
+        private readonly object[] data;
+
+        public InlineDataAttribute(params object[] data)
+        {
+            this.data = data;
+        }
+
+        public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+        {
+            object[] arguments = [typeof(T), .. data];
+
+            return [arguments];
+        }
+    }
+
     public partial class TestCSharp
     {
         public Class TestObject { get; private set; }
@@ -548,21 +569,6 @@ namespace UnitTest
         }
 
         [Theory]
-        // Projected Metadata Types
-        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
-        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
-        [InlineData(typeof(TestComponent.Param7Handler), "TestComponent.Param7Handler", "Metadata")]
-        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
-        // Custom Mapped Metadata Types
-        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
-        [InlineData(typeof(Guid), "Guid", "Metadata")]
-        [InlineData(typeof(Object), "Object", "Metadata")]
-        [InlineData(typeof(String), "String", "Metadata")]
-        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
-        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
-        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
-        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Primitive")]
         // Primitive Types
         [InlineData(typeof(long), "Int64", "Primitive")]
         [InlineData(typeof(int), "Int32", "Primitive")]
@@ -575,23 +581,44 @@ namespace UnitTest
         [InlineData(typeof(float), "Single", "Primitive")]
         [InlineData(typeof(double), "Double", "Primitive")]
         [InlineData(typeof(bool), "Boolean", "Primitive")]
-        // Metadata Interfaces
+        // Projected WinRT Types
+        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
+        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
+        [InlineData(typeof(TestComponent.IRequiredOne), "TestComponent.IRequiredOne", "Metadata")]
+        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.Class), "TestComponentCSharp.Class", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.ComposedBlittableStruct), "TestComponentCSharp.ComposedBlittableStruct", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
+        // Mapped WinRT Types
+        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
+        [InlineData(typeof(Guid), "Guid", "Metadata")]
+        [InlineData(typeof(Object), "Object", "Metadata")]
+        [InlineData(typeof(String), "String", "Metadata")]
+        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
+        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
+        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
         [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
         [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
-        // HResult Special Case
+        // Special Cases
         [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
         // Custom Types
         [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        // Nullbale types
+        // Nullable types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
         // Generic Interfaces
-        [InlineData(typeof(IList<long>), "IList<Int64>", "Primitive")]
-        [InlineData(typeof(IList<TestComponentCSharp.EventWithGuid>), "IList<TestComponentCSharp.EventWithGuid>", "Metadata")]
-        [InlineData(typeof(IEnumerator<TestComponentCSharp.Class>), "IEnumerator<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData(typeof(IEnumerable<TestComponentCSharp.Class>), "IEnumerable<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
+        [InlineData<IList<TestComponentCSharp.EventWithGuid>>(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IList<TestComponentCSharp.Class>>(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
         // KVP types
-        [InlineData(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.KeyValuePair<Object, Object>", "Metadata")]
-        [InlineData(typeof(KeyValuePair<String, TestCSharp>), "Windows.Foundation.Collections.KeyValuePair<Object, Object>", "Metadata")]
+        [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
+        [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
