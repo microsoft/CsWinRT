@@ -88,13 +88,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        WindowsRuntimeExposedType(
-            args: args,
-            windowsUIXamlTypeName: "Windows.UI.Xaml.Interop.IBindableVectorView",
-            microsoftUIXamlTypeName: "Microsoft.UI.Xaml.Interop.IBindableVectorView",
-            trimTarget: interopReferences.BindableIReadOnlyListAdapter.ToReferenceTypeSignature(),
+        IBindableVectorViewType(
             interopReferences: interopReferences,
-            module: module);
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
     }
 
     /// <summary>
@@ -121,11 +118,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: InteropUtf8NameFactory.TypeName(trimTarget),
-            mappedType: trimTarget,
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
-            referenceMappedType: true,
+            mappedType: trimTarget,
             comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
@@ -175,11 +171,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: InteropUtf8NameFactory.TypeName(trimTarget),
-            mappedType: trimTarget,
             mappedMetadata: metadata,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
             metadataTypeName: null,
-            referenceMappedType: true,
+            mappedType: trimTarget,
             comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
@@ -228,11 +223,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: InteropUtf8NameFactory.TypeName(trimTarget),
-            mappedType: trimTarget,
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
-            referenceMappedType: true,
+            mappedType: trimTarget,
             comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
@@ -255,46 +249,90 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     }
 
     /// <summary>
-    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for a given custom-mapped type that can be marshalled to native.
+    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for <c>IBindableVectorView</c>.
     /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="windowsUIXamlTypeName">The runtime class name for <c>Windows.UI.Xaml</c>.</param>
-    /// <param name="microsoftUIXamlTypeName">The runtime class name for <c>Microsoft.UI.Xaml</c>.</param>
-    /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
-    private static void WindowsRuntimeExposedType(
-        InteropGeneratorArgs args,
-        string windowsUIXamlTypeName,
-        string microsoftUIXamlTypeName,
-        TypeSignature trimTarget,
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    private static void IBindableVectorViewType(
         InteropReferences interopReferences,
-        ModuleDefinition module)
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
     {
-        string runtimeClassName = args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName;
+        const string windowsUIXamlTypeName = "Windows.UI.Xaml.Interop.IBindableVectorView";
+        const string microsoftUIXamlTypeName = "Microsoft.UI.Xaml.Interop.IBindableVectorView";
 
-        // Because these types can be instantiated and marshalled to native, but their runtime class name changes between 'Windows.UI.Xaml' and
-        // 'Microsoft.UI.Xaml', we also need to generate a proxy type for them, so that we can annotate it with '[WindowsRuntimeClassName]' with
-        // the correct runtime class name for the configuration actually being used at runtime by the current application or published library.
+        TypeSignature adapterType = interopReferences.BindableIReadOnlyListAdapter.ToReferenceTypeSignature();
+        string runtimeClassName = useWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName;
+
+        // The 'BindableIReadOnlyListAdapter' type is a special type that is only used by the 'IBindableVector.GetView()'
+        // implementation (as it returns an 'IBindableVectorView' instance). This type is only used as a CCW. So we need
+        // a proxy type for it, with the correct runtime class name, and an entry just in the marshalling proxy type map.
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: trimTarget.Name!,
-            mappedType: trimTarget,
+            ns: InteropUtf8NameFactory.TypeNamespace(adapterType),
+            name: InteropUtf8NameFactory.TypeName(adapterType),
             mappedMetadata: null,
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,
-            referenceMappedType: false,
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            mappedType: null,
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(adapterType, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
-            out TypeDefinition proxyType);
+            out TypeDefinition adapterProxyType);
 
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
-            value: args.UseWindowsUIXamlProjections ? windowsUIXamlTypeName : microsoftUIXamlTypeName,
-            target: proxyType.ToTypeSignature(),
-            trimTarget: trimTarget,
+        InteropTypeDefinitionBuilder.TypeMapAttributes(
+            runtimeClassName: null,
+            metadataTypeName: null,
+            externalTypeMapTargetType: null,
+            externalTypeMapTrimTargetType: null,
+            marshallingTypeMapSourceType: adapterType,
+            marshallingTypeMapProxyType: adapterProxyType.ToTypeSignature(),
+            metadataTypeMapSourceType: null,
+            metadataTypeMapProxyType: null,
+            interfaceTypeMapSourceType: null,
+            interfaceTypeMapProxyType: null,
             interopReferences: interopReferences,
-            module: module));
+            module: module);
+
+        // Retrieve the '[IReadOnlyListComWrappersMarshallerAttribute]' type from 'WinRT.Runtime.dll', which is specialized
+        TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
+            ns: "ABI.System.Collections"u8,
+            name: "IReadOnlyListComWrappersMarshallerAttribute"u8);
+
+        // Verify that this marshaller attribute does exist correctly and can be resolved
+        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
+        {
+            throw WellKnownInteropExceptions.NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference, "IBindableVectorView");
+        }
+
+        // Create the proxy type to support RCW marshalling as well
+        InteropTypeDefinitionBuilder.Proxy(
+            ns: "ABI.System.Collections"u8,
+            name: "<#corlib>IReadOnlyList",
+            mappedMetadata: null,
+            runtimeClassName: null,
+            metadataTypeName: null,
+            mappedType: null,
+            comWrappersMarshallerAttributeType: comWrappersMarshallerType,
+            interopReferences: interopReferences,
+            module: module,
+            out TypeDefinition nativeObjectProxyType);
+
+        // Define the type map entries. We only need one in the marshalling external type map. We can use 'IEnumerable'
+        // as the trim target for the specialized RCW type (since the 'IReadOnlyList' interface does not exist in .NET).
+        InteropTypeDefinitionBuilder.TypeMapAttributes(
+            runtimeClassName: runtimeClassName,
+            metadataTypeName: null,
+            externalTypeMapTargetType: nativeObjectProxyType.ToTypeSignature(),
+            externalTypeMapTrimTargetType: interopReferences.IEnumerable.ToReferenceTypeSignature(),
+            marshallingTypeMapSourceType: null,
+            marshallingTypeMapProxyType: null,
+            metadataTypeMapSourceType: null,
+            metadataTypeMapProxyType: null,
+            interfaceTypeMapSourceType: null,
+            interfaceTypeMapProxyType: null,
+            interopReferences: interopReferences,
+            module: module);
     }
 
     /// <summary>
@@ -317,9 +355,9 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: (Utf8String)$"{type.Name}ComWrappersMarshallerAttribute");
 
         // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Import(module).Resolve() is not TypeDefinition comWrappersMarshallerType)
+        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
         {
-            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference);
+            throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(type);
         }
 
         return comWrappersMarshallerType;

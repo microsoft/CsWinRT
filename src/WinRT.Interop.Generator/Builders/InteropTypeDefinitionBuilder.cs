@@ -703,11 +703,10 @@ internal static partial class InteropTypeDefinitionBuilder
         Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
             name: InteropUtf8NameFactory.TypeName(interfaceType),
-            mappedType: interfaceType,
             mappedMetadata: null,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
-            referenceMappedType: true,
+            mappedType: interfaceType,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
@@ -719,11 +718,10 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="mappedMetadata">The name of the mapped metadata for the proxy type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
-    /// <param name="referenceMappedType">Indicates whether to emit an attribute to reference the original managed type.</param>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -731,11 +729,10 @@ internal static partial class InteropTypeDefinitionBuilder
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
-        TypeSignature mappedType,
         string? mappedMetadata,
         string? runtimeClassName,
         string? metadataTypeName,
-        bool referenceMappedType,
+        TypeSignature? mappedType,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -780,9 +777,9 @@ internal static partial class InteropTypeDefinitionBuilder
                     value: metadataTypeName))));
         }
 
-        // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type, if requested.
+        // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type, if available.
         // This allows retrieving the user-provided runtime class name from the original managed type.
-        if (referenceMappedType)
+        if (mappedType is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
