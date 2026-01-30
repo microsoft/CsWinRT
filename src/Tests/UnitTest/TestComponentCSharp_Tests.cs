@@ -1,42 +1,41 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
-
-using Windows.Foundation;
-using Windows.UI;
-using Windows.Storage;
-using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Interop;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
-
 using TestComponentCSharp;
-using System.Collections.Generic;
-using System.Collections;
-using WinRT.Interop;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices.Enumeration;
+using Windows.Devices.Enumeration.Pnp;
+using Windows.Foundation;
+using Windows.Foundation.Tasks;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
-using System.Reflection;
-using Windows.Devices.Enumeration.Pnp;
-using System.Diagnostics;
-using Windows.Devices.Enumeration;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Notifications;
-using WindowsRuntime.InteropServices.Marshalling;
-using WindowsRuntime.InteropServices;
 using WindowsRuntime;
-using System.Runtime.InteropServices.Marshalling;
-using Windows.Foundation.Tasks;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+using WinRT.Interop;
+using Xunit;
 using Xunit.Sdk;
+using static System.Diagnostics.Activity;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
@@ -611,11 +610,6 @@ namespace UnitTest
         [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
         // Special Cases
         [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
-        // Custom Types
-        [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         // Nullable types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
         // Generic Interfaces
@@ -626,12 +620,26 @@ namespace UnitTest
         [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
         // Generic Delegates
         [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
-        [InlineData<EventHandler<TestCSharp>>(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<DelegateTestCSharp<Guid>>(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<EventHandler<TestComponentCSharp.Class>>(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
         // KeyValuePairUnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
         [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
         [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
         [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
+        // Nested Generics
+        [InlineData<EventHandler<IList<long>>>(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<Object, Object>>>(typeof(EventHandler<KeyValuePair<Object, Object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>>(typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [InlineData<IList<KeyValuePair<Object, Object>>>(typeof(IList<KeyValuePair<Object, Object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<IEnumerator<IEnumerable<Object>>>(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
+        [InlineData<IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>>(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        // Custom Types
+        [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<IList<TestCSharp>>>(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<TestCSharp>>(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<DelegateTestCSharp<Guid>>(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
