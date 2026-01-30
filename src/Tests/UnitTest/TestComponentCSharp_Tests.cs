@@ -63,6 +63,11 @@ namespace UnitTest
         }
     }
 
+    public interface ITestCSharp<T>
+    {
+        void TestMethod<T>();
+    }
+
     public partial class TestCSharp
     {
         public Class TestObject { get; private set; }
@@ -606,6 +611,8 @@ namespace UnitTest
         [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
         // Custom Types
         [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
         // Nullable types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
         // Generic Interfaces
@@ -614,7 +621,7 @@ namespace UnitTest
         [InlineData<IList<TestComponentCSharp.Class>>(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
         [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
         [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
-        // KVP types
+        // KeyValuePair
         [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
         [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
         [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
