@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ComponentModel;
 using System.Runtime.Versioning;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
@@ -19,8 +18,7 @@ namespace Windows.UI.Xaml.Interop;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public enum TypeKind
+internal enum TypeKind
 {
     /// <summary>
     /// The type is a language-level primitive.
