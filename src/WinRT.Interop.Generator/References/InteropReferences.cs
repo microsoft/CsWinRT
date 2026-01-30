@@ -3322,13 +3322,13 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of <see cref="EventHandler1EventSource" />
+    /// Gets the <see cref="MemberReference"/> for the <see cref="EventHandler1EventSource"/>'s constructor.
     /// </summary>
-    /// <param name="typeArguments">The input type argument type.</param>
-    public MemberReference EventHandler1EventSource_ctor(TypeSignature[] typeArguments)
+    /// <param name="eventArgsType">The type of event arguments.</param>
+    public MemberReference EventHandler1EventSource_ctor(TypeSignature eventArgsType)
     {
         return EventHandler1EventSource
-            .MakeGenericReferenceType(typeArguments)
+            .MakeGenericReferenceType(eventArgsType)
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
@@ -3336,13 +3336,14 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of <see cref="EventHandler2EventSource" />
+    /// Gets the <see cref="MemberReference"/> for the <see cref="EventHandler2EventSource"/>'s constructor.
     /// </summary>
-    /// <param name="typeArguments">The input type argument type.</param>
-    public MemberReference EventHandler2EventSource_ctor(TypeSignature[] typeArguments)
+    /// <param name="senderType">The sender type.</param>
+    /// <param name="eventArgsType">The type of event arguments.</param>
+    public MemberReference EventHandler2EventSource_ctor(TypeSignature senderType, TypeSignature eventArgsType)
     {
         return EventHandler2EventSource
-            .MakeGenericReferenceType(typeArguments)
+            .MakeGenericReferenceType(senderType, eventArgsType)
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
@@ -3352,11 +3353,11 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
     /// </summary>
-    /// <param name="typeArguments">The input type argument type.</param>
-    public MemberReference VectorChangedEventHandler1EventSource_ctor(TypeSignature[] typeArguments)
+    /// <param name="elementType">The type of elements in the observable vector.</param>
+    public MemberReference VectorChangedEventHandler1EventSource_ctor(TypeSignature elementType)
     {
         return VectorChangedEventHandler1EventSource
-            .MakeGenericReferenceType(typeArguments)
+            .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,

@@ -34,10 +34,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature eventArgsType = delegateType.TypeArguments[0];
+
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler1EventSource,
-                baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor([.. delegateType.TypeArguments]),
+                baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor(eventArgsType),
                 baseEventSourceConvertToUnmanaged: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
@@ -60,10 +62,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature senderType = delegateType.TypeArguments[0];
+            TypeSignature eventArgsType = delegateType.TypeArguments[1];
+
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler2EventSource,
-                baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor([.. delegateType.TypeArguments]),
+                baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor(senderType, eventArgsType),
                 baseEventSourceConvertToUnmanaged: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
@@ -88,10 +93,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature elementType = delegateType.TypeArguments[0];
+
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
-                baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor([.. delegateType.TypeArguments]),
+                baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor(elementType),
                 baseEventSourceConvertToUnmanaged: interopReferences.VectorChangedEventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
