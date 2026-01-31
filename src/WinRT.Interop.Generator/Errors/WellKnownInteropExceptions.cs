@@ -498,7 +498,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteMissingBodyError(MethodDefinition method)
     {
-        return Exception(57, $"Generated interop method '{method}' is missing an IL method body.");
+        return Exception(57, $"Generated interop method '{method}' is missing an IL method body, two-pass rewrite cannot be performed.");
     }
 
     /// <summary>
@@ -639,6 +639,30 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException EmitMetadataAssemblyAttributesError(Exception exception)
     {
         return Exception(74, "Failed to emit the metadata assembly attributes for the interop assembly.", exception);
+    }
+
+    /// <summary>
+    /// A generated interop method is missing an IL method body.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupMissingBodyError(MethodDefinition method)
+    {
+        return Exception(75, $"Generated interop method '{method}' is missing an IL method body, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// A generated interop method has invalid exception handler labels.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupInvalidExceptionHandlerLabels(MethodDefinition method)
+    {
+        return Exception(76, $"Generated interop method '{method}' has invalid exception handler labels, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// A generated interop method has invalid branch instruction labels.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupInvalidBranchInstructionLabels(MethodDefinition method)
+    {
+        return Exception(77, $"Generated interop method '{method}' has invalid branch instruction labels, fixups cannot be applied.");
     }
 
     /// <summary>

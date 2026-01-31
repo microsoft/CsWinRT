@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropGenerator.Fixups;
 /// <summary>
 /// A type that can apply custom fixups to generated methods, as a last processing step.
 /// </summary>
-internal abstract class InteropMethodFixup
+internal abstract partial class InteropMethodFixup
 {
     /// <summary>
     /// Applies the current fixup to a target method.
