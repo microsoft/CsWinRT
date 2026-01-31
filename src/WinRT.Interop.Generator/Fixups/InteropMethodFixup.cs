@@ -47,7 +47,7 @@ internal abstract partial class InteropMethodFixup
     }
 
     /// <summary>
-    /// Validates the exception handler labels for the specified method.
+    /// Validates the branch instruction labels for the specified method.
     /// </summary>
     /// <param name="method">The method to validate.</param>
     /// <param name="body">The method body to validate.</param>
