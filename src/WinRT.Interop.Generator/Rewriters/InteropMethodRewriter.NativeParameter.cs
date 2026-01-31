@@ -87,6 +87,8 @@ internal partial class InteropMethodRewriter
                 }
                 else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
                 {
+                    // For 'KeyValuePair<,>' types, we can always directly lookup the marshaller from the emit state.
+                    // We don't need to pass a disposal method, as they will use the generic one for all COM objects.
                     RewriteBody(
                         parameterType: parameterType,
                         body: body,
@@ -115,9 +117,9 @@ internal partial class InteropMethodRewriter
                         interopReferences: interopReferences,
                         module: module);
                 }
-                else
+                else if (parameterType.IsManagedValueType(interopReferences))
                 {
-                    // The last case handles all other value types, which need explicit disposal for their ABI values
+                    // Handle all managed value types, which need explicit disposal for their ABI values
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     RewriteBody(
@@ -131,6 +133,16 @@ internal partial class InteropMethodRewriter
                         disposeMethod: marshallerType.Dispose(),
                         interopReferences: interopReferences,
                         module: module);
+                }
+                else
+                {
+                    // The last case is for unmanaged value types, which just need marshalling but no disposal
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
+
+                    body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                    body.Instructions.ReferenceReplaceRange(loadMarker, [
+                        CilInstruction.CreateLdarg(parameterIndex),
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module))]);
                 }
             }
             else if (parameterType.IsTypeOfString())
