@@ -117,7 +117,7 @@ internal partial class InteropMethodFixup
         {
             foreach (CilExceptionHandler handler in body.ExceptionHandlers)
             {
-                // Check if this instruction is the starting instruction of any handler.
+                // Check if this instruction is the starting instruction of any 'try' region.
                 // We can directly cast to 'CilInstructionLabel' as we've already validated.
                 if (((CilInstructionLabel)handler.TryStart!).Instruction == instruction)
                 {
