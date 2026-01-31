@@ -700,6 +700,55 @@ internal static class WindowsRuntimeExtensions
     extension(TypeSignature signature)
     {
         /// <summary>
+        /// Tries to extract the underlying type from a constructed <see cref="Nullable{T}"/> type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="underlyingType">The underlying nullable type, if the input type is a constructed <see cref="Nullable{T}"/> type.</param>
+        /// <returns>Whether <paramref name="underlyingType"/> was successfully retrieved.</returns>
+        public bool TryGetNullableUnderlyingType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? underlyingType)
+        {
+            // First check that we have some constructed generic value type.
+            // We also check that we have a single type argument to narrow down.
+            if (signature is not GenericInstanceTypeSignature { IsValueType: true, TypeArguments: [TypeSignature typeArgument] } genericSignature)
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            // Check that we actually have a constructed 'Nullable<T>' type
+            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable1))
+            {
+                underlyingType = null;
+
+                return false;
+            }
+
+            underlyingType = typeArgument;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="MethodSignature"/> for the <c>Invoke</c> method of a given delegate type.
+        /// </summary>
+        /// <param name="module">The <see cref="ModuleDefinition"/> to use to import the delegate before resolving it.</param>
+        /// <returns>The <see cref="MethodSignature"/> for the <c>Invoke</c> method for the input delegate type.</returns>
+        public MethodSignature GetDelegateInvokeMethodSignature(ModuleDefinition module)
+        {
+            // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
+            MethodDefinition invokeMethod = signature.Resolve(module)!.GetMethod("Invoke"u8);
+
+            // Construct the generic signature for the method with the context of the input delegate.
+            // We can use this to get all the parameters, which might be any combination of explicitly
+            // declared types, and constructed generic type parameters. Also, any number of them. If
+            // the input delegate type is not generic instead, we just return the method signature as is.
+            return signature is GenericInstanceTypeSignature genericSignature
+                ? invokeMethod.Signature!.InstantiateGenericTypes(new GenericContext(genericSignature, null))
+                : invokeMethod.Signature!;
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -750,36 +799,6 @@ internal static class WindowsRuntimeExtensions
         public bool IsConstructedNullableValueType(InteropReferences interopReferences)
         {
             return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
-        }
-
-        /// <summary>
-        /// Tries to extract the underlying type from a constructed <see cref="Nullable{T}"/> type.
-        /// </summary>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="underlyingType">The underlying nullable type, if the input type is a constructed <see cref="Nullable{T}"/> type.</param>
-        /// <returns>Whether <paramref name="underlyingType"/> was successfully retrieved.</returns>
-        public bool TryGetNullableUnderlyingType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? underlyingType)
-        {
-            // First check that we have some constructed generic value type.
-            // We also check that we have a single type argument to narrow down.
-            if (signature is not GenericInstanceTypeSignature { IsValueType: true, TypeArguments: [TypeSignature typeArgument] } genericSignature)
-            {
-                underlyingType = null;
-
-                return false;
-            }
-
-            // Check that we actually have a constructed 'Nullable<T>' type
-            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable1))
-            {
-                underlyingType = null;
-
-                return false;
-            }
-
-            underlyingType = typeArgument;
-
-            return true;
         }
 
         /// <summary>

@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -171,6 +172,10 @@ internal partial class InteropGenerator
 
         // Add all '[IgnoresAccessChecksTo]' attributes
         DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        EmitMetadataAssemblyAttributes(interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2537,6 +2542,23 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Emits assembly attributes for the interop assembly being generated.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        try
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.EmitMetadataAssemblyAttributesError(e).ThrowOrAttach(e);
         }
     }
 

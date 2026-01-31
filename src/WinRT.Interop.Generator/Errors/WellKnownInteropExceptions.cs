@@ -166,7 +166,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes
+    /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes.
     /// </summary>
     public static WellKnownInteropException DefineIgnoresAccessChecksToAttributesError(Exception exception)
     {
@@ -631,6 +631,14 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException TrackedMethodDefinitionLookupError(TypeSignature typeSignature, string key)
     {
         return Exception(73, $"Failed to find a tracked method definition for signature '{typeSignature}' and key '{key}'.");
+    }
+
+    /// <summary>
+    /// Failed to define metadata assembly attributes.
+    /// </summary>
+    public static WellKnownInteropException EmitMetadataAssemblyAttributesError(Exception exception)
+    {
+        return Exception(74, "Failed to emit the metadata assembly attributes for the interop assembly.", exception);
     }
 
     /// <summary>

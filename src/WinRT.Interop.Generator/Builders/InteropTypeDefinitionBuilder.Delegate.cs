@@ -83,11 +83,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition vftblType)
         {
-            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
 
-            // Prepare the sender and arguments types (same as for the 'Impl' type below)
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+            // Prepare the sender and arguments types (same as for the 'Impl' type below). Note that
+            // we are relying on the fact that all Windows Runtime generic delegate types have in
+            // common that they all return 'void' and have exactly two parameters on 'Invoke'.
+            TypeSignature senderType = invokeSignature.ParameterTypes[0];
+            TypeSignature argsType = invokeSignature.ParameterTypes[1];
 
             bool isSenderReferenceType = senderType.HasReferenceAbiType(interopReferences);
             bool isArgsReferenceType = argsType.HasReferenceAbiType(interopReferences);
@@ -204,12 +206,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
 
-            // Prepare the sender and arguments types. This path is only ever reached for valid
-            // generic Windows Runtime delegate types, and they all have exactly two type arguments.
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+            // Prepare the sender and arguments types. This path is only ever reached for valid generic
+            // Windows Runtime delegate types, and they all have exactly two type arguments (see above).
+            TypeSignature senderType = invokeSignature.ParameterTypes[0];
+            TypeSignature argsType = invokeSignature.ParameterTypes[1];
 
             // Define the 'Invoke' method as follows:
             //
@@ -248,7 +250,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
-                    { Callvirt, delegateInvokeMethod.Import(module) },
+                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module).Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -533,11 +535,11 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
-            MemberReference delegateInvokeMethod = interopReferences.DelegateInvoke(delegateType, module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type above)
-            TypeSignature senderType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[0];
-            TypeSignature argsType = ((MethodSignature)delegateInvokeMethod.Signature!).ParameterTypes[1];
+            TypeSignature senderType = invokeSignature.ParameterTypes[0];
+            TypeSignature argsType = invokeSignature.ParameterTypes[1];
 
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
@@ -563,8 +565,9 @@ internal partial class InteropTypeDefinitionBuilder
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
-            // Prepare the 'Invoke' signature
-            MethodSignature invokeSignature = WellKnownTypeSignatureFactory.InvokeImpl(
+            // Prepare the 'Invoke' signature for the '[UnmanagedCallersOnly]' export method.
+            // This is derived from the managed one, but with ABI types for both parameters.
+            MethodSignature invokeAbiSignature = WellKnownTypeSignatureFactory.InvokeImpl(
                 senderType: senderType.GetAbiType(interopReferences),
                 argsType: argsType.GetAbiType(interopReferences),
                 interopReferences: interopReferences);
@@ -617,7 +620,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
-                    { Calli, invokeSignature.Import(module).MakeStandAloneSignature() },
+                    { Calli, invokeAbiSignature.Import(module).MakeStandAloneSignature() },
                     { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
                     { Leave_S, ret.CreateLabel() },
 
