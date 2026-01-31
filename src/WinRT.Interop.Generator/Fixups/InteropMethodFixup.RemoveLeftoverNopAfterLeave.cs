@@ -30,6 +30,11 @@ internal partial class InteropMethodFixup
     /// </remarks>
     public sealed class RemoveLeftoverNopAfterLeave : InteropMethodFixup
     {
+        /// <summary>
+        /// The singleton <see cref="RemoveLeftoverNopAfterLeave"/> instance.
+        /// </summary>
+        public static readonly RemoveLeftoverNopAfterLeave Instance = new();
+
         /// <inheritdoc/>
         public override void Apply(MethodDefinition method)
         {

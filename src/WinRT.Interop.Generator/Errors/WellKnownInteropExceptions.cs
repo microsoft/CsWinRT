@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.InteropGenerator.Fixups;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
@@ -663,6 +664,14 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException MethodFixupInvalidBranchInstructionLabels(MethodDefinition method)
     {
         return Exception(77, $"Generated interop method '{method}' has invalid branch instruction labels, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// Failed to apply a fixup to a marshalling method.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupError(InteropMethodFixup fixup, MethodDefinition method, Exception exception)
+    {
+        return Exception(78, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
     }
 
     /// <summary>
