@@ -148,7 +148,6 @@ internal partial class InteropMethodRewriter
             else if (parameterType.IsTypeOfString())
             {
                 RewriteBodyForTypeOfString(
-                    method: method,
                     body: body,
                     tryMarker: tryMarker,
                     loadMarker: loadMarker,
@@ -160,7 +159,6 @@ internal partial class InteropMethodRewriter
             else if (parameterType.IsTypeOfType(interopReferences))
             {
                 RewriteBodyForTypeOfType(
-                    method: method,
                     body: body,
                     tryMarker: tryMarker,
                     loadMarker: loadMarker,
@@ -284,10 +282,8 @@ internal partial class InteropMethodRewriter
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
-        /// <param name="method">The target method to perform two-pass code generation on.</param>
         /// <param name="body">The target body to perform two-pass code generation on.</param>
         private static void RewriteBodyForTypeOfString(
-            MethodDefinition method,
             CilMethodBody body,
             CilInstruction tryMarker,
             CilInstruction loadMarker,
@@ -382,10 +378,8 @@ internal partial class InteropMethodRewriter
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
-        /// <param name="method">The target method to perform two-pass code generation on.</param>
         /// <param name="body">The target body to perform two-pass code generation on.</param>
         private static void RewriteBodyForTypeOfType(
-            MethodDefinition method,
             CilMethodBody body,
             CilInstruction tryMarker,
             CilInstruction loadMarker,
