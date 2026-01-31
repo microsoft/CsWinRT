@@ -302,6 +302,8 @@ internal partial class InteropMethodRewriter
             CilInstruction ldarg_lengthNullCheck = CilInstruction.CreateLdarg(parameterIndex);
             CilInstruction ldarg_getLength = CilInstruction.CreateLdarg(parameterIndex);
             CilInstruction ldloca_s_getHStringReference = new(Ldloca_S, loc_1_hstringReference);
+            CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
+            CilInstruction nop_finallyEnd = new(Nop);
 
             // Pin the input 'string' value, get the (possibly 'null') length, and create the 'HStringReference' value
             body.Instructions.ReferenceReplaceRange(tryMarker, [
@@ -340,49 +342,31 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
 
             // We need to emit code to unpin the local (matching what Roslyn does), but we need to consider whether other parameters
-            // in this same method will be using a protected region. If there aren't any, we can just emit the instructions to unpin
-            // the local inline, without a protected region (we just want to unpin, we don't have any resources to release). However,
-            // if there's a parameter before this one that has a protected region, it means that the inner-most protected region would
-            // have a 'leave.s' instruction to jump to the 'ret' at the end of the method. If that's the case, we can't just emit some
-            // additional instructions here, as they would end up being in that same protected region, but after the 'leave.s', which
-            // is not valid. So to work around that (like Roslyn does), we use a protected region for to unpin as well. With that change,
-            // the 'leave.s' will remain the last instruction in the inner-most protected region, and then following that there will
-            // be the instructions to unpin, in their own 'finally' handler, which then have their own 'endfinally' after them.
-            if (HasProtectedRegionBeforeParameterIndex(method, parameterIndex, interopReferences))
+            // in this same method will be using a protected region. In the scenarios where this rewriter will be used, that will
+            // always be the case, because each method will always have the 'this' parameter as the first argument, being an object
+            // reference for the native object to invoke the method on. And that object reference needs its own protected region.
+            // This means that the inner-most protected region in the method would always have a 'leave.s' instruction to jump to the
+            // 'ret' at the end of the method. Because of this, we can't just emit some additional instructions here, as they would
+            // end up being in that same protected region, but after the 'leave.s', which is not valid. So to work around that (like
+            // Roslyn does), we use a protected region for to unpin as well. With that change, the 'leave.s' will remain the last
+            // instruction in the inner-most protected region, and then following that there will be the instructions to unpin, in
+            // their own 'finally' handler, which then have their own 'endfinally' after them.
+            body.Instructions.ReferenceReplaceRange(finallyMarker, [
+                ldc_i4_0_finallyStart,
+                new CilInstruction(Conv_U),
+                CilInstruction.CreateStloc(loc_0_pinnedString, body),
+                new CilInstruction(Endfinally),
+                nop_finallyEnd]);
+
+            // Setup the protected region to unpin the local
+            body.ExceptionHandlers.Add(new CilExceptionHandler
             {
-                // Additional jump labels just for this protected region
-                CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
-                CilInstruction nop_finallyEnd = new(Nop);
-
-                // Unpin the local (just assign 'null' to it)
-                body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                    ldc_i4_0_finallyStart,
-                    new CilInstruction(Conv_U),
-                    CilInstruction.CreateStloc(loc_0_pinnedString, body),
-                    new CilInstruction(Endfinally),
-                    nop_finallyEnd]);
-
-                // Setup the protected region to unpin the local
-                body.ExceptionHandlers.Add(new CilExceptionHandler
-                {
-                    HandlerType = CilExceptionHandlerType.Finally,
-                    TryStart = nop_tryStart.CreateLabel(),
-                    TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
-                    HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
-                    HandlerEnd = nop_finallyEnd.CreateLabel()
-                });
-            }
-            else
-            {
-                // We don't be needing this 'nop', so we can remove it
-                _ = body.Instructions.ReferenceRemove(nop_tryStart);
-
-                // Unpin the local (same as above, but without the protected region)
-                body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                    new CilInstruction(Ldc_I4_0),
-                    new CilInstruction(Conv_U),
-                    CilInstruction.CreateStloc(loc_0_pinnedString, body)]);
-            }
+                HandlerType = CilExceptionHandlerType.Finally,
+                TryStart = nop_tryStart.CreateLabel(),
+                TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerEnd = nop_finallyEnd.CreateLabel()
+            });
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
@@ -407,7 +391,10 @@ internal partial class InteropMethodRewriter
             body.LocalVariables.Add(loc_0_typeReference);
             body.LocalVariables.Add(loc_1_pinnedTypeReference);
 
+            // Prepare the jump labels
             CilInstruction nop_tryStart = new(Nop);
+            CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
+            CilInstruction nop_finallyEnd = new(Nop);
 
             // Get the 'TypeReference' value and pin it
             body.Instructions.ReferenceReplaceRange(tryMarker, [
@@ -425,75 +412,22 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Call, interopReferences.TypeReferenceConvertToUnmanagedUnsafe.Import(module))]);
 
             // Same code as for 'string' marshalling above (see additional comments there)
-            if (HasProtectedRegionBeforeParameterIndex(method, parameterIndex, interopReferences))
+            body.Instructions.ReferenceReplaceRange(finallyMarker, [
+                ldc_i4_0_finallyStart,
+                new CilInstruction(Conv_U),
+                CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body),
+                new CilInstruction(Endfinally),
+                nop_finallyEnd]);
+
+            // Same as above for the handler for the unpinning
+            body.ExceptionHandlers.Add(new CilExceptionHandler
             {
-                CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
-                CilInstruction nop_finallyEnd = new(Nop);
-
-                body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                    ldc_i4_0_finallyStart,
-                    new CilInstruction(Conv_U),
-                    CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body),
-                    new CilInstruction(Endfinally),
-                    nop_finallyEnd]);
-
-                body.ExceptionHandlers.Add(new CilExceptionHandler
-                {
-                    HandlerType = CilExceptionHandlerType.Finally,
-                    TryStart = nop_tryStart.CreateLabel(),
-                    TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
-                    HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
-                    HandlerEnd = nop_finallyEnd.CreateLabel()
-                });
-            }
-            else
-            {
-                _ = body.Instructions.ReferenceRemove(nop_tryStart);
-
-                body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                    new CilInstruction(Ldc_I4_0),
-                    new CilInstruction(Conv_U),
-                    CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body)]);
-            }
-        }
-
-        /// <summary>
-        /// Checks whether a given method has any parameters before the specified index that need a protected region.
-        /// </summary>
-        /// <param name="method">The target method to perform two-pass code generation on.</param>
-        /// <param name="parameterIndex">The index of the parameter to marshal.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <returns>Whether <paramref name="method"/> has any parameters before <paramref name="parameterIndex"/> that need a protected region.</returns>
-        private static bool HasProtectedRegionBeforeParameterIndex(
-            MethodDefinition method,
-            int parameterIndex,
-            InteropReferences interopReferences)
-        {
-            for (int i = parameterIndex - 1; i >= 1; i--)
-            {
-                TypeSignature parameterType = method.Parameters[i].ParameterType;
-
-                // If the parameter type is a value type, it needs a protected region if it is a
-                // managed type, as that means its ABI value would need some kind of disposal.
-                if (parameterType.IsValueType)
-                {
-                    return !parameterType.IsManagedValueType(interopReferences);
-                }
-
-                // Otherwise, it always needs a protected region, unless it's one of the special
-                // reference types that don't need one when marshalling to a native method. This
-                // is because 'string' and 'Type' just do pinning, and 'Exception' has an ABI type
-                // that is just the blittable 'HResult' struct type, so no disposal is needed.
-                return
-                    !parameterType.IsTypeOfString() &&
-                    !parameterType.IsTypeOfType(interopReferences) &&
-                    !parameterType.IsTypeOfException(interopReferences);
-            }
-
-            // If we reached here, there are no parameters before the target index. We are
-            // intentionally skipping the parameter at index '0', as that is just the 'this'
-            // parameter, which is passed as a 'WindowsRuntimeObjectReference' object.
-            return false;
+                HandlerType = CilExceptionHandlerType.Finally,
+                TryStart = nop_tryStart.CreateLabel(),
+                TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerEnd = nop_finallyEnd.CreateLabel()
+            });
         }
     }
 }
