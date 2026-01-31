@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ComponentModel;
-using System.Runtime.Versioning;
-using Windows.Foundation;
-using Windows.Foundation.Metadata;
 using WindowsRuntime;
 
 namespace Windows.UI.Xaml.Interop;
@@ -16,9 +14,9 @@ namespace Windows.UI.Xaml.Interop;
 /// This type is required for ABI projection of the <see cref="System.Type"/> class, but marshalling it is not supported.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typekind"/>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public enum TypeKind
 {
