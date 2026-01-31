@@ -344,7 +344,7 @@ internal partial class InteropMethodRewriter
                 ldloca_s_getHStringReference,
                 new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanagedUnsafe.Import(module))]);
 
-            // Get the 'HString' value from the reference and pass it as a parameter
+            // Get the 'HString' value from the reference and pass it as a parause a protected region for to unpinmeter
             body.Instructions.ReferenceReplaceRange(loadMarker, [
                 new CilInstruction(Ldloca_S, loc_1_hstringReference),
                 new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
@@ -356,9 +356,9 @@ internal partial class InteropMethodRewriter
             // This means that the inner-most protected region in the method would always have a 'leave.s' instruction to jump to the
             // 'ret' at the end of the method. Because of this, we can't just emit some additional instructions here, as they would
             // end up being in that same protected region, but after the 'leave.s', which is not valid. So to work around that (like
-            // Roslyn does), we use a protected region for to unpin as well. With that change, the 'leave.s' will remain the last
-            // instruction in the inner-most protected region, and then following that there will be the instructions to unpin, in
-            // their own 'finally' handler, which then have their own 'endfinally' after them.
+            // Roslyn does), we use a protected region to unpin the local as well. With that change, the 'leave.s' will remain the
+            // last instruction in the inner-most protected region, and then following that there will be the instructions to unpin,
+            // in their own 'finally' handler, which then have their own 'endfinally' after them.
             body.Instructions.ReferenceReplaceRange(finallyMarker, [
                 ldc_i4_0_finallyStart,
                 new CilInstruction(Conv_U),
