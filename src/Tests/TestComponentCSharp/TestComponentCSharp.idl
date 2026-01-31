@@ -162,8 +162,8 @@ namespace TestComponentCSharp
     {
         SetTypeProperties();
         String GetPropertyInfoTestTypeTrimmed(IType testObject);
-        String GetPropertyInfoTestType(IType testObject);
         String GetPropertyInfoWithType(Windows.UI.Xaml.Interop.TypeName typeName);
+        String GetPropertyInfoTestType(IType testObject, Windows.UI.Xaml.Interop.TypeName typeName);
     }
 
     // Do not reference TestComponentCSharp::TestTypeTrimmed in managed because it needs to be trimmed to test the Metadata TypeKind scenario in the TypeHandling project

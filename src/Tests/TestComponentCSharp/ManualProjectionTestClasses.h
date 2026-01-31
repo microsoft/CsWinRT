@@ -12,9 +12,9 @@ namespace winrt::TestComponentCSharp::implementation
     struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties>
     {
         SetTypeProperties();
-        winrt::hstring GetPropertyInfoTestType(IType testObject);
         winrt::hstring GetPropertyInfoTestTypeTrimmed(IType testObject);
         winrt::hstring GetPropertyInfoWithType(winrt::Windows::UI::Xaml::Interop::TypeName typeName);
+        winrt::hstring GetPropertyInfoTestType(IType const& testObject, Windows::UI::Xaml::Interop::TypeName const& typeName);
     };
 
 	struct CustomBindableIteratorTest : CustomBindableIteratorTestT<CustomBindableIteratorTest>
