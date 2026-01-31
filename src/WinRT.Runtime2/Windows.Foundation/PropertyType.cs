@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ComponentModel;
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
 using WindowsRuntime;
@@ -11,15 +10,13 @@ namespace Windows.Foundation;
 /// <summary>
 /// Specifies property value types.
 /// </summary>
-/// <remarks>
-/// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.propertytype"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>")]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public enum PropertyType : uint
+[ABI.Windows.Foundation.PropertyTypeComWrappersMarshaller]
+public enum PropertyType
 {
     /// <summary>
     /// No type is specified.

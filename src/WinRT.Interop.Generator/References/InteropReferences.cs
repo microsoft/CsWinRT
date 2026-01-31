@@ -544,6 +544,11 @@ internal sealed class InteropReferences
     public TypeReference UnmanagedCallersOnlyAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.InteropServices"u8, "UnmanagedCallersOnlyAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute"/>.
+    /// </summary>
+    public TypeReference DisableRuntimeMarshallingAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.CompilerServices"u8, "DisableRuntimeMarshallingAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
@@ -1623,6 +1628,11 @@ internal sealed class InteropReferences
     public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute.DisableRuntimeMarshallingAttribute()"/>.
+    /// </summary>
+    public MemberReference DisableRuntimeMarshallingAttribute_ctor => field ??= DisableRuntimeMarshallingAttribute.CreateConstructorReference(_corLibTypeFactory);
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance"/>.
     /// </summary>
     public MemberReference ComInterfaceDispatchGetInstance => field ??= ComInterfaceDispatch
@@ -2054,27 +2064,6 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute.CreateConstructorReference(_corLibTypeFactory);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
-    /// </summary>
-    public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
-    /// </summary>
-    public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
-    /// </summary>
-    public MemberReference VectorChangedEventHandler1EventSource_ctor => field ??= VectorChangedEventHandler1EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
@@ -3333,6 +3322,50 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <see cref="EventHandler1EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="eventArgsType">The type of event arguments.</param>
+    public MemberReference EventHandler1EventSource_ctor(TypeSignature eventArgsType)
+    {
+        return EventHandler1EventSource
+            .MakeGenericReferenceType(eventArgsType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <see cref="EventHandler2EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="senderType">The sender type.</param>
+    /// <param name="eventArgsType">The type of event arguments.</param>
+    public MemberReference EventHandler2EventSource_ctor(TypeSignature senderType, TypeSignature eventArgsType)
+    {
+        return EventHandler2EventSource
+            .MakeGenericReferenceType(senderType, eventArgsType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the observable vector.</param>
+    public MemberReference VectorChangedEventHandler1EventSource_ctor(TypeSignature elementType)
+    {
+        return VectorChangedEventHandler1EventSource
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
+
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.
     /// </summary>
     /// <param name="valueType">The input value type.</param>
@@ -3414,22 +3447,18 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
     /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(GenericInstanceTypeSignature delegateType, ModuleDefinition module)
+    public MemberReference DelegateInvoke(TypeSignature delegateType, ModuleDefinition module)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
         MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
 
-        // Construct the generic signature for the method with the context of the input delegate.
-        // We can use this to get all the parameters, which might be any combination of explicitly
-        // declared types, and constructed generic type parameters. Also, any number of them.
-        MethodSignature invokeSignature = invokeMethod.Signature!.InstantiateGenericTypes(new GenericContext(delegateType, null));
-
-        // Create the actual member reference to use when emitting calls to the 'Invoke' method
-        return delegateType
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Invoke"u8, MethodSignature.CreateInstance(
-                returnType: invokeSignature.ReturnType,
-                parameterTypes: invokeSignature.ParameterTypes));
+        // Create the actual member reference to use when emitting calls to the 'Invoke' method.
+        // This has to be on the input (potentially constructed) delegate type, but not using
+        // any constructed type arguments (as they're just derived from the constructed type).
+        // For instance, if the input delegate type were an 'EventHandler<Foo, BarArgs>' generic
+        // instantiation, this 'Invoke' reference would be 'void EventHandler<Foo, BarArgs>::Invoke(!0, !1)'.
+        // This is also why the method reference can directly reuse the signature from the method definition.
+        return delegateType.ToTypeDefOrRef().CreateMemberReference("Invoke"u8, invokeMethod.Signature!);
     }
 
     /// <summary>

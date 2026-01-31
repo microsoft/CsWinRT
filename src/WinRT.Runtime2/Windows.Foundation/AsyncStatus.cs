@@ -10,13 +10,12 @@ namespace Windows.Foundation;
 /// <summary>
 /// Represents the status for an asynchronous operation.
 /// </summary>
-/// <remarks>
-/// This type is required for ABI projection of the <see cref="IAsyncInfo"/> interface, but marshalling it is not supported.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/ne-asyncinfo-asyncstatus"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.AsyncStatus>")]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+[ABI.Windows.Foundation.AsyncStatusComWrappersMarshaller]
 public enum AsyncStatus
 {
     /// <summary>
