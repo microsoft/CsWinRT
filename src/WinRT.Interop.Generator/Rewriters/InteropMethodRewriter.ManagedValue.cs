@@ -15,10 +15,8 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Rewriters;
 
-/// <summary>
-/// A rewritef for interop method definitons, that can add marshalling code as needed.
-/// </summary>
-internal static partial class InteropMethodRewriter
+/// <inheritdoc cref="InteropMethodRewriter"/>
+internal partial class InteropMethodRewriter
 {
     /// <summary>
     /// Contains the logic for marshalling managed values (i.e. parameters that are passed to managed methods, already on the stack).
