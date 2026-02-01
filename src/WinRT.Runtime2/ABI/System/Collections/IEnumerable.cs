@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -181,7 +182,23 @@ public static unsafe class IEnumerableImpl
 
             global::System.Collections.IEnumerator enumerator = thisObject.GetEnumerator();
 
-            *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(enumerator).DetachThisPtrUnsafe();
+            // See IEnumerableAdapter<T>.First for details.
+            if (WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerator>.TryConvertToUnmanagedExact(
+                value: enumerator,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
+                result: out WindowsRuntimeObjectReferenceValue enumeratorValue))
+            {
+                *result = enumeratorValue.DetachThisPtrUnsafe();
+            }
+            else
+            {
+                // In addition to the details in IEnumerableAdapter<T>.First, we wrap non generic enumerator
+                // as a generic enumerator given there are WinUI scenarios where it is expected to be able to QI
+                // for the generic one. This also allows us to take advantage of the same adapter.
+                IEnumeratorAdapter<object> enumeratorAdapter = new(new NonGenericToGenericEnumerator(enumerator));
+
+                *result = (void*)WindowsRuntimeComWrappers.GetOrCreateComInterfaceForObjectExact(enumeratorAdapter, in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator);
+            }
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -216,5 +233,34 @@ file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
         // Return an enumerator through that. We don't know the 'T', so we need to marshal without type info.
         // However, this in practice is fine, as the RCW would also always implement 'IEnumerable' in metadata.
         return IEnumerableInstanceMethods.GetEnumerator(interfaceReference);
+    }
+}
+
+/// <summary>
+/// Wraps an <see cref="global::System.Collections.IEnumerator"/> and exposes it as an <see cref="IEnumerator{Object}"/>.
+/// </summary>
+file sealed class NonGenericToGenericEnumerator : IEnumerator<object>
+{
+    private readonly global::System.Collections.IEnumerator enumerator;
+
+    public NonGenericToGenericEnumerator(global::System.Collections.IEnumerator enumerator)
+    {
+        this.enumerator = enumerator;
+    }
+
+    public object Current => enumerator.Current;
+
+    public bool MoveNext()
+    {
+        return enumerator.MoveNext();
+    }
+
+    public void Reset()
+    {
+        enumerator.Reset();
+    }
+
+    public void Dispose()
+    {
     }
 }
