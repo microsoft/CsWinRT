@@ -11,6 +11,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Fixups;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -152,6 +153,11 @@ internal partial class InteropGenerator
 
         // Rewrite the IL methods of marshalling stubs needing two-pass generation
         RewriteMethodDefinitions(args, emitState, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Apply fixups to all generated interop methods
+        FixupMethodDefinitions(args, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2332,6 +2338,37 @@ internal partial class InteropGenerator
             catch (Exception e)
             {
                 WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies fixups to IL method bodies for marshalling stubs as part of two-pass IL generation.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="module">The interop module being built.</param>
+    private static void FixupMethodDefinitions(InteropGeneratorArgs args, ModuleDefinition module)
+    {
+        ReadOnlySpan<InteropMethodFixup> fixups = [InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance];
+
+        // Applies all available fixups in order, to all methods across all generated types in the module
+        foreach (TypeDefinition type in module.GetAllTypes())
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                foreach (InteropMethodFixup fixup in fixups)
+                {
+                    try
+                    {
+                        fixup.Apply(method);
+                    }
+                    catch (Exception e)
+                    {
+                        WellKnownInteropExceptions.MethodFixupError(fixup, method, e).ThrowOrAttach(e);
+                    }
+                }
             }
         }
     }

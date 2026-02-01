@@ -87,6 +87,8 @@ internal partial class InteropMethodRewriter
                 }
                 else if (parameterType.IsConstructedKeyValuePairType(interopReferences))
                 {
+                    // For 'KeyValuePair<,>' types, we can always directly lookup the marshaller from the emit state.
+                    // We don't need to pass a disposal method, as they will use the generic one for all COM objects.
                     RewriteBody(
                         parameterType: parameterType,
                         body: body,
@@ -115,9 +117,9 @@ internal partial class InteropMethodRewriter
                         interopReferences: interopReferences,
                         module: module);
                 }
-                else
+                else if (parameterType.IsManagedValueType(interopReferences))
                 {
-                    // The last case handles all other value types, which need explicit disposal for their ABI values
+                    // Handle all managed value types, which need explicit disposal for their ABI values
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     RewriteBody(
@@ -131,6 +133,16 @@ internal partial class InteropMethodRewriter
                         disposeMethod: marshallerType.Dispose(),
                         interopReferences: interopReferences,
                         module: module);
+                }
+                else
+                {
+                    // The last case is for unmanaged value types, which just need marshalling but no disposal
+                    InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
+
+                    body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
+                    body.Instructions.ReferenceReplaceRange(loadMarker, [
+                        CilInstruction.CreateLdarg(parameterIndex),
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module))]);
                 }
             }
             else if (parameterType.IsTypeOfString())
@@ -293,15 +305,19 @@ internal partial class InteropMethodRewriter
             body.LocalVariables.Add(loc_2_length);
 
             // Prepare the jump labels
+            CilInstruction nop_tryStart = new(Nop);
             CilInstruction ldarg_pinning = CilInstruction.CreateLdarg(parameterIndex);
             CilInstruction ldarg_lengthNullCheck = CilInstruction.CreateLdarg(parameterIndex);
             CilInstruction ldarg_getLength = CilInstruction.CreateLdarg(parameterIndex);
             CilInstruction ldloca_s_getHStringReference = new(Ldloca_S, loc_1_hstringReference);
+            CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
+            CilInstruction nop_finallyEnd = new(Nop);
 
             // Pin the input 'string' value, get the (possibly 'null') length, and create the 'HStringReference' value
             body.Instructions.ReferenceReplaceRange(tryMarker, [
 
                 // fixed (char* p = value) { }
+                nop_tryStart,
                 CilInstruction.CreateLdarg(parameterIndex),
                 new CilInstruction(Brtrue_S, ldarg_pinning.CreateLabel()),
                 new CilInstruction(Ldc_I4_0),
@@ -333,11 +349,32 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Ldloca_S, loc_1_hstringReference),
                 new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
 
-            // Unpin the local (just assign 'null' to it)
+            // We need to emit code to unpin the local (matching what Roslyn does), but we need to consider whether other parameters
+            // in this same method will be using a protected region. In the scenarios where this rewriter will be used, that will
+            // always be the case, because each method will always have the 'this' parameter as the first argument, being an object
+            // reference for the native object to invoke the method on. And that object reference needs its own protected region.
+            // This means that the inner-most protected region in the method would always have a 'leave.s' instruction to jump to the
+            // 'ret' at the end of the method. Because of this, we can't just emit some additional instructions here, as they would
+            // end up being in that same protected region, but after the 'leave.s', which is not valid. So to work around that (like
+            // Roslyn does), we use a protected region to unpin the local as well. With that change, the 'leave.s' will remain the
+            // last instruction in the inner-most protected region, and then following that there will be the instructions to unpin,
+            // in their own 'finally' handler, which then have their own 'endfinally' after them.
             body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                new CilInstruction(Ldc_I4_0),
+                ldc_i4_0_finallyStart,
                 new CilInstruction(Conv_U),
-                CilInstruction.CreateStloc(loc_0_pinnedString, body)]);
+                CilInstruction.CreateStloc(loc_0_pinnedString, body),
+                new CilInstruction(Endfinally),
+                nop_finallyEnd]);
+
+            // Setup the protected region to unpin the local
+            body.ExceptionHandlers.Add(new CilExceptionHandler
+            {
+                HandlerType = CilExceptionHandlerType.Finally,
+                TryStart = nop_tryStart.CreateLabel(),
+                TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerEnd = nop_finallyEnd.CreateLabel()
+            });
         }
 
         /// <inheritdoc cref="RewriteMethod"/>
@@ -360,8 +397,14 @@ internal partial class InteropMethodRewriter
             body.LocalVariables.Add(loc_0_typeReference);
             body.LocalVariables.Add(loc_1_pinnedTypeReference);
 
+            // Prepare the jump labels
+            CilInstruction nop_tryStart = new(Nop);
+            CilInstruction ldc_i4_0_finallyStart = new(Ldc_I4_0);
+            CilInstruction nop_finallyEnd = new(Nop);
+
             // Get the 'TypeReference' value and pin it
             body.Instructions.ReferenceReplaceRange(tryMarker, [
+                nop_tryStart,
                 CilInstruction.CreateLdarg(parameterIndex),
                 new CilInstruction(Ldloca_S, loc_0_typeReference),
                 new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanagedUnsafe.Import(module)),
@@ -374,11 +417,23 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Ldloca_S, loc_0_typeReference),
                 new CilInstruction(Call, interopReferences.TypeReferenceConvertToUnmanagedUnsafe.Import(module))]);
 
-            // Unpin the local (just assign 'null' to it)
+            // Same code as for 'string' marshalling above (see additional comments there)
             body.Instructions.ReferenceReplaceRange(finallyMarker, [
-                new CilInstruction(Ldc_I4_0),
+                ldc_i4_0_finallyStart,
                 new CilInstruction(Conv_U),
-                CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body)]);
+                CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body),
+                new CilInstruction(Endfinally),
+                nop_finallyEnd]);
+
+            // Same as above for the handler for the unpinning
+            body.ExceptionHandlers.Add(new CilExceptionHandler
+            {
+                HandlerType = CilExceptionHandlerType.Finally,
+                TryStart = nop_tryStart.CreateLabel(),
+                TryEnd = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerStart = ldc_i4_0_finallyStart.CreateLabel(),
+                HandlerEnd = nop_finallyEnd.CreateLabel()
+            });
         }
     }
 }
