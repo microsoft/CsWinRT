@@ -72,6 +72,13 @@ internal abstract partial class InteropMethodFixup
                         throw WellKnownInteropExceptions.MethodFixupInvalidBranchInstructionLabels(method);
                     }
                 }
+
+                // Also make sure that the labels are an 'IList<T>' collection, as we need to be able
+                // to update individual labels later in case we have to redirect any of them as well.
+                if (labels is not IList<ICilLabel>)
+                {
+                    throw WellKnownInteropExceptions.MethodFixupInvalidBranchInstructionLabels(method);
+                }
             }
         }
     }
@@ -113,17 +120,17 @@ internal abstract partial class InteropMethodFixup
         // Update branch instruction operands
         foreach (CilInstruction instruction in body.Instructions)
         {
-            // Handle single branch target
+            // Handle single branch targets
             if (instruction.Operand is CilInstructionLabel label && label.Instruction == oldInstruction)
             {
                 instruction.Operand = newLabel;
             }
-            // Handle switch instruction (multiple branch targets)
-            else if (instruction.Operand is System.Collections.Generic.IList<ICilLabel> labels)
+            else if (instruction.Operand is IList<ICilLabel> labels)
             {
+                // Handle switch instructions (labels have been validated above)
                 for (int i = 0; i < labels.Count; i++)
                 {
-                    if (labels[i] is CilInstructionLabel switchLabel && switchLabel.Instruction == oldInstruction)
+                    if (((CilInstructionLabel)labels[i]).Instruction == oldInstruction)
                     {
                         labels[i] = newLabel;
                     }
