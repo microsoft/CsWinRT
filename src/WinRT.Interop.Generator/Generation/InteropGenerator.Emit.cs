@@ -2349,7 +2349,11 @@ internal partial class InteropGenerator
     /// <param name="module">The interop module being built.</param>
     private static void FixupMethodDefinitions(InteropGeneratorArgs args, ModuleDefinition module)
     {
-        ReadOnlySpan<InteropMethodFixup> fixups = [InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance];
+        ReadOnlySpan<InteropMethodFixup> fixups =
+        [
+            InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance,
+            InteropMethodFixup.RemoveUnnecessaryTryStartNop.Instance
+        ];
 
         // Applies all available fixups in order, to all methods across all generated types in the module
         foreach (TypeDefinition type in module.GetAllTypes())
