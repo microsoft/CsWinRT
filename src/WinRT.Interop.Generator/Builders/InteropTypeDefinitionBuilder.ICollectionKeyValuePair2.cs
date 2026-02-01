@@ -165,6 +165,29 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Create the 'Clear' method
+            MethodDefinition clearMethod = new(
+                name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Clear",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: []));
+
+            // Add and implement the 'Clear' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.ICollection1Clear(keyValuePairType).Import(module),
+                method: clearMethod);
+
+            // Create a body for the 'Clear' method
+            clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType1: dictionaryType,
+                interfaceType2: listType,
+                implementationMethod: clearMethod,
+                forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Clear"u8),
+                forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Clear"u8),
+                interopReferences: interopReferences,
+                module: module);
+
             // Create the 'CopyTo' method
             MethodDefinition copyToMethod = InteropMethodDefinitionFactory.ICollectionKeyValuePair2InterfaceImpl.CopyTo(
                 collectionType: collectionType,

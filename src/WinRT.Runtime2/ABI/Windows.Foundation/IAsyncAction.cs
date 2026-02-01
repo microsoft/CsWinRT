@@ -163,8 +163,8 @@ internal unsafe struct IAsyncActionVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
 }
 

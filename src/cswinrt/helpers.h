@@ -676,6 +676,45 @@ namespace cswinrt
         return false;
     }
 
+    bool is_mapped_type_in_system_objectmodel(std::string_view typeNamespace, std::string_view typeName)
+    {
+        if (typeNamespace == "System.Collections.Specialized"sv)
+        {
+            if (typeName == "INotifyCollectionChanged"sv ||
+                typeName == "NotifyCollectionChangedAction"sv ||
+                typeName == "NotifyCollectionChangedEventArgs"sv ||
+                typeName == "NotifyCollectionChangedEventHandler"sv)
+            {
+                return true;
+            }
+        }
+        else if (typeNamespace == "System.ComponentModel"sv)
+        {
+            if (typeName == "INotifyDataErrorInfo"sv ||
+                typeName == "INotifyPropertyChanged"sv ||
+                typeName == "DataErrorsChangedEventArgs"sv ||
+                typeName == "PropertyChangedEventArgs"sv ||
+                typeName == "PropertyChangedEventHandler"sv)
+            {
+                return true;
+            }
+        }
+        else if (typeNamespace == "System.Windows.Input"sv)
+        {
+            if (typeName == "ICommand"sv)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool is_mapped_type_in_system_numerics_vectors(std::string_view typeNamespace)
+    {
+        return typeNamespace == "System.Numerics"sv;
+    }
+
     struct mapped_type
     {
         std::string_view abi_name;
@@ -714,8 +753,8 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
+                    { "ThicknessHelper" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
@@ -799,7 +838,7 @@ namespace cswinrt
                     { "IAsyncAction", "Windows.Foundation", "IAsyncAction" },
                     { "IAsyncActionWithProgress`1", "Windows.Foundation", "IAsyncActionWithProgress`1" },
                     { "IAsyncInfo", "Windows.Foundation", "IAsyncInfo" },
-                    { "IAsyncOperationWithProgress`1", "Windows.Foundation", "IAsyncOperationWithProgress`1" },
+                    { "IAsyncOperationWithProgress`2", "Windows.Foundation", "IAsyncOperationWithProgress`2" },
                     { "IAsyncOperation`1", "Windows.Foundation", "IAsyncOperation`1" },
                     { "IClosable", "System", "IDisposable", true, true },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
@@ -820,9 +859,9 @@ namespace cswinrt
                     { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true },
                     { "IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true },
                     { "IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true },
+                    { "IMapChangedEventArgs`1", "Windows.Foundation.Collections", "IMapChangedEventArgs`1" },
                     { "IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true },
                     { "IMap`2", "System.Collections.Generic", "IDictionary`2", true, true },
-                    { "IMapChangedEventArgs`1", "Windows.Foundation.Collections", "IMapChangedEventArgs`1" },
                     { "IObservableMap`2", "Windows.Foundation.Collections", "IObservableMap`2" },
                     { "IObservableVector`1", "Windows.Foundation.Collections", "IObservableVector`1" },
                     { "IVectorChangedEventArgs", "Windows.Foundation.Collections", "IVectorChangedEventArgs" },
@@ -866,8 +905,8 @@ namespace cswinrt
                     { "IGridLengthHelperStatics" },
                     { "IThicknessHelper" },
                     { "IThicknessHelperStatics" },
-                    { "ThicknessHelper" },
                     { "IXamlServiceProvider", "System", "IServiceProvider" },
+                    { "ThicknessHelper" },
                 }
             },
             { "Windows.UI.Xaml.Controls.Primitives",
