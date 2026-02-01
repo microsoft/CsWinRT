@@ -344,7 +344,7 @@ internal partial class InteropMethodRewriter
                 ldloca_s_getHStringReference,
                 new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanagedUnsafe.Import(module))]);
 
-            // Get the 'HString' value from the reference and pass it as a parause a protected region for to unpinmeter
+            // Get the 'HString' value from the reference and pass it as a parameter
             body.Instructions.ReferenceReplaceRange(loadMarker, [
                 new CilInstruction(Ldloca_S, loc_1_hstringReference),
                 new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
