@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "Class.h"
 #include "Class.g.cpp"
 
@@ -1088,6 +1088,16 @@ namespace winrt::TestComponentCSharp::implementation
     IMap<int32_t, int32_t> Class::GetIntToIntDictionary()
     {
         return single_threaded_map<int32_t, int32_t>(std::map<int32_t, int32_t>{ {1, 4}, { 2, 8 }, { 3, 12 } });
+    }
+
+    IMap<WF::TimeSpan, WF::TimeSpan> Class::GetTimeSpanToTimeSpanDictionary()
+    {
+        return single_threaded_map<WF::TimeSpan, WF::TimeSpan>(std::map<WF::TimeSpan, WF::TimeSpan>
+        {
+            { WF::TimeSpan(4), WF::TimeSpan(5) },
+            { WF::TimeSpan(6s), WF::TimeSpan(4) },
+            { WF::TimeSpan(7h), WF::TimeSpan(7) }
+        });
     }
     
     IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> Class::GetStringToBlittableDictionary()

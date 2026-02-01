@@ -133,9 +133,9 @@ internal unsafe struct IAsyncInfoVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, System.Exception*, HRESULT> get_ErrorCode;
     public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Id;
     public delegate* unmanaged[MemberFunction]<void*, AsyncStatus*, HRESULT> get_Status;
+    public delegate* unmanaged[MemberFunction]<void*, System.Exception*, HRESULT> get_ErrorCode;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Cancel;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Close;
 }
@@ -162,9 +162,9 @@ public static unsafe class IAsyncInfoImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_ErrorCode = &get_ErrorCode;
         Vftbl.get_Id = &get_Id;
         Vftbl.get_Status = &get_Status;
+        Vftbl.get_ErrorCode = &get_ErrorCode;
         Vftbl.Cancel = &Cancel;
         Vftbl.Close = &Close;
     }

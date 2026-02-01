@@ -341,6 +341,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IMap<String, ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows.Foundation.Collections.IMap<ComposedBlittableStruct, Object> GetBlittableToObjectDictionary();
         Windows.Foundation.Collections.IMap<Int32, Windows.Foundation.Collections.IVector<EnumValue> > GetIntToListDictionary();
+        Windows.Foundation.Collections.IMap<Windows.Foundation.TimeSpan, Windows.Foundation.TimeSpan> GetTimeSpanToTimeSpanDictionary();
 
         // Test IIDOptimizer
         Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();

@@ -421,7 +421,18 @@ namespace cswinrt
             typeNamespace = proj->mapped_namespace;
             if (starts_with(typeNamespace, "System"))
             {
-                w.write("<#corlib>");
+                if (is_mapped_type_in_system_numerics_vectors(typeNamespace))
+                {
+                    w.write("<System-Numerics-Vectors>");
+                }
+                else if (is_mapped_type_in_system_objectmodel(typeNamespace, proj->mapped_name))
+                {
+                    w.write("<System-ObjectModel>");
+                }
+                else
+                {
+                    w.write("<#corlib>");
+                }
                 return;
             }
             else if (!proj->emit_abi)
