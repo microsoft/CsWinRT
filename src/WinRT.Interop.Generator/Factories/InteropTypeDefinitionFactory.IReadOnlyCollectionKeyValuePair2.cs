@@ -94,7 +94,6 @@ internal partial class InteropTypeDefinitionFactory
                 }
             };
 
-            // Add and implement the 'IsInterfaceImplemented' method
             forwarderAttributeType.Methods.Add(isInterfaceImplementedMethod);
         }
     }

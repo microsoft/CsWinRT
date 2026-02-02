@@ -280,7 +280,6 @@ internal static partial class InteropTypeDefinitionBuilder
             }
         };
 
-        // Add and implement the 'CreateObject' method
         marshallerType.Methods.Add(createObjectMethod);
     }
 
