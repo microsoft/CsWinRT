@@ -105,6 +105,22 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 }
 
 /// <summary>
+/// Interop methods for <see cref="global::System.Collections.IEnumerable"/>.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IEnumerableMethods
+{
+    /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
+    public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
+    {
+        return BindableIEnumerableMethods.GetEnumerator(thisReference);
+    }
+}
+
+/// <summary>
 /// The <see cref="global::System.Collections.IEnumerable"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -178,7 +194,7 @@ file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
             interfaceType: typeof(global::System.Collections.IEnumerable).TypeHandle,
             interfaceReference: out WindowsRuntimeObjectReference? interfaceReference))
         {
-            return BindableIEnumerableMethods.GetEnumerator(interfaceReference);
+            return IEnumerableMethods.GetEnumerator(interfaceReference);
         }
 
         // If that fails, try to get an object reference to some 'IEnumerable<T>' instance

@@ -132,7 +132,7 @@ internal sealed class WindowsRuntimeList : WindowsRuntimeObject,
     /// <inheritdoc/>
     public IEnumerator GetEnumerator()
     {
-        return BindableIEnumerableMethods.GetEnumerator(IBindableIterableObjectReference);
+        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(IBindableIterableObjectReference);
     }
 
     /// <inheritdoc/>

@@ -35,7 +35,7 @@ internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerab
     /// <inheritdoc/>
     public IEnumerator GetEnumerator()
     {
-        return BindableIEnumerableMethods.GetEnumerator(NativeObjectReference);
+        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(NativeObjectReference);
     }
 
     /// <inheritdoc/>
