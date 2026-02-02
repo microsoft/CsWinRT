@@ -733,6 +733,28 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
                 method: computeVtablesMethod);
 
+            // Define the 'GetOrCreateComInterfaceForObject' method as follows:
+            //
+            // public override void* GetOrCreateComInterfaceForObject(object value)
+            MethodDefinition getOrCreateComInterfaceForObjectMethod = new(
+                name: "GetOrCreateComInterfaceForObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    parameterTypes: [module.CorLibTypeFactory.Object]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'GetOrCreateComInterfaceForObject' method
+            marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
+
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
                 .Import(module)
