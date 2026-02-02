@@ -3,14 +3,18 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+
+#pragma warning disable IDE0032
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// A stateful adapter for <see cref="IEnumerator"/>, to be exposed as <c>Windows.UI.Xaml.Interop.IBindableIterator</c>.
 /// </summary>
-internal sealed class BindableIEnumeratorAdapter
+[WindowsRuntimeManagedOnlyType]
+internal sealed class BindableIEnumeratorAdapter : IEnumerator<object>, IEnumeratorAdapter
 {
     /// <summary>
     /// The wrapped <see cref="IEnumerator"/> instance.
@@ -32,7 +36,7 @@ internal sealed class BindableIEnumeratorAdapter
     /// </summary>
     /// <param name="enumerator">The wrapped <see cref="IEnumerator"/> instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerator"/> is <see langword="null"/>.</exception>
-    private BindableIEnumeratorAdapter(IEnumerator enumerator)
+    public BindableIEnumeratorAdapter(IEnumerator enumerator)
     {
         ArgumentNullException.ThrowIfNull(enumerator);
 
@@ -46,7 +50,27 @@ internal sealed class BindableIEnumeratorAdapter
     /// <returns>The <see cref="BindableIEnumeratorAdapter"/> instance associated to <paramref name="enumerator"/>.</returns>
     public static BindableIEnumeratorAdapter GetInstance(IEnumerator enumerator)
     {
-        return IBindableIteratorAdapterTable.Table.GetOrAdd(enumerator, static enumerator => new BindableIEnumeratorAdapter(enumerator));
+        // Handle unwrapping for the various cases we can encounter. We want to try to get the inner-most
+        // adapter here, to avoid multiple interface dispatch calls adding overhead. The main cases we
+        // can hit are the one for an 'IEnumerator' instance being marshalled directly (which may or may
+        // not have needed an intermediate adapter), some 'IEnumerator<T>' adapter for an inner enumerator,
+        // or an actual (unwrapped) enumerator that had its own marshalling info when passed to native.
+        return enumerator switch
+        {
+            IEnumeratorAdapter<object> { Enumerator: BindableIEnumeratorAdapter adapter } => adapter,
+            IEnumeratorAdapter<object> { Enumerator: IEnumerator inner }
+                => BindableIEnumeratorAdapterTable.Table.GetOrAdd(inner, BindableIEnumeratorAdapterFactory.Callback),
+            IEnumeratorAdapter { Enumerator: IEnumerator inner }
+                => BindableIEnumeratorAdapterTable.Table.GetOrAdd(inner, BindableIEnumeratorAdapterFactory.Callback),
+            _ => BindableIEnumeratorAdapterTable.Table.GetOrAdd(enumerator, BindableIEnumeratorAdapterFactory.Callback)
+        };
+    }
+
+    /// <inheritdoc/>
+    public IEnumerator Enumerator
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _enumerator;
     }
 
     /// <summary>
@@ -103,15 +127,60 @@ internal sealed class BindableIEnumeratorAdapter
 
         return _hasCurrent;
     }
+
+    /// <inheritdoc/>
+    object IEnumerator<object>.Current => _enumerator.Current;
+
+    /// <inheritdoc/>
+    object IEnumerator.Current => _enumerator.Current;
+
+    /// <inheritdoc/>
+    bool IEnumerator.MoveNext()
+    {
+        return _enumerator.MoveNext();
+    }
+
+    /// <inheritdoc/>
+    void IEnumerator.Reset()
+    {
+        _enumerator.Reset();
+    }
+
+    /// <inheritdoc/>
+    void IDisposable.Dispose()
+    {
+    }
 }
 
 /// <summary>
 /// Mapping table for <see cref="BindableIEnumeratorAdapter"/> instances.
 /// </summary>
-file static class IBindableIteratorAdapterTable
+file static class BindableIEnumeratorAdapterTable
 {
     /// <summary>
     /// The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance for the mapping table.
     /// </summary>
     public static readonly ConditionalWeakTable<IEnumerator, BindableIEnumeratorAdapter> Table = [];
+}
+
+/// <summary>
+/// A factory type for <see cref="BindableIEnumeratorAdapter"/> instances.
+/// </summary>
+file sealed class BindableIEnumeratorAdapterFactory
+{
+    /// <summary>
+    /// The singleton <see cref="BindableIEnumeratorAdapterFactory"/> instance.
+    /// </summary>
+    private static readonly BindableIEnumeratorAdapterFactory Instance = new();
+
+    /// <summary>
+    /// The singleton <see cref="Func{T, TResult}"/> callback instance for the factory.
+    /// </summary>
+    public static readonly Func<IEnumerator, BindableIEnumeratorAdapter> Callback = new(Instance.Create);
+
+    /// <inheritdoc cref="BindableIEnumeratorAdapter(IEnumerator)"/>
+    private BindableIEnumeratorAdapter Create(IEnumerator enumerator)
+    {
+        return new(enumerator);
+    }
 }
