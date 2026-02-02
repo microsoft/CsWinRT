@@ -53,6 +53,11 @@ public static unsafe class IMarshalImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetUnmarshalClass(void* thisPtr, Guid* riid, void* pv, uint dwDestContext, void* pvDestContext, uint mshlFlags, Guid* pCid)
     {
+        if (pCid is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
         *pCid = default;
 
         try
@@ -71,6 +76,11 @@ public static unsafe class IMarshalImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetMarshalSizeMax(void* thisPtr, Guid* riid, void* pv, uint dwDestContext, void* pvDestContext, uint mshlflags, uint* pSize)
     {
+        if (pSize is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
         *pSize = 0;
 
         try
@@ -105,6 +115,11 @@ public static unsafe class IMarshalImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT UnmarshalInterface(void* thisPtr, void* pStm, Guid* riid, void** ppv)
     {
+        if (ppv is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
         *ppv = null;
 
         try
