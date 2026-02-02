@@ -42,7 +42,7 @@ internal static class BindableIEnumerableAdapter
             // be aware that they might potentially have another nested wrapper. We don't have special logic
             // in 'cswinrtgen' to track a constructed 'IEnumerator<object>' when we see 'IEnumerable' being
             // used, however that is not needed given that this interface will always be discovered anyway.
-            // With that, tirmming will then automatically keep code for it if this code path is reachable.
+            // With that, trimming will then automatically keep code for it if this code path is reachable.
             IEnumeratorAdapter<object> enumeratorAdapter = new(managedObjectEnumerator);
 
             // Marshal the adapter, we'll always have marshalling info for it (same as in 'IEnumerableAdapter<T>.First')
