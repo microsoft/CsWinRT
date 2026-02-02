@@ -169,9 +169,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition clearMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Clear",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: []));
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
             // Add and implement the 'Clear' method
             interfaceImplType.AddMethodImplementation(
