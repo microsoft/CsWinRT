@@ -58,6 +58,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
@@ -75,6 +76,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
@@ -90,6 +92,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
@@ -107,6 +110,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.UnmarshalInterface(pStm, riid, ppv);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
@@ -122,6 +126,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.ReleaseMarshalData(pStm);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
@@ -137,6 +142,7 @@ public static unsafe class IMarshalImpl
         try
         {
             FreeThreadedMarshaler.InstanceForCurrentThread.DisconnectObject(dwReserved);
+
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
