@@ -178,29 +178,6 @@ public static unsafe class IAsyncInfoImpl
         get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
-    /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_errorcode"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_ErrorCode(void* thisPtr, System.Exception* errorCode)
-    {
-        if (errorCode is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
-
-            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(thisObject.ErrorCode);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
     /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_id"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT get_Id(void* thisPtr, uint* id)
@@ -238,6 +215,29 @@ public static unsafe class IAsyncInfoImpl
             var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
             *status = thisObject.Status;
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_errorcode"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_ErrorCode(void* thisPtr, System.Exception* errorCode)
+    {
+        if (errorCode is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(thisObject.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }
