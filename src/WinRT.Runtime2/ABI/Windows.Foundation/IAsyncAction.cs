@@ -268,6 +268,7 @@ public static unsafe class IAsyncActionImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IAsyncAction"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("5A648006-843A-4DA9-865B-9D26E5DFAD7B")]
 file interface IAsyncActionInterfaceImpl : IAsyncAction
 {
     /// <inheritdoc/>
