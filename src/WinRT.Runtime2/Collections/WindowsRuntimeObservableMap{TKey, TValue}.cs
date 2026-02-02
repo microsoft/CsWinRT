@@ -217,7 +217,7 @@ public abstract class WindowsRuntimeObservableMap<
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        return TIIterableMethods.First(IIterableObjectReference);
+        return IEnumerableMethods<KeyValuePair<TKey, TValue>>.GetEnumerator<TIIterableMethods>(IIterableObjectReference);
     }
 
     /// <inheritdoc/>
