@@ -25,7 +25,6 @@ internal static partial class MetadataAssemblyAttributesBuilder
     [
         typeof(CompilationRelaxationsAttribute).FullName!,
         typeof(RuntimeCompatibilityAttribute).FullName!,
-        typeof(DebuggableAttribute).FullName!,
         typeof(TargetFrameworkAttribute).FullName!,
         typeof(SupportedOSPlatformAttribute).FullName!,
 #pragma warning disable SYSLIB0003 // Type or member is obsolete
