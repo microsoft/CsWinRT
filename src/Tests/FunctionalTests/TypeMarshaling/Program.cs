@@ -181,11 +181,11 @@ if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TimeSpan)) !
     return 127;
 }
 
-//String expectedMapped6 = "Windows.Foundation.Point Metadata";
-//if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Point)) != expectedMapped6)
-//{
-//    return 128;
-//}
+String expectedMapped6 = "Windows.Foundation.Point Metadata";
+if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Point)) != expectedMapped6)
+{
+    return 128;
+}
 
 String expectedMapped7 = "Windows.Foundation.Rect Metadata";
 if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Rect)) != expectedMapped7)
