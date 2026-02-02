@@ -21,8 +21,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::UI::Xaml::Interop::TypeName const& typeName)
     {
         testObject.TypeProperty(typeName);
+        Windows::UI::Xaml::Interop::TypeName testProperty = testObject.TypeProperty();
         winrt::hstring kind;
-        switch (testObject.TypeProperty().Kind)
+        switch (testProperty.Kind)
         {
         case Windows::UI::Xaml::Interop::TypeKind::Custom:
             kind = winrt::hstring(L"Custom");
@@ -34,7 +35,7 @@ namespace winrt::TestComponentCSharp::implementation
             kind = winrt::hstring(L"Primitive");
             break;
         }
-        return testObject.TypeProperty().Name + L" " + kind;
+        return testProperty.Name + L" " + kind;
     }
 
     winrt::hstring SetTypeProperties::GetPropertyInfoTestTypeTrimmed(IType testObject)
