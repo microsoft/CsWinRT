@@ -157,11 +157,11 @@ if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Type)) != ex
     return 123;
 }
 
-//String expectedMapped2 = "Guid Metadata";
-//if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Guid)) != expectedMapped2)
-//{
-//    return 124;
-//}
+String expectedMapped2 = "Guid Metadata";
+if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Guid)) != expectedMapped2)
+{
+    return 124;
+}
 
 String expectedMapped3 = "Object Metadata";
 if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Object)) != expectedMapped3)
