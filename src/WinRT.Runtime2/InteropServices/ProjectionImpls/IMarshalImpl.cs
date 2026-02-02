@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -56,15 +57,13 @@ public static unsafe class IMarshalImpl
 
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
+            FreeThreadedMarshaler.InstanceForCurrentThread.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-getmarshalsizemax"/>
@@ -75,15 +74,13 @@ public static unsafe class IMarshalImpl
 
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
+            FreeThreadedMarshaler.InstanceForCurrentThread.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-marshalinterface"/>
@@ -92,15 +89,13 @@ public static unsafe class IMarshalImpl
     {
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
+            FreeThreadedMarshaler.InstanceForCurrentThread.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-unmarshalinterface"/>
@@ -111,15 +106,13 @@ public static unsafe class IMarshalImpl
 
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.UnmarshalInterface(pStm, riid, ppv);
+            FreeThreadedMarshaler.InstanceForCurrentThread.UnmarshalInterface(pStm, riid, ppv);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-releasemarshaldata"/>
@@ -128,15 +121,13 @@ public static unsafe class IMarshalImpl
     {
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.ReleaseMarshalData(pStm);
+            FreeThreadedMarshaler.InstanceForCurrentThread.ReleaseMarshalData(pStm);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-disconnectobject"/>
@@ -145,14 +136,12 @@ public static unsafe class IMarshalImpl
     {
         try
         {
-            // EnsureHasFreeThreadedMarshaler();
-            // t_freeThreadedMarshaler.DisconnectObject(dwReserved);
+            FreeThreadedMarshaler.InstanceForCurrentThread.DisconnectObject(dwReserved);
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception ex)
         {
-            return Marshal.GetHRForException(ex);
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(ex);
         }
-
-        return WellKnownErrorCodes.S_OK;
     }
 }
