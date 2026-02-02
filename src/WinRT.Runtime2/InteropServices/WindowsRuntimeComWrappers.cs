@@ -349,7 +349,15 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         HSTRING className = null;
 
         // Get the runtime class name (we need it to figure out the most derived type to marshal)
-        IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Assert();
+        if (IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Failed())
+        {
+            // If we couldn't get the runtime class name, we return it as an IInspectable.
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
+                externalComObject: interfacePointer,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
+                wrapperFlags: out wrapperFlags);
+            return new WindowsRuntimeInspectable(objectReference) { InspectableObjectReference = objectReference };
+        }
 
         try
         {
