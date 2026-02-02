@@ -2595,7 +2595,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+            MetadataAssemblyAttributesBuilder.AssemblyAttributes(interopReferences, module);
         }
         catch (Exception e)
         {
