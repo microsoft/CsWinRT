@@ -414,9 +414,25 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
+            // Handle 'DictionaryKeyCollection<TKey, TValue>.Enumerator'
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.DictionaryKeyCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
             // Handle 'DictionaryValueCollection<TKey, TValue>' as well
             TryTrackGenericTypeInstance(
                 typeSignature: interopReferences.DictionaryValueCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Handle 'DictionaryValueCollection<TKey, TValue>.Enumerator'
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.DictionaryValueCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
@@ -453,9 +469,25 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
 
+            // Handle ''ReadOnlyDictionaryKeyCollection<TKey, TValue>.Enumerator'
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.ReadOnlyDictionaryKeyCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
             // Handle 'ReadOnlyDictionaryValueCollection<TKey, TValue>' as well
             TryTrackGenericTypeInstance(
                 typeSignature: interopReferences.ReadOnlyDictionaryValueCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
+                args: args,
+                discoveryState: discoveryState,
+                interopReferences: interopReferences,
+                module: module);
+
+            // Handle ''ReadOnlyDictionaryValueCollection<TKey, TValue>.Enumerator'
+            TryTrackGenericTypeInstance(
+                typeSignature: interopReferences.ReadOnlyDictionaryValueCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
                 interopReferences: interopReferences,
