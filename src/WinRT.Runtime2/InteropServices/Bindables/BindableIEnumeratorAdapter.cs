@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A stateful adapter for <see cref="IEnumerator"/>, to be exposed as <c>Windows.UI.Xaml.Interop.IBindableIterator</c>.
 /// </summary>
-internal sealed class IBindableIteratorAdapter
+internal sealed class BindableIEnumeratorAdapter
 {
     /// <summary>
     /// The wrapped <see cref="IEnumerator"/> instance.
@@ -28,11 +28,11 @@ internal sealed class IBindableIteratorAdapter
     private bool _hasCurrent;
 
     /// <summary>
-    /// Creates a <see cref="IBindableIteratorAdapter"/> instance with the specified parameters.
+    /// Creates a <see cref="BindableIEnumeratorAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="enumerator">The wrapped <see cref="IEnumerator"/> instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerator"/> is <see langword="null"/>.</exception>
-    private IBindableIteratorAdapter(IEnumerator enumerator)
+    private BindableIEnumeratorAdapter(IEnumerator enumerator)
     {
         ArgumentNullException.ThrowIfNull(enumerator);
 
@@ -40,13 +40,13 @@ internal sealed class IBindableIteratorAdapter
     }
 
     /// <summary>
-    /// Gets an <see cref="IBindableIteratorAdapter"/> instance associated to a given <see cref="IEnumerator"/> object.
+    /// Gets an <see cref="BindableIEnumeratorAdapter"/> instance associated to a given <see cref="IEnumerator"/> object.
     /// </summary>
     /// <param name="enumerator">The input <see cref="IEnumerator"/> object.</param>
-    /// <returns>The <see cref="IBindableIteratorAdapter"/> instance associated to <paramref name="enumerator"/>.</returns>
-    public static IBindableIteratorAdapter GetInstance(IEnumerator enumerator)
+    /// <returns>The <see cref="BindableIEnumeratorAdapter"/> instance associated to <paramref name="enumerator"/>.</returns>
+    public static BindableIEnumeratorAdapter GetInstance(IEnumerator enumerator)
     {
-        return IBindableIteratorAdapterTable.Table.GetOrAdd(enumerator, static enumerator => new IBindableIteratorAdapter(enumerator));
+        return IBindableIteratorAdapterTable.Table.GetOrAdd(enumerator, static enumerator => new BindableIEnumeratorAdapter(enumerator));
     }
 
     /// <summary>
@@ -106,12 +106,12 @@ internal sealed class IBindableIteratorAdapter
 }
 
 /// <summary>
-/// Mapping table for <see cref="IBindableIteratorAdapter"/> instances.
+/// Mapping table for <see cref="BindableIEnumeratorAdapter"/> instances.
 /// </summary>
 file static class IBindableIteratorAdapterTable
 {
     /// <summary>
     /// The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance for the mapping table.
     /// </summary>
-    public static readonly ConditionalWeakTable<IEnumerator, IBindableIteratorAdapter> Table = [];
+    public static readonly ConditionalWeakTable<IEnumerator, BindableIEnumeratorAdapter> Table = [];
 }
