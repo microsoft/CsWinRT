@@ -7,363 +7,339 @@ using TestComponent;
 using TestComponentCSharp;
 using Windows.Foundation;
 
-SetTypeProperties setTypeProperties = new();
-TestType TestTypeClass = new();
+
+int failure;
 
 // Convert to Managed Trimmed Metadata NoMetadataTypeInfo Test Case
 // Goes into NoMetadataTypeInfo codepath for Type.cs ConvertToManaged
 // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario
-String expectedMetadataPropertyInfoTrimmed = "TestComponentCSharp.TestTypeTrimmed Metadata";
-if (setTypeProperties.GetPropertyInfoTestTypeTrimmed(TestTypeClass) != expectedMetadataPropertyInfoTrimmed)
+if ((failure = CheckTrimmed("TestComponentCSharp.TestTypeTrimmed Metadata", 101)) != 0)
 {
-    return 101;
+    return failure;
 }
 
 // Projected WinRT Types
-String TestComponentCSharpClassExpected = "TestComponentCSharp.Class Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponentCSharp.Class)) != TestComponentCSharpClassExpected)
+if ((failure = CheckType(typeof(TestComponentCSharp.Class), "TestComponentCSharp.Class Metadata", 102)) != 0)
 {
-    return 102;
+    return failure;
 }
 
+
 // Custom Type (your existing TestType case)
-String CustomTestTypeExpected = "TestType, TypeMarshaling, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestType)) != CustomTestTypeExpected)
+if ((failure = CheckType(typeof(TestType), "TestType, TypeMarshaling, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null Custom", 103)) != 0)
 {
-    return 103;
+    return failure;
 }
 
 
 // Primitive Types
-String expectedPrimitiveInt64 = "Int64 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(long)) != expectedPrimitiveInt64)
+if ((failure = CheckType(typeof(long), "Int64 Primitive", 104)) != 0)
 {
-    return 104;
+    return failure;
 }
 
-String expectedPrimitiveInt32 = "Int32 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(int)) != expectedPrimitiveInt32)
+if ((failure = CheckType(typeof(int), "Int32 Primitive", 105)) != 0)
 {
-    return 105;
+    return failure;
 }
 
-String expectedPrimitiveInt16 = "Int16 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(short)) != expectedPrimitiveInt16)
+if ((failure = CheckType(typeof(short), "Int16 Primitive", 106)) != 0)
 {
-    return 106;
+    return failure;
 }
 
-String expectedPrimitiveUInt64 = "UInt64 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(ulong)) != expectedPrimitiveUInt64)
+if ((failure = CheckType(typeof(ulong), "UInt64 Primitive", 107)) != 0)
 {
-    return 107;
+    return failure;
 }
 
-String expectedPrimitiveUInt32 = "UInt32 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(uint)) != expectedPrimitiveUInt32)
+if ((failure = CheckType(typeof(uint), "UInt32 Primitive", 108)) != 0)
 {
-    return 108;
+    return failure;
 }
 
-String expectedPrimitiveUInt16 = "UInt16 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(ushort)) != expectedPrimitiveUInt16)
+if ((failure = CheckType(typeof(ushort), "UInt16 Primitive", 109)) != 0)
 {
-    return 109;
+    return failure;
 }
 
-String expectedPrimitiveUInt8 = "UInt8 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(byte)) != expectedPrimitiveUInt8)
+if ((failure = CheckType(typeof(byte), "UInt8 Primitive", 110)) != 0)
 {
-    return 110;
+    return failure;
 }
 
-String expectedPrimitiveChar16 = "Char16 Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(char)) != expectedPrimitiveChar16)
+if ((failure = CheckType(typeof(char), "Char16 Primitive", 111)) != 0)
 {
-    return 111;
+    return failure;
 }
 
-String expectedPrimitiveSingle = "Single Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(float)) != expectedPrimitiveSingle)
+if ((failure = CheckType(typeof(float), "Single Primitive", 112)) != 0)
 {
-    return 112;
+    return failure;
 }
 
-String expectedPrimitiveDouble = "Double Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(double)) != expectedPrimitiveDouble)
+if ((failure = CheckType(typeof(double), "Double Primitive", 113)) != 0)
 {
-    return 113;
+    return failure;
 }
 
-String expectedPrimitiveBoolean = "Boolean Primitive";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(bool)) != expectedPrimitiveBoolean)
+if ((failure = CheckType(typeof(bool), "Boolean Primitive", 114)) != 0)
 {
-    return 114;
+    return failure;
 }
+
 
 // Projected WinRT Types (unit test set)
-String expectedProjected1 = "TestComponent.Class Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponent.Class)) != expectedProjected1)
+if ((failure = CheckType(typeof(TestComponent.Class), "TestComponent.Class Metadata", 115)) != 0)
 {
-    return 115;
+    return failure;
 }
 
-String expectedProjected2 = "TestComponent.Nested Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponent.Nested)) != expectedProjected2)
+if ((failure = CheckType(typeof(TestComponent.Nested), "TestComponent.Nested Metadata", 116)) != 0)
 {
-    return 116;
+    return failure;
 }
 
-String expectedProjected3 = "TestComponent.IRequiredOne Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponent.IRequiredOne)) != expectedProjected3)
+if ((failure = CheckType(typeof(TestComponent.IRequiredOne), "TestComponent.IRequiredOne Metadata", 117)) != 0)
 {
-    return 117;
+    return failure;
 }
 
-String expectedProjected4 = "TestComponent.Param6Handler Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponent.Param6Handler)) != expectedProjected4)
+if ((failure = CheckType(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler Metadata", 118)) != 0)
 {
-    return 118;
+    return failure;
 }
 
-String expectedProjected5 = "TestComponentCSharp.ComposedBlittableStruct Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponentCSharp.ComposedBlittableStruct)) != expectedProjected5)
+if ((failure = CheckType(typeof(TestComponentCSharp.ComposedBlittableStruct), "TestComponentCSharp.ComposedBlittableStruct Metadata", 119)) != 0)
 {
-    return 119;
+    return failure;
 }
 
-String expectedProjected6 = "TestComponentCSharp.IArtist Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponentCSharp.IArtist)) != expectedProjected6)
+if ((failure = CheckType(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist Metadata", 120)) != 0)
 {
-    return 120;
+    return failure;
 }
 
-String expectedProjected7 = "TestComponentCSharp.EnumValue Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponentCSharp.EnumValue)) != expectedProjected7)
+if ((failure = CheckType(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue Metadata", 121)) != 0)
 {
-    return 121;
+    return failure;
 }
 
-String expectedProjected8 = "TestComponentCSharp.EventHandler0 Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestComponentCSharp.EventHandler0)) != expectedProjected8)
+if ((failure = CheckType(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0 Metadata", 122)) != 0)
 {
-    return 122;
+    return failure;
 }
+
 
 // Mapped WinRT Types
-String expectedMapped1 = "Windows.UI.Xaml.Interop.TypeName Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Type)) != expectedMapped1)
+if ((failure = CheckType(typeof(Type), "Windows.UI.Xaml.Interop.TypeName Metadata", 123)) != 0)
 {
-    return 123;
+    return failure;
 }
 
-String expectedMapped2 = "Guid Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Guid)) != expectedMapped2)
+if ((failure = CheckType(typeof(Guid), "Guid Metadata", 124)) != 0)
 {
-    return 124;
+    return failure;
 }
 
-String expectedMapped3 = "Object Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Object)) != expectedMapped3)
+if ((failure = CheckType(typeof(object), "Object Metadata", 125)) != 0)
 {
-    return 125;
+    return failure;
 }
 
-String expectedMapped4 = "String Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(String)) != expectedMapped4)
+if ((failure = CheckType(typeof(string), "String Metadata", 126)) != 0)
 {
-    return 126;
+    return failure;
 }
 
-String expectedMapped5 = "Windows.Foundation.TimeSpan Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TimeSpan)) != expectedMapped5)
+if ((failure = CheckType(typeof(TimeSpan), "Windows.Foundation.TimeSpan Metadata", 127)) != 0)
 {
-    return 127;
+    return failure;
 }
 
-String expectedMapped6 = "Windows.Foundation.Point Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Point)) != expectedMapped6)
+if ((failure = CheckType(typeof(Point), "Windows.Foundation.Point Metadata", 128)) != 0)
 {
-    return 128;
+    return failure;
 }
 
-String expectedMapped7 = "Windows.Foundation.Rect Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Rect)) != expectedMapped7)
+if ((failure = CheckType(typeof(Rect), "Windows.Foundation.Rect Metadata", 129)) != 0)
 {
-    return 129;
+    return failure;
 }
 
-String expectedMapped8 = "Windows.Foundation.Numerics.Vector2 Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Vector2)) != expectedMapped8)
+if ((failure = CheckType(typeof(Vector2), "Windows.Foundation.Numerics.Vector2 Metadata", 130)) != 0)
 {
-    return 130;
+    return failure;
 }
 
-String expectedMapped10 = "Windows.Foundation.IClosable Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IDisposable)) != expectedMapped10)
+if ((failure = CheckType(typeof(IDisposable), "Windows.Foundation.IClosable Metadata", 132)) != 0)
 {
-    return 132;
+    return failure;
 }
+
 
 // Special Cases
-String expectedSpecial1 = "Windows.Foundation.HResult Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Exception)) != expectedSpecial1)
+if ((failure = CheckType(typeof(Exception), "Windows.Foundation.HResult Metadata", 133)) != 0)
 {
-    return 133;
+    return failure;
 }
+
 
 // Nullable types
-String expectedNullable1 = "Windows.Foundation.IReference`1<Int64> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(Nullable<long>)) != expectedNullable1)
+if ((failure = CheckType(typeof(long?), "Windows.Foundation.IReference`1<Int64> Metadata", 134)) != 0)
 {
-    return 134;
+    return failure;
 }
+
 
 // Generic Interfaces
-String expectedGenInterface1 = "Windows.Foundation.Collections.IVector`1<Int64> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IList<long>)) != expectedGenInterface1)
+if ((failure = CheckType(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64> Metadata", 135)) != 0)
 {
-    return 135;
+    return failure;
 }
 
-String expectedGenInterface2 = "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IList<TestComponentCSharp.EventWithGuid>)) != expectedGenInterface2)
+if ((failure = CheckType(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid> Metadata", 136)) != 0)
 {
-    return 136;
+    return failure;
 }
 
-String expectedGenInterface3 = "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IList<TestComponentCSharp.Class>)) != expectedGenInterface3)
+if ((failure = CheckType(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class> Metadata", 137)) != 0)
 {
-    return 137;
+    return failure;
 }
 
-String expectedGenInterface4 = "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IEnumerator<TestComponentCSharp.Class>)) != expectedGenInterface4)
+if ((failure = CheckType(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class> Metadata", 138)) != 0)
 {
-    return 138;
+    return failure;
 }
 
-String expectedGenInterface5 = "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IEnumerable<TestComponentCSharp.Class>)) != expectedGenInterface5)
+if ((failure = CheckType(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class> Metadata", 139)) != 0)
 {
-    return 139;
+    return failure;
 }
+
 
 // Generic Delegates
-String expectedGenDelegate1 = "Windows.Foundation.EventHandler`1<Guid> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<Guid>)) != expectedGenDelegate1)
+if ((failure = CheckType(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid> Metadata", 140)) != 0)
 {
-    return 140;
+    return failure;
 }
 
-String expectedGenDelegate2 = "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<TestComponentCSharp.Class>)) != expectedGenDelegate2)
+if ((failure = CheckType(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class> Metadata", 141)) != 0)
 {
-    return 141;
+    return failure;
 }
+
 
 // KeyValuePair
-String expectedKvp1 = "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(KeyValuePair<Object, TestComponentCSharp.Class>)) != expectedKvp1)
+if ((failure = CheckType(typeof(KeyValuePair<object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class> Metadata", 142)) != 0)
 {
-    return 142;
+    return failure;
 }
 
-String expectedKvp2 = "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(KeyValuePair<Object, Object>)) != expectedKvp2)
+if ((failure = CheckType(typeof(KeyValuePair<object, object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object> Metadata", 143)) != 0)
 {
-    return 143;
+    return failure;
 }
 
-String expectedKvp3 = "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(KeyValuePair<String, TestComponentCSharp.Class>)) != expectedKvp3)
+if ((failure = CheckType(typeof(KeyValuePair<string, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class> Metadata", 144)) != 0)
 {
-    return 144;
+    return failure;
 }
+
 
 // Nested Generics
-String expectedNested1 = "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<IList<long>>)) != expectedNested1)
+if ((failure = CheckType(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>> Metadata", 145)) != 0)
 {
-    return 145;
+    return failure;
 }
 
-String expectedNested2 = "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<KeyValuePair<Object, Object>>)) != expectedNested2)
+if ((failure = CheckType(typeof(EventHandler<KeyValuePair<object, object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>> Metadata", 146)) != 0)
 {
-    return 146;
+    return failure;
 }
 
-String expectedNested3 = "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>)) != expectedNested3)
+if ((failure = CheckType(typeof(EventHandler<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>> Metadata", 147)) != 0)
 {
-    return 147;
+    return failure;
 }
 
-String expectedNested4 = "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IList<KeyValuePair<Object, Object>>)) != expectedNested4)
+if ((failure = CheckType(typeof(IList<KeyValuePair<object, object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>> Metadata", 148)) != 0)
 {
-    return 148;
+    return failure;
 }
 
-String expectedNested5 = "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IEnumerator<IEnumerable<Object>>)) != expectedNested5)
+if ((failure = CheckType(typeof(IEnumerator<IEnumerable<object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>> Metadata", 149)) != 0)
 {
-    return 149;
+    return failure;
 }
 
-String expectedNested6 = "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>> Metadata";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>)) != expectedNested6)
+if ((failure = CheckType(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>> Metadata", 150)) != 0)
 {
-    return 150;
+    return failure;
 }
+
 
 // Custom Types (unit test set)
-// NOTE: Use AssemblyQualifiedName to avoid hardcoding assembly identity in functional tests.
-String expectedCustom1 = $"{typeof(TestCSharp).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(TestCSharp)) != expectedCustom1)
+if ((failure = CheckType(typeof(TestCSharp), $"{typeof(TestCSharp).AssemblyQualifiedName} Custom", 151)) != 0)
 {
-    return 151;
+    return failure;
 }
 
-String expectedCustom2 = $"{typeof(IList<TestCSharp>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(IList<TestCSharp>)) != expectedCustom2)
+if ((failure = CheckType(typeof(IList<TestCSharp>), $"{typeof(IList<TestCSharp>).AssemblyQualifiedName} Custom", 152)) != 0)
 {
-    return 152;
+    return failure;
 }
 
-String expectedCustom3 = $"{typeof(ITestCSharp<double>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(ITestCSharp<double>)) != expectedCustom3)
+if ((failure = CheckType(typeof(ITestCSharp<double>), $"{typeof(ITestCSharp<double>).AssemblyQualifiedName} Custom", 153)) != 0)
 {
-    return 153;
+    return failure;
 }
 
-String expectedCustom4 = $"{typeof(KeyValuePair<String, TestCSharp>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(KeyValuePair<String, TestCSharp>)) != expectedCustom4)
+if ((failure = CheckType(typeof(KeyValuePair<string, TestCSharp>), $"{typeof(KeyValuePair<string, TestCSharp>).AssemblyQualifiedName} Custom", 154)) != 0)
 {
-    return 154;
+    return failure;
 }
 
-String expectedCustom5 = $"{typeof(EventHandler<IList<TestCSharp>>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<IList<TestCSharp>>)) != expectedCustom5)
+if ((failure = CheckType(typeof(EventHandler<IList<TestCSharp>>), $"{typeof(EventHandler<IList<TestCSharp>>).AssemblyQualifiedName} Custom", 155)) != 0)
 {
-    return 155;
+    return failure;
 }
 
-String expectedCustom6 = $"{typeof(EventHandler<TestCSharp>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(EventHandler<TestCSharp>)) != expectedCustom6)
+if ((failure = CheckType(typeof(EventHandler<TestCSharp>), $"{typeof(EventHandler<TestCSharp>).AssemblyQualifiedName} Custom", 156)) != 0)
 {
-    return 156;
+    return failure;
 }
 
-String expectedCustom7 = $"{typeof(DelegateTestCSharp<Guid>).AssemblyQualifiedName} Custom";
-if (setTypeProperties.GetPropertyInfoTestType(TestTypeClass, typeof(DelegateTestCSharp<Guid>)) != expectedCustom7)
+if ((failure = CheckType(typeof(DelegateTestCSharp<Guid>), $"{typeof(DelegateTestCSharp<Guid>).AssemblyQualifiedName} Custom", 157)) != 0)
 {
-    return 157;
+    return failure;
 }
 
 return 100;
+
+static int CheckTrimmed(String expected, int errorCode)
+{
+    TestType testTypeClass = new();
+    return FailIfNotEqual(new SetTypeProperties().GetPropertyInfoTestTypeTrimmed(testTypeClass), expected, errorCode);
+}
+
+static int CheckType(System.Type type, String expected, int errorCode)
+{
+    TestType testTypeClass = new();
+    return FailIfNotEqual(new SetTypeProperties().GetPropertyInfoTestType(testTypeClass, type), expected, errorCode);
+}
+
+static int FailIfNotEqual(String actual, String expected, int errorCode)
+{
+    if (actual != expected)
+    {
+        return errorCode;
+    }
+
+    return 0;
+}
+
 
 sealed class TestType : IType
 {
@@ -379,3 +355,4 @@ interface ITestCSharp<T>
 }
 
 delegate void DelegateTestCSharp<T>(object sender, T value);
+
