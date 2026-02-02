@@ -96,6 +96,26 @@ internal static class InteropCustomAttributeFactory
     }
 
     /// <summary>
+    /// Creates a new custom attribute value for <see cref="System.Reflection.AssemblyMetadataAttribute"/> (and imports all metadata elements for it).
+    /// </summary>
+    /// <param name="key">The metadata key.</param>
+    /// <param name="value">The metadata value.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
+    public static CustomAttribute AssemblyMetadata(string key, string value, InteropReferences interopReferences, ModuleDefinition module)
+    {
+        // Create the following attribute:
+        //
+        // [AssemblyMetadata("<KEY>", "<VALUE>")]
+        return new(interopReferences.AssemblyMetadataAttribute_ctor.Import(module), new CustomAttributeSignature(
+            fixedArguments: [
+                new CustomAttributeArgument(module.CorLibTypeFactory.String, key),
+                new CustomAttributeArgument(module.CorLibTypeFactory.String, value)],
+            namedArguments: []));
+    }
+
+    /// <summary>
     /// Creates a new custom attribute value for <see cref="AttributeUsageAttribute"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="attributeTargets">The <see cref="AttributeTargets"/> value to use.</param>

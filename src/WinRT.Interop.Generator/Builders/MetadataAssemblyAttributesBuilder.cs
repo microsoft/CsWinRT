@@ -56,6 +56,12 @@ internal static partial class MetadataAssemblyAttributesBuilder
                 signature: assemblyAttribute.Signature));
         }
 
+        // Add the '[AssemblyMetadata]' attributes to mark the assembly as trimmable and AOT compatible.
+        // Technically speaking marking it as trimmable isn't required to let trimming works when using
+        // Native AOT, however it's good practice and does matter when trimming while using CoreCLR.
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.AssemblyMetadata("IsTrimmable", "True", interopReferences, module));
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.AssemblyMetadata("IsAotCompatible", "True", interopReferences, module));
+
         // Add the '[DisableRuntimeMarshalling]' attribute
         module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
 

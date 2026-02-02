@@ -549,6 +549,11 @@ internal sealed class InteropReferences
     public TypeReference DisableRuntimeMarshallingAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.CompilerServices"u8, "DisableRuntimeMarshallingAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Reflection.AssemblyMetadataAttribute"/>.
+    /// </summary>
+    public TypeReference AssemblyMetadataAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Reflection"u8, "AssemblyMetadataAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
@@ -1651,6 +1656,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute.DisableRuntimeMarshallingAttribute()"/>.
     /// </summary>
     public MemberReference DisableRuntimeMarshallingAttribute_ctor => field ??= DisableRuntimeMarshallingAttribute.CreateConstructorReference(_corLibTypeFactory);
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Reflection.AssemblyMetadataAttribute.AssemblyMetadataAttribute(string, string)"/>.
+    /// </summary>
+    public MemberReference AssemblyMetadataAttribute_ctor => field ??= AssemblyMetadataAttribute.CreateConstructorReference(_corLibTypeFactory, [_corLibTypeFactory.String, _corLibTypeFactory.String]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance"/>.
