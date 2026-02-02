@@ -351,11 +351,17 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // Get the runtime class name (we need it to figure out the most derived type to marshal)
         if (IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Failed())
         {
-            // If we couldn't get the runtime class name, we return it as an IInspectable.
+            // If we couldn't get the runtime class name, we return it as an opaque 'IInspectable'.
+            // This should generally never be the case, but there are some cases where a public API
+            // returns a non-projected object that implements a projected Windows Runtime interface,
+            // without implementing 'GetRuntimeClassName' (e.g. 'MemoryBuffer.CreateReference'). In
+            // those cases, we assume that callers will just be consuming one of those interfaces,
+            // so they'll just be going through a dynamic interface cast on the returned object.
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
                 externalComObject: interfacePointer,
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
                 wrapperFlags: out wrapperFlags);
+
             return new WindowsRuntimeInspectable(objectReference) { InspectableObjectReference = objectReference };
         }
 
