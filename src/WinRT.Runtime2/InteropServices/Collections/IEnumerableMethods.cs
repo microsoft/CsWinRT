@@ -39,9 +39,22 @@ internal static unsafe class IEnumerableMethods
             // CCW for the managed object, or marshal the type as some RCW for a native object.
             object enumerator = WindowsRuntimeObjectMarshaller.ConvertToManaged(result)!;
 
-            // It's possible to get back some 'IEnumeratorAdapter<T>' instance here, so we
-            // can unwrap the original managed enumerator object from that in this case.
-            // This matches the logic for the normal 'IEnumerable<T>' methods.
+            // It's possible to get back an 'IEnumeratorAdapter<object>' instance here, and we want to unwrap the
+            // inner-most instance here. There are basically two scenarios here. If we have originally marshalled
+            // some 'IEnumerator<object>' object that had no marshalling information, then we'd end up with an
+            // adapter for it, which we want to return here. If we have originally marshalled an 'IEnumerator'
+            // instance that had no marshalling information, then we'd end up with an outer 'IEnumeratorAdapter<object>'
+            // object that wraps a 'BindableIEnumeratorAdapter' instance. So we want to unwrap that inner object.
+            if (enumerator is IEnumeratorAdapter<object> bindableOuterAdapter)
+            {
+                IEnumerator<object> objectEnumerator = bindableOuterAdapter.Enumerator;
+
+                return objectEnumerator is BindableIEnumeratorAdapter bindableInnerAdapter
+                    ? bindableInnerAdapter.Enumerator
+                    : objectEnumerator;
+            }
+
+            // This handles the case where we have some 'T' adapter for an original 'IEnumerator<T>' instance
             if (enumerator is IEnumeratorAdapter adapter)
             {
                 return adapter.Enumerator;
