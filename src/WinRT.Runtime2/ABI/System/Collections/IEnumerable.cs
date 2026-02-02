@@ -213,6 +213,7 @@ public static unsafe class IEnumerableImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IEnumerable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
 file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
 {
     global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator()

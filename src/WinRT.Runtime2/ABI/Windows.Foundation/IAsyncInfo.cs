@@ -288,6 +288,7 @@ public static unsafe class IAsyncInfoImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IAsyncInfo"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("00000036-0000-0000-C000-000000000046")]
 file interface IAsyncInfoInterfaceImpl : IAsyncInfo
 {
     /// <inheritdoc/>

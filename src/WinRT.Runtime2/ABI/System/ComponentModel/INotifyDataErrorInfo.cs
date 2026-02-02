@@ -307,6 +307,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyDataErrorInfo"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
 file interface INotifyDataErrorInfoInterfaceImpl : INotifyDataErrorInfo
 {
     /// <inheritdoc/>
