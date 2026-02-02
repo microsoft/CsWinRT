@@ -355,7 +355,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add the 'ComputeVtables' method
             marshallerAttributeType.Methods.Add(computeVtablesMethod);
 
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
@@ -382,7 +381,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'GetOrCreateComInterfaceForObject' method
             marshallerAttributeType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Declare the local variables:
@@ -454,7 +452,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add the 'CreateObject' method
             marshallerAttributeType.Methods.Add(createObjectMethod);
         }
 
