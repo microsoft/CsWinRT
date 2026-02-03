@@ -571,6 +571,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
     <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
+    <CsWinRTEnableXamlTypeMarshalling Condition="'$(CsWinRTEnableXamlTypeMarshalling)' == ''">true</CsWinRTEnableXamlTypeMarshalling>
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
 
     <!--
@@ -598,6 +599,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_XAML_TYPE_MARSHALLING switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_XAML_TYPE_MARSHALLING"
+                                    Value="$(CsWinRTEnableXamlTypeMarshalling)"
                                     Trim="true" />
 	  
     <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
