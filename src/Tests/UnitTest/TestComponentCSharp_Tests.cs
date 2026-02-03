@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,6 +14,10 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using ABI.System.Collections.Specialized;
+using ABI.System.ComponentModel;
+using ABI.Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Interop;
@@ -22,6 +28,7 @@ using TestComponentCSharp;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Enumeration.Pnp;
 using Windows.Foundation;
+using Windows.Foundation.Collections;
 using Windows.Foundation.Tasks;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
@@ -575,18 +582,66 @@ namespace UnitTest
         }
 
         [Theory]
-        // Primitive Types
-        [InlineData(typeof(long), "Int64", "Primitive")]
-        [InlineData(typeof(int), "Int32", "Primitive")]
-        [InlineData(typeof(short), "Int16", "Primitive")]
-        [InlineData(typeof(ulong), "UInt64", "Primitive")]
-        [InlineData(typeof(uint), "UInt32", "Primitive")]
-        [InlineData(typeof(ushort), "UInt16", "Primitive")]
+        // Mapped System.* Types Primitive Types
+        [InlineData(typeof(bool), "Boolean", "Primitive")]
         [InlineData(typeof(byte), "UInt8", "Primitive")]
         [InlineData(typeof(char), "Char16", "Primitive")]
-        [InlineData(typeof(float), "Single", "Primitive")]
         [InlineData(typeof(double), "Double", "Primitive")]
-        [InlineData(typeof(bool), "Boolean", "Primitive")]
+        [InlineData(typeof(short), "Int16", "Primitive")]
+        [InlineData(typeof(int), "Int32", "Primitive")]
+        [InlineData(typeof(long), "Int64", "Primitive")]
+        [InlineData(typeof(float), "Single", "Primitive")]
+        [InlineData(typeof(ushort), "UInt16", "Primitive")]
+        [InlineData(typeof(uint), "UInt32", "Primitive")]
+        [InlineData(typeof(ulong), "UInt64", "Primitive")]
+        // Mapped System.* Types Metadata Types
+        [InlineData(typeof(DateTimeOffset), "Windows.Foundation.DateTime", "Metadata")]
+        [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
+        [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
+        [InlineData(typeof(Guid), "Guid", "Metadata")]
+        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
+        [InlineData(typeof(object), "Object", "Metadata")]
+        [InlineData(typeof(string), "String", "Metadata")]
+        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
+        [InlineData(typeof(Uri), "Windows.Foundation.Uri", "Metadata")]
+        [InlineData(typeof(ICommand), "Microsoft.UI.Xaml.Input.ICommand", "Metadata")]
+        // Mapped System.Collections.* Types
+        [InlineData(typeof(IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable", "Metadata")]
+        [InlineData(typeof(IEnumerator), "Microsoft.UI.Xaml.Interop.IBindableIterator", "Metadata")]
+        [InlineData(typeof(IList), "Microsoft.UI.Xaml.Interop.IBindableVector", "Metadata")]
+        [InlineData<IReadOnlyList<long>>(typeof(IReadOnlyList<long>), "Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
+        // Mapped System.Collections.Specialized* Types
+        [InlineData(typeof(INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", "Metadata")]
+        [InlineData(typeof(NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Metadata")]
+        [InlineData(typeof(NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", "Metadata")]
+        // Mapped System.ComponentModel.* Types
+        [InlineData(typeof(DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", "Metadata")]
+        [InlineData(typeof(INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", "Metadata")]
+        [InlineData(typeof(INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", "Metadata")]
+        [InlineData(typeof(PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", "Metadata")]
+        [InlineData(typeof(PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", "Metadata")]
+        // Mapped System.Numerics.* Types
+        [InlineData(typeof(Matrix3x2), "Windows.Foundation.Numerics.Matrix3x2", "Metadata")]
+        [InlineData(typeof(Matrix4x4), "Windows.Foundation.Numerics.Matrix4x4", "Metadata")]
+        [InlineData(typeof(Plane), "Windows.Foundation.Numerics.Plane", "Metadata")]
+        [InlineData(typeof(Quaternion), "Windows.Foundation.Numerics.Quaternion", "Metadata")]
+        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
+        [InlineData(typeof(Vector3), "Windows.Foundation.Numerics.Vector3", "Metadata")]
+        [InlineData(typeof(Vector4), "Windows.Foundation.Numerics.Vector4", "Metadata")]
+        // Mapped Windows.Foundation.* Types
+        [InlineData(typeof(AsyncActionCompletedHandler), "Windows.Foundation.AsyncActionCompletedHandler", "Metadata")]
+        [InlineData(typeof(IAsyncAction), "Windows.Foundation.IAsyncAction", "Metadata")]
+        [InlineData(typeof(IAsyncInfo), "Windows.Foundation.IAsyncInfo", "Metadata")]
+        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
+        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
+        [InlineData(typeof(Size), "Windows.Foundation.Size", "Metadata")]
+        // Mapped Windows.Foundation.Collections.* Types
+        [InlineData(typeof(CollectionChange), "Windows.Foundation.Collections.CollectionChange", "Metadata")]
+        [InlineData(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
+        // Mapped WindowsRuntime.InteropServices.* Types
+        [InlineData(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
         // Projected WinRT Types
         [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
         [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
@@ -597,19 +652,6 @@ namespace UnitTest
         [InlineData(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist", "Metadata")]
         [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
         [InlineData(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
-        // Mapped WinRT Types
-        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
-        [InlineData(typeof(Guid), "Guid", "Metadata")]
-        [InlineData(typeof(Object), "Object", "Metadata")]
-        [InlineData(typeof(String), "String", "Metadata")]
-        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
-        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
-        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
-        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
-        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
-        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
-        // Special Cases
-        [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
         // Nullable types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
         // Generic Interfaces
@@ -619,7 +661,6 @@ namespace UnitTest
         [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
         [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
         // Generic Delegates
-        [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
         [InlineData<EventHandler<TestComponentCSharp.Class>>(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
         // KeyValuePairUnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
         [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
