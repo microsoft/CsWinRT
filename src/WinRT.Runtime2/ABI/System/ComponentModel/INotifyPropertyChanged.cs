@@ -14,6 +14,10 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(INotifyPropertyChanged),
+    proxy: typeof(ABI.System.ComponentModel.INotifyPropertyChangedInterfaceImpl))]
+
 namespace ABI.System.ComponentModel;
 
 /// <summary>
