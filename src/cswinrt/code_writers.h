@@ -9003,6 +9003,16 @@ wrapperObject = null;
 wrapperFlags = CreatedWrapperFlags.None;
 return false;
 }
+
+public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+{
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+    externalComObject: value,
+    iid: %,
+    wrapperFlags: out wrapperFlags);
+
+return new %(valueReference);
+}
 }
 )",
                 type.TypeName(),
@@ -9015,7 +9025,11 @@ return false;
                         }
                     });
                 }),
+                // TryCreateObject
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                bind<write_type_name>(type, typedef_name_type::Projected, true),
+                // CreateObject
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
