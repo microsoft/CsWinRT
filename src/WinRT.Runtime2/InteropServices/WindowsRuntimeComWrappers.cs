@@ -413,17 +413,16 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                 }
             }
 
-            // If we get here, it means that we couldn't find any partially derived type to marshal. However, we want
-            // to leverage as much static type information as possible, so first we check if we have a callback for an
-            // unsealed type. If we do, we can delegate to it to create the resulting object. Consider a scenario where
-            // some code called a Windows Runtime API returning an anonymous object implementing an interface type, but
-            // with without implementing 'GetRuntimeClassName' (or with it returning an incorrect value that we can't
-            // recognize). Even in that case, we still have the static type information about the returned interface
-            // type, meaning we know the object to return should be "at least that interface type". And we know that
-            // the interface pointer is also already an interface pointer for that specific interface. So by invoking
-            // the provided callback, if available, we still manage to return a specialized RCW type, which will have
-            // the requested interface (and possibly others too) implemented in metadata. This allows callers to not
-            // have to go through dynamic interface casts to consume those interfaces, which improves performance.
+            // If we get here, it means that we couldn't find any partially derived type to marshal. However, we want to leverage
+            // as much static type information as possible, so first we check if we have a callback for an unsealed type. If we do,
+            // we can delegate to it to create the resulting object. Consider a scenario where some code called a Windows Runtime
+            // API returning an anonymous object implementing an interface type, but without implementing 'GetRuntimeClassName'
+            // (or with it returning an incorrect value that we can't recognize). Even in that case, we still have the static type
+            // information about the returned interface type, meaning we know the object to return should be "at least that interface
+            // type". And we know that the interface pointer is also already an interface pointer for that specific interface. So by
+            // invoking the provided callback, if available, we still manage to return a specialized RCW type, which will have the
+            // requested interface (and possibly others too) implemented in metadata. This allows callers to not have to go through
+            // dynamic interface casts to consume those interfaces, which improves performance.
             if (UnsealedObjectComWrappersCallback is { } fallbackUnsealedObjectCallback)
             {
                 return fallbackUnsealedObjectCallback.CreateObject(interfacePointer, out wrapperFlags);
