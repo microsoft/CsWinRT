@@ -222,7 +222,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Define the 'CreateObject' method as follows:
         //
-        // public static object TryCreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+        // public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
         MethodDefinition createObjectMethod = new(
             name: "CreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
