@@ -77,7 +77,7 @@ namespace winrt::TestComponentCSharp::implementation
     }
     winrt::Microsoft::UI::Xaml::Interop::IBindableIterator CustomBindableVectorTest::First()
     {
-        return winrt::Microsoft::UI::Xaml::Interop::IBindableIterator();
+        return make<CustomBindableIteratorTest>();
     }
 
     winrt::Microsoft::UI::Xaml::Interop::IBindableIterator CustomBindableObservableVectorTest::First()
