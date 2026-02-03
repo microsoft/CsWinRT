@@ -1524,6 +1524,22 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Object]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s adder.
+    /// </summary>
+    public MemberReference INotifyCollectionChangedadd_CollectionChanged => ICommand
+        .CreateMemberReference("add_CollectionChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s remover.
+    /// </summary>
+    public MemberReference INotifyCollectionChangedremove_CollectionChanged => ICommand
+        .CreateMemberReference("remove_CollectionChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s adder.
     /// </summary>
     public MemberReference INotifyPropertyChangedadd_PropertyChanged => ICommand
