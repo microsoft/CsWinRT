@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Collections.Frozen;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Security;
