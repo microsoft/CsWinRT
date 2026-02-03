@@ -31,6 +31,7 @@ namespace ABI.System;
 //     All native objects reporting their runtime class name as 'Windows.Foundation.IReference`1<Windows.Foundation.EventHandler<Object>>'
 //     will be marshalled as 'EventHandler<Object>'. We only special case marshalling to managed from an exact pointer to a native
 //     delegate instance. This is mostly just needed to allow implementing 'ICommand.CanExecuteChanged' over native objects.
+//   - We also don't use '[WindowsRuntimeMappedMetadata]', so when marshalling 'typeof(EventHandler)', it will be a custom type.
 //
 // This is also why some ABI methods for 'EventHandler' are either missing or not implemented.
 
@@ -38,7 +39,6 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.EventHandler"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventhandler-1"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.EventHandler<Object>>")]
 [EventHandlerComWrappersMarshaller]
 file static class EventHandler;
