@@ -524,7 +524,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
     /// <summary>
     /// Retrieves the marshaller attribute associated with a specified custom-mapped type.
-    /// interop.
     /// </summary>
     /// <param name="type">The custom-mapped type to retrieve the marshaller attribute for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -552,7 +551,6 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
     /// <summary>
     /// Retrieves the "Methods" type associated with a specified custom-mapped type.
-    /// interop.
     /// </summary>
     /// <param name="type">The custom-mapped type to retrieve the "Methods" type for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
