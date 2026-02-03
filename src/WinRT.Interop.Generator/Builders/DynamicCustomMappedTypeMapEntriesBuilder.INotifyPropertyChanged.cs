@@ -50,7 +50,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             module.TopLevelTypes.Add(interfaceImplType);
 
             // Create the 'INotifyPropertyChanged.PropertyChanged' add method
-            MethodDefinition add_ICommandCanExecuteChangedMethod = new(
+            MethodDefinition add_INotifyPropertyChangedPropertyChangedMethod = new(
                 name: "System.ComponentModel.INotifyPropertyChanged.add_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
@@ -69,10 +69,10 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.INotifyPropertyChangedadd_PropertyChanged.Import(module),
-                method: add_ICommandCanExecuteChangedMethod);
+                method: add_INotifyPropertyChangedPropertyChangedMethod);
 
             // Create the 'INotifyPropertyChanged.PropertyChanged' remove method
-            MethodDefinition remove_ICommandCanExecuteChangedMethod = new(
+            MethodDefinition remove_INotifyPropertyChangedPropertyChangedMethod = new(
                 name: "System.ComponentModel.INotifyPropertyChanged.remove_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
@@ -91,19 +91,19 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.INotifyPropertyChangedremove_PropertyChanged.Import(module),
-                method: remove_ICommandCanExecuteChangedMethod);
+                method: remove_INotifyPropertyChangedPropertyChangedMethod);
 
             // Create the 'INotifyPropertyChanged.PropertyChanged' event
-            EventDefinition observableMap2MapChangedProperty = new(
+            EventDefinition propertyChangedProperty = new(
                 name: "System.ComponentModel.INotifyPropertyChanged.PropertyChanged",
                 attributes: default,
                 eventType: interopReferences.PropertyChangedEventHandler.Import(module))
             {
-                AddMethod = add_ICommandCanExecuteChangedMethod,
-                RemoveMethod = remove_ICommandCanExecuteChangedMethod
+                AddMethod = add_INotifyPropertyChangedPropertyChangedMethod,
+                RemoveMethod = remove_INotifyPropertyChangedPropertyChangedMethod
             };
 
-            interfaceImplType.Events.Add(observableMap2MapChangedProperty);
+            interfaceImplType.Events.Add(propertyChangedProperty);
         }
     }
 }
