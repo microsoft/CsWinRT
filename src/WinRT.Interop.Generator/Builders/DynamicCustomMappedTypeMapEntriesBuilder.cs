@@ -56,6 +56,24 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
+        // TODO: also emit IDIC interface
+        InterfaceType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        // TODO: also emit IDIC interface
+        InterfaceType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
         ClassType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
