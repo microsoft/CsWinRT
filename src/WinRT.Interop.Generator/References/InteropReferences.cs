@@ -2048,6 +2048,16 @@ internal sealed class InteropReferences
                 CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.CreateObject</c>.
+    /// </summary>
+    public MemberReference IWindowsRuntimeUnsealedObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeUnsealedObjectComWrappersCallback
+        .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Object,
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback.CreateArray</c>.
     /// </summary>
     public MemberReference IWindowsRuntimeArrayComWrappersCallbackCreateArray => field ??= IWindowsRuntimeArrayComWrappersCallback
