@@ -110,7 +110,7 @@ The API surface of projected runtime classes will be significantly streamlined c
 - **`IWinRTObject` and all related infrastructure in each projected runtime class will be removed.** All the shared functionality will be provided by the base `WindowsRuntimeObject` class, which will also handle `IDynamicInterfaceCastable` caching. This also reduces the object size for each runtime class type, as well as improving binary size.
 - **`As<I>()` will be removed.** This functionality is available via `WindowsRuntimeActivationFactory`.
 - **`*.FromAbi(nint)` will be removed.** Native objects can be marshalled to managed objects via `WindowsRuntimeMarshal.ConvertToManaged`.
-- **`*.FromAbi(nint)` will be removed.** Managed objects can be marshalled to native objects via `WindowsRuntimeMarshal.ConvertToUnmanaged`. It will be up to callers to perform any additional `QueryInterface` calls that may be needed.
+- **`*.FromManaged(object)` will be removed.** Managed objects can be marshalled to native objects via `WindowsRuntimeMarshal.ConvertToUnmanaged`. It will be up to callers to perform any additional `QueryInterface` calls that may be needed.
 - **All `IEquatable<T>` support will be removed.** Projected runtime class instances will compare via reference equality, like any other object. Equality support for the underlying native object will be provided as opt-in via the `WindowsRuntimeMarshal` type.
 
 ## Adoption plan
