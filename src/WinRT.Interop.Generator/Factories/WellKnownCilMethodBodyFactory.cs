@@ -61,7 +61,7 @@ internal static class WellKnownCilMethodBodyFactory
         }
 
         // Call the forwarded method and return
-        body.Instructions.Add(new CilInstruction(Call, forwardedMethod));
+        body.Instructions.Add(new CilInstruction(Call, forwardedMethod.Import(module)));
         body.Instructions.Add(new CilInstruction(Ret));
 
         return body;
@@ -129,7 +129,7 @@ internal static class WellKnownCilMethodBodyFactory
                 // <FORWARDED_METHOD1>(interfaceReference, <ARGS>);
                 { Ldloc_1 },
                 { nop_type1Args },
-                { Call, forwardedMethod1 },
+                { Call, forwardedMethod1.Import(module) },
                 { Ret },
 
                 // interfaceReference = thisObject.GetObjectReferenceForInterface(typeof(<INTERFACE_TYPE2>));
@@ -143,7 +143,7 @@ internal static class WellKnownCilMethodBodyFactory
                 // <FORWARDED_METHOD2>(interfaceReference, <ARGS>);
                 { Ldloc_1 },
                 { nop_type2Args },
-                { Call, forwardedMethod2 },
+                { Call, forwardedMethod2.Import(module) },
                 { Ret }
             }
         };
@@ -219,7 +219,7 @@ internal static class WellKnownCilMethodBodyFactory
                 // <EVENT_METHOD>(thisObject, thisReference).<ACCESSOR_METHOD>(value);
                 { Ldloc_0 },
                 { Ldloc_1 },
-                { Call, eventMethod },
+                { Call, eventMethod.Import(module) },
                 { Ldarg_1 },
                 { Callvirt, accessorMethod.Import(module) },
                 { Ret }
