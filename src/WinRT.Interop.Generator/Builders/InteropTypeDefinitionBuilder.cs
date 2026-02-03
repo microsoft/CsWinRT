@@ -722,7 +722,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for (if <see langword="null"/>, the attribute will be omitted).</param>
-    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="proxyType">The resulting proxy type.</param>
@@ -733,7 +733,7 @@ internal static partial class InteropTypeDefinitionBuilder
         string? runtimeClassName,
         string? metadataTypeName,
         TypeSignature? mappedType,
-        TypeDefinition comWrappersMarshallerAttributeType,
+        TypeDefinition? comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition proxyType)
@@ -788,8 +788,11 @@ internal static partial class InteropTypeDefinitionBuilder
                     value: mappedType.Import(module)))));
         }
 
-        // Add the generated marshaller attribute
-        proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+        // Add the generated marshaller attribute, if available
+        if (comWrappersMarshallerAttributeType is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+        }
     }
 
     /// <summary>

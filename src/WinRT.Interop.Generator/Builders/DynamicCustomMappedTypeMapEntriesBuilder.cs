@@ -38,7 +38,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: interopReferences.IEnumerable.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
 
         InterfaceType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
@@ -46,7 +47,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: interopReferences.IEnumerator.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
 
         InterfaceType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
@@ -54,7 +56,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: interopReferences.IList.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
 
         // TODO: also emit IDIC interface
         InterfaceType(
@@ -63,7 +66,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: false);
 
         // TODO: also emit IDIC interface
         InterfaceType(
@@ -72,7 +76,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             trimTarget: interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: false);
 
         ClassType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
@@ -121,15 +126,24 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="useComWrappersMarshallerAttribute">Whether to also use the <c>[WindowsRuntimeComWrappersMarshaller]</c> attribute for <paramref name="trimTarget"/>.</param>
     private static void InterfaceType(
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
         InteropReferences interopReferences,
         ModuleDefinition module,
-        bool useWindowsUIXamlProjections)
+        bool useWindowsUIXamlProjections,
+        bool useComWrappersMarshallerAttribute)
     {
         string metadata = useWindowsUIXamlProjections ? windowsUIXamlMetadata : microsoftUIXamlMetadata;
+
+        // Only lookup the '[WindowsRuntimeComWrappersMarshaller]' attribute if requested. For instance, types such as 'IEnumerable'
+        // will need one, so they can plug in specialized RCWs to better handle all the various scenarios where the interface is
+        // used. Other interfaces, such as 'INotifyPropertyChanged', don't need that, and they will just rely on dynamic casts.
+        TypeDefinition? comWrappersMarshallerAttribute = useComWrappersMarshallerAttribute
+            ? GetMarshallerAttributeType(trimTarget, interopReferences, module)
+            : null;
 
         // Define the proxy type for the interface type. Because the metadata type name depends on the XAML configuration
         // that is used, we can't define this proxy type in advance even if the interface type itself is not generic.
@@ -140,7 +154,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            comWrappersMarshallerAttributeType: comWrappersMarshallerAttribute,
             interopReferences: interopReferences,
             module: module,
             proxyType: out TypeDefinition proxyType);
