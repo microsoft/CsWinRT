@@ -654,6 +654,10 @@ namespace UnitTest
         [InlineData(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
         // Nullable types
         [InlineData(typeof(Nullable<long>), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
+        [InlineData(typeof(Nullable<Point>), "Windows.Foundation.IReference`1<Windows.Foundation.Point>", "Metadata")]
+        [InlineData(typeof(Nullable<Vector3>), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>", "Metadata")]
+        [InlineData(typeof(Nullable<Guid>), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
+        [InlineData<IList<Nullable<Int32>>>(typeof(IList<Nullable<Int32>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Interfaces
         [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
         [InlineData<IList<TestComponentCSharp.EventWithGuid>>(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
