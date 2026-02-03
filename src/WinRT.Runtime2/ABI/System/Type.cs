@@ -101,6 +101,11 @@ public static unsafe class TypeMarshaller
     {
         ArgumentNullException.ThrowIfNull(value);
 
+        if (!WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
+        {
+            TypeExceptions.ThrowNotSupportedExceptionForMarshallingDisabled();
+        }
+
         ManagedTypeReference typeReference = TypeNameCache.TypeToTypeNameMap.GetOrAdd(value, UncachedTypeMarshaller.ToManagedTypeReference);
 
         reference = new TypeReference { Name = typeReference.Name, Kind = typeReference.Kind };
@@ -113,6 +118,11 @@ public static unsafe class TypeMarshaller
     /// <returns>The managed <see cref="global::System.Type"/> value</returns>
     public static global::System.Type? ConvertToManaged(Type value)
     {
+        if (!WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
+        {
+            TypeExceptions.ThrowNotSupportedExceptionForMarshallingDisabled();
+        }
+
         ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
 
         // Get the alternate lookup from the cache first and use it to try to retrieve a cached 'Type'
@@ -568,6 +578,19 @@ internal static unsafe class TypeExceptions
             $"If the application is running with trimming enabled (or on Native AOT), it's possible the issue is caused by trimming causing all metadata for the type " +
             $"to be removed. To work around the issue, consider using the '[DynamicDependency]' attribute over the method causing this exception to eventually be thrown. " +
             $"You can see the API docs for this attribute here: https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.dynamicdependencyattribute.");
+    }
+
+    /// <summary>
+    /// Throws a <see cref="NotSupportedException"/> if marshalling support is disabled.
+    /// </summary>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    public static void ThrowNotSupportedExceptionForMarshallingDisabled()
+    {
+        throw new NotSupportedException(
+            $"Support for marshalling 'System.Type' values is disabled (make sure that the 'CsWinRTEnableXamlTypeMarshalling' property is not set to 'false'). " +
+            $"In this configuration, marshalling a 'System.Type' value directly to native code or to managed will always fail. Additionally, marshalling a " +
+            $"boxed 'System.Type' object as an untyped parameter for a Windows Runtime API will result in the CCW using the same layot as for 'object'.");
     }
 }
 

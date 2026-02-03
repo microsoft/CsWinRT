@@ -471,7 +471,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // That is, when e.g. doing 'typeof(Foo)', the actual object is some 'RuntimeType' object itself (non public).
         if (instance is Type)
         {
-            return GetInfo(typeof(Type));
+            // Only enable this marshalling if the feature switch is enabled, to minimize size. Supporting 'Type'
+            // marshalling actually roots a significant amount of additional code, such as the metadata type map.
+            if (WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
+            {
+                return WindowsRuntimeMarshallingInfo.GetInfo(typeof(Type));
+            }
         }
 
         // For all other cases, we fallback to the marshalling info for 'object'. This is the
