@@ -565,12 +565,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         ModuleDefinition module)
     {
         // Retrieve the "Methods" type from 'WinRT.Runtime.dll', which always follows this naming convention
-        TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
+        TypeReference methodsTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
             ns: InteropUtf8NameFactory.TypeNamespace(type),
             name: (Utf8String)$"{type.Name}Methods");
 
         // The "Methods" type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition methodsType)
+        if (methodsTypeReference.Resolve(module) is not TypeDefinition methodsType)
         {
             throw WellKnownInteropExceptions.CustomMappedTypeMethodsTypeResolveError(type);
         }
