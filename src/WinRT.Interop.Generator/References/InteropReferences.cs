@@ -1524,6 +1524,22 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.Object]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s adder.
+    /// </summary>
+    public MemberReference INotifyPropertyChangedadd_PropertyChanged => ICommand
+        .CreateMemberReference("add_PropertyChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s remover.
+    /// </summary>
+    public MemberReference INotifyPropertyChangedremove_PropertyChanged => ICommand
+        .CreateMemberReference("remove_PropertyChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.Current"/>.
     /// </summary>
     public MemberReference IEnumeratorget_Current => field ??= IEnumerator

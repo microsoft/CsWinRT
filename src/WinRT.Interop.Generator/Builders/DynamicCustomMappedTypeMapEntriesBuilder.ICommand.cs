@@ -94,7 +94,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 method: remove_ICommandCanExecuteChangedMethod);
 
             // Create the 'ICommand.CanExecuteChanged' event
-            EventDefinition observableMap2MapChangedProperty = new(
+            EventDefinition canExecuteChangedProperty = new(
                 name: "System.Windows.Input.ICommand.CanExecuteChanged",
                 attributes: default,
                 eventType: interopReferences.EventHandler.Import(module))
@@ -103,7 +103,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 RemoveMethod = remove_ICommandCanExecuteChangedMethod
             };
 
-            interfaceImplType.Events.Add(observableMap2MapChangedProperty);
+            interfaceImplType.Events.Add(canExecuteChangedProperty);
 
             // Define the 'ICommand.CanExecute' method
             MethodDefinition canExecuteMethod = new(

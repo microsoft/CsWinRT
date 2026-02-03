@@ -64,15 +64,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
-        // TODO: also emit IDIC interface
-        InterfaceType(
-            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
-            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
-            trimTarget: interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
+        INotifyPropertyChangedInterfaceType(
             interopReferences: interopReferences,
             module: module,
-            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-            useComWrappersMarshallerAttribute: false);
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         // TODO: also emit IDIC interface
         InterfaceType(
@@ -221,6 +216,59 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             interfaceImplType: out TypeDefinition interfaceImplType);
 
         // Same logic as other interface types above, but we also need a '[DynamicInterfaceCastableImplementation]' type and entry
+        InteropTypeDefinitionBuilder.TypeMapAttributes(
+            runtimeClassName: null,
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
+            externalTypeMapTargetType: proxyType.ToTypeSignature(),
+            externalTypeMapTrimTargetType: trimTarget,
+            marshallingTypeMapSourceType: null,
+            marshallingTypeMapProxyType: null,
+            metadataTypeMapSourceType: trimTarget,
+            metadataTypeMapProxyType: proxyType.ToTypeSignature(),
+            interfaceTypeMapSourceType: trimTarget,
+            interfaceTypeMapProxyType: interfaceImplType.ToTypeSignature(),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for the <see cref="System.ComponentModel.INotifyPropertyChanged"/> interface type.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    private static void INotifyPropertyChangedInterfaceType(
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
+    {
+        const string windowsUIXamlMetadata = "Windows.Foundation.UniversalApiContract";
+        const string microsoftUIXamlMetadata = "Microsoft.UI.Xaml.WinUIContract";
+
+        TypeSignature trimTarget = interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature();
+        string metadata = useWindowsUIXamlProjections ? windowsUIXamlMetadata : microsoftUIXamlMetadata;
+
+        // Define the proxy type for the 'INotifyPropertyChanged' interface type
+        InteropTypeDefinitionBuilder.Proxy(
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
+            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            mappedMetadata: metadata,
+            runtimeClassName: null,
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
+            mappedType: trimTarget,
+            comWrappersMarshallerAttributeType: null,
+            interopReferences: interopReferences,
+            module: module,
+            proxyType: out TypeDefinition proxyType);
+
+        // Define the 'InterfaceImpl' type for the 'INotifyPropertyChanged' interface type
+        INotifyPropertyChanged.InterfaceImpl(
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interfaceImplType: out TypeDefinition interfaceImplType);
+
+        // Same logic as other interface types above with '[DynamicInterfaceCastableImplementation]'
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
