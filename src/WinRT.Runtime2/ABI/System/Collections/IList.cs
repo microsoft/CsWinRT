@@ -89,6 +89,17 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeList(valueReference);
+    }
 }
 
 /// <summary>
