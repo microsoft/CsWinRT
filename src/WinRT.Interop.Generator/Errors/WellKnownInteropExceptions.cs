@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.InteropGenerator.Fixups;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
@@ -166,7 +167,7 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes
+    /// Failed to define the <c>[IgnoresAccessChecksTo]</c> attributes.
     /// </summary>
     public static WellKnownInteropException DefineIgnoresAccessChecksToAttributesError(Exception exception)
     {
@@ -498,7 +499,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteMissingBodyError(MethodDefinition method)
     {
-        return Exception(57, $"Generated interop method '{method}' is missing an IL method body.");
+        return Exception(57, $"Generated interop method '{method}' is missing an IL method body, two-pass rewrite cannot be performed.");
     }
 
     /// <summary>
@@ -647,6 +648,46 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference attributeType, string nativeType)
     {
         return Exception(75, $"Failed to resolve the 'ComWrappersMarshallerAttribute' type '{attributeType}' for a non-projected Windows Runtime type '{nativeType}'.");
+    }
+
+    /// <summary>
+    /// Failed to define metadata assembly attributes.
+    /// </summary>
+    public static WellKnownInteropException EmitMetadataAssemblyAttributesError(Exception exception)
+    {
+        return Exception(74, "Failed to emit the metadata assembly attributes for the interop assembly.", exception);
+    }
+
+    /// <summary>
+    /// A generated interop method is missing an IL method body.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupMissingBodyError(MethodDefinition method)
+    {
+        return Exception(75, $"Generated interop method '{method}' is missing an IL method body, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// A generated interop method has invalid exception handler labels.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupInvalidExceptionHandlerLabels(MethodDefinition method)
+    {
+        return Exception(76, $"Generated interop method '{method}' has invalid exception handler labels, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// A generated interop method has invalid branch instruction labels.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupInvalidBranchInstructionLabels(MethodDefinition method)
+    {
+        return Exception(77, $"Generated interop method '{method}' has invalid branch instruction labels, fixups cannot be applied.");
+    }
+
+    /// <summary>
+    /// Failed to apply a fixup to a marshalling method.
+    /// </summary>
+    public static WellKnownInteropException MethodFixupError(InteropMethodFixup fixup, MethodDefinition method, Exception exception)
+    {
+        return Exception(78, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
     }
 
     /// <summary>

@@ -82,6 +82,20 @@ internal static class InteropCustomAttributeFactory
     }
 
     /// <summary>
+    /// Creates a new custom attribute value for <see cref="DisableRuntimeMarshalling"/> (and imports all metadata elements for it).
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
+    public static CustomAttribute DisableRuntimeMarshalling(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        // Create the following attribute:
+        //
+        // [DisableRuntimeMarshalling]
+        return new(interopReferences.DisableRuntimeMarshallingAttribute_ctor.Import(module), new CustomAttributeSignature());
+    }
+
+    /// <summary>
     /// Creates a new custom attribute value for <see cref="AttributeUsageAttribute"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="attributeTargets">The <see cref="AttributeTargets"/> value to use.</param>

@@ -10,6 +10,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Fixups;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -154,6 +156,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Apply fixups to all generated interop methods
+        FixupMethodDefinitions(args, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for user-defined array types
         DefineUserDefinedTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
@@ -171,6 +178,10 @@ internal partial class InteropGenerator
 
         // Add all '[IgnoresAccessChecksTo]' attributes
         DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        EmitMetadataAssemblyAttributes(interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2332,6 +2343,41 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Applies fixups to IL method bodies for marshalling stubs as part of two-pass IL generation.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="module">The interop module being built.</param>
+    private static void FixupMethodDefinitions(InteropGeneratorArgs args, ModuleDefinition module)
+    {
+        ReadOnlySpan<InteropMethodFixup> fixups =
+        [
+            InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance,
+            InteropMethodFixup.RemoveUnnecessaryTryStartNop.Instance
+        ];
+
+        // Applies all available fixups in order, to all methods across all generated types in the module
+        foreach (TypeDefinition type in module.GetAllTypes())
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                foreach (InteropMethodFixup fixup in fixups)
+                {
+                    try
+                    {
+                        fixup.Apply(method);
+                    }
+                    catch (Exception e)
+                    {
+                        WellKnownInteropExceptions.MethodFixupError(fixup, method, e).ThrowOrAttach(e);
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the interop types for user-defined types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -2537,6 +2583,23 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DefineIgnoresAccessChecksToAttributesError(e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Emits assembly attributes for the interop assembly being generated.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        try
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.EmitMetadataAssemblyAttributesError(e).ThrowOrAttach(e);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -2210,25 +2210,50 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
-    /// <summary>The IID for <c>IReferenceOfCollectionChange</c> (25BCAF91-880D-537D-82FC-9BBF0CACCB8B).</summary>
-    public static ref readonly Guid IID_IReferenceOfCollectionChange
+    /// <summary>The IID for <c>IReferenceOfPropertyType</c> (ECEBDE54-FAC0-5AEB-9BA9-9E1FE17E31D5).</summary>
+    public static ref readonly Guid IID_IReferenceOfPropertyType
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
             ReadOnlySpan<byte> data =
             [
-                0x91, 0xAF, 0xBC, 0x25,
-                0x0D, 0x88,
-                0x7D, 0x53,
-                0x82,
-                0xFC,
+                0x54, 0xDE, 0xEB, 0xEC,
+                0xC0, 0xFA,
+                0xEB, 0x5A,
                 0x9B,
-                0xBF,
-                0x0C,
-                0xAC,
-                0xCB,
-                0x8B
+                0xA9,
+                0x9E,
+                0x1F,
+                0xE1,
+                0x7E,
+                0x31,
+                0xD5
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfAsyncStatus</c> (A4B74936-2947-5FE8-88D5-51CD35050E71).</summary>
+    public static ref readonly Guid IID_IReferenceOfAsyncStatus
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x36, 0x49, 0xB7, 0xA4,
+                0x47, 0x29,
+                0xE8, 0x5F,
+                0x88,
+                0xD5,
+                0x51,
+                0xCD,
+                0x35,
+                0x05,
+                0x0E,
+                0x71
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
@@ -2254,6 +2279,31 @@ internal static class WellKnownWindowsInterfaceIIDs
                 0x60,
                 0x5B,
                 0x8F
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfCollectionChange</c> (25BCAF91-880D-537D-82FC-9BBF0CACCB8B).</summary>
+    public static ref readonly Guid IID_IReferenceOfCollectionChange
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x91, 0xAF, 0xBC, 0x25,
+                0x0D, 0x88,
+                0x7D, 0x53,
+                0x82,
+                0xFC,
+                0x9B,
+                0xBF,
+                0x0C,
+                0xAC,
+                0xCB,
+                0x8B
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
