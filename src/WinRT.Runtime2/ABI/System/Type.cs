@@ -101,13 +101,200 @@ public static unsafe class TypeMarshaller
     {
         ArgumentNullException.ThrowIfNull(value);
 
+        ManagedTypeReference typeReference = TypeNameCache.TypeToTypeNameMap.GetOrAdd(value, UncachedTypeMarshaller.ToManagedTypeReference);
+
+        reference = new TypeReference { Name = typeReference.Name, Kind = typeReference.Kind };
+    }
+
+    /// <summary>
+    /// Converts an unmanaged <see cref="Type"/> to a managed <see cref="global::System.Type"/>.
+    /// </summary>
+    /// <param name="value">The unmanaged <see cref="Type"/> value.</param>
+    /// <returns>The managed <see cref="global::System.Type"/> value</returns>
+    public static global::System.Type? ConvertToManaged(Type value)
+    {
+        ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
+
+        // Get the alternate lookup from the cache first and use it to try to retrieve a cached 'Type'
+        // instance. This allows us to avoid materializing the 'string' if we have a cache hit here.
+        if (TypeNameCache.TypeNameToTypeMap.GetAlternateLookup<TransientTypeReference>().TryGetValue(
+            key: new TransientTypeReference(typeName, value.Kind),
+            value: out global::System.Type? result))
+        {
+            return result;
+        }
+
+        // We didn't get a cached value, so we just manually marshal the value here. Note that we
+        // can't just use a 'GetOrAdd' overload here like above, because there isn't one available
+        // that supports alternate lookups. But we don't want to give up on avoiding this allocation.
+        result = UncachedTypeMarshaller.FromTransientTypeReference(new TransientTypeReference(typeName, value.Kind));
+
+        // Try to add the value to the cache. If another thread already added it, we just ignore the result.
+        // Marshalled 'Type' instances are guaranteed to have a 1:1 mapping, so we can still use the local
+        // value that we just produced, instead of having to do another lookup to get it from the cache.
+        _ = TypeNameCache.TypeNameToTypeMap.TryAdd(new ManagedTypeReference(typeName.ToString(), value.Kind), result);
+
+        return result;
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Type? value)
+    {
+        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType));
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Type? UnboxToManaged(void* value)
+    {
+        Type? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Type>(value);
+
+        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+    }
+
+    /// <summary>
+    /// Disposes resources associated with an unmanaged <see cref="Type"/> value.
+    /// </summary>
+    /// <param name="value">The unmanaged <see cref="Type"/> value to dispose.</param>
+    public static void Dispose(Type value)
+    {
+        HStringMarshaller.Free(value.Name);
+    }
+}
+
+/// <summary>
+/// Represents a reference to a <see cref="Type"/> value, for fast marshalling to native.
+/// </summary>
+file readonly struct ManagedTypeReference
+{
+    /// <inheritdoc cref="Type.Name"/>
+    public readonly string Name;
+
+    /// <inheritdoc cref = "Type.Kind" />
+    public readonly TypeKind Kind;
+
+    /// <summary>
+    /// Creates a new <see cref="ManagedTypeReference"/> value with the specified parameters.
+    /// </summary>
+    /// <param name="name"><inheritdoc cref="Type.Name" path="/summary/node()"/></param>
+    /// <param name="kind"><inheritdoc cref = "Type.Kind" path="/summary/node()"/></param>
+    public ManagedTypeReference(string name, TypeKind kind)
+    {
+        Name = name;
+        Kind = kind;
+    }
+}
+
+/// <summary>
+/// Represents a transient reference to a <see cref="Type"/> value, to avoid allocations.
+/// </summary>
+file readonly ref struct TransientTypeReference
+{
+    /// <inheritdoc cref="Type.Name"/>
+    public readonly ReadOnlySpan<char> Name;
+
+    /// <inheritdoc cref = "Type.Kind" />
+    public readonly TypeKind Kind;
+
+    /// <summary>
+    /// Creates a new <see cref="TransientTypeReference"/> value with the specified parameters.
+    /// </summary>
+    /// <param name="name"><inheritdoc cref="Type.Name" path="/summary/node()"/></param>
+    /// <param name="kind"><inheritdoc cref = "Type.Kind" path="/summary/node()"/></param>
+    public TransientTypeReference(ReadOnlySpan<char> name, TypeKind kind)
+    {
+        Name = name;
+        Kind = kind;
+    }
+}
+
+/// <summary>
+/// A custom <see cref="IEqualityComparer{T}"/> for <see cref="ManagedTypeReference"/> to support zero-allocation lookups.
+/// </summary>
+file sealed class ManagedTypeReferenceEqualityComparer :
+    IEqualityComparer<ManagedTypeReference>,
+    IAlternateEqualityComparer<TransientTypeReference, ManagedTypeReference>
+{
+    /// <summary>
+    /// The singleton <see cref="ManagedTypeReferenceEqualityComparer"/> instance.
+    /// </summary>
+    public static readonly ManagedTypeReferenceEqualityComparer Instance = new();
+
+    /// <inheritdoc/>
+    public ManagedTypeReference Create(TransientTypeReference alternate)
+    {
+        return new(alternate.Name.ToString(), alternate.Kind);
+    }
+
+    /// <inheritdoc/>
+    public bool Equals(ManagedTypeReference x, ManagedTypeReference y)
+    {
+        return x.Kind == y.Kind && string.Equals(x.Name, y.Name, StringComparison.Ordinal);
+    }
+
+    /// <inheritdoc/>
+    public bool Equals(TransientTypeReference alternate, ManagedTypeReference other)
+    {
+        return alternate.Kind == other.Kind && alternate.Name.SequenceEqual(other.Name);
+    }
+
+    /// <inheritdoc/>
+    public int GetHashCode(ManagedTypeReference obj)
+    {
+        return HashCode.Combine(
+            value1: string.GetHashCode(obj.Name),
+            value2: obj.Kind);
+    }
+
+    /// <inheritdoc/>
+    public int GetHashCode(TransientTypeReference alternate)
+    {
+        return HashCode.Combine(
+            value1: string.GetHashCode(alternate.Name),
+            value2: alternate.Kind);
+    }
+}
+
+/// <summary>
+/// Cached maps to speedup <see cref="global::System.Type"/> marshalling.
+/// </summary>
+file static class TypeNameCache
+{
+    /// <summary>
+    /// The cache of type names to <see cref="global::System.Type"/> instances.
+    /// </summary>
+    /// <remarks>
+    /// This cache is mostly only used by XAML, meaning it should pretty much always be accessed from the UI thread.
+    /// Because of this, we can set the concurrency level to just '1', to reduce the memory use from this dictionary.
+    /// </remarks>
+    public static readonly ConcurrentDictionary<ManagedTypeReference, global::System.Type?> TypeNameToTypeMap = new(
+        concurrencyLevel: 1,
+        capacity: 32,
+        comparer: ManagedTypeReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// The cache of <see cref="global::System.Type"/> instances to type name values.
+    /// </summary>
+    /// <remarks><inheritdoc cref="TypeNameToTypeMap" path="/remarks/node()"/></remarks>
+    public static readonly ConcurrentDictionary<global::System.Type, ManagedTypeReference> TypeToTypeNameMap = new(concurrencyLevel: 1, capacity: 32);
+}
+
+/// <summary>
+/// Marshaller for <see cref="global::System.Type"/> using no cache.
+/// </summary>
+file static class UncachedTypeMarshaller
+{
+    /// <summary>
+    /// Converts a <see cref="global::System.Type"/> to a <see cref="ManagedTypeReference"/> value.
+    /// </summary>
+    /// <param name="value">The <see cref="global::System.Type"/> value.</param>
+    /// <returns>The <see cref="ManagedTypeReference"/> value.</returns>
+    public static ManagedTypeReference ToManagedTypeReference(global::System.Type value)
+    {
         // Special case for 'NoMetadataTypeInfo' instances, which can only be obtained
         // from previous calls to 'ConvertToManaged' for types that had been trimmed.
         if (value is NoMetadataTypeInfo noMetadataTypeInfo)
         {
-            reference = new TypeReference { Name = noMetadataTypeInfo.FullName, Kind = TypeKind.Metadata };
-
-            return;
+            return new(noMetadataTypeInfo.FullName, TypeKind.Metadata);
         }
 
         // We need special handling for 'Nullable<T>' values. If we have one, we want to use the underlying type
@@ -127,9 +314,7 @@ public static unsafe class TypeMarshaller
             // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too.
             if (!value.IsGenericType && value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
             {
-                reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Metadata };
-
-                return;
+                return new(value.FullName!, TypeKind.Metadata);
             }
 
             // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
@@ -137,26 +322,20 @@ public static unsafe class TypeMarshaller
             // being projected types from there. So we handle them here first to get the right metadata type name.
             if (WindowsRuntimeMetadataInfo.TryGetInfo(value, out WindowsRuntimeMetadataInfo? metadataInfo))
             {
-                reference = new TypeReference { Name = metadataInfo.GetMetadataTypeName(), Kind = TypeKind.Metadata };
-
-                return;
+                return new(metadataInfo.GetMetadataTypeName(), TypeKind.Metadata);
             }
         }
 
         // Special case 'Exception' types, since we also need to handle all derived types (e.g. user-defined)
         if (value.IsAssignableTo(typeof(global::System.Exception)))
         {
-            reference = new TypeReference { Name = "Windows.Foundation.HResult", Kind = TypeKind.Metadata };
-
-            return;
+            return new("Windows.Foundation.HResult", TypeKind.Metadata);
         }
 
         // Special case 'Type' as well, for the same reason (e.g. 'typeof(Foo)' would return a 'RuntimeType' instance)
         if (value.IsAssignableTo(typeof(global::System.Type)))
         {
-            reference = new TypeReference { Name = "Windows.UI.Xaml.Interop.TypeName", Kind = TypeKind.Metadata };
-
-            return;
+            return new("Windows.UI.Xaml.Interop.TypeName", TypeKind.Metadata);
         }
 
         global::System.Type typeOrUnderlyingType = nullableUnderlyingType ?? value;
@@ -181,9 +360,7 @@ public static unsafe class TypeMarshaller
                 // This will also handle generic delegate types, which will also use '[WindowsRuntimeMetadataTypeName]'.
                 if (marshallingInfo.TryGetMetadataTypeName(out string? metadataTypeName))
                 {
-                    reference = new TypeReference { Name = metadataTypeName, Kind = kind };
-
-                    return;
+                    return new(metadataTypeName, kind);
                 }
 
                 // If the type is 'KeyValuePair<,>', we are guaranteed to have a runtime class name on the proxy type.
@@ -194,9 +371,7 @@ public static unsafe class TypeMarshaller
                     typeOrUnderlyingType.IsGenericType &&
                     typeOrUnderlyingType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
-                    reference = new TypeReference { Name = marshallingInfo.GetRuntimeClassName(), Kind = kind };
-
-                    return;
+                    return new(marshallingInfo.GetRuntimeClassName(), kind);
                 }
 
                 // If we don't have a metadata type name, check if we have a value type or a delegate type.
@@ -209,9 +384,7 @@ public static unsafe class TypeMarshaller
                 if (typeOrUnderlyingType.IsValueType ||
                     typeOrUnderlyingType.IsAssignableTo(typeof(Delegate)))
                 {
-                    reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
-
-                    return;
+                    return new(typeOrUnderlyingType.FullName!, kind);
                 }
             }
 
@@ -230,16 +403,12 @@ public static unsafe class TypeMarshaller
             // cases such as constructed 'Nullable<T>' types, which will report their boxed type name.
             if (marshallingInfo.TryGetRuntimeClassName(out string? runtimeClassName))
             {
-                reference = new TypeReference { Name = runtimeClassName, Kind = kind };
-
-                return;
+                return new(runtimeClassName, kind);
             }
 
             // Otherwise, use the type name directly. This will handle all remaining cases, such as projected
             // runtime classes and interface types. For all of those, the projected type name will be correct.
-            reference = new TypeReference { Name = typeOrUnderlyingType.FullName, Kind = kind };
-
-            return;
+            return new(typeOrUnderlyingType.FullName!, kind);
         }
 
         // For primitive types, we always report 'TypeKind.Primitive'. This means that some
@@ -250,26 +419,24 @@ public static unsafe class TypeMarshaller
         // custom types, which they would be otherwise, since they don't have marshalling info.
         if (value.IsPrimitive)
         {
-            reference = new TypeReference { Name = value.FullName, Kind = TypeKind.Primitive };
-
-            return;
+            return new(value.FullName!, TypeKind.Primitive);
         }
 
     CustomType:
 
         // All other cases are treated as custom types (e.g. user-defined types)
-        reference = new TypeReference { Name = value.AssemblyQualifiedName, Kind = TypeKind.Custom };
+        return new(value.AssemblyQualifiedName!, TypeKind.Custom);
     }
 
     /// <summary>
-    /// Converts an unmanaged <see cref="Type"/> to a managed <see cref="global::System.Type"/>.
+    /// Converts a <see cref="TransientTypeReference"/> to a managed <see cref="global::System.Type"/>.
     /// </summary>
-    /// <param name="value">The unmanaged <see cref="Type"/> value.</param>
+    /// <param name="value">The <see cref="TransientTypeReference"/> value.</param>
     /// <returns>The managed <see cref="global::System.Type"/> value</returns>
     [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]
-    public static global::System.Type? ConvertToManaged(Type value)
+    public static global::System.Type? FromTransientTypeReference(TransientTypeReference value)
     {
-        ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
+        ReadOnlySpan<char> typeName = value.Name;
 
         // Just return 'null' if we somehow received a default value
         if (typeName.IsEmpty)
@@ -333,7 +500,7 @@ public static unsafe class TypeMarshaller
                 publicType.IsAssignableTo(typeof(global::System.Exception)) ||
                 publicType.IsAssignableTo(typeof(global::System.Type)))
             {
-                return NoMetadataTypeInfo.GetOrCreate(typeName);
+                return new NoMetadataTypeInfo(typeName.ToString());
             }
 
             if (publicType.IsValueType)
@@ -375,34 +542,11 @@ public static unsafe class TypeMarshaller
         // returned implementation will just throw an exception for all unsupported operations on it.
         if (type is null && value.Kind is TypeKind.Metadata)
         {
-            return NoMetadataTypeInfo.GetOrCreate(typeName);
+            return new NoMetadataTypeInfo(typeName.ToString());
         }
 
         // Return whatever result we managed to get from the cache
         return type;
-    }
-
-    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Type? value)
-    {
-        return value is null ? default : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType));
-    }
-
-    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static global::System.Type? UnboxToManaged(void* value)
-    {
-        Type? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Type>(value);
-
-        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
-    }
-
-    /// <summary>
-    /// Disposes resources associated with an unmanaged <see cref="Type"/> value.
-    /// </summary>
-    /// <param name="value">The unmanaged <see cref="Type"/> value to dispose.</param>
-    public static void Dispose(Type value)
-    {
-        HStringMarshaller.Free(value.Name);
     }
 }
 
@@ -592,18 +736,6 @@ file static unsafe class TypeReferenceImpl
 file sealed class NoMetadataTypeInfo : TypeInfo
 {
     /// <summary>
-    /// The cache of <see cref="NoMetadataTypeInfo"/> instances.
-    /// </summary>
-    /// <remarks>
-    /// This cache is mostly only used by XAML, meaning it should pretty much always be accessed from the UI thread.
-    /// Because of this, we can set the concurrency level to just '1', to reduce the memory use from this dictionary.
-    /// </remarks>
-    private static readonly ConcurrentDictionary<string, NoMetadataTypeInfo> NoMetadataTypeCache = new(
-        concurrencyLevel: 1,
-        capacity: 32,
-        comparer: StringComparer.Ordinal);
-
-    /// <summary>
     /// The full name of the type missing metadata information.
     /// </summary>
     private readonly string _fullName;
@@ -612,30 +744,9 @@ file sealed class NoMetadataTypeInfo : TypeInfo
     /// Creates a new <see cref="NoMetadataTypeInfo"/> instance with the specified parameters.
     /// </summary>
     /// <param name="fullName">The full name of the type missing metadata information.</param>
-    private NoMetadataTypeInfo(string fullName)
+    public NoMetadataTypeInfo(string fullName)
     {
         _fullName = fullName;
-    }
-
-    /// <summary>
-    /// Gets a cached <see cref="NoMetadataTypeInfo"/> instance for the specified type name.
-    /// </summary>
-    /// <param name="fullName">The full name of the type missing metadata information.</param>
-    /// <returns>The resulting <see cref="NoMetadataTypeInfo"/> instance.</returns>
-    public static NoMetadataTypeInfo GetOrCreate(ReadOnlySpan<char> fullName)
-    {
-        // Try to lookup an existing instance first, to skip allocating a 'string' if we can
-        if (NoMetadataTypeCache.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out NoMetadataTypeInfo? existing))
-        {
-            return existing;
-        }
-
-        NoMetadataTypeInfo typeInfo = new(fullName.ToString());
-
-        // The type instance was not in the cache, so try to add it now. We perform this lookup
-        // with the 'string' instance we created to initialize the new 'NoMetadataTypeInfo' value
-        // we'trying to add to the cache, so that if we win the race, we only allocate it once.
-        return NoMetadataTypeCache.GetOrAdd(typeInfo._fullName, typeInfo);
     }
 
     /// <inheritdoc/>
