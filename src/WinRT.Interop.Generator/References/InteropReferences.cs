@@ -1494,7 +1494,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s adder.
     /// </summary>
-    public MemberReference ICommandadd_CanExecuteChanged => ICommand
+    public MemberReference ICommandadd_CanExecuteChanged => field ??= ICommand
         .CreateMemberReference("add_CanExecuteChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
@@ -1502,7 +1502,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s remover.
     /// </summary>
-    public MemberReference ICommandremove_CanExecuteChanged => ICommand
+    public MemberReference ICommandremove_CanExecuteChanged => field ??= ICommand
         .CreateMemberReference("remove_CanExecuteChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
@@ -1526,7 +1526,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s adder.
     /// </summary>
-    public MemberReference INotifyCollectionChangedadd_CollectionChanged => INotifyCollectionChanged
+    public MemberReference INotifyCollectionChangedadd_CollectionChanged => field ??= INotifyCollectionChanged
         .CreateMemberReference("add_CollectionChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
@@ -1534,7 +1534,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s remover.
     /// </summary>
-    public MemberReference INotifyCollectionChangedremove_CollectionChanged => INotifyCollectionChanged
+    public MemberReference INotifyCollectionChangedremove_CollectionChanged => field ??= INotifyCollectionChanged
         .CreateMemberReference("remove_CollectionChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
@@ -1542,7 +1542,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s adder.
     /// </summary>
-    public MemberReference INotifyPropertyChangedadd_PropertyChanged => INotifyPropertyChanged
+    public MemberReference INotifyPropertyChangedadd_PropertyChanged => field ??= INotifyPropertyChanged
         .CreateMemberReference("add_PropertyChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
@@ -1550,7 +1550,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s remover.
     /// </summary>
-    public MemberReference INotifyPropertyChangedremove_PropertyChanged => INotifyPropertyChanged
+    public MemberReference INotifyPropertyChangedremove_PropertyChanged => field ??= INotifyPropertyChanged
         .CreateMemberReference("remove_PropertyChanged"u8, MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
