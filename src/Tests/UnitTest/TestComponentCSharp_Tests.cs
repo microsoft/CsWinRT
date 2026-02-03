@@ -127,7 +127,7 @@ namespace UnitTest
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
 
             TestObject.EnumsProperty = null;
-            Assert.Equal(null, TestObject.EnumsProperty);
+            Assert.Empty(TestObject.EnumsProperty);
 
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
@@ -136,7 +136,7 @@ namespace UnitTest
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
 
             TestObject.EnumStructsProperty = null;
-            Assert.Equal(null, TestObject.EnumStructsProperty);
+            Assert.Empty(TestObject.EnumStructsProperty);
 
             // Flags
             var expectedFlag = FlagValue.All;
