@@ -150,8 +150,6 @@ public static unsafe class IDisposableImpl
 /// <summary>
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
-[WindowsRuntimeClassName("Windows.Foundation.IClosable")]
 [DynamicInterfaceCastableImplementation]
 file interface IDisposableInterfaceImpl : global::System.IDisposable
 {
