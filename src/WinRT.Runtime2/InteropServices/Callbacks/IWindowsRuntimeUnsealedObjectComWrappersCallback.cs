@@ -58,6 +58,7 @@ public unsafe interface IWindowsRuntimeUnsealedObjectComWrappersCallback
     /// <remarks>
     /// This method is equivalent to <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>, but for unsealed
     /// types, and is called if <see cref="TryCreateObject"/> failed but not other more specific RCW type could be resolved.
+    /// Additionally, it can also be called if <see cref="IInspectableVftbl.GetRuntimeClassNameUnsafe"/> fails for any reason.
     /// </remarks>
     /// <seealso cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>
     static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
