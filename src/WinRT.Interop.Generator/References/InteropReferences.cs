@@ -1492,6 +1492,38 @@ internal sealed class InteropReferences
         .CreateMemberReference("Dispose"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s adder.
+    /// </summary>
+    public MemberReference ICommandadd_CanExecuteChanged => ICommand
+        .CreateMemberReference("add_CanExecuteChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s remover.
+    /// </summary>
+    public MemberReference ICommandremove_CanExecuteChanged => ICommand
+        .CreateMemberReference("remove_CanExecuteChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecute"/>.
+    /// </summary>
+    public MemberReference ICommandCanExecute => field ??= ICommand
+        .CreateMemberReference("CanExecute"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Boolean,
+            parameterTypes: [_corLibTypeFactory.Object]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.Execute"/>.
+    /// </summary>
+    public MemberReference ICommandExecute => field ??= ICommand
+        .CreateMemberReference("Execute"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Object]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.Current"/>.
     /// </summary>
     public MemberReference IEnumeratorget_Current => field ??= IEnumerator
