@@ -56,7 +56,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// This will only have non <see langword="null"/> values for types needing special marshalling. Types which are meant to
     /// be marshalled as opaque <c>IInspectable</c> objects will have no associated values, and should be handled separately.
     /// </remarks>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?> TypeToMarshallingInfoTable = [];
+    private static readonly ConcurrentDictionary<Type, WindowsRuntimeMarshallingInfo?> TypeToMarshallingInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateMarshallingInfo"/>.
