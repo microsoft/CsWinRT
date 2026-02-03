@@ -48,4 +48,17 @@ public unsafe interface IWindowsRuntimeUnsealedObjectComWrappersCallback
         ReadOnlySpan<char> runtimeClassName,
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags);
+
+    /// <summary>
+    /// Creates a managed Windows Runtime object for a given native object.
+    /// </summary>
+    /// <param name="value">The input native object to marshal.</param>
+    /// <param name="wrapperFlags">Flags used to describe the created wrapper object.</param>
+    /// <returns>The resulting managed Windows Runtime object.</returns>
+    /// <remarks>
+    /// This method is equivalent to <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>, but for unsealed
+    /// types, and is called if <see cref="TryCreateObject"/> failed but not other more specific RCW type could be resolved.
+    /// </remarks>
+    /// <seealso cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>
+    static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }
