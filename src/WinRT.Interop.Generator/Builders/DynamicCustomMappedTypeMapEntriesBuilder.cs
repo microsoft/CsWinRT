@@ -106,6 +106,14 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
+        ValueType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.NotifyCollectionChangedAction.ToReferenceTypeSignature(),
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
         IBindableVectorViewType(
             interopReferences: interopReferences,
             module: module,
@@ -424,6 +432,56 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             proxyType: out TypeDefinition proxyType);
 
         // Same as above for class types, the only difference here is in the proxy type definition for delegates
+        InteropTypeDefinitionBuilder.TypeMapAttributes(
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
+            externalTypeMapTargetType: proxyType.ToTypeSignature(),
+            externalTypeMapTrimTargetType: trimTarget,
+            marshallingTypeMapSourceType: trimTarget,
+            marshallingTypeMapProxyType: proxyType.ToTypeSignature(),
+            metadataTypeMapSourceType: null,
+            metadataTypeMapProxyType: null,
+            interfaceTypeMapSourceType: null,
+            interfaceTypeMapProxyType: null,
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for a given custom-mapped value type.
+    /// </summary>
+    /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
+    /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
+    /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    private static void ValueType(
+        string windowsUIXamlMetadata,
+        string microsoftUIXamlMetadata,
+        TypeSignature trimTarget,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        bool useWindowsUIXamlProjections)
+    {
+        string metadata = useWindowsUIXamlProjections ? windowsUIXamlMetadata : microsoftUIXamlMetadata;
+
+        // Define the proxy type for the value type. In this case we still need both the runtime class name and the
+        // metadata type name, as above, but we also need to reference the boxed type instantiation for this type.
+        InteropTypeDefinitionBuilder.Proxy(
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
+            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            mappedMetadata: metadata,
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
+            mappedType: trimTarget,
+            referenceType: interopReferences.Nullable1.MakeGenericValueType(trimTarget),
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            interopReferences: interopReferences,
+            module: module,
+            proxyType: out TypeDefinition proxyType);
+
+        // Same as above for delegate types, with both a marshalling and a metadata type map entry
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
