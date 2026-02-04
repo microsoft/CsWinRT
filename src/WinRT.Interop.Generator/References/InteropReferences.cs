@@ -424,6 +424,11 @@ internal sealed class InteropReferences
     public TypeReference ReadOnlyCollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.ObjectModel"u8, "ReadOnlyCollection`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedAction"/>.
+    /// </summary>
+    public TypeReference NotifyCollectionChangedAction => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedAction"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     public TypeReference NotifyCollectionChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventHandler"u8);
@@ -622,6 +627,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMappedTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMappedTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMappedTypeAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeReferenceTypeAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeReferenceTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeReferenceTypeAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
@@ -2358,6 +2368,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedTypeAttribute"/>'s constructor.
     /// </summary>
     public MemberReference WindowsRuntimeMappedTypeAttribute_ctor => field ??= WindowsRuntimeMappedTypeAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [Type.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeReferenceTypeAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeReferenceTypeAttribute_ctor => field ??= WindowsRuntimeReferenceTypeAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [Type.ToReferenceTypeSignature()]));

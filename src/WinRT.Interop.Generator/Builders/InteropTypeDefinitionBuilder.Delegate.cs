@@ -944,6 +944,7 @@ internal partial class InteropTypeDefinitionBuilder
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
                 metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
                 mappedType: delegateType,
+                referenceType: null,
                 comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,

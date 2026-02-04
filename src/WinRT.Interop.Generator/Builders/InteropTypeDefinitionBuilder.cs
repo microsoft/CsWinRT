@@ -736,6 +736,7 @@ internal static partial class InteropTypeDefinitionBuilder
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
             mappedType: interfaceType,
+            referenceType: null,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
@@ -751,6 +752,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="referenceType">The <see cref="TypeSignature"/> for the reference type the proxy type is associated with (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -762,6 +764,7 @@ internal static partial class InteropTypeDefinitionBuilder
         string? runtimeClassName,
         string? metadataTypeName,
         TypeSignature? mappedType,
+        TypeSignature? referenceType,
         TypeDefinition? comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
@@ -815,6 +818,17 @@ internal static partial class InteropTypeDefinitionBuilder
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
                     value: mappedType.Import(module)))));
+        }
+
+        // Add the '[WindowsRuntimeReferenceType]' attribute with the provided reference type, if available.
+        // This allows retrieving the boxed type (i.e. a 'Nullable<T>' instantiation) for a given value type.
+        if (referenceType is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeReferenceTypeAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
+                    value: referenceType.Import(module)))));
         }
 
         // Add the generated marshaller attribute, if available
