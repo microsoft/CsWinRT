@@ -548,7 +548,7 @@ public abstract unsafe class WindowsRuntimeObject :
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
             // If we should throw, explicitly throw the same exception as from 'GetInterfaceImplementation', rather than
-            // just returning 'false' and letting the runtime throw an 'InvalidCastException'. This allows develoers to
+            // just returning 'false' and letting the runtime throw an 'InvalidCastException'. This allows developers to
             // more easily understand why a given runtime cast might be failing under different configurations.
             if (throwIfNotImplemented)
             {

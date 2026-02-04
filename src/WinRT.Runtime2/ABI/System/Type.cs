@@ -590,7 +590,7 @@ internal static unsafe class TypeExceptions
         throw new NotSupportedException(
             $"Support for marshalling 'System.Type' values is disabled (make sure that the 'CsWinRTEnableXamlTypeMarshalling' property is not set to 'false'). " +
             $"In this configuration, marshalling a 'System.Type' value directly to native code or to managed will always fail. Additionally, marshalling a " +
-            $"boxed 'System.Type' object as an untyped parameter for a Windows Runtime API will result in the CCW using the same layot as for 'object'.");
+            $"boxed 'System.Type' object as an untyped parameter for a Windows Runtime API will result in the CCW using the same layout as for 'object'.");
     }
 }
 
