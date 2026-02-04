@@ -15,10 +15,6 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
-[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
-    source: typeof(INotifyCollectionChanged),
-    proxy: typeof(ABI.System.Collections.Specialized.INotifyCollectionChangedInterfaceImpl))]
-
 namespace ABI.System.Collections.Specialized;
 
 /// <summary>
@@ -195,32 +191,6 @@ public static unsafe class INotifyCollectionChangedImpl
         catch (global::System.Exception e)
         {
             return e.HResult;
-        }
-    }
-}
-
-/// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyCollectionChanged"/>.
-/// </summary>
-[DynamicInterfaceCastableImplementation]
-file interface INotifyCollectionChangedInterfaceImpl : INotifyCollectionChanged
-{
-    /// <inheritdoc/>
-    event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
-    {
-        add
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
-
-            INotifyCollectionChangedMethods.CollectionChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
-        }
-        remove
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
-
-            INotifyCollectionChangedMethods.CollectionChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 }

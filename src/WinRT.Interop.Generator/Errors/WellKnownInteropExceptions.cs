@@ -691,6 +691,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to resolve the associated "Methods" type for a custom-mapped type.
+    /// </summary>
+    public static WellKnownInteropException CustomMappedTypeMethodsTypeResolveError(TypeSignature type)
+    {
+        return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
