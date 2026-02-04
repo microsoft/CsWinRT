@@ -8,7 +8,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
@@ -39,6 +38,22 @@ internal static class ModuleDefinitionExtensions
         }
 
         throw new ArgumentException($"Type with name '{ns}.{name}' not found.");
+    }
+
+    /// <summary>
+    /// Enumerates all methods (including from nested types) defined in a given module.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <returns>The resulting methods.</returns>
+    public static IEnumerable<MethodDefinition> GetAllMethods(this ModuleDefinition module)
+    {
+        foreach (TypeDefinition type in module.GetAllTypes())
+        {
+            foreach (MethodDefinition method in type.Methods)
+            {
+                yield return method;
+            }
+        }
     }
 
     /// <summary>
@@ -220,8 +235,14 @@ internal static class ModuleDefinitionExtensions
                 }
             }
 
-            // And process locals as well
-            foreach (CilLocalVariable localVariable in specification.Method!.Resolve()?.CilMethodBody?.LocalVariables ?? [])
+            // Resolve the method definition to be able to process its body
+            if (specification.Method!.Resolve() is not MethodDefinition method)
+            {
+                continue;
+            }
+
+            // Process all declared locals as well
+            foreach (CilLocalVariable localVariable in method.CilMethodBody?.LocalVariables ?? [])
             {
                 foreach (TResult result in EnumerateTypeSignatures(
                     localVariable.VariableType.InstantiateGenericTypes(genericContext),
@@ -232,24 +253,9 @@ internal static class ModuleDefinitionExtensions
                 }
             }
 
-            IReadOnlyList<CilInstruction> instructions = specification.Method!.Resolve()?.CilMethodBody?.Instructions ?? (IReadOnlyList<CilInstruction>)[];
-
-            // Go through instruction to look for new objects
-            foreach (CilInstruction instruction in instructions)
+            // Look for all 'newobj' instructions and instantiate the object types
+            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
             {
-                // We only care for 'newobj' instructions
-                if (instruction.OpCode != CilOpCodes.Newobj)
-                {
-                    continue;
-                }
-
-                // Check that we can retrieve the target object type
-                if (instruction.Operand is not IMethodDefOrRef { DeclaringType: ITypeDefOrRef objectType })
-                {
-                    continue;
-                }
-
-                // Instantiate the object type and enumerate all signatures
                 foreach (TResult result in EnumerateTypeSignatures(
                     objectType.ToTypeSignature().InstantiateGenericTypes(genericContext),
                     results,
@@ -259,24 +265,47 @@ internal static class ModuleDefinitionExtensions
                 }
             }
 
-            // Go through instruction to look for new arrays
-            foreach (CilInstruction instruction in instructions)
+            // Look for all 'newarr' instructions and instantiate the element types
+            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
             {
-                // We only care for 'newarr' instructions
-                if (instruction.OpCode != CilOpCodes.Newarr)
-                {
-                    continue;
-                }
-
-                // Check that we can retrieve the target object type
-                if (instruction.Operand is not ITypeDefOrRef arrayType)
-                {
-                    continue;
-                }
-
-                // Instantiate the object type and enumerate all signatures
                 foreach (TResult result in EnumerateTypeSignatures(
-                    arrayType.ToTypeSignature().InstantiateGenericTypes(genericContext),
+                    elementType.MakeSzArrayType().InstantiateGenericTypes(genericContext),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
+        }
+
+        // We also want to process all declared methods, so we can discover objects and array types being
+        // instantiated. These might result in new type signastures that we wouldn't otherwise discover.
+        foreach (MethodDefinition method in module.GetAllMethods())
+        {
+            // Ignore all methods that require a generic type parameter, since they would
+            // not be instantiated here. We might discover them when 
+            if (method.HasGenericParameters || method.DeclaringType!.HasGenericParameters)
+            {
+                continue;
+            }
+
+            // Look for all 'newobj' instructions and gather all object types
+            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
+            {
+                foreach (TResult result in EnumerateTypeSignatures(
+                    objectType.ToTypeSignature(),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
+
+            // Look for all 'newarr' instructions and gather all element types
+            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
+            {
+                foreach (TResult result in EnumerateTypeSignatures(
+                    elementType.MakeSzArrayType(),
                     results,
                     visitor))
                 {
