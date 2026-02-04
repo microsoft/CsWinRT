@@ -67,7 +67,7 @@ namespace winrt::TestComponentCSharp::implementation
 
     int32_t UnSealedCustomEquals::Value()
     {
-        return value;
+        return value * factor;
     }
 
     void UnSealedCustomEquals::Value(int32_t value)

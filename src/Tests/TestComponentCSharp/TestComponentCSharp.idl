@@ -152,6 +152,15 @@ namespace TestComponentCSharp
         static ISingleton Instance;
     }
 
+    [default_interface]
+    unsealed runtimeclass UnSealedCustomEquals
+    {
+        Int32 Value{ get; set; };
+
+        UnSealedCustomEquals();
+        Int32 GetHashCode();
+    }
+
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -341,6 +350,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IMap<String, ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows.Foundation.Collections.IMap<ComposedBlittableStruct, Object> GetBlittableToObjectDictionary();
         Windows.Foundation.Collections.IMap<Int32, Windows.Foundation.Collections.IVector<EnumValue> > GetIntToListDictionary();
+        Windows.Foundation.Collections.IMap<Windows.Foundation.TimeSpan, Windows.Foundation.TimeSpan> GetTimeSpanToTimeSpanDictionary();
 
         // Test IIDOptimizer
         Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
@@ -495,6 +505,7 @@ namespace TestComponentCSharp
         void RaiseCanExecuteChanged();
 
         static Object BadRuntimeClassName{ get; };
+        static UnSealedCustomEquals NonProjectedClassInstance{ get; };
     }
 
     runtimeclass ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
@@ -672,15 +683,6 @@ And this is another one"
         [default_overload]
         Int32 Equals(Object obj);
         Int32 Equals(CustomEquals2 other);
-    }
-
-    [default_interface]
-    unsealed runtimeclass UnSealedCustomEquals
-    {
-        Int32 Value{ get; set; };
-
-        UnSealedCustomEquals();
-        Int32 GetHashCode();
     }
 
     [default_interface]

@@ -121,7 +121,7 @@ public abstract class WindowsRuntimeReadOnlyDictionary<
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        return TIIterableMethods.First(IIterableObjectReference);
+        return IEnumerableMethods<KeyValuePair<TKey, TValue>>.GetEnumerator<TIIterableMethods>(IIterableObjectReference);
     }
 
     /// <inheritdoc/>

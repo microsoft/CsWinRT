@@ -14,14 +14,14 @@ namespace OOPExe
 
         static unsafe void Main(string[] args)
         {
-            object obj;
+            void* obj;
             int hr = PInvoke.CoCreateInstance(new Guid("15F1005B-E23A-4154-9417-CCD083D452BB"), null, CLSCTX.CLSCTX_LOCAL_SERVER, typeof(IAsyncAction).GUID, out obj);
             if (hr < 0)
             {
                 Marshal.ThrowExceptionForHR(hr);
             }
 
-            var asyncAction = (IAsyncAction) WindowsRuntimeMarshal.ConvertToManaged((void*)Marshal.GetIUnknownForObject(obj));
+            var asyncAction = (IAsyncAction) WindowsRuntimeMarshal.ConvertToManaged(obj);
             asyncAction.Completed = Completed;
 
             if (done.WaitOne(20000))

@@ -4,8 +4,6 @@
 using System;
 using System.ComponentModel;
 
-#pragma warning disable CS1573
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>

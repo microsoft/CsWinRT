@@ -133,9 +133,9 @@ internal unsafe struct IAsyncInfoVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, System.Exception*, HRESULT> get_ErrorCode;
     public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Id;
     public delegate* unmanaged[MemberFunction]<void*, AsyncStatus*, HRESULT> get_Status;
+    public delegate* unmanaged[MemberFunction]<void*, System.Exception*, HRESULT> get_ErrorCode;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Cancel;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Close;
 }
@@ -162,9 +162,9 @@ public static unsafe class IAsyncInfoImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_ErrorCode = &get_ErrorCode;
         Vftbl.get_Id = &get_Id;
         Vftbl.get_Status = &get_Status;
+        Vftbl.get_ErrorCode = &get_ErrorCode;
         Vftbl.Cancel = &Cancel;
         Vftbl.Close = &Close;
     }
@@ -176,29 +176,6 @@ public static unsafe class IAsyncInfoImpl
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(in Vftbl);
-    }
-
-    /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_errorcode"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_ErrorCode(void* thisPtr, System.Exception* errorCode)
-    {
-        if (errorCode is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
-
-            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(thisObject.ErrorCode);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_id"/>
@@ -238,6 +215,29 @@ public static unsafe class IAsyncInfoImpl
             var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
 
             *status = thisObject.Status;
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/nf-asyncinfo-iasyncinfo-get_errorcode"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_ErrorCode(void* thisPtr, System.Exception* errorCode)
+    {
+        if (errorCode is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            var thisObject = ComInterfaceDispatch.GetInstance<IAsyncInfo>((ComInterfaceDispatch*)thisPtr);
+
+            *errorCode = System.ExceptionMarshaller.ConvertToUnmanaged(thisObject.ErrorCode);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -288,6 +288,7 @@ public static unsafe class IAsyncInfoImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IAsyncInfo"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("00000036-0000-0000-C000-000000000046")]
 file interface IAsyncInfoInterfaceImpl : IAsyncInfo
 {
     /// <inheritdoc/>

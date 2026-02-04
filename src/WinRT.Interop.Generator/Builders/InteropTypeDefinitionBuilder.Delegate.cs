@@ -728,10 +728,28 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'ComputeVtables' method
-            marshallerType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-                method: computeVtablesMethod);
+            marshallerType.Methods.Add(computeVtablesMethod);
+
+            // Define the 'GetOrCreateComInterfaceForObject' method as follows:
+            //
+            // public override void* GetOrCreateComInterfaceForObject(object value)
+            MethodDefinition getOrCreateComInterfaceForObjectMethod = new(
+                name: "GetOrCreateComInterfaceForObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    parameterTypes: [module.CorLibTypeFactory.Object]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Ret }
+                }
+            };
+
+            marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
@@ -763,10 +781,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'CreateObject' method
-            marshallerType.AddMethodImplementation(
-                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-                method: createObjectMethod);
+            marshallerType.Methods.Add(createObjectMethod);
         }
 
         /// <summary>

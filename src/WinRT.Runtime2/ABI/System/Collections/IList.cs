@@ -89,6 +89,17 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableVector,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeList(valueReference);
+    }
 }
 
 /// <summary>
@@ -444,6 +455,7 @@ public static unsafe class IListImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IList"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
 file interface IListInterfaceImpl : global::System.Collections.IList
 {
     /// <inheritdoc/>

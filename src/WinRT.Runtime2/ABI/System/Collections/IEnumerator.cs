@@ -75,7 +75,7 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
                 wrapperFlags: out wrapperFlags);
 
-            wrapperObject = new WindowsRuntimeIterator(valueReference);
+            wrapperObject = new WindowsRuntimeEnumerator(valueReference);
 
             return true;
         }
@@ -84,6 +84,17 @@ file abstract class IEnumeratorComWrappersCallback : IWindowsRuntimeUnsealedObje
         wrapperObject = null;
 
         return false;
+    }
+
+    /// <inheritdoc/>
+    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeEnumerator(valueReference);
     }
 }
 
@@ -100,7 +111,7 @@ file sealed unsafe class IEnumeratorComWrappersMarshallerAttribute : WindowsRunt
             iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator,
             wrapperFlags: out wrapperFlags);
 
-        return new WindowsRuntimeIterator(valueReference);
+        return new WindowsRuntimeEnumerator(valueReference);
     }
 }
 
@@ -177,7 +188,7 @@ public static unsafe class IEnumeratorImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            object? current = IBindableIteratorAdapter.GetInstance(thisObject).Current;
+            object? current = BindableIEnumeratorAdapter.GetInstance(thisObject).Current;
 
             *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(current).DetachThisPtrUnsafe();
 
@@ -202,7 +213,7 @@ public static unsafe class IEnumeratorImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            *result = IBindableIteratorAdapter.GetInstance(thisObject).HasCurrent;
+            *result = BindableIEnumeratorAdapter.GetInstance(thisObject).HasCurrent;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -225,7 +236,7 @@ public static unsafe class IEnumeratorImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerator>((ComInterfaceDispatch*)thisPtr);
 
-            *result = IBindableIteratorAdapter.GetInstance(thisObject).MoveNext();
+            *result = BindableIEnumeratorAdapter.GetInstance(thisObject).MoveNext();
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -247,6 +258,7 @@ public static unsafe class IEnumeratorImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IEnumerator"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
 file interface IEnumeratorInterfaceImpl : global::System.Collections.IEnumerator
 {
     /// <inheritdoc/>

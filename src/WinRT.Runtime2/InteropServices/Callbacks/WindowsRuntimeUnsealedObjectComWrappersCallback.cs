@@ -29,6 +29,9 @@ internal abstract unsafe class WindowsRuntimeUnsealedObjectComWrappersCallback
         ReadOnlySpan<char> runtimeClassName,
         [NotNullWhen(true)] out object? wrapperObject,
         out CreatedWrapperFlags wrapperFlags);
+
+    /// <inheritdoc cref="IWindowsRuntimeUnsealedObjectComWrappersCallback.CreateObject"/>
+    public abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }
 
 /// <summary>
@@ -51,5 +54,11 @@ file sealed class WindowsRuntimeUnsealedObjectComWrappersCallbackHost<TCallback>
         out CreatedWrapperFlags wrapperFlags)
     {
         return TCallback.TryCreateObject(value, runtimeClassName, out wrapperObject, out wrapperFlags);
+    }
+
+    /// <inheritdoc/>
+    public override unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        return TCallback.CreateObject(value, out wrapperFlags);
     }
 }

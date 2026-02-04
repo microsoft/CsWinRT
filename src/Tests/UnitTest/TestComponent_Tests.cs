@@ -456,8 +456,8 @@ namespace UnitTest
             IStringable[] b = null;
             IStringable[] c;
             IStringable[] d = Tests.Array16(a, b, out c);
-            Assert.Null(c);
-            Assert.Null(d);
+            Assert.Empty(c);
+            Assert.Empty(d);
         }
 
         private T[] Array_Call<T>(ReadOnlySpan<T> a, Span<T> b, out T[] c)

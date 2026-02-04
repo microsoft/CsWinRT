@@ -76,7 +76,7 @@ namespace cswinrt
         return (settings.internal || settings.embedded) ? "internal" : "public";
     }
 
-    bool is_type_blittable(type_semantics const& semantics, bool for_array = false)
+    bool is_type_blittable(type_semantics const& semantics)
     {
         return call(semantics,
             [&](object_type)
@@ -88,7 +88,7 @@ namespace cswinrt
                 switch (get_category(type))
                 {
                     case category::enum_type:
-                        return !for_array;
+                        return true;
                     case category::struct_type:
                         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
                         {
@@ -421,7 +421,18 @@ namespace cswinrt
             typeNamespace = proj->mapped_namespace;
             if (starts_with(typeNamespace, "System"))
             {
-                w.write("<#corlib>");
+                if (is_mapped_type_in_system_numerics_vectors(typeNamespace))
+                {
+                    w.write("<System-Numerics-Vectors>");
+                }
+                else if (is_mapped_type_in_system_objectmodel(typeNamespace, proj->mapped_name))
+                {
+                    w.write("<System-ObjectModel>");
+                }
+                else
+                {
+                    w.write("<#corlib>");
+                }
                 return;
             }
             else if (!proj->emit_abi)
@@ -771,17 +782,26 @@ namespace cswinrt
         }
     }
 
-    void write_projected_signature(writer& w, TypeSig const& type_sig)
+    // Used as part of return type and property signatures
+    void write_projected_signature(writer& w, TypeSig const& type_sig, bool is_parameter)
     {
-        write_projection_type(w, get_type_semantics(type_sig));
-        if(type_sig.is_szarray()) w.write("[]");
+        // For parameters, we are only called in property scenarios where arrays are pass_array.
+        if (is_parameter && type_sig.is_szarray())
+        {
+            w.write("ReadOnlySpan<%>", bind<write_projection_type>(get_type_semantics(type_sig)));
+        }
+        else
+        {
+            write_projection_type(w, get_type_semantics(type_sig));
+            if (type_sig.is_szarray()) w.write("[]");
+        }
     };
 
     void write_projection_return_type(writer& w, method_signature const& signature)
     {
         if (auto return_sig = signature.return_signature())
         {
-            write_projected_signature(w, return_sig.Type());
+            write_projected_signature(w, return_sig.Type(), false);
         }
         else
         {
@@ -2087,9 +2107,9 @@ static extern void %([UnsafeAccessorType("%, WinRT.Interop")] object _, WindowsR
         return w.write_temp("%.%", write_type_name_temp(w, iface, "%", implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected), name);
     }
 
-    std::string write_prop_type(writer& w, Property const& prop)
+    std::string write_prop_type(writer& w, Property const& prop, bool is_set_property = false)
     {
-        return w.write_temp("%", bind<write_projected_signature>(prop.Type().Type()));
+        return w.write_temp("%", bind<write_projected_signature>(prop.Type().Type(), is_set_property));
     }
 
     void write_explicitly_implemented_property_for_abi(writer& w, Property const& prop, TypeDef const& iface)
@@ -5912,7 +5932,7 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
         {
             if (m.is_array())
             {
-                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.is_pinnable = is_type_blittable(semantics) && !m.is_out();
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
@@ -6097,9 +6117,9 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
             }
             else
             {
-                m.is_pinnable = is_type_blittable(semantics, true) && !m.is_out();
+                m.is_pinnable = is_type_blittable(semantics) && !m.is_out();
                 m.interop_dll_type = w.write_temp("%", bind<write_interop_dll_type_name>(semantics, typedef_name_type::ArrayMarshaller));
-                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }
@@ -6612,7 +6632,7 @@ public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value
 {%}
 )",                 
                     prop.Name(),
-                    write_prop_type(w, prop),
+                    write_prop_type(w, prop, true),
                     bind([&](writer& w) {
                         init_call_variables(w);
                         write_abi_method_call_marshalers(w, invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop));
@@ -7483,8 +7503,8 @@ global::System.Buffers.ArrayPool<%>.Shared.Return(__%_arrayFromPool);
             {
                 if (m.marshaler_type.empty())
                 {
-                    m.is_blittable = is_type_blittable(semantics, true);
-                    m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
+                    m.is_blittable = is_type_blittable(semantics);
+                    m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
                     m.marshaler_type += "<" + m.param_type + ">";
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
@@ -8983,6 +9003,16 @@ wrapperObject = null;
 wrapperFlags = CreatedWrapperFlags.None;
 return false;
 }
+
+public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+{
+WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+    externalComObject: value,
+    iid: %,
+    wrapperFlags: out wrapperFlags);
+
+return new %(valueReference);
+}
 }
 )",
                 type.TypeName(),
@@ -8995,7 +9025,11 @@ return false;
                         }
                     });
                 }),
+                // TryCreateObject
                 bind<write_type_name>(type, typedef_name_type::ABI, false),
+                bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                bind<write_type_name>(type, typedef_name_type::Projected, true),
+                // CreateObject
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }

@@ -355,8 +355,33 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add the 'ComputeVtables' method
             marshallerAttributeType.Methods.Add(computeVtablesMethod);
+
+            // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
+            CreateComInterfaceFlags flags = keyValuePairType.IsTrackerSupportRequired(interopReferences)
+                ? CreateComInterfaceFlags.TrackerSupport
+                : CreateComInterfaceFlags.None;
+
+            // Define the 'GetOrCreateComInterfaceForObject' method as follows:
+            //
+            // public override void* GetOrCreateComInterfaceForObject(object value)
+            MethodDefinition getOrCreateComInterfaceForObjectMethod = new(
+                name: "GetOrCreateComInterfaceForObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    parameterTypes: [module.CorLibTypeFactory.Object]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4((int)flags) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Ret }
+                }
+            };
+
+            marshallerAttributeType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'interfaceValue')
@@ -427,7 +452,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add the 'CreateObject' method
             marshallerAttributeType.Methods.Add(createObjectMethod);
         }
 

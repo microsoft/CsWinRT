@@ -466,7 +466,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'GetOrCreateComInterfaceForObject' method
             marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Define the 'ComputeVtables' method as follows:
@@ -490,7 +489,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'ComputeVtables' method
             marshallerType.Methods.Add(computeVtablesMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the array
@@ -526,7 +524,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'CreateObject' method
             marshallerType.Methods.Add(createObjectMethod);
         }
 

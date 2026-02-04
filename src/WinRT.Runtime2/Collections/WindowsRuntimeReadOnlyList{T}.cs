@@ -84,7 +84,7 @@ public abstract class WindowsRuntimeReadOnlyList<
     /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator()
     {
-        return TIIterableMethods.First(IIterableObjectReference);
+        return IEnumerableMethods<T>.GetEnumerator<TIIterableMethods>(IIterableObjectReference);
     }
 
     /// <inheritdoc/>

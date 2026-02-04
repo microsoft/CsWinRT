@@ -276,6 +276,7 @@ public static unsafe class ICommandImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="ICommand"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
 file interface ICommandInterfaceImpl : ICommand
 {
     /// <inheritdoc/>

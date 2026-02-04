@@ -994,9 +994,19 @@ internal sealed class InteropReferences
     public TypeReference DictionaryKeyCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "DictionaryKeyCollection`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.DictionaryKeyCollection2&lt;TKey, TValue&gt;.Enumerator</c>.
+    /// </summary>
+    public TypeReference DictionaryKeyCollection2Enumerator => field ??= DictionaryKeyCollection2.CreateTypeReference("Enumerator"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.DictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference DictionaryValueCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "DictionaryValueCollection`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.DictionaryValueCollection2&lt;TKey, TValue&gt;.Enumerator</c>.
+    /// </summary>
+    public TypeReference DictionaryValueCollection2Enumerator => field ??= DictionaryValueCollection2.CreateTypeReference("Enumerator"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.ObjectModel.ReadOnlyDictionary{TKey, TValue}"/>.
@@ -1009,9 +1019,19 @@ internal sealed class InteropReferences
     public TypeReference ReadOnlyDictionaryKeyCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "ReadOnlyDictionaryKeyCollection`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryKeyCollection2&lt;TKey, TValue&gt;.Enumerator</c>.
+    /// </summary>
+    public TypeReference ReadOnlyDictionaryKeyCollection2Enumerator => field ??= ReadOnlyDictionaryKeyCollection2.CreateTypeReference("Enumerator"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference ReadOnlyDictionaryValueCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "ReadOnlyDictionaryValueCollection`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryValueCollection2&lt;TKey, TValue&gt;.Enumerator</c>.
+    /// </summary>
+    public TypeReference ReadOnlyDictionaryValueCollection2Enumerator => field ??= ReadOnlyDictionaryValueCollection2.CreateTypeReference("Enumerator"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter</c>.
@@ -2025,6 +2045,16 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Void.MakePointerType(),
                 ReadOnlySpanChar,
                 _corLibTypeFactory.Object.MakeByReferenceType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.CreateObject</c>.
+    /// </summary>
+    public MemberReference IWindowsRuntimeUnsealedObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeUnsealedObjectComWrappersCallback
+        .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Object,
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
                 CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>

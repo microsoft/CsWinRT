@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Class.g.h"
 #include "winrt/Windows.Foundation.Collections.h"
@@ -295,6 +295,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows::Foundation::Collections::IMap<TestComponentCSharp::ComposedBlittableStruct, Windows::Foundation::IInspectable> GetBlittableToObjectDictionary();
         Windows::Foundation::Collections::IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> GetIntToListDictionary();
+        Windows::Foundation::Collections::IMap<Windows::Foundation::TimeSpan, Windows::Foundation::TimeSpan> GetTimeSpanToTimeSpanDictionary();
 
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
@@ -487,6 +488,7 @@ namespace winrt::TestComponentCSharp::implementation
         void RaiseCanExecuteChanged();
 
         static Windows::Foundation::IInspectable BadRuntimeClassName();
+        static winrt::TestComponentCSharp::UnSealedCustomEquals NonProjectedClassInstance();
     };
 }
 

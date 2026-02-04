@@ -72,6 +72,17 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeAsyncAction(objectReference);
+    }
 }
 
 /// <summary>
@@ -163,8 +174,8 @@ internal unsafe struct IAsyncActionVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
 }
 
@@ -268,6 +279,7 @@ public static unsafe class IAsyncActionImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IAsyncAction"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("5A648006-843A-4DA9-865B-9D26E5DFAD7B")]
 file interface IAsyncActionInterfaceImpl : IAsyncAction
 {
     /// <inheritdoc/>
