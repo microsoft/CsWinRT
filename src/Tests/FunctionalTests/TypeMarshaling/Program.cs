@@ -134,6 +134,8 @@ TypeCase[] TestCases =
     new(typeof(Vector3?), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>",    "Metadata", 166),
     new(typeof(Guid?),    "Windows.Foundation.IReference`1<Guid>",                                   "Metadata", 167),
     new(typeof(IList<int?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata", 168),
+    new(typeof(TestComponentCSharp.EnumValue?),       "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>",       "Metadata", 195),
+    new(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata", 196),
 
     // --------------------
     // Generic Types
