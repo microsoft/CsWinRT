@@ -279,11 +279,12 @@ internal static class ModuleDefinitionExtensions
         }
 
         // We also want to process all declared methods, so we can discover objects and array types being
-        // instantiated. These might result in new type signastures that we wouldn't otherwise discover.
+        // instantiated. These might result in new type signatures that we wouldn't otherwise discover.
         foreach (MethodDefinition method in module.GetAllMethods())
         {
             // Ignore all methods that require a generic type parameter, since they would
-            // not be instantiated here. We might discover them when 
+            // not be instantiated here. We might discover them when going through the
+            // type and method specification tables above, so we'd also have a context.
             if (method.HasGenericParameters || method.DeclaringType!.HasGenericParameters)
             {
                 continue;
