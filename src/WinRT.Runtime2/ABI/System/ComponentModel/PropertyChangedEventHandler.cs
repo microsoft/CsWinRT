@@ -55,7 +55,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
 file static unsafe class PropertyChangedEventHandlerNativeDelegate
 {
     /// <inheritdoc cref="PropertyChangedEventHandler"/>
-    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, global::System.ComponentModel.PropertyChangedEventArgs e)
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, PropertyChangedEventArgs e)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
