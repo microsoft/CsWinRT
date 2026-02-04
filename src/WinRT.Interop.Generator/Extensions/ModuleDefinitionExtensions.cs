@@ -41,22 +41,6 @@ internal static class ModuleDefinitionExtensions
     }
 
     /// <summary>
-    /// Enumerates all methods (including from nested types) defined in a given module.
-    /// </summary>
-    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
-    /// <returns>The resulting methods.</returns>
-    public static IEnumerable<MethodDefinition> GetAllMethods(this ModuleDefinition module)
-    {
-        foreach (TypeDefinition type in module.GetAllTypes())
-        {
-            foreach (MethodDefinition method in type.Methods)
-            {
-                yield return method;
-            }
-        }
-    }
-
-    /// <summary>
     /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
@@ -200,6 +184,30 @@ internal static class ModuleDefinitionExtensions
                     yield return result;
                 }
             }
+
+            // Look for all 'newobj' instructions and gather all object types
+            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
+            {
+                foreach (TResult result in EnumerateTypeSignatures(
+                    objectType.ToTypeSignature(),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
+
+            // Look for all 'newarr' instructions and gather all element types
+            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
+            {
+                foreach (TResult result in EnumerateTypeSignatures(
+                    elementType.MakeSzArrayType(),
+                    results,
+                    visitor))
+                {
+                    yield return result;
+                }
+            }
         }
 
         // Enumerate method specifications as well. These are used to detect generic instantiations of methods being invoked
@@ -270,43 +278,6 @@ internal static class ModuleDefinitionExtensions
             {
                 foreach (TResult result in EnumerateTypeSignatures(
                     elementType.MakeSzArrayType().InstantiateGenericTypes(genericContext),
-                    results,
-                    visitor))
-                {
-                    yield return result;
-                }
-            }
-        }
-
-        // We also want to process all declared methods, so we can discover objects and array types being
-        // instantiated. These might result in new type signatures that we wouldn't otherwise discover.
-        foreach (MethodDefinition method in module.GetAllMethods())
-        {
-            // Ignore all methods that require a generic type parameter, since they would
-            // not be instantiated here. We might discover them when going through the
-            // type and method specification tables above, so we'd also have a context.
-            if (method.HasGenericParameters || method.DeclaringType!.HasGenericParameters)
-            {
-                continue;
-            }
-
-            // Look for all 'newobj' instructions and gather all object types
-            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    objectType.ToTypeSignature(),
-                    results,
-                    visitor))
-                {
-                    yield return result;
-                }
-            }
-
-            // Look for all 'newarr' instructions and gather all element types
-            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    elementType.MakeSzArrayType(),
                     results,
                     visitor))
                 {
