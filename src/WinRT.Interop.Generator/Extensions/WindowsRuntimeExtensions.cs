@@ -178,6 +178,7 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CollectionChange) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncStatus) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyType) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||

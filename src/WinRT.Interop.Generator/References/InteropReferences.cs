@@ -1334,6 +1334,11 @@ internal sealed class InteropReferences
     public TypeReference TrustLevel => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "TrustLevel"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.PropertyType</c>.
+    /// </summary>
+    public TypeReference PropertyType => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "PropertyType"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Point</c>.
     /// </summary>
     public TypeReference Point => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Point"u8);
