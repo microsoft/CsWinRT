@@ -71,6 +71,17 @@ file abstract class IEnumerableComWrappersCallback : IWindowsRuntimeUnsealedObje
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeEnumerable(valueReference);
+    }
 }
 
 /// <summary>
@@ -106,19 +117,7 @@ public static class IEnumerableMethods
     /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
     public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
-        return IBindableIterableMethods.First(thisReference);
-    }
-}
-
-/// <summary>
-/// Interop methods for <see cref="IEnumerable"/> invoked over constructed iterator types.
-/// </summary>
-file static class IEnumerableInstanceMethods
-{
-    /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
-    public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
-    {
-        return global::WindowsRuntime.InteropServices.IEnumerableMethods.GetEnumerator(thisReference);
+        return BindableIEnumerableMethods.GetEnumerator(thisReference);
     }
 }
 
@@ -169,9 +168,7 @@ public static unsafe class IEnumerableImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<IEnumerable>((ComInterfaceDispatch*)thisPtr);
 
-            IEnumerator enumerator = thisObject.GetEnumerator();
-
-            *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(enumerator).DetachThisPtrUnsafe();
+            BindableIEnumerableAdapter.First(thisObject, result);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -186,6 +183,7 @@ public static unsafe class IEnumerableImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IEnumerable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
 file interface IEnumerableInterfaceImpl : IEnumerable
 {
     IEnumerator IEnumerable.GetEnumerator()
@@ -205,6 +203,6 @@ file interface IEnumerableInterfaceImpl : IEnumerable
 
         // Return an enumerator through that. We don't know the 'T', so we need to marshal without type info.
         // However, this in practice is fine, as the RCW would also always implement 'IEnumerable' in metadata.
-        return IEnumerableInstanceMethods.GetEnumerator(interfaceReference);
+        return global::WindowsRuntime.InteropServices.IEnumerableMethods.GetEnumerator(interfaceReference);
     }
 }

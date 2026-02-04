@@ -479,7 +479,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
                     { Stloc_0 },
                     { Ldloc_0 },
-                    { Call, interopReferences.ICollection1Clear(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Clear(elementType).Import(module) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },

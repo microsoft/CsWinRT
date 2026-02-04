@@ -112,7 +112,7 @@ public static unsafe class INotifyDataErrorInfoMethods
     public static EventHandlerEventSource<DataErrorsChangedEventArgs> ErrorsChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-        [return: UnsafeAccessorType("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop")]
+        [return: UnsafeAccessorType("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'1<<System-ObjectModel>System-ComponentModel-DataErrorsChangedEventArgs>, WinRT.Interop")]
         static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
 
         return ErrorsChangedTable.GetOrAdd(
@@ -140,7 +140,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
                 static extern IEnumerable<object>? ConvertToManaged(
-                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop")] object? _,
+                    [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                     void* value);
 
                 return ConvertToManaged(null, result)!;
@@ -260,7 +260,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler`1<<#corlib>System-ComponentModel-DataErrorsChangedEventArgs>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'1<<System-ObjectModel>System-ComponentModel-DataErrorsChangedEventArgs>Marshaller, WinRT.Interop")] object? _,
                 void* value);
 
             EventHandler<DataErrorsChangedEventArgs>? managedHandler = ConvertToManaged(null, handler);
@@ -312,7 +312,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable`1<object>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                 IEnumerable<object>? value);
 
             *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult).DetachThisPtrUnsafe();
@@ -330,6 +330,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
 file interface INotifyDataErrorInfoInterfaceImpl : global::System.ComponentModel.INotifyDataErrorInfo
 {
     /// <inheritdoc/>

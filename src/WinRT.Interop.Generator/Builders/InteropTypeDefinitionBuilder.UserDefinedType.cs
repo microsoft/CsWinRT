@@ -219,7 +219,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'ComputeVtables' method
             marshallerType.Methods.Add(computeVtablesMethod);
 
             // Define the 'GetOrCreateComInterfaceForObject' method as follows:
@@ -241,7 +240,6 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'GetOrCreateComInterfaceForObject' method
             marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
         }
 

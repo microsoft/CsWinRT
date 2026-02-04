@@ -181,6 +181,7 @@ public static unsafe class IVectorChangedEventArgsImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IVectorChangedEventArgs"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("575933DF-34FE-4480-AF15-07691F3D5D9B")]
 file interface IVectorChangedEventArgsInterfaceImpl : IVectorChangedEventArgs
 {
     /// <inheritdoc/>

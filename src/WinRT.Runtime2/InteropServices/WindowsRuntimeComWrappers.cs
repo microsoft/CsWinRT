@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -326,61 +328,104 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // We always need this, and all callers are expected to be providing one.
         void* interfacePointer = CreateObjectTargetInterfacePointer;
 
-        // Validate that we do have an input interface pointer, just in case.
-        // We might want to relax this restriction later if actually needed.
-        ArgumentNullException.ThrowIfNull(interfacePointer);
-
-        // If we have a callback instance, it means this invocation was for a statically visible type that can
-        // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
-        if (ObjectComWrappersCallback is { } createObjectCallback)
+        // There is a rare case where we might not have an input interface pointer, and that is if this
+        // call was directly to 'ComWrappers' through the rehydration path in 'WeakReference<T>'. That
+        // is, if we had a 'WeakReference<T>' instance pointing to an RCW object which got collected,
+        // if someone tries to access the target object, the 'WeakReference<T>' instance will directly
+        // use 'ComWrappers' to try to create a new equivalent RCW object. In that case, it would not
+        // go through the normal marshalling path that we expect, and no static type information would
+        // be provided (since 'WeakReference<T>' is not passing the 'T' context to 'ComWrappers').
+        if (interfacePointer is null)
         {
-            // Callers will have provided a derived interface pointer, if statically visible. For instance, if
-            // a native API returned an instance of a delegate type, we can reuse that, rather than doing a
-            // 'QueryInterface' call again from here (because 'CreateObject' only ever gets an 'IUnknown'
-            // object as input). So we can just forward that here directly to the provided callback.
-            return createObjectCallback.CreateObject(interfacePointer, out wrapperFlags);
+            // In this scenario, we need to ensure that no static callback is available. This is needed because
+            // these callbacks expect a specific interface pointer as input, which we can't ever guarantee here.
+            if (ObjectComWrappersCallback is not null || UnsealedObjectComWrappersCallback is not null)
+            {
+                WindowsRuntimeComWrappersExceptions.ThrowInvalidOperationException();
+            }
+
+            // Manually 'QueryInterface' to retrieve the 'IInspectable' object we need
+            IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out interfacePointer).Assert();
         }
-
-        HSTRING className = null;
-
-        // Get the runtime class name (we need it to figure out the most derived type to marshal)
-        IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Assert();
 
         try
         {
-            // We only need the runtime class name in this scope, so just get the raw characters
-            ReadOnlySpan<char> runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(className);
-
-            // If we have a callback instance for an unsealed type, it means that this invocation was for either an
-            // unsealed type or some interface type. In this case, we do logic analogous to the case above, just with
-            // the additional complexity due to also needing the runtime class name to figure out the managed type.
-            if (UnsealedObjectComWrappersCallback is { } unsealedObjectCallback)
+            // If we have a callback instance, it means this invocation was for a statically visible type that can
+            // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
+            if (ObjectComWrappersCallback is { } createObjectCallback)
             {
-                // We can now invoke the callback. If we have an exact match with the runtime class name that
-                // the callback is specialized for, then we can just directly return the object it produced.
-                if (unsealedObjectCallback.TryCreateObject(
-                    value: interfacePointer,
-                    runtimeClassName: runtimeClassName,
-                    out object? wrapperObject,
-                    out wrapperFlags))
+                // Callers will have provided a derived interface pointer, if statically visible. For instance, if
+                // a native API returned an instance of a delegate type, we can reuse that, rather than doing a
+                // 'QueryInterface' call again from here (because 'CreateObject' only ever gets an 'IUnknown'
+                // object as input). So we can just forward that here directly to the provided callback.
+                return createObjectCallback.CreateObject(interfacePointer, out wrapperFlags);
+            }
+
+            HSTRING className = null;
+
+            // Get the runtime class name (we need it to figure out the most derived type to marshal).
+            // This should generally always succeed, but there are some cases where a public API
+            // returns a non-projected object that implements a projected Windows Runtime interface,
+            // without implementing 'GetRuntimeClassName' (e.g. 'MemoryBuffer.CreateReference').
+            if (IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Succeeded())
+            {
+                try
                 {
-                    return wrapperObject;
+                    // We only need the runtime class name in this scope, so just get the raw characters
+                    ReadOnlySpan<char> runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(className);
+
+                    // If we have a callback instance for an unsealed type, it means that this invocation was for either an
+                    // unsealed type or some interface type. In this case, we do logic analogous to the case above, just with
+                    // the additional complexity due to also needing the runtime class name to figure out the managed type.
+                    if (UnsealedObjectComWrappersCallback is { } unsealedObjectCallback)
+                    {
+                        // We can now invoke the callback. If we have an exact match with the runtime class name that
+                        // the callback is specialized for, then we can just directly return the object it produced.
+                        if (unsealedObjectCallback.TryCreateObject(
+                            value: interfacePointer,
+                            runtimeClassName: runtimeClassName,
+                            out object? wrapperObject,
+                            out wrapperFlags))
+                        {
+                            return wrapperObject;
+                        }
+                    }
+
+                    // We didn't find an exact match, so we need to walk the parent types in the hierarchy. Note that
+                    // if the type is an interface type, this will simply not find any matches and return immediately.
+                    // This also covers cases where we have no static type information whatsoever (i.e. we're just
+                    // marshalling 'object'). This traversal allows us to still return derived types, when not trimmed.
+                    if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfo(
+                        runtimeClassName: runtimeClassName,
+                        info: out WindowsRuntimeMarshallingInfo? unsealedMarshallingInfo))
+                    {
+                        return unsealedMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
+                    }
+                }
+                finally
+                {
+                    HStringMarshaller.Free(className);
                 }
             }
 
-            // We didn't find an exact match, so we need to walk the parent types in the hierarchy. Note that
-            // if the type is an interface type, this will simply not find any matches and return immediately.
-            // This also covers cases where we have no static type information whatsoever (i.e. we're just
-            // marshalling 'object'). This traversal allows us to still return derived types, when not trimmed.
-            if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfo(
-                runtimeClassName: runtimeClassName,
-                info: out WindowsRuntimeMarshallingInfo? unsealedMarshallingInfo))
+            // If we get here, it means that we couldn't find any partially derived type to marshal. However, we want to leverage
+            // as much static type information as possible, so first we check if we have a callback for an unsealed type. If we do,
+            // we can delegate to it to create the resulting object. Consider a scenario where some code called a Windows Runtime
+            // API returning an anonymous object implementing an interface type, but without implementing 'GetRuntimeClassName'
+            // (or with it returning an incorrect value that we can't recognize). Even in that case, we still have the static type
+            // information about the returned interface type, meaning we know the object to return should be "at least that interface
+            // type". And we know that the interface pointer is also already an interface pointer for that specific interface. So by
+            // invoking the provided callback, if available, we still manage to return a specialized RCW type, which will have the
+            // requested interface (and possibly others too) implemented in metadata. This allows callers to not have to go through
+            // dynamic interface casts to consume those interfaces, which improves performance.
+            if (UnsealedObjectComWrappersCallback is { } fallbackUnsealedObjectCallback)
             {
-                return unsealedMarshallingInfo.GetComWrappersMarshaller().CreateObject(interfacePointer, out wrapperFlags);
+                return fallbackUnsealedObjectCallback.CreateObject(interfacePointer, out wrapperFlags);
             }
 
-            // We couldn't find any partially derived type to marshal: just return an opaque object.
-            // It can still be used via interfaces by doing 'IDynamicInterfaceCastable' casts on it.
+            // As a last resort, if we couldn't find any partially derived type to marshal and we also had no static type
+            // information at all, we just return an opaque object. It can still be used via interfaces (including generics)
+            // by doing 'IDynamicInterfaceCastable' casts on it. It will still work the same, just with lower performance.
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
                 externalComObject: interfacePointer,
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
@@ -392,7 +437,12 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         }
         finally
         {
-            HStringMarshaller.Free(className);
+            // If we hit the special case mentioned above where we had to manually 'QueryInterface' for 'IInspectable', as the caller
+            // hadn't provided a valid interface pointer, we need to also make sure to release that acquired interface pointer here.
+            if (CreateObjectTargetInterfacePointer is null)
+            {
+                _ = IUnknownVftbl.ReleaseUnsafe(interfacePointer);
+            }
         }
     }
 
@@ -442,5 +492,24 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // For all other cases, we fallback to the marshalling info for 'object'. This is the
         // shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'. 
         return WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+    }
+}
+
+/// <summary>
+/// Exception stubs for <see cref="WindowsRuntimeComWrappers"/>.
+/// </summary>
+file static class WindowsRuntimeComWrappersExceptions
+{
+    /// <summary>
+    /// Throws an <see cref="InvalidOperationException"/> when in an invalid state.
+    /// </summary>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    public static void ThrowInvalidOperationException()
+    {
+        throw new InvalidOperationException(
+            $"The Windows Runtime 'ComWrappers' instance is not in a valid state to marshal an opaque 'IInspectable' object. " +
+            $"If no static type information is available, it is not possible to leverage any of the static callback types. " +
+            $"This scenario should never be hit. Please file an issue at https://github.com/microsoft/CsWinRT.");
     }
 }

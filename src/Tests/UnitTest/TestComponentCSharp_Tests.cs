@@ -162,7 +162,7 @@ namespace UnitTest
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
 
             TestObject.EnumsProperty = null;
-            Assert.Equal(null, TestObject.EnumsProperty);
+            Assert.Empty(TestObject.EnumsProperty);
 
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
@@ -171,7 +171,7 @@ namespace UnitTest
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
 
             TestObject.EnumStructsProperty = null;
-            Assert.Equal(null, TestObject.EnumStructsProperty);
+            Assert.Empty(TestObject.EnumStructsProperty);
 
             // Flags
             var expectedFlag = FlagValue.All;
@@ -1126,6 +1126,10 @@ namespace UnitTest
             strings_out = (string[])TestObject.ObjectProperty;
             Assert.True(strings_out.SequenceEqual(strings_in));
 
+            var eventHandler = new EventHandler<int>((sender, args) => { });
+            TestObject.ObjectProperty = eventHandler;
+            Assert.Equal(eventHandler, TestObject.ObjectProperty);
+
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
@@ -1543,7 +1547,7 @@ namespace UnitTest
             Assert.True(TestObject.GetInts().SequenceEqual(arr));
 
             TestObject.SetInts(null);
-            Assert.Null(TestObject.GetInts());
+            Assert.Empty(TestObject.GetInts());
         }
 
         [ComImport]
@@ -3997,6 +4001,53 @@ namespace UnitTest
             key.blittable = blittable;
             Assert.Equal("box", (string)blittableToObjectDict[key]);
             Assert.Equal("box", (string)blittableToObjectDict[key]);
+        }
+
+        [Fact]
+        public void TestTimeSpanDictionary()
+        {
+            IDictionary<TimeSpan, TimeSpan> timeSpanDict = TestObject.GetTimeSpanToTimeSpanDictionary();
+
+            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(1)));
+            Assert.True(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
+            Assert.True(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
+
+            Assert.Equal(TimeSpan.FromTicks(7), timeSpanDict[TimeSpan.FromHours(7)]);
+            Assert.Equal(TimeSpan.FromTicks(5), timeSpanDict[TimeSpan.FromTicks(4)]);
+
+            Assert.True(timeSpanDict.Remove(TimeSpan.FromHours(7)));
+            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
+
+            Assert.Equal(2, timeSpanDict.Keys.Count);
+
+            timeSpanDict.Clear();
+
+            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
+            Assert.Empty(timeSpanDict.Keys);
+
+            // Key - value entries are 1 minute apart as it is used for validation later.
+            timeSpanDict.Add(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
+            timeSpanDict[TimeSpan.FromMinutes(3)] = TimeSpan.FromMinutes(4);
+
+            Assert.True(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(1), out TimeSpan value1));
+            Assert.Equal(TimeSpan.FromMinutes(2), value1);
+            Assert.False(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(6), out TimeSpan _));
+
+            Assert.Equal(2, timeSpanDict.Keys.Count);
+
+            foreach (var entries in timeSpanDict)
+            {
+                Assert.Equal(TimeSpan.FromMinutes(1), entries.Value - entries.Key);
+            }
+        }
+
+        [Fact]
+        public void TestNontProjectedClassAsBaseClass()
+        {
+            UnSealedCustomEquals customEquals = Class.NonProjectedClassInstance;
+            customEquals.Value = 3;
+            // Non projected class changes the behavior of the Value property to double it.
+            Assert.Equal(6, customEquals.Value);
         }
     }
 }

@@ -151,6 +151,7 @@ public static unsafe class IDisposableImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
+[Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
 file interface IDisposableInterfaceImpl : global::System.IDisposable
 {
     /// <inheritdoc/>

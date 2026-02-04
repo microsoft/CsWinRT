@@ -108,7 +108,11 @@ public sealed class DictionaryKeyCollection<TKey, TValue> : ICollection<TKey>
     /// <summary>
     /// The <see cref="IEnumerator{T}"/> implementation for <see cref="DictionaryKeyCollection{TKey, TValue}"/>.
     /// </summary>
-    private sealed class Enumerator : IEnumerator<TKey>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public sealed class Enumerator : IEnumerator<TKey>
     {
         /// <summary>
         /// The underlying <see cref="IEnumerable{T}"/> instance that contains the key-value pairs of the read-only dictionary.

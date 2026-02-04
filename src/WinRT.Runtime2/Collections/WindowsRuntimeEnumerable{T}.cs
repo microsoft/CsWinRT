@@ -45,7 +45,7 @@ public abstract class WindowsRuntimeEnumerable<T, TIIterableMethods> : WindowsRu
     /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator()
     {
-        return TIIterableMethods.First(NativeObjectReference);
+        return IEnumerableMethods<T>.GetEnumerator<TIIterableMethods>(NativeObjectReference);
     }
 
     /// <inheritdoc/>
