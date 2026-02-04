@@ -658,6 +658,8 @@ namespace UnitTest
         [InlineData(typeof(Point?), "Windows.Foundation.IReference`1<Windows.Foundation.Point>", "Metadata")]
         [InlineData(typeof(Vector3?), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>", "Metadata")]
         [InlineData(typeof(Guid?), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
         [InlineData<IList<Int32?>>(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Types
         [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
