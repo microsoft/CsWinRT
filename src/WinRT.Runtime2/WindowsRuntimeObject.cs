@@ -515,6 +515,20 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
     {
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false'). " +
+                    $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
         Type type = Type.GetTypeFromHandle(interfaceType)!;
 
         // If we can resolve the implementation type through the Windows Runtime infrastructure, return it
@@ -538,6 +552,11 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            return false;
+        }
+
         return TryGetCastResult(
             interfaceType: interfaceType,
             implementationType: out _,
@@ -675,6 +694,13 @@ public abstract unsafe class WindowsRuntimeObject :
     private bool LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
     {
         castResult = null;
+
+        // Also fail from here if the feature switch is disabled, to ensure that 'DynamicInterfaceCastableImplementationInfo'
+        // can fully be trimmed. In theory this path shouldn't be reachable if the feature is disabled, but this can help.
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            return false;
+        }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
 
