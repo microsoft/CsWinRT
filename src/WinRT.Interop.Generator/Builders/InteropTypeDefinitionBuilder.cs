@@ -219,6 +219,36 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ret }
             }
         };
+
+        // Define the 'CreateObject' method as follows:
+        //
+        // public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+        MethodDefinition createObjectMethod = new(
+            name: "CreateObject"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(
+                returnType: module.CorLibTypeFactory.Object,
+                parameterTypes: [
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+        {
+            CilOutParameterIndices = [2],
+            CilInstructions =
+            {
+                // Create the 'WindowsRuntimeObjectReference' instance and use it to create a 'NativeObject' instance
+                { Ldarg_0 },
+                { Call, get_IidMethod },
+                { Ldarg_1 },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
+                { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                { Ret }
+            }
+        };
+
+        // Add and implement 'CreateObject'
+        callbackType.AddMethodImplementation(
+            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackCreateObject.Import(module),
+            method: createObjectMethod);
     }
 
     /// <summary>

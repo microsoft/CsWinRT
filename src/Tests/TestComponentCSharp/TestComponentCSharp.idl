@@ -152,6 +152,15 @@ namespace TestComponentCSharp
         static ISingleton Instance;
     }
 
+    [default_interface]
+    unsealed runtimeclass UnSealedCustomEquals
+    {
+        Int32 Value{ get; set; };
+
+        UnSealedCustomEquals();
+        Int32 GetHashCode();
+    }
+
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -496,6 +505,7 @@ namespace TestComponentCSharp
         void RaiseCanExecuteChanged();
 
         static Object BadRuntimeClassName{ get; };
+        static UnSealedCustomEquals NonProjectedClassInstance{ get; };
     }
 
     runtimeclass ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
@@ -673,15 +683,6 @@ And this is another one"
         [default_overload]
         Int32 Equals(Object obj);
         Int32 Equals(CustomEquals2 other);
-    }
-
-    [default_interface]
-    unsealed runtimeclass UnSealedCustomEquals
-    {
-        Int32 Value{ get; set; };
-
-        UnSealedCustomEquals();
-        Int32 GetHashCode();
     }
 
     [default_interface]

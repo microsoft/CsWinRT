@@ -488,6 +488,7 @@ namespace winrt::TestComponentCSharp::implementation
         void RaiseCanExecuteChanged();
 
         static Windows::Foundation::IInspectable BadRuntimeClassName();
+        static winrt::TestComponentCSharp::UnSealedCustomEquals NonProjectedClassInstance();
     };
 }
 

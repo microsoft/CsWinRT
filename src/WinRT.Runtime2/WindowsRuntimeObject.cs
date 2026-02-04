@@ -322,7 +322,7 @@ public abstract unsafe class WindowsRuntimeObject :
 
             return _inspectableObjectReference ?? InitializeInspectableObjectReference();
         }
-        set => Interlocked.CompareExchange(ref _inspectableObjectReference, value, comparand: null);
+        init => _inspectableObjectReference = value;
     }
 
     /// <summary>

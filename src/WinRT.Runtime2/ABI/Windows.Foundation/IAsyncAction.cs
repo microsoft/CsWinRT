@@ -72,6 +72,17 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeAsyncAction(objectReference);
+    }
 }
 
 /// <summary>
