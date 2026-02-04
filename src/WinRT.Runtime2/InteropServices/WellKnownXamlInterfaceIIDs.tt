@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ output extension=".g.cs"#>
@@ -18,14 +18,15 @@ var entries = new string[]
 {
     "INotifyPropertyChanged",
     "INotifyCollectionChanged",
-    "INotifyCollectionChangedEventArgs",
     "INotifyCollectionChangedEventArgsFactory",
+    "NotifyCollectionChangedEventArgs",
     "NotifyCollectionChangedEventHandler",
     "PropertyChangedEventArgs",
     "PropertyChangedEventArgsRuntimeClassFactory",
     "PropertyChangedEventHandler",
     "IReferenceOfPropertyChangedEventHandler",
-    "IReferenceOfNotifyCollectionChangedEventHandler"
+    "IReferenceOfNotifyCollectionChangedAction",
+    "IReferenceOfNotifyCollectionChangedEventHandler",
 };
 
 for (int i = 0; i < entries.Length; i++)
