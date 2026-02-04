@@ -40,6 +40,8 @@ namespace winrt::TestComponentCSharp::implementation
         int32_t Value();
         void Value(int32_t value);
         int32_t GetHashCode();
+    protected:
+        int32_t factor;
 
     private:
         int32_t value;
@@ -52,6 +54,19 @@ namespace winrt::TestComponentCSharp::implementation
         bool Equals(winrt::Windows::Foundation::IInspectable const& obj);
         int32_t GetHashCode();
         bool Equals(winrt::TestComponentCSharp::UnSealedCustomEquals const& other);
+    };
+
+    struct NonProjectedDerivedCustomEquals : winrt::implements<NonProjectedDerivedCustomEquals, TestComponentCSharp::implementation::UnSealedCustomEquals>
+    {
+        NonProjectedDerivedCustomEquals()
+        {
+            factor = 2;
+        }
+
+        hstring GetRuntimeClassName() const override
+        {
+            return L"TestComponentCSharp.NonProjectedDerivedCustomEquals";
+        }
     };
 }
 namespace winrt::TestComponentCSharp::factory_implementation

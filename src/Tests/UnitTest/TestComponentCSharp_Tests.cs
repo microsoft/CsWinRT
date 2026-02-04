@@ -3897,5 +3897,14 @@ namespace UnitTest
                 Assert.Equal(TimeSpan.FromMinutes(1), entries.Value - entries.Key);
             }
         }
+
+        [Fact]
+        public void TestNontProjectedClassAsBaseClass()
+        {
+            UnSealedCustomEquals customEquals = Class.NonProjectedClassInstance;
+            customEquals.Value = 3;
+            // Non projected class changes the behavior of the Value property to double it.
+            Assert.Equal(6, customEquals.Value);
+        }
     }
 }

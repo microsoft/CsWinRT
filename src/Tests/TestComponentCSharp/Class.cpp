@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Class.h"
 #include "Class.g.cpp"
+#include "CustomEquals.h"
 
 using namespace std::chrono;
 
@@ -2120,6 +2121,11 @@ namespace winrt::TestComponentCSharp::implementation
         };
 
         return winrt::make<bad_runtime_classname>();
+    }
+
+    winrt::TestComponentCSharp::UnSealedCustomEquals Class::NonProjectedClassInstance()
+    {
+        return winrt::make<NonProjectedDerivedCustomEquals>();
     }
 }
 
