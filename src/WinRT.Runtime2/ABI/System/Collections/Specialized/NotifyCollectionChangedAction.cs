@@ -13,7 +13,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006, CA1416
 
-namespace ABI.Windows.Foundation;
+namespace ABI.System.Collections.Specialized;
 
 /// <summary>
 /// Marshaller for <see cref="NotifyCollectionChangedAction"/>.
