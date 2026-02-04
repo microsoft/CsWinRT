@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -88,6 +89,68 @@ internal static class MethodDefinitionExtensions
                         name: null,
                         attributes: ParameterAttributes.Out));
                 }
+            }
+        }
+
+        /// <summary>
+        /// Enumerates all types that are instantiated via a <see langword="newobj"/> instruction in a given method.
+        /// </summary>
+        /// <returns>The resulting types.</returns>
+        public IEnumerable<ITypeDefOrRef> EnumerateNewobjTypes()
+        {
+            // Make sure that we do have some instructions to analyze
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            // Go through instruction to look for new objects
+            foreach (CilInstruction instruction in instructions)
+            {
+                // We only care for 'newobj' instructions
+                if (instruction.OpCode != Newobj)
+                {
+                    continue;
+                }
+
+                // Check that we can retrieve the target object type
+                if (instruction.Operand is not IMethodDefOrRef { DeclaringType: ITypeDefOrRef objectType })
+                {
+                    continue;
+                }
+
+                yield return objectType;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates the element types of all arrays that are instantiated via a <see langword="newarr"/> instruction in a given method.
+        /// </summary>
+        /// <returns>The resulting element types.</returns>
+        public IEnumerable<ITypeDefOrRef> EnumerateNewarrElementTypes()
+        {
+            // Make sure that we do have some instructions to analyze
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            // Go through instruction to look for new arrays
+            foreach (CilInstruction instruction in instructions)
+            {
+                // We only care for 'newarr' instructions
+                if (instruction.OpCode != Newarr)
+                {
+                    continue;
+                }
+
+                // Check that we can retrieve the target element type
+                if (instruction.Operand is not ITypeDefOrRef elementType)
+                {
+                    continue;
+                }
+
+                yield return elementType;
             }
         }
     }
