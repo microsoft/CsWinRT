@@ -41,7 +41,7 @@ namespace winrt::TestComponentCSharp::implementation
         void Value(int32_t value);
         int32_t GetHashCode();
     protected:
-        int32_t factor;
+        int32_t factor = 1;
 
     private:
         int32_t value;
