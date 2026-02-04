@@ -404,13 +404,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         string metadata = useWindowsUIXamlProjections ? windowsUIXamlMetadata : microsoftUIXamlMetadata;
 
         // Define the proxy type for the delegate type. Same as above, we need to define this proxy type here, as the
-        // metadata type name is not fixed. We don't need a runtime class name because the type is managed-only. That
-        // is, when marshalled to native it will be converted into a fully native object, so we don't need name lookups.
+        // metadata type name is not fixed. This type can be instantiated and boxed, so we need both possible names.
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
             name: InteropUtf8NameFactory.TypeName(trimTarget),
             mappedMetadata: metadata,
-            runtimeClassName: null,
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
             comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
@@ -421,7 +420,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Same as above for class types, the only difference here is in the proxy type definition for delegates
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
-            metadataTypeName: null,
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             externalTypeMapTargetType: proxyType.ToTypeSignature(),
             externalTypeMapTrimTargetType: trimTarget,
             marshallingTypeMapSourceType: trimTarget,
