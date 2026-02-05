@@ -93,6 +93,25 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
+        /// Enumerates all types that are used for local variables in a given method.
+        /// </summary>
+        /// <returns>The resulting types.</returns>
+        public IEnumerable<TypeSignature> EnumerateLocalVariableTypes()
+        {
+            // Make sure that we do have a body to analyze
+            if (method.CilMethodBody is not CilMethodBody body)
+            {
+                yield break;
+            }
+
+            // Go through local variables and gather their types
+            foreach (CilLocalVariable localVariable in body.LocalVariables ?? [])
+            {
+                yield return localVariable.VariableType;
+            }
+        }
+
+        /// <summary>
         /// Enumerates all types that are instantiated via a <see langword="newobj"/> instruction in a given method.
         /// </summary>
         /// <returns>The resulting types.</returns>
