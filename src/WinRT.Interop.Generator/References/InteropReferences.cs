@@ -784,9 +784,9 @@ internal sealed class InteropReferences
     public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;</c>.
     /// </summary>
-    public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
+    public TypeReference IMapChangedEventArgsMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsMethodsImpl`1"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
@@ -5980,7 +5980,7 @@ internal sealed class InteropReferences
     /// <param name="elementType">The input element type.</param>
     public MemberReference IMapChangedEventArgsImpl1Key(TypeSignature elementType)
     {
-        return IMapChangedEventArgsImpl1
+        return IMapChangedEventArgsMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Key"u8, MethodSignature.CreateStatic(
