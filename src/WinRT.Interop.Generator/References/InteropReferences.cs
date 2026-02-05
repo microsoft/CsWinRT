@@ -1868,7 +1868,7 @@ internal sealed class InteropReferences
                 IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
                 _corLibTypeFactory.UInt32,
                 _corLibTypeFactory.UInt32,
-                _corLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
