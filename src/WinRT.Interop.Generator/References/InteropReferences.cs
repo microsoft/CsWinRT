@@ -634,7 +634,7 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeMappedTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMappedTypeAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeReferenceTypeAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReferenceTypeAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeReferenceTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReferenceTypeAttribute"u8);
 
