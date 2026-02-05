@@ -643,6 +643,9 @@ namespace UnitTest
         [InlineData(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
         // Mapped WindowsRuntime.InteropServices.* Types
         [InlineData(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
+        // Others
+        [InlineData<NotifyCollectionChangedAction>(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
+        [InlineData<NotifyCollectionChangedAction?>(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
         // Projected WinRT Types
         [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
         [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]

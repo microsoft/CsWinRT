@@ -162,7 +162,6 @@ TypeCase[] TestCases =
 
     // --------------------
     // Custom Types
-    // NOTE: these strings assume the e2e test assembly identity matches "TypeMarshaling" (like your existing TestType expectation)
     // --------------------
     new(typeof(TestCSharp), "TestCSharp, TypeMarshaling, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom", 184),
 
@@ -215,6 +214,12 @@ TypeCase[] TestCases =
         "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
         "Custom",
         194),
+
+    // --------------------
+    // Others
+    // --------------------
+    new(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata", 197),
+    new(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata", 198),
 ];
 
 // Convert to Managed Trimmed Metadata NoMetadataTypeInfo Test Case
