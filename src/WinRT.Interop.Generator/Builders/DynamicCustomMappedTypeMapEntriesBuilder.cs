@@ -109,7 +109,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         ValueType(
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
-            trimTarget: interopReferences.NotifyCollectionChangedAction.ToReferenceTypeSignature(),
+            trimTarget: interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature(),
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
