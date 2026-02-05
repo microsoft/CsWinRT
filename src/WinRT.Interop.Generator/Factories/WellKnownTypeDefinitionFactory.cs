@@ -1290,11 +1290,31 @@ internal static partial class WellKnownTypeDefinitionFactory
         // Get the signature for the 'ComInterfaceEntry' type
         TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
 
+        // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces
+        int numberOfDynamicEntries = numberOfEntries - 6;
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfDynamicEntries, 1, nameof(numberOfEntries));
+
         // Add a field for each interface entry
-        for (int i = 0; i < numberOfEntries; i++)
+        for (int i = 0; i < numberOfDynamicEntries; i++)
         {
             interfaceEntriesType.Fields.Add(new FieldDefinition($"InterfaceEntry(Index={i})", FieldAttributes.Public, comInterfaceEntryType));
         }
+
+        // Add the default entries
+        //
+        // public ComInterfaceEntry IStringable;
+        // public ComInterfaceEntry IWeakReferenceSource;
+        // public ComInterfaceEntry IMarshal;
+        // public ComInterfaceEntry IAgileObject;
+        // public ComInterfaceEntry IInspectable;
+        // public ComInterfaceEntry IUnknown;
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
 
         return interfaceEntriesType;
     }

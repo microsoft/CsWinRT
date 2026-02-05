@@ -67,8 +67,8 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
-            // Track whether 'IMarshal' is explicitly implemented (so we'll skip the built-in one)
-            bool hasUserImplementedIMarshalInterface = false;
+            // Track the explicitly implemented 'IMarshal' interface, if we have one (so we'll skip the built-in one)
+            InterfaceEntryInfo? userImplementedIMarshalInterface = null;
 
             // Append all entries for the type (which we share for all matching user-defined types)
             foreach (TypeSignature typeSignature in vtableTypes)
@@ -115,10 +115,15 @@ internal partial class InteropTypeDefinitionBuilder
                         }
 
                         // Track if the current interface is 'IMarshal'
-                        hasUserImplementedIMarshalInterface |= interfaceId == WellKnownInterfaceIIDs.IID_IMarshal;
-
-                        // Add the entry from the 'InterfaceInformation' type, which contains the generated info we need
-                        entriesList.Add(new ComInterfaceEntryInfo(interfaceInformationType));
+                        if (interfaceId == WellKnownInterfaceIIDs.IID_IMarshal)
+                        {
+                            userImplementedIMarshalInterface = new ComInterfaceEntryInfo(interfaceInformationType);
+                        }
+                        else
+                        {
+                            // Add the entry from the 'InterfaceInformation' type, which contains the generated info we need
+                            entriesList.Add(new ComInterfaceEntryInfo(interfaceInformationType));
+                        }
                     }
                     else
                     {
@@ -138,10 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                 new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable));
 
             // Add the default 'IMarshal' entry if the user type didn't implement it explicitly
-            if (!hasUserImplementedIMarshalInterface)
-            {
-                entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable));
-            }
+            entriesList.Add(userImplementedIMarshalInterface ?? new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable));
 
             // Add the default core entries at the end ('IUnknown' in particular must always be the last one)
             entriesList.AddRange(
