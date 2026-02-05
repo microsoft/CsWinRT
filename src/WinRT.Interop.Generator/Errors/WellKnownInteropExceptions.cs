@@ -433,7 +433,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the type of an implemented interface.
     /// </summary>
-    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeSignature type)
     {
         return Warning(49, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
@@ -672,6 +672,14 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException MethodFixupError(InteropMethodFixup fixup, MethodDefinition method, Exception exception)
     {
         return Exception(78, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to resolve the element type for an array type.
+    /// </summary>
+    public static WellKnownInteropWarning ArrayTypeElementTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
+    {
+        return Warning(79, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
     }
 
     /// <summary>

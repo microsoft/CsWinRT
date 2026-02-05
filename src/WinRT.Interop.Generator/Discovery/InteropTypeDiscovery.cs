@@ -84,7 +84,13 @@ internal static partial class InteropTypeDiscovery
         ModuleDefinition module)
     {
         // Ignore types that should explicitly be excluded
-        if (TypeExclusions.IsExcluded(typeDefinition, interopReferences))
+        if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
+        {
+            return;
+        }
+
+        // Ignore SZ array types, we can't handle them from here and they have dedicated logic below
+        if (typeSignature is SzArrayTypeSignature)
         {
             return;
         }
@@ -163,7 +169,7 @@ internal static partial class InteropTypeDiscovery
             // This can really only fail for some constructed generics, for invalid type arguments.
             if (!interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
             {
-                WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+                WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
                 continue;
             }
@@ -256,6 +262,110 @@ internal static partial class InteropTypeDiscovery
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
+
+        // Return the builder to the pool for reuse
+        TypeSignatureBuilderPool.Add(interfaces);
+    }
+
+    /// <summary>
+    /// Tries to track an exposed SZ array type (which may or may not have a Windows Runtime element type).
+    /// </summary>
+    /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>
+    /// <param name="typeSignature">The <see cref="SzArrayTypeSignature"/> for the SZ array type to analyze.</param>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    /// <remarks>
+    /// This method expects <paramref name="typeDefinition"/> to either be non-generic, or
+    /// to have <paramref name="typeSignature"/> be a fully constructed signature for it.
+    /// </remarks>
+    public static void TryTrackExposedSzArrayType(
+        TypeDefinition typeDefinition,
+        SzArrayTypeSignature typeSignature,
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Ignore types that should explicitly be excluded
+        if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
+        {
+            return;
+        }
+
+        // We'll need to look up attributes and enumerate interfaces across the entire type
+        // hierarchy for this type, so make sure that we can resolve all types from it first.
+        if (!typeDefinition.IsTypeHierarchyFullyResolvable(out ITypeDefOrRef? failedResolutionBaseType))
+        {
+            WellKnownInteropExceptions.ArrayTypeElementTypeNotFullyResolvedWarning(failedResolutionBaseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+
+            return;
+        }
+
+        // If the element type is a managed only type, ignore the array type. It is true that the array itself
+        // would still implement some Windows Runtime interfaces, however we assume that if a user has chosen
+        // to block marshalling for a given type, it means they also wouldn't want code to handle arrays of it.
+        if (typeDefinition.IsWindowsRuntimeManagedOnlyType(interopReferences))
+        {
+            return;
+        }
+
+        // Recursion check (see additional notes above)
+        if (!discoveryState.TryMarkUserDefinedType(typeSignature))
+        {
+            return;
+        }
+
+        // Get or create a builder (see additional notes above)
+        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
+        {
+            interfaces = new TypeSignatureEquatableSet.Builder();
+        }
+
+        // Make sure to clear the builder first (see additional notes above)
+        interfaces.Clear();
+
+        // Gather all implemented Windows Runtime interfaces for the current type. Note that for
+        // SZ arrays we are guaranteed to have at least some, due to the enumerable interfaces
+        // that the runtime automatically implements on them.
+        foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces(interopReferences))
+        {
+            // Validate that we can resolve the interface. In this case we should be pretty confident
+            // that this won't possibly fail, since we expect to only see well-known interfaces here.
+            if (!interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
+            {
+                WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
+
+                continue;
+            }
+
+            // Enumerate the current interface and the covariant combinations (see additional notes above)
+            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
+            {
+                // Track all interfaces except '[exclusiveto]' ones (see additional notes above)
+                if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
+                {
+                    interfaces.Add(covariantInterfaceSignature);
+
+                    // Make sure that any discovered interfaces are also tracked (see additional notes above)
+                    if (covariantInterfaceSignature is GenericInstanceTypeSignature constructedSignature)
+                    {
+                        TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
+                            typeSignature: constructedSignature,
+                            args: args,
+                            discoveryState,
+                            interopReferences: interopReferences,
+                            module: module);
+                    }
+                }
+            }
+        }
+
+        // Track the array as a user-defined type. Note that for SZ arrays that don't have an element type
+        // that is a Windows Runtime type, they're effectively just like any other normal user-defined type.
+        // That is, some 'Foo[]' type will behave conceptually the same as some 'List<Foo>' instantiation.
+        discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
 
         // Return the builder to the pool for reuse
         TypeSignatureBuilderPool.Add(interfaces);
