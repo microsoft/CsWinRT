@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -23,6 +24,11 @@ internal static partial class InteropTypeDiscovery
     /// A pool of <see cref="TypeSignatureEquatableSet.Builder"/> instances that can be reused by discovery logic.
     /// </summary>
     private static readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> TypeSignatureBuilderPool = [];
+
+    /// <summary>
+    /// A pool of <see cref="HashSet{T}"/> instances used to validate duplicate IIDs.
+    /// </summary>
+    private static readonly ConcurrentBag<HashSet<Guid>> IidHashSetPool = [];
 
     /// <summary>
     /// Tries to track a given composable Windows Runtime type.
@@ -156,6 +162,15 @@ internal static partial class InteropTypeDiscovery
         // Since we're reusing the builder for all types, make sure to clear it first
         interfaces.Clear();
 
+        // Use the same logic to also retrieve the set to use to validate unique IIDs in custom interfaces
+        if (!IidHashSetPool.TryTake(out HashSet<Guid>? iids))
+        {
+            iids = [];
+        }
+
+        // Clear this set as well, since we might've retrieved one from the shared pool
+        iids.Clear();
+
         // We want to explicitly track whether the type implements any projected Windows Runtime
         // interfaces, as we are only interested in such types. We want to also gather all
         // implemented '[GeneratedComInterface]' interfaces, but if a type only implements
@@ -243,6 +258,12 @@ internal static partial class InteropTypeDiscovery
                         continue;
                     }
 
+                    // Ensure that this is the first interface we see implemented on this type with this IID
+                    if (!iids.Add(iid))
+                    {
+                        WellKnownInteropExceptions.GeneratedComInterfaceDuplicateIidWarning(interfaceDefinition, typeDefinition, iid).LogOrThrow(args.TreatWarningsAsErrors);
+                    }
+
                     // Validate that the current interface isn't trying to implement a reserved interface.
                     // For instance, it's not allowed to try to explicitly implement 'IUnknown' or 'IInspectable'.
                     if (WellKnownInterfaceIIDs.ReservedIIDsMap.TryGetValue(iid, out string? interfaceName))
@@ -263,8 +284,9 @@ internal static partial class InteropTypeDiscovery
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
 
-        // Return the builder to the pool for reuse
+        // Return the builder and set to the pool for reuse
         TypeSignatureBuilderPool.Add(interfaces);
+        IidHashSetPool.Add(iids);
     }
 
     /// <summary>

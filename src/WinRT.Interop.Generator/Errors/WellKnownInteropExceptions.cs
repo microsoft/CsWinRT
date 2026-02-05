@@ -683,6 +683,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Multiple '[GeneratedComInterface]' types are using the same IID.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceDuplicateIidWarning(TypeDefinition interfaceType, TypeDefinition type, Guid iid)
+    {
+        return Warning(80, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
