@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -137,17 +136,6 @@ internal static class ModuleDefinitionExtensions
             }
         }
 
-        // Enumerate the type specification table first. This will contain all type signatures for types that
-        // are referenced by a metadata token anywhere in the module. This will also include things such as
-        // base types (for generic types or not), as well as implemented (generic) interfaces.
-        foreach (TypeSpecification type in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
-        {
-            foreach (TResult result in EnumerateTypeSignatures(type.Signature, results, visitor))
-            {
-                yield return result;
-            }
-        }
-
         // Enumerate the fields table. This is needed because field definitions can have type signatures inline,
         // without them appearing in the type specification table. This ensures that we're not missing those.
         foreach (FieldDefinition field in module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
@@ -158,54 +146,63 @@ internal static class ModuleDefinitionExtensions
             }
         }
 
-        // Enumerate the method table, to ensure we can detect signatures for return types and parameter types
+        // Enumerate the method table, to ensure we can detect signatures for return types and parameter types.
+        // In each method, we also walk the method body to find local variable types, 'newobj' and 'newarr' types.
+        // Note that methods in this table might require type arguments, which we don't have from here. However,
+        // rather than just ignoring them here, we rely on types not fully constructed to be filtered out later.
+        // This is still useful even in those cases, as we might see partially constructed signatures where
+        // one or more type arguments is statically known, and which might be a type relevant for marshalling.
         foreach (MethodDefinition method in module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
-            // Gather return type signatures
-            foreach (TResult result in EnumerateTypeSignatures(method.Signature?.ReturnType, results, visitor))
+            foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes())
+            {
+                foreach (TResult result in EnumerateTypeSignatures(visibleType, results, visitor))
+                {
+                    yield return result;
+                }
+            }
+        }
+
+        // Enumerate the type specification table. This will contain all type signatures for types that are
+        // referenced by a metadata token anywhere in the module. This will also include things such as base
+        // types (for generic types or not), as well as implemented (generic) interfaces.
+        foreach (TypeSpecification specification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
+        {
+            foreach (TResult result in EnumerateTypeSignatures(specification.Signature, results, visitor))
             {
                 yield return result;
             }
 
-            // Walk all parameters as well
-            foreach (TypeSignature parameter in method.Signature?.ParameterTypes ?? [])
+            // Resolve the type definition to be able to process its methods
+            if (specification.Resolve() is not TypeDefinition type)
             {
-                foreach (TResult result in EnumerateTypeSignatures(parameter, results, visitor))
-                {
-                    yield return result;
-                }
+                continue;
             }
 
-            // Also walk all declared locals, just in case
-            foreach (CilLocalVariable local in method.CilMethodBody?.LocalVariables ?? [])
-            {
-                foreach (TResult result in EnumerateTypeSignatures(local.VariableType, results, visitor))
-                {
-                    yield return result;
-                }
-            }
+            GenericContext genericContext = new(specification.Signature as GenericInstanceTypeSignature, null);
 
-            // Look for all 'newobj' instructions and gather all object types
-            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
+            // Also manually enumerate all methods from the types we have the specification for. The reason for doing this
+            // is that it might allow us to see more constructed types then we can from just the methods table, and the
+            // method specification table. For instance:
+            //
+            // class C<T>
+            // {
+            //     List<T> M() => [];
+            // }
+            //
+            // If we have a 'C<int>' type specification, we can resolve 'C<T>', enumerate its methods, which will give us
+            // the definition for 'M()', and then we'll be able to instantiate its return type with the generic context
+            // from the type specification, so we'll be able to construct 'List<int>'. If we only saw 'C<T>.M()' from the
+            // methods table, we wouldn't have the necessary generic context. And becase 'M()' is not itself generic,
+            // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
+            foreach (MethodDefinition method in type.Methods)
             {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    objectType.ToTypeSignature(),
-                    results,
-                    visitor))
+                foreach (TypeSignature visitedType in method.EnumerateAllVisibleTypes())
                 {
-                    yield return result;
-                }
-            }
-
-            // Look for all 'newarr' instructions and gather all element types
-            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    elementType.MakeSzArrayType(),
-                    results,
-                    visitor))
-                {
-                    yield return result;
+                    foreach (TResult result in EnumerateTypeSignatures(visitedType.InstantiateGenericTypes(genericContext), results, visitor))
+                    {
+                        yield return result;
+                    }
                 }
             }
         }
@@ -214,72 +211,17 @@ internal static class ModuleDefinitionExtensions
         // or passed around in some way (eg. as delegates). Crucially, this allows us to catch constructed delegates that
         // don't appear anywhere else, as they're just a result of specific instantiations of a generic method. For instance:
         //
-        // public static List<T> M<T>() => [];
-        // public static object N() => M<int>();
+        // static List<T> M<T>() => [];
+        // static object N() => M<int>();
         //
         // This will correctly detect that constructed 'List<int>' on the constructed return for the 'M<int>()' invocation.
         foreach (MethodSpecification specification in module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
             GenericContext genericContext = new(specification.DeclaringType?.ToTypeSignature() as GenericInstanceTypeSignature, specification.Signature);
 
-            // Instantiate and gather the return type
-            foreach (TResult result in EnumerateTypeSignatures(
-                specification.Method!.Signature!.ReturnType.InstantiateGenericTypes(genericContext),
-                results,
-                visitor))
+            foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes())
             {
-                yield return result;
-            }
-
-            // Instantiate and gather all parameter types
-            foreach (TypeSignature parameterType in specification.Method!.Signature!.ParameterTypes)
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    parameterType.InstantiateGenericTypes(genericContext),
-                    results,
-                    visitor))
-                {
-                    yield return result;
-                }
-            }
-
-            // Resolve the method definition to be able to process its body
-            if (specification.Method!.Resolve() is not MethodDefinition method)
-            {
-                continue;
-            }
-
-            // Process all declared locals as well
-            foreach (CilLocalVariable localVariable in method.CilMethodBody?.LocalVariables ?? [])
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    localVariable.VariableType.InstantiateGenericTypes(genericContext),
-                    results,
-                    visitor))
-                {
-                    yield return result;
-                }
-            }
-
-            // Look for all 'newobj' instructions and instantiate the object types
-            foreach (ITypeDefOrRef objectType in method.EnumerateNewobjTypes())
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    objectType.ToTypeSignature().InstantiateGenericTypes(genericContext),
-                    results,
-                    visitor))
-                {
-                    yield return result;
-                }
-            }
-
-            // Look for all 'newarr' instructions and instantiate the element types
-            foreach (ITypeDefOrRef elementType in method.EnumerateNewarrElementTypes())
-            {
-                foreach (TResult result in EnumerateTypeSignatures(
-                    elementType.MakeSzArrayType().InstantiateGenericTypes(genericContext),
-                    results,
-                    visitor))
+                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
                 {
                     yield return result;
                 }
