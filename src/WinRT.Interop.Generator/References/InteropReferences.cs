@@ -1364,6 +1364,11 @@ internal sealed class InteropReferences
     public TypeReference Size => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Size"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IStringable</c>.
+    /// </summary>
+    public TypeReference IStringable => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IStringable"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncStatus</c>.
     /// </summary>
     public TypeReference AsyncStatus => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncStatus"u8);
