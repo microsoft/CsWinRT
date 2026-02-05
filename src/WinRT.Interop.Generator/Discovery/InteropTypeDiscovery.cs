@@ -157,7 +157,7 @@ internal static partial class InteropTypeDiscovery
         bool hasAnyProjectedWindowsRuntimeInterfaces = false;
 
         // Gather all implemented Windows Runtime interfaces for the current type
-        foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
+        foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces(interopReferences))
         {
             // Make sure we can resolve the interface type fully, which we should always be able to do.
             // This can really only fail for some constructed generics, for invalid type arguments.

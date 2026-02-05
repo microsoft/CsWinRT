@@ -191,7 +191,7 @@ internal partial class InteropTypeDiscovery
                 module: module);
 
             // We also want to crawl base interfaces
-            foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
+            foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces(interopReferences))
             {
                 // Filter out just constructed generic interfaces, since we only care about those here.
                 // The non-generic ones are only useful when gathering interfaces for user-defined types.
