@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Windows.Foundation;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -13,48 +13,36 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
-    value: "Windows.Foundation.AsyncStatus",
-    target: typeof(AsyncStatus),
-    trimTarget: typeof(AsyncStatus))]
-
-[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-    value: "Windows.Foundation.IReference`1<Windows.Foundation.AsyncStatus>",
-    target: typeof(AsyncStatus),
-    trimTarget: typeof(AsyncStatus))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-
-namespace ABI.Windows.Foundation;
+namespace ABI.System.Collections.Specialized;
 
 /// <summary>
-/// Marshaller for <see cref="AsyncStatus"/>.
+/// Marshaller for <see cref="NotifyCollectionChangedAction"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class AsyncStatusMarshaller
+public static unsafe class NotifyCollectionChangedActionMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(AsyncStatus? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(NotifyCollectionChangedAction? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedAction);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static AsyncStatus? UnboxToManaged(void* value)
+    public static NotifyCollectionChangedAction? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<AsyncStatus>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<NotifyCollectionChangedAction>(value);
     }
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="AsyncStatus"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="NotifyCollectionChangedAction"/>.
 /// </summary>
-file struct AsyncStatusInterfaceEntries
+file struct NotifyCollectionChangedActionInterfaceEntries
 {
-    public ComInterfaceEntry IReferenceOfAsyncStatus;
+    public ComInterfaceEntry IReferenceOfNotifyCollectionChangedAction;
     public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
@@ -65,23 +53,23 @@ file struct AsyncStatusInterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="AsyncStatusInterfaceEntries"/>.
+/// The implementation of <see cref="NotifyCollectionChangedActionInterfaceEntries"/>.
 /// </summary>
-file static class AsyncStatusInterfaceEntriesImpl
+file static class NotifyCollectionChangedActionInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="AsyncStatusInterfaceEntries"/> value for <see cref="AsyncStatus"/>.
+    /// The <see cref="NotifyCollectionChangedActionInterfaceEntries"/> value for <see cref="NotifyCollectionChangedAction"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly AsyncStatusInterfaceEntries Entries;
+    public static readonly NotifyCollectionChangedActionInterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static AsyncStatusInterfaceEntriesImpl()
+    static NotifyCollectionChangedActionInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfAsyncStatus.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus;
-        Entries.IReferenceOfAsyncStatus.Vtable = IReferenceImpl.Int32Enum;
+        Entries.IReferenceOfNotifyCollectionChangedAction.IID = WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedAction;
+        Entries.IReferenceOfNotifyCollectionChangedAction.Vtable = IReferenceImpl.Int32Enum;
         Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
         Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
@@ -100,9 +88,13 @@ file static class AsyncStatusInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="AsyncStatus"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="NotifyCollectionChangedAction"/>.
 /// </summary>
-internal sealed unsafe class AsyncStatusComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class NotifyCollectionChangedActionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -113,9 +105,9 @@ internal sealed unsafe class AsyncStatusComWrappersMarshallerAttribute : Windows
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(AsyncStatusInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(NotifyCollectionChangedActionInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(in AsyncStatusInterfaceEntriesImpl.Entries);
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in NotifyCollectionChangedActionInterfaceEntriesImpl.Entries);
     }
 
     /// <inheritdoc/>
@@ -123,6 +115,6 @@ internal sealed unsafe class AsyncStatusComWrappersMarshallerAttribute : Windows
     {
         wrapperFlags = CreatedWrapperFlags.NonWrapping;
 
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<AsyncStatus>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<NotifyCollectionChangedAction>(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedAction);
     }
 }

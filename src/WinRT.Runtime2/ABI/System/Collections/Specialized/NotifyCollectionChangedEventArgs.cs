@@ -178,7 +178,7 @@ public sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshaller
 
         IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: value,
-            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgs,
+            iid: in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventArgs,
             pvObject: out void* result).Assert();
 
         try

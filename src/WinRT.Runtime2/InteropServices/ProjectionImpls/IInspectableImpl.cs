@@ -56,9 +56,18 @@ public static unsafe class IInspectableImpl
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
+            // Get the marshalling info for the current object. Note that we don't necessary have an exact match.
+            // For instance, consider the scenario where 'typeof(Foo)' has been marshalled as 'object' to native.
+            // The CCW would be for a concrete 'RuntimeType' instance, which we can't know about. This logic
+            // takes care of finding the best marshalling info match for similar cases (e.g. for 'Exception' too).
+            if (!WindowsRuntimeMarshallingInfo.TryGetInfo(instance.GetType(), out WindowsRuntimeMarshallingInfo? marshallingInfo))
+            {
+                marshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(instance);
+            }
+
             // Get the managed CCW vtable entries to gather the IIDs. This method should only be used with
             // managed objects that were produced by 'WindowsRuntimeComWrappers', so this should never fail.
-            WindowsRuntimeVtableInfo vtableInfo = WindowsRuntimeMarshallingInfo.GetInfo(instance.GetType()).GetVtableInfo();
+            WindowsRuntimeVtableInfo vtableInfo = marshallingInfo.GetVtableInfo();
 
             Guid* pIids = (Guid*)Marshal.AllocCoTaskMem(sizeof(Guid) * vtableInfo.Count);
 
@@ -87,8 +96,14 @@ public static unsafe class IInspectableImpl
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
+            // Get the marshalling info for the current object (see additional notes above)
+            if (!WindowsRuntimeMarshallingInfo.TryGetInfo(instance.GetType(), out WindowsRuntimeMarshallingInfo? marshallingInfo))
+            {
+                marshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(instance);
+            }
+
             // Like for 'GetIids', this method should only be called on managed types, and it should never fail
-            string runtimeClassName = WindowsRuntimeMarshallingInfo.GetInfo(instance.GetType()).GetRuntimeClassName();
+            string runtimeClassName = marshallingInfo.GetRuntimeClassName();
 
             *className = HStringMarshaller.ConvertToUnmanaged(runtimeClassName);
 

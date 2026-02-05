@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -32,17 +32,6 @@ internal static class WellKnownXamlInterfaceIIDs
     }
 
     /// <summary>
-    /// Gets the IID for <c>INotifyCollectionChangedEventArgs</c>.
-    /// </summary>
-    public static ref readonly Guid IID_INotifyCollectionChangedEventArgs
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
-            ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_INotifyCollectionChangedEventArgs
-            : ref WellKnownWindowsInterfaceIIDs.IID_MUX_INotifyCollectionChangedEventArgs;
-    }
-
-    /// <summary>
     /// Gets the IID for <c>INotifyCollectionChangedEventArgsFactory</c>.
     /// </summary>
     public static ref readonly Guid IID_INotifyCollectionChangedEventArgsFactory
@@ -51,6 +40,17 @@ internal static class WellKnownXamlInterfaceIIDs
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
             ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_INotifyCollectionChangedEventArgsFactory
             : ref WellKnownWindowsInterfaceIIDs.IID_MUX_INotifyCollectionChangedEventArgsFactory;
+    }
+
+    /// <summary>
+    /// Gets the IID for <c>NotifyCollectionChangedEventArgs</c>.
+    /// </summary>
+    public static ref readonly Guid IID_NotifyCollectionChangedEventArgs
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_NotifyCollectionChangedEventArgs
+            : ref WellKnownWindowsInterfaceIIDs.IID_MUX_NotifyCollectionChangedEventArgs;
     }
 
     /// <summary>
@@ -106,6 +106,17 @@ internal static class WellKnownXamlInterfaceIIDs
         get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
             ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_IReferenceOfPropertyChangedEventHandler
             : ref WellKnownWindowsInterfaceIIDs.IID_MUX_IReferenceOfPropertyChangedEventHandler;
+    }
+
+    /// <summary>
+    /// Gets the IID for <c>IReferenceOfNotifyCollectionChangedAction</c>.
+    /// </summary>
+    public static ref readonly Guid IID_IReferenceOfNotifyCollectionChangedAction
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_IReferenceOfNotifyCollectionChangedAction
+            : ref WellKnownWindowsInterfaceIIDs.IID_MUX_IReferenceOfNotifyCollectionChangedAction;
     }
 
     /// <summary>
