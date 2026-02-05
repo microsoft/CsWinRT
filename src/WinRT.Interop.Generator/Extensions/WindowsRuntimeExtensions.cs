@@ -162,6 +162,7 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector4) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DataErrorsChangedEventArgs) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventArgs);
         }
 
