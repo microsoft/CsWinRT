@@ -2043,7 +2043,9 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeObjectComWrappersCallback
         .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Object,
-            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.TryCreateObject</c>.
