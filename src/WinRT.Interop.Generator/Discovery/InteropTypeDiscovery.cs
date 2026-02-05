@@ -362,9 +362,9 @@ internal static partial class InteropTypeDiscovery
             }
         }
 
-        // If the element type is a Windows Runtime type, track is specifically as such.
+        // If the array is a valid Windows Runtime type, track is specifically as such.
         // This is because in this case we'll require additional, specialized marshalling.
-        if (typeSignature.BaseType.IsWindowsRuntimeType(interopReferences))
+        if (typeSignature.IsWindowsRuntimeType(interopReferences))
         {
             discoveryState.TrackSzArrayType(typeSignature, interfaces.ToEquatableSet());
         }
