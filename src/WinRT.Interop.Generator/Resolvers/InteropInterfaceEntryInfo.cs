@@ -13,11 +13,6 @@ namespace WindowsRuntime.InteropGenerator.Resolvers;
 internal abstract class InteropInterfaceEntryInfo
 {
     /// <summary>
-    /// Gets whether the current instance represents the <c>IMarshal</c> interface.
-    /// </summary>
-    public abstract bool IsIMarshalInterface { get; }
-
-    /// <summary>
     /// Loads the IID for the interface onto the evaluation stack.
     /// </summary>
     /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
