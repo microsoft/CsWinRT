@@ -845,6 +845,7 @@ namespace cswinrt
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable`1", true },
+                    { "IStringable", "Windows.Foundation", "IStringable" },
                     { "Point", "Windows.Foundation", "Point" },
                     { "PropertyType", "Windows.Foundation", "PropertyType" },
                     { "Rect", "Windows.Foundation", "Rect" },
