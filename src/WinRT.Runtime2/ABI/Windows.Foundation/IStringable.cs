@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -56,7 +57,104 @@ public static unsafe class IStringableMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static global::Windows.Foundation.IStringable? ConvertToManaged(void* value)
     {
-        return (global::Windows.Foundation.IStringable?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::Windows.Foundation.IStringable?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IStringableComWrappersCallback>(value);
+    }
+}
+
+/// <summary>
+/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IStringable"/>.
+/// </summary>
+file abstract class IStringableComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static unsafe bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        // Here we match the runtime class name of 'IStringable', as usual for marshalling interfaces (which handles them being
+        // returned from anonymous objects implementing them), as well as 'Uri'. The reason for this special handling is that
+        // 'System.Uri' is a custom-mapped type, and it doesn't implement 'Windows.Foundation.IStringable'. However, the native
+        // 'Windows.Foundation.Uri' type does implement it. This specific issue only happens with this interface and this type.
+        // Without this special handling, we'd get 'Windows.Foundation.Uri' as the runtime class name, which would then cause
+        // our marshalling infrastructure to return a 'System.Uri' instance, resulting in the following interface cast to fail.
+        if (runtimeClassName.SequenceEqual("Windows.Foundation.IStringable") ||
+            runtimeClassName.SequenceEqual("Windows.Foundation.Uri"))
+        {
+            WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IStringable,
+                wrapperFlags: out wrapperFlags);
+
+            wrapperObject = new WindowsRuntimeStringable(valueReference);
+
+            return true;
+        }
+
+        wrapperFlags = CreatedWrapperFlags.None;
+        wrapperObject = null;
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IStringable,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeStringable(valueReference);
+    }
+}
+
+/// <summary>
+/// The implementation of a projected anonymous <see cref="global::Windows.Foundation.IStringable"/> object.
+/// </summary>
+[WindowsRuntimeManagedOnlyType]
+file sealed class WindowsRuntimeStringable : WindowsRuntimeObject,
+    global::Windows.Foundation.IStringable,
+    IWindowsRuntimeInterface<global::Windows.Foundation.IStringable>
+{
+    /// <summary>
+    /// Creates a <see cref="WindowsRuntimeStringable"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
+    public WindowsRuntimeStringable(WindowsRuntimeObjectReference nativeObjectReference)
+        : base(nativeObjectReference)
+    {
+    }
+
+    /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected internal override bool HasUnwrappableNativeObjectReference => true;
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return IStringableMethods.ToString(NativeObjectReference);
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<global::Windows.Foundation.IStringable>.GetInterface()
+    {
+        return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected override bool IsOverridableInterface(in Guid iid)
+    {
+        return false;
     }
 }
 
@@ -71,7 +169,7 @@ public static unsafe class IStringableMethods
 {
     /// <see cref="global::Windows.Foundation.IStringable.ToString"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static string? ToString(WindowsRuntimeObjectReference thisReference)
+    public static string ToString(WindowsRuntimeObjectReference thisReference)
     {
         using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
 
@@ -169,7 +267,7 @@ public static unsafe class IStringableImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::Windows.Foundation.IStringable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-[Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
+[Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
 file interface IStringableInterfaceImpl : global::Windows.Foundation.IStringable
 {
     /// <inheritdoc/>
@@ -177,6 +275,6 @@ file interface IStringableInterfaceImpl : global::Windows.Foundation.IStringable
     {
         var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::Windows.Foundation.IStringable).TypeHandle);
 
-        return IStringableMethods.ToString(thisReference)!;
+        return IStringableMethods.ToString(thisReference);
     }
 }
