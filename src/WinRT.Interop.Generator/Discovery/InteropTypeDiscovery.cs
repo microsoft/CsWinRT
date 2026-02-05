@@ -312,7 +312,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Recursion check (see additional notes above)
-        if (!discoveryState.TryMarkUserDefinedType(typeSignature))
+        if (!discoveryState.TryMarkSzArrayType(typeSignature))
         {
             return;
         }
