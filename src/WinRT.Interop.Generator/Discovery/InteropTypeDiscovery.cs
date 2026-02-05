@@ -362,10 +362,19 @@ internal static partial class InteropTypeDiscovery
             }
         }
 
-        // Track the array as a user-defined type. Note that for SZ arrays that don't have an element type
-        // that is a Windows Runtime type, they're effectively just like any other normal user-defined type.
-        // That is, some 'Foo[]' type will behave conceptually the same as some 'List<Foo>' instantiation.
-        discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
+        // If the element type is a Windows Runtime type, track is specifically as such.
+        // This is because in this case we'll require additional, specialized marshalling.
+        if (typeSignature.BaseType.IsWindowsRuntimeType(interopReferences))
+        {
+            discoveryState.TrackSzArrayType(typeSignature, interfaces.ToEquatableSet());
+        }
+        else
+        {
+            // Track the array as a user-defined type. Note that for SZ arrays that don't have an element type
+            // that is a Windows Runtime type, they're effectively just like any other normal user-defined type.
+            // That is, some 'Foo[]' type will behave conceptually the same as some 'List<Foo>' instantiation.
+            discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
+        }
 
         // Return the builder to the pool for reuse
         TypeSignatureBuilderPool.Add(interfaces);

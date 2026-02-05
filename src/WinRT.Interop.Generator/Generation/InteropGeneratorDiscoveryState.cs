@@ -63,9 +63,6 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
-    private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
-
     /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
@@ -78,11 +75,20 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
+    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
     /// <remarks>
     /// The value is also <see cref="TypeSignatureEquatableSet"/> so we can de-duplicate equivalent sets across different maps (e.g. <see cref="_userDefinedTypes"/>).
     /// </remarks>
     private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _userDefinedVtableTypes = [];
+
+    /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
+    /// <remarks>
+    /// The value is also <see cref="TypeSignatureEquatableSet"/> so we can de-duplicate equivalent sets across different maps (e.g. <see cref="_szArrayTypes"/>).
+    /// </remarks>
+    private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _szArrayVtableTypes = [];
 
     /// <summary>
     /// The mapping of all types that failed resolution.
@@ -388,17 +394,6 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
-    /// Tracks a SZ array type.
-    /// </summary>
-    /// <param name="szArrayType">The SZ array type.</param>
-    public void TrackSzArrayType(SzArrayTypeSignature szArrayType)
-    {
-        ThrowIfReadOnly();
-
-        _ = _szArrayTypes.TryAdd(szArrayType, 0);
-    }
-
-    /// <summary>
     /// Tries to mark a user-defined type as having been seen the first time,
     /// and indicating that it's in the process of being processed.
     /// </summary>
@@ -447,6 +442,21 @@ internal sealed class InteropGeneratorDiscoveryState
         TypeSignatureEquatableSet cachedVtableTypes = _userDefinedVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
 
         _ = _userDefinedTypes.TryAdd(userDefinedType, cachedVtableTypes);
+    }
+
+    /// <summary>
+    /// Tracks an SZ array type.
+    /// </summary>
+    /// <param name="arrayType">The SZ array type.</param>
+    /// <param name="vtableTypes">The vtable types for <paramref name="arrayType"/>.</param>
+    public void TrackSzArrayType(SzArrayTypeSignature arrayType, TypeSignatureEquatableSet vtableTypes)
+    {
+        ThrowIfReadOnly();
+
+        // Track unique sets for the input vtable slots (see notes above)
+        TypeSignatureEquatableSet cachedVtableTypes = _szArrayVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
+
+        _ = _szArrayTypes.TryAdd(arrayType, cachedVtableTypes);
     }
 
     /// <summary>
