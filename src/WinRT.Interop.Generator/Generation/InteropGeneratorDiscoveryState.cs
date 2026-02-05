@@ -191,11 +191,6 @@ internal sealed class InteropGeneratorDiscoveryState
     public IReadOnlyCollection<GenericInstanceTypeSignature> KeyValuePairTypes => (IReadOnlyCollection<GenericInstanceTypeSignature>)_keyValuePairTypes.Keys;
 
     /// <summary>
-    /// Gets all SZ array types.
-    /// </summary>
-    public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
-
-    /// <summary>
     /// Gets all user-defined types.
     /// </summary>
     public IReadOnlyCollection<TypeSignature> UserDefinedTypes => (IReadOnlyCollection<TypeSignature>)_userDefinedTypes.Keys;
@@ -209,6 +204,21 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all user-defined vtable types (for each user-defined type).
     /// </summary>
     public IReadOnlyCollection<TypeSignatureEquatableSet> UserDefinedVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_userDefinedVtableTypes.Keys;
+
+    /// <summary>
+    /// Gets all SZ array types.
+    /// </summary>
+    public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
+
+    /// <summary>
+    /// Gets all SZ array types and their vtable types.
+    /// </summary>
+    public IReadOnlyDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> SzArrayAndVtableTypes => _szArrayTypes;
+
+    /// <summary>
+    /// Gets all SZ array vtable types (for each SZ array type).
+    /// </summary>
+    public IReadOnlyCollection<TypeSignatureEquatableSet> SzArrayVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_szArrayVtableTypes.Keys;
 
     /// <summary>
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
