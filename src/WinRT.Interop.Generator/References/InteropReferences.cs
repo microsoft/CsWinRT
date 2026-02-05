@@ -5379,7 +5379,7 @@ internal sealed class InteropReferences
                     IDictionary2.MakeGenericReferenceType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
@@ -5580,7 +5580,7 @@ internal sealed class InteropReferences
                     IReadOnlyDictionary2.MakeGenericReferenceType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
