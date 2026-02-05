@@ -1498,7 +1498,7 @@ internal sealed class InteropReferences
             parameterTypes: [
                 IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.String),
                 _corLibTypeFactory.UInt32,
-                _corLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
