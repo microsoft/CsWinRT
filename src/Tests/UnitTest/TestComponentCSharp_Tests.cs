@@ -3350,7 +3350,6 @@ namespace UnitTest
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
             Assert.True(bindableIterator.MoveNext());
-            Assert.True(bindableIterator.HasCurrent);
             Assert.Equal(27861, bindableIterator.Current);
         }
 

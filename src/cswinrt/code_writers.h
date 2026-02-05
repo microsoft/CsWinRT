@@ -3166,6 +3166,16 @@ IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::AB
 objref_name);
     }
 
+    void write_nongeneric_enumerator_members_using_static_abi_methods(writer& w, std::string const& objref_name)
+    {
+        w.write(R"(
+public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext(%);
+public void Reset() => throw new NotSupportedException();
+public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current(%);
+)",
+objref_name, objref_name);
+    }
+
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
     {
         w.write(R"(
@@ -3897,6 +3907,10 @@ visibility, self, objref_name);
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
             write_nongeneric_enumerable_members_using_static_abi_methods(w, objref_name);
+        }
+        else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerator")
+        {
+            write_nongeneric_enumerator_members_using_static_abi_methods(w, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {

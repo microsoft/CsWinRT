@@ -781,6 +781,7 @@ namespace cswinrt
             { "Microsoft.UI.Xaml.Interop",
                 {
                     { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableIterator", "System.Collections", "IEnumerator", true, true },
                     { "IBindableVector", "System.Collections", "IList", true, true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
@@ -933,6 +934,7 @@ namespace cswinrt
             { "Windows.UI.Xaml.Interop",
                 {
                     { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableIterator", "System.Collections", "IEnumerator", true, true },
                     { "IBindableVector", "System.Collections", "IList", true, true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
