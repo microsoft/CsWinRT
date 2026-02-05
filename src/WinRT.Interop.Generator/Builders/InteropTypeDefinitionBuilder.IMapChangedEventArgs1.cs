@@ -82,7 +82,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Key' method
             argsMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapChangedEventArgsImpl1Key(elementType).Import(module),
+                declaration: interopReferences.IMapChangedEventArgsMethodsImpl1Key(elementType).Import(module),
                 method: keyMethod);
         }
 

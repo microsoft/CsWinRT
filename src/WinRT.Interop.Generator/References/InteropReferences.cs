@@ -5975,10 +5975,10 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;.Key</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;.Key</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    public MemberReference IMapChangedEventArgsImpl1Key(TypeSignature elementType)
+    public MemberReference IMapChangedEventArgsMethodsImpl1Key(TypeSignature elementType)
     {
         return IMapChangedEventArgsMethodsImpl1
             .MakeGenericReferenceType(elementType)
