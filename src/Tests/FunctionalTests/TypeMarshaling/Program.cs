@@ -55,7 +55,7 @@ TypeCase[] TestCases =
     new(typeof(TimeSpan),           "Windows.Foundation.TimeSpan",             "Metadata", 123),
     new(typeof(Type),               "Windows.UI.Xaml.Interop.TypeName",        "Metadata", 124),
     new(typeof(Uri),                "Windows.Foundation.Uri",                  "Metadata", 125),
-    //new(typeof(ICommand),           "Microsoft.UI.Xaml.Input.ICommand",        "Metadata", 126),
+    new(typeof(ICommand),           "Microsoft.UI.Xaml.Input.ICommand",        "Metadata", 126),
 
     // --------------------
     // Mapped System.Collections.* Types
