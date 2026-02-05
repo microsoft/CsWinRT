@@ -182,7 +182,7 @@ internal static class ModuleDefinitionExtensions
             GenericContext genericContext = new(specification.Signature as GenericInstanceTypeSignature, null);
 
             // Also manually enumerate all methods from the types we have the specification for. The reason for doing this
-            // is that it might allow us to see more constructed types then we can from just the methods table, and the
+            // is that it might allow us to see more constructed types than we can from just the methods table, and the
             // method specification table. For instance:
             //
             // class C<T>
@@ -193,13 +193,13 @@ internal static class ModuleDefinitionExtensions
             // If we have a 'C<int>' type specification, we can resolve 'C<T>', enumerate its methods, which will give us
             // the definition for 'M()', and then we'll be able to instantiate its return type with the generic context
             // from the type specification, so we'll be able to construct 'List<int>'. If we only saw 'C<T>.M()' from the
-            // methods table, we wouldn't have the necessary generic context. And becase 'M()' is not itself generic,
+            // methods table, we wouldn't have the necessary generic context. And because 'M()' is not itself generic,
             // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
             foreach (MethodDefinition method in type.Methods)
             {
-                foreach (TypeSignature visitedType in method.EnumerateAllVisibleTypes())
+                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes())
                 {
-                    foreach (TResult result in EnumerateTypeSignatures(visitedType.InstantiateGenericTypes(genericContext), results, visitor))
+                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
                     {
                         yield return result;
                     }

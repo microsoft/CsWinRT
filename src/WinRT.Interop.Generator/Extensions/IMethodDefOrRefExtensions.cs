@@ -23,10 +23,9 @@ internal static class IMethodDefOrRefExtensions
             // Visit the method signature, if available
             if (method.Signature is MethodSignature signature)
             {
-                // Instantiate and gather the return type
                 yield return signature.ReturnType;
 
-                // Instantiate and gather all parameter types
+                // Gather all parameter types as well
                 foreach (TypeSignature parameterType in signature.ParameterTypes)
                 {
                     yield return parameterType;
@@ -42,13 +41,13 @@ internal static class IMethodDefOrRefExtensions
                     yield return localType;
                 }
 
-                // Look for all 'newobj' instructions and instantiate the object types
+                // Look for all 'newobj' instructions and gather the object types
                 foreach (ITypeDefOrRef objectType in definition.EnumerateNewobjTypes())
                 {
                     yield return objectType.ToTypeSignature();
                 }
 
-                // Look for all 'newarr' instructions and instantiate the element types
+                // Look for all 'newarr' instructions and gather the element types
                 foreach (ITypeDefOrRef elementType in definition.EnumerateNewarrElementTypes())
                 {
                     yield return elementType.MakeSzArrayType();
