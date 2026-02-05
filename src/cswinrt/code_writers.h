@@ -4819,7 +4819,7 @@ R"(
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
     }
 
-    void write_winrt_classname_attribute(writer& w, TypeDef const& type)
+    void write_value_type_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
         if (settings.reference_projection)
         {
@@ -9359,7 +9359,7 @@ R"(
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         bind<write_winrt_metadata_attribute>(type),
-        bind<write_winrt_classname_attribute>(type),
+        bind<write_value_type_winrt_classname_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
         bind<write_comwrapper_marshaller_attribute>(type),
         bind<write_winrt_reference_type_attribute>(type),
@@ -9423,7 +9423,7 @@ R"(
         // struct
         w.write("%%%%public% struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_winrt_classname_attribute>(type),
+            bind<write_value_type_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
             bind<write_winrt_reference_type_attribute>(type),
             has_addition_to_type(type) ? " partial" : "",
@@ -9486,7 +9486,7 @@ R"(
         if (!is_type_blittable(type))
         {
             w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% unsafe struct %\n{\n",
-                bind<write_winrt_classname_attribute>(type),
+                bind<write_value_type_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false));
