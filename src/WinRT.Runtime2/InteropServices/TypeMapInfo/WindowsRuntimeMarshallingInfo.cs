@@ -450,6 +450,36 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Gets the <see cref="WindowsRuntimeMarshallingInfo"/> value to marshal an opaque (managed) object.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <returns>The <see cref="WindowsRuntimeMarshallingInfo"/> value to use to marshal <paramref name="instance"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static WindowsRuntimeMarshallingInfo GetOpaqueInfo(object instance)
+    {
+        // Special case for (derived) exception types, which won't have their own type map entry, but should all map
+        // to the same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
+        // Note that custom exception types that might implement additional interfaces will still just be marshalled
+        // as any other exception type (i.e. as just 'HResult'). This is intended and by design.
+        if (instance is Exception)
+        {
+            return GetInfo(typeof(Exception));
+        }
+
+        // Special case for 'Type' instances too. This is needed even without considering custom user-defined types
+        // (which shouldn't really be common anyway), because 'Type' itself is just a base type and not instantiated.
+        // That is, when e.g. doing 'typeof(Foo)', the actual object is some 'RuntimeType' object itself (non public).
+        if (instance is Type)
+        {
+            return GetInfo(typeof(Type));
+        }
+
+        // For all other cases, we fallback to the marshalling info for 'object'. This is the
+        // shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'. 
+        return GetInfo(typeof(object));
+    }
+
+    /// <summary>
     /// Gets the <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
     /// <returns>The resulting <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance.</returns>
