@@ -272,7 +272,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Ldarg_3 },
+                    { Ldarg_2 },
                     { Call, interopReferences.IReadOnlyDictionaryMethods2TryGetValue(keyType, valueType, mapViewMethodsType).Import(module) },
                     { Ret }
                 }

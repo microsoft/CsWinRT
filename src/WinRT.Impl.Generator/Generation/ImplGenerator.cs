@@ -41,7 +41,7 @@ internal static partial class ImplGenerator
         typeof(AssemblyInformationalVersionAttribute).FullName!,
         typeof(AssemblyProductAttribute).FullName!,
         typeof(AssemblyTitleAttribute).FullName!,
-        typeof(TargetPlatformAttribute).FullName!,
+        typeof(TargetFrameworkAttribute).FullName!,
         typeof(SupportedOSPlatformAttribute).FullName!,
         typeof(NeutralResourcesLanguageAttribute).FullName!,
         typeof(DisableRuntimeMarshallingAttribute).FullName!,
@@ -201,19 +201,6 @@ internal static partial class ImplGenerator
     {
         try
         {
-            // Copy over all module attributes
-            foreach (CustomAttribute moduleAttribute in inputModule.CustomAttributes)
-            {
-                if (!WellKnownAttributeTypes.Contains(moduleAttribute.Constructor?.DeclaringType?.FullName ?? ""))
-                {
-                    continue;
-                }
-
-                implModule.CustomAttributes.Add(new CustomAttribute(
-                    constructor: (ICustomAttributeType)moduleAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
-                    signature: moduleAttribute.Signature));
-            }
-
             // Copy over all assembly attributes
             foreach (CustomAttribute assemblyAttribute in inputModule.Assembly!.CustomAttributes)
             {
@@ -225,6 +212,19 @@ internal static partial class ImplGenerator
                 implModule.Assembly!.CustomAttributes.Add(new CustomAttribute(
                     constructor: (ICustomAttributeType)assemblyAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
                     signature: assemblyAttribute.Signature));
+            }
+
+            // Copy over all module attributes
+            foreach (CustomAttribute moduleAttribute in inputModule.CustomAttributes)
+            {
+                if (!WellKnownAttributeTypes.Contains(moduleAttribute.Constructor?.DeclaringType?.FullName ?? ""))
+                {
+                    continue;
+                }
+
+                implModule.CustomAttributes.Add(new CustomAttribute(
+                    constructor: (ICustomAttributeType)moduleAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    signature: moduleAttribute.Signature));
             }
         }
         catch (Exception e)
