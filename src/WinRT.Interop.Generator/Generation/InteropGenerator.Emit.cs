@@ -10,7 +10,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Fixups;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
@@ -2595,7 +2594,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+            MetadataAssemblyAttributesBuilder.AssemblyAttributes(interopReferences, module);
         }
         catch (Exception e)
         {

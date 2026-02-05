@@ -47,7 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(argsMethodsType);
@@ -82,7 +82,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Key' method
             argsMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapChangedEventArgsImpl1Key(elementType).Import(module),
+                declaration: interopReferences.IMapChangedEventArgsMethodsImpl1Key(elementType).Import(module),
                 method: keyMethod);
         }
 

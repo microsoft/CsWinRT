@@ -554,6 +554,11 @@ internal sealed class InteropReferences
     public TypeReference DisableRuntimeMarshallingAttribute => field ??= SystemRuntimeInteropServices.CreateTypeReference("System.Runtime.CompilerServices"u8, "DisableRuntimeMarshallingAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Reflection.AssemblyMetadataAttribute"/>.
+    /// </summary>
+    public TypeReference AssemblyMetadataAttribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Reflection"u8, "AssemblyMetadataAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Type</c>.
     /// </summary>
     public TypeReference AbiType => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System"u8, "Type"u8);
@@ -804,9 +809,9 @@ internal sealed class InteropReferences
     public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;</c>.
     /// </summary>
-    public TypeReference IMapChangedEventArgsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsImpl`1"u8);
+    public TypeReference IMapChangedEventArgsMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapChangedEventArgsMethodsImpl`1"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
@@ -1597,7 +1602,7 @@ internal sealed class InteropReferences
             parameterTypes: [
                 IEnumeratorAdapter1.MakeGenericReferenceType(_corLibTypeFactory.String),
                 _corLibTypeFactory.UInt32,
-                _corLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterExtensions.GetMany</c>.
@@ -1755,6 +1760,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute.DisableRuntimeMarshallingAttribute()"/>.
     /// </summary>
     public MemberReference DisableRuntimeMarshallingAttribute_ctor => field ??= DisableRuntimeMarshallingAttribute.CreateConstructorReference(_corLibTypeFactory);
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Reflection.AssemblyMetadataAttribute.AssemblyMetadataAttribute(string, string)"/>.
+    /// </summary>
+    public MemberReference AssemblyMetadataAttribute_ctor => field ??= AssemblyMetadataAttribute.CreateConstructorReference(_corLibTypeFactory, [_corLibTypeFactory.String, _corLibTypeFactory.String]);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance"/>.
@@ -1962,7 +1972,7 @@ internal sealed class InteropReferences
                 IList1.MakeGenericReferenceType(_corLibTypeFactory.String),
                 _corLibTypeFactory.UInt32,
                 _corLibTypeFactory.UInt32,
-                _corLibTypeFactory.Void.MakePointerType()]));
+                _corLibTypeFactory.Void.MakePointerType().MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterExtensions.GetMany</c>.
@@ -2137,7 +2147,9 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeObjectComWrappersCallbackCreateObject => field ??= IWindowsRuntimeObjectComWrappersCallback
         .CreateMemberReference("CreateObject"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Object,
-            parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+            parameterTypes: [
+                _corLibTypeFactory.Void.MakePointerType(),
+                CreatedWrapperFlags.ToValueTypeSignature().MakeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback.TryCreateObject</c>.
@@ -5497,7 +5509,7 @@ internal sealed class InteropReferences
                     IDictionary2.MakeGenericReferenceType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
@@ -5698,7 +5710,7 @@ internal sealed class InteropReferences
                     IReadOnlyDictionary2.MakeGenericReferenceType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
@@ -6093,12 +6105,12 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsImpl&lt;K&gt;.Key</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;.Key</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    public MemberReference IMapChangedEventArgsImpl1Key(TypeSignature elementType)
+    public MemberReference IMapChangedEventArgsMethodsImpl1Key(TypeSignature elementType)
     {
-        return IMapChangedEventArgsImpl1
+        return IMapChangedEventArgsMethodsImpl1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Key"u8, MethodSignature.CreateStatic(
