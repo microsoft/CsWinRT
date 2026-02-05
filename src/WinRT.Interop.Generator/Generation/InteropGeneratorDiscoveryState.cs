@@ -76,7 +76,7 @@ internal sealed class InteropGeneratorDiscoveryState
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
-    private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
     /// <remarks>
