@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -58,7 +58,7 @@ public static class WellKnownInterfaceIIDs
         get => ref WellKnownWindowsInterfaceIIDs.IID_IInspectable;
     }
 
-    /// <summary>The IID for <c>IStringable</c>.</summary>
+    /// <summary>The IID for <c>IStringable</c> (mapped to <see cref="global::Windows.Foundation.IStringable"/>.</summary>
     public static ref readonly Guid IID_IStringable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   

@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ output extension=".g.cs"#>
@@ -29,7 +29,7 @@ var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFull
     (null, "IMarshal", false),
     (null, "IMemoryBufferByteAccess", false),
     (null, "IInspectable", false),
-    (null, "IStringable", false),
+    ("Windows.Foundation.IStringable", "IStringable", false),
     (null, "IPropertyValue", false),
     (null, "IWeakReferenceSource", false),
     ("System.Collections.IEnumerable", "Windows.UI.Xaml.Interop.IBindableIterable", false),
