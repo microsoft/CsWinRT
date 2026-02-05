@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -38,118 +37,48 @@ internal partial class InteropTypeDefinitionBuilder
         /// The thread-local list to build COM interface entries.
         /// </summary>
         [ThreadStatic]
-        private static List<InterfaceEntryInfo>? entriesList;
+        private static List<InteropInterfaceEntryInfo>? entriesList;
 
         /// <summary>
         /// Creates a new type definition for the implementation of the COM interface entries for a user-defined type.
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="vtableTypes">The vtable types implemented by <paramref name="userDefinedType"/>.</param>
-        /// <param name="args">The arguments for this invocation.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
             TypeSignature userDefinedType,
             TypeSignatureEquatableSet vtableTypes,
-            InteropGeneratorArgs args,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceEntriesImplType)
         {
             // Reuse the same list, to minimize allocations (since we always need to build the entries at runtime here)
-            List<InterfaceEntryInfo> entriesList = UserDefinedType.entriesList ??= [];
+            List<InteropInterfaceEntryInfo> entriesList = UserDefinedType.entriesList ??= [];
 
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
-            // Track the explicitly implemented 'IMarshal' interface, if we have one (so we'll skip the built-in one)
-            InterfaceEntryInfo? userImplementedIMarshalInterface = null;
+            // Add all entries for explicitly implemented interfaces
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                emitState: emitState,
+                module: module,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
-            // Append all entries for the type (which we share for all matching user-defined types)
-            foreach (TypeSignature typeSignature in vtableTypes)
-            {
-                // Handle generic types first, and then custom-mapped and manually projected types.
-                // These require special handling, because their ABI types are in different locations.
-                if (typeSignature is GenericInstanceTypeSignature genericTypeSignature)
-                {
-                    (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
-                        type: genericTypeSignature,
-                        interopDefinitions: interopDefinitions,
-                        interopReferences: interopReferences,
-                        emitState: emitState);
-
-                    entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod));
-                }
-                else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences) || typeSignature.IsManuallyProjectedWindowsRuntimeInterfaceType(interopReferences))
-                {
-                    (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
-                        type: typeSignature,
-                        interopReferences: interopReferences,
-                        useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
-
-                    entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod));
-                }
-                else
-                {
-                    // We always need to resolve the user-defined types in all cases below, so just do it once first
-                    TypeDefinition interfaceType = typeSignature.Resolve()!;
-
-                    // For '[GeneratedComInterface]', we need to retrieve and use the generated vtable from the COM generators
-                    if (interfaceType.IsGeneratedComInterfaceType)
-                    {
-                        // Ignore interfaces we can't retrieve information for (this should never happen, interfaces are filtered during discovery)
-                        if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
-                        {
-                            continue;
-                        }
-
-                        // Get the IID of the interface (same as above, this is pre-validated)
-                        if (!interfaceType.TryGetGuidAttribute(interopReferences, out Guid interfaceId))
-                        {
-                            continue;
-                        }
-
-                        // Track if the current interface is 'IMarshal'
-                        if (interfaceId == WellKnownInterfaceIIDs.IID_IMarshal)
-                        {
-                            userImplementedIMarshalInterface = new ComInterfaceEntryInfo(interfaceInformationType);
-                        }
-                        else
-                        {
-                            // Add the entry from the 'InterfaceInformation' type, which contains the generated info we need
-                            entriesList.Add(new ComInterfaceEntryInfo(interfaceInformationType));
-                        }
-                    }
-                    else
-                    {
-                        // This is the common case for all normally projected, non-generic Windows Runtime types
-                        (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
-                            type: interfaceType,
-                            interopReferences: interopReferences);
-
-                        entriesList.Add(new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod));
-                    }
-                }
-            }
-
-            // Add the default entries after all user implementations
-            entriesList.AddRange(
-                new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
-                new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable));
-
-            // Add the default 'IMarshal' entry if the user type didn't implement it explicitly
-            entriesList.Add(userImplementedIMarshalInterface ?? new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable));
-
-            // Add the default core entries at the end ('IUnknown' in particular must always be the last one)
-            entriesList.AddRange(
-                new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
-                new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
-                new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable));
+            // Add the built-in native interfaces at the end
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateNativeInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopReferences: interopReferences));
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
@@ -328,48 +257,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceTypeMapProxyType: null,
                 interopReferences: interopReferences,
                 module: module);
-        }
-
-        /// <summary>
-        /// An <see cref="InterfaceEntryInfo"/> type for Windows Runtime types.
-        /// </summary>
-        /// <param name="get_IID">The <see cref="IMethodDefOrRef"/> value to get the interface IID.</param>
-        /// <param name="get_Vtable">The <see cref="IMethodDefOrRef"/> value to get the interface vtable.</param>
-        private sealed class WindowsRuntimeInterfaceEntryInfo(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) : InterfaceEntryInfo
-        {
-            /// <inheritdoc/>
-            public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
-            {
-                _ = instructions.Add(Call, get_IID.Import(module));
-                _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
-            }
-
-            /// <inheritdoc/>
-            public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
-            {
-                _ = instructions.Add(Call, get_Vtable.Import(module));
-            }
-        }
-
-        /// <summary>
-        /// An <see cref="InterfaceEntryInfo"/> type for COM types.
-        /// </summary>
-        /// <param name="interfaceInformationType">The <c>InterfaceInformation</c> type for the current interface.</param>
-        private sealed class ComInterfaceEntryInfo(TypeSignature interfaceInformationType) : InterfaceEntryInfo
-        {
-            /// <inheritdoc/>
-            public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
-            {
-                _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
-            }
-
-            /// <inheritdoc/>
-            public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
-            {
-                _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-                _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
-            }
         }
     }
 }

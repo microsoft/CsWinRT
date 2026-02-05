@@ -107,18 +107,10 @@ internal static class InteropInterfaceEntriesResolver
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values for native interfaces.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     public static IEnumerable<InteropInterfaceEntryInfo> EnumerateNativeInterfaceEntries(
         TypeSignatureEquatableSet vtableTypes,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        InteropGeneratorEmitState emitState,
-        ModuleDefinition module,
-        bool useWindowsUIXamlProjections)
+        InteropReferences interopReferences)
     {
         // Get the entry info for 'IMarshal', either user-provided or the built-in one
         if (!TryGetUserDefinedIMarshalInterfaceImplementation(

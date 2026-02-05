@@ -2417,7 +2417,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
-                    args: args,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,

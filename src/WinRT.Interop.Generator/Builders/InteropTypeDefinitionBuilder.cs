@@ -14,6 +14,7 @@ using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 #pragma warning disable IDE0061
@@ -575,7 +576,7 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition implType,
-        params ReadOnlySpan<InterfaceEntryInfo> implTypes)
+        params ReadOnlySpan<InteropInterfaceEntryInfo> implTypes)
     {
         InterfaceEntriesImpl(
             ns: ns,
@@ -874,27 +875,5 @@ internal static partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module));
         }
-    }
-
-    /// <summary>
-    /// A base type to abstract inserting interface entries information into a static constructor.
-    /// </summary>
-    private abstract class InterfaceEntryInfo
-    {
-        /// <summary>
-        /// Loads the IID for the interface onto the evaluation stack.
-        /// </summary>
-        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
-        public abstract void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module);
-
-        /// <summary>
-        /// Loads the vtable for the interface onto the evaluation stack.
-        /// </summary>
-        /// <param name="instructions">The target <see cref="CilInstructionCollection"/>.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The <see cref="ModuleDefinition"/> in use.</param>
-        public abstract void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module);
     }
 }
