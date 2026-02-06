@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -10,6 +12,7 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -26,6 +29,12 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class SzArray
     {
+        /// <summary>
+        /// The thread-local list to build COM interface entries.
+        /// </summary>
+        [ThreadStatic]
+        private static List<InteropInterfaceEntryInfo>? entriesList;
+
         /// <summary>
         /// Creates a new type definition for the marshaller for some SZ array type.
         /// </summary>
@@ -335,6 +344,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the COM interface entries for some SZ array type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="vtableTypes">The vtable types implemented by <paramref name="arrayType"/>.</param>
         /// <param name="implType">The <see cref="TypeDefinition"/> instance returned by <see cref="Impl"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -342,9 +352,11 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
             SzArrayTypeSignature arrayType,
+            TypeSignatureEquatableSet vtableTypes,
             TypeDefinition implType,
             MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
@@ -352,65 +364,55 @@ internal partial class InteropTypeDefinitionBuilder
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
+            out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
         {
-            var listImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
-                type: interopReferences.IList.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+            // Reuse the same list, to minimize allocations (same as for user-defined types)
+            List<InteropInterfaceEntryInfo> entriesList = SzArray.entriesList ??= [];
 
-            var enumerableImpl = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
-                type: interopReferences.IEnumerable.ToReferenceTypeSignature(),
-                interopReferences: interopReferences,
-                useWindowsUIXamlProjections: useWindowsUIXamlProjections);
+            // It's not guaranteed that the list is empty, so we must always reset it first
+            entriesList.Clear();
 
-            var list1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
-                type: interopReferences.IList1.MakeGenericReferenceType(arrayType.BaseType),
+            // Add the entry for the 'IReferenceArray<T>' implementation first
+            entriesList.Add(InteropInterfaceEntriesResolver.Create(get_IidMethod, implType.GetMethod("get_Vtable"u8)));
+
+            // Add all entries for explicitly implemented interfaces
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
+                vtableTypes: vtableTypes,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                emitState: emitState);
-
-            var enumerable1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
-                type: interopReferences.IEnumerable1.MakeGenericReferenceType(arrayType.BaseType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                emitState: emitState);
-
-            var readOnlyList1Impl = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
-                type: interopReferences.IReadOnlyList1.MakeGenericReferenceType(arrayType.BaseType),
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                emitState: emitState);
+                emitState: emitState,
+                module: module,
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             var propertyValueImpl = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
+
+            // Add the entry for the 'IPropertyValue' implementation as well
+            entriesList.Add(InteropInterfaceEntriesResolver.Create(propertyValueImpl.get_IID, propertyValueImpl.get_Vtable));
+
+            // Add the built-in native interfaces at the end
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateNativeInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopReferences: interopReferences));
+
+            // Get or create the interface entries type for this user-defined type (we reuse them based on number of entries)
+            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count);
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
-                entriesFieldType: interopDefinitions.IReferenceArrayInterfaceEntries,
+                entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
                 implType: out interfaceEntriesImplType,
-                implTypes: [
-                    (get_IidMethod, implType.GetMethod("get_Vtable"u8)),
-                    (listImpl.get_IID, listImpl.get_Vtable),
-                    (enumerableImpl.get_IID, enumerableImpl.get_Vtable),
-                    (list1Impl.get_IID, list1Impl.get_Vtable),
-                    (enumerable1Impl.get_IID, enumerable1Impl.get_Vtable),
-                    (readOnlyList1Impl.get_IID, readOnlyList1Impl.get_Vtable),
-                    (propertyValueImpl.get_IID, propertyValueImpl.get_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
+                implTypes: CollectionsMarshal.AsSpan(entriesList));
         }
 
         /// <summary>
         /// Creates a new type definition for the marshaller attribute for some SZ array type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        ///<param name="arrayInterfaceEntriesType">The <see cref="TypeDefinition"/> for the interface entries type returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
@@ -420,6 +422,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
             SzArrayTypeSignature arrayType,
+            TypeDefinition arrayInterfaceEntriesType,
             TypeDefinition arrayInterfaceEntriesImplType,
             TypeDefinition arrayComWrappersCallbackType,
             MethodDefinition get_IidMethod,
@@ -482,7 +485,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_1 },
-                    { CilInstruction.CreateLdcI4(interopDefinitions.IReferenceArrayInterfaceEntries.Fields.Count) },
+                    { CilInstruction.CreateLdcI4(arrayInterfaceEntriesType.Fields.Count) },
                     { Stind_I4 },
                     { Call, arrayInterfaceEntriesImplType.GetMethod("get_Vtables"u8) },
                     { Ret }

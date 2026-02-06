@@ -2143,7 +2143,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.OrderByFullyQualifiedTypeName())
+        foreach ((SzArrayTypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.SzArrayAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2181,6 +2181,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
+                    vtableTypes: vtableTypes,
                     implType: arrayImplType,
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
@@ -2188,10 +2189,12 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersMarshallerAttribute(
                     arrayType: typeSignature,
+                    arrayInterfaceEntriesType: interfaceEntriesType,
                     arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
                     arrayComWrappersCallbackType: arrayComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
