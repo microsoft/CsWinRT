@@ -15,7 +15,7 @@ using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 namespace WindowsRuntime.InteropGenerator.Resolvers;
 
 /// <summary>
-/// A resolver for CCW interface entries for some managed type to exposed to native code.
+/// A resolver for CCW interface entries for some managed type to be exposed to native code.
 /// </summary>
 internal static class InteropInterfaceEntriesResolver
 {
