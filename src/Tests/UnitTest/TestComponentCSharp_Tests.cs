@@ -638,6 +638,7 @@ namespace UnitTest
         [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
         [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
         [InlineData(typeof(Size), "Windows.Foundation.Size", "Metadata")]
+        [InlineData(typeof(IStringable), "Windows.Foundation.IStringable", "Metadata")]
         // Mapped Windows.Foundation.Collections.* Types
         [InlineData(typeof(CollectionChange), "Windows.Foundation.Collections.CollectionChange", "Metadata")]
         [InlineData(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
