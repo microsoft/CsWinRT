@@ -247,7 +247,8 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable);
         }
 
         /// <summary>

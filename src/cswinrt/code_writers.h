@@ -1024,6 +1024,12 @@ namespace cswinrt
 
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
+            if (mapping->mapped_name == "IStringable")
+            {
+                w.write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
+                return;
+            }
+
             std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
             name = escape_type_name_for_identifier(name, true, true);
             w.write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_%", name);
