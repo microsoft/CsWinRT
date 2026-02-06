@@ -395,8 +395,8 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableTypes: vtableTypes,
                 interopReferences: interopReferences));
 
-            // Get or create the interface entries type for this user-defined type (we reuse them based on number of entries)
-            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count);
+            // Get or create the interface entries type for this SZ array type (we reuse them based on number of entries)
+            interfaceEntriesType = interopDefinitions.SzArrayInterfaceEntries(entriesList.Count);
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),

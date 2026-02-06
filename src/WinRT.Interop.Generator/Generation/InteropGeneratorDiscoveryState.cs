@@ -72,10 +72,10 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field to support <see cref="TryMarkWindowsRuntimeGenericInterfaceTypeInstance"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedWindowsRuntimeGenericInterfaceTypeInstances = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    /// <summary>Backing field for <see cref="UserDefinedAndVtableTypes"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    /// <summary>Backing field for <see cref="SzArrayAndVtableTypes"/>.</summary>
     private readonly ConcurrentDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
@@ -198,11 +198,6 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all user-defined vtable types (for each user-defined type).
     /// </summary>
     public IReadOnlyCollection<TypeSignatureEquatableSet> UserDefinedVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_userDefinedVtableTypes.Keys;
-
-    /// <summary>
-    /// Gets all SZ array types.
-    /// </summary>
-    public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
 
     /// <summary>
     /// Gets all SZ array types and their vtable types.
