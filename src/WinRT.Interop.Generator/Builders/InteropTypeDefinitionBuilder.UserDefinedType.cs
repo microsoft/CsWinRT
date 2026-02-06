@@ -28,12 +28,6 @@ internal partial class InteropTypeDefinitionBuilder
     public static class UserDefinedType
     {
         /// <summary>
-        /// The number of default, always present COM interface entries.
-        /// We always append some default slots to all user-defined types.
-        /// </summary>
-        private const int NumberOfDefaultComInterfaceEntries = 6;
-
-        /// <summary>
         /// The thread-local list to build COM interface entries.
         /// </summary>
         [ThreadStatic]
@@ -49,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
             TypeSignature userDefinedType,
@@ -58,6 +53,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
+            out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
         {
             // Reuse the same list, to minimize allocations (since we always need to build the entries at runtime here)
@@ -80,10 +76,13 @@ internal partial class InteropTypeDefinitionBuilder
                 vtableTypes: vtableTypes,
                 interopReferences: interopReferences));
 
+            // Get or create the interface entries type for this user-defined type (we reuse them based on number of entries)
+            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count);
+
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "InterfaceEntriesImpl"),
-                entriesFieldType: interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count),
+                entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
                 implType: out interfaceEntriesImplType,
@@ -94,15 +93,15 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller attribute of some user-defined type.
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
-        /// <param name="vtableTypes">The vtable types implemented by <paramref name="userDefinedType"/>.</param>
-        /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
+        /// <param name="interfaceEntriesType">The <see cref="TypeDefinition"/> for the interface entries type returned by <see cref="InterfaceEntriesImpl"/>.</param>
+        /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> for the interface entries implementation type returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
             TypeSignature userDefinedType,
-            TypeSignatureEquatableSet vtableTypes,
+            TypeDefinition interfaceEntriesType,
             TypeDefinition interfaceEntriesImplType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
@@ -125,9 +124,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
-
-            // Retrieve the cached COM interface entries type, as we need the number of fields
-            TypeDefinition interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(NumberOfDefaultComInterfaceEntries + vtableTypes.Count);
 
             // Define the 'ComputeVtables' method as follows:
             //

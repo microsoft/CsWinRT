@@ -20,6 +20,11 @@ namespace WindowsRuntime.InteropGenerator.Resolvers;
 internal static class InteropInterfaceEntriesResolver
 {
     /// <summary>
+    /// The number of default, always present COM interface entries (returned by <see cref="EnumerateNativeInterfaceEntries"/>).
+    /// </summary>
+    public const int NumberOfNativeComInterfaceEntries = 6;
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values from a given source set of vtable types.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>

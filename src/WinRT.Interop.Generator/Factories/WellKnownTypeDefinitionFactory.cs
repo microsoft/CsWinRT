@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -1291,7 +1292,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
 
         // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces
-        int numberOfDynamicEntries = numberOfEntries - 6;
+        int numberOfDynamicEntries = numberOfEntries - InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries;
 
         ArgumentOutOfRangeException.ThrowIfLessThan(numberOfDynamicEntries, 1, nameof(numberOfEntries));
 

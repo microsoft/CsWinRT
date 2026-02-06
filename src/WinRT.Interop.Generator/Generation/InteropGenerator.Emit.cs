@@ -2422,11 +2422,12 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.ComWrappersMarshallerAttribute(
                     userDefinedType: typeSignature,
-                    vtableTypes: vtableTypes,
+                    interfaceEntriesType: interfaceEntriesType,
                     interfaceEntriesImplType: interfaceEntriesImplType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
