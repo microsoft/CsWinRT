@@ -31,10 +31,13 @@ internal static class RuntimeClassNameGenerator
             throw WellKnownInteropExceptions.RuntimeClassNameGenerationError(type);
         }
 
-        // We need to wrap the metadata name with "IReference`1<...>" only for non-generic
-        // value types, and for delegate types. We skip generic value types because the only
-        // possible type is 'KeyValuePair<TKey, TValue>', but that is a Windows Runtime interface.
-        bool isReference = (type.IsValueType && !type.IsGenericType) || typeDefinition.IsDelegate;
+        // We need to wrap the metadata name with "IReference`1<...>" only for non-generic value types, and for delegate
+        // types. We skip generic value types because the only possible type is 'KeyValuePair<TKey, TValue>', but that is
+        // a Windows Runtime interface. We also need to make sure to skip SZ arrays manually. Note that when resolving the
+        // signature of an SZ array type, we'd just get a definition for the array element type. So we need to manually
+        // check for that scenario via the original type signature directly to make sure to not accidentally mark arrays
+        // of some type that would require reference support, as needing reference support themselves.
+        bool isReference = type is not SzArrayTypeSignature && ((type.IsValueType && !type.IsGenericType) || typeDefinition.IsDelegate);
 
         if (isReference)
         {
