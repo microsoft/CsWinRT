@@ -170,11 +170,6 @@ internal sealed class InteropDefinitions
     public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
 
     /// <summary>
-    /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayInterfaceEntries</c> type.
-    /// </summary>
-    public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences, _interopModule);
-
-    /// <summary>
     /// Enumerates all necessary COM interface entries types for user-defined types.
     /// </summary>
     /// <returns>The sequence of all necessary COM interface entries types.</returns>

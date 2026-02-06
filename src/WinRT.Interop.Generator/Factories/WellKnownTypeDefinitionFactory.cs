@@ -163,7 +163,7 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
-    /// Creates a new type definition for the vtable of an 'IReference`1&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
+    /// Creates a new type definition for the vtable of an 'IReference&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -197,7 +197,7 @@ internal static partial class WellKnownTypeDefinitionFactory
                 module.CorLibTypeFactory.Void.MakePointerType(),
                 module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
 
-        // The vtable layout for 'IReference`1<T>' looks like this:
+        // The vtable layout for 'IReference<T>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -1222,55 +1222,6 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
-    }
-
-    /// <summary>
-    /// Creates a new type definition for COM interface entries for some SZ array type.
-    /// </summary>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
-    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition ReferenceArrayInterfaceEntriesType(InteropReferences interopReferences, ModuleDefinition module)
-    {
-        TypeDefinition interfaceEntriesType = new(
-            ns: null,
-            name: "<IReferenceArrayInterfaceEntries>"u8,
-            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
-
-        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
-
-        // The type layout looks like this:
-        //
-        // public ComInterfaceEntry IReferenceArray'1;
-        // public ComInterfaceEntry IBindableVector;
-        // public ComInterfaceEntry IBindableIterable;
-        // public ComInterfaceEntry IVector'1;
-        // public ComInterfaceEntry IIterable'1;
-        // public ComInterfaceEntry IVectorView'1;
-        // public ComInterfaceEntry IPropertyValue;
-        // public ComInterfaceEntry IStringable;
-        // public ComInterfaceEntry IWeakReferenceSource;
-        // public ComInterfaceEntry IMarshal;
-        // public ComInterfaceEntry IAgileObject;
-        // public ComInterfaceEntry IInspectable;
-        // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IReferenceArray'1"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableVector"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IBindableIterable"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IVector'1"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IIterable'1"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IVectorView'1"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
-
-        return interfaceEntriesType;
     }
 
     /// <summary>

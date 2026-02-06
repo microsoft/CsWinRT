@@ -84,12 +84,6 @@ internal sealed class InteropGeneratorDiscoveryState
     /// </remarks>
     private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _userDefinedVtableTypes = [];
 
-    /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
-    /// <remarks>
-    /// The value is also <see cref="TypeSignatureEquatableSet"/> so we can de-duplicate equivalent sets across different maps (e.g. <see cref="_szArrayTypes"/>).
-    /// </remarks>
-    private readonly ConcurrentDictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _szArrayVtableTypes = [];
-
     /// <summary>
     /// The mapping of all types that failed resolution.
     /// </summary>
@@ -214,11 +208,6 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all SZ array types and their vtable types.
     /// </summary>
     public IReadOnlyDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> SzArrayAndVtableTypes => _szArrayTypes;
-
-    /// <summary>
-    /// Gets all SZ array vtable types (for each SZ array type).
-    /// </summary>
-    public IReadOnlyCollection<TypeSignatureEquatableSet> SzArrayVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_szArrayVtableTypes.Keys;
 
     /// <summary>
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
@@ -463,10 +452,7 @@ internal sealed class InteropGeneratorDiscoveryState
     {
         ThrowIfReadOnly();
 
-        // Track unique sets for the input vtable slots (see notes above)
-        TypeSignatureEquatableSet cachedVtableTypes = _szArrayVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
-
-        _ = _szArrayTypes.TryAdd(arrayType, cachedVtableTypes);
+        _ = _szArrayTypes.TryAdd(arrayType, vtableTypes);
     }
 
     /// <summary>

@@ -2508,7 +2508,6 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IAsyncOperationWithProgressVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
-            module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
         }
         catch (Exception e)
         {
