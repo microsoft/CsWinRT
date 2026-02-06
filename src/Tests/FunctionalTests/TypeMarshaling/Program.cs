@@ -134,9 +134,10 @@ TypeCase[] TestCases =
     new(typeof(Point?),                     "Windows.Foundation.IReference`1<Windows.Foundation.Point>",                            "Metadata", 701),
     new(typeof(Vector3?),                   "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>",                 "Metadata", 702),
     new(typeof(Guid?),                      "Windows.Foundation.IReference`1<Guid>",                                                "Metadata", 703),
-    new(typeof(IList<int?>),                "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>",      "Metadata", 704),
-    new(typeof(TestComponentCSharp.EnumValue?),       "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>",              "Metadata", 705),
-    new(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>",        "Metadata", 706),
+    new(typeof(IList<int?>),                "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>",     "Metadata", 704),
+    new(typeof(TestComponentCSharp.EnumValue?),       "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>",             "Metadata", 705),
+    new(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>",       "Metadata", 706),
+    new(typeof(int?[]),                     "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>",         "Metadata", 707),
 
     // --------------------
     // Generic Types
