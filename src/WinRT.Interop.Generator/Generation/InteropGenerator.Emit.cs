@@ -2444,7 +2444,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderBy(static pair => pair.Key, TypeDescriptorComparer.Create<TypeSignature>()))
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
