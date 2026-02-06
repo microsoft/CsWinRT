@@ -614,6 +614,9 @@ internal static partial class InteropTypeDefinitionBuilder
         Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_Vtable,
         out TypeDefinition implType)
     {
+        // Enforce that we can initialize all interface entries
+        ArgumentOutOfRangeException.ThrowIfNotEqual(implTypes.Length, entriesFieldType.Fields.Count, nameof(implTypes));
+
         // We're declaring an 'internal static class' type
         implType = new TypeDefinition(
             ns: ns,
