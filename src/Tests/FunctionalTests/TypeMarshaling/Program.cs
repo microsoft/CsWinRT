@@ -217,10 +217,36 @@ TypeCase[] TestCases =
         860),
 
     // --------------------
+    // Arrays
+    // --------------------
+    new(typeof(object[]),  "Windows.Foundation.IReferenceArray`1<Object>",                                       "Metadata", 950),
+    new(typeof(long[]),    "Windows.Foundation.IReferenceArray`1<Int64>",                                        "Metadata", 951),
+    new(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>",  "Metadata", 952),
+    new(typeof(TestComponentCSharp.ComposedBlittableStruct[]),
+        "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>",
+        "Metadata",
+        953),
+
+    new(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata", 954),
+    new(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata", 955),
+    new(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata", 956),
+    new(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata", 957),
+    new(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata", 958),
+    new(typeof(IList<long?>[]),
+        "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>",
+        "Metadata",
+        959),
+
+    new(typeof(KeyValuePair<object, object>[]),
+        "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>",
+        "Metadata",
+        960),
+
+    // --------------------
     // Others
     // --------------------
-    new(typeof(NotifyCollectionChangedAction),  "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction",                                 "Metadata", 900),
-    new(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata", 901),
+    new(typeof(NotifyCollectionChangedAction),  "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction",                                 "Metadata", 1000),
+    new(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata", 1001),
 ];
 
 // Convert to Managed Trimmed Metadata NoMetadataTypeInfo Test Case

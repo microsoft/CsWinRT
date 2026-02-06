@@ -694,6 +694,20 @@ namespace UnitTest
         [InlineData<KeyValuePair<Int32, WeakReference<Object>>>(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [InlineData<ICollection<object>>(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [InlineData<KeyValuePair<Object, Object>?>(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Object, Object[]>>(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<long[][]>(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        // Arrays
+        [InlineData<Object[]>(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
+        [InlineData<long[]>(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
+        [InlineData<TestComponentCSharp.Class[]>(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<TestComponentCSharp.ComposedBlittableStruct[]>(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
+        [InlineData<TestComponentCSharp.IArtist[]>(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
+        [InlineData<TestComponentCSharp.EnumValue[]>(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [InlineData<TestComponentCSharp.EventHandler0[]>(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
+        [InlineData<Point[]>(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
+        [InlineData<IList<long>[]>(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<IList<long?>[]>(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>[]>(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
