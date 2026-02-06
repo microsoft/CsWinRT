@@ -2522,8 +2522,14 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Also emit all shared COM interface entries types that are programmatically generated
+            // Emit all shared COM interface entries types that are programmatically generated for user-defined types
             foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
+            {
+                module.TopLevelTypes.Add(typeDefinition);
+            }
+
+            // Also emit interface entries types for SZ arrays, same as for user-defined types above
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }

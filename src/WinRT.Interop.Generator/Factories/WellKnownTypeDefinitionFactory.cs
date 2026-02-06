@@ -1321,6 +1321,61 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
+    /// Creates a new type definition for COM interface entries for an SZ array type.
+    /// </summary>
+    /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition SzArrayInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition interfaceEntriesType = new(
+            ns: null,
+            name: $"<SzArrayInterfaceEntries(Count={numberOfEntries})>",
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the signature for the 'ComInterfaceEntry' type
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+
+        // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces.
+        // This is similar to user-defined types (see above), except we also have two additional entries
+        // for the 'IReferenceArray<T>' interface, and for the 'IPropertyValue' interface.
+        int numberOfDynamicEntries = numberOfEntries - InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries - 2;
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfDynamicEntries, 1, nameof(numberOfEntries));
+
+        // Add the special entry for the 'IReferenceArray<T>' interface. This always has higher
+        // priority for CCWs of types that implement some kind of 'IReference*<T>' interface.
+        interfaceEntriesType.Fields.Add(new FieldDefinition("ArrayReference"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        // Add a field for each interface entry (names start at index '1' since 'IReferenceArray<T>' comes before them)
+        for (int i = 0; i < numberOfDynamicEntries; i++)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition($"InterfaceEntry(Index={i + 1})", FieldAttributes.Public, comInterfaceEntryType));
+        }
+
+        // Add the default entries
+        //
+        // public ComInterfaceEntry IPropertyValue;
+        // public ComInterfaceEntry IStringable;
+        // public ComInterfaceEntry IWeakReferenceSource;
+        // public ComInterfaceEntry IMarshal;
+        // public ComInterfaceEntry IAgileObject;
+        // public ComInterfaceEntry IInspectable;
+        // public ComInterfaceEntry IUnknown;
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        return interfaceEntriesType;
+    }
+
+    /// <summary>
     /// Creates types to use to declare RVA fields.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
