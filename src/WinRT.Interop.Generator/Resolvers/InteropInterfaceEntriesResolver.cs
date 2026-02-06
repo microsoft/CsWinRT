@@ -25,6 +25,17 @@ internal static class InteropInterfaceEntriesResolver
     public const int NumberOfNativeComInterfaceEntries = 6;
 
     /// <summary>
+    /// Creates an <see cref="InteropInterfaceEntryInfo"/> instance with a provided set of methods.
+    /// </summary>
+    /// <param name="get_IID">The <see cref="IMethodDefOrRef"/> value to get the interface IID.</param>
+    /// <param name="get_Vtable">The <see cref="IMethodDefOrRef"/> value to get the interface vtable.</param>
+    /// <returns>The resulting <see cref="InteropInterfaceEntryInfo"/> instance.</returns>
+    public static InteropInterfaceEntryInfo Create(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)
+    {
+        return new WindowsRuntimeInterfaceEntryInfo(get_IID, get_Vtable);
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values from a given source set of vtable types.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>
