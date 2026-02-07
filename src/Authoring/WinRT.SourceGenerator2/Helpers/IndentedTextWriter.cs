@@ -123,7 +123,7 @@ internal ref struct IndentedTextWriter
     /// </summary>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">Whether the input content is multiline.</param>
-    public void Write(ReadOnlySpan<char> content, bool isMultiline = false)
+    public void Write(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
         if (isMultiline)
         {
@@ -164,7 +164,7 @@ internal ref struct IndentedTextWriter
     /// </summary>
     /// <param name="handler">The interpolated string handler with content to write.</param>
     [UnconditionalSuppressMessage("Performance", "CA1822", Justification = "This method implicitly passes 'this' to the input handler.")]
-    public readonly void Write([InterpolatedStringHandlerArgument("")] ref WriteInterpolatedStringHandler handler)
+    public readonly void Write([InterpolatedStringHandlerArgument("")] scoped ref WriteInterpolatedStringHandler handler)
     {
     }
 
@@ -188,7 +188,7 @@ internal ref struct IndentedTextWriter
     /// <param name="condition">The condition to use to decide whether or not to write content.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">Whether the input content is multiline.</param>
-    public void WriteIf(bool condition, ReadOnlySpan<char> content, bool isMultiline = false)
+    public void WriteIf(bool condition, scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
         if (condition)
         {
@@ -202,7 +202,7 @@ internal ref struct IndentedTextWriter
     /// <param name="condition">The condition to use to decide whether or not to write content.</param>
     /// <param name="handler">The interpolated string handler with content to write.</param>
     [UnconditionalSuppressMessage("Performance", "CA1822", Justification = "This method implicitly passes 'this' to the input handler.")]
-    public readonly void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref WriteIfInterpolatedStringHandler handler)
+    public readonly void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] scoped ref WriteIfInterpolatedStringHandler handler)
     {
     }
 
@@ -235,7 +235,7 @@ internal ref struct IndentedTextWriter
     /// </summary>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">Whether the input content is multiline.</param>
-    public void WriteLine(ReadOnlySpan<char> content, bool isMultiline = false)
+    public void WriteLine(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
         Write(content, isMultiline);
         WriteLine();
@@ -245,9 +245,9 @@ internal ref struct IndentedTextWriter
     /// Writes content to the underlying buffer and appends a trailing new line.
     /// </summary>
     /// <param name="handler">The interpolated string handler with content to write.</param>
-    public void WriteLine([InterpolatedStringHandlerArgument("")] ref WriteInterpolatedStringHandler handler)
+    public readonly void WriteLine([InterpolatedStringHandlerArgument("")] scoped ref WriteInterpolatedStringHandler handler)
     {
-        WriteLine();
+        Unsafe.AsRef(in this).WriteLine();
     }
 
     /// <summary>
@@ -283,7 +283,7 @@ internal ref struct IndentedTextWriter
     /// <param name="condition">The condition to use to decide whether or not to write content.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">Whether the input content is multiline.</param>
-    public void WriteLineIf(bool condition, ReadOnlySpan<char> content, bool isMultiline = false)
+    public void WriteLineIf(bool condition, scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
         if (condition)
         {
@@ -297,11 +297,11 @@ internal ref struct IndentedTextWriter
     /// </summary>
     /// <param name="condition">The condition to use to decide whether or not to write content.</param>
     /// <param name="handler">The interpolated string handler with content to write.</param>
-    public void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref WriteIfInterpolatedStringHandler handler)
+    public readonly void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] scoped ref WriteIfInterpolatedStringHandler handler)
     {
         if (condition)
         {
-            WriteLine();
+            Unsafe.AsRef(in this).WriteLine();
         }
     }
 
@@ -325,7 +325,7 @@ internal ref struct IndentedTextWriter
     /// Writes raw text to the underlying buffer, adding leading indentation if needed.
     /// </summary>
     /// <param name="content">The raw text to write.</param>
-    private void WriteRawText(ReadOnlySpan<char> content)
+    private void WriteRawText(scoped ReadOnlySpan<char> content)
     {
         if (_handler.Text.Length == 0 || _handler.Text[^1] == DefaultNewLine)
         {
@@ -408,7 +408,7 @@ internal ref struct IndentedTextWriter
 
         /// <summary>Writes the specified character span to the handler.</summary>
         /// <param name="value">The span to write.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value)
+        public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
             _writer.Write(value);
         }
@@ -488,7 +488,7 @@ internal ref struct IndentedTextWriter
         }
 
         /// <inheritdoc cref="WriteInterpolatedStringHandler.AppendFormatted(ReadOnlySpan{char})"/>
-        public void AppendFormatted(ReadOnlySpan<char> value)
+        public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
             _writer.AppendFormatted(value);
         }
