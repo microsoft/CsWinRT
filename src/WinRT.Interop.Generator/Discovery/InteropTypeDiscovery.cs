@@ -189,6 +189,13 @@ internal static partial class InteropTypeDiscovery
                 continue;
             }
 
+            // Check if the current interface is a Windows Runtime interface. We compute this here so that later
+            // we can still include the current interface even if it is an '[exclusiveto]' one, while filtering
+            // out all other '[exclusiveto]' interfaces that might show up as part of the covariant expansion.
+            // The reason for this is that we want overridable interfaces to be in the CCW interface entries,
+            // while we don't want them to appear if they're just a type argument for a generic interface.
+            bool isInterfaceWindowsRuntime = interfaceSignature.IsWindowsRuntimeType(interopReferences);
+
             // Enumerate both the current interface, as well as all covariant combinations derived from it.
             // This is because we want entries in the vtable to match what users expect in the .NET world.
             // For instance, consider this scenario:
@@ -208,7 +215,9 @@ internal static partial class InteropTypeDiscovery
                 // '[exclusiveto]' interfaces too, which might still show up as part of the covariant
                 // expansion. However, those would then either fail to resolve or just result in
                 // unnecessary binary size increase, since nobody would ever use them from here.
-                if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
+                // We also have an additional check to include overridable interfaces (see notes above).
+                if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences) ||
+                    (isInterfaceWindowsRuntime && SignatureComparer.IgnoreVersion.Equals(covariantInterfaceSignature, interfaceSignature)))
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
@@ -365,7 +374,8 @@ internal static partial class InteropTypeDiscovery
             // Enumerate the current interface and the covariant combinations (see additional notes above)
             foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
-                // Track all interfaces except '[exclusiveto]' ones (see additional notes above)
+                // Track all interfaces except '[exclusiveto]' ones (see additional notes above). We don't need to care about
+                // overridable interfaces here, since those can only apply to classes, and SZ arrays will never have any.
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
                 {
                     interfaces.Add(covariantInterfaceSignature);
