@@ -25,6 +25,7 @@ The **mangled namespace** for a given type is defined as follows:
 
 1. **No namespace**: if the input type has no namespace, the generated namespace defaults to `ABI`.
 2. **Existing namespace**: if the input type has a namespace, the generated namespace prepends `ABI.` to the original namespace.
+3. **Nested types**: if the input type is nested, the namespace is derived from the outermost declaring type (i.e. the top-level enclosing type), using the same rules above.
 
 The **mangled type name** for a given type is defined as follows:
 
@@ -45,10 +46,10 @@ These are the well-known assemblies and their compact identifiers:
 - `System.Runtime`: `#corlib`
 - `Microsoft.Windows.SDK.NET` or `Microsoft.Windows.UI.Xaml`: `#Windows`
 - `WinRT.Runtime`: `#CsWinRT`
-- `Microsoft.UI.Xaml.Projection`: `#WinUI2`
-- `Microsoft.Graphics.Canvas.Interop`: `#Win2D`
 
 Compact identifiers are prefixed with `#` to distinguish them from user-defined assembly names.
+
+For types not belonging to any well-known assembly, the implementation also checks for a `[WindowsRuntimeMetadata]` attribute on the resolved type definition. If the attribute is present, the Windows Runtime metadata name from the attribute is used as the assembly identifier instead of the actual assembly name. This allows types carrying WinRT metadata to be identified by their canonical Windows Runtime name rather than the .NET assembly they happen to live in. If the attribute is not present, the raw assembly name is used as-is.
 
 ### Examples
 
@@ -134,6 +135,8 @@ primitiveType : 'bool'
               | 'ulong'
               | 'float'
               | 'double'
+              | 'nint'
+              | 'nuint'
               | 'string'
               | 'object';
 
@@ -154,8 +157,6 @@ arrayType : '<' mangledTypeName '>' 'Array';
 assemblyName : '#corlib'
              | '#Windows'
              | '#CsWinRT'
-             | '#WinUI2'
-             | '#Win2D'
              | identifier;
 
 // After substitutions, identifiers may contain '-' (from namespaces), '+' (nested type separators,
