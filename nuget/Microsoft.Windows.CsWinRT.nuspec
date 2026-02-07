@@ -40,7 +40,6 @@
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
     <file src="$winrt_shim$" target ="lib\net8.0\"/>
-    <file src="$winrt_shim$" target ="lib\net9.0\"/>
 
     <!-- Localized resources for error strings 
          The paths here leads to a folder of folders, 
