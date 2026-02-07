@@ -697,7 +697,7 @@ internal static class WellKnownInteropExceptions
     {
         return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
     }
-  
+
     /// <summary>
     /// Failed to resolve the element type for an array type.
     /// </summary>
