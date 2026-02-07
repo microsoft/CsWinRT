@@ -14,6 +14,13 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006, CA2256
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Windows.Foundation.IAsyncAction",
+    target: typeof(IAsyncAction),
+    trimTarget: typeof(IAsyncAction))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IAsyncAction),
     proxy: typeof(ABI.Windows.Foundation.IAsyncActionInterfaceImpl))]

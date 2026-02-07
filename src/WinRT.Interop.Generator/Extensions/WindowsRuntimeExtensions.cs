@@ -162,6 +162,7 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector4) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DataErrorsChangedEventArgs) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventArgs);
         }
 
@@ -178,6 +179,7 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CollectionChange) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncStatus) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyType) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||
@@ -245,7 +247,8 @@ internal static class WindowsRuntimeExtensions
             return
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable);
         }
 
         /// <summary>

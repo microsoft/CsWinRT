@@ -425,7 +425,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the associated <c>ComWrappersMarshallerAttribute</c> type for a custom-mapped type.
     /// </summary>
-    public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
+    public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeSignature type)
     {
         return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
@@ -675,11 +675,35 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate the runtime class name of some Windows Runtime type.
+    /// </summary>
+    public static Exception RuntimeClassNameGenerationError(TypeSignature type)
+    {
+        return Exception(79, $"Failed to generate the runtime class name for type '{type}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the target <c>ComWrappersMarshallerAttribute</c> type for a non-projected Windows Runtime type.
+    /// </summary>
+    public static WellKnownInteropException NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference attributeType, string nativeType)
+    {
+        return Exception(80, $"Failed to resolve the 'ComWrappersMarshallerAttribute' type '{attributeType}' for a non-projected Windows Runtime type '{nativeType}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the associated "Methods" type for a custom-mapped type.
+    /// </summary>
+    public static WellKnownInteropException CustomMappedTypeMethodsTypeResolveError(TypeSignature type)
+    {
+        return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
+    }
+  
+    /// <summary>
     /// Failed to resolve the element type for an array type.
     /// </summary>
     public static WellKnownInteropWarning ArrayTypeElementTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
     {
-        return Warning(79, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
+        return Warning(82, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
     }
 
     /// <summary>
@@ -687,7 +711,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning GeneratedComInterfaceDuplicateIidWarning(TypeDefinition interfaceType, TypeDefinition type, Guid iid)
     {
-        return Warning(80, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(83, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>

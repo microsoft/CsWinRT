@@ -5,9 +5,65 @@
 #include "CustomBindableVectorTest.g.cpp"
 #include "CustomBindableObservableVectorTest.g.cpp"
 #include "CustomIteratorTest.g.cpp"
+#include "SetTypeProperties.g.cpp"
+#include <winrt/Windows.UI.Xaml.Interop.h>
 
 namespace winrt::TestComponentCSharp::implementation
 {
+    SetTypeProperties::SetTypeProperties()
+    {
+
+    }
+
+
+    winrt::hstring SetTypeProperties::GetPropertyInfoTestType(
+        IType const& testObject,
+        Windows::UI::Xaml::Interop::TypeName const& typeName)
+    {
+        testObject.TypeProperty(typeName);
+        Windows::UI::Xaml::Interop::TypeName testProperty = testObject.TypeProperty();
+        winrt::hstring kind;
+        switch (testProperty.Kind)
+        {
+        case Windows::UI::Xaml::Interop::TypeKind::Custom:
+            kind = winrt::hstring(L"Custom");
+            break;
+        case Windows::UI::Xaml::Interop::TypeKind::Metadata:
+            kind = winrt::hstring(L"Metadata");
+            break;
+        default:
+            kind = winrt::hstring(L"Primitive");
+            break;
+        }
+        return testProperty.Name + L" " + kind;
+    }
+
+    winrt::hstring SetTypeProperties::GetPropertyInfoTestTypeTrimmed(IType testObject)
+    {
+        testObject.TypeProperty(winrt::xaml_typename<TestComponentCSharp::TestTypeTrimmed>());
+        winrt::hstring kind;
+        switch (testObject.TypeProperty().Kind)
+        {
+            case Windows::UI::Xaml::Interop::TypeKind::Custom:
+                kind = winrt::hstring(L"Custom");
+                break;
+            case Windows::UI::Xaml::Interop::TypeKind::Metadata:
+                kind = winrt::hstring(L"Metadata");
+                break;
+            default:
+                kind = winrt::hstring(L"Primitive");
+                break;
+        }
+        return testObject.TypeProperty().Name + L" " + kind;
+    }
+
+    winrt::hstring SetTypeProperties::GetPropertyInfoWithType(winrt::Windows::UI::Xaml::Interop::TypeName typeName)
+    {
+        TestComponentCSharp::Class TestObject;
+        TestObject.TypeProperty(typeName);
+        return TestObject.GetTypePropertyAbiName() + L" " + TestObject.GetTypePropertyKind();
+    }
+
 	CustomBindableIteratorTest::CustomBindableIteratorTest()
 	{
 		

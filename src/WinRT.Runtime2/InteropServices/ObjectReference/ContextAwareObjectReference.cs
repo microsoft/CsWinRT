@@ -132,7 +132,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
                 // trying again every time. To do this, we just set the field to a placeholder if it's still 'null'.
                 _ = Interlocked.CompareExchange(
                     location1: ref _agileReference,
-                    value: PlaceholderNullAgileReference.Instance,
+                    value: NullPlaceholder.Instance,
                     comparand: null);
 
                 // At this point we can return whatever the updated value is
@@ -146,7 +146,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
 
             // Check if we got the placeholder value, and return 'null' if so.
             // Otherwise, we can rely on the instance being an object reference.
-            return agileReference == PlaceholderNullAgileReference.Instance
+            return agileReference == NullPlaceholder.Instance
                 ? null
                 : Unsafe.As<WindowsRuntimeObjectReference>(agileReference);
         }
@@ -302,15 +302,4 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
             }
         }
     }
-}
-
-/// <summary>
-/// A placeholder object for <see cref="ContextAwareObjectReference.AgileReference"/>.
-/// </summary>
-file static class PlaceholderNullAgileReference
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static object Instance = new();
 }

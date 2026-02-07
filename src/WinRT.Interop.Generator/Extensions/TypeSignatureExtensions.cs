@@ -18,6 +18,11 @@ internal static class TypeSignatureExtensions
     extension(TypeSignature signature)
     {
         /// <summary>
+        /// Gets whether the current type is a (constructed) generic type.
+        /// </summary>
+        public bool IsGenericType => signature.ElementType is ElementType.GenericInst;
+
+        /// <summary>
         /// Determines whether the current type is assignable from the provided type.
         /// </summary>
         /// <param name="other">The other type.</param>

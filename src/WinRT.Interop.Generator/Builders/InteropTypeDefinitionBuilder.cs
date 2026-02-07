@@ -712,27 +712,35 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
-    /// Creates a new type definition for the proxy type of some managed type.
+    /// Creates a new type definition for the proxy type of some interface type.
     /// </summary>
-    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="proxyType">The resulting proxy type.</param>
     public static void Proxy(
-        TypeSignature mappedType,
+        TypeSignature interfaceType,
         TypeDefinition comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections,
         out TypeDefinition proxyType)
     {
+        // This method is only used with interface types. Because of this, we need also emit the
+        // '[WindowsRuntimeMappedType]' attribute, so that 'TypeName' marshalling can retrieve
+        // the proxy type containing the runtime class name from the input managed type. We also
+        // emit '[WindowsRuntimeMetadataTypeName]', to support mapping the generic interface name
+        // when marshalling 'TypeName' instances. Nobody would need a runtime class name here.
         Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(mappedType),
-            name: InteropUtf8NameFactory.TypeName(mappedType),
-            mappedType: mappedType,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mappedType, useWindowsUIXamlProjections),
+            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
+            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            mappedMetadata: null,
+            runtimeClassName: null,
+            metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
+            mappedType: interfaceType,
+            referenceType: null,
             comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
             interopReferences: interopReferences,
             module: module,
@@ -744,18 +752,24 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
-    /// <param name="runtimeClassName">The runtime class name for the managed type (if null, the source type will be used).</param>
-    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+    /// <param name="mappedMetadata">The name of the mapped metadata for the proxy type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="referenceType">The <see cref="TypeSignature"/> for the reference type the proxy type is associated with (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="proxyType">The resulting proxy type.</param>
     public static void Proxy(
         Utf8String ns,
         Utf8String name,
-        TypeSignature mappedType,
+        string? mappedMetadata,
         string? runtimeClassName,
-        TypeDefinition comWrappersMarshallerAttributeType,
+        string? metadataTypeName,
+        TypeSignature? mappedType,
+        TypeSignature? referenceType,
+        TypeDefinition? comWrappersMarshallerAttributeType,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition proxyType)
@@ -769,19 +783,40 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(proxyType);
 
+        // Add the '[WindowsRuntimeMappedMetadata]' attribute with the provided .winmd name, if available
+        if (mappedMetadata is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: mappedMetadata))));
+        }
+
+        // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name, if available
         if (runtimeClassName is not null)
         {
-            // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: runtimeClassName))));
         }
-        else
+
+        // Add the '[WindowsRuntimeMetadataTypeName]' attribute with the provided metadata type name, if available
+        if (metadataTypeName is not null)
         {
-            // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type. This allows
-            // the runtime to retrieve the user-provided runtime class name from the original type.
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.String,
+                    value: metadataTypeName))));
+        }
+
+        // Add the '[WindowsRuntimeMappedType]' attribute with the provided mapped type, if available.
+        // This allows retrieving the user-provided runtime class name from the original managed type.
+        if (mappedType is not null)
+        {
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
@@ -789,8 +824,22 @@ internal static partial class InteropTypeDefinitionBuilder
                     value: mappedType.Import(module)))));
         }
 
-        // Add the generated marshaller attribute
-        proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+        // Add the '[WindowsRuntimeReferenceType]' attribute with the provided reference type, if available.
+        // This allows retrieving the boxed type (i.e. a 'Nullable<T>' instantiation) for a given value type.
+        if (referenceType is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(
+                constructor: interopReferences.WindowsRuntimeReferenceTypeAttribute_ctor.Import(module),
+                signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
+                    value: referenceType.Import(module)))));
+        }
+
+        // Add the generated marshaller attribute, if available
+        if (comWrappersMarshallerAttributeType is not null)
+        {
+            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+        }
     }
 
     /// <summary>
@@ -812,10 +861,13 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         TypeMapAttributes(
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
             externalTypeMapTrimTargetType: interfaceType,
-            proxyTypeMapSourceType: null,
-            proxyTypeMapProxyType: null,
+            marshallingTypeMapSourceType: null,
+            marshallingTypeMapProxyType: null,
+            metadataTypeMapSourceType: interfaceType,
+            metadataTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
             interfaceTypeMapSourceType: interfaceType,
             interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
             interopReferences: interopReferences,
@@ -825,28 +877,34 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <summary>
     /// Creates the type map attributes for a given type.
     /// </summary>
-    /// <param name="runtimeClassName">The runtime class name for the managed type.</param>
+    /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="externalTypeMapTargetType">The target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
     /// <param name="externalTypeMapTrimTargetType">The trim target type for <see cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)"/>.</param>
-    /// <param name="proxyTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
-    /// <param name="proxyTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="marshallingTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="marshallingTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="metadataTypeMapSourceType">The source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
+    /// <param name="metadataTypeMapProxyType">The proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interfaceTypeMapSourceType">The IDIC source type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interfaceTypeMapProxyType">The IDIC proxy type for <see cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)"/>.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     public static void TypeMapAttributes(
         string? runtimeClassName,
+        string? metadataTypeName,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTargetType,
         [NotNullIfNotNull(nameof(runtimeClassName))] TypeSignature? externalTypeMapTrimTargetType,
-        [NotNullIfNotNull(nameof(proxyTypeMapProxyType))] TypeSignature? proxyTypeMapSourceType,
-        [NotNullIfNotNull(nameof(proxyTypeMapSourceType))] TypeSignature? proxyTypeMapProxyType,
+        [NotNullIfNotNull(nameof(marshallingTypeMapProxyType))] TypeSignature? marshallingTypeMapSourceType,
+        [NotNullIfNotNull(nameof(marshallingTypeMapSourceType))] TypeSignature? marshallingTypeMapProxyType,
+        [NotNullIfNotNull(nameof(metadataTypeMapProxyType))] TypeSignature? metadataTypeMapSourceType,
+        [NotNullIfNotNull(nameof(metadataTypeMapSourceType))] TypeSignature? metadataTypeMapProxyType,
         [NotNullIfNotNull(nameof(interfaceTypeMapProxyType))] TypeSignature? interfaceTypeMapSourceType,
         [NotNullIfNotNull(nameof(interfaceTypeMapSourceType))] TypeSignature? interfaceTypeMapProxyType,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
         // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the external type map.
-        // This is optional, only needed for projected types.
+        // This is optional, only needed for custom-mapped or projected types.
         if (runtimeClassName is not null)
         {
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeComWrappersTypeMapGroup(
@@ -857,13 +915,36 @@ internal static partial class InteropTypeDefinitionBuilder
                 module: module));
         }
 
+        // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the metadata type map.
+        // This is also optional, only needed for some 'TypeName' marshalling cases.
+        if (metadataTypeName is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapWindowsRuntimeMetadataTypeMapGroup(
+                value: metadataTypeName,
+                target: externalTypeMapTargetType!,
+                trimTarget: externalTypeMapTrimTargetType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
+
         // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the proxy type map.
-        // This is only needed for types that can actually be instantiated.
-        if (proxyTypeMapSourceType is not null)
+        // This is only needed for types that can actually be instantiated (e.g. classes).
+        if (marshallingTypeMapSourceType is not null)
         {
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
-                source: proxyTypeMapSourceType,
-                proxy: proxyTypeMapProxyType!,
+                source: marshallingTypeMapSourceType,
+                proxy: marshallingTypeMapProxyType!,
+                interopReferences: interopReferences,
+                module: module));
+        }
+
+        // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the metadata type map.
+        // This is not always needed, but it is for types that cannot actually be instantiated.
+        if (metadataTypeMapSourceType is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeMetadataTypeMapGroup(
+                source: metadataTypeMapSourceType,
+                proxy: metadataTypeMapProxyType!,
                 interopReferences: interopReferences,
                 module: module));
         }

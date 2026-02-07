@@ -26,6 +26,9 @@ namespace ABI.System.ComponentModel;
 /// ABI type for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.dataerrorschangedeventargs"/>
+[WindowsRuntimeMappedMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeClassName("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")]
+[WindowsRuntimeMappedType(typeof(global::System.ComponentModel.DataErrorsChangedEventArgs))]
 [DataErrorsChangedEventArgsComWrappersMarshaller]
 file static class DataErrorsChangedEventArgs;
 

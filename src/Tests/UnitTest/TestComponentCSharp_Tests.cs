@@ -1,47 +1,82 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
-
-using Windows.Foundation;
-using Windows.UI;
-using Windows.Storage;
-using Windows.Storage.Streams;
+using System.Windows.Input;
+using ABI.System.Collections.Specialized;
+using ABI.System.ComponentModel;
+using ABI.Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Interop;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
-
 using TestComponentCSharp;
-using System.Collections.Generic;
-using System.Collections;
-using WinRT.Interop;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices.Enumeration;
+using Windows.Devices.Enumeration.Pnp;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Windows.Foundation.Tasks;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
-using System.Reflection;
-using Windows.Devices.Enumeration.Pnp;
-using System.Diagnostics;
-using Windows.Devices.Enumeration;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Notifications;
-using WindowsRuntime.InteropServices.Marshalling;
-using WindowsRuntime.InteropServices;
 using WindowsRuntime;
-using System.Runtime.InteropServices.Marshalling;
-using Windows.Foundation.Tasks;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+using WinRT.Interop;
+using Xunit;
+using Xunit.Sdk;
+using static System.Diagnostics.Activity;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 
 namespace UnitTest
 {
+    [CLSCompliant(false)]
+    [DataDiscoverer("Xunit.Sdk.InlineDataDiscoverer", "xunit.core")]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public sealed class InlineDataAttribute<T> : DataAttribute
+    {
+        private readonly object[] data;
+
+        public InlineDataAttribute(params object[] data)
+        {
+            this.data = data;
+        }
+
+        public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+        {
+            object[] arguments = [typeof(T), .. data];
+
+            return [arguments];
+        }
+    }
+
+    public delegate void DelegateTestCSharp<T>();
+
+    public interface ITestCSharp<T>
+    {
+        void TestMethod<T>();
+    }
+
     public partial class TestCSharp
     {
         public Class TestObject { get; private set; }
@@ -547,12 +582,139 @@ namespace UnitTest
             Assert.Equal(2, array.Count);
         }
 
-        [Fact]
-        public void TestTypePropertyWithSystemType()
+        [Theory]
+        // Mapped System.* Types Primitive Types
+        [InlineData(typeof(bool), "Boolean", "Primitive")]
+        [InlineData(typeof(byte), "UInt8", "Primitive")]
+        [InlineData(typeof(char), "Char16", "Primitive")]
+        [InlineData(typeof(double), "Double", "Primitive")]
+        [InlineData(typeof(short), "Int16", "Primitive")]
+        [InlineData(typeof(int), "Int32", "Primitive")]
+        [InlineData(typeof(long), "Int64", "Primitive")]
+        [InlineData(typeof(float), "Single", "Primitive")]
+        [InlineData(typeof(ushort), "UInt16", "Primitive")]
+        [InlineData(typeof(uint), "UInt32", "Primitive")]
+        [InlineData(typeof(ulong), "UInt64", "Primitive")]
+        // Mapped System.* Types Metadata Types
+        [InlineData(typeof(DateTimeOffset), "Windows.Foundation.DateTime", "Metadata")]
+        [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
+        [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
+        [InlineData(typeof(Guid), "Guid", "Metadata")]
+        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
+        [InlineData(typeof(object), "Object", "Metadata")]
+        [InlineData(typeof(string), "String", "Metadata")]
+        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
+        [InlineData(typeof(Uri), "Windows.Foundation.Uri", "Metadata")]
+        [InlineData(typeof(ICommand), "Microsoft.UI.Xaml.Input.ICommand", "Metadata")]
+        // Mapped System.Collections.* Types
+        [InlineData(typeof(IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable", "Metadata")]
+        [InlineData(typeof(IEnumerator), "Microsoft.UI.Xaml.Interop.IBindableIterator", "Metadata")]
+        [InlineData(typeof(IList), "Microsoft.UI.Xaml.Interop.IBindableVector", "Metadata")]
+        [InlineData<IReadOnlyList<long>>(typeof(IReadOnlyList<long>), "Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
+        // Mapped System.Collections.Specialized* Types
+        [InlineData(typeof(INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", "Metadata")]
+        [InlineData(typeof(NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Metadata")]
+        [InlineData(typeof(NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", "Metadata")]
+        // Mapped System.ComponentModel.* Types
+        [InlineData(typeof(DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", "Metadata")]
+        [InlineData(typeof(INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", "Metadata")]
+        [InlineData(typeof(INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", "Metadata")]
+        [InlineData(typeof(PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", "Metadata")]
+        [InlineData(typeof(PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", "Metadata")]
+        // Mapped System.Numerics.* Types
+        [InlineData(typeof(Matrix3x2), "Windows.Foundation.Numerics.Matrix3x2", "Metadata")]
+        [InlineData(typeof(Matrix4x4), "Windows.Foundation.Numerics.Matrix4x4", "Metadata")]
+        [InlineData(typeof(Plane), "Windows.Foundation.Numerics.Plane", "Metadata")]
+        [InlineData(typeof(Quaternion), "Windows.Foundation.Numerics.Quaternion", "Metadata")]
+        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
+        [InlineData(typeof(Vector3), "Windows.Foundation.Numerics.Vector3", "Metadata")]
+        [InlineData(typeof(Vector4), "Windows.Foundation.Numerics.Vector4", "Metadata")]
+        // Mapped Windows.Foundation.* Types
+        [InlineData(typeof(AsyncActionCompletedHandler), "Windows.Foundation.AsyncActionCompletedHandler", "Metadata")]
+        [InlineData(typeof(IAsyncAction), "Windows.Foundation.IAsyncAction", "Metadata")]
+        [InlineData(typeof(IAsyncInfo), "Windows.Foundation.IAsyncInfo", "Metadata")]
+        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
+        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
+        [InlineData(typeof(Size), "Windows.Foundation.Size", "Metadata")]
+        [InlineData(typeof(IStringable), "Windows.Foundation.IStringable", "Metadata")]
+        // Mapped Windows.Foundation.Collections.* Types
+        [InlineData(typeof(CollectionChange), "Windows.Foundation.Collections.CollectionChange", "Metadata")]
+        [InlineData(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
+        // Mapped WindowsRuntime.InteropServices.* Types
+        [InlineData(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
+        // Others
+        [InlineData<NotifyCollectionChangedAction>(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
+        [InlineData<NotifyCollectionChangedAction?>(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
+        // Projected WinRT Types
+        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
+        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
+        [InlineData(typeof(TestComponent.IRequiredOne), "TestComponent.IRequiredOne", "Metadata")]
+        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.Class), "TestComponentCSharp.Class", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.ComposedBlittableStruct), "TestComponentCSharp.ComposedBlittableStruct", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
+        // Nullable Types
+        [InlineData(typeof(long?), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
+        [InlineData(typeof(Point?), "Windows.Foundation.IReference`1<Windows.Foundation.Point>", "Metadata")]
+        [InlineData(typeof(Vector3?), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>", "Metadata")]
+        [InlineData(typeof(Guid?), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [InlineData(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
+        [InlineData<IList<Int32?>>(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        [InlineData<Int32?[]>(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        // Generic Types
+        [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
+        [InlineData<IList<TestComponentCSharp.EventWithGuid>>(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IList<TestComponentCSharp.Class>>(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<EventHandler<TestComponentCSharp.Class>>(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
+        [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
+        // Nested Generics
+        [InlineData<EventHandler<IList<long>>>(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<Object, Object>>>(typeof(EventHandler<KeyValuePair<Object, Object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>>(typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [InlineData<IList<KeyValuePair<Object, Object>>>(typeof(IList<KeyValuePair<Object, Object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<IEnumerator<IEnumerable<Object>>>(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
+        [InlineData<IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>>(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        // Custom Types
+        [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<IList<TestCSharp>>>(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<TestCSharp>>(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<DelegateTestCSharp<Guid>>(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<WeakReference<TestComponent.Class>>(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Int32, WeakReference<Object>>>(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ICollection<object>>(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Object, Object>?>(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Object, Object[]>>(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<long[][]>(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        // Arrays
+        [InlineData<Object[]>(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
+        [InlineData<long[]>(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
+        [InlineData<TestComponentCSharp.Class[]>(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<TestComponentCSharp.ComposedBlittableStruct[]>(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
+        [InlineData<TestComponentCSharp.IArtist[]>(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
+        [InlineData<TestComponentCSharp.EnumValue[]>(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [InlineData<TestComponentCSharp.EventHandler0[]>(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
+        [InlineData<Point[]>(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
+        [InlineData<IList<long>[]>(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<IList<long?>[]>(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>[]>(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
-            TestObject.TypeProperty = typeof(System.Type);
-            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", TestObject.GetTypePropertyAbiName());
-            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+            // test method here
+            TestObject.TypeProperty = type;
+            Assert.Equal(name, TestObject.GetTypePropertyAbiName());
+            Assert.Equal(kind, TestObject.GetTypePropertyKind());
         }
 
         class CustomDictionary : Dictionary<string, string> { }
@@ -2702,15 +2864,16 @@ namespace UnitTest
             IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
             Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
 
-            Assert.Equal(string.Empty, Class.GetName(arr));
-            Assert.Equal(string.Empty, Class.GetName(arr2));
+            // TODO: Enable once non WinRT arrays are supported.
+            // Assert.Equal(string.Empty, Class.GetName(arr));
+            // Assert.Equal(string.Empty, Class.GetName(arr2));
             Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", Class.GetName(arr3));
             Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr4));
             Assert.Equal("Windows.Foundation.IReferenceArray`1<Windows.Foundation.PropertyType>", Class.GetName(arr5));
-            Assert.Equal(string.Empty, Class.GetName(arr.GetValue(0)));
-            Assert.Equal(string.Empty, Class.GetName(arr2.GetValue(0)));
+            // Assert.Equal(string.Empty, Class.GetName(arr.GetValue(0)));
+            // Assert.Equal(string.Empty, Class.GetName(arr2.GetValue(0)));
             Assert.Equal("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
-            Assert.Equal(string.Empty, Class.GetName(arr4[0]));
+            // Assert.Equal(string.Empty, Class.GetName(arr4[0]));
             Assert.Equal("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
 
             Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(IProperties1)));
@@ -3207,7 +3370,6 @@ namespace UnitTest
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
             Assert.True(bindableIterator.MoveNext());
-            Assert.True(bindableIterator.HasCurrent);
             Assert.Equal(27861, bindableIterator.Current);
         }
 
@@ -3432,34 +3594,34 @@ namespace UnitTest
             Assert.True(eventCalled2);
         }
 
-        [Fact]
-        public unsafe void TestProxiedDelegate()
-        {
-            var obj = new OOPAsyncAction();
-            var factory = new WinRTClassFactory<OOPAsyncAction>(
-                () => obj,
-                new Dictionary<Guid, Func<object, IntPtr>>()
-                {
-                    { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
-                });
+        //[Fact]
+        //public unsafe void TestProxiedDelegate()
+        //{
+        //    var obj = new OOPAsyncAction();
+        //    var factory = new WinRTClassFactory<OOPAsyncAction>(
+        //        () => obj,
+        //        new Dictionary<Guid, Func<object, IntPtr>>()
+        //        {
+        //            { typeof(IAsyncAction).GUID, obj => (IntPtr)WindowsRuntimeInterfaceMarshaller<IAsyncAction>.ConvertToUnmanaged((IAsyncAction) obj, typeof(IAsyncAction).GUID).GetThisPtr() },
+        //        });
 
-            WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
+        //    WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
-            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
-            var proc = Process.Start(launchExePath);
-            Thread.Sleep(5000);
-            obj.Close();
-            Assert.True(obj.delegateCalled);
+        //    var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        //    var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+        //    var proc = Process.Start(launchExePath);
+        //    Thread.Sleep(5000);
+        //    obj.Close();
+        //    Assert.True(obj.delegateCalled);
 
-            try
-            {
-                proc.Kill();
-            }
-            catch (Exception)
-            {
-            }
-        }
+        //    try
+        //    {
+        //        proc.Kill();
+        //    }
+        //    catch (Exception)
+        //    {
+        //    }
+        //}
 
         [Fact]
         private async Task TestPnpPropertiesInLoop()

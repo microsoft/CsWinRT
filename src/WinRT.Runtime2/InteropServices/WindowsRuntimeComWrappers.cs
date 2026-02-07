@@ -189,11 +189,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         }
         else
         {
-            // Special case 'Exception', see notes in 'ComputeVtables' below for more details. Repeating this here
-            // allows us to still skip the repeated lookup, as we already know we won't find a matching key pair.
-            MarshallingInfo = instance is Exception
-                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
-                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+            // If we couldn't retrieve the marshalling info, get the one to marshal anonymous objects.
+            // E.g. this would be the case when marshalling a custom exception type, or some 'Type'.
+            MarshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(instance);
 
             thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, CreateComInterfaceFlags.TrackerSupport);
         }
@@ -297,11 +295,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // If we already have one available passed by callers up the stack, we can skip the lookup and just use it.
         if (marshallingInfo is null && !WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out marshallingInfo))
         {
-            // Special case for exception types, which won't have their own type map entry, but should all map to the
-            // same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
-            marshallingInfo = obj is Exception
-                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
-                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+            marshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(obj);
         }
 
         // Get the vtable from the current marshalling info (it will get cached in that instance)

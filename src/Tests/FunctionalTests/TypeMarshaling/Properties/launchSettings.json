@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TypeMarshaling": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

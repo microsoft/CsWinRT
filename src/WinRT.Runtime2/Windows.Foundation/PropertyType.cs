@@ -13,6 +13,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.propertytype"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>")]
+[WindowsRuntimeReferenceType(typeof(PropertyType?))]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.PropertyTypeComWrappersMarshaller]

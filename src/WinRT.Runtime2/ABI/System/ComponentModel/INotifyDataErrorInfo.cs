@@ -16,10 +16,33 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE1006
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo",
+    target: typeof(ABI.System.ComponentModel.INotifyDataErrorInfo),
+    trimTarget: typeof(INotifyDataErrorInfo))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(INotifyDataErrorInfo),
+    proxy: typeof(ABI.System.ComponentModel.INotifyDataErrorInfo))]
+
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(INotifyDataErrorInfo),
+    proxy: typeof(ABI.System.ComponentModel.INotifyDataErrorInfoInterfaceImpl))]
+
 namespace ABI.System.ComponentModel;
 
 /// <summary>
-/// Marshaller for <see cref="INotifyDataErrorInfo"/>.
+/// ABI type for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
+/// </summary>
+[WindowsRuntimeMappedMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeMetadataTypeName("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo")]
+[WindowsRuntimeMappedType(typeof(global::System.ComponentModel.INotifyDataErrorInfo))]
+file static class INotifyDataErrorInfo;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -28,22 +51,22 @@ namespace ABI.System.ComponentModel;
 public static unsafe class INotifyDataErrorInfoMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(INotifyDataErrorInfo? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.INotifyDataErrorInfo? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<INotifyDataErrorInfo>.ConvertToUnmanaged(
+        return WindowsRuntimeInterfaceMarshaller<global::System.ComponentModel.INotifyDataErrorInfo>.ConvertToUnmanaged(
             value: value,
             iid: in WellKnownWindowsInterfaceIIDs.IID_INotifyDataErrorInfo);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static INotifyDataErrorInfo? ConvertToManaged(void* value)
+    public static global::System.ComponentModel.INotifyDataErrorInfo? ConvertToManaged(void* value)
     {
-        return (INotifyDataErrorInfo?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::System.ComponentModel.INotifyDataErrorInfo?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="INotifyDataErrorInfo"/>.
+/// Interop methods for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -52,7 +75,7 @@ public static unsafe class INotifyDataErrorInfoMarshaller
 public static unsafe class INotifyDataErrorInfoMethods
 {
     /// <summary>
-    /// The <see cref="EventSource{T}"/> table for <see cref="INotifyDataErrorInfo.ErrorsChanged"/>.
+    /// The <see cref="EventSource{T}"/> table for <see cref="global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged"/>.
     /// </summary>
     private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource<DataErrorsChangedEventArgs>> ErrorsChangedTable
     {
@@ -71,7 +94,7 @@ public static unsafe class INotifyDataErrorInfoMethods
         }
     }
 
-    /// <see cref="INotifyDataErrorInfo.HasErrors"/>
+    /// <see cref="global::System.ComponentModel.INotifyDataErrorInfo.HasErrors"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool HasErrors(WindowsRuntimeObjectReference thisReference)
     {
@@ -85,7 +108,7 @@ public static unsafe class INotifyDataErrorInfoMethods
         return Unsafe.BitCast<bool, byte>(result) != 0;
     }
 
-    /// <see cref="INotifyDataErrorInfo.ErrorsChanged"/>
+    /// <see cref="global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged"/>
     public static EventHandlerEventSource<DataErrorsChangedEventArgs> ErrorsChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
@@ -98,7 +121,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             factoryArgument: thisReference);
     }
 
-    /// <see cref="INotifyDataErrorInfo.GetErrors"/>
+    /// <see cref="global::System.ComponentModel.INotifyDataErrorInfo.GetErrors"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static IEnumerable GetErrors(WindowsRuntimeObjectReference thisReference, string? propertyName)
     {
@@ -131,7 +154,7 @@ public static unsafe class INotifyDataErrorInfoMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="INotifyDataErrorInfo"/>.
+/// Binding type for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct INotifyDataErrorInfoVftbl
@@ -149,7 +172,7 @@ internal unsafe struct INotifyDataErrorInfoVftbl
 }
 
 /// <summary>
-/// The <see cref="INotifyDataErrorInfo"/> implementation.
+/// The <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -158,7 +181,7 @@ internal unsafe struct INotifyDataErrorInfoVftbl
 public static unsafe class INotifyDataErrorInfoImpl
 {
     /// <summary>
-    /// The <see cref="INotifyDataErrorInfoVftbl"/> value for the managed <see cref="INotifyDataErrorInfo"/> implementation.
+    /// The <see cref="INotifyDataErrorInfoVftbl"/> value for the managed <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly INotifyDataErrorInfoVftbl Vftbl;
@@ -177,7 +200,7 @@ public static unsafe class INotifyDataErrorInfoImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="INotifyDataErrorInfo"/> implementation.
+    /// Gets a pointer to the managed <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -186,15 +209,15 @@ public static unsafe class INotifyDataErrorInfoImpl
     }
 
     /// <summary>
-    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="INotifyDataErrorInfo.ErrorsChanged"/>.
+    /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged"/>.
     /// </summary>
-    private static ConditionalWeakTable<INotifyDataErrorInfo, EventRegistrationTokenTable<EventHandler<DataErrorsChangedEventArgs>>> ErrorsChanged
+    private static ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, EventRegistrationTokenTable<EventHandler<DataErrorsChangedEventArgs>>> ErrorsChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<INotifyDataErrorInfo, EventRegistrationTokenTable<EventHandler<DataErrorsChangedEventArgs>>> MakeErrorsChanged()
+            static ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, EventRegistrationTokenTable<EventHandler<DataErrorsChangedEventArgs>>> MakeErrorsChanged()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
@@ -213,7 +236,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             *result = thisObject.HasErrors;
 
@@ -233,7 +256,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
@@ -260,7 +283,7 @@ public static unsafe class INotifyDataErrorInfoImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             if (thisObject is not null && ErrorsChanged.TryGetValue(thisObject, out var table) && table.RemoveEventHandler(token, out EventHandler<DataErrorsChangedEventArgs>? managedHandler))
             {
@@ -283,7 +306,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
             IEnumerable managedResult = thisObject.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 
@@ -304,46 +327,46 @@ public static unsafe class INotifyDataErrorInfoImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyDataErrorInfo"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
 [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
-file interface INotifyDataErrorInfoInterfaceImpl : INotifyDataErrorInfo
+file interface INotifyDataErrorInfoInterfaceImpl : global::System.ComponentModel.INotifyDataErrorInfo
 {
     /// <inheritdoc/>
-    event EventHandler<DataErrorsChangedEventArgs>? INotifyDataErrorInfo.ErrorsChanged
+    event EventHandler<DataErrorsChangedEventArgs>? global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged
     {
         add
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyDataErrorInfo).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
 
             INotifyDataErrorInfoMethods.ErrorsChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyDataErrorInfo).TypeHandle);
+            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
 
             INotifyDataErrorInfoMethods.ErrorsChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 
     /// <inheritdoc/>
-    bool INotifyDataErrorInfo.HasErrors
+    bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(INotifyDataErrorInfo).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
 
             return INotifyDataErrorInfoMethods.HasErrors(thisReference);
         }
     }
 
     /// <inheritdoc/>
-    IEnumerable INotifyDataErrorInfo.GetErrors(string? propertyName)
+    IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string? propertyName)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(INotifyDataErrorInfo).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
 
         return INotifyDataErrorInfoMethods.GetErrors(thisReference, propertyName);
     }

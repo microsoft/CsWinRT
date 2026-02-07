@@ -195,29 +195,3 @@ public static unsafe class INotifyPropertyChangedImpl
         }
     }
 }
-
-/// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyPropertyChanged"/>.
-/// </summary>
-[DynamicInterfaceCastableImplementation]
-file interface INotifyPropertyChangedInterfaceImpl : INotifyPropertyChanged
-{
-    /// <inheritdoc/>
-    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
-    {
-        add
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyPropertyChanged).TypeHandle);
-
-            INotifyPropertyChangedMethods.PropertyChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
-        }
-        remove
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyPropertyChanged).TypeHandle);
-
-            INotifyPropertyChangedMethods.PropertyChanged(thisObject, thisReference).Unsubscribe(value);
-        }
-    }
-}

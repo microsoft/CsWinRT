@@ -127,11 +127,11 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
         {
             DynamicInterfaceCastableForwarderAttribute? value = ImplementationType.GetCustomAttribute<DynamicInterfaceCastableForwarderAttribute>(inherit: false);
 
-            value ??= PlaceholderDynamicInterfaceCastableForwarderAttribute.Instance;
+            value ??= DynamicInterfaceCastableForwarderAttributePlaceholder.Instance;
 
             _implementationForwarder = value;
 
-            if (value is not (null or PlaceholderDynamicInterfaceCastableForwarderAttribute))
+            if (value is not (null or DynamicInterfaceCastableForwarderAttributePlaceholder))
             {
                 forwarder = value;
 
@@ -148,7 +148,7 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
         // We have a cached forwarder, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderDynamicInterfaceCastableForwarderAttribute)
+            if (value is DynamicInterfaceCastableForwarderAttributePlaceholder)
             {
                 forwarder = null;
 
@@ -178,24 +178,5 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
 
         // There's no '[DynamicCastableImplementation]' info for the provided interface type
         return null;
-    }
-}
-
-/// <summary>
-/// A placeholder <see cref="DynamicInterfaceCastableForwarderAttribute"/> type.
-/// </summary>
-file sealed class PlaceholderDynamicInterfaceCastableForwarderAttribute : DynamicInterfaceCastableForwarderAttribute
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static PlaceholderDynamicInterfaceCastableForwarderAttribute Instance = new();
-
-    /// <inheritdoc/>
-    public override bool IsInterfaceImplemented(WindowsRuntimeObject thisReference, [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
-    {
-        interfaceReference = null;
-
-        return false;
     }
 }

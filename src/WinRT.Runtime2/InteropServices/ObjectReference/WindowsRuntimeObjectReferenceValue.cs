@@ -136,7 +136,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This method is analogous to <see cref="System.IDisposable.Dispose"/>, but with one crucial
+    /// This method is analogous to <see cref="IDisposable.Dispose"/>, but with one crucial
     /// difference. That is: <b>calling this method more than once is undefined behavior</b>.
     /// </para>
     /// <para>
