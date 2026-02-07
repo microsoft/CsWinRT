@@ -425,7 +425,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the associated <c>ComWrappersMarshallerAttribute</c> type for a custom-mapped type.
     /// </summary>
-    public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference type)
+    public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeSignature type)
     {
         return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
@@ -672,6 +672,30 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException MethodFixupError(InteropMethodFixup fixup, MethodDefinition method, Exception exception)
     {
         return Exception(78, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate the runtime class name of some Windows Runtime type.
+    /// </summary>
+    public static Exception RuntimeClassNameGenerationError(TypeSignature type)
+    {
+        return Exception(79, $"Failed to generate the runtime class name for type '{type}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the target <c>ComWrappersMarshallerAttribute</c> type for a non-projected Windows Runtime type.
+    /// </summary>
+    public static WellKnownInteropException NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference attributeType, string nativeType)
+    {
+        return Exception(80, $"Failed to resolve the 'ComWrappersMarshallerAttribute' type '{attributeType}' for a non-projected Windows Runtime type '{nativeType}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the associated "Methods" type for a custom-mapped type.
+    /// </summary>
+    public static WellKnownInteropException CustomMappedTypeMethodsTypeResolveError(TypeSignature type)
+    {
+        return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
     }
 
     /// <summary>

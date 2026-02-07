@@ -424,6 +424,11 @@ internal sealed class InteropReferences
     public TypeReference ReadOnlyCollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.ObjectModel"u8, "ReadOnlyCollection`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedAction"/>.
+    /// </summary>
+    public TypeReference NotifyCollectionChangedAction => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedAction"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
     /// </summary>
     public TypeReference NotifyCollectionChangedEventHandler => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventHandler"u8);
@@ -599,6 +604,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataTypeNameAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataTypeNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataTypeNameAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
     /// </summary>
     public TypeReference WindowsRuntimeDefaultInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDefaultInterfaceAttribute"u8);
@@ -607,6 +617,16 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMappedMetadataAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMappedMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMappedMetadataAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReferenceTypeAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeReferenceTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeReferenceTypeAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeManagedOnlyTypeAttribute</c>.
@@ -622,6 +642,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersTypeMapGroup"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeMetadataTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMetadataTypeMapGroup"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
@@ -1324,6 +1349,11 @@ internal sealed class InteropReferences
     public TypeReference TrustLevel => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "TrustLevel"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.PropertyType</c>.
+    /// </summary>
+    public TypeReference PropertyType => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "PropertyType"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Point</c>.
     /// </summary>
     public TypeReference Point => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Point"u8);
@@ -1337,6 +1367,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Size</c>.
     /// </summary>
     public TypeReference Size => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Size"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IStringable</c>.
+    /// </summary>
+    public TypeReference IStringable => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IStringable"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.AsyncStatus</c>.
@@ -1461,6 +1496,16 @@ internal sealed class InteropReferences
     public MemberReference TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeComWrappersTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, System.Type, System.Type)"/>, using <see cref="WindowsRuntimeMetadataTypeMapGroup"/>.
+    /// </summary>
+    public MemberReference TypeMapAttributeWindowsRuntimeMetadataTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeMetadataTypeMapGroup"/>.
+    /// </summary>
+    public MemberReference TypeMapAssociationAttributeWindowsRuntimeMetadataTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="DynamicInterfaceCastableImplementationTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(DynamicInterfaceCastableImplementationTypeMapGroup.ToReferenceTypeSignature());
@@ -1470,6 +1515,70 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IDisposableDispose => field ??= IDisposable
         .CreateMemberReference("Dispose"u8, MethodSignature.CreateInstance(_corLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s adder.
+    /// </summary>
+    public MemberReference ICommandadd_CanExecuteChanged => field ??= ICommand
+        .CreateMemberReference("add_CanExecuteChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecuteChanged"/>'s remover.
+    /// </summary>
+    public MemberReference ICommandremove_CanExecuteChanged => field ??= ICommand
+        .CreateMemberReference("remove_CanExecuteChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [EventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.CanExecute"/>.
+    /// </summary>
+    public MemberReference ICommandCanExecute => field ??= ICommand
+        .CreateMemberReference("CanExecute"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Boolean,
+            parameterTypes: [_corLibTypeFactory.Object]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Windows.Input.ICommand.Execute"/>.
+    /// </summary>
+    public MemberReference ICommandExecute => field ??= ICommand
+        .CreateMemberReference("Execute"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.Object]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s adder.
+    /// </summary>
+    public MemberReference INotifyCollectionChangedadd_CollectionChanged => field ??= INotifyCollectionChanged
+        .CreateMemberReference("add_CollectionChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>'s remover.
+    /// </summary>
+    public MemberReference INotifyCollectionChangedremove_CollectionChanged => field ??= INotifyCollectionChanged
+        .CreateMemberReference("remove_CollectionChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s adder.
+    /// </summary>
+    public MemberReference INotifyPropertyChangedadd_PropertyChanged => field ??= INotifyPropertyChanged
+        .CreateMemberReference("add_PropertyChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>'s remover.
+    /// </summary>
+    public MemberReference INotifyPropertyChangedremove_PropertyChanged => field ??= INotifyPropertyChanged
+        .CreateMemberReference("remove_PropertyChanged"u8, MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [PropertyChangedEventHandler.ToReferenceTypeSignature()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.Current"/>.
@@ -2257,9 +2366,33 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.String]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMetadataTypeNameAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeMetadataTypeNameAttribute_ctor => field ??= WindowsRuntimeMetadataTypeNameAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedMetadataAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeMappedMetadataAttribute_ctor => field ??= WindowsRuntimeMappedMetadataAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [_corLibTypeFactory.String]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedTypeAttribute"/>'s constructor.
     /// </summary>
     public MemberReference WindowsRuntimeMappedTypeAttribute_ctor => field ??= WindowsRuntimeMappedTypeAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [Type.ToReferenceTypeSignature()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeReferenceTypeAttribute"/>'s constructor.
+    /// </summary>
+    public MemberReference WindowsRuntimeReferenceTypeAttribute_ctor => field ??= WindowsRuntimeReferenceTypeAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [Type.ToReferenceTypeSignature()]));

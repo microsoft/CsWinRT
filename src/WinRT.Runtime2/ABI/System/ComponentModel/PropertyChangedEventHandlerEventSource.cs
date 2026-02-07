@@ -26,7 +26,7 @@ public sealed unsafe class PropertyChangedEventHandlerEventSource : EventSource<
     /// <inheritdoc/>
     protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventHandler value)
     {
-        return ABI.System.ComponentModel.PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
+        return PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

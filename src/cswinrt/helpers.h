@@ -781,6 +781,7 @@ namespace cswinrt
             { "Microsoft.UI.Xaml.Interop",
                 {
                     { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableIterator", "System.Collections", "IEnumerator", true, true },
                     { "IBindableVector", "System.Collections", "IList", true, true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
@@ -844,6 +845,7 @@ namespace cswinrt
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable`1", true },
+                    { "IStringable", "Windows.Foundation", "IStringable" },
                     { "Point", "Windows.Foundation", "Point" },
                     { "PropertyType", "Windows.Foundation", "PropertyType" },
                     { "Rect", "Windows.Foundation", "Rect" },
@@ -933,6 +935,7 @@ namespace cswinrt
             { "Windows.UI.Xaml.Interop",
                 {
                     { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableIterator", "System.Collections", "IEnumerator", true, true },
                     { "IBindableVector", "System.Collections", "IList", true, true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },

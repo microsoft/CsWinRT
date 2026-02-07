@@ -871,7 +871,7 @@ public abstract unsafe class WindowsRuntimeObject :
     }
 
     /// <summary>
-    /// A dummy type to use for caching adaptive <see cref="System.Collections.IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
+    /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
     /// </summary>
     private static class IEnumerableInstance;
 }

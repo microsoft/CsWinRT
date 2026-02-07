@@ -25,21 +25,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.Collections;
 
 /// <summary>
-/// ABI type for <see cref="global::System.Collections.IList"/>.
-/// </summary>
-/// <remarks>
-/// This interface is equivalent to <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.IBindableVector"/>.
-/// </remarks>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.IBindableVector"/>
-[IListComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static class IList;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.Collections.IList"/>.
+/// Marshaller for <see cref="IList"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -48,20 +34,20 @@ public static class IList;
 public static unsafe class IListMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IList? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IList? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IList>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableVector);
+        return WindowsRuntimeInterfaceMarshaller<IList>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableVector);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.Collections.IList? ConvertToManaged(void* value)
+    public static IList? ConvertToManaged(void* value)
     {
-        return (global::System.Collections.IList?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IListComWrappersCallback>(value);
+        return (IList?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IListComWrappersCallback>(value);
     }
 }
 
 /// <summary>
-/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="global::System.Collections.IList"/>.
+/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IList"/>.
 /// </summary>
 file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
@@ -103,9 +89,13 @@ file abstract class IListComWrappersCallback : IWindowsRuntimeUnsealedObjectComW
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Collections.IList"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="IList"/>.
 /// </summary>
-file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
@@ -120,7 +110,7 @@ file sealed unsafe class IListComWrappersMarshallerAttribute : WindowsRuntimeCom
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.Collections.IList"/>.
+/// Interop methods for <see cref="IList"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -140,55 +130,55 @@ public static class IListMethods
         BindableIListMethods.CopyTo(thisReference, array, index);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.this"/>
+    /// <inheritdoc cref="IList.this"/>
     public static object? Item(WindowsRuntimeObjectReference thisReference, int index)
     {
         return BindableIListMethods.Item(thisReference, index);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.this"/>
+    /// <inheritdoc cref="IList.this"/>
     public static void Item(WindowsRuntimeObjectReference thisReference, int index, object? value)
     {
         BindableIListMethods.Item(thisReference, index, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.Add"/>
+    /// <inheritdoc cref="IList.Add"/>
     public static int Add(WindowsRuntimeObjectReference thisReference, object? value)
     {
         return BindableIListMethods.Add(thisReference, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.Contains"/>
+    /// <inheritdoc cref="IList.Contains"/>
     public static bool Contains(WindowsRuntimeObjectReference thisReference, object? value)
     {
         return BindableIListMethods.Contains(thisReference, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.IndexOf"/>
+    /// <inheritdoc cref="IList.IndexOf"/>
     public static int IndexOf(WindowsRuntimeObjectReference thisReference, object? value)
     {
         return BindableIListMethods.IndexOf(thisReference, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.Insert"/>
+    /// <inheritdoc cref="IList.Insert"/>
     public static void Insert(WindowsRuntimeObjectReference thisReference, int index, object? value)
     {
         BindableIListMethods.Insert(thisReference, index, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.Remove"/>
+    /// <inheritdoc cref="IList.Remove"/>
     public static void Remove(WindowsRuntimeObjectReference thisReference, object? value)
     {
         BindableIListMethods.Remove(thisReference, value);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.RemoveAt"/>
+    /// <inheritdoc cref="IList.RemoveAt"/>
     public static void RemoveAt(WindowsRuntimeObjectReference thisReference, int index)
     {
         BindableIListMethods.RemoveAt(thisReference, index);
     }
 
-    /// <inheritdoc cref="global::System.Collections.IList.Clear"/>
+    /// <inheritdoc cref="IList.Clear"/>
     public static void Clear(WindowsRuntimeObjectReference thisReference)
     {
         BindableIListMethods.Clear(thisReference);
@@ -196,7 +186,7 @@ public static class IListMethods
 }
 
 /// <summary>
-/// The <see cref="global::System.Collections.IList"/> implementation.
+/// The <see cref="IList"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -205,7 +195,7 @@ public static class IListMethods
 public static unsafe class IListImpl
 {
     /// <summary>
-    /// The <see cref="IBindableVectorVftbl"/> value for the managed <see cref="global::System.Collections.IList"/> implementation.
+    /// The <see cref="IBindableVectorVftbl"/> value for the managed <see cref="IList"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBindableVectorVftbl Vftbl;
@@ -230,7 +220,7 @@ public static unsafe class IListImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.Collections.IList"/> implementation.
+    /// Gets a pointer to the managed <see cref="IList"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -249,7 +239,7 @@ public static unsafe class IListImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             object? value = BindableIListAdapter.GetAt(thisObject, index);
 
@@ -274,7 +264,7 @@ public static unsafe class IListImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             *size = BindableIListAdapter.Size(thisObject);
 
@@ -297,7 +287,7 @@ public static unsafe class IListImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(thisObject);
 
@@ -322,7 +312,7 @@ public static unsafe class IListImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
@@ -342,7 +332,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
@@ -362,7 +352,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
@@ -382,7 +372,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             BindableIListAdapter.RemoveAt(thisObject, index);
 
@@ -400,7 +390,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             object? item = WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
 
@@ -420,7 +410,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             BindableIListAdapter.RemoveAtEnd(thisObject);
 
@@ -438,7 +428,7 @@ public static unsafe class IListImpl
     {
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IList>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
 
             BindableIListAdapter.Clear(thisObject);
 
@@ -452,87 +442,87 @@ public static unsafe class IListImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IList"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IList"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
 [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-file interface IListInterfaceImpl : global::System.Collections.IList
+file interface IListInterfaceImpl : IList
 {
     /// <inheritdoc/>
-    object? global::System.Collections.IList.this[int index]
+    object? IList.this[int index]
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
             return BindableIListMethods.Item(thisReference, index);
         }
         set
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
             BindableIListMethods.Item(thisReference, index, value);
         }
     }
 
     /// <inheritdoc/>
-    bool global::System.Collections.IList.IsFixedSize => false;
+    bool IList.IsFixedSize => false;
 
     /// <inheritdoc/>
-    bool global::System.Collections.IList.IsReadOnly => false;
+    bool IList.IsReadOnly => false;
 
     /// <inheritdoc/>
-    int global::System.Collections.IList.Add(object? value)
+    int IList.Add(object? value)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         return BindableIListMethods.Add(thisReference, value);
     }
 
     /// <inheritdoc/>
-    void global::System.Collections.IList.Clear()
+    void IList.Clear()
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         BindableIListMethods.Clear(thisReference);
     }
 
     /// <inheritdoc/>
-    bool global::System.Collections.IList.Contains(object? value)
+    bool IList.Contains(object? value)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         return BindableIListMethods.Contains(thisReference, value);
     }
 
     /// <inheritdoc/>
-    int global::System.Collections.IList.IndexOf(object? value)
+    int IList.IndexOf(object? value)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         return BindableIListMethods.IndexOf(thisReference, value);
     }
 
     /// <inheritdoc/>
-    void global::System.Collections.IList.Insert(int index, object? value)
+    void IList.Insert(int index, object? value)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         BindableIListMethods.Insert(thisReference, index, value);
     }
 
     /// <inheritdoc/>
-    void global::System.Collections.IList.Remove(object? value)
+    void IList.Remove(object? value)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         BindableIListMethods.Remove(thisReference, value);
     }
 
     /// <inheritdoc/>
-    void global::System.Collections.IList.RemoveAt(int index)
+    void IList.RemoveAt(int index)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         BindableIListMethods.RemoveAt(thisReference, index);
     }
@@ -542,7 +532,7 @@ file interface IListInterfaceImpl : global::System.Collections.IList
     {
         get
         {
-            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+            var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
             return BindableIListMethods.Count(thisReference);
         }
@@ -557,7 +547,7 @@ file interface IListInterfaceImpl : global::System.Collections.IList
     /// <inheritdoc/>
     void ICollection.CopyTo(Array array, int index)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Collections.IList).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IList).TypeHandle);
 
         BindableIListMethods.CopyTo(thisReference, array, index);
     }

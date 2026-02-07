@@ -21,21 +21,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace ABI.System.Collections;
 
 /// <summary>
-/// ABI type for <see cref="global::System.Collections.IEnumerable"/>.
-/// </summary>
-/// <remarks>
-/// This interface is equivalent to <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.ibindableiterable"/>.
-/// </remarks>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
-[IEnumerableComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static class IEnumerable;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.Collections.IEnumerable"/>.
+/// Marshaller for <see cref="IEnumerable"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -44,20 +30,20 @@ public static class IEnumerable;
 public static unsafe class IEnumerableMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.IEnumerable? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IEnumerable? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<global::System.Collections.IEnumerable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable);
+        return WindowsRuntimeInterfaceMarshaller<IEnumerable>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static global::System.Collections.IEnumerable? ConvertToManaged(void* value)
+    public static IEnumerable? ConvertToManaged(void* value)
     {
-        return (global::System.Collections.IEnumerable?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IEnumerableComWrappersCallback>(value);
+        return (IEnumerable?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IEnumerableComWrappersCallback>(value);
     }
 }
 
 /// <summary>
-/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="global::System.Collections.IEnumerable"/>.
+/// The <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IEnumerable"/>.
 /// </summary>
 file abstract class IEnumerableComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
@@ -99,9 +85,13 @@ file abstract class IEnumerableComWrappersCallback : IWindowsRuntimeUnsealedObje
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Collections.IEnumerable"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="IEnumerable"/>.
 /// </summary>
-file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
@@ -116,7 +106,7 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 }
 
 /// <summary>
-/// Interop methods for <see cref="global::System.Collections.IEnumerable"/>.
+/// Interop methods for <see cref="IEnumerable"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -124,15 +114,15 @@ file sealed unsafe class IEnumerableComWrappersMarshallerAttribute : WindowsRunt
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumerableMethods
 {
-    /// <inheritdoc cref="global::System.Collections.IEnumerable.GetEnumerator"/>
-    public static global::System.Collections.IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
+    /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
+    public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
         return BindableIEnumerableMethods.GetEnumerator(thisReference);
     }
 }
 
 /// <summary>
-/// The <see cref="global::System.Collections.IEnumerable"/> implementation.
+/// The <see cref="IEnumerable"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -141,7 +131,7 @@ public static class IEnumerableMethods
 public static unsafe class IEnumerableImpl
 {
     /// <summary>
-    /// The <see cref="IBindableIterableVftbl"/> value for the managed <see cref="global::System.Collections.IEnumerable"/> implementation.
+    /// The <see cref="IBindableIterableVftbl"/> value for the managed <see cref="IEnumerable"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBindableIterableVftbl Vftbl;
@@ -157,7 +147,7 @@ public static unsafe class IEnumerableImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="global::System.Collections.IEnumerable"/> implementation.
+    /// Gets a pointer to the managed <see cref="IEnumerable"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -176,7 +166,7 @@ public static unsafe class IEnumerableImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::System.Collections.IEnumerable>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<IEnumerable>((ComInterfaceDispatch*)thisPtr);
 
             BindableIEnumerableAdapter.First(thisObject, result);
 
@@ -190,19 +180,19 @@ public static unsafe class IEnumerableImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Collections.IEnumerable"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IEnumerable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
 [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
-file interface IEnumerableInterfaceImpl : global::System.Collections.IEnumerable
+file interface IEnumerableInterfaceImpl : IEnumerable
 {
-    global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
+    IEnumerator IEnumerable.GetEnumerator()
     {
         WindowsRuntimeObject thisObject = (WindowsRuntimeObject)this;
 
         // First, try to lookup for the actual 'IEnumerable' interface being implemented
         if (thisObject.TryGetObjectReferenceForInterface(
-            interfaceType: typeof(global::System.Collections.IEnumerable).TypeHandle,
+            interfaceType: typeof(IEnumerable).TypeHandle,
             interfaceReference: out WindowsRuntimeObjectReference? interfaceReference))
         {
             return IEnumerableMethods.GetEnumerator(interfaceReference);

@@ -1091,10 +1091,13 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: listType,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
+                marshallingTypeMapSourceType: null,
+                marshallingTypeMapProxyType: null,
+                metadataTypeMapSourceType: listType,
+                metadataTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
                 interfaceTypeMapSourceType: listType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,
@@ -1108,10 +1111,13 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 InteropTypeDefinitionBuilder.TypeMapAttributes(
                     runtimeClassName: null,
+                    metadataTypeName: null,
                     externalTypeMapTargetType: null,
                     externalTypeMapTrimTargetType: null,
-                    proxyTypeMapSourceType: null,
-                    proxyTypeMapProxyType: null,
+                    marshallingTypeMapSourceType: null,
+                    marshallingTypeMapProxyType: null,
+                    metadataTypeMapSourceType: null,
+                    metadataTypeMapProxyType: null,
                     interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType(elementType),
                     interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                     interopReferences: interopReferences,

@@ -12,26 +12,10 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0008, IDE0055
 
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(NotifyCollectionChangedEventArgs),
-    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs))]
-
 namespace ABI.System.Collections.Specialized;
 
 /// <summary>
-/// ABI type for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.notifycollectionchangedeventargs"/>
-/// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.interop.notifycollectionchangedeventargs"/>
-[NotifyCollectionChangedEventArgsComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static class NotifyCollectionChangedEventArgs;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+/// Marshaller for <see cref="NotifyCollectionChangedEventArgs"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -40,7 +24,7 @@ public static class NotifyCollectionChangedEventArgs;
 public static unsafe class NotifyCollectionChangedEventArgsMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventArgs? value)
     {
         if (value is null)
         {
@@ -59,7 +43,7 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
 
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToManaged"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static global::System.Collections.Specialized.NotifyCollectionChangedEventArgs? ConvertToManaged(void* value)
+    public static NotifyCollectionChangedEventArgs? ConvertToManaged(void* value)
     {
         if (value is null)
         {
@@ -165,14 +149,18 @@ public static unsafe class NotifyCollectionChangedEventArgsMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="NotifyCollectionChangedEventArgs"/>.
 /// </summary>
-file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        var args = (global::System.Collections.Specialized.NotifyCollectionChangedEventArgs)value;
+        var args = (NotifyCollectionChangedEventArgs)value;
 
         return NotifyCollectionChangedEventArgsRuntimeClassFactory.CreateInstance(
             args.Action,
@@ -190,7 +178,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
 
         IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: value,
-            iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgs,
+            iid: in WellKnownXamlInterfaceIIDs.IID_NotifyCollectionChangedEventArgs,
             pvObject: out void* result).Assert();
 
         try
@@ -205,7 +193,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
 }
 
 /// <summary>
-/// The runtime class factory for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+/// The runtime class factory for <see cref="NotifyCollectionChangedEventArgs"/>.
 /// </summary>
 file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
 {
@@ -217,14 +205,14 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
         iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory);
 
     /// <summary>
-    /// Creates a new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
+    /// Creates a new native instance for <see cref="NotifyCollectionChangedEventArgs"/>.
     /// </summary>
-    /// <param name="action"><inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs.Action" path="/summary/node()"/></param>
-    /// <param name="newItems"><inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs.NewItems" path="/summary/node()"/></param>
-    /// <param name="oldItems"><inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs.OldItems" path="/summary/node()"/></param>
-    /// <param name="newIndex"><inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs.NewStartingIndex" path="/summary/node()"/></param>
-    /// <param name="oldIndex"><inheritdoc cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs.OldStartingIndex" path="/summary/node()"/></param>
-    /// <returns>The new native instance for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.</returns>
+    /// <param name="action"><inheritdoc cref="NotifyCollectionChangedEventArgs.Action" path="/summary/node()"/></param>
+    /// <param name="newItems"><inheritdoc cref="NotifyCollectionChangedEventArgs.NewItems" path="/summary/node()"/></param>
+    /// <param name="oldItems"><inheritdoc cref="NotifyCollectionChangedEventArgs.OldItems" path="/summary/node()"/></param>
+    /// <param name="newIndex"><inheritdoc cref="NotifyCollectionChangedEventArgs.NewStartingIndex" path="/summary/node()"/></param>
+    /// <param name="oldIndex"><inheritdoc cref="NotifyCollectionChangedEventArgs.OldStartingIndex" path="/summary/node()"/></param>
+    /// <returns>The new native instance for <see cref="NotifyCollectionChangedEventArgs"/>.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* CreateInstance(
         NotifyCollectionChangedAction action,

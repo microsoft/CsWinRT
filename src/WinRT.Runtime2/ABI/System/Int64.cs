@@ -14,6 +14,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Int64",
+    target: typeof(ABI.System.Int64),
+    trimTarget: typeof(long))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference`1<Int64>",
     target: typeof(ABI.System.Int64),
@@ -27,7 +32,11 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="long"/>.
 /// </summary>
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Int64>")]
+[WindowsRuntimeMetadataTypeName("Int64")]
+[WindowsRuntimeMappedType(typeof(long))]
+[WindowsRuntimeReferenceType(typeof(long?))]
 [Int64ComWrappersMarshaller]
 file static class Int64;
 

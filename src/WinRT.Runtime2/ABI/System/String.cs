@@ -15,6 +15,11 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable IDE0008, IDE1006, CA1416
 
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "String",
+    target: typeof(ABI.System.String),
+    trimTarget: typeof(string))]
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference`1<String>",
     target: typeof(ABI.System.String),
@@ -28,7 +33,10 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="string"/>.
 /// </summary>
+[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<String>")]
+[WindowsRuntimeMetadataTypeName("String")]
+[WindowsRuntimeMappedType(typeof(string))]
 [StringComWrappersMarshaller]
 file static class String;
 

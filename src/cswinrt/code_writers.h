@@ -1024,6 +1024,12 @@ namespace cswinrt
 
         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
         {
+            if (mapping->mapped_name == "IStringable")
+            {
+                w.write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
+                return;
+            }
+
             std::string name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
             name = escape_type_name_for_identifier(name, true, true);
             w.write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_%", name);
@@ -3166,6 +3172,16 @@ IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::AB
 objref_name);
     }
 
+    void write_nongeneric_enumerator_members_using_static_abi_methods(writer& w, std::string const& objref_name)
+    {
+        w.write(R"(
+public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext(%);
+public void Reset() => throw new NotSupportedException();
+public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current(%);
+)",
+objref_name, objref_name);
+    }
+
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
     {
         w.write(R"(
@@ -3897,6 +3913,10 @@ visibility, self, objref_name);
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
             write_nongeneric_enumerable_members_using_static_abi_methods(w, objref_name);
+        }
+        else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerator")
+        {
+            write_nongeneric_enumerator_members_using_static_abi_methods(w, objref_name);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {
@@ -4714,17 +4734,47 @@ R"(file static class %InterfaceEntriesImpl
 )", name, name, bind<write_iid_guid>(type), name, bind<write_iid_reference_guid>(type), name);
     }
 
+
+    void write_pragma_restore_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning restore IL2026
+)");
+    }
+
+    void write_pragma_disable_IL2026(writer& w)
+    {
+        w.write(
+R"(
+#pragma warning disable IL2026
+)");
+    }
+
+    void write_winrt_windowsmetadata_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
+    {
+        auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+        w.write(
+R"(
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "%",
+    target: typeof(%),
+    trimTarget: typeof(%))]
+)",
+            projection_name,
+            projection_name,
+            projection_name);
+    }
+
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
     {
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
-R"(#pragma warning disable IL2026
+R"(
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "%",
     target: typeof(%),
     trimTarget: typeof(%))]
-#pragma warning restore IL2026
-
 )",
         bind([&](writer& w) {
             if (is_value_type)
@@ -4764,13 +4814,18 @@ R"(#pragma warning disable IL2026
             bind<write_type_name>(type, typedef_name_type::ABI, true));
     }
 
+    void write_winrt_reference_type_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
+    }
+
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
     }
 
-    void write_struct_winrt_classname_attribute(writer& w, TypeDef const& type)
+    void write_value_type_winrt_classname_attribute(writer& w, TypeDef const& type)
     {
         if (settings.reference_projection)
         {
@@ -9305,13 +9360,15 @@ internal unsafe struct %Vftbl
 
         w.write(
 R"(
-%%%%% enum % : %
+%%%%%%% enum % : %
 {
 )",             
         is_flags_enum(type) ? "[FlagsAttribute]\n" : "",
         bind<write_winrt_metadata_attribute>(type),
+        bind<write_value_type_winrt_classname_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
         bind<write_comwrapper_marshaller_attribute>(type),
+        bind<write_winrt_reference_type_attribute>(type),
         (settings.internal) ? "internal" : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
@@ -9370,10 +9427,11 @@ R"(
         }
 
         // struct
-        w.write("%%%public% struct %: IEquatable<%>\n{\n",
+        w.write("%%%%public% struct %: IEquatable<%>\n{\n",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_struct_winrt_classname_attribute>(type),
+            bind<write_value_type_winrt_classname_attribute>(type),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_winrt_reference_type_attribute>(type),
             has_addition_to_type(type) ? " partial" : "",
             type.TypeName(),
             type.TypeName());
@@ -9434,7 +9492,7 @@ R"(
         if (!is_type_blittable(type))
         {
             w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% unsafe struct %\n{\n",
-                bind<write_struct_winrt_classname_attribute>(type),
+                bind<write_value_type_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false));

@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Runtime.CompilerServices;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -22,63 +24,35 @@ internal static class RuntimeClassNameGenerator
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
-        // Helper to format a full type signature into a target interpolated handler
-        static void AppendRuntimeClassName(
-            ref DefaultInterpolatedStringHandler interpolatedStringHandler,
-            TypeSignature type,
-            bool useWindowsUIXamlProjections)
+        // We need to be able to resolve the type definition to determine whether we need
+        // to wrap the metadata type name within "IReference`1<...>" (e.g. for delegates).
+        if (type.Resolve() is not TypeDefinition typeDefinition)
         {
-            // Handle SZ array types and map them to 'IReferenceArray<T>' type names
-            if (type is SzArrayTypeSignature szArrayTypeSignature)
-            {
-                interpolatedStringHandler.AppendLiteral("Windows.Foundation.IReferenceArray`1<");
-
-                AppendRuntimeClassName(ref interpolatedStringHandler, szArrayTypeSignature.BaseType, useWindowsUIXamlProjections);
-
-                interpolatedStringHandler.AppendLiteral(">");
-            }
-            else if (type is GenericInstanceTypeSignature genericInstanceTypeSignature)
-            {
-                // For constructed generic types, we first format the generic type (with a mapped
-                // name, if applicable), and then recursively process all generic type arguments.
-                if (TypeMapping.TryFindMappedTypeName(genericInstanceTypeSignature.GenericType.FullName, useWindowsUIXamlProjections, out string? mappedTypeName))
-                {
-                    interpolatedStringHandler.AppendLiteral(mappedTypeName);
-                }
-                else
-                {
-                    interpolatedStringHandler.AppendLiteral(genericInstanceTypeSignature.GenericType.FullName);
-                }
-
-                interpolatedStringHandler.AppendLiteral("<");
-
-                // Recursively format each type argument
-                for (int i = 0; i < genericInstanceTypeSignature.TypeArguments.Count; i++)
-                {
-                    // Add the ', ' separator after the first type argument
-                    if (i > 0)
-                    {
-                        interpolatedStringHandler.AppendLiteral(", ");
-                    }
-
-                    AppendRuntimeClassName(ref interpolatedStringHandler, genericInstanceTypeSignature.TypeArguments[i], useWindowsUIXamlProjections);
-                }
-
-                interpolatedStringHandler.AppendLiteral(">");
-            }
-            else if (TypeMapping.TryFindMappedTypeName(type.FullName, useWindowsUIXamlProjections, out string? simpleMappedTypeName))
-            {
-                // We have a simple, non-generic type, so format its mapped type if available
-                interpolatedStringHandler.AppendLiteral(simpleMappedTypeName);
-            }
-            else
-            {
-                // Otherwise the type must be a projected type, so just format the full name
-                interpolatedStringHandler.AppendLiteral(type.FullName);
-            }
+            throw WellKnownInteropExceptions.RuntimeClassNameGenerationError(type);
         }
 
-        AppendRuntimeClassName(ref handler, type, useWindowsUIXamlProjections);
+        // We need to wrap the metadata name with "IReference`1<...>" only for non-generic value types, and for delegate
+        // types. We skip generic value types because the only possible type is 'KeyValuePair<TKey, TValue>', but that is
+        // a Windows Runtime interface. We also need to make sure to skip SZ arrays manually. Note that when resolving the
+        // signature of an SZ array type, we'd just get a definition for the array element type. So we need to manually
+        // check for that scenario via the original type signature directly to make sure to not accidentally mark arrays
+        // of some type that would require reference support, as needing reference support themselves.
+        bool isReference = type is not SzArrayTypeSignature && ((type.IsValueType && !type.IsGenericType) || typeDefinition.IsDelegate);
+
+        if (isReference)
+        {
+            handler.AppendLiteral("Windows.Foundation.IReference`1<");
+        }
+
+        // Aside from the possible "IReference`1<...>" prefix, the runtime class name will be the same
+        // as the metadata type name for all cases, so here we just forward to that to generate it.
+        MetadataTypeNameGenerator.AppendMetadataTypeName(ref handler, type, useWindowsUIXamlProjections);
+
+        if (isReference)
+        {
+            handler.AppendLiteral(">");
+
+        }
 
         return handler.ToStringAndClear();
     }

@@ -271,10 +271,13 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: null,
+                metadataTypeName: null,
                 externalTypeMapTargetType: null,
                 externalTypeMapTrimTargetType: null,
-                proxyTypeMapSourceType: null,
-                proxyTypeMapProxyType: null,
+                marshallingTypeMapSourceType: null,
+                marshallingTypeMapProxyType: null,
+                metadataTypeMapSourceType: null,
+                metadataTypeMapProxyType: null,
                 interfaceTypeMapSourceType: collectionType,
                 interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                 interopReferences: interopReferences,

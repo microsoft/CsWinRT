@@ -13,10 +13,33 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
+    value: "Microsoft.UI.Xaml.IXamlServiceProvider",
+    target: typeof(ABI.System.IServiceProvider),
+    trimTarget: typeof(IServiceProvider))]
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(IServiceProvider),
+    proxy: typeof(ABI.System.IServiceProvider))]
+
+[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
+    source: typeof(IServiceProvider),
+    proxy: typeof(ABI.System.IServiceProviderInterfaceImpl))]
+
 namespace ABI.System;
 
 /// <summary>
-/// Marshaller for <see cref="IServiceProvider"/>.
+/// ABI type for <see cref="global::System.IServiceProvider"/>.
+/// </summary>
+[WindowsRuntimeMappedMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeMetadataTypeName("Microsoft.UI.Xaml.IXamlServiceProvider")]
+[WindowsRuntimeMappedType(typeof(global::System.IServiceProvider))]
+file static class IServiceProvider;
+
+/// <summary>
+/// Marshaller for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -25,20 +48,20 @@ namespace ABI.System;
 public static unsafe class IServiceProviderMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IServiceProvider? value)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.IServiceProvider? value)
     {
-        return WindowsRuntimeInterfaceMarshaller<IServiceProvider>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IXamlServiceProvider);
+        return WindowsRuntimeInterfaceMarshaller<global::System.IServiceProvider>.ConvertToUnmanaged(value, in WellKnownWindowsInterfaceIIDs.IID_IXamlServiceProvider);
     }
 
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
-    public static IServiceProvider? ConvertToManaged(void* value)
+    public static global::System.IServiceProvider? ConvertToManaged(void* value)
     {
-        return (IServiceProvider?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (global::System.IServiceProvider?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
     }
 }
 
 /// <summary>
-/// Interop methods for <see cref="IServiceProvider"/>.
+/// Interop methods for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -46,7 +69,7 @@ public static unsafe class IServiceProviderMarshaller
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IServiceProviderMethods
 {
-    /// <see cref="IServiceProvider.GetService"/>
+    /// <see cref="global::System.IServiceProvider.GetService"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static object? GetService(WindowsRuntimeObjectReference thisReference, global::System.Type serviceType)
     {
@@ -74,7 +97,7 @@ public static unsafe class IServiceProviderMethods
 }
 
 /// <summary>
-/// Binding type for <see cref="IServiceProvider"/>.
+/// Binding type for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IServiceProviderVftbl
@@ -89,7 +112,7 @@ internal unsafe struct IServiceProviderVftbl
 }
 
 /// <summary>
-/// The <see cref="IServiceProvider"/> implementation.
+/// The <see cref="global::System.IServiceProvider"/> implementation.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -98,7 +121,7 @@ internal unsafe struct IServiceProviderVftbl
 public static unsafe class IServiceProviderImpl
 {
     /// <summary>
-    /// The <see cref="IServiceProviderVftbl"/> value for the managed <see cref="IServiceProvider"/> implementation.
+    /// The <see cref="IServiceProviderVftbl"/> value for the managed <see cref="global::System.IServiceProvider"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IServiceProviderVftbl Vftbl;
@@ -114,7 +137,7 @@ public static unsafe class IServiceProviderImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the managed <see cref="IServiceProvider"/> implementation.
+    /// Gets a pointer to the managed <see cref="global::System.IServiceProvider"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -133,7 +156,7 @@ public static unsafe class IServiceProviderImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<IServiceProvider>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::System.IServiceProvider>((ComInterfaceDispatch*)thisPtr);
 
             global::System.Type? managedType = TypeMarshaller.ConvertToManaged(serviceType);
 
@@ -157,16 +180,16 @@ public static unsafe class IServiceProviderImpl
 }
 
 /// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IServiceProvider"/>.
+/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
 [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
-file interface IServiceProviderInterfaceImpl : IServiceProvider
+file interface IServiceProviderInterfaceImpl : global::System.IServiceProvider
 {
     /// <inheritdoc/>
-    object? IServiceProvider.GetService(global::System.Type serviceType)
+    object? global::System.IServiceProvider.GetService(global::System.Type serviceType)
     {
-        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(IServiceProvider).TypeHandle);
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.IServiceProvider).TypeHandle);
 
         return IServiceProviderMethods.GetService(thisReference, serviceType);
     }

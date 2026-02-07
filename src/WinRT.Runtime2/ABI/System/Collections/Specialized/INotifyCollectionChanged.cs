@@ -194,29 +194,3 @@ public static unsafe class INotifyCollectionChangedImpl
         }
     }
 }
-
-/// <summary>
-/// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="INotifyCollectionChanged"/>.
-/// </summary>
-[DynamicInterfaceCastableImplementation]
-file interface INotifyCollectionChangedInterfaceImpl : INotifyCollectionChanged
-{
-    /// <inheritdoc/>
-    event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
-    {
-        add
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
-
-            INotifyCollectionChangedMethods.CollectionChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
-        }
-        remove
-        {
-            var thisObject = (WindowsRuntimeObject)this;
-            var thisReference = thisObject.GetObjectReferenceForInterface(typeof(INotifyCollectionChanged).TypeHandle);
-
-            INotifyCollectionChangedMethods.CollectionChanged(thisObject, thisReference).Unsubscribe(value);
-        }
-    }
-}

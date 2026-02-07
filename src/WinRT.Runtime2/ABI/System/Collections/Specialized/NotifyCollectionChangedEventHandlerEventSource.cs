@@ -27,7 +27,7 @@ public sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : Even
     /// <inheritdoc/>
     protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventHandler value)
     {
-        return ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
+        return NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

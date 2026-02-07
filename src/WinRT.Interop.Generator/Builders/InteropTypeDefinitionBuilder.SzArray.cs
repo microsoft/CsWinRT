@@ -528,10 +528,45 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the proxy type for some SZ array type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition comWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            bool useWindowsUIXamlProjections,
+            out TypeDefinition proxyType)
+        {
+            // This is a proxy for Windows Runtime arrays, so we also need to emit the '[WindowsRuntimeMappedMetadata]'
+            // attribute, so that during 'TypeName' marshalling we can detect whether the type is a metadata type. Note
+            // that arrays with element types that are not Windows Runtime types will still have entries in the marshalling
+            // type map (as they're treated the same as normal user-defined types), so this allows us to distinguish them.
+            InteropTypeDefinitionBuilder.Proxy(
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
+                name: InteropUtf8NameFactory.TypeName(arrayType),
+                mappedMetadata: "Windows.Foundation.FoundationContract",
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
+                mappedType: arrayType,
+                referenceType: null,
+                comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                proxyType: out proxyType);
+        }
+
+        /// <summary>
         /// Creates the type map attributes for some SZ array type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -544,10 +579,13 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
+                metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: arrayType,
-                proxyTypeMapSourceType: arrayType,
-                proxyTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                marshallingTypeMapSourceType: arrayType,
+                marshallingTypeMapProxyType: proxyType.ToReferenceTypeSignature(),
+                metadataTypeMapSourceType: null,
+                metadataTypeMapProxyType: null,
                 interfaceTypeMapSourceType: null,
                 interfaceTypeMapProxyType: null,
                 interopReferences: interopReferences,
