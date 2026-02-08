@@ -356,6 +356,7 @@ static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* lengt
 [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
 static extern int WindowsDeleteString(IntPtr hstring);
 
+/*
 static Exception RunAndGetException(Action action)
 {
     try
@@ -369,6 +370,7 @@ static Exception RunAndGetException(Action action)
         return e;
     }
 }
+*/
 
 static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 {
