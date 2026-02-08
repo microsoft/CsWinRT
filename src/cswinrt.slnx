@@ -107,6 +107,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/Windows/Windows.csproj">
+      <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
