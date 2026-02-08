@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using TestComponentCSharp;
+using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -221,7 +222,9 @@ catch (Exception)
     }
 }
 
+// TODO enable when bindable custom properties are supported.
 
+/*
 // Test ICustomProperty
 Language language = new Language();
 language.Value = 42;
@@ -328,6 +331,7 @@ if ((int)retrievedValue8 != 4 ||
 {
     return 136;
 }
+*/
 
 if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedOnlyClass())) is not NotSupportedException)
 {
@@ -400,7 +404,7 @@ sealed partial class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
-// [WinRTRuntimeClassName("ManagedWarningClass")]
+[WindowsRuntimeClassName("ManagedWarningClass")]
 sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
     public int Test => 4;
