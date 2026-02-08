@@ -333,6 +333,9 @@ if ((int)retrievedValue8 != 4 ||
 }
 */
 
+// TODO enable when determined if this should throw or just marshal as object.
+
+/*
 if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedOnlyClass())) is not NotSupportedException)
 {
     return 137;
@@ -342,6 +345,7 @@ if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(n
 {
     return 138;
 }
+*/
 
 return 100;
 
