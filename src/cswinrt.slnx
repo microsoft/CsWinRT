@@ -108,6 +108,9 @@
     </Project>
     <Project Path="Projections/Windows/Windows.csproj">
       <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
+      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
+      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -350,6 +353,10 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
   <Project Path="Benchmarks/Benchmarks.csproj">
+    <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
+    <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
+    <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+    <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
     <Platform Solution="*|ARM" Project="x86" />
     <Platform Solution="*|ARM64" Project="x86" />
     <Platform Solution="*|x64" Project="x64" />
