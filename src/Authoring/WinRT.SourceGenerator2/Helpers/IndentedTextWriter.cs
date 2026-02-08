@@ -169,6 +169,19 @@ internal ref struct IndentedTextWriter
     }
 
     /// <summary>
+    /// Writes content to the underlying buffer.
+    /// </summary>
+    /// <param name="handler">The interpolated string handler with content to write.</param>
+    /// <param name="isMultiline">Whether the input content is multiline.</param>
+    [UnconditionalSuppressMessage("Performance", "CA1822", Justification = "This method implicitly passes 'this' to the input handler.")]
+    public readonly void Write(scoped ref DefaultInterpolatedStringHandler handler, bool isMultiline)
+    {
+        Unsafe.AsRef(in this).Write(handler.Text, isMultiline);
+
+        handler.Clear();
+    }
+
+    /// <summary>
     /// Writes content to the underlying buffer depending on an input condition.
     /// </summary>
     /// <param name="condition">The condition to use to decide whether or not to write content.</param>
@@ -248,6 +261,18 @@ internal ref struct IndentedTextWriter
     public readonly void WriteLine([InterpolatedStringHandlerArgument("")] scoped ref WriteInterpolatedStringHandler handler)
     {
         Unsafe.AsRef(in this).WriteLine();
+    }
+
+    /// <summary>
+    /// Writes content to the underlying buffer and appends a trailing new line.
+    /// </summary>
+    /// <param name="handler">The interpolated string handler with content to write.</param>
+    /// <param name="isMultiline">Whether the input content is multiline.</param>
+    public readonly void WriteLine(scoped ref DefaultInterpolatedStringHandler handler, bool isMultiline)
+    {
+        Unsafe.AsRef(in this).WriteLine(handler.Text, isMultiline);
+
+        handler.Clear();
     }
 
     /// <summary>
