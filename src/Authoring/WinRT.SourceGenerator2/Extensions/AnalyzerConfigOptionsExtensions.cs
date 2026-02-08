@@ -23,6 +23,24 @@ internal static class AnalyzerConfigOptionsExtensions
         }
 
         /// <summary>
+        /// Gets the value of the <c>"CsWinRTComponent"</c> property.
+        /// </summary>
+        /// <returns>The value of the <c>"CsWinRTComponent"</c> property.</returns>
+        public bool GetCsWinRTComponent()
+        {
+            return options.GetBooleanProperty("CsWinRTComponent");
+        }
+
+        /// <summary>
+        /// Gets the value of the <c>"CsWinRTMergeReferencedActivationFactories"</c> property.
+        /// </summary>
+        /// <returns>The value of the <c>"CsWinRTMergeReferencedActivationFactories"</c> property.</returns>
+        public bool GetCsWinRTMergeReferencedActivationFactories()
+        {
+            return options.GetBooleanProperty("CsWinRTMergeReferencedActivationFactories");
+        }
+
+        /// <summary>
         /// Tries to get the value of a boolean MSBuild property.
         /// </summary>
         /// <param name="propertyName">The property name.</param>
