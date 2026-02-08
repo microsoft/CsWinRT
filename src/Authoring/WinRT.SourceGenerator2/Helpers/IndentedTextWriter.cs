@@ -52,7 +52,7 @@ internal ref struct IndentedTextWriter
 
     /// <summary>
     /// Creates a new <see cref="IndentedTextWriter"/> value with the specified parameters.
-    /// </summary>v
+    /// </summary>
     /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
     /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
     public IndentedTextWriter(int literalLength, int formattedCount)

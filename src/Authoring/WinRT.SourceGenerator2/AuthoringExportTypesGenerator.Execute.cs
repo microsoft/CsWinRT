@@ -185,7 +185,7 @@ public partial class AuthoringExportTypesGenerator
                     }
                     else if (info.Options.MergeReferencedActivationFactories)
                     {
-                        writer.WriteLine("ReferencedManagedExports.GetActivationFactory(activatableClassId);");
+                        writer.WriteLine("return ReferencedManagedExports.GetActivationFactory(activatableClassId);");
                     }
                 }
 
@@ -226,7 +226,7 @@ public partial class AuthoringExportTypesGenerator
 
                     using (writer.WriteBlock())
                     {
-                        writer.WriteLine("void* activationFactory");
+                        writer.WriteLine("void* activationFactory;");
 
                         // Iterate through all transitvely referenced activation factories from other components and use the first that succeeds
                         foreach (string managedExportsTypeName in info.MergedManagedExportsTypeNames)
@@ -323,14 +323,14 @@ public partial class AuthoringExportTypesGenerator
                         {
                             IActivationFactory* result = ManagedExports.GetActivationFactory(managedActivatableClassId);
 
-                            if ((void*)obj is null)
+                            if ((void*)result is null)
                             {
                                 *factory = null;
                 
                                 return CLASS_E_CLASSNOTAVAILABLE;
                             }
                 
-                            *factory = (void*)obj;
+                            *factory = (void*)result;
                 
                             return S_OK;
                         }
@@ -338,8 +338,6 @@ public partial class AuthoringExportTypesGenerator
                         {
                             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
                         }
-
-                        {GenerateNativeDllGetActivationFactoryImpl(context)}
                     }
                 
                     /// <summary>
@@ -383,7 +381,7 @@ public partial class AuthoringExportTypesGenerator
                     /// <see href="https://learn.microsoft.com/windows/win32/api/winstring/nf-winstring-windowsgetstringrawbuffer"/>
                     [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", EntryPoint = "WindowsGetStringRawBuffer", ExactSpelling = true)]
                     [SupportedOSPlatform("windows6.2")]
-                    public static extern partial char* WindowsGetStringRawBuffer(HSTRING @string, uint* length);
+                    public static extern char* WindowsGetStringRawBuffer(HSTRING @string, uint* length);
                 }
                 """);
 
