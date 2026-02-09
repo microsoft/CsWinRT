@@ -75,6 +75,6 @@ internal static partial class ProjectionGenerator
         }
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName)}");
+        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName)}.dll");
     }
 }
