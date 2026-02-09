@@ -32,6 +32,8 @@ internal partial class ProjectionGenerator
             List<SyntaxTree> syntaxTrees = [];
             foreach (string file in Directory.GetFiles(processingState.SourcesFolder, "*.cs"))
             {
+                args.Token.ThrowIfCancellationRequested();
+
                 using Stream stream = File.OpenRead(file);
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
             }
@@ -43,6 +45,8 @@ internal partial class ProjectionGenerator
             {
                 references.Add(MetadataReference.CreateFromFile(refPath));
             }
+
+            args.Token.ThrowIfCancellationRequested();
 
             // Create the compilation
             compilation = CSharpCompilation.Create(
@@ -60,6 +64,8 @@ internal partial class ProjectionGenerator
         {
             throw WellKnownProjectionGeneratorExceptions.CreateCompilationError(e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
 
         try
         {
