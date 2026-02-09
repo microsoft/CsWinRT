@@ -43,6 +43,7 @@ using WindowsRuntime.InteropServices.Marshalling;
 using WinRT.Interop;
 using Xunit;
 using Xunit.Sdk;
+using Xunit.v3;
 using static System.Diagnostics.Activity;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
@@ -50,25 +51,45 @@ using static System.Diagnostics.Activity;
 
 namespace UnitTest
 {
+
     [CLSCompliant(false)]
-    [DataDiscoverer("Xunit.Sdk.InlineDataDiscoverer", "xunit.core")]
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public sealed class InlineDataAttribute<T> : DataAttribute
     {
-        private readonly object[] data;
-
-        public InlineDataAttribute(params object[] data)
+        public InlineDataAttribute(params object?[]? data)
         {
-            this.data = data;
+            // Match xUnit v3 InlineData behavior: passing null means "single null value"
+            Data = data ?? [null];
         }
 
-        public override IEnumerable<object[]> GetData(MethodInfo testMethod)
-        {
-            object[] arguments = [typeof(T), .. data];
+        public object?[] Data { get; }
 
-            return [arguments];
+        public override ValueTask<IReadOnlyCollection<ITheoryDataRow>> GetData(
+            MethodInfo testMethod,
+            DisposalTracker disposalTracker)
+        {
+            object?[] arguments = [typeof(T), .. Data];
+
+            var traits = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+            TestIntrospectionHelper.MergeTraitsInto(traits, Traits);
+
+            return new(
+                [
+                    new TheoryDataRow(arguments)
+                    {
+                        Explicit = ExplicitAsNullable,
+                        Label = Label,
+                        Skip = Skip,
+                        TestDisplayName = TestDisplayName,
+                        Timeout = TimeoutAsNullable,
+                        Traits = traits,
+                    }
+                ]);
         }
+
+        public override bool SupportsDiscoveryEnumeration() => true;
     }
+
 
     public delegate void DelegateTestCSharp<T>();
 
@@ -597,7 +618,7 @@ namespace UnitTest
         [InlineData(typeof(ulong), "UInt64", "Primitive")]
         // Mapped System.* Types Metadata Types
         [InlineData(typeof(DateTimeOffset), "Windows.Foundation.DateTime", "Metadata")]
-        [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
+        [InlineData<EventHandler<Guid>>("Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
         [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
         [InlineData(typeof(Guid), "Guid", "Metadata")]
         [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
@@ -612,7 +633,7 @@ namespace UnitTest
         [InlineData(typeof(IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable", "Metadata")]
         [InlineData(typeof(IEnumerator), "Microsoft.UI.Xaml.Interop.IBindableIterator", "Metadata")]
         [InlineData(typeof(IList), "Microsoft.UI.Xaml.Interop.IBindableVector", "Metadata")]
-        [InlineData<IReadOnlyList<long>>(typeof(IReadOnlyList<long>), "Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
+        [InlineData<IReadOnlyList<long>>("Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
         // Mapped System.Collections.Specialized* Types
         [InlineData(typeof(INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", "Metadata")]
         [InlineData(typeof(NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Metadata")]
@@ -645,8 +666,8 @@ namespace UnitTest
         // Mapped WindowsRuntime.InteropServices.* Types
         [InlineData(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
         // Others
-        [InlineData<NotifyCollectionChangedAction>(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
-        [InlineData<NotifyCollectionChangedAction?>(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
+        [InlineData<NotifyCollectionChangedAction>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
+        [InlineData<NotifyCollectionChangedAction?>("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
         // Projected WinRT Types
         [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
         [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
@@ -664,51 +685,51 @@ namespace UnitTest
         [InlineData(typeof(Guid?), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
         [InlineData(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
         [InlineData(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
-        [InlineData<IList<Int32?>>(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
-        [InlineData<Int32?[]>(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        [InlineData<IList<Int32?>>("Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        [InlineData<Int32?[]>("Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Types
-        [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
-        [InlineData<IList<TestComponentCSharp.EventWithGuid>>(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
-        [InlineData<IList<TestComponentCSharp.Class>>(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
-        [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<EventHandler<TestComponentCSharp.Class>>(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
-        [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<IList<long>>("Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
+        [InlineData<IList<TestComponentCSharp.EventWithGuid>>("Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IList<TestComponentCSharp.Class>>("Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
+        [InlineData<IEnumerator<TestComponentCSharp.Class>>("Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<IEnumerable<TestComponentCSharp.Class>>("Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<EventHandler<TestComponentCSharp.Class>>("Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>("Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>>("Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
+        [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>("Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
         // Nested Generics
-        [InlineData<EventHandler<IList<long>>>(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [InlineData<EventHandler<KeyValuePair<Object, Object>>>(typeof(EventHandler<KeyValuePair<Object, Object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
-        [InlineData<EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>>(typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
-        [InlineData<IList<KeyValuePair<Object, Object>>>(typeof(IList<KeyValuePair<Object, Object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
-        [InlineData<IEnumerator<IEnumerable<Object>>>(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
-        [InlineData<IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>>(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [InlineData<EventHandler<IList<long>>>("Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<Object, Object>>>("Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>>("Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [InlineData<IList<KeyValuePair<Object, Object>>>("Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<IEnumerator<IEnumerable<Object>>>("Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
+        [InlineData<IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>>("Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
         // Custom Types
         [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<EventHandler<IList<TestCSharp>>>(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<EventHandler<TestCSharp>>(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<DelegateTestCSharp<Guid>>(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<WeakReference<TestComponent.Class>>(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Int32, WeakReference<Object>>>(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<ICollection<object>>(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Object, Object>?>(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Object, Object[]>>(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<long[][]>(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<IList<TestCSharp>>("System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ITestCSharp<double>>("UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<KeyValuePair<String, TestCSharp>>("System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<IList<TestCSharp>>>("System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<EventHandler<TestCSharp>>("System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<DelegateTestCSharp<Guid>>("UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [InlineData<WeakReference<TestComponent.Class>>("System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Int32, WeakReference<Object>>>("System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<ICollection<object>>("System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Object, Object>?>("System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<KeyValuePair<Object, Object[]>>("System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [InlineData<long[][]>("System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         // Arrays
-        [InlineData<Object[]>(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
-        [InlineData<long[]>(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
-        [InlineData<TestComponentCSharp.Class[]>(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<TestComponentCSharp.ComposedBlittableStruct[]>(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
-        [InlineData<TestComponentCSharp.IArtist[]>(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
-        [InlineData<TestComponentCSharp.EnumValue[]>(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
-        [InlineData<TestComponentCSharp.EventHandler0[]>(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
-        [InlineData<Point[]>(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
-        [InlineData<IList<long>[]>(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [InlineData<IList<long?>[]>(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
-        [InlineData<KeyValuePair<Object, Object>[]>(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [InlineData<Object[]>("Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
+        [InlineData<long[]>("Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
+        [InlineData<TestComponentCSharp.Class[]>( "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
+        [InlineData<TestComponentCSharp.ComposedBlittableStruct[]>("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
+        [InlineData<TestComponentCSharp.IArtist[]>("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
+        [InlineData<TestComponentCSharp.EnumValue[]>("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [InlineData<TestComponentCSharp.EventHandler0[]>("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
+        [InlineData<Point[]>("Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
+        [InlineData<IList<long>[]>("Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [InlineData<IList<long?>[]>("Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
+        [InlineData<KeyValuePair<Object, Object>[]>("Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
