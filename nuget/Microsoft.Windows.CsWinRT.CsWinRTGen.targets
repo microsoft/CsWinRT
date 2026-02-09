@@ -11,6 +11,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenToolsDirectory>$(SolutionDir)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\</CsWinRTGenToolsDirectory>
     <CsWinRTImplToolsDirectory>$(SolutionDir)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\</CsWinRTImplToolsDirectory>
     <CsWinRTMergedProjectionToolsDirectory>$(SolutionDir)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\</CsWinRTMergedProjectionToolsDirectory>
+
+    <CsWinRTGenTasksAssembly Condition="!Exists('$(CsWinRTGenTasksAssembly)')">$(SolutionDir)RunCsWinRTGeneratorTask\bin\$(Platform)\$(Configuration)\netstandard2.0\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
+    <CsWinRTGenToolsDirectory Condition="!Exists('$(CsWinRTGenToolsDirectory)')">$(SolutionDir)WinRT.Interop.Generator\bin\$(Platform)\$(Configuration)\net10.0\</CsWinRTGenToolsDirectory>
+    <CsWinRTImplToolsDirectory Condition="!Exists('$(CsWinRTImplToolsDirectory)')">$(SolutionDir)WinRT.Impl.Generator\bin\$(Platform)\$(Configuration)\net10.0\</CsWinRTImplToolsDirectory>
+    <CsWinRTMergedProjectionToolsDirectory Condition="!Exists('$(CsWinRTMergedProjectionToolsDirectory)')">$(SolutionDir)WinRT.Projection.Generator\bin\$(Platform)\$(Configuration)\net10.0\</CsWinRTMergedProjectionToolsDirectory>
+
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
     <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>
 
