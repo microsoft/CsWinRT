@@ -186,20 +186,17 @@ TestCustomPropertyProvider testCustomPropertyProvider = new();
 unsafe
 {
     void* testCustomPropertyProviderUnknownPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(testCustomPropertyProvider);
-    void* customPropertyProviderPtr = null;
 
     try
     {
         // We should be able to get an 'ICustomPropertyProvider' interface pointer
-        Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
-            pUnk: (nint)customPropertyProviderPtr,
-            iid: new Guid("7C925755-3E48-42B4-8677-76372267033F"),
-            ppv: out *(nint*)&customPropertyProviderPtr));
+        ComHelpers.EnsureQueryInterface(
+            unknownPtr: testCustomPropertyProviderUnknownPtr,
+            iids: [new Guid("7C925755-3E48-42B4-8677-76372267033F")]);
     }
     finally
     {
         WindowsRuntimeMarshal.Free(testCustomPropertyProviderUnknownPtr);
-        WindowsRuntimeMarshal.Free(customPropertyProviderPtr);
     }
 }
 
