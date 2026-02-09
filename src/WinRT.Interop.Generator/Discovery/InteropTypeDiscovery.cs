@@ -221,7 +221,15 @@ internal static partial class InteropTypeDiscovery
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
-                    interfaces.Add(covariantInterfaceSignature);
+                    // Try to track the current interface, stop if we exceeded the maximum limit
+                    if (!TryAddExposedInterfaceType(
+                        typeSignature: typeSignature,
+                        interfaceType: covariantInterfaceSignature,
+                        interfaces: interfaces,
+                        args: args))
+                    {
+                        break;
+                    }
 
                     // If the current interface is generic, also make sure that it's tracked. This is needed
                     // to fully cover all possible constructed generic interface types that might be needed.
@@ -281,7 +289,14 @@ internal static partial class InteropTypeDiscovery
                     }
 
                     // Also track all '[GeneratedComInterface]' interfaces too, and filter them later (below)
-                    interfaces.Add(covariantInterfaceSignature);
+                    if (!TryAddExposedInterfaceType(
+                        typeSignature: typeSignature,
+                        interfaceType: covariantInterfaceSignature,
+                        interfaces: interfaces,
+                        args: args))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -378,7 +393,15 @@ internal static partial class InteropTypeDiscovery
                 // overridable interfaces here, since those can only apply to classes, and SZ arrays will never have any.
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
                 {
-                    interfaces.Add(covariantInterfaceSignature);
+                    // Try to track the current interface (same validation as above)
+                    if (!TryAddExposedInterfaceType(
+                        typeSignature: typeSignature,
+                        interfaceType: covariantInterfaceSignature,
+                        interfaces: interfaces,
+                        args: args))
+                    {
+                        break;
+                    }
 
                     // Make sure that any discovered interfaces are also tracked (see additional notes above)
                     if (covariantInterfaceSignature is GenericInstanceTypeSignature constructedSignature)
@@ -410,5 +433,31 @@ internal static partial class InteropTypeDiscovery
 
         // Return the builder to the pool for reuse
         TypeSignatureBuilderPool.Add(interfaces);
+    }
+
+    /// <summary>
+    /// Tries to add a new tracked exposed Windows Runtime interface type.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the type to analyze.</param>
+    /// <param name="interfaceType">The <see cref="TypeSignature"/> for the interface type to try to add.</param>
+    /// <param name="interfaces">The set of interfaces being populated.</param>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <returns>Whether the new interface could be added.</returns>
+    private static bool TryAddExposedInterfaceType(
+        TypeSignature typeSignature,
+        TypeSignature interfaceType,
+        TypeSignatureEquatableSet.Builder interfaces,
+        InteropGeneratorArgs args)
+    {
+        if (interfaces.Count == 128)
+        {
+            WellKnownInteropExceptions.ExceededNumberOfExposedWindowsRuntimeInterfaceTypesWarning(typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
+
+            return false;
+        }
+
+        interfaces.Add(interfaceType);
+
+        return true;
     }
 }
