@@ -101,7 +101,7 @@ internal sealed partial class TypeSignatureEquatableSet :
         // And results in different hashcodes for equivalent signatures, which breaks everything.
         HashCode hashCode = default;
 
-        foreach (TypeSignature typeSignature in _set)
+        foreach (TypeSignature typeSignature in _set.OrderByFullyQualifiedTypeName())
         {
             hashCode.Add(typeSignature, SignatureComparer.IgnoreVersion);
         }
