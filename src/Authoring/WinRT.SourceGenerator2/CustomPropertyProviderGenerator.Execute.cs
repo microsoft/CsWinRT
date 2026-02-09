@@ -43,7 +43,7 @@ public partial class CustomPropertyProviderGenerator
                 return false;
             }
 
-            // We can only generated the 'ICustomPropertyProvider' implementation if the type is 'partial'.
+            // We can only generate the 'ICustomPropertyProvider' implementation if the type is 'partial'.
             // Additionally, all parent type declarations must also be 'partial', for generation to work.
             if (!((MemberDeclarationSyntax)node).IsPartialAndWithinPartialTypeHierarchy)
             {

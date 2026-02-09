@@ -11,7 +11,7 @@ namespace WindowsRuntime.SourceGenerator.Tests;
 public class Test_CustomPropertyProviderGenerator
 {
     [TestMethod]
-    public async Task SimpleShader_ComputeShader()
+    public async Task ValidClass_MixedProperties()
     {
         const string source = """
             using WindowsRuntime.Xaml;
