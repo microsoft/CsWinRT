@@ -37,6 +37,7 @@ internal static partial class ProjectionGenerator
 
         ProjectionGeneratorProcessingState processingState;
 
+        // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
         try
         {
             ConsoleApp.Log($"Processing {args.WinMDPaths.Length + 1} .winmd references");
@@ -50,6 +51,7 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Invoke 'cswinrt.exe' to generate the projection sources
         try
         {
             ConsoleApp.Log("Generating merged projection code");
@@ -63,6 +65,7 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
         try
         {
             ConsoleApp.Log("Compiling merged projection");

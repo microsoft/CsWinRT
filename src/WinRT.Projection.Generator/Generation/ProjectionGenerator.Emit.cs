@@ -18,7 +18,7 @@ internal partial class ProjectionGenerator
     private const string ProjectionAssemblyName = "WinRT.Projection";
 
     /// <summary>
-    /// Creates the Roslyn compilation from the generated sources and emits the projection DLL.
+    /// Runs the emit logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="processingState">The state from the processing phase.</param>
@@ -26,10 +26,12 @@ internal partial class ProjectionGenerator
     {
         CSharpCompilation compilation;
 
+        // Create the Roslyn compilation from the generated projection sources
         try
         {
-            // Parse the source files into a syntax tree
+            // Parse the source files into syntax trees
             List<SyntaxTree> syntaxTrees = [];
+
             foreach (string file in Directory.GetFiles(processingState.SourcesFolder, "*.cs"))
             {
                 args.Token.ThrowIfCancellationRequested();
@@ -38,7 +40,7 @@ internal partial class ProjectionGenerator
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
             }
 
-            // Build references list
+            // Build the references list
             List<MetadataReference> references = [];
 
             foreach (string refPath in processingState.ReferencesWithoutProjections)
@@ -67,6 +69,7 @@ internal partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit the projection .dll to disk
         try
         {
             // Configure emit options for embedded symbols
@@ -74,11 +77,15 @@ internal partial class ProjectionGenerator
                 debugInformationFormat: DebugInformationFormat.Embedded,
                 includePrivateMembers: true);
 
-            // Emit the compilation to a file
             string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
 
-            using FileStream fileStream = new(projectionDllPath, FileMode.Create);
-            EmitResult result = compilation.Emit(fileStream, options: emitOptions);
+            EmitResult result;
+
+            // Emit the compilation to a file
+            using (FileStream fileStream = new(projectionDllPath, FileMode.Create))
+            {
+                result = compilation.Emit(fileStream, options: emitOptions);
+            }
 
             if (!result.Success)
             {

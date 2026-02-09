@@ -27,10 +27,10 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Processes the input references and generates the CsWinRT response file.
+    /// Runs the processing logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <returns>The resulting <see cref="ProjectionGeneratorProcessingState"/>.</returns>
+    /// <returns>The resulting state.</returns>
     private static ProjectionGeneratorProcessingState ProcessReferences(ProjectionGeneratorArgs args)
     {
         args.Token.ThrowIfCancellationRequested();
@@ -43,7 +43,7 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Runs the CsWinRT tool to generate the projection source files.
+    /// Runs the source generation logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="processingState">The state from the processing phase.</param>
@@ -74,10 +74,14 @@ internal partial class ProjectionGenerator
     /// Generates a response file for CsWinRT based on the provided arguments and reference assemblies.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="outputFolder">The folder where sources are generated in.</param>
-    /// <param name="rspFile">The generated response file for running cswinrt.exe.</param>
-    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the rsp file.</param>
-    private static void GenerateRspFile(ProjectionGeneratorArgs args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies)
+    /// <param name="outputFolder">The folder where sources will be generated.</param>
+    /// <param name="rspFile">The generated response file for running <c>cswinrt.exe</c>.</param>
+    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
+    private static void GenerateRspFile(
+        ProjectionGeneratorArgs args,
+        out string outputFolder,
+        out string rspFile,
+        out HashSet<string> projectionReferenceAssemblies)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -86,7 +90,9 @@ internal partial class ProjectionGenerator
         projectionReferenceAssemblies = [];
 
         using StreamWriter fileStream = new(rspFile);
+
         PathAssemblyResolver resolver = new(args.ReferenceAssemblyPaths);
+
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
             ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
