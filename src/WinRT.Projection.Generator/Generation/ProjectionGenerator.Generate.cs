@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Resolvers;
 
@@ -26,22 +27,47 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Generate the projection sources using CsWinRT for the generator.
+    /// Processes the input references and generates the CsWinRT response file.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the sources.</param>
-    /// <returns>The path to the folder containing the generated sources.</returns>
-    private static string GenerateSources(ProjectionGeneratorArgs args, out HashSet<string> projectionReferenceAssemblies)
+    /// <returns>The resulting <see cref="ProjectionGeneratorProcessingState"/>.</returns>
+    private static ProjectionGeneratorProcessingState ProcessReferences(ProjectionGeneratorArgs args)
     {
         args.Token.ThrowIfCancellationRequested();
 
-        GenerateRspFile(args, out string outputFolder, out string rspFile, out projectionReferenceAssemblies);
+        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies);
 
-        args.Token.ThrowIfCancellationRequested();
+        string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        RunCsWinRT(args, rspFile);
+        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections);
+    }
 
-        return outputFolder;
+    /// <summary>
+    /// Runs the CsWinRT tool to generate the projection source files.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void GenerateSources(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
+    {
+        ProcessStartInfo processInfo = new()
+        {
+            FileName = args.CsWinRTExePath,
+            Arguments = "@" + processingState.RspFilePath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            CreateNoWindow = true
+        };
+
+        using Process cswinrtProcess = Process.Start(processInfo) ?? throw new Exception();
+        string error = cswinrtProcess.StandardError.ReadToEnd();
+        cswinrtProcess.WaitForExit();
+
+        if (cswinrtProcess.ExitCode != 0)
+        {
+            throw new Win32Exception(cswinrtProcess.ExitCode, error);
+        }
     }
 
     /// <summary>
@@ -103,34 +129,6 @@ internal partial class ProjectionGenerator
         foreach (string winmdPath in args.WinMDPaths)
         {
             fileStream.WriteLine($"-input \"{winmdPath}\"");
-        }
-    }
-
-    /// <summary>
-    /// Executes the CsWinRT tool with the specified response file.
-    /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="rspFile">The path to the response file containing CsWinRT arguments.</param>
-    private static void RunCsWinRT(ProjectionGeneratorArgs args, string rspFile)
-    {
-        ProcessStartInfo processInfo = new()
-        {
-            FileName = args.CsWinRTExePath,
-            Arguments = "@" + rspFile,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            CreateNoWindow = true
-        };
-
-        using Process cswinrtProcess = Process.Start(processInfo) ?? throw new Exception();
-        string error = cswinrtProcess.StandardError.ReadToEnd();
-        cswinrtProcess.WaitForExit();
-
-        if (cswinrtProcess.ExitCode != 0)
-        {
-            throw new Win32Exception(cswinrtProcess.ExitCode, error);
         }
     }
 
