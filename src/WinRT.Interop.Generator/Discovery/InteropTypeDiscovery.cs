@@ -228,7 +228,7 @@ internal static partial class InteropTypeDiscovery
                         interfaces: interfaces,
                         args: args))
                     {
-                        break;
+                        goto FinalizeUserDefinedType;
                     }
 
                     // If the current interface is generic, also make sure that it's tracked. This is needed
@@ -300,6 +300,8 @@ internal static partial class InteropTypeDiscovery
                 }
             }
         }
+
+    FinalizeUserDefinedType:
 
         // If the user-defined type implements at least a Windows Runtime interface, then it's considered exposed.
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
@@ -400,7 +402,7 @@ internal static partial class InteropTypeDiscovery
                         interfaces: interfaces,
                         args: args))
                     {
-                        break;
+                        goto FinalizeSzArrayType;
                     }
 
                     // Make sure that any discovered interfaces are also tracked (see additional notes above)
@@ -416,6 +418,8 @@ internal static partial class InteropTypeDiscovery
                 }
             }
         }
+
+    FinalizeSzArrayType:
 
         // If the array is a valid Windows Runtime type, track is specifically as such.
         // This is because in this case we'll require additional, specialized marshalling.
@@ -449,6 +453,15 @@ internal static partial class InteropTypeDiscovery
         TypeSignatureEquatableSet.Builder interfaces,
         InteropGeneratorArgs args)
     {
+        // If the set already contains the current interface, we can just skip it
+        // and tell the user that we successfully "added" it, as it's already there.
+        if (interfaces.Contains(interfaceType))
+        {
+            return true;
+        }
+
+        // Warn if we already have 128 items, as we know at this point the new interface we
+        // would be going to add is one we never saw before, so it'd be successfully added.
         if (interfaces.Count == 128)
         {
             WellKnownInteropExceptions.ExceededNumberOfExposedWindowsRuntimeInterfaceTypesWarning(typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
@@ -456,7 +469,7 @@ internal static partial class InteropTypeDiscovery
             return false;
         }
 
-        interfaces.Add(interfaceType);
+        _ = interfaces.Add(interfaceType);
 
         return true;
     }
