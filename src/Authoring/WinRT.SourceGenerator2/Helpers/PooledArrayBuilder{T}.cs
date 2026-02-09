@@ -26,7 +26,7 @@ internal struct PooledArrayBuilder<T> : IDisposable
     private static readonly ObjectPool<Writer> SharedObjectPool = new(static () => new Writer());
 
     /// <summary>
-    /// The rented <see cref="Writer"/> instance to use.
+    /// The pooled <see cref="Writer"/> instance to use.
     /// </summary>
     private Writer? _writer;
 

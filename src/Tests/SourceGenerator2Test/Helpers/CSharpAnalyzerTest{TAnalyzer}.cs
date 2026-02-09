@@ -29,7 +29,7 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     private readonly LanguageVersion _languageVersion;
 
     /// <summary>
-    /// Creates a new <see cref="CSharpAnalyzerTest{TAnalyzer}"/> instance with the specified paramaters.
+    /// Creates a new <see cref="CSharpAnalyzerTest{TAnalyzer}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The C# language version to use to parse code.</param>

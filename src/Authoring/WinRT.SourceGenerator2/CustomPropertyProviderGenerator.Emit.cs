@@ -314,7 +314,7 @@ public partial class CustomPropertyProviderGenerator
 
             using (writer.WriteBlock())
             {
-                // Emit all 'ICustomProperty' members for a normal proprty, and the singleton field
+                // Emit all 'ICustomProperty' members for a normal property, and the singleton field
                 writer.WriteLine($$"""
                     /// <summary>
                     /// Gets the singleton <see cref="{{implementationTypeName}}"/> instance for this custom property.
