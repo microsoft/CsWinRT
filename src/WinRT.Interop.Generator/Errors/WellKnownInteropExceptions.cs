@@ -715,11 +715,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// An exposed type exceeded the maximum limited of interfaces.
+    /// An exposed type exceeded the maximum limit of interfaces.
     /// </summary>
     public static WellKnownInteropWarning ExceededNumberOfExposedWindowsRuntimeInterfaceTypesWarning(TypeSignature type)
     {
-        return Warning(84, $"Exposed type '{type}' exceeded the maximum limit of 128 projected Windows Runtime interfaces implemented: all exceeding interfaces interfaces will not be included in the set of available COM interface entries.");
+        return Warning(84, $"Exposed type '{type}' exceeded the maximum limit of 128 projected Windows Runtime interfaces implemented: all exceeding interfaces will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
