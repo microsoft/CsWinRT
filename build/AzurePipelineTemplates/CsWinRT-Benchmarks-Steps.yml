@@ -10,34 +10,11 @@ steps:
     script: get_testwinrt.cmd
     workingDirectory: $(Build.SourcesDirectory)\src
 
-# Use .NET Core runtme 3.1
 - task: UseDotNet@2
-  displayName: Use .NET Core runtime 3.1
-  inputs:
-    packageType: runtime
-    version: 3.1.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-# Use .NET Core runtime 6.0
-- task: UseDotNet@2
-  displayName: Use .NET Core runtime 6.0
-  inputs:
-    packageType: runtime
-    version: 6.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 8.0
+  displayName: Use .NET Core SDK 10.0
   inputs:
     packageType: sdk
-    version: 8.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 9.0
-  inputs:
-    packageType: sdk
-    version: 9.x
+    version: 10.x
     installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Verify .NET SDK
