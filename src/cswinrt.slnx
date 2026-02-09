@@ -52,10 +52,6 @@
   <Folder Name="/Projections/">
     <File Path="Projections/Directory.Build.props" />
     <Project Path="Projections/Benchmark/Benchmark.csproj">
-      <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
-      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
