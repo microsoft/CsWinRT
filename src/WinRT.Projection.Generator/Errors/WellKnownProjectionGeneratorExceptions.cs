@@ -69,6 +69,30 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
+    /// The <c>cswinrt.exe</c> process failed to start.
+    /// </summary>
+    public static Exception CsWinRTProcessStartError()
+    {
+        return Exception(7, "Failed to start the 'cswinrt.exe' process.");
+    }
+
+    /// <summary>
+    /// The <c>cswinrt.exe</c> process failed to start.
+    /// </summary>
+    public static Exception CsWinRTProcessStartError(Exception exception)
+    {
+        return Exception(7, "Failed to start the 'cswinrt.exe' process.", exception);
+    }
+
+    /// <summary>
+    /// The <c>cswinrt.exe</c> process exited with a non-zero exit code.
+    /// </summary>
+    public static Exception CsWinRTProcessError(int exitCode, Exception exception)
+    {
+        return Exception(8, $"The 'cswinrt.exe' process exited with code {exitCode}.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

@@ -8,7 +8,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionGenerator.Resolvers;
+
+#pragma warning disable IDE0270
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
@@ -60,13 +63,36 @@ internal partial class ProjectionGenerator
             CreateNoWindow = true
         };
 
-        using Process cswinrtProcess = Process.Start(processInfo) ?? throw new Exception();
-        string error = cswinrtProcess.StandardError.ReadToEnd();
-        cswinrtProcess.WaitForExit();
+        Process? cswinrtProcess;
 
-        if (cswinrtProcess.ExitCode != 0)
+        try
         {
-            throw new Win32Exception(cswinrtProcess.ExitCode, error);
+            cswinrtProcess = Process.Start(processInfo);
+
+            // Make sure we did successfully start the process ('Start' can return 'null')
+            if (cswinrtProcess is null)
+            {
+                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError();
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError(e);
+        }
+
+        // Validate that generation was successful
+        using (cswinrtProcess)
+        {
+            string error = cswinrtProcess.StandardError.ReadToEnd();
+
+            cswinrtProcess.WaitForExit();
+
+            if (cswinrtProcess.ExitCode != 0)
+            {
+                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessError(
+                    exitCode: cswinrtProcess.ExitCode,
+                    exception: new Win32Exception(cswinrtProcess.ExitCode, error));
+            }
         }
     }
 
