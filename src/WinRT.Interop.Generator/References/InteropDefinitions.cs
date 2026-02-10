@@ -37,7 +37,7 @@ internal sealed class InteropDefinitions
     public InteropDefinitions(
         InteropReferences interopReferences,
         ModuleDefinition windowsRuntimeProjectionModule,
-        ModuleDefinition windowsRuntimeComponentModule)
+        ModuleDefinition? windowsRuntimeComponentModule)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
@@ -55,7 +55,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).
     /// </summary>
-    public ModuleDefinition WindowsRuntimeComponentModule { get; }
+    public ModuleDefinition? WindowsRuntimeComponentModule { get; }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoresAccessChecksToAttribute</c> type.
