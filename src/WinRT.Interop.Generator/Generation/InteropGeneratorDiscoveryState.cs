@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -17,6 +18,12 @@ internal sealed class InteropGeneratorDiscoveryState
 {
     /// <summary>Backing field for <see cref="ModuleDefinitions"/>.</summary>
     private readonly ConcurrentDictionary<string, ModuleDefinition> _moduleDefinitions = [];
+
+    /// <summary>Backing field for <see cref="WinRTProjectionModuleDefinition"/>.</summary>
+    private ModuleDefinition? _winRTProjectionModuleDefinition;
+
+    /// <summary>Backing field for <see cref="WinRTAuthoringModuleDefinition"/>.</summary>
+    private ModuleDefinition? _winRTAuthoringModuleDefinition;
 
     /// <summary>Backing field for <see cref="TypeHierarchyEntries"/>.</summary>
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
@@ -108,6 +115,16 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets the loaded modules.
     /// </summary>
     public IReadOnlyDictionary<string, ModuleDefinition> ModuleDefinitions => _moduleDefinitions;
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Projection.dll</c>.
+    /// </summary>
+    public ModuleDefinition? WinRTProjectionModuleDefinition => _winRTProjectionModuleDefinition;
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Authoring.dll</c>.
+    /// </summary>
+    public ModuleDefinition? WinRTAuthoringModuleDefinition => _winRTAuthoringModuleDefinition;
 
     /// <summary>
     /// Gets the type hierarchy entries.
@@ -219,6 +236,30 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _ = _moduleDefinitions.TryAdd(path, module);
+    }
+
+    /// <summary>
+    /// Tracks the <c>WinRT.Projection.dll</c> loaded module definition.
+    /// </summary>
+    /// <param name="module">The loaded module.</param>
+    [MemberNotNull(nameof(_winRTProjectionModuleDefinition))]
+    public void TrackWinRTProjectionModuleDefinition(ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        _winRTProjectionModuleDefinition = module;
+    }
+
+    /// <summary>
+    /// Tracks the <c>WinRT.Authoring.dll</c> loaded module definition.
+    /// </summary>
+    /// <param name="module">The loaded module.</param>
+    [MemberNotNull(nameof(_winRTAuthoringModuleDefinition))]
+    public void TrackWinRTAuthoringModuleDefinition(ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        _winRTAuthoringModuleDefinition = module;
     }
 
     /// <summary>
