@@ -20,12 +20,12 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeAuthoringAssemblyAttribute : Attribute
+public sealed class WindowsRuntimeComponentAssemblyAttribute : Attribute
 {
     /// <summary>
-    /// Creates a new <see cref="WindowsRuntimeAuthoringAssemblyAttribute"/> instance.
+    /// Creates a new <see cref="WindowsRuntimeComponentAssemblyAttribute"/> instance.
     /// </summary>
-    public WindowsRuntimeAuthoringAssemblyAttribute()
+    public WindowsRuntimeComponentAssemblyAttribute()
     {
     }
 }
