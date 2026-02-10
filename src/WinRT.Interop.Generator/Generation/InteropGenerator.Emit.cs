@@ -241,7 +241,7 @@ internal partial class InteropGenerator
         try
         {
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
-            ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
+            ModuleDefinition winRTInteropModule = new(InteropNames.WindowsRuntimeInteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
             {
                 // Create and set a metadata resolver from the assembly resolver that we created during the discovery phase (used for auto-import)
                 MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver),
@@ -253,7 +253,7 @@ internal partial class InteropGenerator
 
             // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
             // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
-            _ = new AssemblyDefinition(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            _ = new AssemblyDefinition(InteropNames.WindowsRuntimeInteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { winRTInteropModule }
             };
@@ -2607,7 +2607,7 @@ internal partial class InteropGenerator
     /// <param name="module">The module to write to disk.</param>
     private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module)
     {
-        string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.InteropDllName);
+        string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
         try
         {
