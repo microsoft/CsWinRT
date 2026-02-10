@@ -138,8 +138,8 @@ internal static partial class SignatureGenerator
     }
 
     /// <summary>
-    /// Attempts to retrieve the default interface signature from the <see cref="System.Runtime.InteropServices.GuidAttribute"/>
-    /// attribute applied to the specified type, which is assumed to be some projected Windows Runtime interface or delegate type.
+    /// Attempts to retrieve the IID for the specified type by checking the <see cref="System.Runtime.InteropServices.GuidAttribute"/>
+    /// attribute applied to it, if presen. The type is assumed to be some projected Windows Runtime interface or delegate type.
     /// </summary>
     /// <param name="type">The type descriptor to try to get the IID for.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
