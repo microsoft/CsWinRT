@@ -20,11 +20,13 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
         /// <summary>
         /// Creates a new type definition for the interface implementation of the <see cref="System.ComponentModel.INotifyPropertyChanged"/> interface.
         /// </summary>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -42,7 +44,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopDefinitions, interopReferences, module, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
             };

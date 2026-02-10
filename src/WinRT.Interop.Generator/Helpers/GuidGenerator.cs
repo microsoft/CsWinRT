@@ -27,12 +27,17 @@ internal static class GuidGenerator
     /// Generates the IID for the specified type by computing its Windows Runtime signature and deriving an IID from that signature.
     /// </summary>
     /// <param name="type">The <see cref="TypeSignature"/> to generate the IID for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting IID for <paramref name="type"/>.</returns>
-    public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    public static Guid CreateIID(
+        TypeSignature type,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
     {
-        string signature = SignatureGenerator.GetSignature(type, interopReferences, useWindowsUIXamlProjections);
+        string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
 
         return guid;

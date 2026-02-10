@@ -21,11 +21,13 @@ internal static partial class SignatureGenerator
     /// Generates the Windows Runtime signature for the specified type.
     /// </summary>
     /// <param name="type">The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to generate the signature for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting signature for <paramref name="type"/>.</returns>
     public static string GetSignature(
         TypeSignature type,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
@@ -66,15 +68,15 @@ internal static partial class SignatureGenerator
             ElementType.Object => ObjectSignature,
             ElementType.String => StringSignature,
             ElementType.Type => TypeSignature,
-            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum => Enum(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
             ElementType.ValueType when typeDefinition.IsClass && type.IsTypeOfGuid(interopReferences) => GuidSignature,
-            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
+            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             ElementType.Class when typeDefinition.IsInterface => Interface(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             _ => null
         };
 
@@ -97,11 +99,13 @@ internal static partial class SignatureGenerator
     /// attribute applied to the specified type, which is assumed to be some projected Windows Runtime class.
     /// </summary>
     /// <param name="type">The type definition to inspect for the default interface attribute.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
     /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
     private static bool TryGetDefaultInterfaceFromAttribute(
         TypeDefinition type,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {

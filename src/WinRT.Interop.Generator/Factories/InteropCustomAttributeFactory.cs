@@ -20,18 +20,20 @@ internal static class InteropCustomAttributeFactory
     /// Creates a new custom attribute value for <see cref="GuidAttribute"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="type">The type to generate the IID for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <remarks>The resulting <see cref="GuidAttribute"/> value.</remarks>
     public static CustomAttribute Guid(
         TypeSignature type,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         return Guid(
-            guid: GuidGenerator.CreateIID(type, interopReferences, useWindowsUIXamlProjections),
+            guid: GuidGenerator.CreateIID(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             interopReferences: interopReferences,
             module: module);
     }

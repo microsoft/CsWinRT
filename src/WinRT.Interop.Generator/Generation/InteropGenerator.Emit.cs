@@ -175,7 +175,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Add all dynamic type map entries for custom-mapped types
-        DefineDynamicCustomMappedTypeMapEntries(args, interopReferences, module);
+        DefineDynamicCustomMappedTypeMapEntries(args, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -528,6 +528,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerator1.InterfaceImpl(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -654,6 +655,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerable1.InterfaceImpl(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -782,6 +784,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyList1.InterfaceImpl(
                     readOnlyListType: typeSignature,
                     readOnlyListMethodsType: readOnlyListMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -919,6 +922,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.InterfaceImpl(
                     listType: typeSignature,
                     listMethodsType: listMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1049,6 +1053,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.InterfaceImpl(
                     readOnlyDictionaryType: typeSignature,
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1186,6 +1191,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.InterfaceImpl(
                     dictionaryType: typeSignature,
                     dictionaryMethodsType: dictionaryMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1413,6 +1419,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.InterfaceImpl(
                     argsType: typeSignature,
                     argsMethodsType: argsMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1534,6 +1541,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableVector1.InterfaceImpl(
                     vectorType: typeSignature,
                     vectorMethodsType: methodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1655,6 +1663,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableMap2.InterfaceImpl(
                     mapType: typeSignature,
                     mapMethodsType: methodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1766,6 +1775,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.InterfaceImpl(
                     actionType: typeSignature,
                     actionMethodsType: actionMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1877,6 +1887,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncOperation1.InterfaceImpl(
                     operationType: typeSignature,
                     operationMethodsType: operationMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1988,6 +1999,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.InterfaceImpl(
                     operationType: typeSignature,
                     operationMethodsType: operationMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -2550,10 +2562,12 @@ internal partial class InteropGenerator
     /// Defines the dynamic type map entries for custom-mapped types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineDynamicCustomMappedTypeMapEntries(
         InteropGeneratorArgs args,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -2561,6 +2575,7 @@ internal partial class InteropGenerator
         {
             DynamicCustomMappedTypeMapEntriesBuilder.AssemblyAttributes(
                 args: args,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
