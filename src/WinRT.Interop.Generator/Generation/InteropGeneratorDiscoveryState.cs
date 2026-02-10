@@ -22,7 +22,7 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="WinRTProjectionModuleDefinition"/>.</summary>
     private ModuleDefinition? _winRTProjectionModuleDefinition;
 
-    /// <summary>Backing field for <see cref="WinRTAuthoringModuleDefinition"/>.</summary>
+    /// <summary>Backing field for <see cref="WinRTComponentModuleDefinition"/>.</summary>
     private ModuleDefinition? _winRTComponentModuleDefinition;
 
     /// <summary>Backing field for <see cref="TypeHierarchyEntries"/>.</summary>
@@ -124,7 +124,7 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Component.dll</c>.
     /// </summary>
-    public ModuleDefinition? WinRTAuthoringModuleDefinition => _winRTComponentModuleDefinition;
+    public ModuleDefinition? WinRTComponentModuleDefinition => _winRTComponentModuleDefinition;
 
     /// <summary>
     /// Gets the type hierarchy entries.
