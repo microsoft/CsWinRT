@@ -45,7 +45,11 @@ internal partial class InteropGenerator
 
         // Setup the well known items to use when emitting code
         InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
-        InteropDefinitions interopDefinitions = new(interopReferences, module);
+        InteropDefinitions interopDefinitions = new(
+            interopReferences: interopReferences,
+            windowsRuntimeInteropModule: module,
+            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition!,
+            windowsRuntimeAuthoringModule: discoveryState.WinRTAuthoringModuleDefinition!);
 
         args.Token.ThrowIfCancellationRequested();
 
