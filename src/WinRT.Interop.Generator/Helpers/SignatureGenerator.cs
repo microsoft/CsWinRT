@@ -161,7 +161,7 @@ internal static partial class SignatureGenerator
         // For delegates, try to get the projected type from the projection .dll, as they will have the '[Guid]' attribute on them.
         // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
         if (type.IsDelegate &&
-            interopDefinitions.WindowsRuntimeProjectionModule.TryGetType(type.Namespace, type.Name, out TypeDefinition? projectedType))
+            interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
         {
             return projectedType.TryGetGuidAttribute(interopReferences, out iid);
         }
@@ -187,7 +187,7 @@ internal static partial class SignatureGenerator
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
         // Tries to get the projected type from the projection .dll, as it will have the attribute
-        if (!interopDefinitions.WindowsRuntimeProjectionModule.TryGetType(type.Namespace, type.Name, out TypeDefinition? projectedType))
+        if (!interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
         {
             defaultInterface = null;
 

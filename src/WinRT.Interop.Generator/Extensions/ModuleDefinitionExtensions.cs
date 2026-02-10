@@ -17,7 +17,7 @@ namespace WindowsRuntime.InteropGenerator;
 /// <summary>
 /// Extensions for the <see cref="ModuleDefinition"/> type.
 /// </summary>
-internal static class ModuleDefinitionExtensions
+internal static partial class ModuleDefinitionExtensions
 {
     /// <summary>
     /// Gets the first type with a given namespace and name from the specified type.
