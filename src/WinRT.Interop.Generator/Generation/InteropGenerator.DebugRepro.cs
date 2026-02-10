@@ -70,7 +70,7 @@ internal partial class InteropGenerator
         List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
         string? winRTProjectionAssemblyHashedName = null;
-        string? winRTAuthoringAssemblyHashedName = null;
+        string? winRTComponentAssemblyHashedName = null;
 
         // Create another subdirectory for all the input assembly paths. We don't put these in the top level
         // temporary folder so that the number of files there remains very small. The reason is just to
@@ -103,9 +103,9 @@ internal partial class InteropGenerator
             {
                 winRTProjectionAssemblyHashedName = destinationPath;
             }
-            else if (args.WinRTAuthoringAssemblyPath is not null && dllEntry.Name == args.WinRTAuthoringAssemblyPath)
+            else if (args.WinRTComponentAssemblyPath is not null && dllEntry.Name == args.WinRTComponentAssemblyPath)
             {
-                winRTAuthoringAssemblyHashedName = destinationPath;
+                winRTComponentAssemblyHashedName = destinationPath;
             }
             else if (Path.IsWithinDirectoryName(dllEntry.FullName, "references"))
             {
@@ -126,7 +126,7 @@ internal partial class InteropGenerator
             ImplementationAssemblyPaths = [.. implementationPaths],
             OutputAssemblyPath = outputAssemblyPath!,
             WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName!,
-            WinRTAuthoringAssemblyPath = winRTAuthoringAssemblyHashedName,
+            WinRTComponentAssemblyPath = winRTComponentAssemblyHashedName,
             GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
@@ -191,7 +191,7 @@ internal partial class InteropGenerator
         // Hash and copy the well known assemblies we use as input
         string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalPaths, args.Token);
         string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, tempDirectory, originalPaths, args.Token);
-        string? winRTAuthoringAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTAuthoringAssemblyPath, tempDirectory, originalPaths, args.Token);
+        string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, tempDirectory, originalPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -202,7 +202,7 @@ internal partial class InteropGenerator
             ImplementationAssemblyPaths = [.. updatedImplementationDllNames],
             OutputAssemblyPath = outputAssemblyHashedName,
             WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName,
-            WinRTAuthoringAssemblyPath = winRTAuthoringAssemblyHashedName,
+            WinRTComponentAssemblyPath = winRTComponentAssemblyHashedName,
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,

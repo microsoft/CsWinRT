@@ -48,7 +48,7 @@ internal partial class InteropGenerator
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
             windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition!,
-            windowsRuntimeAuthoringModule: discoveryState.WinRTAuthoringModuleDefinition!);
+            windowsRuntimeComponentModule: discoveryState.WinRTAuthoringModuleDefinition!);
 
         args.Token.ThrowIfCancellationRequested();
 

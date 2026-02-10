@@ -40,7 +40,7 @@ internal partial class InteropGenerator
         // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
 
-        // First, load the special 'WinRT.Projection.dll' and 'WinRT.Authoring.dll' modules (the latter is optional).
+        // First, load the special 'WinRT.Projection.dll' and 'WinRT.Component.dll' modules (the latter is optional).
         // These are necessary for surfacing some information needed to generate code, that is not present otherwise.
         LoadWinRTModules(args, discoveryState);
 
@@ -93,12 +93,12 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Load the 'WinRT.Authoring.dll' module, if available
-        if (args.WinRTAuthoringAssemblyPath is not null)
+        // Load the 'WinRT.Component.dll' module, if available
+        if (args.WinRTComponentAssemblyPath is not null)
         {
-            ModuleDefinition winRTAuthoringModule = ModuleDefinition.FromFile(args.WinRTAuthoringAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+            ModuleDefinition winRTComponentModule = ModuleDefinition.FromFile(args.WinRTComponentAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-            discoveryState.TrackWinRTProjectionModuleDefinition(winRTAuthoringModule);
+            discoveryState.TrackWinRTComponentModuleDefinition(winRTComponentModule);
         }
     }
 

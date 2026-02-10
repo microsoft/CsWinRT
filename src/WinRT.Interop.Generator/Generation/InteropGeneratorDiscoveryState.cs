@@ -23,7 +23,7 @@ internal sealed class InteropGeneratorDiscoveryState
     private ModuleDefinition? _winRTProjectionModuleDefinition;
 
     /// <summary>Backing field for <see cref="WinRTAuthoringModuleDefinition"/>.</summary>
-    private ModuleDefinition? _winRTAuthoringModuleDefinition;
+    private ModuleDefinition? _winRTComponentModuleDefinition;
 
     /// <summary>Backing field for <see cref="TypeHierarchyEntries"/>.</summary>
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
@@ -122,9 +122,9 @@ internal sealed class InteropGeneratorDiscoveryState
     public ModuleDefinition? WinRTProjectionModuleDefinition => _winRTProjectionModuleDefinition;
 
     /// <summary>
-    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Authoring.dll</c>.
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Component.dll</c>.
     /// </summary>
-    public ModuleDefinition? WinRTAuthoringModuleDefinition => _winRTAuthoringModuleDefinition;
+    public ModuleDefinition? WinRTAuthoringModuleDefinition => _winRTComponentModuleDefinition;
 
     /// <summary>
     /// Gets the type hierarchy entries.
@@ -251,15 +251,15 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
-    /// Tracks the <c>WinRT.Authoring.dll</c> loaded module definition.
+    /// Tracks the <c>WinRT.Component.dll</c> loaded module definition.
     /// </summary>
     /// <param name="module">The loaded module.</param>
-    [MemberNotNull(nameof(_winRTAuthoringModuleDefinition))]
-    public void TrackWinRTAuthoringModuleDefinition(ModuleDefinition module)
+    [MemberNotNull(nameof(_winRTComponentModuleDefinition))]
+    public void TrackWinRTComponentModuleDefinition(ModuleDefinition module)
     {
         ThrowIfReadOnly();
 
-        _winRTAuthoringModuleDefinition = module;
+        _winRTComponentModuleDefinition = module;
     }
 
     /// <summary>
