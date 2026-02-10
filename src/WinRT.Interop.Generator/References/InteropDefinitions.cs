@@ -32,12 +32,30 @@ internal sealed class InteropDefinitions
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    public InteropDefinitions(InteropReferences interopReferences)
+    /// <param name="windowsRuntimeProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
+    /// <param name="windowsRuntimeAuthoringModule">The <see cref="ModuleDefinition"/> for the Windows Runtime authoring assembly (i.e. <c>WinRT.Authoring.dll</c>).</param>
+    public InteropDefinitions(
+        InteropReferences interopReferences,
+        ModuleDefinition windowsRuntimeProjectionModule,
+        ModuleDefinition windowsRuntimeAuthoringModule)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
         _szArrayInterfaceEntries = [];
+
+        WindowsRuntimeProjectionModule = windowsRuntimeProjectionModule;
+        WindowsRuntimeAuthoringModule = windowsRuntimeAuthoringModule;
     }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).
+    /// </summary>
+    public ModuleDefinition WindowsRuntimeProjectionModule { get; }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime authoring assembly (i.e. <c>WinRT.Authoring.dll</c>).
+    /// </summary>
+    public ModuleDefinition WindowsRuntimeAuthoringModule { get; }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoresAccessChecksToAttribute</c> type.
