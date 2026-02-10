@@ -76,9 +76,20 @@ internal partial class TypeSignatureEquatableSet
         /// Adds a new <see cref="TypeSignature"/> value to the builder.
         /// </summary>
         /// <param name="typeSignature">The <see cref="TypeSignature"/> value to add.</param>
-        public void Add(TypeSignature typeSignature)
+        /// <returns>Whether <paramref name="typeSignature"/> was added to the set.</returns>
+        public bool Add(TypeSignature typeSignature)
         {
-            _ = _set.Add(typeSignature);
+            return _set.Add(typeSignature);
+        }
+
+        /// <summary>
+        /// Checks whether the builder contains a given <see cref="TypeSignature"/> value.
+        /// </summary>
+        /// <param name="typeSignature">The <see cref="TypeSignature"/> value to check.</param>
+        /// <returns>Whether the builder contains <paramref name="typeSignature"/>.</returns>
+        public bool Contains(TypeSignature typeSignature)
+        {
+            return _set.Contains(typeSignature);
         }
 
         /// <summary>
