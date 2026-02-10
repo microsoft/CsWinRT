@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Indicates which type contains the managed <c>GetActivationFactory</c> method to invoke for authoring scenarios. This
-/// attribute is only meant to be used within an assembly annotated with <see cref="WindowsRuntimeAuthoringAssemblyAttribute"/>.
+/// attribute is only meant to be used within an assembly annotated with <see cref="WindowsRuntimeComponentAssemblyAttribute"/>.
 /// </summary>
 /// <remarks>
 /// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly.
@@ -19,13 +19,13 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeAuthoringAssemblyExportsTypeAttribute : Attribute
+public sealed class WindowsRuntimeComponentAssemblyExportsTypeAttribute : Attribute
 {
     /// <summary>
-    /// Creates a new <see cref="WindowsRuntimeAuthoringAssemblyExportsTypeAttribute"/> instance with the specified parameters.
+    /// Creates a new <see cref="WindowsRuntimeComponentAssemblyExportsTypeAttribute"/> instance with the specified parameters.
     /// </summary>
     /// <param name="exportsType">The type that contains the managed <c>GetActivationFactory</c> method to invoke for authoring scenarios.</param>
-    public WindowsRuntimeAuthoringAssemblyExportsTypeAttribute(Type exportsType)
+    public WindowsRuntimeComponentAssemblyExportsTypeAttribute(Type exportsType)
     {
         ExportsType = exportsType;
     }

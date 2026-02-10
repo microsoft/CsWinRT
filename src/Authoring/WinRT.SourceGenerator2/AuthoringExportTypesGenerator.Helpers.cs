@@ -30,7 +30,7 @@ public partial class AuthoringExportTypesGenerator
             [NotNullWhen(true)] out string? name)
         {
             // Get the attribute to lookup to find the target type to use
-            INamedTypeSymbol winRTAssemblyExportsTypeAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeAuthoringAssemblyExportsTypeAttribute")!;
+            INamedTypeSymbol winRTAssemblyExportsTypeAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyExportsTypeAttribute")!;
 
             // Make sure the assembly does have the attribute on it
             if (!assemblySymbol.TryGetAttributeWithType(winRTAssemblyExportsTypeAttributeSymbol, out AttributeData? attributeData))
