@@ -723,6 +723,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Invalid reference to a reserved .dll name.
+    /// </summary>
+    public static WellKnownInteropException ReservedDllNameReferenceError(string dllName)
+    {
+        return Exception(85, $"Invalid .dll reference to the reserved .dll name '{dllName}': it is not valid to reference .dll-s with a name starting with the 'WinRT.' prefix.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
