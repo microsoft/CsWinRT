@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -28,15 +29,34 @@ internal static class ModuleDefinitionExtensions
     /// <exception cref="ArgumentException">Thrown if the type couldn't be found.</exception>
     public static TypeDefinition GetType(this ModuleDefinition module, Utf8String ns, Utf8String name)
     {
-        foreach (TypeDefinition type in module.TopLevelTypes)
+        return TryGetType(module, ns, name, out TypeDefinition? type)
+            ? type
+            : throw new ArgumentException($"Type with name '{ns}.{name}' not found.");
+    }
+
+    /// <summary>
+    /// Tries to get the first type with a given namespace and name from the specified type.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="ns">The namespace of the type.</param>
+    /// <param name="name">The name of the type to get.</param>
+    /// <param name="type">The resulting type, if found.</param>
+    /// <returns>Whether <paramref name="type"/> was found.</returns>
+    public static bool TryGetType(this ModuleDefinition module, Utf8String? ns, Utf8String? name, [NotNullWhen(true)] out TypeDefinition? type)
+    {
+        foreach (TypeDefinition item in module.TopLevelTypes)
         {
-            if (type.Namespace == ns && type.Name == name)
+            if (item.Namespace == ns && item.Name == name)
             {
-                return type;
+                type = item;
+
+                return true;
             }
         }
 
-        throw new ArgumentException($"Type with name '{ns}.{name}' not found.");
+        type = null;
+
+        return false;
     }
 
     /// <summary>

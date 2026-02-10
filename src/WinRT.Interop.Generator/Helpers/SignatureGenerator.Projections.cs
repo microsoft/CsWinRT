@@ -29,9 +29,10 @@ internal partial class SignatureGenerator
         bool useWindowsUIXamlProjections)
     {
         // If we fail to get the IID of the generic interface, we can't do anything else
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        if (!TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
             type: typeSignature.GenericType,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: out Guid interfaceIid))
         {
@@ -133,14 +134,20 @@ internal partial class SignatureGenerator
     /// Tries to get the signature of a delegate type.
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
+    /// <param name="interopDefinitions"><inheritdoc cref="GetSignature" path="/param[@name='interopDefinitions']/node()"/></param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Delegate(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Delegate(
+        TypeDefinition typeDefinition,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
     {
         // Just like for generic instantiations, we need to resolve the IID for the type first
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        if (TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
             type: typeDefinition,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: out Guid iid))
         {
@@ -174,9 +181,10 @@ internal partial class SignatureGenerator
         }
 
         // Otherwise, get the IID from the type definition and use it
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        if (!TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
             type: typeDefinition,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: out Guid iid))
         {
@@ -190,14 +198,20 @@ internal partial class SignatureGenerator
     /// Tries to get the signature of an interface type.
     /// </summary>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
+    /// <param name="interopDefinitions"><inheritdoc cref="GetSignature" path="/param[@name='interopDefinitions']/node()"/></param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
     /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
-    private static string? Interface(TypeDefinition typeDefinition, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    private static string? Interface(
+        TypeDefinition typeDefinition,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
     {
         // For all interface types, we should always be able to resolve their IID
-        if (!GuidGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        if (!TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
             type: typeDefinition,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: out Guid iid))
         {
