@@ -301,6 +301,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
         /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -308,6 +309,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceImpl(
             GenericInstanceTypeSignature mapType,
             TypeDefinition mapMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -332,7 +334,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(mapType, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(mapType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
