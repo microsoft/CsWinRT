@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using ConsoleAppFramework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -23,48 +21,37 @@ internal partial class ProjectionGenerator
     /// Runs the emit logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    private static void Emit(ProjectionGeneratorArgs args)
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void Emit(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
     {
-        args.Token.ThrowIfCancellationRequested();
+        CSharpCompilation compilation;
 
-        string sourcesFolder = GenerateSources(args, out HashSet<string> projectionReferenceAssemblies);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
-
-        ConsoleApp.Log("Compiling merged projection");
-
-        CSharpCompilation compilation = CreateCompilationForProjection(sourcesFolder, referencesWithoutProjections);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
-        SaveDll(compilation, projectionDllPath);
-    }
-
-    private static CSharpCompilation CreateCompilationForProjection(string sourcesFolder, string[] referencePaths)
-    {
+        // Create the Roslyn compilation from the generated projection sources
         try
         {
-            // Parse the source files into a syntax tree
+            // Parse the source files into syntax trees
             List<SyntaxTree> syntaxTrees = [];
-            foreach (string file in Directory.GetFiles(sourcesFolder, "*.cs"))
+
+            foreach (string file in Directory.GetFiles(processingState.SourcesFolder, "*.cs"))
             {
+                args.Token.ThrowIfCancellationRequested();
+
                 using Stream stream = File.OpenRead(file);
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
             }
 
-            // Build references list
+            // Build the references list
             List<MetadataReference> references = [];
 
-            foreach (string refPath in referencePaths)
+            foreach (string refPath in processingState.ReferencesWithoutProjections)
             {
                 references.Add(MetadataReference.CreateFromFile(refPath));
             }
 
+            args.Token.ThrowIfCancellationRequested();
+
             // Create the compilation
-            CSharpCompilation compilation = CSharpCompilation.Create(
+            compilation = CSharpCompilation.Create(
                 ProjectionAssemblyName,
                 syntaxTrees,
                 references,
@@ -74,17 +61,15 @@ internal partial class ProjectionGenerator
                     optimizationLevel: OptimizationLevel.Release,
                     deterministic: true,
                     generalDiagnosticOption: ReportDiagnostic.Info));
-
-            return compilation;
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownProjectionGeneratorExceptions.CreateCompilationError(e);
         }
-    }
 
-    private static void SaveDll(CSharpCompilation compilation, string dllPath)
-    {
+        args.Token.ThrowIfCancellationRequested();
+
+        // Emit the projection .dll to disk
         try
         {
             // Configure emit options for embedded symbols
@@ -92,9 +77,15 @@ internal partial class ProjectionGenerator
                 debugInformationFormat: DebugInformationFormat.Embedded,
                 includePrivateMembers: true);
 
+            string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
+
+            EmitResult result;
+
             // Emit the compilation to a file
-            using FileStream fileStream = new(dllPath, FileMode.Create);
-            EmitResult result = compilation.Emit(fileStream, options: emitOptions);
+            using (FileStream fileStream = new(projectionDllPath, FileMode.Create))
+            {
+                result = compilation.Emit(fileStream, options: emitOptions);
+            }
 
             if (!result.Success)
             {

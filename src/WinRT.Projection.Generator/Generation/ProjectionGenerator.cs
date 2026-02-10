@@ -35,20 +35,49 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        ProjectionGeneratorProcessingState processingState;
+
+        // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
         try
         {
-            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + 1} modules");
+            ConsoleApp.Log($"Processing {args.WinMDPaths.Length + 1} .winmd references");
 
-            Emit(args);
+            processingState = ProcessReferences(args);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledProjectionGeneratorException("processing", e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Invoke 'cswinrt.exe' to generate the projection sources
+        try
+        {
+            ConsoleApp.Log("Generating merged projection code");
+
+            GenerateSources(args, processingState);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledProjectionGeneratorException("source-generation", e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
+        try
+        {
+            ConsoleApp.Log("Compiling merged projection");
+
+            Emit(args, processingState);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledProjectionGeneratorException("emit", e);
         }
 
-        args.Token.ThrowIfCancellationRequested();
-
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName)}");
+        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName)}.dll");
     }
 }

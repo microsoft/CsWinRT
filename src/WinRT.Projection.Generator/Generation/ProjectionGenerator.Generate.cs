@@ -6,8 +6,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionGenerator.Resolvers;
+
+#pragma warning disable IDE0270
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
@@ -26,32 +30,84 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Generate the projection sources using CsWinRT for the generator.
+    /// Runs the processing logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the sources.</param>
-    /// <returns>The path to the folder containing the generated sources.</returns>
-    private static string GenerateSources(ProjectionGeneratorArgs args, out HashSet<string> projectionReferenceAssemblies)
+    /// <returns>The resulting state.</returns>
+    private static ProjectionGeneratorProcessingState ProcessReferences(ProjectionGeneratorArgs args)
     {
         args.Token.ThrowIfCancellationRequested();
 
-        GenerateRspFile(args, out string outputFolder, out string rspFile, out projectionReferenceAssemblies);
+        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies);
 
-        args.Token.ThrowIfCancellationRequested();
+        string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        RunCsWinRT(args, rspFile);
+        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections);
+    }
 
-        return outputFolder;
+    /// <summary>
+    /// Runs the source generation logic for the generator.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void GenerateSources(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
+    {
+        ProcessStartInfo processInfo = new()
+        {
+            FileName = args.CsWinRTExePath,
+            Arguments = "@" + processingState.RspFilePath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            CreateNoWindow = true
+        };
+
+        Process? cswinrtProcess;
+
+        try
+        {
+            cswinrtProcess = Process.Start(processInfo);
+
+            // Make sure we did successfully start the process ('Start' can return 'null')
+            if (cswinrtProcess is null)
+            {
+                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError();
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError(e);
+        }
+
+        // Validate that generation was successful
+        using (cswinrtProcess)
+        {
+            string error = cswinrtProcess.StandardError.ReadToEnd();
+
+            cswinrtProcess.WaitForExit();
+
+            if (cswinrtProcess.ExitCode != 0)
+            {
+                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessError(
+                    exitCode: cswinrtProcess.ExitCode,
+                    exception: new Win32Exception(cswinrtProcess.ExitCode, error));
+            }
+        }
     }
 
     /// <summary>
     /// Generates a response file for CsWinRT based on the provided arguments and reference assemblies.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="outputFolder">The folder where sources are generated in.</param>
-    /// <param name="rspFile">The generated response file for running cswinrt.exe.</param>
-    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the rsp file.</param>
-    private static void GenerateRspFile(ProjectionGeneratorArgs args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies)
+    /// <param name="outputFolder">The folder where sources will be generated.</param>
+    /// <param name="rspFile">The generated response file for running <c>cswinrt.exe</c>.</param>
+    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
+    private static void GenerateRspFile(
+        ProjectionGeneratorArgs args,
+        out string outputFolder,
+        out string rspFile,
+        out HashSet<string> projectionReferenceAssemblies)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -60,7 +116,9 @@ internal partial class ProjectionGenerator
         projectionReferenceAssemblies = [];
 
         using StreamWriter fileStream = new(rspFile);
+
         PathAssemblyResolver resolver = new(args.ReferenceAssemblyPaths);
+
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
             ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
@@ -103,34 +161,6 @@ internal partial class ProjectionGenerator
         foreach (string winmdPath in args.WinMDPaths)
         {
             fileStream.WriteLine($"-input \"{winmdPath}\"");
-        }
-    }
-
-    /// <summary>
-    /// Executes the CsWinRT tool with the specified response file.
-    /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="rspFile">The path to the response file containing CsWinRT arguments.</param>
-    private static void RunCsWinRT(ProjectionGeneratorArgs args, string rspFile)
-    {
-        ProcessStartInfo processInfo = new()
-        {
-            FileName = args.CsWinRTExePath,
-            Arguments = "@" + rspFile,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            CreateNoWindow = true
-        };
-
-        using Process cswinrtProcess = Process.Start(processInfo) ?? throw new Exception();
-        string error = cswinrtProcess.StandardError.ReadToEnd();
-        cswinrtProcess.WaitForExit();
-
-        if (cswinrtProcess.ExitCode != 0)
-        {
-            throw new Win32Exception(cswinrtProcess.ExitCode, error);
         }
     }
 
