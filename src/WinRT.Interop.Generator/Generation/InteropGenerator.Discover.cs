@@ -40,6 +40,10 @@ internal partial class InteropGenerator
         // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
 
+        // First, load the special 'WinRT.Projection.dll' and 'WinRT.Authoring.dll' modules (the latter is optional).
+        // These are necessary for surfacing some information needed to generate code, that is not present otherwise.
+        LoadWinRTModules(args, discoveryState);
+
         try
         {
             // Load and process all modules, potentially in parallel
@@ -73,6 +77,29 @@ internal partial class InteropGenerator
         ValidateWinRTRuntimeDllVersion2References(args, discoveryState);
 
         return discoveryState;
+    }
+
+    /// <summary>
+    /// Loads the special WinRT module definitions.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    private static void LoadWinRTModules(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Load the 'WinRT.Projection.dll' module, this should always be available
+        ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+        discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Load the 'WinRT.Authoring.dll' module, if available
+        if (args.WinRTAuthoringAssemblyPath is not null)
+        {
+            ModuleDefinition winRTAuthoringModule = ModuleDefinition.FromFile(args.WinRTAuthoringAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+            discoveryState.TrackWinRTProjectionModuleDefinition(winRTAuthoringModule);
+        }
     }
 
     /// <summary>
