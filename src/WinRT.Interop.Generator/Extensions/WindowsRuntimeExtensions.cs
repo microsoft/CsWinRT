@@ -42,7 +42,7 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
-        /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+        /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
         public bool TryGetGuidAttribute(InteropReferences interopReferences, out Guid iid)
         {
             if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
