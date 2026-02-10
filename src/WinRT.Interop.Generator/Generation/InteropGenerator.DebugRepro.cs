@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -68,6 +69,8 @@ internal partial class InteropGenerator
         List<string> referencePaths = [];
         List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
+        string? winRTProjectionAssemblyHashedName = null;
+        string? winRTAuthoringAssemblyHashedName = null;
 
         // Create another subdirectory for all the input assembly paths. We don't put these in the top level
         // temporary folder so that the number of files there remains very small. The reason is just to
@@ -96,6 +99,14 @@ internal partial class InteropGenerator
             {
                 outputAssemblyPath = destinationPath;
             }
+            else if (dllEntry.Name == args.WinRTProjectionAssemblyPath)
+            {
+                winRTProjectionAssemblyHashedName = destinationPath;
+            }
+            else if (args.WinRTAuthoringAssemblyPath is not null && dllEntry.Name == args.WinRTAuthoringAssemblyPath)
+            {
+                winRTAuthoringAssemblyHashedName = destinationPath;
+            }
             else if (Path.IsWithinDirectoryName(dllEntry.FullName, "references"))
             {
                 referencePaths.Add(destinationPath);
@@ -114,6 +125,8 @@ internal partial class InteropGenerator
             ReferenceAssemblyPaths = [.. referencePaths],
             ImplementationAssemblyPaths = [.. implementationPaths],
             OutputAssemblyPath = outputAssemblyPath!,
+            WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName!,
+            WinRTAuthoringAssemblyPath = winRTAuthoringAssemblyHashedName,
             GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
@@ -175,15 +188,12 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Add the output assembly to the temporary directory with a hashed name
-        string outputAssemblyHashedName = GetHashedFileName(args.OutputAssemblyPath);
-        string outputAssemblyDestination = Path.Combine(tempDirectory, outputAssemblyHashedName);
-
-        File.Copy(args.OutputAssemblyPath, outputAssemblyDestination, overwrite: true);
+        // Hash and copy the well known assemblies we use as input
+        string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalPaths, args.Token);
+        string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, tempDirectory, originalPaths, args.Token);
+        string? winRTAuthoringAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTAuthoringAssemblyPath, tempDirectory, originalPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
-
-        originalPaths.Add(outputAssemblyHashedName, args.OutputAssemblyPath);
 
         // Prepare the .rsp file with all updated arguments
         string rspText = new InteropGeneratorArgs
@@ -191,6 +201,8 @@ internal partial class InteropGenerator
             ReferenceAssemblyPaths = [.. updatedReferenceDllNames],
             ImplementationAssemblyPaths = [.. updatedImplementationDllNames],
             OutputAssemblyPath = outputAssemblyHashedName,
+            WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName,
+            WinRTAuthoringAssemblyPath = winRTAuthoringAssemblyHashedName,
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
@@ -278,5 +290,37 @@ internal partial class InteropGenerator
         }
 
         return updatedDllNames;
+    }
+
+    /// <summary>
+    /// Copies a specified assembly to a target folder.q
+    /// </summary>
+    /// <param name="assemblyPath">The input assembly paths.</param>
+    /// <param name="destinationDirectory">The target directory to copy the assembly to.</param>
+    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
+    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The hashed filename.</returns>
+    [return: NotNullIfNotNull(nameof(assemblyPath))]
+    private static string? CopyHashedFileToDirectory(
+        string? assemblyPath,
+        string destinationDirectory,
+        Dictionary<string, string> originalPaths,
+        CancellationToken token)
+    {
+        if (assemblyPath is null)
+        {
+            return null;
+        }
+
+        string hashedName = GetHashedFileName(assemblyPath);
+        string destinationPath = Path.Combine(destinationDirectory, hashedName);
+
+        File.Copy(assemblyPath, destinationPath, overwrite: true);
+
+        token.ThrowIfCancellationRequested();
+
+        originalPaths.Add(hashedName, assemblyPath);
+
+        return hashedName;
     }
 }
