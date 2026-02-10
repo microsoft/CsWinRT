@@ -29,7 +29,7 @@ internal static class WindowsRuntimeTypeAnalyzer
         interfaceType = null;
 
         // Go through all implemented interfaces for the user-defined type
-        foreach (TypeSignature interfaceSignature in type.EnumerateAllInterfaces())
+        foreach (TypeSignature interfaceSignature in type.EnumerateAllInterfaces(interopReferences))
         {
             // If the current interface is not a Windows Runtime type, just skip it.
             // We can only use Windows Runtime interfaces for the runtime class name.
@@ -119,7 +119,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             yield return interfaceType;
 
             // Next, gather all combinations from interfaces implemented by the element type
-            foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces())
+            foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces(interopReferences))
             {
                 // Construct the generic interface with the current element type
                 yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
@@ -135,7 +135,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             }
 
             // Then, also gather all base types for the element type
-            foreach (TypeSignature baseType in elementType.EnumerateBaseTypes())
+            foreach (TypeSignature baseType in elementType.EnumerateBaseTypes(interopReferences))
             {
                 yield return genericInterfaceType.MakeGenericReferenceType(baseType);
             }

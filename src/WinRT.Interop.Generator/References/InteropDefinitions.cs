@@ -29,6 +29,11 @@ internal sealed class InteropDefinitions
     private readonly ConcurrentDictionary<int, TypeDefinition> _userDefinedInterfaceEntries;
 
     /// <summary>
+    /// The map of generated COM interface entries types for SZ array types (with a Windows Runtime type for their element type).
+    /// </summary>
+    private readonly ConcurrentDictionary<int, TypeDefinition> _szArrayInterfaceEntries;
+
+    /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -38,6 +43,7 @@ internal sealed class InteropDefinitions
         _interopReferences = interopReferences;
         _interopModule = interopModule;
         _userDefinedInterfaceEntries = [];
+        _szArrayInterfaceEntries = [];
     }
 
     /// <summary>
@@ -164,12 +170,7 @@ internal sealed class InteropDefinitions
     public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
 
     /// <summary>
-    /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayInterfaceEntries</c> type.
-    /// </summary>
-    public TypeDefinition IReferenceArrayInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayInterfaceEntriesType(_interopReferences, _interopModule);
-
-    /// <summary>
-    /// Enumerates all necessary COM interface entries types.
+    /// Enumerates all necessary COM interface entries types for user-defined types.
     /// </summary>
     /// <returns>The sequence of all necessary COM interface entries types.</returns>
     /// <remarks>
@@ -190,5 +191,29 @@ internal sealed class InteropDefinitions
         return _userDefinedInterfaceEntries.GetOrAdd(
             key: numberOfEntries,
             valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences, _interopModule));
+    }
+
+    /// <summary>
+    /// Enumerates all necessary COM interface entries types for SZ array types.
+    /// </summary>
+    /// <returns>The sequence of all necessary COM interface entries types.</returns>
+    /// <remarks>
+    /// This method must be called after all necessary calls to <see cref="SzArrayInterfaceEntries"/>.
+    /// </remarks>
+    public IEnumerable<TypeDefinition> EnumerateSzArrayInterfaceEntriesTypes()
+    {
+        return _szArrayInterfaceEntries.Values;
+    }
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the COM interface entries type for SZ array types with the specified number of entries.
+    /// </summary>
+    /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public TypeDefinition SzArrayInterfaceEntries(int numberOfEntries)
+    {
+        return _szArrayInterfaceEntries.GetOrAdd(
+            key: numberOfEntries,
+            valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.SzArrayInterfaceEntriesType(numberOfEntries, _interopReferences, _interopModule));
     }
 }

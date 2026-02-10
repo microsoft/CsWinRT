@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -68,12 +69,29 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Enumerates all interface types implemented by the specified type, including those implemented by base types.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The sequence of interface types implemented by the input type.</returns>
         /// <remarks>
         /// This method might return the same interface types multiple times, if implemented by multiple types in the hierarchy.
         /// </remarks>
-        public IEnumerable<TypeSignature> EnumerateAllInterfaces()
+        public IEnumerable<TypeSignature> EnumerateAllInterfaces(InteropReferences interopReferences)
         {
+            // Each SZ array also gets a series of interfaces automatically implemented by the runtime.
+            // The set is fixed, so we can just hardcode those here to make sure they are also discovered.
+            // The normal logic wouldn't work here, because the base type for arrays is the element type.
+            if (signature is SzArrayTypeSignature arraySignature)
+            {
+                yield return interopReferences.IList.ToReferenceTypeSignature();
+                yield return interopReferences.ICollection.ToReferenceTypeSignature();
+                yield return interopReferences.IEnumerable.ToReferenceTypeSignature();
+                yield return interopReferences.IList1.MakeGenericReferenceType(arraySignature.BaseType);
+                yield return interopReferences.ICollection1.MakeGenericReferenceType(arraySignature.BaseType);
+                yield return interopReferences.IEnumerable1.MakeGenericReferenceType(arraySignature.BaseType);
+                yield return interopReferences.IReadOnlyList1.MakeGenericReferenceType(arraySignature.BaseType);
+
+                yield break;
+            }
+
             TypeSignature? currentSignature = signature;
 
             while (currentSignature is not null)
@@ -104,7 +122,7 @@ internal static class TypeSignatureExtensions
 
                     // Also recurse on the base interfaces (no need to instantiate the returned interface type
                     // signatures for base interfaces here: they will be already instantiated when returned).
-                    foreach (TypeSignature baseInterface in interfaceSignature.EnumerateAllInterfaces())
+                    foreach (TypeSignature baseInterface in interfaceSignature.EnumerateAllInterfaces(interopReferences))
                     {
                         yield return baseInterface;
                     }
@@ -128,9 +146,19 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Enumerates all base types of a given type.
         /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The sequence of base types of the input type.</returns>
-        public IEnumerable<TypeSignature> EnumerateBaseTypes()
+        public IEnumerable<TypeSignature> EnumerateBaseTypes(InteropReferences interopReferences)
         {
+            // If we see an SZ array, we can directly return 'System.Array' as its only base type.
+            // We can't rely on the base type from the signature, as it would be the element type.
+            if (signature is SzArrayTypeSignature)
+            {
+                yield return interopReferences.Array.ToReferenceTypeSignature();
+
+                yield break;
+            }
+
             TypeSignature? currentSignature = signature;
 
             while (currentSignature is not null)

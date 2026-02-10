@@ -374,6 +374,11 @@ internal sealed class InteropReferences
     public TypeReference IEnumerable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "IEnumerable`1"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.ICollection"/>.
+    /// </summary>
+    public TypeReference ICollection => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections"u8, "ICollection"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Generic.ICollection{T}"/>.
     /// </summary>
     public TypeReference ICollection1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic"u8, "ICollection`1"u8);

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -108,7 +107,7 @@ internal partial class InteropTypeDiscovery
         }
 
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-        if (!typeSignature.IsFullyResolvable(out _))
+        if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
         {
             // Log a warning the first time we fail to resolve this SZ array in this module
             if (discoveryState.TrackFailedResolutionType(typeSignature, module))
@@ -119,30 +118,15 @@ internal partial class InteropTypeDiscovery
             return;
         }
 
-        // Ignore array types that are not Windows Runtime types
-        if (!typeSignature.IsWindowsRuntimeType(interopReferences))
-        {
-            return;
-        }
-
-        // Track all SZ array types, as we'll need to emit marshalling code for them
-        discoveryState.TrackSzArrayType(typeSignature);
-
-        // Each SZ array also gets a series of interfaces automatically implemented by the runtime.
-        // The set is fixed, so we can just hardcode those here to make sure they are also discovered.
-        // They will all be needed later, because CCWs for array objects will need those vtable slots.
-        foreach (GenericInstanceTypeSignature interfaceType in (ReadOnlySpan<GenericInstanceTypeSignature>)[
-            interopReferences.IList1.MakeGenericReferenceType(typeSignature.BaseType),
-            interopReferences.IEnumerable1.MakeGenericReferenceType(typeSignature.BaseType),
-            interopReferences.IReadOnlyList1.MakeGenericReferenceType(typeSignature.BaseType)])
-        {
-            TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interfaceType,
-                args: args,
-                discoveryState: discoveryState,
-                interopReferences: interopReferences,
-                module: module);
-        }
+        // Track all SZ array types, as we'll need to emit marshalling code for them.
+        // This is regardless of whether their element type is a Windows Runtime type.
+        TryTrackExposedSzArrayType(
+            typeDefinition: typeDefinition,
+            typeSignature: typeSignature,
+            args: args,
+            discoveryState: discoveryState,
+            interopReferences: interopReferences,
+            module: module);
     }
 
     /// <summary>
@@ -191,7 +175,7 @@ internal partial class InteropTypeDiscovery
                 module: module);
 
             // We also want to crawl base interfaces
-            foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces())
+            foreach (TypeSignature interfaceSignature in typeSignature.EnumerateAllInterfaces(interopReferences))
             {
                 // Filter out just constructed generic interfaces, since we only care about those here.
                 // The non-generic ones are only useful when gathering interfaces for user-defined types.
