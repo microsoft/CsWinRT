@@ -293,7 +293,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Copies a specified assembly to a target folder.q
+    /// Copies a specified assembly to a target folder.
     /// </summary>
     /// <param name="assemblyPath">The input assembly paths.</param>
     /// <param name="destinationDirectory">The target directory to copy the assembly to.</param>
