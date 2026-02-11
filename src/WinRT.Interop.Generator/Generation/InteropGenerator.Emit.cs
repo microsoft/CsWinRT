@@ -240,7 +240,7 @@ internal partial class InteropGenerator
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
             ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
             {
-                // Set the metadata resolver that we created during the discovery phase (used for auto-import)
+                // Create and set a metadata resolver from the assembly resolver that we created during the discovery phase (used for auto-import)
                 MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver),
 
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
@@ -248,8 +248,9 @@ internal partial class InteropGenerator
                 Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys)
             };
 
-            // Also create a containinng assembly for it (needed for the emit phase)
-            AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
+            // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
+            _ = new AssemblyDefinition(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { winRTInteropModule }
             };
