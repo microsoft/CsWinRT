@@ -2143,7 +2143,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (SzArrayTypeSignature typeSignature in discoveryState.SzArrayTypes.OrderByFullyQualifiedTypeName())
+        foreach ((SzArrayTypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.SzArrayAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2181,6 +2181,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.SzArray.InterfaceEntriesImpl(
                     arrayType: typeSignature,
+                    vtableTypes: vtableTypes,
                     implType: arrayImplType,
                     get_IidMethod: get_IidMethod,
                     interopDefinitions: interopDefinitions,
@@ -2188,10 +2189,12 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition arrayInterfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersMarshallerAttribute(
                     arrayType: typeSignature,
+                    arrayInterfaceEntriesType: interfaceEntriesType,
                     arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
                     arrayComWrappersCallbackType: arrayComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
@@ -2417,16 +2420,17 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
-                    args: args,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.ComWrappersMarshallerAttribute(
                     userDefinedType: typeSignature,
-                    vtableTypes: vtableTypes,
+                    interfaceEntriesType: interfaceEntriesType,
                     interfaceEntriesImplType: interfaceEntriesImplType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
@@ -2443,7 +2447,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderBy(static pair => pair.Key, TypeDescriptorComparer.Create<TypeSignature>()))
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2504,7 +2508,6 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IAsyncOperationWithProgressVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IMapChangedEventArgsVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayVftbl);
-            module.TopLevelTypes.Add(interopDefinitions.IReferenceArrayInterfaceEntries);
         }
         catch (Exception e)
         {
@@ -2521,8 +2524,14 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Also emit all shared COM interface entries types that are programmatically generated
+            // Emit all shared COM interface entries types that are programmatically generated for user-defined types
             foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
+            {
+                module.TopLevelTypes.Add(typeDefinition);
+            }
+
+            // Also emit interface entries types for SZ arrays, same as for user-defined types above
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes().OrderByFullyQualifiedTypeName())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }

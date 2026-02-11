@@ -63,17 +63,20 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="SzArrayTypes"/>.</summary>
-    private readonly ConcurrentDictionary<SzArrayTypeSignature, byte> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
-
     /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field to support <see cref="TryMarkSzArrayType"/>.</summary>
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedSzArrayTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field to support <see cref="TryMarkWindowsRuntimeGenericInterfaceTypeInstance"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, byte> _markedWindowsRuntimeGenericInterfaceTypeInstances = new(SignatureComparer.IgnoreVersion);
 
-    /// <summary>Backing field for <see cref="UserDefinedTypes"/>.</summary>
+    /// <summary>Backing field for <see cref="UserDefinedAndVtableTypes"/>.</summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="SzArrayAndVtableTypes"/>.</summary>
+    private readonly ConcurrentDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
     /// <remarks>
@@ -182,11 +185,6 @@ internal sealed class InteropGeneratorDiscoveryState
     public IReadOnlyCollection<GenericInstanceTypeSignature> KeyValuePairTypes => (IReadOnlyCollection<GenericInstanceTypeSignature>)_keyValuePairTypes.Keys;
 
     /// <summary>
-    /// Gets all SZ array types.
-    /// </summary>
-    public IReadOnlyCollection<SzArrayTypeSignature> SzArrayTypes => (IReadOnlyCollection<SzArrayTypeSignature>)_szArrayTypes.Keys;
-
-    /// <summary>
     /// Gets all user-defined types.
     /// </summary>
     public IReadOnlyCollection<TypeSignature> UserDefinedTypes => (IReadOnlyCollection<TypeSignature>)_userDefinedTypes.Keys;
@@ -200,6 +198,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets all user-defined vtable types (for each user-defined type).
     /// </summary>
     public IReadOnlyCollection<TypeSignatureEquatableSet> UserDefinedVtableTypes => (IReadOnlyCollection<TypeSignatureEquatableSet>)_userDefinedVtableTypes.Keys;
+
+    /// <summary>
+    /// Gets all SZ array types and their vtable types.
+    /// </summary>
+    public IReadOnlyDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> SzArrayAndVtableTypes => _szArrayTypes;
 
     /// <summary>
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
@@ -385,17 +388,6 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
-    /// Tracks a SZ array type.
-    /// </summary>
-    /// <param name="szArrayType">The SZ array type.</param>
-    public void TrackSzArrayType(SzArrayTypeSignature szArrayType)
-    {
-        ThrowIfReadOnly();
-
-        _ = _szArrayTypes.TryAdd(szArrayType, 0);
-    }
-
-    /// <summary>
     /// Tries to mark a user-defined type as having been seen the first time,
     /// and indicating that it's in the process of being processed.
     /// </summary>
@@ -407,12 +399,23 @@ internal sealed class InteropGeneratorDiscoveryState
     }
 
     /// <summary>
+    /// Tries to mark an SZ array type as having been seen the first time,
+    /// and indicating that it's in the process of being processed.
+    /// </summary>
+    /// <param name="arrayType">The SZ array type.</param>
+    /// <returns>Whether this was the first time that <paramref name="arrayType"/> was seen.</returns>
+    public bool TryMarkSzArrayType(SzArrayTypeSignature arrayType)
+    {
+        return _markedSzArrayTypes.TryAdd(arrayType, 0);
+    }
+
+    /// <summary>
     /// Tries to mark a constructed generic Windows Runtime interface type as having been seen the first time,
     /// and indicating that it's in the process of being processed.
     /// </summary>
     /// <param name="interfaceType">The constructed generic Windows Runtime interface type.</param>
     /// <returns>Whether this was the first time that <paramref name="interfaceType"/> was seen.</returns>
-    public bool TryMarkWindowsRuntimeGenericInterfaceTypeInstance(TypeSignature interfaceType)
+    public bool TryMarkWindowsRuntimeGenericInterfaceTypeInstance(GenericInstanceTypeSignature interfaceType)
     {
         return _markedWindowsRuntimeGenericInterfaceTypeInstances.TryAdd(interfaceType, 0);
     }
@@ -433,6 +436,18 @@ internal sealed class InteropGeneratorDiscoveryState
         TypeSignatureEquatableSet cachedVtableTypes = _userDefinedVtableTypes.GetOrAdd(vtableTypes, vtableTypes);
 
         _ = _userDefinedTypes.TryAdd(userDefinedType, cachedVtableTypes);
+    }
+
+    /// <summary>
+    /// Tracks an SZ array type.
+    /// </summary>
+    /// <param name="arrayType">The SZ array type.</param>
+    /// <param name="vtableTypes">The vtable types for <paramref name="arrayType"/>.</param>
+    public void TrackSzArrayType(SzArrayTypeSignature arrayType, TypeSignatureEquatableSet vtableTypes)
+    {
+        ThrowIfReadOnly();
+
+        _ = _szArrayTypes.TryAdd(arrayType, vtableTypes);
     }
 
     /// <summary>

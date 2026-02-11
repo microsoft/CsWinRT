@@ -259,7 +259,7 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Track the SZ array type (if it's not applicable, it will be a no-op)
+                // Track the SZ array type (both for Windows Runtime types and user-defined types)
                 InteropTypeDiscovery.TryTrackSzArrayType(
                     typeSignature: typeSignature,
                     args: args,

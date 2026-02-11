@@ -433,7 +433,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to resolve the type of an implemented interface.
     /// </summary>
-    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeSignature type)
     {
         return Warning(49, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
@@ -696,6 +696,30 @@ internal static class WellKnownInteropExceptions
     public static WellKnownInteropException CustomMappedTypeMethodsTypeResolveError(TypeSignature type)
     {
         return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
+    }
+
+    /// <summary>
+    /// Failed to resolve the element type for an array type.
+    /// </summary>
+    public static WellKnownInteropWarning ArrayTypeElementTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
+    {
+        return Warning(82, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
+    }
+
+    /// <summary>
+    /// Multiple '[GeneratedComInterface]' types are using the same IID.
+    /// </summary>
+    public static WellKnownInteropWarning GeneratedComInterfaceDuplicateIidWarning(TypeDefinition interfaceType, TypeDefinition type, Guid iid)
+    {
+        return Warning(83, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
+    /// An exposed type exceeded the maximum limit of interfaces.
+    /// </summary>
+    public static WellKnownInteropWarning ExceededNumberOfExposedWindowsRuntimeInterfaceTypesWarning(TypeSignature type)
+    {
+        return Warning(84, $"Exposed type '{type}' exceeded the maximum limit of 128 projected Windows Runtime interfaces implemented: all exceeding interfaces will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
