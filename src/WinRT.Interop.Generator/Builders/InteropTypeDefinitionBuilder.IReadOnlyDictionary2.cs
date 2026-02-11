@@ -412,7 +412,7 @@ internal partial class InteropTypeDefinitionBuilder
                     new InterfaceImplementation(readOnlyDictionaryType.ToTypeDefOrRef()),
                     new InterfaceImplementation(readOnlyCollectionType.ToTypeDefOrRef()),
                     new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.ToTypeDefOrRef())
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 

@@ -121,14 +121,14 @@ internal partial class InteropMethodRewriter
                 // 'Type' values also need their own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged),
-                    new CilInstruction(Stobj, interopReferences.AbiType.ToTypeDefOrRef())]);
+                    new CilInstruction(Stobj, interopReferences.AbiType)]);
             }
             else if (retValType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, and needs its own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
                     new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged),
-                    new CilInstruction(Stobj, interopReferences.AbiException.ToTypeDefOrRef())]);
+                    new CilInstruction(Stobj, interopReferences.AbiException)]);
             }
             else
             {

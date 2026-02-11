@@ -376,7 +376,6 @@ internal static partial class InteropTypeDefinitionBuilder
         // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
         IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
             interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-            
             .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
 
         // Define the 'ConvertToManaged' method as follows:
@@ -838,7 +837,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // Add the generated marshaller attribute, if available
         if (comWrappersMarshallerAttributeType is not null)
         {
-            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!));
+            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()));
         }
     }
 

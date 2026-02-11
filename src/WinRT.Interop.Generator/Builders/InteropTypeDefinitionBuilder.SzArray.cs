@@ -495,8 +495,8 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(computeVtablesMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the array
-            IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor = interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
-                
+            IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor =
+                interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
                 .MakeGenericInstanceMethod(arrayComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Define the 'CreateObject' method as follows:
