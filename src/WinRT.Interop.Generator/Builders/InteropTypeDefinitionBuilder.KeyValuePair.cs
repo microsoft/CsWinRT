@@ -138,7 +138,6 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature typeSignature2 = keyValuePairType;
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
@@ -154,7 +153,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [typeSignature2]))
+                    parameterTypes: [keyValuePairType]))
             {
                 CilInstructions =
                 {
@@ -183,7 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: typeSignature2,
+                    returnType: keyValuePairType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilLocalVariables = { loc_0_default },

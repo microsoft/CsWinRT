@@ -346,7 +346,6 @@ internal static partial class InteropTypeDefinitionBuilder
         emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
 
         // Prepare the external types we need in the implemented methods
-        TypeSignature typeSignature2 = typeSignature;
         TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
         // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
@@ -360,7 +359,7 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
                 returnType: windowsRuntimeObjectReferenceValueType,
-                parameterTypes: [typeSignature2]))
+                parameterTypes: [typeSignature]))
         {
             CilInstructions =
             {
@@ -385,14 +384,14 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "ConvertToManaged"u8,
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
-                returnType: typeSignature2,
+                returnType: typeSignature,
                 parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
         {
             CilInstructions =
             {
                 { Ldarg_0 },
                 { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
-                { Castclass, typeSignature2.ToTypeDefOrRef() },
+                { Castclass, typeSignature.ToTypeDefOrRef() },
                 { Ret }
             }
         };

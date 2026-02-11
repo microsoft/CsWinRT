@@ -265,7 +265,7 @@ internal partial class InteropMethodRewriter
 
                 body.Instructions.ReferenceReplaceRange(finallyMarker, [
                     ldloc_or_a_finallyStart,
-                    new CilInstruction(Call, disposeMethod!),
+                    new CilInstruction(Call, disposeMethod),
                     new CilInstruction(Endfinally),
                     nop_finallyEnd]);
             }

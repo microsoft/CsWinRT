@@ -816,7 +816,6 @@ internal partial class InteropTypeDefinitionBuilder
             emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature delegateType2 = delegateType;
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Define the 'ConvertToUnmanaged' method as follows:
@@ -827,7 +826,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [delegateType2]))
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {
@@ -852,14 +851,14 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: delegateType2,
+                    returnType: delegateType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, windowsRuntimeDelegateMarshallerConvertToManaged },
-                    { Castclass, delegateType2.ToTypeDefOrRef() },
+                    { Castclass, delegateType.ToTypeDefOrRef() },
                     { Ret }
                 }
             };
@@ -874,7 +873,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [delegateType2]))
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {
@@ -899,7 +898,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "UnboxToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: delegateType2,
+                    returnType: delegateType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilInstructions =
