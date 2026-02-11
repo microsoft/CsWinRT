@@ -59,7 +59,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType));
 
             // 'Value' field with the cached factory delegate
-            factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType.Import(module)));
+            factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
 
             // Add the parameterless constructor
             factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(module));
@@ -79,10 +79,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Callback"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType).Import(module),
+                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -107,7 +107,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the delegate type and store it in the 'Value' field
             _ = cctor.CilInstructions.Add(Ldsfld, factoryType.Fields[0]);
             _ = cctor.CilInstructions.Add(Ldftn, callbackMethod);
-            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType).Import(module));
+            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType));
             _ = cctor.CilInstructions.Add(Stsfld, factoryType.Fields[1]);
 
             _ = cctor.CilInstructions.Add(Ret);
@@ -141,7 +141,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(methodsType);
@@ -181,10 +181,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "VectorChanged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: eventHandlerEventSourceType.Import(module),
+                    returnType: eventHandlerEventSourceType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -192,14 +192,14 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_0 },
                     { Ldsfld, eventSourceFactoryType.GetField("Value"u8) },
                     { Ldarg_1 },
-                    { Callvirt, conditionalWeakTableGetOrAddMethod.Import(module) },
+                    { Callvirt, conditionalWeakTableGetOrAddMethod },
                     { Ret }
                 }
             };
 
             // Add and implement the 'IObservableVectorMethodsImpl<T>.VectorChanged' method
             methodsType.AddMethodImplementation(
-                declaration: interopReferences.IObservableVectorMethodsImpl1VectorChanged(elementType).Import(module),
+                declaration: interopReferences.IObservableVectorMethodsImpl1VectorChanged(elementType),
                 method: vectorChangedMethod);
         }
 
@@ -326,16 +326,16 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     InteropCustomAttributeFactory.Guid(vectorType, interopReferences, module, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(vectorType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IList1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.ICollection1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                    new InterfaceImplementation(vectorType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IList1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.ICollection1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -350,7 +350,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [handlerType.Import(module)]))
+                    parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: vectorType,
@@ -363,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IObservableVector1add_VectorChanged(elementType).Import(module),
+                declaration: interopReferences.IObservableVector1add_VectorChanged(elementType),
                 method: add_IObservableVector1VectorChangedMethod);
 
             // Create the 'IObservableVector<T>.VectorChanged' remove method
@@ -372,7 +372,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [handlerType.Import(module)]))
+                    parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: vectorType,
@@ -385,14 +385,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IObservableVector<T>.VectorChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IObservableVector1remove_VectorChanged(elementType).Import(module),
+                declaration: interopReferences.IObservableVector1remove_VectorChanged(elementType),
                 method: remove_IObservableVector1VectorChangedMethod);
 
             // Create the 'IObservableVector<T>.VectorChanged' event
             EventDefinition observableVector1VectorChangedProperty = new(
                 name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.VectorChanged",
                 attributes: default,
-                eventType: handlerType.Import(module).ToTypeDefOrRef())
+                eventType: handlerType.ToTypeDefOrRef())
             {
                 AddMethod = add_IObservableVector1VectorChangedMethod,
                 RemoveMethod = remove_IObservableVector1VectorChangedMethod

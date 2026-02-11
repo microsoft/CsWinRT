@@ -46,11 +46,11 @@ internal static class WellKnownCilMethodBodyFactory
                 // Load 'this', cast to 'WindowsRuntimeObject', and call 'GetObjectReferenceForInterface'
                 // with the 'RuntimeTypeHandle' value that's loaded for the target interface type.
                 { Ldarg_0 },
-                { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                { Ldtoken, interfaceType.Import(module).ToTypeDefOrRef() },
-                { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                { Castclass, interopReferences.WindowsRuntimeObject },
+                { Ldtoken, interfaceType.ToTypeDefOrRef() },
+                { Call, interopReferences.TypeGetTypeFromHandle },
+                { Callvirt, interopReferences.Typeget_TypeHandle },
+                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface },
             }
         };
 
@@ -61,7 +61,7 @@ internal static class WellKnownCilMethodBodyFactory
         }
 
         // Call the forwarded method and return
-        body.Instructions.Add(new CilInstruction(Call, forwardedMethod.Import(module)));
+        body.Instructions.Add(new CilInstruction(Call, forwardedMethod));
         body.Instructions.Add(new CilInstruction(Ret));
 
         return body;
@@ -98,8 +98,8 @@ internal static class WellKnownCilMethodBodyFactory
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObject' (for 'thisObject')
         //   [1]: 'WindowsRuntimeObjectReference' (for 'interfaceReference')
-        CilLocalVariable loc_0_thisObject = new(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module));
-        CilLocalVariable loc_1_interfaceReference = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
+        CilLocalVariable loc_0_thisObject = new(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature());
+        CilLocalVariable loc_1_interfaceReference = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
 
         // Prepare the jump labels
         CilInstruction ldloc_0_type2Check = new(Ldloc_0);
@@ -114,36 +114,36 @@ internal static class WellKnownCilMethodBodyFactory
             {
                 // WindowsRuntimeObject thisObject = (WindowsRuntimeObject)this;
                 { Ldarg_0 },
-                { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                { Castclass, interopReferences.WindowsRuntimeObject },
                 { Stloc_0 },
 
                 // if (thisObject.TryGetObjectReferenceForInterface(typeof(<INTERFACE_TYPE1>), out interfaceReference))
                 { Ldloc_0 },
-                { Ldtoken, interfaceType1.Import(module).ToTypeDefOrRef() },
-                { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                { Ldtoken, interfaceType1.ToTypeDefOrRef() },
+                { Call, interopReferences.TypeGetTypeFromHandle },
+                { Callvirt, interopReferences.Typeget_TypeHandle },
                 { Ldloca_S, loc_1_interfaceReference },
-                { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface.Import(module) },
+                { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface },
                 { Brfalse_S, ldloc_0_type2Check.CreateLabel() },
 
                 // <FORWARDED_METHOD1>(interfaceReference, <ARGS>);
                 { Ldloc_1 },
                 { nop_type1Args },
-                { Call, forwardedMethod1.Import(module) },
+                { Call, forwardedMethod1 },
                 { Ret },
 
                 // interfaceReference = thisObject.GetObjectReferenceForInterface(typeof(<INTERFACE_TYPE2>));
                 { ldloc_0_type2Check },
-                { Ldtoken, interfaceType2.Import(module).ToTypeDefOrRef() },
-                { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                { Ldtoken, interfaceType2.ToTypeDefOrRef() },
+                { Call, interopReferences.TypeGetTypeFromHandle },
+                { Callvirt, interopReferences.Typeget_TypeHandle },
+                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface },
                 { Stloc_1 },
 
                 // <FORWARDED_METHOD2>(interfaceReference, <ARGS>);
                 { Ldloc_1 },
                 { nop_type2Args },
-                { Call, forwardedMethod2.Import(module) },
+                { Call, forwardedMethod2 },
                 { Ret }
             }
         };
@@ -200,28 +200,28 @@ internal static class WellKnownCilMethodBodyFactory
         {
             LocalVariables =
             {
-                new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module)),
-                new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module))
+                new CilLocalVariable(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()),
+                new CilLocalVariable(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature())
             },
             Instructions =
             {
                 // Cast 'this' and resolve the 'WindowsRuntimeObjectReference' instance for the interface
                 { Ldarg_0 },
-                { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                { Castclass, interopReferences.WindowsRuntimeObject },
                 { Stloc_0 },
                 { Ldloc_0 },
-                { Ldtoken, interfaceType.Import(module).ToTypeDefOrRef() },
-                { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                { Ldtoken, interfaceType.ToTypeDefOrRef() },
+                { Call, interopReferences.TypeGetTypeFromHandle },
+                { Callvirt, interopReferences.Typeget_TypeHandle },
+                { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface },
                 { Stloc_1 },
 
                 // <EVENT_METHOD>(thisObject, thisReference).<ACCESSOR_METHOD>(value);
                 { Ldloc_0 },
                 { Ldloc_1 },
-                { Call, eventMethod.Import(module) },
+                { Call, eventMethod },
                 { Ldarg_1 },
-                { Callvirt, accessorMethod.Import(module) },
+                { Callvirt, accessorMethod },
                 { Ret }
             }
         };

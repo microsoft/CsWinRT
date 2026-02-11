@@ -85,13 +85,13 @@ internal static partial class InteropMethodRewriter
 
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module))]);
+                        new CilInstruction(Call, marshallerType.UnboxToManaged())]);
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
                 {
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe.Import(module))]);
+                        new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe)]);
                 }
                 else
                 {
@@ -99,14 +99,14 @@ internal static partial class InteropMethodRewriter
 
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
+                        new CilInstruction(Call, marshallerType.ConvertToManaged())]);
                 }
             }
             else if (parameterType.IsTypeOfString())
             {
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module))]);
+                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged)]);
             }
             else
             {
@@ -114,7 +114,7 @@ internal static partial class InteropMethodRewriter
 
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module))]);
+                    new CilInstruction(Call, marshallerType.ConvertToManaged())]);
             }
         }
     }

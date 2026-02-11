@@ -102,8 +102,8 @@ internal partial class InteropMethodRewriter
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReferenceReplaceRange(marker, [
-                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)),
-                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged()),
+                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).ToTypeDefOrRef())]);
                 }
             }
             else if (retValType.IsTypeOfString())
@@ -112,23 +112,23 @@ internal partial class InteropMethodRewriter
                 // 'HStringMarshaller.ConvertToUnmanaged' method actually takes a 'ReadOnlySpan<char>',
                 // so we first also need to create one from the 'string' value loaded on the stack.
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
+                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString),
+                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged),
                     new CilInstruction(Stind_I)]);
             }
             else if (retValType.IsTypeOfType(interopReferences))
             {
                 // 'Type' values also need their own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiType.Import(module).ToTypeDefOrRef())]);
+                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged),
+                    new CilInstruction(Stobj, interopReferences.AbiType.ToTypeDefOrRef())]);
             }
             else if (retValType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, and needs its own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiException.Import(module).ToTypeDefOrRef())]);
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged),
+                    new CilInstruction(Stobj, interopReferences.AbiException.ToTypeDefOrRef())]);
             }
             else
             {
@@ -158,16 +158,16 @@ internal partial class InteropMethodRewriter
             // We need a new local for the 'WindowsRuntimeObjectReferenceValue' returned from the
             // marshalling methods that the code will invoke. This is because we are going to call
             // the 'DetachThisPtrUnsafe()' method on it, which needs 'this' by reference.
-            CilLocalVariable loc_returnValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_returnValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             body.LocalVariables.Add(loc_returnValue);
 
             // Marshal the value and detach its native pointer before assigning it to the target location
             body.Instructions.ReferenceReplaceRange(marker, [
-                new CilInstruction(Call, marshallerMethod.Import(module)),
+                new CilInstruction(Call, marshallerMethod),
                 CilInstruction.CreateStloc(loc_returnValue, body),
                 new CilInstruction(Ldloca_S, loc_returnValue),
-                new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module)),
+                new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe),
                 new CilInstruction(Stind_I)]);
         }
     }

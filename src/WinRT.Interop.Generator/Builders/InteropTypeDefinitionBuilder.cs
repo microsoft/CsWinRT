@@ -105,18 +105,18 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "NativeObject"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: nativeObjectBaseType.Import(module).ToTypeDefOrRef());
+            baseType: nativeObjectBaseType.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(nativeObjectType);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature());
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
 
         nativeObjectType.Methods.Add(ctor);
 
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-        _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType).Import(module));
+        _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType));
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
         {
-            Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback.Import(module)) }
+            Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback) }
         };
 
         module.TopLevelTypes.Add(callbackType);
@@ -164,19 +164,19 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.ReadOnlySpanChar.Import(module),
+                    interopReferences.ReadOnlySpanChar,
                     module.CorLibTypeFactory.Object.MakeByReferenceType(),
-                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         { CilOutParameterIndices = [3, 4] };
 
         // Add and implement 'TryCreateObject'
         callbackType.AddMethodImplementation(
-            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject.Import(module),
+            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject,
             method: tryCreateObjectMethod);
 
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObjectReference' (for 'result')
-        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
+        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
 
         // Jump labels
         CilInstruction ldarg_3_failure = new(Ldarg_3);
@@ -190,15 +190,15 @@ internal static partial class InteropTypeDefinitionBuilder
                 // Compare the runtime class name for the fast path
                 { Ldarg_1 },
                 { Ldstr, runtimeClassName },
-                { Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module) },
-                { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
+                { Call, interopReferences.MemoryExtensionsAsSpanCharString },
+                { Call, interopReferences.MemoryExtensionsSequenceEqualChar },
                 { Brfalse_S, ldarg_3_failure.CreateLabel() },
 
                 // Create the 'WindowsRuntimeObjectReference' instance
                 { Ldarg_0 },
                 { Call, get_IidMethod },
                 { Ldarg_3 },
-                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe },
                 { Stloc_0 },
 
                 // Create and assign the 'NativeObject' instance to return
@@ -231,7 +231,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Object,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -240,7 +240,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ldarg_0 },
                 { Call, get_IidMethod },
                 { Ldarg_1 },
-                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe },
                 { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                 { Ret }
             }
@@ -248,7 +248,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Add and implement 'CreateObject'
         callbackType.AddMethodImplementation(
-            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackCreateObject.Import(module),
+            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackCreateObject,
             method: createObjectMethod);
     }
 
@@ -274,7 +274,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersMarshallerAttribute"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+            baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
         module.TopLevelTypes.Add(marshallerType);
 
@@ -284,7 +284,7 @@ internal static partial class InteropTypeDefinitionBuilder
         marshallerType.Methods.Add(ctor);
 
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-        _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+        _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
         // Define the 'CreateObject' method as follows:
         //
@@ -296,7 +296,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Object,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -305,7 +305,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ldarg_1 },
                 { Call, get_IidMethod },
                 { Ldarg_2 },
-                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReference.Import(module) },
+                { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReference },
                 { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                 { Ret },
             }
@@ -346,8 +346,8 @@ internal static partial class InteropTypeDefinitionBuilder
         emitState.TrackTypeDefinition(marshallerType, typeSignature, "Marshaller");
 
         // Prepare the external types we need in the implemented methods
-        TypeSignature typeSignature2 = typeSignature.Import(module);
-        TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
+        TypeSignature typeSignature2 = typeSignature;
+        TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
         // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
         MemberReference windowsRuntimeInterfaceMarshallerConvertToUnmanaged = interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged(typeSignature);
@@ -366,7 +366,7 @@ internal static partial class InteropTypeDefinitionBuilder
             {
                 { Ldarg_0 },
                 { Call, get_IidMethod },
-                { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged.Import(module) },
+                { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged },
                 { Ret }
             }
         };
@@ -376,7 +376,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
         IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
             interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-            .Import(module)
+            
             .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
 
         // Define the 'ConvertToManaged' method as follows:
@@ -439,7 +439,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // private static readonly <VTABLE_TYPE> Vftbl;
         FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private | FieldAttributes.Static, vftblType.ToValueTypeSignature())
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor) }
         };
 
         implType.Fields.Add(vftblField);
@@ -463,13 +463,13 @@ internal static partial class InteropTypeDefinitionBuilder
         switch (interfaceType)
         {
             case ComInterfaceType.InterfaceIsIUnknown:
-                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IUnknownImplget_Vtable.Import(module));
+                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IUnknownImplget_Vtable);
                 _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IUnknownVftbl);
                 _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IUnknownVftbl);
                 vtableOffset = 3;
                 break;
             case ComInterfaceType.InterfaceIsIInspectable:
-                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IInspectableImplget_Vtable.Import(module));
+                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IInspectableImplget_Vtable);
                 _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IInspectableVftbl);
                 _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IInspectableVftbl);
                 vtableOffset = 6;
@@ -533,8 +533,8 @@ internal static partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            _ = instructions.Add(Call, arg.get_IID.Import(module));
-            _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
+            _ = instructions.Add(Call, arg.get_IID);
+            _ = instructions.Add(Ldobj, interopReferences.Guid);
         }
 
         // Load the vtable property
@@ -544,7 +544,7 @@ internal static partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             ModuleDefinition module)
         {
-            _ = instructions.Add(Call, arg.get_Vtable.Import(module));
+            _ = instructions.Add(Call, arg.get_Vtable);
         }
 
         InterfaceEntriesImpl(
@@ -634,7 +634,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private | FieldAttributes.Static, entriesFieldType.ToValueTypeSignature())
         {
-            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor) }
         };
 
         implType.Fields.Add(entriesField);
@@ -645,8 +645,8 @@ internal static partial class InteropTypeDefinitionBuilder
         // Import the target fields (they have to be in the module, or the resulting assembly won't be valid):
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
-        IFieldDescriptor comInterfaceEntryIIDField = interopReferences.ComInterfaceEntryIID.Import(module);
-        IFieldDescriptor comInterfaceEntryVtableField = interopReferences.ComInterfaceEntryVtable.Import(module);
+        IFieldDescriptor comInterfaceEntryIIDField = interopReferences.ComInterfaceEntryIID;
+        IFieldDescriptor comInterfaceEntryVtableField = interopReferences.ComInterfaceEntryVtable;
 
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CilMethodBody!.Instructions;
@@ -681,7 +681,7 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.MakePointerType();
 
         // Create the 'Vtables' property
         PropertyDefinition vtablesProperty = new(
@@ -787,7 +787,7 @@ internal static partial class InteropTypeDefinitionBuilder
         if (mappedMetadata is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor.Import(module),
+                constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: mappedMetadata))));
@@ -797,7 +797,7 @@ internal static partial class InteropTypeDefinitionBuilder
         if (runtimeClassName is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor.Import(module),
+                constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: runtimeClassName))));
@@ -807,7 +807,7 @@ internal static partial class InteropTypeDefinitionBuilder
         if (metadataTypeName is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor.Import(module),
+                constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
                     argumentType: module.CorLibTypeFactory.String,
                     value: metadataTypeName))));
@@ -818,10 +818,10 @@ internal static partial class InteropTypeDefinitionBuilder
         if (mappedType is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor.Import(module),
+                constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: mappedType.Import(module)))));
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: mappedType))));
         }
 
         // Add the '[WindowsRuntimeReferenceType]' attribute with the provided reference type, if available.
@@ -829,16 +829,16 @@ internal static partial class InteropTypeDefinitionBuilder
         if (referenceType is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeReferenceTypeAttribute_ctor.Import(module),
+                constructor: interopReferences.WindowsRuntimeReferenceTypeAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.Import(module).ToReferenceTypeSignature(),
-                    value: referenceType.Import(module)))));
+                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
+                    value: referenceType))));
         }
 
         // Add the generated marshaller attribute, if available
         if (comWrappersMarshallerAttributeType is not null)
         {
-            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!.Import(module)));
+            proxyType.CustomAttributes.Add(new CustomAttribute(comWrappersMarshallerAttributeType.GetConstructor()!));
         }
     }
 

@@ -168,7 +168,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
                 name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: baseEventSourceSignature.Import(module).ToTypeDefOrRef());
+                baseType: baseEventSourceSignature.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(eventSourceType);
 
@@ -183,7 +183,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 module: module,
                 parameterTypes: [
-                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                    interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     module.CorLibTypeFactory.Int32]);
 
             eventSourceType.Methods.Add(ctor);
@@ -191,7 +191,7 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
             _ = ctor.CilMethodBody!.Instructions.Insert(2, Ldarg_2);
-            _ = ctor.CilMethodBody!.Instructions.Insert(3, Call, baseEventSource_ctor.Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(3, Call, baseEventSource_ctor);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -200,8 +200,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
-                    parameterTypes: [delegateType.Import(module)]))
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {

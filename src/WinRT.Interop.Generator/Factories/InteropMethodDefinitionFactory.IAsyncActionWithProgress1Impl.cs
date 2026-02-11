@@ -49,7 +49,7 @@ internal partial class InteropMethodDefinitionFactory
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
@@ -63,8 +63,8 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(actionType).Import(module) },
-                    { Callvirt, interopReferences.IAsyncActionWithProgress1GetResults(progressType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(actionType) },
+                    { Callvirt, interopReferences.IAsyncActionWithProgress1GetResults(progressType) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -87,7 +87,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

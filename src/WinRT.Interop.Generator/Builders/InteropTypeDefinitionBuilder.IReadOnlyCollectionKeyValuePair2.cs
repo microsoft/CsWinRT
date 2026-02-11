@@ -77,14 +77,14 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     new CustomAttribute(forwarderAttributeType.GetMethod(".ctor"u8))
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(readOnlyCollectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.ToTypeDefOrRef())
                 }
             };
 
@@ -98,7 +98,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType).Import(module),
+                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType),
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method

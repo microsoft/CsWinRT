@@ -27,7 +27,7 @@ internal partial class WellKnownTypeDefinitionFactory
             ns: "System.Runtime.CompilerServices"u8,
             name: "IgnoresAccessChecksToAttribute"u8,
             attributes: TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.Attribute.Import(module));
+            baseType: interopReferences.Attribute);
 
         // Add the '_assemblyName' field
         FieldDefinition assemblyNameField = new(
@@ -46,7 +46,7 @@ internal partial class WellKnownTypeDefinitionFactory
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
         _ = ctor.CilMethodBody!.Instructions.Insert(2, Stfld, assemblyNameField);
         _ = ctor.CilMethodBody!.Instructions.Insert(3, Ldarg_0);
-        _ = ctor.CilMethodBody!.Instructions.Insert(4, Call, interopReferences.Attribute_ctor.Import(module));
+        _ = ctor.CilMethodBody!.Instructions.Insert(4, Call, interopReferences.Attribute_ctor);
 
         // Create the 'get_AssemblyName' getter method
         MethodDefinition get_AssemblyNameMethod = new(

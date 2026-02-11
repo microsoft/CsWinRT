@@ -40,7 +40,7 @@ internal static class MethodDefinitionExtensions
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, object_ctor.Import(module) },
+                    { Call, object_ctor },
                     { Ret }
                 }
             };
@@ -58,7 +58,7 @@ internal static class MethodDefinitionExtensions
 
             // Emit a call to the base constructor ('CreateConstructor' already adds the 'ret' instruction)
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, constructorMethod.Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, constructorMethod);
 
             return ctor;
         }
