@@ -51,6 +51,57 @@ internal sealed class InteropReferences
     /// </summary>
     public CorLibTypeFactory CorLibTypeFactory => _corLibTypeFactory;
 
+    /// <inheritdoc cref="CorLibTypeFactory.Void"/>
+    public CorLibTypeSignature Void => _corLibTypeFactory.Void;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Boolean"/>
+    public CorLibTypeSignature Boolean => _corLibTypeFactory.Boolean;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Char"/>
+    public CorLibTypeSignature Char => _corLibTypeFactory.Char;
+
+    /// <inheritdoc cref="CorLibTypeFactory.SByte"/>
+    public CorLibTypeSignature SByte => _corLibTypeFactory.SByte;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Byte"/>
+    public CorLibTypeSignature Byte => _corLibTypeFactory.Byte;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int16"/>
+    public CorLibTypeSignature Int16 => _corLibTypeFactory.Int16;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt16"/>
+    public CorLibTypeSignature UInt16 => _corLibTypeFactory.UInt16;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int32"/>
+    public CorLibTypeSignature Int32 => _corLibTypeFactory.Int32;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt32"/>
+    public CorLibTypeSignature UInt32 => _corLibTypeFactory.UInt32;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Int64"/>
+    public CorLibTypeSignature Int64 => _corLibTypeFactory.Int64;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UInt64"/>
+    public CorLibTypeSignature UInt64 => _corLibTypeFactory.UInt64;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Single"/>
+    public CorLibTypeSignature Single => _corLibTypeFactory.Single;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Double"/>
+    public CorLibTypeSignature Double => _corLibTypeFactory.Double;
+
+    /// <inheritdoc cref="CorLibTypeFactory.String"/>
+    public CorLibTypeSignature String => _corLibTypeFactory.String;
+
+    /// <inheritdoc cref="CorLibTypeFactory.IntPtr"/>
+    public CorLibTypeSignature IntPtr => _corLibTypeFactory.IntPtr;
+
+    /// <inheritdoc cref="CorLibTypeFactory.UIntPtr"/>
+    public CorLibTypeSignature UIntPtr => _corLibTypeFactory.UIntPtr;
+
+    /// <inheritdoc cref="CorLibTypeFactory.Object"/>
+    public CorLibTypeSignature Object => _corLibTypeFactory.Object;
+
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
     /// </summary>
@@ -169,7 +220,7 @@ internal sealed class InteropReferences
     public TypeReference ArraySegment1Enumerator => field ??= ArraySegment1.CreateTypeReference("Enumerator"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Nullable"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="Nullable"/>.
     /// </summary>
     public TypeReference Nullable1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Nullable`1"u8);
 
