@@ -113,7 +113,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -123,7 +123,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -162,7 +162,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };

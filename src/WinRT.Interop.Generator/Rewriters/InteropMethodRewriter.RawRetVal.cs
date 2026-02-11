@@ -68,14 +68,14 @@ internal partial class InteropMethodRewriter
             {
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.BoxToUnmanaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.BoxToUnmanaged()));
             }
             else
             {
                 // For any other types, we always just forward directly to 'ConvertToUnmanaged', without any other changes
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged()));
             }
         }
     }

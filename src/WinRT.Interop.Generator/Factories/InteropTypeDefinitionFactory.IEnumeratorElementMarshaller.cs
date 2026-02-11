@@ -97,7 +97,7 @@ internal partial class InteropTypeDefinitionFactory
             MethodDefinition disposeMethod = new(
                 name: "Dispose"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(module.CorLibTypeFactory.Void, elementAbiType.Import(module)))
+                signature: MethodSignature.CreateStatic(module.CorLibTypeFactory.Void, elementAbiType))
             {
                 CilInstructions =
                 {
@@ -109,7 +109,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'Dispose' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerDispose(elementType, elementAbiType).Import(module),
+                declaration: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerDispose(elementType, elementAbiType),
                 method: disposeMethod);
 
             // Track rewriting the disposal for 'Dispose'
@@ -210,7 +210,7 @@ internal partial class InteropTypeDefinitionFactory
         {
             // Select the attributes and base type depending on whether we want a value type or not
             (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
-                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType.Import(module))
+                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType)
                 : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             // We're declaring an 'internal abstract class' type
@@ -220,7 +220,7 @@ internal partial class InteropTypeDefinitionFactory
                 attributes: attributes,
                 baseType: baseType)
             {
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
 
             // Rewriting labels
@@ -233,8 +233,8 @@ internal partial class InteropTypeDefinitionFactory
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.GetRawAbiType(interopReferences).Import(module),
-                    parameterTypes: [elementType.Import(module)]))
+                    returnType: elementType.GetRawAbiType(interopReferences),
+                    parameterTypes: [elementType]))
             {
                 CilInstructions =
                 {
@@ -246,7 +246,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'ConvertToUnmanaged' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: convertToUnmanagedInterfaceMethod.Import(module),
+                declaration: convertToUnmanagedInterfaceMethod,
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'

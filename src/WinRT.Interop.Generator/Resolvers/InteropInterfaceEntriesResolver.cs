@@ -221,14 +221,14 @@ internal static class InteropInterfaceEntriesResolver
         /// <inheritdoc/>
         public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Call, get_IID.Import(module));
-            _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
+            _ = instructions.Add(Call, get_IID);
+            _ = instructions.Add(Ldobj, interopReferences.Guid);
         }
 
         /// <inheritdoc/>
         public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Call, get_Vtable.Import(module));
+            _ = instructions.Add(Call, get_Vtable);
         }
     }
 
@@ -241,15 +241,15 @@ internal static class InteropInterfaceEntriesResolver
         /// <inheritdoc/>
         public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
+            _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid);
         }
 
         /// <inheritdoc/>
         public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
+            _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable);
         }
     }
 }

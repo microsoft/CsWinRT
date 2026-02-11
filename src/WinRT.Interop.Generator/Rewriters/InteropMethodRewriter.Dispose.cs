@@ -64,18 +64,18 @@ internal partial class InteropMethodRewriter
             {
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.Dispose().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.Dispose()));
             }
             else if (parameterType.IsTypeOfString())
             {
                 // When disposing 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerFree.Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerFree));
             }
             else
             {
                 // For everything else, we just release the native object. This also applies to generic value types,
                 // such as 'KeyValuePair<TKey, TValue>', because they are actually interface types at the ABI level.
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.WindowsRuntimeUnknownMarshallerFree.Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.WindowsRuntimeUnknownMarshallerFree));
             }
         }
     }

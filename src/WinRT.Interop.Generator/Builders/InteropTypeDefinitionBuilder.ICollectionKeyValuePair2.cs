@@ -78,14 +78,14 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     new CustomAttribute(forwarderAttributeType.GetMethod(".ctor"u8))
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(collectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -102,11 +102,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [keyValuePairType.Import(module)]));
+                    parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Add' ('KeyValuePair<,>') method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Add(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1Add(keyValuePairType),
                 method: addKeyValuePairMethod);
 
             // Create a body for the 'Add' ('KeyValuePair<,>') method
@@ -125,11 +125,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyValuePairType.Import(module)]));
+                    parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Remove' ('KeyValuePair<,>') method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Remove(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1Remove(keyValuePairType),
                 method: removeKeyValuePairMethod);
 
             // Create a body for the 'Remove' ('KeyValuePair<,>') method
@@ -148,11 +148,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyValuePairType.Import(module)]));
+                    parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Contains' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Contains(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1Contains(keyValuePairType),
                 method: containsMethod);
 
             // Create a body for the 'Contains' method
@@ -173,7 +173,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Clear' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1Clear(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1Clear(keyValuePairType),
                 method: clearMethod);
 
             // Create a body for the 'Clear' method
@@ -195,7 +195,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'CopyTo' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1CopyTo(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1CopyTo(keyValuePairType),
                 method: copyToMethod);
 
             // Create the 'get_Count' getter method
@@ -206,7 +206,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_Count(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1get_Count(keyValuePairType),
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
@@ -243,7 +243,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'get_IsReadOnly' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_IsReadOnly(keyValuePairType).Import(module),
+                declaration: interopReferences.ICollection1get_IsReadOnly(keyValuePairType),
                 method: get_IsReadOnlyMethod);
 
             // Create the 'IsReadOnly' property

@@ -224,8 +224,8 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        senderType.GetAbiType(interopReferences).Import(module),
-                        argsType.GetAbiType(interopReferences).Import(module)]))
+                        senderType.GetAbiType(interopReferences),
+                        argsType.GetAbiType(interopReferences)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
             };
@@ -233,7 +233,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Labels for jumps
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction nop_parameter2Rewrite = new(Nop);
 
@@ -247,10 +247,10 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
-                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module).Import(module) },
+                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -273,7 +273,7 @@ internal partial class InteropTypeDefinitionBuilder
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -339,14 +339,14 @@ internal partial class InteropTypeDefinitionBuilder
             // Jump labels
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
 
             // Declare 2 local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Value' method
             valueMethod.CilMethodBody = new CilMethodBody()
@@ -366,11 +366,11 @@ internal partial class InteropTypeDefinitionBuilder
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Stloc_1 },
                     { Ldloca_S, loc_1_referenceValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe },
                     { Stind_I },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -394,7 +394,7 @@ internal partial class InteropTypeDefinitionBuilder
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -477,7 +477,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeObjectComWrappersCallback.Import(module)) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeObjectComWrappersCallback) }
             };
 
             module.TopLevelTypes.Add(callbackType);
@@ -492,7 +492,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilMethodBody = new CilMethodBody
@@ -504,9 +504,9 @@ internal partial class InteropTypeDefinitionBuilder
                         { Ldarg_0 },
                         { Call, get_IidMethod },
                         { Ldarg_1 },
-                        { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe.Import(module) },
+                        { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceUnsafe },
                         { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
-                        { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
+                        { Newobj, interopReferences.Delegate_ctor(delegateType) },
                         { Ret }
                     }
                 }
@@ -514,7 +514,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'CreateObject' method
             callbackType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeObjectComWrappersCallbackCreateObject.Import(module),
+                declaration: interopReferences.IWindowsRuntimeObjectComWrappersCallbackCreateObject,
                 method: createObjectMethod);
         }
 
@@ -559,9 +559,9 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module),
-                        senderType.Import(module),
-                        argsType.Import(module)]));
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        senderType,
+                        argsType]));
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
@@ -573,9 +573,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences);
 
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue
-                .Import(module)
-                .ToValueTypeSignature();
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
@@ -602,7 +600,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Load the local [0]
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -612,7 +610,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // 'Invoke' call for the native delegate (and 'try' for local [2])
                     { Ldloca_S, loc_0_thisValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { nop_ld_sender },
@@ -620,8 +618,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.DelegateVftbl.Fields[3] },
-                    { Calli, invokeAbiSignature.Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, invokeAbiSignature.MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, ret.CreateLabel() },
 
                     // Optional 'finally' blocks for the marshalled parameters. These are intentionally
@@ -631,7 +629,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // 'finally' for local [0]
                     { ldloca_0_finally_0 },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
 
                     // return;
@@ -695,7 +693,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -705,7 +703,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -744,7 +742,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };
@@ -752,8 +750,8 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(getOrCreateComInterfaceForObjectMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
-            IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
-                .Import(module)
+            IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor =
+                interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Define the 'CreateObject' method as follows:
@@ -766,7 +764,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =
@@ -818,8 +816,7 @@ internal partial class InteropTypeDefinitionBuilder
             emitState.TrackTypeDefinition(marshallerType, delegateType, "Marshaller");
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature delegateType2 = delegateType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -829,13 +826,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [delegateType2]))
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged },
                     { Ret }
                 }
             };
@@ -845,7 +842,6 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.ConvertToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
-                .Import(module)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Define the 'ConvertToManaged' method as follows:
@@ -855,14 +851,14 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: delegateType2,
+                    returnType: delegateType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, windowsRuntimeDelegateMarshallerConvertToManaged },
-                    { Castclass, delegateType2.ToTypeDefOrRef() },
+                    { Castclass, delegateType.ToTypeDefOrRef() },
                     { Ret }
                 }
             };
@@ -877,13 +873,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [delegateType2]))
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, get_ReferenceIidMethod },
-                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged },
                     { Ret }
                 }
             };
@@ -893,7 +889,6 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.UnboxToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged
-                .Import(module)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Define the 'UnboxToManaged' method as follows:
@@ -903,7 +898,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "UnboxToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: delegateType2,
+                    returnType: delegateType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilInstructions =

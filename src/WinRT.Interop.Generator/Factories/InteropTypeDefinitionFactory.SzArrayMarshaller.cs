@@ -304,9 +304,9 @@ internal partial class InteropTypeDefinitionFactory
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType),
                         module.CorLibTypeFactory.UInt32.MakeByReferenceType(),
-                        elementAbiType.Import(module).MakePointerType().MakeByReferenceType()]))
+                        elementAbiType.MakePointerType().MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2, 3],
                 CilInstructions =
@@ -314,7 +314,7 @@ internal partial class InteropTypeDefinitionFactory
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, convertToUnmanagedMethod.Import(module) },
+                    { Call, convertToUnmanagedMethod },
                     { Ret }
                 }
             };
@@ -328,16 +328,16 @@ internal partial class InteropTypeDefinitionFactory
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: arrayType.Import(module),
+                    returnType: arrayType,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                        elementAbiType.MakePointerType()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, convertToManagedMethod.Import(module) },
+                    { Call, convertToManagedMethod },
                     { Ret }
                 }
             };
@@ -354,15 +354,15 @@ internal partial class InteropTypeDefinitionFactory
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType(),
-                        interopReferences.Span1.MakeGenericValueType(elementType).Import(module)]))
+                        elementAbiType.MakePointerType(),
+                        interopReferences.Span1.MakeGenericValueType(elementType)]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, copyToManagedMethod.Import(module) },
+                    { Call, copyToManagedMethod },
                     { Ret }
                 }
             };
@@ -378,16 +378,16 @@ internal partial class InteropTypeDefinitionFactory
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType).Import(module),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType),
                         module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                        elementAbiType.MakePointerType()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, copyToUnmanagedMethod.Import(module) },
+                    { Call, copyToUnmanagedMethod },
                     { Ret }
                 }
             };
@@ -406,13 +406,13 @@ internal partial class InteropTypeDefinitionFactory
                         returnType: module.CorLibTypeFactory.Void,
                         parameterTypes: [
                             module.CorLibTypeFactory.UInt32,
-                            elementAbiType.Import(module).MakePointerType()]))
+                            elementAbiType.MakePointerType()]))
                 {
                     CilInstructions =
                     {
                         { Ldarg_0 },
                         { Ldarg_1 },
-                        { Call, disposeMethod.Import(module) },
+                        { Call, disposeMethod },
                         { Ret }
                     }
                 };
@@ -430,13 +430,13 @@ internal partial class InteropTypeDefinitionFactory
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                        elementAbiType.MakePointerType()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, freeMethod.Import(module) },
+                    { Call, freeMethod },
                     { Ret }
                 }
             };

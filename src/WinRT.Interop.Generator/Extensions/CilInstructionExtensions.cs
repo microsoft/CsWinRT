@@ -99,7 +99,7 @@ internal static class CilInstructionExtensions
                 ElementType.R8 => new CilInstruction(Stind_R8),
                 ElementType.ValueType when type.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
                 ElementType.I => new CilInstruction(Stind_I),
-                _ => new CilInstruction(Stobj, type.Import(module).ToTypeDefOrRef()),
+                _ => new CilInstruction(Stobj, type.ToTypeDefOrRef()),
             };
         }
 
@@ -128,7 +128,7 @@ internal static class CilInstructionExtensions
                 ElementType.R8 => new CilInstruction(Ldind_R8),
                 ElementType.ValueType when type.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Ldind_I4),
                 ElementType.I => new CilInstruction(Ldind_I),
-                _ => new CilInstruction(Ldobj, type.Import(module).ToTypeDefOrRef()),
+                _ => new CilInstruction(Ldobj, type.ToTypeDefOrRef()),
             };
         }
     }

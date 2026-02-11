@@ -60,7 +60,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType));
 
             // 'Value' field with the cached factory delegate
-            factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType.Import(module)));
+            factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
 
             // Add the parameterless constructor
             factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(module));
@@ -80,10 +80,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Callback"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType).Import(module),
+                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -108,7 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the delegate type and store it in the 'Value' field
             _ = cctor.CilInstructions.Add(Ldsfld, factoryType.Fields[0]);
             _ = cctor.CilInstructions.Add(Ldftn, callbackMethod);
-            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType).Import(module));
+            _ = cctor.CilInstructions.Add(Newobj, interopReferences.Delegate_ctor(funcType));
             _ = cctor.CilInstructions.Add(Stsfld, factoryType.Fields[1]);
 
             _ = cctor.CilInstructions.Add(Ret);
@@ -143,7 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(methodsType);
@@ -183,10 +183,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "MapChanged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: eventHandlerEventSourceType.Import(module),
+                    returnType: eventHandlerEventSourceType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module),
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module)]))
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -194,14 +194,14 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_0 },
                     { Ldsfld, eventSourceFactoryType.GetField("Value"u8) },
                     { Ldarg_1 },
-                    { Callvirt, conditionalWeakTableGetOrAddMethod.Import(module) },
+                    { Callvirt, conditionalWeakTableGetOrAddMethod },
                     { Ret }
                 }
             };
 
             // Add and implement the 'IObservableMapMethodsImpl<TKey, TValue>.MapChanged' method
             methodsType.AddMethodImplementation(
-                declaration: interopReferences.IObservableMapMethodsImpl2MapChanged(keyType, valueType).Import(module),
+                declaration: interopReferences.IObservableMapMethodsImpl2MapChanged(keyType, valueType),
                 method: mapChangedMethod);
         }
 
@@ -338,16 +338,16 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     InteropCustomAttributeFactory.Guid(mapType, interopReferences, module, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(mapType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                    new InterfaceImplementation(mapType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(dictionaryType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(collectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -362,7 +362,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [handlerType.Import(module)]))
+                    parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: mapType,
@@ -375,7 +375,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IObservableMap<K, V>.MapChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IObservableMap2add_MapChanged(keyType, valueType).Import(module),
+                declaration: interopReferences.IObservableMap2add_MapChanged(keyType, valueType),
                 method: add_IObservableMap2MapChangedMethod);
 
             // Create the 'IObservableMap<K, V>.MapChanged' remove method
@@ -384,7 +384,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [handlerType.Import(module)]))
+                    parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: mapType,
@@ -397,14 +397,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IObservableMap<K, V>.MapChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IObservableMap2remove_MapChanged(keyType, valueType).Import(module),
+                declaration: interopReferences.IObservableMap2remove_MapChanged(keyType, valueType),
                 method: remove_IObservableMap2MapChangedMethod);
 
             // Create the 'IObservableMap<K, V>.MapChanged' event
             EventDefinition observableMap2MapChangedProperty = new(
                 name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.MapChanged",
                 attributes: default,
-                eventType: handlerType.Import(module).ToTypeDefOrRef())
+                eventType: handlerType.ToTypeDefOrRef())
             {
                 AddMethod = add_IObservableMap2MapChangedMethod,
                 RemoveMethod = remove_IObservableMap2MapChangedMethod
