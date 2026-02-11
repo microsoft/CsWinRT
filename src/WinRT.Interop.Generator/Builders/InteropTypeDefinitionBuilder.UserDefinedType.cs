@@ -115,7 +115,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
 
@@ -130,7 +132,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                    parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
                 CilInstructions =
@@ -152,8 +154,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetOrCreateComInterfaceForObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
-                    parameterTypes: [module.CorLibTypeFactory.Object]))
+                    returnType: interopReferences.Void.MakePointerType(),
+                    parameterTypes: [interopReferences.Object]))
             {
                 CilInstructions =
                 {

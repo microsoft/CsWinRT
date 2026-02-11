@@ -19,11 +19,6 @@ internal sealed class InteropDefinitions
     private readonly InteropReferences _interopReferences;
 
     /// <summary>
-    /// The <see cref="ModuleDefinition"/> for the interop assembly being produced.
-    /// </summary>
-    private readonly ModuleDefinition _interopModule;
-
-    /// <summary>
     /// The map of generated COM interface entries types for user-defined types.
     /// </summary>
     private readonly ConcurrentDictionary<int, TypeDefinition> _userDefinedInterfaceEntries;
@@ -37,11 +32,9 @@ internal sealed class InteropDefinitions
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="interopModule">The <see cref="ModuleDefinition"/> for the interop assembly being produced.</param>
-    public InteropDefinitions(InteropReferences interopReferences, ModuleDefinition interopModule)
+    public InteropDefinitions(InteropReferences interopReferences)
     {
         _interopReferences = interopReferences;
-        _interopModule = interopModule;
         _userDefinedInterfaceEntries = [];
         _szArrayInterfaceEntries = [];
     }
@@ -49,7 +42,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoresAccessChecksToAttribute</c> type.
     /// </summary>
-    public TypeDefinition IgnoresAccessChecksToAttribute => field ??= WellKnownTypeDefinitionFactory.IgnoresAccessChecksToAttribute(_interopReferences, _interopModule);
+    public TypeDefinition IgnoresAccessChecksToAttribute => field ??= WellKnownTypeDefinitionFactory.IgnoresAccessChecksToAttribute(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>RvaFields</c> type.
@@ -57,7 +50,7 @@ internal sealed class InteropDefinitions
     /// <remarks>
     /// This type has exactly one nested type, for RVA fields of size 16 (ie. <see cref="System.Guid"/>).
     /// </remarks>
-    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences, _interopModule);
+    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
@@ -67,7 +60,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
     /// </summary>
-    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopModule);
+    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
@@ -167,7 +160,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
     /// </summary>
-    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences);
 
     /// <summary>
     /// Enumerates all necessary COM interface entries types for user-defined types.

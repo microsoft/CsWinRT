@@ -42,7 +42,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
@@ -54,7 +54,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.add_CanExecuteChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.EventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -75,7 +75,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.remove_CanExecuteChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.EventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -108,8 +108,8 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.CanExecute"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [module.CorLibTypeFactory.Object]));
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [interopReferences.Object]));
 
             // Add and implement the 'CanExecute' method
             interfaceImplType.AddMethodImplementation(
@@ -128,8 +128,8 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.Execute"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [module.CorLibTypeFactory.Object]));
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.Object]));
 
             // Add and implement the 'Execute' method
             interfaceImplType.AddMethodImplementation(

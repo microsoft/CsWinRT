@@ -94,7 +94,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(

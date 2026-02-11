@@ -25,12 +25,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="collectionType">The <see cref="TypeSignature"/> for the vector type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition CopyTo(
             GenericInstanceTypeSignature collectionType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             GenericInstanceTypeSignature keyValuePairType = (GenericInstanceTypeSignature)collectionType.TypeArguments[0];
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
@@ -46,10 +44,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.CopyTo",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         keyValuePairType.MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.Int32]));
 
             // Jump labels
             CilInstruction ldloc_0_type2Check = new(Ldloc_0);

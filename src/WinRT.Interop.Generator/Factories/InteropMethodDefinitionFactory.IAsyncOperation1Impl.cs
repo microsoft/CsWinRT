@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="getResultsMethod">The interface method to invoke on <paramref name="operationType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>GetResults</c> method for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult,TProgress&gt;</c> interfaces.
         /// </remarks>
@@ -35,8 +34,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature operationType,
             MemberReference getResultsMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature resultType = operationType.TypeArguments[0];
 
@@ -48,9 +46,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetResults"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         resultType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -68,7 +66,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'

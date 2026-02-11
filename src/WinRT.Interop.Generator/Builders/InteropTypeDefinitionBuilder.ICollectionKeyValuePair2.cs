@@ -101,7 +101,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Add",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Add' ('KeyValuePair<,>') method
@@ -123,7 +123,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Remove",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Remove' ('KeyValuePair<,>') method
@@ -145,7 +145,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Contains",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [keyValuePairType]));
 
             // Add and implement the 'Contains' method
@@ -166,7 +166,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition clearMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Clear",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                signature: MethodSignature.CreateInstance(interopReferences.Void));
 
             // Add and implement the 'Clear' method
             interfaceImplType.AddMethodImplementation(
@@ -186,8 +186,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition copyToMethod = InteropMethodDefinitionFactory.ICollectionKeyValuePair2InterfaceImpl.CopyTo(
                 collectionType: collectionType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'CopyTo' method
             interfaceImplType.AddMethodImplementation(
@@ -198,7 +197,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
@@ -227,7 +226,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IsReadOnlyMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_IsReadOnly",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean))
+                signature: MethodSignature.CreateInstance(interopReferences.Boolean))
             {
                 CilInstructions =
                 {

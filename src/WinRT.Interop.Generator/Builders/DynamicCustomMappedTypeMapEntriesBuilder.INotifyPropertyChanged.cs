@@ -42,7 +42,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
@@ -54,7 +54,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.ComponentModel.INotifyPropertyChanged.add_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -75,7 +75,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.ComponentModel.INotifyPropertyChanged.remove_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(

@@ -32,15 +32,13 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="accessorMethodName">The name of the accessor method to create.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_KeyOrValue(
             TypeSignature keyOrValueType,
             TypeDefinition vftblType,
             Utf8String vftblMethodName,
             Utf8String accessorMethodName,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Define the accessor method as follows:
             //
@@ -50,7 +48,7 @@ internal partial class InteropMethodDefinitionFactory
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: keyOrValueType,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             { NoInlining = true };
 
             // Declare the local variables:

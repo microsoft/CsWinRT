@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(factoryType);
 
@@ -60,7 +60,7 @@ internal partial class InteropTypeDefinitionBuilder
             factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
 
             // Add the parameterless constructor
-            factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(module));
+            factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
             // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
             TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
@@ -133,7 +133,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -154,7 +154,6 @@ internal partial class InteropTypeDefinitionBuilder
                 index: 2, // Arbitrary index, just copied from what Roslyn does here
                 propertyType: conditionalWeakTableType,
                 interopReferences: interopReferences,
-                module: module,
                 backingField: out FieldDefinition vectorChangedTableField,
                 factoryMethod: out MethodDefinition makeVectorChangedMethod,
                 getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
@@ -321,7 +320,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(vectorType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(vectorType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
@@ -343,7 +342,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.add_VectorChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -364,7 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableVector<{elementType.FullName}>.remove_VectorChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -426,7 +425,6 @@ internal partial class InteropTypeDefinitionBuilder
                 index: 8, // Arbitrary index, just copied from what Roslyn does here
                 propertyType: conditionalWeakTableType,
                 interopReferences: interopReferences,
-                module: module,
                 backingField: out FieldDefinition vectorChangedTableField,
                 factoryMethod: out MethodDefinition makeVectorChangedMethod,
                 getAccessorMethod: out MethodDefinition get_VectorChangedTableMethod,
@@ -436,14 +434,12 @@ internal partial class InteropTypeDefinitionBuilder
                 vectorType: vectorType,
                 get_VectorChangedTableMethod: get_VectorChangedTableMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             MethodDefinition remove_VectorChangedMethod = InteropMethodDefinitionFactory.IObservableVector1Impl.remove_VectorChanged(
                 vectorType: vectorType,
                 get_VectorChangedTableMethod: get_VectorChangedTableMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

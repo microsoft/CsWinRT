@@ -29,7 +29,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="getAtMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>GetAt</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
@@ -37,8 +36,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyListType,
             MemberReference getAtMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
@@ -50,10 +48,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetAt"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -63,7 +61,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(readOnlyListType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -138,15 +136,13 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="sizeMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>get_Size</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
         public static MethodDefinition get_Size(
             GenericInstanceTypeSignature readOnlyListType,
             MemberReference sizeMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'get_Size' method as follows:
             //
@@ -156,10 +152,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "get_Size"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -168,7 +164,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(readOnlyListType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -236,7 +232,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="indexOfMethod">The adapter method to invoke on <paramref name="readOnlyListType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>IndexOf</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
@@ -244,8 +239,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyListType,
             MemberReference indexOfMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
@@ -257,12 +251,12 @@ internal partial class InteropMethodDefinitionFactory
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         elementType.GetAbiType(interopReferences),
-                        module.CorLibTypeFactory.UInt32.MakePointerType(),
-                        module.CorLibTypeFactory.Boolean.MakePointerType()]))
+                        interopReferences.UInt32.MakePointerType(),
+                        interopReferences.Boolean.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -271,7 +265,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(readOnlyListType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
@@ -374,7 +368,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="getManyMethod">The adapter method to invoke on <paramref name="readOnlyListType"/> (if <see langword="null"/>, will be automatically selected).</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>GetMany</c> method for <see cref="System.Collections.Generic.IList{T}"/> interfaces.
         /// </remarks>
@@ -382,8 +375,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyListType,
             IMethodDescriptor? getManyMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
@@ -420,13 +412,13 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+                        interopReferences.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -443,7 +435,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if either pointer argument is 'null'

@@ -59,8 +59,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.BlittableValueType(
                     arrayType: arrayType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -69,16 +68,14 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.KeyValuePair(
                     arrayType: arrayType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 module.TopLevelTypes.Add(elementMarshallerType);
 
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.KeyValuePair(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -87,16 +84,14 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ManagedValueType(
                     arrayType: arrayType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 module.TopLevelTypes.Add(elementMarshallerType);
 
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ManagedValueType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -105,16 +100,14 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.UnmanagedValueType(
                     arrayType: arrayType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 module.TopLevelTypes.Add(elementMarshallerType);
 
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.UnmanagedValueType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -122,8 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Object(
                     arrayType: arrayType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -131,8 +123,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.String(
                     arrayType: arrayType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -140,8 +131,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Type(
                     arrayType: arrayType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -149,8 +139,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Exception(
                     arrayType: arrayType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -159,16 +148,14 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ReferenceType(
                     arrayType: arrayType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 module.TopLevelTypes.Add(elementMarshallerType);
 
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ReferenceType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
             }
@@ -194,7 +181,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeArrayComWrappersCallback) }
             };
@@ -210,8 +197,8 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.Array.ToReferenceTypeSignature(),
                     parameterTypes: [
-                        module.CorLibTypeFactory.UInt32,
-                        module.CorLibTypeFactory.Void.MakePointerType()]))
+                        interopReferences.UInt32,
+                        interopReferences.Void.MakePointerType()]))
             {
                 CilInstructions =
                 {
@@ -253,10 +240,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "get_Value"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32.MakePointerType(),
                         arrayType.BaseType.GetAbiType(interopReferences).MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -272,7 +259,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Declare 2 local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Value' method
@@ -438,7 +425,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
 
@@ -454,8 +443,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetOrCreateComInterfaceForObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
-                    parameterTypes: [module.CorLibTypeFactory.Object]))
+                    returnType: interopReferences.Void.MakePointerType(),
+                    parameterTypes: [interopReferences.Object]))
             {
                 CilInstructions =
                 {
@@ -476,7 +465,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.ComInterfaceEntry.MakePointerType(),
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                    parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
                 CilInstructions =
@@ -503,9 +492,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Object,
+                    returnType: interopReferences.Object,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],

@@ -466,7 +466,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: "WindowsRuntime.Interop"u8,
             name: "WindowsRuntimeTypeHierarchyData"u8,
             attributes: TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(windowsRuntimeTypeHierarchyDataType);
 
@@ -564,8 +564,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             name: "IsLengthInRange"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Boolean,
-                parameterTypes: [module.CorLibTypeFactory.Int32]))
+                returnType: interopReferences.Boolean,
+                parameterTypes: [interopReferences.Int32]))
         {
             IsAggressiveInlining = true,
             CilInstructions =
