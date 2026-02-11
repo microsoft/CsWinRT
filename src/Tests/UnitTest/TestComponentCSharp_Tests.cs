@@ -25,6 +25,7 @@ using Microsoft.UI.Xaml.Interop;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using TestComponentCSharp;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Enumeration.Pnp;
@@ -90,6 +91,20 @@ namespace UnitTest
         public override bool SupportsDiscoveryEnumeration() => true;
     }
 
+    internal static class Helper
+    {
+        public static string JITorAOT()
+        {
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                return "AOT-style runtime: dynamic code NOT supported (no JIT for dynamic code).";
+            }
+
+            return RuntimeFeature.IsDynamicCodeCompiled
+                ? "JIT-capable runtime: dynamic code supported AND compiled."
+                : "Dynamic code supported but NOT compiled (likely interpreted).";
+        }
+    }
 
     public delegate void DelegateTestCSharp<T>();
 
@@ -114,6 +129,12 @@ namespace UnitTest
             E value;
         }
 
+
+        [Fact]
+        public void TestRunningInAOT()
+        {
+            Assert.Equal("AOT-style runtime: dynamic code NOT supported (no JIT for dynamic code).", Helper.JITorAOT());
+        }
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]

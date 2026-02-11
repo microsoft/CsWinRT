@@ -33,7 +33,8 @@
     <PackageVersion Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.10.1" />
-    <PackageVersion Include="MSTest.TestFramework" Version="3.10.1" />
+    <PackageVersion Include="MSTest.TestFramework" Version="3.2.2" />
+    <PackageVersion Include="MSTest.Analyzers" Version="3.2.2" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NUnit" Version="3.12.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
