@@ -104,7 +104,9 @@ internal static partial class InteropTypeDefinitionBuilder
         module.TopLevelTypes.Add(nativeObjectType);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(
+            corLibTypeFactory: interopReferences.CorLibTypeFactory,
+            parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
 
         nativeObjectType.Methods.Add(ctor);
 
@@ -273,7 +275,7 @@ internal static partial class InteropTypeDefinitionBuilder
         module.TopLevelTypes.Add(marshallerType);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(interopReferences.CorLibTypeFactory);
 
         marshallerType.Methods.Add(ctor);
 

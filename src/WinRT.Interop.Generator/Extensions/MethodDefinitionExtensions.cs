@@ -19,6 +19,35 @@ internal static class MethodDefinitionExtensions
 {
     extension(MethodDefinition method)
     {
+#pragma warning disable // TODO: remove this method when available in AsmResolver (see: https://github.com/Washi1337/AsmResolver/pull/712)
+        /// <summary>
+        /// Creates a new public constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// </summary>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
+        /// <param name="parameterTypes">An ordered list of types the parameters of the constructor should have.</param>
+        /// <returns>The constructor.</returns>
+        /// <remarks>
+        /// The resulting method's body will consist of a single <c>ret</c> instruction, and does not contain a call to
+        /// any of the declaring type's base classes. For an idiomatic .NET binary, this should be added.
+        /// </remarks>
+        public static MethodDefinition CreateConstructor(CorLibTypeFactory corLibTypeFactory, params TypeSignature[] parameterTypes)
+        {
+            var ctor = new MethodDefinition(".ctor",
+                MethodAttributes.Public
+                | MethodAttributes.SpecialName
+                | MethodAttributes.RuntimeSpecialName,
+                MethodSignature.CreateInstance(corLibTypeFactory.Void, parameterTypes));
+
+            for (int i = 0; i < parameterTypes.Length; i++)
+                ctor.ParameterDefinitions.Add(new ParameterDefinition(null));
+
+            ctor.CilMethodBody = new CilMethodBody();
+            ctor.CilMethodBody.Instructions.Add(CilOpCodes.Ret);
+
+            return ctor;
+        }
+#pragma warning restore
+
         /// <summary>
         /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
         /// </summary>

@@ -18,9 +18,8 @@ internal partial class WellKnownTypeDefinitionFactory
     /// Creates the <c>IgnoresAccessChecksToAttribute</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IgnoresAccessChecksToAttribute</c> type.</returns>
-    public static TypeDefinition IgnoresAccessChecksToAttribute(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IgnoresAccessChecksToAttribute(InteropReferences interopReferences)
     {
         // We're declaring a 'public sealed class' type
         TypeDefinition IgnoresAccessChecksToType = new(
@@ -38,7 +37,9 @@ internal partial class WellKnownTypeDefinitionFactory
         IgnoresAccessChecksToType.Fields.Add(assemblyNameField);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.String);
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(
+            corLibTypeFactory: interopReferences.CorLibTypeFactory,
+            parameterTypes: [interopReferences.String]);
 
         IgnoresAccessChecksToType.Methods.Add(ctor);
 

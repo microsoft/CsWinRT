@@ -175,7 +175,7 @@ internal partial class InteropTypeDefinitionBuilder
             //
             // All the actual initialization logic is done in the base 'EventSource<T>' type.
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
-                module: module,
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     interopReferences.Int32]);
