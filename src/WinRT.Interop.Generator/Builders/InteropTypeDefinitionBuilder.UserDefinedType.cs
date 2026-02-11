@@ -68,7 +68,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                module: module,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             // Add the built-in native interfaces at the end

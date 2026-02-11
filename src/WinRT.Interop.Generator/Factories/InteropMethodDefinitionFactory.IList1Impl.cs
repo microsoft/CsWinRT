@@ -51,7 +51,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -200,7 +200,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -285,7 +285,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         elementType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -374,7 +374,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -454,7 +454,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -589,7 +589,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.UInt32,
                         elementAbiType.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -655,7 +655,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Mul },
                     { Conv_I },
                     { Add },
-                    { CilInstruction.CreateLdind(elementAbiType, module) },
+                    { CilInstruction.CreateLdind(elementAbiType) },
                     { nop_convertToManaged },
                     { Callvirt, interopReferences.ICollection1Add(elementType) },
 
@@ -740,7 +740,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:

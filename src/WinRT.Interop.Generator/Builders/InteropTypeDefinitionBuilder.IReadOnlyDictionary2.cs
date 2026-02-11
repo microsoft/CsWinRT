@@ -70,8 +70,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
                 keyType: keyType,
                 valueType: module.CorLibTypeFactory.Void,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Go through the lookup so that we can reuse the vtable later
             vftblType = emitState.GetOrAddIMapView2VftblType(keyType, newVftblType);
@@ -434,8 +433,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: readOnlyDictionaryType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("Item"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -526,8 +524,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: readOnlyDictionaryType,
                 implementationMethod: containsKeyMethod,
                 forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("ContainsKey"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'TryGetValue' method
             MethodDefinition tryGetValueMethod = new(
@@ -548,8 +545,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: readOnlyDictionaryType,
                 implementationMethod: tryGetValueMethod,
                 forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("TryGetValue"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>

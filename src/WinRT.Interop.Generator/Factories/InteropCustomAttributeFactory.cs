@@ -59,10 +59,9 @@ internal static class InteropCustomAttributeFactory
     /// Creates a new custom attribute value for <see cref="UnmanagedCallersOnlyAttribute"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     /// <remarks>The attribute will specify the <see cref="CallConvMemberFunction"/> calling convention.</remarks>
-    public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences, ModuleDefinition module)
+    public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences)
     {
         // Get the 'Type[]' signature and reuse it (we need it for both the argument and the element)
         TypeSignature typeArraySignature = interopReferences.Type.MakeSzArrayType();
@@ -85,9 +84,8 @@ internal static class InteropCustomAttributeFactory
     /// Creates a new custom attribute value for <see cref="DisableRuntimeMarshalling"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
-    public static CustomAttribute DisableRuntimeMarshalling(InteropReferences interopReferences, ModuleDefinition module)
+    public static CustomAttribute DisableRuntimeMarshalling(InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -175,14 +173,12 @@ internal static class InteropCustomAttributeFactory
     /// <param name="target"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='target']/node()"/></param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute TypeMapWindowsRuntimeComWrappersTypeMapGroup(
         string value,
         TypeSignature target,
         TypeSignature trimTarget,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -190,7 +186,7 @@ internal static class InteropCustomAttributeFactory
         return new(interopReferences.TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
+                    argumentType: interopReferences.CorLibTypeFactory.String,
                     value: value),
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.ToReferenceTypeSignature(),
@@ -206,13 +202,11 @@ internal static class InteropCustomAttributeFactory
     /// <param name="source"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='source']/node()"/></param>
     /// <param name="proxy"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='proxy']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
         TypeSignature source,
         TypeSignature proxy,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -234,14 +228,12 @@ internal static class InteropCustomAttributeFactory
     /// <param name="target"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='target']/node()"/></param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute TypeMapWindowsRuntimeMetadataTypeMapGroup(
         string value,
         TypeSignature target,
         TypeSignature trimTarget,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -249,7 +241,7 @@ internal static class InteropCustomAttributeFactory
         return new(interopReferences.TypeMapAttributeWindowsRuntimeMetadataTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
+                    argumentType: interopReferences.CorLibTypeFactory.String,
                     value: value),
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.ToReferenceTypeSignature(),
@@ -265,13 +257,11 @@ internal static class InteropCustomAttributeFactory
     /// <param name="source"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='source']/node()"/></param>
     /// <param name="proxy"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='proxy']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute TypeMapAssociationWindowsRuntimeMetadataTypeMapGroup(
         TypeSignature source,
         TypeSignature proxy,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -292,13 +282,11 @@ internal static class InteropCustomAttributeFactory
     /// <param name="source"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='source']/node()"/></param>
     /// <param name="proxy"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='proxy']/node()"/></param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute TypeMapAssociationDynamicInterfaceCastableImplementationTypeMapGroup(
         TypeSignature source,
         TypeSignature proxy,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //

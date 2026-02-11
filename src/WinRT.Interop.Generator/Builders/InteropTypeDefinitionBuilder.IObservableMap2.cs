@@ -25,14 +25,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the cached factory type for the property for the event args for the map.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="factoryType">The resulting factory type.</param>
         public static void EventSourceFactory(
             GenericInstanceTypeSignature mapType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -119,17 +117,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
         /// <param name="eventSourceFactoryType">The type returned by <see cref="EventSourceFactory"/>.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="methodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature mapType,
             TypeDefinition eventSourceFactoryType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition methodsType)
         {
@@ -369,8 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
                     handlerType: handlerType,
                     eventMethod: mapMethodsType.GetMethod("MapChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'IObservableMap<K, V>.MapChanged' add accessor method
@@ -391,8 +384,7 @@ internal partial class InteropTypeDefinitionBuilder
                     handlerType: handlerType,
                     eventMethod: mapMethodsType.GetMethod("MapChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'IObservableMap<K, V>.MapChanged' remove accessor method

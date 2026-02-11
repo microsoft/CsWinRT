@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="methodName">The name of the get method.</param>
         /// <param name="asyncInfoType">The type of async info interface.</param>
-        /// <param name="handlerType">The type of the handler delegate.</param>
         /// <param name="get_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToUnmanagedMethod">The method to use to convert the handler to unmanaged.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -35,7 +34,6 @@ internal partial class InteropMethodDefinitionFactory
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
-            TypeSignature handlerType,
             MemberReference get_HandlerMethod,
             MethodDefinition convertToUnmanagedMethod,
             InteropReferences interopReferences,
@@ -54,7 +52,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
@@ -129,7 +127,6 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="methodName">The name of the get method.</param>
         /// <param name="asyncInfoType">The type of async info interface.</param>
-        /// <param name="handlerType">The type of the handler delegate.</param>
         /// <param name="set_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToManagedMethod">The method to use to convert the handler to a managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -137,7 +134,6 @@ internal partial class InteropMethodDefinitionFactory
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
-            TypeSignature handlerType,
             MemberReference set_HandlerMethod,
             MethodDefinition convertToManagedMethod,
             InteropReferences interopReferences,
@@ -156,7 +152,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps

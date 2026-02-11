@@ -35,15 +35,13 @@ internal static partial class InteropMethodRewriter
         /// <param name="parameterIndex">The index of the parameter to marshal.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
             CilInstruction marker,
             int parameterIndex,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)

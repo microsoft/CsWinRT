@@ -20,9 +20,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IUnknownVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IUnknownVftbl(InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
@@ -52,9 +51,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IInspectableVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IInspectableVftbl(InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
@@ -95,21 +93,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as sender and args types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition DelegateVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateVftbl(InteropReferences interopReferences)
     {
         return DelegateVftbl(
             ns: null,
             name: "<DelegateVftbl>"u8,
             senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -120,15 +116,13 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="senderType">The sender type for the vtable type.</param>
     /// <param name="argsType">The args type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateVftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature senderType,
         TypeSignature argsType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
@@ -166,9 +160,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IReference&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateReferenceVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateReferenceVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -192,10 +185,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReference<T>' looks like this:
         //
@@ -221,9 +214,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -262,9 +254,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerator{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IEnumerator1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IEnumerator1Vftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -318,9 +309,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerable{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IEnumerable1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IEnumerable1Vftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -365,20 +355,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IReadOnlyList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IReadOnlyList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as element type, so it can be shared across reference types.
     /// </remarks>
-    public static TypeDefinition IReadOnlyList1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IReadOnlyList1Vftbl(InteropReferences interopReferences)
     {
         return IReadOnlyList1Vftbl(
             ns: null,
             name: "<IReadOnlyList1Vftbl>"u8,
             elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -388,14 +376,12 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="name">The type name.</param>
     /// <param name="elementType">The element type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IReadOnlyList1Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature elementType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
@@ -449,20 +435,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IList{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as element type, so it can be shared across reference types.
     /// </remarks>
-    public static TypeDefinition IList1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IList1Vftbl(InteropReferences interopReferences)
     {
         return IList1Vftbl(
             ns: null,
             name: "<IList1Vftbl>"u8,
             elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -472,14 +456,12 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="name">The type name.</param>
     /// <param name="elementType">The element type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IList1Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature elementType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
@@ -558,21 +540,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IReadOnlyDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IReadOnlyDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as key and value types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition IReadOnlyDictionary2Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IReadOnlyDictionary2Vftbl(InteropReferences interopReferences)
     {
         return IReadOnlyDictionary2Vftbl(
             ns: null,
             name: "<IReadOnlyDictionary2Vftbl>"u8,
             keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -583,15 +563,13 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="keyType">The key type for the vtable type.</param>
     /// <param name="valueType">The value type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IReadOnlyDictionary2Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature keyType,
         TypeSignature valueType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
@@ -645,21 +623,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as key and value types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition IDictionary2Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IDictionary2Vftbl(InteropReferences interopReferences)
     {
         return IDictionary2Vftbl(
             ns: null,
             name: "<IDictionary2Vftbl>"u8,
             keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -670,15 +646,13 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="keyType">The key type for the vtable type.</param>
     /// <param name="valueType">The value type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IDictionary2Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature keyType,
         TypeSignature valueType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
@@ -741,9 +715,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;K, V&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IKeyValuePairVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -767,10 +740,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
 
         // The vtable layout for 'IKeyValuePair`2<Key, Value>' looks like this:
         //
@@ -798,9 +771,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -835,9 +807,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IMapChangedEventArgs`1&lt;K&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IMapChangedEventArgsVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IMapChangedEventArgsVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -885,9 +856,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IObservableVector`1&lt;T&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IObservableVectorVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IObservableVectorVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -935,9 +905,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IObservableMap`2&lt;K, V&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IObservableMapVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IObservableMapVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -985,9 +954,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncActionWithProgress`1&lt;TProgress&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncActionWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncActionWithProgressVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -1054,9 +1022,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncOperation`1&lt;TResult&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncOperationVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncOperationVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -1109,9 +1076,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncOperationWithProgress`2&lt;TResult, TProgress&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncOperationWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncOperationWithProgressVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -1229,9 +1195,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -1276,9 +1241,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition SzArrayInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition SzArrayInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,

@@ -242,8 +242,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: get_CompletedMethod,
                 forwardedMethod: completedMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Completed' getter method
             MethodDefinition set_CompletedMethod = new(
@@ -263,8 +262,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: set_CompletedMethod,
                 forwardedMethod: completedMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Completed' property
             PropertyDefinition completedProperty = new(
@@ -294,8 +292,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: operationType,
                 implementationMethod: getResultsMethod,
                 forwardedMethod: operationMethodsType.GetMethod("GetResults"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>
@@ -328,7 +325,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
                 methodName: "get_Completed"u8,
                 asyncInfoType: operationType,
-                handlerType: asyncOperationCompletedHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncOperation1get_Completed(resultType),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
                 interopReferences: interopReferences,
@@ -342,7 +338,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
                 methodName: "set_Completed"u8,
                 asyncInfoType: operationType,
-                handlerType: asyncOperationCompletedHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncOperation1set_Completed(resultType),
                 convertToManagedMethod: convertToManagedMethod,
                 interopReferences: interopReferences,

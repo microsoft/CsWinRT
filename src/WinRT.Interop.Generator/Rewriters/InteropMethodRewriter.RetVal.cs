@@ -31,7 +31,6 @@ internal partial class InteropMethodRewriter
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// <para>
         /// This method assumes the evaluation stack already has two values on its top:
@@ -49,8 +48,7 @@ internal partial class InteropMethodRewriter
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -71,7 +69,7 @@ internal partial class InteropMethodRewriter
                 // However, we must use the correct indirect store instruction for primitive types.
                 if (retValType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType, module)]);
+                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType)]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
@@ -80,8 +78,7 @@ internal partial class InteropMethodRewriter
                         body: body,
                         marker: marker,
                         marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (retValType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -92,8 +89,7 @@ internal partial class InteropMethodRewriter
                         body: body,
                         marker: marker,
                         marshallerMethod: marshallerType.BoxToUnmanaged(),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else
                 {
@@ -140,8 +136,7 @@ internal partial class InteropMethodRewriter
                     body: body,
                     marker: marker,
                     marshallerMethod: marshallerType.ConvertToUnmanaged(),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
@@ -152,8 +147,7 @@ internal partial class InteropMethodRewriter
             CilMethodBody body,
             CilInstruction marker,
             IMethodDefOrRef marshallerMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // We need a new local for the 'WindowsRuntimeObjectReferenceValue' returned from the
             // marshalling methods that the code will invoke. This is because we are going to call

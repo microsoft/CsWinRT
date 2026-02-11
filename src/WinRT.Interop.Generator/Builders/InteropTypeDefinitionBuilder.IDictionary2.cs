@@ -57,7 +57,6 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
-                module: module,
                 out MethodDefinition get_IidMethod2,
                 out PropertyDefinition iidProperty);
 
@@ -109,8 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(vftblType);
 
@@ -145,8 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Go through the lookup so that we can reuse the vtable later
                 vftblType = emitState.GetOrAddIMap2VftblType(keyType, valueType, newVftblType);
@@ -754,8 +751,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: itemMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Item' setter method
             MethodDefinition set_ItemMethod = new(
@@ -775,8 +771,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: set_ItemMethod,
                 forwardedMethod: itemMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -864,8 +859,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: containsKeyMethod,
                 forwardedMethod: dictionaryMethodsType.GetMethod("ContainsKey"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'TryGetValue' method
             MethodDefinition tryGetValueMethod = new(
@@ -886,8 +880,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: tryGetValueMethod,
                 forwardedMethod: dictionaryMethodsType.GetMethod("TryGetValue"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // There's two 'Add' and 'Remove' overloads, one from 'IDictionary<,>' and one from 'ICollection<>'.
             // They are always emitted in this relative order in the "Methods" type, so get them in advance here.
@@ -912,8 +905,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: addMethod,
                 forwardedMethod: addMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Remove' method
             MethodDefinition removeMethod = new(
@@ -933,8 +925,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: removeMethod,
                 forwardedMethod: removeMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>

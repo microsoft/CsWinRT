@@ -58,7 +58,6 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
-                module: module,
                 out MethodDefinition get_IidMethod2,
                 out PropertyDefinition iidProperty);
 
@@ -100,8 +99,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(listType),
                 name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             module.TopLevelTypes.Add(vftblType);
         }
@@ -620,7 +618,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
@@ -628,7 +625,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature listType,
             TypeDefinition listMethodsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
@@ -679,8 +675,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: itemMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Item' getter method
             MethodDefinition set_ItemMethod = new(
@@ -702,8 +697,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: set_ItemMethod,
                 forwardedMethod: itemMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -733,8 +727,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: indexOfMethod,
                 forwardedMethod: listMethodsType.GetMethod("IndexOf"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Insert' method
             MethodDefinition insertMethod = new(
@@ -756,8 +749,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: insertMethod,
                 forwardedMethod: listMethodsType.GetMethod("Insert"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'RemoveAt' method
             MethodDefinition removeAtMethod = new(
@@ -775,8 +767,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: listType,
                 implementationMethod: removeAtMethod,
                 forwardedMethod: listMethodsType.GetMethod("RemoveAt"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Skip the 'ICollection<T>' methods if the element type is 'KeyValuePair<TKey, TValue>'.
             // Same logic as for 'IReadOnlyList<T>' types, see additional notes there for context.
@@ -798,8 +789,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: get_CountMethod,
                     forwardedMethod: listMethodsType.GetMethod("Count"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Count' property
                 PropertyDefinition countProperty = new(
@@ -856,8 +846,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: addMethod,
                     forwardedMethod: listMethodsType.GetMethod("Add"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Clear' method
                 MethodDefinition clearMethod = new(
@@ -875,8 +864,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: clearMethod,
                     forwardedMethod: listMethodsType.GetMethod("Clear"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Contains' method
                 MethodDefinition containsMethod = new(
@@ -894,8 +882,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: containsMethod,
                     forwardedMethod: listMethodsType.GetMethod("Contains"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'CopyTo' method
                 MethodDefinition copyToMethod = new(
@@ -917,8 +904,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: copyToMethod,
                     forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Remove' method
                 MethodDefinition removeMethod = new(
@@ -936,8 +922,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: listType,
                     implementationMethod: removeMethod,
                     forwardedMethod: listMethodsType.GetMethod("Remove"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
