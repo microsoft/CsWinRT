@@ -2432,7 +2432,6 @@ internal partial class InteropGenerator
                     userDefinedType: typeSignature,
                     interfaceEntriesType: interfaceEntriesType,
                     interfaceEntriesImplType: interfaceEntriesImplType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
