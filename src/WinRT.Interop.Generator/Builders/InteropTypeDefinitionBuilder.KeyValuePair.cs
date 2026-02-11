@@ -78,7 +78,6 @@ internal partial class InteropTypeDefinitionBuilder
             if (!methodsType.TryGetMethod(get_KeyMethodName, out keyAccessorMethod!))
             {
                 keyAccessorMethod = InteropMethodDefinitionFactory.KeyValuePairMethods.get_KeyOrValue(
-                    keyValuePairType: keyValuePairType,
                     keyOrValueType: keyType,
                     vftblType: interopDefinitions.IKeyValuePairVftbl,
                     vftblMethodName: "get_Key"u8,
@@ -94,7 +93,6 @@ internal partial class InteropTypeDefinitionBuilder
             if (!methodsType.TryGetMethod(get_ValueMethodName, out valueAccessorMethod!))
             {
                 valueAccessorMethod = InteropMethodDefinitionFactory.KeyValuePairMethods.get_KeyOrValue(
-                    keyValuePairType: keyValuePairType,
                     keyOrValueType: valueType,
                     vftblType: interopDefinitions.IKeyValuePairVftbl,
                     vftblMethodName: "get_Value"u8,

@@ -26,16 +26,14 @@ internal partial class InteropMethodDefinitionFactory
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Key</c> or <c>get_Value</c> accessor method for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
-        /// <param name="keyValuePairType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="keyOrValueType">The result type to return (must be either the key or value type from <paramref name="keyValuePairType"/>).</param>
-        /// <param name="vftblType">The vtable type for <paramref name="keyValuePairType"/>.</param>
+        /// <param name="keyOrValueType">The result type to return.</param>
+        /// <param name="vftblType">The vtable type for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="vftblMethodName">The name of the vtable method to invoke.</param>
         /// <param name="accessorMethodName">The name of the accessor method to create.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_KeyOrValue(
-            GenericInstanceTypeSignature keyValuePairType,
             TypeSignature keyOrValueType,
             TypeDefinition vftblType,
             Utf8String vftblMethodName,
