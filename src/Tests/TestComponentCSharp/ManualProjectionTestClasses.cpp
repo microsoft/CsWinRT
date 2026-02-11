@@ -6,10 +6,23 @@
 #include "CustomBindableObservableVectorTest.g.cpp"
 #include "CustomIteratorTest.g.cpp"
 #include "SetTypeProperties.g.cpp"
+#include "SealedDelegateClassTest.g.cpp"
+#include "StaticDelegateClassTest.g.cpp"
 #include <winrt/Windows.UI.Xaml.Interop.h>
 
 namespace winrt::TestComponentCSharp::implementation
 {
+    void StaticDelegateClassTest::Run(EventHandler0 e)
+    {
+        e();
+    }
+
+
+    void SealedDelegateClassTest::Run()
+    {
+        Windows::Foundation::PropertyValue::CreateInt32(27861);
+    }
+    
     SetTypeProperties::SetTypeProperties()
     {
 

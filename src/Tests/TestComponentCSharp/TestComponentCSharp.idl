@@ -686,6 +686,18 @@ And this is another one"
         void f();
     }
 
+    static runtimeclass StaticDelegateClassTest
+    {
+        static void Run(EventHandler0 e);
+    }
+
+    [default_interface]
+    runtimeclass SealedDelegateClassTest
+    {
+        SealedDelegateClassTest(); 
+        void Run();
+    }
+
     [default_interface]
     runtimeclass CustomEquals
     {

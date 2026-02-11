@@ -93,6 +93,12 @@ namespace UnitTest
             E value;
         }
 
+        [Fact]
+        public void TestDelegateCallBack()
+        {
+            SealedDelegateClassTest a = new SealedDelegateClassTest();
+            StaticDelegateClassTest.Run(a.Run);
+        }
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]
