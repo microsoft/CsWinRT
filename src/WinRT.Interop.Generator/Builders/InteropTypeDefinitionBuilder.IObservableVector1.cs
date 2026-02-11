@@ -60,7 +60,7 @@ internal partial class InteropTypeDefinitionBuilder
             factoryType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
 
             // Add the parameterless constructor
-            factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(module));
+            factoryType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
             // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
             TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);

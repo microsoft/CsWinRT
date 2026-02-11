@@ -115,7 +115,9 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
 

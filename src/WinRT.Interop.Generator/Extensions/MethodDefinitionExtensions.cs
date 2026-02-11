@@ -22,45 +22,40 @@ internal static class MethodDefinitionExtensions
         /// <summary>
         /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
         /// </summary>
-        /// <param name="module">The target module the method will be added to.</param>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
         /// <returns>The constructor.</returns>
-        public static MethodDefinition CreateDefaultConstructor(ModuleDefinition module)
+        public static MethodDefinition CreateDefaultConstructor(CorLibTypeFactory corLibTypeFactory)
         {
             // We should call the 'object' constructor, for correctness
-            MemberReference object_ctor = module.CorLibTypeFactory.CorLibScope
+            MemberReference object_ctor = corLibTypeFactory.CorLibScope
                 .CreateTypeReference("System"u8, "Object"u8)
-                .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+                .CreateMemberReference(".ctor"u8, MethodSignature.CreateInstance(corLibTypeFactory.Void));
 
             // Create the parameterless constructor
-            return new(
-                name: ".ctor"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void))
-            {
-                CilInstructions =
-                {
-                    { Ldarg_0 },
-                    { Call, object_ctor },
-                    { Ret }
-                }
-            };
+            return CreateDefaultConstructor(corLibTypeFactory, object_ctor);
         }
 
         /// <summary>
         /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
         /// </summary>
-        /// <param name="module">The target module the method will be added to.</param>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
         /// <param name="constructorMethod">The <see cref="MemberReference"/> for the base constructor to invoke.</param>
         /// <returns>The constructor.</returns>
-        public static MethodDefinition CreateDefaultConstructor(ModuleDefinition module, MemberReference constructorMethod)
+        public static MethodDefinition CreateDefaultConstructor(CorLibTypeFactory corLibTypeFactory, MemberReference constructorMethod)
         {
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
-
-            // Emit a call to the base constructor ('CreateConstructor' already adds the 'ret' instruction)
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, constructorMethod);
-
-            return ctor;
+            // This is the same as the overload above, except it calls the provided constructor instead of the 'object' constructor
+            return new(
+                name: ".ctor"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+                MethodSignature.CreateInstance(corLibTypeFactory.Void))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, constructorMethod },
+                    { Ret }
+                }
+            };
         }
 
         /// <inheritdoc cref="CilMethodBody.Instructions"/>

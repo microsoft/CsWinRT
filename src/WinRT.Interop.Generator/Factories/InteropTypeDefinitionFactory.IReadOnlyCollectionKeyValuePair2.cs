@@ -50,7 +50,9 @@ internal partial class InteropTypeDefinitionFactory
             module.TopLevelTypes.Add(forwarderAttributeType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.DynamicInterfaceCastableForwarderAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.DynamicInterfaceCastableForwarderAttribute_ctor);
 
             forwarderAttributeType.Methods.Add(ctor);
 
