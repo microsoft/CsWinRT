@@ -17,7 +17,6 @@ namespace winrt::TestComponentCSharp::implementation
         e();
     }
 
-
     void SealedDelegateClassTest::Run()
     {
         Windows::Foundation::PropertyValue::CreateInt32(27861);
@@ -27,7 +26,6 @@ namespace winrt::TestComponentCSharp::implementation
     {
 
     }
-
 
     winrt::hstring SetTypeProperties::GetPropertyInfoTestType(
         IType const& testObject,

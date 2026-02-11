@@ -94,8 +94,9 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestDelegateCallBack()
+        public void TestDelegateCallBackOnSealedType()
         {
+            // In CSWinRT 2.0, this scenario would throw an exception but this is fixed in 3.0
             SealedDelegateClassTest a = new SealedDelegateClassTest();
             StaticDelegateClassTest.Run(a.Run);
         }
