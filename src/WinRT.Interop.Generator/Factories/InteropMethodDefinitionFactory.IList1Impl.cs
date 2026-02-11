@@ -29,12 +29,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetView(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -46,10 +44,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetView"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -58,7 +56,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -132,12 +130,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition SetAt(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -146,8 +142,7 @@ internal partial class InteropMethodDefinitionFactory
                 adapterMethod: interopReferences.IListAdapter1SetAt(elementType),
                 listType: listType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -156,12 +151,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition InsertAt(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -170,8 +163,7 @@ internal partial class InteropMethodDefinitionFactory
                 adapterMethod: interopReferences.IListAdapter1InsertAt(elementType),
                 listType: listType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -179,11 +171,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition RemoveAt(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -195,10 +185,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "RemoveAt"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -207,7 +197,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
@@ -263,12 +253,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Append(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -280,9 +268,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Append"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         elementType.GetAbiType(interopReferences)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -292,7 +280,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
@@ -355,11 +343,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition RemoveAtEnd(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -371,8 +357,8 @@ internal partial class InteropMethodDefinitionFactory
                 name: "RemoveAtEnd"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -381,7 +367,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
@@ -435,11 +421,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Clear(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -451,8 +435,8 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Clear"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -461,7 +445,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
@@ -516,12 +500,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -555,8 +537,7 @@ internal partial class InteropMethodDefinitionFactory
                 readOnlyListType: listType,
                 getManyMethod: getManyMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -565,12 +546,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition ReplaceAll(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -583,10 +562,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "ReplaceAll"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
                         elementAbiType.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -597,8 +576,8 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'uint' (for the 'i' loop variable)
             //   [2]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_i = new(module.CorLibTypeFactory.UInt32);
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_i = new(interopReferences.UInt32);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_2_nullCheck = new(Ldarg_2);
@@ -715,14 +694,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition SetAtOrInsertAt(
             Utf8String methodName,
             MemberReference adapterMethod,
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -734,10 +711,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -747,7 +724,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(listType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);

@@ -30,20 +30,17 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Key(
             GenericInstanceTypeSignature keyValuePairType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             return get_KeyOrValue(
                 keyValuePairType: keyValuePairType,
                 keyOrValueType: keyValuePairType.TypeArguments[0],
                 methodName: "get_Key"u8,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -52,20 +49,17 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Value(
             GenericInstanceTypeSignature keyValuePairType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             return get_KeyOrValue(
                 keyValuePairType: keyValuePairType,
                 keyOrValueType: keyValuePairType.TypeArguments[1],
                 methodName: "get_Value"u8,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -76,14 +70,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="methodName">The name of the method to generate.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition get_KeyOrValue(
             GenericInstanceTypeSignature keyValuePairType,
             TypeSignature keyOrValueType,
             Utf8String methodName,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Define the method as follows:
             //
@@ -93,9 +85,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         keyOrValueType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -113,7 +105,7 @@ internal partial class InteropMethodDefinitionFactory
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'KeyValuePair<,>' (the boxed object to get values from)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_keyValuePair = new(keyValuePairType);
 
             // Labels for jumps
@@ -141,7 +133,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(module.CorLibTypeFactory.Object) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(interopReferences.Object) },
                     { Unbox_Any, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Ldarg_1 },

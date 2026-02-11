@@ -18,9 +18,8 @@ internal partial class WellKnownTypeDefinitionFactory
     /// Creates the <c>IgnoresAccessChecksToAttribute</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IgnoresAccessChecksToAttribute</c> type.</returns>
-    public static TypeDefinition IgnoresAccessChecksToAttribute(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IgnoresAccessChecksToAttribute(InteropReferences interopReferences)
     {
         // We're declaring a 'public sealed class' type
         TypeDefinition IgnoresAccessChecksToType = new(
@@ -33,12 +32,14 @@ internal partial class WellKnownTypeDefinitionFactory
         FieldDefinition assemblyNameField = new(
             name: "_assemblyName"u8,
             attributes: FieldAttributes.Private | FieldAttributes.InitOnly,
-            fieldType: module.CorLibTypeFactory.String);
+            fieldType: interopReferences.String);
 
         IgnoresAccessChecksToType.Fields.Add(assemblyNameField);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, module.CorLibTypeFactory.String);
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(
+            corLibTypeFactory: interopReferences.CorLibTypeFactory,
+            parameterTypes: [interopReferences.String]);
 
         IgnoresAccessChecksToType.Methods.Add(ctor);
 
@@ -52,7 +53,7 @@ internal partial class WellKnownTypeDefinitionFactory
         MethodDefinition get_AssemblyNameMethod = new(
             name: "get_AssemblyName"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName,
-            signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.String));
+            signature: MethodSignature.CreateInstance(interopReferences.String));
 
         // Create the 'AssemblyName' property
         PropertyDefinition assemblyNameProperty = new(
@@ -81,8 +82,7 @@ internal partial class WellKnownTypeDefinitionFactory
         IgnoresAccessChecksToType.CustomAttributes.Add(InteropCustomAttributeFactory.AttributeUsage(
             attributeTargets: AttributeTargets.Assembly,
             allowMultiple: true,
-            interopReferences: interopReferences,
-            module: module));
+            interopReferences: interopReferences));
 
         return IgnoresAccessChecksToType;
     }

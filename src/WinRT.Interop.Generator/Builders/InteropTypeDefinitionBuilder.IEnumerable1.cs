@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface) }
             };
@@ -94,7 +94,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IIterableMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -131,8 +131,8 @@ internal partial class InteropTypeDefinitionBuilder
             //   [2]: 'void*' (the enumerator pointer that was retrieved)
             //   [3]: 'IEnumerator<<TYPE_ARGUMENT>>' (the marshalled enumerator)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_enumeratorPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
+            CilLocalVariable loc_2_enumeratorPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_3_enumerator = new(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType));
 
             // Jump labels
@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(enumerableMethodsType);
 
@@ -365,7 +365,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(enumerableType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(enumerableType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
@@ -438,8 +438,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition firstMethod = InteropMethodDefinitionFactory.IEnumerable1Impl.First(
                 enumerableType: enumerableType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>HasKey</c> method for <c>IMap&lt;K, V&gt;</c> interfaces.
         /// </remarks>
@@ -35,8 +34,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature keyAbiType = keyType.GetAbiType(interopReferences);
@@ -48,7 +46,7 @@ internal partial class InteropMethodDefinitionFactory
                 name: "HasKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -59,7 +57,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: 'bool' (for 'result')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_result = new(interopReferences.CorLibTypeFactory.Boolean);
 
             // Jump labels
@@ -147,7 +145,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="readOnlyDictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>Lookup</c> method for <c>IMap&lt;K, V&gt;</c> interfaces.
         /// </remarks>
@@ -155,8 +152,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
@@ -181,7 +177,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: <ABI_VALUE_TYPE> (for 'resultNative')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_resultNative = new(valueAbiType);
 
             // Jump labels

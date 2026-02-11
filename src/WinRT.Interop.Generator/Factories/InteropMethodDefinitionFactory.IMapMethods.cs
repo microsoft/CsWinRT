@@ -27,13 +27,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="dictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Insert(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
@@ -47,7 +45,7 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Insert"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType,
@@ -61,7 +59,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: 'bool' (for 'result')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_result = new(interopReferences.CorLibTypeFactory.Boolean);
 
             // Jump labels
@@ -162,13 +160,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="dictionaryType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Remove(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature keyAbiType = keyType.GetAbiType(interopReferences);
@@ -180,7 +176,7 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         keyType]))
@@ -190,7 +186,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);

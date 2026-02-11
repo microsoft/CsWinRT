@@ -28,11 +28,7 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition get_HasCurrent(
-            GenericInstanceTypeSignature enumeratorType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition get_HasCurrent(GenericInstanceTypeSignature enumeratorType, InteropReferences interopReferences)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -40,8 +36,7 @@ internal partial class InteropMethodDefinitionFactory
                 methodName: "get_HasCurrent"u8,
                 adapterMethod: interopReferences.IEnumeratorAdapter1get_HasCurrent(elementType),
                 enumeratorType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>
@@ -49,11 +44,7 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
-        public static MethodDefinition MoveNext(
-            GenericInstanceTypeSignature enumeratorType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+        public static MethodDefinition MoveNext(GenericInstanceTypeSignature enumeratorType, InteropReferences interopReferences)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -61,8 +52,7 @@ internal partial class InteropMethodDefinitionFactory
                 methodName: "MoveNext"u8,
                 adapterMethod: interopReferences.IEnumeratorAdapter1MoveNext(elementType),
                 enumeratorType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>
@@ -71,12 +61,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Current(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -88,9 +76,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "get_Current"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         elementType.GetAbiType(interopReferences).MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -108,7 +96,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -169,12 +157,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -211,12 +197,12 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType(),
-                        module.CorLibTypeFactory.UInt32.MakePointerType()]))
+                        interopReferences.UInt32.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -233,7 +219,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if either pointer argument is 'null'
@@ -295,13 +281,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="adapterMethod">The adapter method to forward the call to.</param>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition HasCurrentOrMoveNext(
             Utf8String methodName,
             MemberReference adapterMethod,
             GenericInstanceTypeSignature enumeratorType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -313,10 +297,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Boolean.MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Boolean.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -332,7 +316,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'

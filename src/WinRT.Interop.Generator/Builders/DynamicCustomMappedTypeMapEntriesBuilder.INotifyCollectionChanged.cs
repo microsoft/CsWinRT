@@ -42,7 +42,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
@@ -54,7 +54,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Collections.Specialized.INotifyCollectionChanged.add_CollectionChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -75,7 +75,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Collections.Specialized.INotifyCollectionChanged.remove_CollectionChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(

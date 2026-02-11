@@ -23,7 +23,6 @@ internal static class InteropMemberDefinitionFactory
     /// <param name="index">The index of the property (used for the factory method name).</param>
     /// <param name="propertyType">The type of the property.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="backingField">The resulting backing field.</param>
     /// <param name="factoryMethod">The resulting factory method.</param>
     /// <param name="getAccessorMethod">The resulting get accessor method.</param>
@@ -33,7 +32,6 @@ internal static class InteropMemberDefinitionFactory
         int index,
         TypeSignature propertyType,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         out FieldDefinition backingField,
         out MethodDefinition factoryMethod,
         out MethodDefinition getAccessorMethod,
@@ -59,7 +57,7 @@ internal static class InteropMemberDefinitionFactory
             {
                 // _ = Interlocked.CompareExchange(ref <BACKING_FIELD>, value: new(), comparand: null);
                 { Ldsflda, backingField },
-                { Newobj, propertyType.ToTypeDefOrRef().CreateConstructorReference(module.CorLibTypeFactory) },
+                { Newobj, propertyType.ToTypeDefOrRef().CreateConstructorReference(interopReferences.CorLibTypeFactory) },
                 { Ldnull },
                 { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(propertyType) },
                 { Pop },

@@ -27,13 +27,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = arrayType.BaseType;
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -50,8 +48,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -60,13 +57,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = arrayType.BaseType;
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -84,8 +79,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Rewriting labels
             CilInstruction nop_dispose = new(Nop);
@@ -96,7 +90,7 @@ internal partial class InteropTypeDefinitionFactory
             MethodDefinition disposeMethod = new(
                 name: "Dispose"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(module.CorLibTypeFactory.Void, elementAbiType))
+                signature: MethodSignature.CreateStatic(interopReferences.Void, elementAbiType))
             {
                 CilInstructions =
                 {
@@ -126,13 +120,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
             TypeSignature keyType = elementType.TypeArguments[0];
@@ -156,8 +148,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(keyType, valueType),
                 isValueType: isValueType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -166,13 +157,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             SzArrayTypeSignature arrayType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = arrayType.BaseType;
 
@@ -188,8 +177,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToManagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeArrayElementMarshallerConvertToManaged(elementType),
                 isValueType: false,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -202,7 +190,6 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="isValueType">Indicates whether the element marshaller type should be emitted as a value type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ElementMarshaller(
             SzArrayTypeSignature arrayType,
@@ -211,15 +198,14 @@ internal partial class InteropTypeDefinitionFactory
             MemberReference convertToManagedInterfaceMethod,
             bool isValueType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = arrayType.BaseType;
 
             // Select the attributes and base type depending on whether we want a value type or not
             (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
                 ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType)
-                : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, interopReferences.Object.ToTypeDefOrRef());
 
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
