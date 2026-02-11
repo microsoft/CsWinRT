@@ -34,14 +34,12 @@ internal partial class InteropMethodRewriter
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -68,14 +66,14 @@ internal partial class InteropMethodRewriter
             {
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.BoxToUnmanaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.BoxToUnmanaged()));
             }
             else
             {
                 // For any other types, we always just forward directly to 'ConvertToUnmanaged', without any other changes
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToUnmanaged()));
             }
         }
     }

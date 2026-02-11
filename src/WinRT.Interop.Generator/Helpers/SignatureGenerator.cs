@@ -67,7 +67,7 @@ internal static partial class SignatureGenerator
             ElementType.String => StringSignature,
             ElementType.Type => TypeSignature,
             ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
-            ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum => Enum(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
+            ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum => Enum(typeFullName, typeDefinition, interopReferences),
             ElementType.ValueType when typeDefinition.IsClass && type.IsTypeOfGuid(interopReferences) => GuidSignature,
             ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
             ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopReferences, useWindowsUIXamlProjections),

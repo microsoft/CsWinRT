@@ -47,7 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(argsMethodsType);
@@ -59,13 +59,13 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CollectionChange"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.CollectionChange.ToValueTypeSignature().Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.CollectionChange.ToValueTypeSignature(),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IMapChangedEventArgsMethodsCollectionChange.Import(module) },
+                    { Call, interopReferences.IMapChangedEventArgsMethodsCollectionChange },
                     { Ret }
                 }
             };
@@ -82,7 +82,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Key' method
             argsMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapChangedEventArgsMethodsImpl1Key(elementType).Import(module),
+                declaration: interopReferences.IMapChangedEventArgsMethodsImpl1Key(elementType),
                 method: keyMethod);
         }
 
@@ -197,10 +197,10 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     InteropCustomAttributeFactory.Guid(argsType, interopReferences, module, useWindowsUIXamlProjections)
                 },
-                Interfaces = { new InterfaceImplementation(argsType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(argsType.ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(interfaceImplType);
@@ -209,11 +209,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CollectionChangeMethod = new(
                 name: $"Windows.Foundation.Collections.IMapChangedEventArgs<{elementType.FullName}>.get_CollectionChange",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.CollectionChange.ToValueTypeSignature().Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.CollectionChange.ToValueTypeSignature()));
 
             // Add and implement the 'CollectionChange' get accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IMapChangedEventArgs1get_CollectionChange(elementType).Import(module),
+                declaration: interopReferences.IMapChangedEventArgs1get_CollectionChange(elementType),
                 method: get_CollectionChangeMethod);
 
             // Create a method body for the 'CollectionChange' property
@@ -221,8 +221,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: argsType,
                 implementationMethod: get_CollectionChangeMethod,
                 forwardedMethod: argsMethodsType.GetMethod("CollectionChange"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'CollectionChange' property
             PropertyDefinition collectionChangeProperty = new(
@@ -239,11 +238,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeyMethod = new(
                 name: $"Windows.Foundation.Collections.IMapChangedEventArgs<{elementType.FullName}>.get_Key",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType.Import(module)));
+                signature: MethodSignature.CreateInstance(elementType));
 
             // Add and implement the 'Key' get accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IMapChangedEventArgs1get_Key(elementType).Import(module),
+                declaration: interopReferences.IMapChangedEventArgs1get_Key(elementType),
                 method: get_KeyMethod);
 
             // Create a method body for the 'Key' property
@@ -251,8 +250,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: argsType,
                 implementationMethod: get_KeyMethod,
                 forwardedMethod: argsMethodsType.GetMethod("Key"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Key' property
             PropertyDefinition keyProperty = new(

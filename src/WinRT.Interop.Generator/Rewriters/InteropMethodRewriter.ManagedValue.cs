@@ -31,14 +31,12 @@ internal partial class InteropMethodRewriter
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -68,12 +66,12 @@ internal partial class InteropMethodRewriter
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     // For 'Nullable<T>' parameters (i.e. we have an 'IReference<T>' interface pointer), we unbox the underlying type
-                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.UnboxToManaged().Import(module)));
+                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.UnboxToManaged()));
                 }
                 else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
                 {
                     // When marshalling 'ReadOnlySpan<char>' values, we also use 'HStringMarshaller', but without materializing the 'string' object
-                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe.Import(module)));
+                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe));
                 }
                 else
                 {
@@ -83,13 +81,13 @@ internal partial class InteropMethodRewriter
                     InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
-                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module)));
+                    body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToManaged()));
                 }
             }
             else if (parameterType.IsTypeOfString())
             {
                 // When marshalling 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged.Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManaged));
             }
             else
             {
@@ -97,7 +95,7 @@ internal partial class InteropMethodRewriter
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
                 // Marshal the value normally (the caller will own the native resource)
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.ConvertToManaged()));
             }
         }
     }

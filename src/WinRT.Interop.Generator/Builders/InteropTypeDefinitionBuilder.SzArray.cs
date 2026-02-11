@@ -196,7 +196,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeArrayComWrappersCallback.Import(module)) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeArrayComWrappersCallback) }
             };
 
             module.TopLevelTypes.Add(callbackType);
@@ -208,7 +208,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CreateArray"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.Array.ToReferenceTypeSignature().Import(module),
+                    returnType: interopReferences.Array.ToReferenceTypeSignature(),
                     parameterTypes: [
                         module.CorLibTypeFactory.UInt32,
                         module.CorLibTypeFactory.Void.MakePointerType()]))
@@ -224,7 +224,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement 'CreateArray'
             callbackType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackCreateArray.Import(module),
+                declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackCreateArray,
                 method: createArrayMethod);
         }
 
@@ -257,23 +257,23 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
-                        arrayType.BaseType.GetAbiType(interopReferences).Import(module).MakePointerType().MakePointerType()]))
+                        arrayType.BaseType.GetAbiType(interopReferences).MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
             CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
 
             // Declare 2 local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_referenceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Value' method
             valueMethod.CilMethodBody = new CilMethodBody()
@@ -296,8 +296,8 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(arrayType).Import(module) },
-                    { Newobj, interopReferences.ReadOnlySpan1_ctor(arrayType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(arrayType) },
+                    { Newobj, interopReferences.ReadOnlySpan1_ctor(arrayType) },
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
@@ -323,7 +323,7 @@ internal partial class InteropTypeDefinitionBuilder
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -382,7 +382,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                module: module,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             var propertyValueImpl = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
@@ -416,7 +415,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -426,7 +424,6 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition arrayInterfaceEntriesImplType,
             TypeDefinition arrayComWrappersCallbackType,
             MethodDefinition get_IidMethod,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -436,7 +433,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
                 name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -464,7 +461,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { CilInstruction.CreateLdcI4((int)flags) },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };
@@ -478,7 +475,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ComputeVtables"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.ComInterfaceEntry.Import(module).MakePointerType(),
+                    returnType: interopReferences.ComInterfaceEntry.MakePointerType(),
                     parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
@@ -495,8 +492,8 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(computeVtablesMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the array
-            IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor = interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
-                .Import(module)
+            IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor =
+                interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
                 .MakeGenericInstanceMethod(arrayComWrappersCallbackType.ToReferenceTypeSignature());
 
             // Define the 'CreateObject' method as follows:
@@ -509,7 +506,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =

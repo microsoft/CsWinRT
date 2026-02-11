@@ -31,14 +31,12 @@ internal partial class InteropMethodRewriter
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -64,18 +62,18 @@ internal partial class InteropMethodRewriter
             {
                 InteropMarshallerType marshallerType = InteropMarshallerTypeResolver.GetMarshallerType(parameterType, interopReferences, emitState);
 
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.Dispose().Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.Dispose()));
             }
             else if (parameterType.IsTypeOfString())
             {
                 // When disposing 'string' values, we must use 'HStringMarshaller' (the ABI type is not actually a COM object)
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerFree.Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerFree));
             }
             else
             {
                 // For everything else, we just release the native object. This also applies to generic value types,
                 // such as 'KeyValuePair<TKey, TValue>', because they are actually interface types at the ABI level.
-                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.WindowsRuntimeUnknownMarshallerFree.Import(module)));
+                body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.WindowsRuntimeUnknownMarshallerFree));
             }
         }
     }

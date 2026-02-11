@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="methodName">The name of the get method.</param>
         /// <param name="asyncInfoType">The type of async info interface.</param>
-        /// <param name="handlerType">The type of the handler delegate.</param>
         /// <param name="get_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToUnmanagedMethod">The method to use to convert the handler to unmanaged.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -35,7 +34,6 @@ internal partial class InteropMethodDefinitionFactory
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
-            TypeSignature handlerType,
             MemberReference get_HandlerMethod,
             MethodDefinition convertToUnmanagedMethod,
             InteropReferences interopReferences,
@@ -54,20 +52,20 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' (the marshalled async info instance)
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Current' method
             handlerMethod.CilMethodBody = new CilMethodBody()
@@ -87,12 +85,12 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType).Import(module) },
-                    { Callvirt, get_HandlerMethod.Import(module) },
-                    { Call, convertToUnmanagedMethod.Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType) },
+                    { Callvirt, get_HandlerMethod },
+                    { Call, convertToUnmanagedMethod },
                     { Stloc_1 },
                     { Ldloca_S, loc_1_handlerValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe },
                     { Stind_I },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -116,7 +114,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -129,7 +127,6 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="methodName">The name of the get method.</param>
         /// <param name="asyncInfoType">The type of async info interface.</param>
-        /// <param name="handlerType">The type of the handler delegate.</param>
         /// <param name="set_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToManagedMethod">The method to use to convert the handler to a managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -137,7 +134,6 @@ internal partial class InteropMethodDefinitionFactory
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
-            TypeSignature handlerType,
             MemberReference set_HandlerMethod,
             MethodDefinition convertToManagedMethod,
             InteropReferences interopReferences,
@@ -156,14 +152,14 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
@@ -186,10 +182,10 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType) },
                     { Ldarg_1 },
-                    { Call, convertToManagedMethod.Import(module) },
-                    { Callvirt, set_HandlerMethod.Import(module) },
+                    { Call, convertToManagedMethod },
+                    { Callvirt, set_HandlerMethod },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -212,7 +208,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

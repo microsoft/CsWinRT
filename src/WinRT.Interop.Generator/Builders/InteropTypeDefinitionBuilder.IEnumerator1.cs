@@ -29,7 +29,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.</param>
@@ -37,7 +36,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature enumeratorType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            ModuleDefinition module,
             InteropGeneratorEmitState emitState,
             bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod)
@@ -46,7 +44,6 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                module: module,
                 iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
@@ -80,7 +77,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IIteratorMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IIteratorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(iteratorMethodsType);
@@ -92,22 +89,22 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Current"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: enumeratorType.TypeArguments[0].Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: enumeratorType.TypeArguments[0],
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             { NoInlining = true };
 
             // Add and implement the 'Current' method
             iteratorMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IIteratorMethodsImpl1Current(elementType).Import(module),
+                declaration: interopReferences.IIteratorMethodsImpl1Current(elementType),
                 method: currentMethod);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_ELEMENT_TYPE>' (the native value that was retrieved)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences).Import(module));
+            CilLocalVariable loc_2_currentNative = new(elementType.GetAbiType(interopReferences));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -123,12 +120,12 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
 
                     // '.try' code
                     { ldloca_s_0_tryStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_currentNative },
@@ -136,13 +133,13 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.IEnumerator1Vftbl.GetField("get_Current"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.IEnumerator1CurrentImpl(interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, WellKnownTypeSignatureFactory.IEnumerator1CurrentImpl(interopReferences).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
                     // '.finally' code
                     { ldloca_s_0_finallyStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
                     { nop_finallyEnd },
                     { nop_returnValueRewrite }
@@ -175,12 +172,12 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IIteratorMethodsHasCurrent.Import(module) },
+                    { Call, interopReferences.IIteratorMethodsHasCurrent },
                     { Ret }
                 }
             };
@@ -195,12 +192,12 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IIteratorMethodsMoveNext.Import(module) },
+                    { Call, interopReferences.IIteratorMethodsMoveNext },
                     { Ret }
                 }
             };
@@ -241,8 +238,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Current"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: elementType,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -262,7 +259,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
@@ -386,14 +383,14 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     InteropCustomAttributeFactory.Guid(enumeratorType, interopReferences, module, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(enumeratorType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerator.Import(module)),
-                    new InterfaceImplementation(interopReferences.IDisposable.Import(module))
+                    new InterfaceImplementation(enumeratorType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerator),
+                    new InterfaceImplementation(interopReferences.IDisposable)
                 }
             };
 
@@ -403,11 +400,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IEnumerator1CurrentMethod = new(
                 name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType.Import(module)));
+                signature: MethodSignature.CreateInstance(elementType));
 
             // Add and implement the 'IEnumerator<T>.Current' get accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumerator1get_Current(elementType).Import(module),
+                declaration: interopReferences.IEnumerator1get_Current(elementType),
                 method: get_IEnumerator1CurrentMethod);
 
             // Create a method body for the 'IEnumerator<T>.Current' property
@@ -415,8 +412,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: get_IEnumerator1CurrentMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("Current"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerator<T>.Current' property
             PropertyDefinition enumerator1CurrentProperty = new(
@@ -437,7 +433,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'IEnumerator.Current' get accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumeratorget_Current.Import(module),
+                declaration: interopReferences.IEnumeratorget_Current,
                 method: get_IEnumeratorCurrentMethod);
 
             // Create a method body for the 'IEnumerator.Current' property
@@ -446,14 +442,14 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.IEnumerator1get_Current(elementType).Import(module) },
+                    { Callvirt, interopReferences.IEnumerator1get_Current(elementType) },
                 }
             };
 
             // If the element type is a value type, we need to box it
             if (elementType.IsValueType)
             {
-                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, elementType.Import(module).ToTypeDefOrRef());
+                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, elementType.ToTypeDefOrRef());
             }
 
             // Add the return
@@ -478,7 +474,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'MoveNext' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumeratorMoveNext.Import(module),
+                declaration: interopReferences.IEnumeratorMoveNext,
                 method: moveNextMethod);
 
             // Create a method body for the 'MoveNext' method
@@ -486,8 +482,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: moveNextMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("MoveNext"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'System.IEnumerator.Reset' method
             MethodDefinition resetMethod = new(
@@ -497,7 +492,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'Reset' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IEnumeratorReset.Import(module),
+                declaration: interopReferences.IEnumeratorReset,
                 method: resetMethod);
 
             // Create a method body for the 'Reset' method
@@ -505,7 +500,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 Instructions =
                 {
-                    { Newobj, interopReferences.NotSupportedException_ctor.Import(module) },
+                    { Newobj, interopReferences.NotSupportedException_ctor },
                     { Throw }
                 }
             };
@@ -518,7 +513,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // And and implement the 'Dispose' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDisposableDispose.Import(module),
+                declaration: interopReferences.IDisposableDispose,
                 method: disposeMethod);
 
             // Create a method body for the 'Dispose' method

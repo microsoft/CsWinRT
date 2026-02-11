@@ -41,10 +41,10 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
                 },
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(interfaceImplType);
@@ -55,20 +55,19 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.Import(module).ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CollectionChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyCollectionChanged.CollectionChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.INotifyCollectionChangedadd_CollectionChanged.Import(module),
+                declaration: interopReferences.INotifyCollectionChangedadd_CollectionChanged,
                 method: add_INotifyCollectionChangedCollectionChangedMethod);
 
             // Create the 'INotifyCollectionChanged.CollectionChanged' remove method
@@ -77,27 +76,26 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.Import(module).ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CollectionChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyCollectionChanged.CollectionChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.INotifyCollectionChangedremove_CollectionChanged.Import(module),
+                declaration: interopReferences.INotifyCollectionChangedremove_CollectionChanged,
                 method: remove_INotifyCollectionChangedCollectionChangedMethod);
 
             // Create the 'INotifyCollectionChanged.CollectionChanged' event
             EventDefinition collectionChangedProperty = new(
                 name: "System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged",
                 attributes: default,
-                eventType: interopReferences.NotifyCollectionChangedEventHandler.Import(module))
+                eventType: interopReferences.NotifyCollectionChangedEventHandler)
             {
                 AddMethod = add_INotifyCollectionChangedCollectionChangedMethod,
                 RemoveMethod = remove_INotifyCollectionChangedCollectionChangedMethod

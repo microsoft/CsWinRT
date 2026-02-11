@@ -36,7 +36,6 @@ internal partial class InteropMethodRewriter
         /// <param name="parameterIndex">The index of the parameter to marshal.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
@@ -45,8 +44,7 @@ internal partial class InteropMethodRewriter
             CilInstruction finallyMarker,
             int parameterIndex,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -98,8 +96,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToUnmanaged"),
                         disposeMethod: null,
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -114,8 +111,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: marshallerType.BoxToUnmanaged(),
                         disposeMethod: null,
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (parameterType.IsManagedValueType(interopReferences))
                 {
@@ -131,8 +127,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: marshallerType.ConvertToUnmanaged(),
                         disposeMethod: marshallerType.Dispose(),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else
                 {
@@ -142,7 +137,7 @@ internal partial class InteropMethodRewriter
                     body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
                     body.Instructions.ReferenceReplaceRange(loadMarker, [
                         CilInstruction.CreateLdarg(parameterIndex),
-                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module))]);
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged())]);
                 }
             }
             else if (parameterType.IsTypeOfString())
@@ -153,8 +148,7 @@ internal partial class InteropMethodRewriter
                     loadMarker: loadMarker,
                     finallyMarker: finallyMarker,
                     parameterIndex: parameterIndex,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
@@ -164,8 +158,7 @@ internal partial class InteropMethodRewriter
                     loadMarker: loadMarker,
                     finallyMarker: finallyMarker,
                     parameterIndex: parameterIndex,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
             else if (parameterType.IsTypeOfException(interopReferences))
             {
@@ -173,7 +166,7 @@ internal partial class InteropMethodRewriter
                 body.Instructions.ReferenceRemoveRange(tryMarker, finallyMarker);
                 body.Instructions.ReferenceReplaceRange(loadMarker, [
                     CilInstruction.CreateLdarg(parameterIndex),
-                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module))]);
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged)]);
             }
             else
             {
@@ -189,8 +182,7 @@ internal partial class InteropMethodRewriter
                     parameterIndex: parameterIndex,
                     marshallerMethod: marshallerType.ConvertToUnmanaged(),
                     disposeMethod: null,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
@@ -207,16 +199,15 @@ internal partial class InteropMethodRewriter
             int parameterIndex,
             IMethodDefOrRef marshallerMethod,
             IMethodDefOrRef? disposeMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature parameterAbiType = parameterType.GetAbiType(interopReferences);
 
             // Prepare the new local for the ABI value (or 'WindowsRuntimeObjectReferenceValue').
             // This is only for parameter types that need some kind of disposal after the call.
             CilLocalVariable loc_parameter = parameterAbiType.IsTypeOfVoidPointer()
-                ? new CilLocalVariable(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature())
-                : new CilLocalVariable(parameterAbiType.Import(module));
+                ? new CilLocalVariable(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature())
+                : new CilLocalVariable(parameterAbiType);
 
             body.LocalVariables.Add(loc_parameter);
 
@@ -228,7 +219,7 @@ internal partial class InteropMethodRewriter
             // Marshal the value before the call
             body.Instructions.ReferenceReplaceRange(tryMarker, [
                 CilInstruction.CreateLdarg(parameterIndex),
-                new CilInstruction(Call, marshallerMethod.Import(module)),
+                new CilInstruction(Call, marshallerMethod),
                 CilInstruction.CreateStloc(loc_parameter, body),
                 nop_tryStart]);
 
@@ -238,7 +229,7 @@ internal partial class InteropMethodRewriter
             {
                 body.Instructions.ReferenceReplaceRange(loadMarker, [
                     new CilInstruction(Ldloca_S, loc_parameter),
-                    new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module))]);
+                    new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe)]);
             }
             else
             {
@@ -255,7 +246,7 @@ internal partial class InteropMethodRewriter
 
                 body.Instructions.ReferenceReplaceRange(finallyMarker, [
                     ldloc_or_a_finallyStart,
-                    new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module)),
+                    new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose),
                     new CilInstruction(Endfinally),
                     nop_finallyEnd]);
             }
@@ -265,7 +256,7 @@ internal partial class InteropMethodRewriter
 
                 body.Instructions.ReferenceReplaceRange(finallyMarker, [
                     ldloc_or_a_finallyStart,
-                    new CilInstruction(Call, disposeMethod!.Import(module)),
+                    new CilInstruction(Call, disposeMethod),
                     new CilInstruction(Endfinally),
                     nop_finallyEnd]);
             }
@@ -289,16 +280,15 @@ internal partial class InteropMethodRewriter
             CilInstruction loadMarker,
             CilInstruction finallyMarker,
             int parameterIndex,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Declare the local variables:
             //   [0]: 'ref char' (for the pinned 'string')
             //   [1]: 'HStringReference' (for 'hstringReference')
             //   [2]: 'int?' (for 'length')
             CilLocalVariable loc_0_pinnedString = new(interopReferences.CorLibTypeFactory.Char.MakeByReferenceType().MakePinnedType());
-            CilLocalVariable loc_1_hstringReference = new(interopReferences.HStringReference.Import(module).ToValueTypeSignature());
-            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.CorLibTypeFactory.Int32).Import(module));
+            CilLocalVariable loc_1_hstringReference = new(interopReferences.HStringReference.ToValueTypeSignature());
+            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.CorLibTypeFactory.Int32));
 
             body.LocalVariables.Add(loc_0_pinnedString);
             body.LocalVariables.Add(loc_1_hstringReference);
@@ -324,7 +314,7 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Conv_U),
                 new CilInstruction(Br_S, ldarg_lengthNullCheck.CreateLabel()),
                 ldarg_pinning,
-                new CilInstruction(Call, interopReferences.StringGetPinnableReference.Import(module)),
+                new CilInstruction(Call, interopReferences.StringGetPinnableReference),
                 CilInstruction.CreateStloc(loc_0_pinnedString, body),
                 CilInstruction.CreateLdloc(loc_0_pinnedString, body),
                 new CilInstruction(Conv_U),
@@ -333,21 +323,21 @@ internal partial class InteropMethodRewriter
                 ldarg_lengthNullCheck,
                 new CilInstruction(Brtrue_S, ldarg_getLength.CreateLabel()),
                 new CilInstruction(Ldloca_S, loc_2_length),
-                new CilInstruction(Initobj, interopReferences.NullableInt32.Import(module).ToTypeDefOrRef()),
+                new CilInstruction(Initobj, interopReferences.NullableInt32.ToTypeDefOrRef()),
                 CilInstruction.CreateLdloc(loc_2_length, body),
                 new CilInstruction(Br_S, ldloca_s_getHStringReference.CreateLabel()),
                 ldarg_getLength,
-                new CilInstruction(Call, interopReferences.Stringget_Length.Import(module)),
-                new CilInstruction(Newobj, interopReferences.Nullable1_ctor(interopReferences.CorLibTypeFactory.Int32).Import(module)),
+                new CilInstruction(Call, interopReferences.Stringget_Length),
+                new CilInstruction(Newobj, interopReferences.Nullable1_ctor(interopReferences.CorLibTypeFactory.Int32)),
 
                 // HStringMarshaller.ConvertToUnmanagedUnsafe(p, length, out HStringReference hstringReference);
                 ldloca_s_getHStringReference,
-                new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanagedUnsafe.Import(module))]);
+                new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanagedUnsafe)]);
 
             // Get the 'HString' value from the reference and pass it as a parameter
             body.Instructions.ReferenceReplaceRange(loadMarker, [
                 new CilInstruction(Ldloca_S, loc_1_hstringReference),
-                new CilInstruction(Call, interopReferences.HStringReferenceget_HString.Import(module))]);
+                new CilInstruction(Call, interopReferences.HStringReferenceget_HString)]);
 
             // We need to emit code to unpin the local (matching what Roslyn does), but we need to consider whether other parameters
             // in this same method will be using a protected region. In the scenarios where this rewriter will be used, that will
@@ -385,13 +375,12 @@ internal partial class InteropMethodRewriter
             CilInstruction loadMarker,
             CilInstruction finallyMarker,
             int parameterIndex,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Declare the local variables:
             //   [0]: 'TypeReference' (for 'typeReference')
             //   [1]: 'ref byte' (for the pinned type reference)
-            CilLocalVariable loc_0_typeReference = new(interopReferences.TypeReference.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_0_typeReference = new(interopReferences.TypeReference.ToValueTypeSignature());
             CilLocalVariable loc_1_pinnedTypeReference = new(interopReferences.CorLibTypeFactory.Byte.MakeByReferenceType().MakePinnedType());
 
             body.LocalVariables.Add(loc_0_typeReference);
@@ -407,15 +396,15 @@ internal partial class InteropMethodRewriter
                 nop_tryStart,
                 CilInstruction.CreateLdarg(parameterIndex),
                 new CilInstruction(Ldloca_S, loc_0_typeReference),
-                new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanagedUnsafe.Import(module)),
+                new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanagedUnsafe),
                 new CilInstruction(Ldloca_S, loc_0_typeReference),
-                new CilInstruction(Call, interopReferences.TypeReferenceGetPinnableReference.Import(module)),
+                new CilInstruction(Call, interopReferences.TypeReferenceGetPinnableReference),
                 CilInstruction.CreateStloc(loc_1_pinnedTypeReference, body)]);
 
             // Get the ABI 'Type' value and pass it as a parameter
             body.Instructions.ReferenceReplaceRange(loadMarker, [
                 new CilInstruction(Ldloca_S, loc_0_typeReference),
-                new CilInstruction(Call, interopReferences.TypeReferenceConvertToUnmanagedUnsafe.Import(module))]);
+                new CilInstruction(Call, interopReferences.TypeReferenceConvertToUnmanagedUnsafe)]);
 
             // Same code as for 'string' marshalling above (see additional comments there)
             body.Instructions.ReferenceReplaceRange(finallyMarker, [

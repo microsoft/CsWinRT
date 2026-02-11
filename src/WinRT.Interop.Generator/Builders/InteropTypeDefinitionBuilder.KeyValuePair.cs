@@ -78,7 +78,6 @@ internal partial class InteropTypeDefinitionBuilder
             if (!methodsType.TryGetMethod(get_KeyMethodName, out keyAccessorMethod!))
             {
                 keyAccessorMethod = InteropMethodDefinitionFactory.KeyValuePairMethods.get_KeyOrValue(
-                    keyValuePairType: keyValuePairType,
                     keyOrValueType: keyType,
                     vftblType: interopDefinitions.IKeyValuePairVftbl,
                     vftblMethodName: "get_Key"u8,
@@ -94,7 +93,6 @@ internal partial class InteropTypeDefinitionBuilder
             if (!methodsType.TryGetMethod(get_ValueMethodName, out valueAccessorMethod!))
             {
                 valueAccessorMethod = InteropMethodDefinitionFactory.KeyValuePairMethods.get_KeyOrValue(
-                    keyValuePairType: keyValuePairType,
                     keyOrValueType: valueType,
                     vftblType: interopDefinitions.IKeyValuePairVftbl,
                     vftblMethodName: "get_Value"u8,
@@ -138,8 +136,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature typeSignature2 = keyValuePairType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature();
 
             // Determine which 'CreateComInterfaceFlags' flags we use for the marshalled CCW
             CreateComInterfaceFlags flags = keyValuePairType.IsTrackerSupportRequired(interopReferences)
@@ -154,15 +151,15 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [typeSignature2]))
+                    parameterTypes: [keyValuePairType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Box, keyValuePairType.ToTypeDefOrRef() },
                     { CilInstruction.CreateLdcI4((int)flags) },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeKeyValuePairTypeMarshallerConvertToUnmanagedUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeKeyValuePairTypeMarshallerConvertToUnmanagedUnsafe },
                     { Ret }
                 }
             };
@@ -171,7 +168,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Declare the local variables:
             //   [0]: '<KEY_VALUE_PAIR_TYPE>' (for the failure path, initialized to 'default')
-            CilLocalVariable loc_0_default = new(keyValuePairType.Import(module));
+            CilLocalVariable loc_0_default = new(keyValuePairType);
 
             // Jump labels
             CilInstruction ldarg_0_marshal = new(Ldarg_0);
@@ -183,7 +180,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: typeSignature2,
+                    returnType: keyValuePairType,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
                 CilLocalVariables = { loc_0_default },
@@ -197,7 +194,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // return default
                     { Ldloca_S, loc_0_default },
-                    { Initobj, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Initobj, keyValuePairType.ToTypeDefOrRef() },
                     { Ldloc_0 },
                     { Ret },
 
@@ -206,7 +203,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, keyAccessorMethod },
                     { Ldarg_0 },
                     { Call, valueAccessorMethod },
-                    { Newobj, interopReferences.KeyValuePair2_ctor(keyValuePairType).Import(module) },
+                    { Newobj, interopReferences.KeyValuePair2_ctor(keyValuePairType) },
                     { Ret }
                 }
             };
@@ -322,7 +319,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerAttributeType);
 
@@ -332,7 +329,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerAttributeType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -376,7 +373,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_1 },
                     { CilInstruction.CreateLdcI4((int)flags) },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };
@@ -386,7 +383,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'interfaceValue')
             //   [1]: 'object' (for 'managedValue')
-            CilLocalVariable loc_0_interfaceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_0_interfaceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_managedValue = new(module.CorLibTypeFactory.Object);
 
             // Jump labels
@@ -404,7 +401,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilLocalVariables = { loc_0_interfaceValue, loc_1_managedValue },
@@ -418,20 +415,20 @@ internal partial class InteropTypeDefinitionBuilder
                     // WindowsRuntimeObjectReferenceValue interfaceValue = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceValue(value, in <KEY_VALUE_PAIR_TYPE_IID>);
                     { Ldarg_1 },
                     { Call, get_IidMethod },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalCreateObjectReferenceValue },
                     { Stloc_0 },
 
                     // object managedValue = <MARSHALLER_TYPE>.ConvertToManaged(interfaceValue.GetThisPtrUnsafe());
                     { ldloca_s_interfaceValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Call, keyValuePairMarshallerType.GetMethod("ConvertToManaged"u8) },
-                    { Box, keyValuePairType.Import(module).ToTypeDefOrRef() },
+                    { Box, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_epilogue.CreateLabel() },
 
                     // 'finally' for local [0]
                     { ldloca_0_finally },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
 
                     // return managedValue;

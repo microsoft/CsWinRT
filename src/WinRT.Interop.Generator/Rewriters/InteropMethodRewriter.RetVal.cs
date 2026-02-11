@@ -31,7 +31,6 @@ internal partial class InteropMethodRewriter
         /// <param name="marker">The target IL instruction to replace with the right set of specialized instructions.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// <para>
         /// This method assumes the evaluation stack already has two values on its top:
@@ -49,8 +48,7 @@ internal partial class InteropMethodRewriter
             MethodDefinition method,
             CilInstruction marker,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -71,7 +69,7 @@ internal partial class InteropMethodRewriter
                 // However, we must use the correct indirect store instruction for primitive types.
                 if (retValType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType, module)]);
+                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType)]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {
@@ -80,8 +78,7 @@ internal partial class InteropMethodRewriter
                         body: body,
                         marker: marker,
                         marshallerMethod: emitState.LookupTypeDefinition(retValType, "Marshaller").GetMethod("ConvertToUnmanaged"),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (retValType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -92,8 +89,7 @@ internal partial class InteropMethodRewriter
                         body: body,
                         marker: marker,
                         marshallerMethod: marshallerType.BoxToUnmanaged(),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else
                 {
@@ -102,8 +98,8 @@ internal partial class InteropMethodRewriter
 
                     // Delegate to the marshaller to convert the managed value type on the evaluation stack
                     body.Instructions.ReferenceReplaceRange(marker, [
-                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged().Import(module)),
-                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).Import(module).ToTypeDefOrRef())]);
+                        new CilInstruction(Call, marshallerType.ConvertToUnmanaged()),
+                        new CilInstruction(Stobj, retValType.GetAbiType(interopReferences).ToTypeDefOrRef())]);
                 }
             }
             else if (retValType.IsTypeOfString())
@@ -112,23 +108,23 @@ internal partial class InteropMethodRewriter
                 // 'HStringMarshaller.ConvertToUnmanaged' method actually takes a 'ReadOnlySpan<char>',
                 // so we first also need to create one from the 'string' value loaded on the stack.
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
+                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString),
+                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged),
                     new CilInstruction(Stind_I)]);
             }
             else if (retValType.IsTypeOfType(interopReferences))
             {
                 // 'Type' values also need their own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiType.Import(module).ToTypeDefOrRef())]);
+                    new CilInstruction(Call, interopReferences.TypeMarshallerConvertToUnmanaged),
+                    new CilInstruction(Stobj, interopReferences.AbiType)]);
             }
             else if (retValType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, and needs its own specialized marshaller
                 body.Instructions.ReferenceReplaceRange(marker, [
-                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged.Import(module)),
-                    new CilInstruction(Stobj, interopReferences.AbiException.Import(module).ToTypeDefOrRef())]);
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToUnmanaged),
+                    new CilInstruction(Stobj, interopReferences.AbiException)]);
             }
             else
             {
@@ -140,8 +136,7 @@ internal partial class InteropMethodRewriter
                     body: body,
                     marker: marker,
                     marshallerMethod: marshallerType.ConvertToUnmanaged(),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
@@ -152,22 +147,21 @@ internal partial class InteropMethodRewriter
             CilMethodBody body,
             CilInstruction marker,
             IMethodDefOrRef marshallerMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // We need a new local for the 'WindowsRuntimeObjectReferenceValue' returned from the
             // marshalling methods that the code will invoke. This is because we are going to call
             // the 'DetachThisPtrUnsafe()' method on it, which needs 'this' by reference.
-            CilLocalVariable loc_returnValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature());
+            CilLocalVariable loc_returnValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             body.LocalVariables.Add(loc_returnValue);
 
             // Marshal the value and detach its native pointer before assigning it to the target location
             body.Instructions.ReferenceReplaceRange(marker, [
-                new CilInstruction(Call, marshallerMethod.Import(module)),
+                new CilInstruction(Call, marshallerMethod),
                 CilInstruction.CreateStloc(loc_returnValue, body),
                 new CilInstruction(Ldloca_S, loc_returnValue),
-                new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module)),
+                new CilInstruction(Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe),
                 new CilInstruction(Stind_I)]);
         }
     }

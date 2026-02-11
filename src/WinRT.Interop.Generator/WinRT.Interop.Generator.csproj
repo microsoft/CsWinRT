@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
@@ -28,9 +28,6 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-    <!-- Workaround for some methods not being fully implemented yet -->
-    <NoWarn>$(NoWarn);IDE0060</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

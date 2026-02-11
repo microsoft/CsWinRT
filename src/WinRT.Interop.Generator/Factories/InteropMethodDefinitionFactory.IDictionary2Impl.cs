@@ -51,20 +51,20 @@ internal static partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(dictionaryType);
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'GetView' method
@@ -84,11 +84,11 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
-                    { Call, interopReferences.IDictionaryAdapter2GetView(keyType, valueType).Import(module) },
+                    { Call, interopReferences.IDictionaryAdapter2GetView(keyType, valueType) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -112,7 +112,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -155,17 +155,17 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        keyAbiType.Import(module),
-                        valueAbiType.Import(module),
+                        keyAbiType,
+                        valueAbiType,
                         module.CorLibTypeFactory.Boolean.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(dictionaryType);
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
@@ -174,7 +174,7 @@ internal static partial class InteropMethodDefinitionFactory
             CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction nop_parameter2Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'Insert' method
             insertMethod.CilMethodBody = new CilMethodBody()
@@ -193,13 +193,13 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
                     { Stloc_0 },
                     { Ldarg_3 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
-                    { Call, interopReferences.IDictionaryAdapter2Insert(keyType, valueType).Import(module) },
+                    { Call, interopReferences.IDictionaryAdapter2Insert(keyType, valueType) },
                     { Stind_I1 },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -223,7 +223,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -271,22 +271,22 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         module.CorLibTypeFactory.Void.MakePointerType(),
-                        keyType.GetAbiType(interopReferences).Import(module)]))
+                        keyType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(dictionaryType);
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Get the target 'Remove' method (we can optimize for 'string' types)
             IMethodDescriptor adapterRemoveMethod = keyType.IsTypeOfString()
@@ -301,11 +301,11 @@ internal static partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
-                    { Call, adapterRemoveMethod.Import(module) },
+                    { Call, adapterRemoveMethod },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -328,7 +328,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -373,19 +373,19 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(dictionaryType.Import(module));
+            CilLocalVariable loc_0_thisObject = new(dictionaryType);
             CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'Clear' method
             clearMethod.CilMethodBody = new CilMethodBody()
@@ -395,10 +395,10 @@ internal static partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
                     { Stloc_0 },
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -421,7 +421,7 @@ internal static partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
