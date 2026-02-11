@@ -24,11 +24,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="actionType">The <see cref="TypeSignature"/> for the async action type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetResults(
             GenericInstanceTypeSignature actionType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature progressType = actionType.TypeArguments[0];
 
@@ -40,8 +38,8 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetResults"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -53,7 +51,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'GetResults' method
             getResultsMethod.CilMethodBody = new CilMethodBody()

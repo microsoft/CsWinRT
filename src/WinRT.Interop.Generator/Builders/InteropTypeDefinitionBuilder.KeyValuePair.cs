@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature()),
                 name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(methodsType);
         }
@@ -54,7 +54,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="keyAccessorMethod">The resulting accessor method for the key.</param>
         /// <param name="valueAccessorMethod">The resulting accessor method for the value.</param>
         public static void Accessors(
@@ -63,7 +62,6 @@ internal partial class InteropTypeDefinitionBuilder
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
-            ModuleDefinition module,
             out MethodDefinition keyAccessorMethod,
             out MethodDefinition valueAccessorMethod)
         {
@@ -83,8 +81,7 @@ internal partial class InteropTypeDefinitionBuilder
                     vftblMethodName: "get_Key"u8,
                     accessorMethodName: get_KeyMethodName,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 methodsType.Methods.Add(keyAccessorMethod);
             }
@@ -98,8 +95,7 @@ internal partial class InteropTypeDefinitionBuilder
                     vftblMethodName: "get_Value"u8,
                     accessorMethodName: get_ValueMethodName,
                     interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module);
+                    emitState: emitState);
 
                 methodsType.Methods.Add(valueAccessorMethod);
             }
@@ -131,7 +127,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(marshallerType);
 
@@ -181,7 +177,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: keyValuePairType,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CilLocalVariables = { loc_0_default },
                 CilInstructions =
@@ -235,15 +231,13 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeyMethod = InteropMethodDefinitionFactory.IKeyValuePair2Impl.get_Key(
                 keyValuePairType: keyValuePairType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'get_Value' method
             MethodDefinition get_ValueMethod = InteropMethodDefinitionFactory.IKeyValuePair2Impl.get_Value(
                 keyValuePairType: keyValuePairType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
@@ -339,7 +333,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                    parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
                 CilInstructions =
@@ -366,8 +360,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetOrCreateComInterfaceForObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
-                    parameterTypes: [module.CorLibTypeFactory.Object]))
+                    returnType: interopReferences.Void.MakePointerType(),
+                    parameterTypes: [interopReferences.Object]))
             {
                 CilInstructions =
                 {
@@ -384,7 +378,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'interfaceValue')
             //   [1]: 'object' (for 'managedValue')
             CilLocalVariable loc_0_interfaceValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_managedValue = new(module.CorLibTypeFactory.Object);
+            CilLocalVariable loc_1_managedValue = new(interopReferences.Object);
 
             // Jump labels
             CilInstruction ldloca_s_interfaceValue = new(Ldloca_S, loc_0_interfaceValue);
@@ -398,9 +392,9 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Object,
+                    returnType: interopReferences.Object,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],

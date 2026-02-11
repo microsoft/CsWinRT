@@ -29,13 +29,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition add_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
@@ -57,10 +55,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "add_MapChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.EventRegistrationToken.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -79,7 +77,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_unboxedValue = new(mapType);
             CilLocalVariable loc_1_managedHandler = new(eventHandlerType);
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'add_MapChanged' method
             add_MapChangedMethod.CilMethodBody = new CilMethodBody()
@@ -157,12 +155,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="mapType">The <see cref="TypeSignature"/> for the map type.</param>
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition remove_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
@@ -184,9 +180,9 @@ internal partial class InteropMethodDefinitionFactory
                 name: "remove_MapChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         interopReferences.EventRegistrationToken.ToValueTypeSignature()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -206,7 +202,7 @@ internal partial class InteropMethodDefinitionFactory
             CilLocalVariable loc_0_unboxedValue = new(mapType);
             CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType);
             CilLocalVariable loc_2_managedHandler = new(eventHandlerType);
-            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_3_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'remove_MapChanged' method
             remove_MapChangedMethod.CilMethodBody = new CilMethodBody()

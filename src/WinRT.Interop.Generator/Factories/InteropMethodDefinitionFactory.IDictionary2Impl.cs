@@ -28,12 +28,10 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetView(
             GenericInstanceTypeSignature dictionaryType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
@@ -46,10 +44,10 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "GetView"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -58,7 +56,7 @@ internal static partial class InteropMethodDefinitionFactory
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(dictionaryType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -132,12 +130,10 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Insert(
             GenericInstanceTypeSignature dictionaryType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
@@ -152,12 +148,12 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "Insert"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         keyAbiType,
                         valueAbiType,
-                        module.CorLibTypeFactory.Boolean.MakePointerType()]))
+                        interopReferences.Boolean.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -166,7 +162,7 @@ internal static partial class InteropMethodDefinitionFactory
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(dictionaryType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -250,12 +246,10 @@ internal static partial class InteropMethodDefinitionFactory
         /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Remove(
             GenericInstanceTypeSignature dictionaryType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
@@ -268,9 +262,9 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "Remove"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
                         keyType.GetAbiType(interopReferences)]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
@@ -280,7 +274,7 @@ internal static partial class InteropMethodDefinitionFactory
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(dictionaryType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
@@ -353,11 +347,9 @@ internal static partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Clear(
             GenericInstanceTypeSignature dictionaryType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
@@ -370,8 +362,8 @@ internal static partial class InteropMethodDefinitionFactory
                 name: "Clear"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -380,7 +372,7 @@ internal static partial class InteropMethodDefinitionFactory
             //   [0]: '<DICTIONARY_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_thisObject = new(dictionaryType);
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);

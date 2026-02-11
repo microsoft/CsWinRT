@@ -21,19 +21,16 @@ internal static class InteropCustomAttributeFactory
     /// </summary>
     /// <param name="type">The type to generate the IID for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <remarks>The resulting <see cref="GuidAttribute"/> value.</remarks>
     public static CustomAttribute Guid(
         TypeSignature type,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         return Guid(
             guid: GuidGenerator.CreateIID(type, interopReferences, useWindowsUIXamlProjections),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -41,16 +38,15 @@ internal static class InteropCustomAttributeFactory
     /// </summary>
     /// <param name="guid">The value to encode.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <remarks>The resulting <see cref="GuidAttribute"/> value.</remarks>
-    public static CustomAttribute Guid(Guid guid, InteropReferences interopReferences, ModuleDefinition module)
+    public static CustomAttribute Guid(Guid guid, InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
         // [Guid("<GUID>")]
         return new(interopReferences.GuidAttribute_ctor, new CustomAttributeSignature(
             fixedArguments: [new CustomAttributeArgument(
-                argumentType: module.CorLibTypeFactory.String,
+                argumentType: interopReferences.String,
                 value: guid.ToString().ToUpperInvariant())],
             namedArguments: []));
     }
@@ -99,17 +95,16 @@ internal static class InteropCustomAttributeFactory
     /// <param name="key">The metadata key.</param>
     /// <param name="value">The metadata value.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
-    public static CustomAttribute AssemblyMetadata(string key, string value, InteropReferences interopReferences, ModuleDefinition module)
+    public static CustomAttribute AssemblyMetadata(string key, string value, InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
         // [AssemblyMetadata("<KEY>", "<VALUE>")]
         return new(interopReferences.AssemblyMetadataAttribute_ctor, new CustomAttributeSignature(
             fixedArguments: [
-                new CustomAttributeArgument(module.CorLibTypeFactory.String, key),
-                new CustomAttributeArgument(module.CorLibTypeFactory.String, value)],
+                new CustomAttributeArgument(interopReferences.String, key),
+                new CustomAttributeArgument(interopReferences.String, value)],
             namedArguments: []));
     }
 
@@ -119,13 +114,11 @@ internal static class InteropCustomAttributeFactory
     /// <param name="attributeTargets">The <see cref="AttributeTargets"/> value to use.</param>
     /// <param name="allowMultiple">Whether to allow multiple uses of the attribute.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute AttributeUsage(
         AttributeTargets attributeTargets,
         bool allowMultiple,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Create the following attribute:
         //
@@ -137,9 +130,9 @@ internal static class InteropCustomAttributeFactory
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Property,
                 memberName: "AllowMultiple"u8,
-                argumentType: module.CorLibTypeFactory.Boolean,
+                argumentType: interopReferences.Boolean,
                 argument: new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.Boolean,
+                    argumentType: interopReferences.Boolean,
                     value: allowMultiple))]));
     }
 
@@ -148,21 +141,21 @@ internal static class InteropCustomAttributeFactory
     /// </summary>
     /// <param name="assemblyName">The target assemby name.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     public static CustomAttribute IgnoresAccessChecksTo(
         string assemblyName,
         InteropDefinitions interopDefinitions,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Get the constructor taking 'assemblyName' as a string argument
-        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(module.CorLibTypeFactory.String)!;
+        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(interopReferences.String)!;
 
         // Create the following attribute:
         //
         // [IgnoresAccessChecksTo(<assemblyName>)]
         return new(ctor, new CustomAttributeSignature(new CustomAttributeArgument(
-            argumentType: module.CorLibTypeFactory.String,
+            argumentType: interopReferences.String,
             value: assemblyName)));
     }
 

@@ -31,14 +31,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="convertToManagedMethod">The marshalling method to convert the handler delegate native pointer.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature handlerType,
             FieldDefinition vftblField,
             MethodDefinition convertToManagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'Handler' get method as follows:
             //
@@ -57,8 +55,8 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'void*' (the handler pointer that was retrieved)
             //   [3]: '<HANDLER_TYPE>' (the marshalled handler)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_handlerPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
+            CilLocalVariable loc_2_handlerPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_3_handler = new(handlerType);
 
             // Jump labels
@@ -142,14 +140,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="convertToUnmanagedMethod">The marshalling method to convert the handler delegate managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature handlerType,
             FieldDefinition vftblField,
             MethodDefinition convertToUnmanagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'Handler' set method as follows:
             //
@@ -158,7 +154,7 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         handlerType]))
@@ -170,7 +166,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'void*' (for 'thisPtr')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_2_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_2_thisPtr = new(interopReferences.Void.MakePointerType());
 
             // Jump labels
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
@@ -254,13 +250,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblField">The vtable field definition for the interface slot to invoke.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetResults(
             TypeSignature resultType,
             FieldDefinition vftblField,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Define the 'GetResults' get method as follows:
             //
@@ -278,7 +272,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_RESULT_TYPE>' (the ABI type for the type argument)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_resultNative = new(resultType.GetAbiType(interopReferences));
 
             // Jump labels

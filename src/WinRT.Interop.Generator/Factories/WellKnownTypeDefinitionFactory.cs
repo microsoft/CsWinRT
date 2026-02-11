@@ -1138,9 +1138,8 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IReferenceArray`1&lt;T&gt;' instantiation for some SZ array type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition ReferenceArrayVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition ReferenceArrayVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -1164,11 +1163,11 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.UInt32.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReferenceArray`1<T>' looks like this:
         //
@@ -1294,19 +1293,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates types to use to declare RVA fields.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The <see cref="TypeDefinition"/> to use to contain all RVA fields.</returns>
     /// <remarks>
     /// The returned type will have exactly one nested type, for RVA fields of size 16 (ie. <see cref="Guid"/>).
     /// </remarks>
-    public static TypeDefinition RvaFields(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition RvaFields(InteropReferences interopReferences)
     {
         // Define the special '<RvaFields>' type, to contain all RVA fields
         TypeDefinition rvaFieldsType = new(
             ns: null,
             name: "<RvaFields>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
@@ -1327,15 +1325,15 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates the container type for all IID properties.
     /// </summary>
-    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <c>InterfaceIIDs</c> type.</returns>
-    public static TypeDefinition InterfaceIIDs(ModuleDefinition module)
+    public static TypeDefinition InterfaceIIDs(InteropReferences interopReferences)
     {
         // We're declaring an 'internal static class' type
         return new(
             ns: null,
             name: "<InterfaceIIDs>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
     }
 }

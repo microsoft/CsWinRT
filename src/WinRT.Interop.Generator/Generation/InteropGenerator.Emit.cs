@@ -176,7 +176,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Add all '[IgnoresAccessChecksTo]' attributes
-        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, module);
+        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1270,7 +1270,6 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
-                    module: module,
                     keyAccessorMethod: out MethodDefinition keyAccessorMethod,
                     valueAccessorMethod: out MethodDefinition valueAccessorMethod);
 
@@ -2537,10 +2536,12 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIgnoresAccessChecksToAttributes(
         InteropGeneratorDiscoveryState discoveryState,
         InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module)
     {
         try
@@ -2552,6 +2553,7 @@ internal partial class InteropGenerator
             IgnoresAccessChecksToBuilder.AssemblyAttributes(
                 referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
                 interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
                 module: module);
         }
         catch (Exception e)

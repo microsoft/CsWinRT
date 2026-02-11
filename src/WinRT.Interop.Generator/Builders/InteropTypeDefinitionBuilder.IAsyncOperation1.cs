@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType),
                 name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).ToTypeDefOrRef()) }
             };
@@ -62,8 +62,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("get_Completed"u8),
                 convertToManagedMethod: convertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1get_Completed(resultType),
@@ -80,8 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
                 handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("set_Completed"u8),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1set_Completed(resultType),
@@ -92,8 +90,7 @@ internal partial class InteropTypeDefinitionBuilder
                 resultType: resultType,
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("GetResults"u8),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             operationMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IAsyncOperationMethodsImpl1GetResults(resultType),
@@ -212,7 +209,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(operationType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(operationType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
@@ -249,7 +246,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.set_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)]));
 
             // Add and implement the 'set_Completed' method
@@ -327,8 +324,7 @@ internal partial class InteropTypeDefinitionBuilder
                 asyncInfoType: operationType,
                 get_HandlerMethod: interopReferences.IAsyncOperation1get_Completed(resultType),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
@@ -340,15 +336,13 @@ internal partial class InteropTypeDefinitionBuilder
                 asyncInfoType: operationType,
                 set_HandlerMethod: interopReferences.IAsyncOperation1set_Completed(resultType),
                 convertToManagedMethod: convertToManagedMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             MethodDefinition getResultsMethod = InteropMethodDefinitionFactory.IAsyncOperation1Impl.GetResults(
                 operationType: operationType,
                 getResultsMethod: interopReferences.IAsyncOperation1GetResults(resultType),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

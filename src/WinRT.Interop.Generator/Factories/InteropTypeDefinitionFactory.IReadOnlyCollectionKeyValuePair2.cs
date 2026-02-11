@@ -64,7 +64,7 @@ internal partial class InteropTypeDefinitionFactory
                 name: "IsInterfaceImplemented"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.MakeByReferenceType()]))

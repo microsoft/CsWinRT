@@ -178,7 +178,7 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    module.CorLibTypeFactory.Int32]);
+                    interopReferences.Int32]);
 
             eventSourceType.Methods.Add(ctor);
 

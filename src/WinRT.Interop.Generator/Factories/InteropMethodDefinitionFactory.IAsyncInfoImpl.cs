@@ -30,14 +30,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToUnmanagedMethod">The method to use to convert the handler to unmanaged.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition get_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
             MemberReference get_HandlerMethod,
             MethodDefinition convertToUnmanagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'get_Handler' get method as follows:
             //
@@ -47,10 +45,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType().MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -64,7 +62,7 @@ internal partial class InteropMethodDefinitionFactory
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' (the marshalled async info instance)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
             // Create a method body for the 'get_Current' method
@@ -130,14 +128,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="set_HandlerMethod">The interface method to invoke on <paramref name="asyncInfoType"/>.</param>
         /// <param name="convertToManagedMethod">The method to use to convert the handler to a managed object.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition set_Handler(
             Utf8String methodName,
             TypeSignature asyncInfoType,
             MemberReference set_HandlerMethod,
             MethodDefinition convertToManagedMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Define the 'set_Handler' get method as follows:
             //
@@ -147,10 +143,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -163,7 +159,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Declare the local variables:
             //   [0]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'get_Current' method
             handlerMethod.CilMethodBody = new CilMethodBody()

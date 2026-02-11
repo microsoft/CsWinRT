@@ -57,7 +57,7 @@ internal sealed class InteropDefinitions
     /// <remarks>
     /// This type has exactly one nested type, for RVA fields of size 16 (ie. <see cref="System.Guid"/>).
     /// </remarks>
-    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences, _interopModule);
+    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
@@ -67,7 +67,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
     /// </summary>
-    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopModule);
+    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
@@ -167,7 +167,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IReferenceArrayVftbl</c> type.
     /// </summary>
-    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IReferenceArrayVftbl => field ??= WellKnownTypeDefinitionFactory.ReferenceArrayVftbl(_interopReferences);
 
     /// <summary>
     /// Enumerates all necessary COM interface entries types for user-defined types.

@@ -137,7 +137,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            baseType: interopReferences.Object.ToTypeDefOrRef())
         {
             Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback) }
         };
@@ -155,11 +155,11 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "TryCreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Boolean,
+                returnType: interopReferences.Boolean,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.Void.MakePointerType(),
                     interopReferences.ReadOnlySpanChar,
-                    module.CorLibTypeFactory.Object.MakeByReferenceType(),
+                    interopReferences.Object.MakeByReferenceType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         { CilOutParameterIndices = [3, 4] };
 
@@ -222,9 +222,9 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "CreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Object,
+                returnType: interopReferences.Object,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.Void.MakePointerType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
@@ -287,9 +287,9 @@ internal static partial class InteropTypeDefinitionBuilder
             name: "CreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
             signature: MethodSignature.CreateInstance(
-                returnType: module.CorLibTypeFactory.Object,
+                returnType: interopReferences.Object,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.Void.MakePointerType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
@@ -332,7 +332,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(marshallerType);
 
@@ -379,7 +379,7 @@ internal static partial class InteropTypeDefinitionBuilder
             attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
             signature: MethodSignature.CreateStatic(
                 returnType: typeSignature,
-                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                parameterTypes: [interopReferences.Void.MakePointerType()]))
         {
             CilInstructions =
             {
@@ -421,7 +421,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -491,7 +491,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // Create the 'Vtable' property
         WellKnownMemberDefinitionFactory.Vtable(
             vftblField: vftblField,
-            corLibTypeFactory: module.CorLibTypeFactory,
+            corLibTypeFactory: interopReferences.CorLibTypeFactory,
             out PropertyDefinition vtableProperty,
             out MethodDefinition get_VtableMethod);
 
@@ -614,7 +614,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -771,7 +771,7 @@ internal static partial class InteropTypeDefinitionBuilder
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(proxyType);
 
@@ -781,7 +781,7 @@ internal static partial class InteropTypeDefinitionBuilder
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: mappedMetadata))));
         }
 
@@ -791,7 +791,7 @@ internal static partial class InteropTypeDefinitionBuilder
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeClassNameAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: runtimeClassName))));
         }
 
@@ -801,7 +801,7 @@ internal static partial class InteropTypeDefinitionBuilder
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMetadataTypeNameAttribute_ctor,
                 signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: metadataTypeName))));
         }
 

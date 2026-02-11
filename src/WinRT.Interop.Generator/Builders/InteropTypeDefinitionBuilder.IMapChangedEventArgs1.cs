@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(argsType),
                 name: InteropUtf8NameFactory.TypeName(argsType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
@@ -77,8 +77,7 @@ internal partial class InteropTypeDefinitionBuilder
                 argsType: argsType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'Key' method
             argsMethodsType.AddMethodImplementation(
@@ -198,7 +197,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(argsType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(argsType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(argsType.ToTypeDefOrRef()) }
             };
@@ -284,15 +283,13 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'get_CollectionChange' method
             MethodDefinition collectionChangeMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.CollectionChanged(
                 argsType: argsType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'get_Key' method
             MethodDefinition keyMethod = InteropMethodDefinitionFactory.IMapChangedEventArgs1Impl.Key(
                 argsType: argsType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

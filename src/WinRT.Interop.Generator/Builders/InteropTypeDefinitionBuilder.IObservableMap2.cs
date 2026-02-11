@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(factoryType);
 
@@ -135,7 +135,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
                 Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
@@ -156,7 +156,6 @@ internal partial class InteropTypeDefinitionBuilder
                 index: 2, // Arbitrary index, just copied from what Roslyn does here
                 propertyType: conditionalWeakTableType,
                 interopReferences: interopReferences,
-                module: module,
                 backingField: out FieldDefinition mapChangedTableField,
                 factoryMethod: out MethodDefinition makeMapChangedMethod,
                 getAccessorMethod: out MethodDefinition get_MapChangedTableMethod,
@@ -333,7 +332,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(mapType, interopReferences, module, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(mapType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
@@ -355,7 +354,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.add_MapChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -376,7 +375,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"Windows.Foundation.Collections.IObservableMap<{keyType.FullName},{valueType.FullName}>.remove_MapChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [handlerType]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
@@ -439,7 +438,6 @@ internal partial class InteropTypeDefinitionBuilder
                 index: 8, // Arbitrary index, just copied from what Roslyn does here
                 propertyType: conditionalWeakTableType,
                 interopReferences: interopReferences,
-                module: module,
                 backingField: out FieldDefinition mapChangedTableField,
                 factoryMethod: out MethodDefinition makeMapChangedMethod,
                 getAccessorMethod: out MethodDefinition get_MapChangedTableMethod,
@@ -449,14 +447,12 @@ internal partial class InteropTypeDefinitionBuilder
                 mapType: mapType,
                 get_MapChangedTableMethod: get_MapChangedTableMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             MethodDefinition remove_MapChangedMethod = InteropMethodDefinitionFactory.IObservableMap2Impl.remove_MapChanged(
                 mapType: mapType,
                 get_MapChangedTableMethod: get_MapChangedTableMethod,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
